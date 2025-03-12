@@ -123,7 +123,7 @@ function robodesk_my_tickets_shortcode()
         'taxonomy' => 'robodesk_ticket_priority',
         'hide_empty' => false,
     ));
-    print_r($priority_terms);
+
 
     $statuses = array('open', 'in-progress', 'archived', 'closed');
 
@@ -193,6 +193,19 @@ function robodesk_my_tickets_shortcode()
         </tbody>
     </table>
     <?php
+        $big = 999999999; // Need an unlikely integer
+        $pagination = paginate_links(array(
+            'base' => str_replace($big, '%#%', esc_url(get_pagenum_link($big))),
+            'format' => '?paged=%#%',
+            'current' => max(1, $paged),
+            'total' => $query->max_num_pages,
+            'prev_text' => __('« Previous'),
+            'next_text' => __('Next »'),
+        ));
+    
+        if ($pagination) {
+            echo '<div class="pagination">' . $pagination . '</div>';
+        }
     return ob_get_clean();
 }
 
@@ -861,10 +874,10 @@ function robodesk_single_ticket_shortcode($atts)
                         'toolbar2' => '',
                         'toolbar3' => '',
                         'toolbar4' => '',
-                    ), // Disable TinyMCE if not needed
-                    'quicktags' => false, // Disable Quicktags (Text tab)
+                    ), 
+                    'quicktags' => false, 
                 );
-                wp_editor('', 'note_content', $settings); // Use wp_editor()
+                wp_editor('', 'note_content', $settings); 
                 ?>
                 <div class="file-upload-wrapper">
                     <label for="note_attachment" class="custom-file-upload">Upload File</label>

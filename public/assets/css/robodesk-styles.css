@@ -353,3 +353,20 @@
     0% { transform: translate(-50%, -50%) rotate(0deg); }
     100% { transform: translate(-50%, -50%) rotate(360deg); }
 }
+
+/*Pagination For my tickets table*/
+.pagination {
+    text-align: center;
+    margin-top: 20px;
+}
+.pagination a, .pagination span {
+    padding: 5px 10px;
+    margin: 0 2px;
+    border: 1px solid #ddd;
+    text-decoration: none;
+}
+.pagination .current {
+    background: #0073aa;
+    color: #fff;
+    border-color: #0073aa;
+}
