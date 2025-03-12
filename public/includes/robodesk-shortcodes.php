@@ -83,7 +83,7 @@ function robodesk_my_tickets_shortcode()
     $paged = (get_query_var('paged')) ? absint(get_query_var('paged')) : 1;
 
     $orderby = isset($_GET['orderby']) ? sanitize_text_field($_GET['orderby']) : 'date'; // Get orderby from query string
-    $order = isset($_GET['order']) ? sanitize_text_field($_GET['order']) : 'DESC'; // Get order from query string
+    $order = isset($_GET['order']) ? sanitize_text_field($_GET['order']) : 'ASC'; // Get order from query string
 
     $args = array(
         'post_type' => 'robodesk_ticket',

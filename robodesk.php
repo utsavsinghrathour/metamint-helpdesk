@@ -58,11 +58,14 @@ function robodesk_deactivate()
 add_action('wp_enqueue_scripts', 'robodesk_enqueue_scripts');
 function robodesk_enqueue_scripts()
 {
+
+    wp_enqueue_script('jquery');
     if (is_admin()) {
         add_action('admin_enqueue_scripts', 'robodesk_enqueue_admin_scripts');
+      
     } else {
         wp_enqueue_style('robodesk-styles', ROBODESK_PLUGIN_URL . 'public/assets/css/robodesk-styles.css', array(), '1.0');
-        wp_enqueue_script('jquery');
+    
         wp_enqueue_script('robodesk-scripts', ROBODESK_PLUGIN_URL . 'public/assets/js/robodesk-scripts.js', array('jquery'), '1.0', true);
 
         wp_localize_script('robodesk-scripts', 'robodesk_ajax_object', array(
@@ -91,13 +94,22 @@ function robodesk_enqueue_scripts()
 function robodesk_enqueue_admin_scripts($hook)
 {
     global $post;
+    wp_enqueue_script('jquery');
+    wp_enqueue_script('jquery-ui-sortable');
+    wp_enqueue_script('custom-taxonomy-order',ROBODESK_PLUGIN_URL . 'admin/assets/js/custom-taxonomy-order.js', array('jquery', 'jquery-ui-sortable'), time(), true);
+    wp_localize_script('custom-taxonomy-order', 'taxonomyOrderData', array(
+        'ajax_url' => admin_url('admin-ajax.php'),
+        'nonce'    => wp_create_nonce('taxonomy_order_nonce')
+    ));
     if ('post.php' != $hook && 'post-new.php' != $hook) return;
     if (!isset($post) || $post->post_type != 'robodesk_ticket') return;
 
     wp_enqueue_style('robodesk-admin-styles', ROBODESK_PLUGIN_URL . 'admin/assets/css/robodesk-admin-styles.css', array(), '1.0');
-    wp_enqueue_script('jquery');
+   
     wp_enqueue_script('robodesk-admin-scripts', ROBODESK_PLUGIN_URL . 'admin/assets/js/robodesk-admin-scripts.js', array('jquery'), '1.0', true);
     wp_localize_script('robodesk-admin-scripts', 'robodesk_ajax_object', array('ajax_url' => admin_url('admin-ajax.php'), 'ticket_id' => $post->ID, 'nonce' => wp_create_nonce('robodesk_change_ticket_nonce'), 'faq_nonce' => wp_create_nonce('robodesk_faq_vote_nonce'), 'credentials_nonce' => wp_create_nonce('robodesk_credentials_nonce')));
+    
+
 }
 add_action('admin_enqueue_scripts', 'robodesk_enqueue_admin_scripts');
 

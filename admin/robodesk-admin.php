@@ -73,3 +73,98 @@ function robodesk_add_admin_menu()
         'edit-tags.php?taxonomy=robodesk_faq_category&post_type=robodesk_faq'
     );
 }
+
+
+
+
+
+// PHP
+function update_taxonomy_order() {
+    if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'taxonomy_order_nonce')) {
+        wp_send_json_error('Invalid nonce');
+    }
+
+    if (!isset($_POST['order']) || !is_array($_POST['order'])) {
+        wp_send_json_error('Invalid order data');
+    }
+
+    $term_order = array_map('intval', $_POST['order']);
+    
+    foreach ($term_order as $index => $term_id) {
+        if ($term_id) {
+            update_term_meta($term_id, 'taxonomy_order', $index);
+        }
+    }
+
+    wp_send_json_success('Order updated');
+}
+add_action('wp_ajax_update_taxonomy_order', 'update_taxonomy_order');
+
+function modify_taxonomy_query($query) {
+    if (is_admin() && 
+        isset($query->query_vars['taxonomy']) && 
+        $query->query_vars['taxonomy'] === 'robodesk_ticket_priority') {
+        
+        $query->query_vars['meta_key'] = 'taxonomy_order';
+        $query->query_vars['orderby'] = array(
+            'meta_value_num' => 'ASC',
+            'name' => 'ASC' 
+        );
+        
+       
+        $query->query_vars['meta_query'] = array(
+            'relation' => 'OR',
+            array(
+                'key' => 'taxonomy_order',
+                'compare' => 'EXISTS'
+            ),
+            array(
+                'key' => 'taxonomy_order',
+                'compare' => 'NOT EXISTS',
+                'value' => ''
+            )
+        );
+    }
+}
+add_action('pre_get_terms', 'modify_taxonomy_query');
+
+
+function set_default_taxonomy_order($term_id, $tt_id, $taxonomy) {
+    if ($taxonomy === 'robodesk_ticket_priority') {
+        $terms = get_terms(array(
+            'taxonomy'   => $taxonomy,
+            'hide_empty' => false,
+            'meta_key'   => 'taxonomy_order',
+            'orderby'    => 'meta_value_num',
+            'order'      => 'DESC',
+            'fields'     => 'ids',
+            'number'     => 1
+        ));
+
+        $new_order = (!empty($terms) && get_term_meta($terms[0], 'taxonomy_order', true) !== '') 
+            ? (int)get_term_meta($terms[0], 'taxonomy_order', true) + 1 
+            : 0;
+            
+        update_term_meta($term_id, 'taxonomy_order', $new_order);
+    }
+}
+add_action('created_term', 'set_default_taxonomy_order', 10, 3);
+
+
+function custom_taxonomy_order($terms, $taxonomies, $args) {
+    if (is_admin() && 
+        in_array('robodesk_ticket_priority', $taxonomies) && 
+        !isset($_GET['orderby'])) {
+        
+        usort($terms, function($a, $b) {
+            $a_order = get_term_meta($a->term_id, 'taxonomy_order', true);
+            $b_order = get_term_meta($b->term_id, 'taxonomy_order', true);
+            $a_order = $a_order !== '' ? (int)$a_order : PHP_INT_MAX;
+            $b_order = $b_order !== '' ? (int)$b_order : PHP_INT_MAX;
+            
+            return $a_order - $b_order;
+        });
+    }
+    return $terms;
+}
+add_filter('get_terms', 'custom_taxonomy_order', 10, 3);

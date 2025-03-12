@@ -109,6 +109,7 @@ function robodesk_register_ticket_post_type()
         'show_ui'           => true,
         'show_admin_column' => true,
         'query_var'         => true,
+        'sort'              => true,
         'rewrite'           => array('slug' => 'ticket-priority'),
     );
 
