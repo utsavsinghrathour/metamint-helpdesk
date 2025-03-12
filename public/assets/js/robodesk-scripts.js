@@ -304,7 +304,6 @@ jQuery(document).ready(function($) {
     $('body').append('<div class="spinner"></div>');
         $('#robodesk-create-ticket').submit(function (e) {
             e.preventDefault(); 
-          
             $('#robodesk-response-message').html('');
             var formData = {
                 action: 'robodesk_create_new_ticket', 
@@ -313,8 +312,6 @@ jQuery(document).ready(function($) {
                 ticket_priority: $('#ticket_priority').val(),
                 robodesk_nonce: $('#_wpnonce').val(), 
             };
-  
-            
             $.ajax({
                 url: robodesk_ajax_object.ajax_url,
                 type: 'POST',
