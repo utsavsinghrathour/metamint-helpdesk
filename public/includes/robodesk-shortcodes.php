@@ -82,16 +82,22 @@ function robodesk_my_tickets_shortcode()
     $user_id = get_current_user_id();
     $paged = (get_query_var('paged')) ? absint(get_query_var('paged')) : 1;
 
-    $orderby = isset($_GET['orderby']) ? sanitize_text_field($_GET['orderby']) : 'date'; // Get orderby from query string
-    $order = isset($_GET['order']) ? sanitize_text_field($_GET['order']) : 'ASC'; // Get order from query string
+    $orderby = isset($_GET['orderby']) ? sanitize_text_field($_GET['orderby']) : 'date'; 
+    $order = isset($_GET['order']) ? sanitize_text_field($_GET['order']) : 'ASC'; 
 
     $args = array(
         'post_type' => 'robodesk_ticket',
         'author' => $user_id,
         'posts_per_page' => 10,
         'paged' => $paged,
-        'orderby' => $orderby, // Use the selected orderby
-        'order' => $order,    // Use the selected order
+        'orderby' => $orderby, 
+        'order' => $order, 
+        'tax_query'      => array(
+        array(
+            'taxonomy' => 'robodesk_ticket_priority',
+            'operator' => 'EXISTS', // Ensure the post has a term in this taxonomy
+        ),
+    ),
     );
 
     $selected_priority = isset($_GET['robodesk_ticket_priority']) ? sanitize_text_field($_GET['robodesk_ticket_priority']) : '';
@@ -116,7 +122,25 @@ function robodesk_my_tickets_shortcode()
             ),
         );
     }
-
+    add_filter('posts_join', function ($join) {
+        global $wpdb;
+        $join .= " LEFT JOIN {$wpdb->term_relationships} AS tr ON ($wpdb->posts.ID = tr.object_id)";
+        $join .= " LEFT JOIN {$wpdb->term_taxonomy} AS tt ON (tr.term_taxonomy_id = tt.term_taxonomy_id AND tt.taxonomy = 'robodesk_ticket_priority')";
+        $join .= " LEFT JOIN {$wpdb->termmeta} AS tm ON (tt.term_id = tm.term_id AND tm.meta_key = 'taxonomy_order')";
+        return $join;
+    });
+    
+    add_filter('posts_groupby', function ($groupby) {
+        global $wpdb;
+        $groupby = "$wpdb->posts.ID";
+        return $groupby;
+    });
+    
+    add_filter('posts_orderby', function ($orderby) {
+        global $wpdb;
+        $orderby = "COALESCE(MIN(tm.meta_value), 9999) ASC";
+        return $orderby;
+    });
     $query = new WP_Query($args);
 
     $priority_terms = get_terms(array(

@@ -95,6 +95,7 @@ function robodesk_enqueue_admin_scripts($hook)
 {
     global $post;
     wp_enqueue_script('jquery');
+    
     wp_enqueue_script('jquery-ui-sortable');
     wp_enqueue_script('custom-taxonomy-order',ROBODESK_PLUGIN_URL . 'admin/assets/js/custom-taxonomy-order.js', array('jquery', 'jquery-ui-sortable'), time(), true);
     wp_localize_script('custom-taxonomy-order', 'taxonomyOrderData', array(

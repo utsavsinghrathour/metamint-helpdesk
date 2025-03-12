@@ -9,7 +9,6 @@ jQuery(document).ready(function($) {
                 termOrder.push(id);
             });
            
-            
             $.ajax({
                 url: taxonomyOrderData.ajax_url,
                 type: 'POST',

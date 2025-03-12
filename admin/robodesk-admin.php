@@ -74,11 +74,6 @@ function robodesk_add_admin_menu()
     );
 }
 
-
-
-
-
-// PHP
 function update_taxonomy_order() {
     if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'taxonomy_order_nonce')) {
         wp_send_json_error('Invalid nonce');
