@@ -99,7 +99,6 @@ function modify_taxonomy_query($query) {
     if (is_admin() && 
         isset($query->query_vars['taxonomy']) && 
         $query->query_vars['taxonomy'] === 'robodesk_ticket_priority') {
-        
         $query->query_vars['meta_key'] = 'taxonomy_order';
         $query->query_vars['orderby'] = array(
             'meta_value_num' => 'ASC',

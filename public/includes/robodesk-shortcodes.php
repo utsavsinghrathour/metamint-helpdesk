@@ -73,7 +73,28 @@ function robodesk_ticket_form_shortcode()
     }
 }
 
-// Shortcode to display user's tickets
+function order_posts_by_priority_term_meta($clauses, $query) {
+   
+    if (!$query->get('order_by_tax_priority')) {
+        return $clauses;
+    }
+    global $wpdb;  
+    $clauses['join'] .= "
+        LEFT JOIN {$wpdb->term_relationships} AS tr ON {$wpdb->posts}.ID = tr.object_id
+        LEFT JOIN {$wpdb->term_taxonomy} AS tt ON tr.term_taxonomy_id = tt.term_taxonomy_id
+        LEFT JOIN {$wpdb->termmeta} AS tm ON tt.term_id = tm.term_id
+    ";
+
+    $clauses['where'] .= " AND tt.taxonomy = 'robodesk_ticket_priority'";
+    $clauses['where'] .= " AND tm.meta_key = 'taxonomy_order'";
+    $clauses['groupby'] = "{$wpdb->posts}.ID";
+    $clauses['fields'] .= ", COALESCE(MIN(CAST(tm.meta_value AS UNSIGNED)), 9999) as term_order";
+    $clauses['orderby'] = "term_order ASC";
+    return $clauses;
+}
+add_filter('posts_clauses', 'order_posts_by_priority_term_meta', 10, 2);
+
+
 add_shortcode('robodesk_my_tickets', 'robodesk_my_tickets_shortcode');
 
 
@@ -92,12 +113,7 @@ function robodesk_my_tickets_shortcode()
         'paged' => $paged,
         'orderby' => $orderby, 
         'order' => $order, 
-        'tax_query'      => array(
-        array(
-            'taxonomy' => 'robodesk_ticket_priority',
-            'operator' => 'EXISTS', // Ensure the post has a term in this taxonomy
-        ),
-    ),
+        'order_by_tax_priority' => true,
     );
 
     $selected_priority = isset($_GET['robodesk_ticket_priority']) ? sanitize_text_field($_GET['robodesk_ticket_priority']) : '';
@@ -122,25 +138,6 @@ function robodesk_my_tickets_shortcode()
             ),
         );
     }
-    add_filter('posts_join', function ($join) {
-        global $wpdb;
-        $join .= " LEFT JOIN {$wpdb->term_relationships} AS tr ON ($wpdb->posts.ID = tr.object_id)";
-        $join .= " LEFT JOIN {$wpdb->term_taxonomy} AS tt ON (tr.term_taxonomy_id = tt.term_taxonomy_id AND tt.taxonomy = 'robodesk_ticket_priority')";
-        $join .= " LEFT JOIN {$wpdb->termmeta} AS tm ON (tt.term_id = tm.term_id AND tm.meta_key = 'taxonomy_order')";
-        return $join;
-    });
-    
-    add_filter('posts_groupby', function ($groupby) {
-        global $wpdb;
-        $groupby = "$wpdb->posts.ID";
-        return $groupby;
-    });
-    
-    add_filter('posts_orderby', function ($orderby) {
-        global $wpdb;
-        $orderby = "COALESCE(MIN(tm.meta_value), 9999) ASC";
-        return $orderby;
-    });
     $query = new WP_Query($args);
 
     $priority_terms = get_terms(array(
