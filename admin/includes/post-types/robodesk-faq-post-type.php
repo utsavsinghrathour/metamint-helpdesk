@@ -1,6 +1,6 @@
 <?php
 // Register FAQ Post Type and Taxonomy
-add_action('register_post_type', 'robodesk_register_faq_post_type');
+add_action('init', 'robodesk_register_faq_post_type');
 function robodesk_register_faq_post_type()
 {
     $faq_labels = array(
