@@ -89,7 +89,8 @@ function order_posts_by_priority_term_meta($clauses, $query) {
     $clauses['where'] .= " AND tm.meta_key = 'taxonomy_order'";
     $clauses['groupby'] = "{$wpdb->posts}.ID";
     $clauses['fields'] .= ", COALESCE(MIN(CAST(tm.meta_value AS UNSIGNED)), 9999) as term_order";
-    $clauses['orderby'] = "term_order {$query->get('order')}";
+    $clauses['orderby'] = "term_order {$query->get('orderby')}";
+    $clauses['orderby'] = "term_order {$query->get('')}";
     return $clauses;
 }
 add_filter('posts_clauses', 'order_posts_by_priority_term_meta', 10, 2);
@@ -99,7 +100,9 @@ add_shortcode('robodesk_my_tickets', 'robodesk_my_tickets_shortcode');
 
 
 function robodesk_my_tickets_shortcode()
-{
+{   
+    global $wp;
+  
     $user_id = get_current_user_id();
     $paged = (get_query_var('paged')) ? absint(get_query_var('paged')) : 1;
 
@@ -198,7 +201,7 @@ function robodesk_my_tickets_shortcode()
                     <tr>
                         <td>
                             <?php
-                            $ticket_url = add_query_arg(array('robodesk_page' => 'my-tickets', 'tid' => get_the_ID()), site_url('/frontend-dashboard/'));
+                            $ticket_url = add_query_arg(array('robodesk_page' => 'my-tickets', 'tid' => get_the_ID()), site_url($wp->request));
                             ?>
                             <a href="<?php echo esc_url($ticket_url); ?>"><?php the_title(); ?></a>
                            
@@ -823,6 +826,7 @@ function robodesk_single_ticket_shortcode($atts)
                 <option value="completed" <?php selected($status, 'completed'); ?>>Completed</option>
             </select>
         </div>
+        <?php if(is_admin()) : ?>
         <div class="robodesk-ticket-notes">
             <h3>Ticket Notes</h3>
             <?php
@@ -926,6 +930,7 @@ function robodesk_single_ticket_shortcode($atts)
                 <input type="submit" value="Add Note">
             </form>
         </div>
+        <?php endif; ?>
     </div>
 <?php
     return ob_get_clean();
