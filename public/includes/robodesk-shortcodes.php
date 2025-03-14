@@ -935,7 +935,17 @@ function robodesk_single_ticket_shortcode($atts)
             </form>
         </div>
         <?php endif;
-            robodesk_get_comments($ticket_id)
+          
+          $args = array(
+            'post_id' => $ticket_id,
+            'status' => 'approve',
+            'type' => 'robodesk_ticket', 
+            'order' => 'ASC',
+        );
+        
+        $comments = get_comments($args);
+        
+        // var_dump($comments);
         
         ?>
         
@@ -960,19 +970,42 @@ function robodesk_get_comments($ticketid){
     $comments = get_comments($args);
 
     if ($comments) {
-        echo '<div class="robodesk-ticket-notes">';
-        echo '<h3>Ticket replies</h3>';
-        echo '<ul>';
-        foreach ($comments as $comment) {
-            echo '<li>';
-            echo '<p><strong>' . esc_html($comment->comment_author) . '</strong> on ' . mysql2date(get_option('date_format'), $comment->comment_date) . ':</p>';
-            echo '<p>' . esc_html($comment->comment_content) . '</p>';
-            echo '</li>';
-        }
-        echo '</ul>';
-        echo '</div>';
+        wp_list_comments(array(
+            'style' => 'ul',
+            'callback' => 'robodesk_comment_callback', 
+            'reverse_top_level' => false, 
+        ), $comments);
     }
     
+}
+
+function robodesk_comment_callback($comment, $args, $depth) {
+
+
+    ?>
+    <li <?php comment_class(); ?> id="comment-<?php comment_ID(); ?>">
+        <div class="comment-author vcard">
+            <?php echo get_avatar($comment, 48); ?>
+            <cite class="fn"><?php echo esc_html($comment->comment_author); ?></cite> 
+            <span class="says">says:</span>
+        </div>
+        
+        <?php if ($comment->comment_approved == '0') : ?>
+            <em><?php _e('Your comment is awaiting moderation.'); ?></em>
+            <br />
+        <?php endif; ?>
+
+        <div class="comment-meta commentmetadata">
+            <a href="<?php echo esc_url(get_comment_link($comment->comment_ID)); ?>">
+                <?php printf(__('%1$s at %2$s'), get_comment_date(), get_comment_time()); ?>
+            </a>
+        </div>
+
+        <div class="comment-content">
+            <?php comment_text(); ?>
+        </div>
+    </li>
+    <?php
 }
 
 
