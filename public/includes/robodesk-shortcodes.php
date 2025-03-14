@@ -89,7 +89,7 @@ function order_posts_by_priority_term_meta($clauses, $query) {
     $clauses['where'] .= " AND tm.meta_key = 'taxonomy_order'";
     $clauses['groupby'] = "{$wpdb->posts}.ID";
     $clauses['fields'] .= ", COALESCE(MIN(CAST(tm.meta_value AS UNSIGNED)), 9999) as term_order";
-    $clauses['orderby'] = "term_order ASC";
+    $clauses['orderby'] = "term_order {$query->get('order')}";
     return $clauses;
 }
 add_filter('posts_clauses', 'order_posts_by_priority_term_meta', 10, 2);
