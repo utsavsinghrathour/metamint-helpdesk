@@ -95,7 +95,7 @@ function robodesk_enqueue_admin_scripts($hook)
 {
     global $post;
     wp_enqueue_script('jquery');
-    if(!empty($_GET) && $_GET['taxonomy'] == 'robodesk_ticket_priority' && $_GET['post_type'] == 'robodesk_ticket' ){
+    if(!empty($_GET) && isset($_GET['taxonomy']) && $_GET['taxonomy'] == 'robodesk_ticket_priority' && $_GET['post_type'] == 'robodesk_ticket' ){
         wp_enqueue_script('jquery-ui-sortable');
         wp_enqueue_script('custom-taxonomy-order',ROBODESK_PLUGIN_URL . 'admin/assets/js/custom-taxonomy-order.js', array('jquery', 'jquery-ui-sortable'), time(), true);
         wp_localize_script('custom-taxonomy-order', 'taxonomyOrderData', array(
