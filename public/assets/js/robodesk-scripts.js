@@ -1,5 +1,11 @@
 jQuery(document).ready(function($) {
-    // Ticket Status Change
+    tinymce.init({
+        selector: '#ticket_content',  
+        menubar: false,
+        toolbar: 'bold italic | link | bullist numlist',
+        statusbar: false,
+        plugins: 'lists link', 
+    });
 
     $('#change-ticket-status').change(function() {
         var ticketId = $(this).data('ticket-id');

@@ -64,6 +64,9 @@ function robodesk_enqueue_scripts()
         add_action('admin_enqueue_scripts', 'robodesk_enqueue_admin_scripts');
       
     } else {
+        
+        wp_enqueue_script('wp-tinymce');
+        
         wp_enqueue_style('robodesk-styles', ROBODESK_PLUGIN_URL . 'public/assets/css/robodesk-styles.css', array(), '1.0');
     
         wp_enqueue_script('robodesk-scripts', ROBODESK_PLUGIN_URL . 'public/assets/js/robodesk-scripts.js', array('jquery'), '1.0', true);
