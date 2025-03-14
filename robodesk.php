@@ -207,3 +207,8 @@ function robodesk_hide_admin_bar_for_support_customer()
 add_action('init', 'robodesk_hide_admin_bar_for_support_customer');
 
 
+
+add_action('wp_head', function(){
+
+
+});

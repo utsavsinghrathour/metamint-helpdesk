@@ -198,7 +198,7 @@ function robodesk_my_tickets_shortcode()
                     <tr>
                         <td>
                             <?php
-                            $ticket_url = add_query_arg(array('robodesk_page' => 'my-tickets', 'robodesk_ticket_id' => get_the_ID()), get_permalink());
+                            $ticket_url = add_query_arg(array('robodesk_page' => 'my-tickets', 'tid' => get_the_ID()), site_url('/frontend-dashboard/'));
                             ?>
                             <a href="<?php echo esc_url($ticket_url); ?>"><?php the_title(); ?></a>
                            
@@ -241,11 +241,12 @@ function robodesk_frontend_dashboard_shortcode()
     if (is_user_logged_in()) {
         $user_id = get_current_user_id();
         $current_page = get_query_var('robodesk_page');
+      
         if (empty($current_page)) {
             $current_page = isset($_GET['robodesk_page']) ? $_GET['robodesk_page'] : 'dashboard';
         }
 
-        $ticket_id = get_query_var('tid'); // Get the ticket ID from the query var
+        $ticket_id = get_query_var('tid'); 
         if (empty($ticket_id)) {
             $ticket_id = isset($_GET['tid']) ? $_GET['tid'] : '';
         }
@@ -632,7 +633,6 @@ function robodesk_frontend_dashboard_menu($items)
 }
 add_filter('robodesk_frontend_dashboard_menu_items', 'robodesk_frontend_dashboard_menu');
 
-// Function to display the create ticket page content
 function robodesk_create_ticket_page()
 {
     if (is_user_logged_in()) {
@@ -648,16 +648,14 @@ function robodesk_create_ticket_page()
                 <label for="ticket_content">Description:</label><br>
                 <!-- <textarea id="ticket_content" name="ticket_content" rows="4" required></textarea><br><br> -->
                 <?php
-      
-               
-                    $args = array(
-                            'media_buttons' => false, 
-                            'textarea_name' => 'ticket_content',
-                            'textarea_rows' => get_option('default_post_edit_rows', 10), 
-                            'quicktags' => false, 
-                        );
-                    wp_editor( false, 'ticket_content', $args );
-                    
+                $args = array(
+                        'media_buttons' => false, 
+                        'textarea_name' => 'ticket_content',
+                        'textarea_rows' => get_option('default_post_edit_rows', 10), 
+                        'quicktags' => false, 
+                    );
+                wp_editor( false, 'ticket_content', $args );
+                
                 ?>
 
                 <label for="ticket_priority">Priority:</label><br>
@@ -741,7 +739,9 @@ function robodesk_profile_content_page()
 function robodesk_my_tickets_content_page()
 {
     // ... my tickets page content
-    return robodesk_my_tickets_shortcode(); // Call the existing shortcode function
+
+    
+    return robodesk_my_tickets_shortcode();
 }
 
 
