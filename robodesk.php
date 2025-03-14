@@ -65,11 +65,9 @@ function robodesk_enqueue_scripts()
       
     } else {
         
-        wp_enqueue_script('wp-tinymce');
-        
         wp_enqueue_style('robodesk-styles', ROBODESK_PLUGIN_URL . 'public/assets/css/robodesk-styles.css', array(), '1.0');
     
-        wp_enqueue_script('robodesk-scripts', ROBODESK_PLUGIN_URL . 'public/assets/js/robodesk-scripts.js', array('jquery'), '1.0', true);
+        wp_enqueue_script('robodesk-scripts', ROBODESK_PLUGIN_URL . 'public/assets/js/robodesk-scripts.js', array('jquery'), time(), true);
 
         wp_localize_script('robodesk-scripts', 'robodesk_ajax_object', array(
             'ajax_url' => admin_url('admin-ajax.php'),

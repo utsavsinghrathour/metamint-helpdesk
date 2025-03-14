@@ -1,11 +1,4 @@
 jQuery(document).ready(function($) {
-    tinymce.init({
-        selector: '#ticket_content',  
-        menubar: false,
-        toolbar: 'bold italic | link | bullist numlist',
-        statusbar: false,
-        plugins: 'lists link', 
-    });
 
     $('#change-ticket-status').change(function() {
         var ticketId = $(this).data('ticket-id');
@@ -307,7 +300,7 @@ jQuery(document).ready(function($) {
         }
     });
   
-    $('body').append('<div class="spinner"></div>');
+        $('body').append('<div class="spinner"></div>');
         $('#robodesk-create-ticket').submit(function (e) {
             e.preventDefault(); 
             $('#robodesk-response-message').html('');

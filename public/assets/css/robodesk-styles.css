@@ -370,3 +370,9 @@
     color: #fff;
     border-color: #0073aa;
 }
+
+/* Tiny mce style */
+
+.tox-tbtn[aria-label="Fullscreen"] {
+    margin-left: auto;
+}

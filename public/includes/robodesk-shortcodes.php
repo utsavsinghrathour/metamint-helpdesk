@@ -646,7 +646,19 @@ function robodesk_create_ticket_page()
                 <input type="text" id="ticket_title" name="ticket_title" required><br><br>
 
                 <label for="ticket_content">Description:</label><br>
-                <textarea id="ticket_content" name="ticket_content" rows="4" required></textarea><br><br>
+                <!-- <textarea id="ticket_content" name="ticket_content" rows="4" required></textarea><br><br> -->
+                <?php
+      
+               
+                    $args = array(
+                            'media_buttons' => false, 
+                            'textarea_name' => 'ticket_content',
+                            'textarea_rows' => get_option('default_post_edit_rows', 10), 
+                            'quicktags' => false, 
+                        );
+                    wp_editor( false, 'ticket_content', $args );
+                    
+                ?>
 
                 <label for="ticket_priority">Priority:</label><br>
                 <?php
