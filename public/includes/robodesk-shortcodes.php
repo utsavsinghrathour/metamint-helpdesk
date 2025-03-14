@@ -798,9 +798,12 @@ function robodesk_single_ticket_shortcode($atts)
     $time_ago_class = '';
 
     $current_user = wp_get_current_user();
+    $caps = $current_user->caps;
+    
     $allowed_roles = array('administrator', 'editor', 'support_agent', 'support_manager');
+    
     $show_private_checkbox = array_intersect($allowed_roles, $current_user->roles);
-
+    
     if (strtotime($updated_date) < strtotime('-30 hours')) {
         $time_ago_class = 'robodesk-time-ago-over-30';
     }
@@ -818,6 +821,7 @@ function robodesk_single_ticket_shortcode($atts)
         <div class="robodesk-ticket-content">
             <?php echo apply_filters('the_content', $ticket->post_content); ?>
         </div>
+        <?php if(in_array('administrator',$current_user->roles)) :?>
         <div class="robodesk-ticket-actions">
             <select id="change-ticket-status" data-ticket-id="<?php echo esc_attr($ticket_id); ?>">
                 <option value="new" <?php selected($status, 'new'); ?>>New</option>
@@ -826,7 +830,7 @@ function robodesk_single_ticket_shortcode($atts)
                 <option value="completed" <?php selected($status, 'completed'); ?>>Completed</option>
             </select>
         </div>
-        <?php if(is_admin()) : ?>
+
         <div class="robodesk-ticket-notes">
             <h3>Ticket Notes</h3>
             <?php
@@ -931,6 +935,10 @@ function robodesk_single_ticket_shortcode($atts)
             </form>
         </div>
         <?php endif; ?>
+        
+        <!--  -->
+        <!-- is_admin condition closed -->
+       
     </div>
 <?php
     return ob_get_clean();
