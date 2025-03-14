@@ -193,6 +193,7 @@ function robodesk_my_tickets_shortcode()
                     if ($terms && !is_wp_error($terms)) {
                         $priority_name = $terms[0]->name;
                     }
+            
             ?>
                     <tr>
                         <td>
@@ -200,6 +201,8 @@ function robodesk_my_tickets_shortcode()
                             $ticket_url = add_query_arg(array('robodesk_page' => 'my-tickets', 'robodesk_ticket_id' => get_the_ID()), get_permalink());
                             ?>
                             <a href="<?php echo esc_url($ticket_url); ?>"><?php the_title(); ?></a>
+                           
+                            <p class="ticket-date"><?php echo get_the_date( 'dS M Y'); ?></p>
                         </td>
                         <td><?php echo esc_html($status); ?></td>
                         <td><?php echo esc_html($priority_name); ?></td>
