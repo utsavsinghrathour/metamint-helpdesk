@@ -934,7 +934,10 @@ function robodesk_single_ticket_shortcode($atts)
                 <input type="submit" value="Add Note">
             </form>
         </div>
-        <?php endif; ?>
+        <?php endif;
+            robodesk_get_comments($ticket_id)
+        
+        ?>
         
         <!--  -->
         <!-- is_admin condition closed -->
@@ -944,6 +947,33 @@ function robodesk_single_ticket_shortcode($atts)
     return ob_get_clean();
 }
 add_shortcode('robodesk_single_ticket', 'robodesk_single_ticket_shortcode');
+
+
+function robodesk_get_comments($ticketid){
+    
+    $args = array(
+        'post_id' => $ticketid,
+        'status' => 'approve',
+        'type' => 'robodesk_ticket', // Only get robodesk_note comments
+        'order' => 'ASC',
+    );
+    $comments = get_comments($args);
+
+    if ($comments) {
+        echo '<div class="robodesk-ticket-notes">';
+        echo '<h3>Ticket replies</h3>';
+        echo '<ul>';
+        foreach ($comments as $comment) {
+            echo '<li>';
+            echo '<p><strong>' . esc_html($comment->comment_author) . '</strong> on ' . mysql2date(get_option('date_format'), $comment->comment_date) . ':</p>';
+            echo '<p>' . esc_html($comment->comment_content) . '</p>';
+            echo '</li>';
+        }
+        echo '</ul>';
+        echo '</div>';
+    }
+    
+}
 
 
 //Shortcode for login form
