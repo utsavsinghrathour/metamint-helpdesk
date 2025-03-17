@@ -41,7 +41,7 @@ function robodesk_ticket_form_shortcode()
             </form>
         </div>
     <?php
-    
+
 
         if (isset($_POST['ticket_title']) && isset($_POST['ticket_content']) && isset($_POST['ticket_origin']) && isset($_POST['ticket_priority'])) {
             $ticket_title = sanitize_text_field($_POST['ticket_title']);
@@ -73,12 +73,13 @@ function robodesk_ticket_form_shortcode()
     }
 }
 
-function order_posts_by_priority_term_meta($clauses, $query) {
-   
+function order_posts_by_priority_term_meta($clauses, $query)
+{
+
     if (!$query->get('order_by_tax_priority')) {
         return $clauses;
     }
-    global $wpdb;  
+    global $wpdb;
     $clauses['join'] .= "
         LEFT JOIN {$wpdb->term_relationships} AS tr ON {$wpdb->posts}.ID = tr.object_id
         LEFT JOIN {$wpdb->term_taxonomy} AS tt ON tr.term_taxonomy_id = tt.term_taxonomy_id
@@ -100,22 +101,22 @@ add_shortcode('robodesk_my_tickets', 'robodesk_my_tickets_shortcode');
 
 
 function robodesk_my_tickets_shortcode()
-{   
+{
     global $wp;
-  
+
     $user_id = get_current_user_id();
     $paged = (get_query_var('paged')) ? absint(get_query_var('paged')) : 1;
 
-    $orderby = isset($_GET['orderby']) ? sanitize_text_field($_GET['orderby']) : 'date'; 
-    $order = isset($_GET['order']) ? sanitize_text_field($_GET['order']) : 'ASC'; 
+    $orderby = isset($_GET['orderby']) ? sanitize_text_field($_GET['orderby']) : 'date';
+    $order = isset($_GET['order']) ? sanitize_text_field($_GET['order']) : 'ASC';
 
     $args = array(
         'post_type' => 'robodesk_ticket',
         'author' => $user_id,
         'posts_per_page' => 10,
         'paged' => $paged,
-        'orderby' => $orderby, 
-        'order' => $order, 
+        'orderby' => $orderby,
+        'order' => $order,
         'order_by_tax_priority' => true,
     );
 
@@ -196,7 +197,7 @@ function robodesk_my_tickets_shortcode()
                     if ($terms && !is_wp_error($terms)) {
                         $priority_name = $terms[0]->name;
                     }
-            
+
             ?>
                     <tr>
                         <td>
@@ -204,8 +205,8 @@ function robodesk_my_tickets_shortcode()
                             $ticket_url = add_query_arg(array('robodesk_page' => 'my-tickets', 'tid' => get_the_ID()), site_url($wp->request));
                             ?>
                             <a href="<?php echo esc_url($ticket_url); ?>"><?php the_title(); ?></a>
-                           
-                            <p class="ticket-date"><?php echo get_the_date( 'dS M Y'); ?></p>
+
+                            <p class="ticket-date"><?php echo get_the_date('dS M Y'); ?></p>
                         </td>
                         <td><?php echo esc_html($status); ?></td>
                         <td><?php echo esc_html($priority_name); ?></td>
@@ -220,19 +221,19 @@ function robodesk_my_tickets_shortcode()
         </tbody>
     </table>
     <?php
-        $big = 999999999; // Need an unlikely integer
-        $pagination = paginate_links(array(
-            'base' => str_replace($big, '%#%', esc_url(get_pagenum_link($big))),
-            'format' => '?paged=%#%',
-            'current' => max(1, $paged),
-            'total' => $query->max_num_pages,
-            'prev_text' => __('« Previous'),
-            'next_text' => __('Next »'),
-        ));
-    
-        if ($pagination) {
-            echo '<div class="pagination">' . $pagination . '</div>';
-        }
+    $big = 999999999; // Need an unlikely integer
+    $pagination = paginate_links(array(
+        'base' => str_replace($big, '%#%', esc_url(get_pagenum_link($big))),
+        'format' => '?paged=%#%',
+        'current' => max(1, $paged),
+        'total' => $query->max_num_pages,
+        'prev_text' => __('« Previous'),
+        'next_text' => __('Next »'),
+    ));
+
+    if ($pagination) {
+        echo '<div class="pagination">' . $pagination . '</div>';
+    }
     return ob_get_clean();
 }
 
@@ -244,12 +245,12 @@ function robodesk_frontend_dashboard_shortcode()
     if (is_user_logged_in()) {
         $user_id = get_current_user_id();
         $current_page = get_query_var('robodesk_page');
-      
+
         if (empty($current_page)) {
             $current_page = isset($_GET['robodesk_page']) ? $_GET['robodesk_page'] : 'dashboard';
         }
 
-        $ticket_id = get_query_var('tid'); 
+        $ticket_id = get_query_var('tid');
         if (empty($ticket_id)) {
             $ticket_id = isset($_GET['tid']) ? $_GET['tid'] : '';
         }
@@ -652,13 +653,13 @@ function robodesk_create_ticket_page()
                 <!-- <textarea id="ticket_content" name="ticket_content" rows="4" required></textarea><br><br> -->
                 <?php
                 $args = array(
-                        'media_buttons' => false, 
-                        'textarea_name' => 'ticket_content',
-                        'textarea_rows' => get_option('default_post_edit_rows', 10), 
-                        'quicktags' => false, 
-                    );
-                wp_editor( false, 'ticket_content', $args );
-                
+                    'media_buttons' => false,
+                    'textarea_name' => 'ticket_content',
+                    'textarea_rows' => get_option('default_post_edit_rows', 10),
+                    'quicktags' => false,
+                );
+                wp_editor(false, 'ticket_content', $args);
+
                 ?>
 
                 <label for="ticket_priority">Priority:</label><br>
@@ -676,7 +677,7 @@ function robodesk_create_ticket_page()
                 <input type="hidden" name="action" value="robodesk_create_new_ticket">
                 <?php wp_nonce_field('robodesk_create_ticket_nonce'); ?>
                 <input type="submit" value="Create Ticket">
-               
+
             </form>
             <div id="robodesk-response-message"></div>
         </div>
@@ -743,7 +744,7 @@ function robodesk_my_tickets_content_page()
 {
     // ... my tickets page content
 
-    
+
     return robodesk_my_tickets_shortcode();
 }
 
@@ -799,14 +800,19 @@ function robodesk_single_ticket_shortcode($atts)
 
     $current_user = wp_get_current_user();
     $caps = $current_user->caps;
-    
+
     $allowed_roles = array('administrator', 'editor', 'support_agent', 'support_manager');
-    
+
     $show_private_checkbox = array_intersect($allowed_roles, $current_user->roles);
-    
+
     if (strtotime($updated_date) < strtotime('-30 hours')) {
         $time_ago_class = 'robodesk-time-ago-over-30';
     }
+
+    global $post, $withcomments;
+    $original_post = $post;
+    $post = $ticket;
+    $withcomments = true;
 
     ob_start();
 ?>
@@ -821,193 +827,198 @@ function robodesk_single_ticket_shortcode($atts)
         <div class="robodesk-ticket-content">
             <?php echo apply_filters('the_content', $ticket->post_content); ?>
         </div>
-        <?php if(in_array('administrator',$current_user->roles)) :?>
-        <div class="robodesk-ticket-actions">
-            <select id="change-ticket-status" data-ticket-id="<?php echo esc_attr($ticket_id); ?>">
-                <option value="new" <?php selected($status, 'new'); ?>>New</option>
-                <option value="in-progress" <?php selected($status, 'in-progress'); ?>>In Progress</option>
-                <option value="archived" <?php selected($status, 'archived'); ?>>Archived</option>
-                <option value="completed" <?php selected($status, 'completed'); ?>>Completed</option>
-            </select>
-        </div>
+        <?php if (in_array('administrator', $current_user->roles)) : ?>
+            <div class="robodesk-ticket-actions">
+                <select id="change-ticket-status" data-ticket-id="<?php echo esc_attr($ticket_id); ?>">
+                    <option value="new" <?php selected($status, 'new'); ?>>New</option>
+                    <option value="in-progress" <?php selected($status, 'in-progress'); ?>>In Progress</option>
+                    <option value="archived" <?php selected($status, 'archived'); ?>>Archived</option>
+                    <option value="completed" <?php selected($status, 'completed'); ?>>Completed</option>
+                </select>
+            </div>
 
-        <div class="robodesk-ticket-notes">
-            <h3>Ticket Notes</h3>
-            <?php
-            global $wpdb;
-            $notes_table = $wpdb->prefix . 'robodesk_ticket_notes';
-            // $notes = $wpdb->get_results("SELECT * FROM $notes_table WHERE ticket_id = $ticket_id ORDER BY created_at ASC");
-
-            $current_user = wp_get_current_user();
-            $allowed_roles = array('administrator', 'editor', 'support_agent', 'support_manager');
-            $is_allowed_to_view_private = array_intersect($allowed_roles, $current_user->roles);
-
-
-            $notes_query = "SELECT * FROM $notes_table WHERE ticket_id = $ticket_id AND type = 'user_note'";
-            if (!$is_allowed_to_view_private) {
-                $notes_query .= " AND is_private = 0";
-            }
-            $notes_query .= " ORDER BY created_at ASC";
-            $notes = $wpdb->get_results($notes_query);
-
-
-            /**
-            $notes_query = "SELECT * FROM $notes_table WHERE ticket_id = $ticket_id AND type = 'user_note'";
-            if (!$is_allowed_to_view_private) {
-                $notes_query .= " AND is_private = 0";
-            }
-            $notes_query .= " ORDER BY created_at ASC";
-            $notes = $wpdb->get_results($notes_query);
-             **/
-            if ($notes) : ?>
-                <ul>
-                    <?php foreach ($notes as $note) :
-
-                        $attachments = get_posts(array(
-                            'post_type' => 'attachment',
-                            'meta_key' => '_robodesk_ticket_note_id',
-                            'meta_value' => $note->id,
-                            'posts_per_page' => -1
-                        ));
-                        $user = get_user_by('id', $note->user_id);
-                        $user_name = $user ? $user->display_name : 'Guest';
-                        $note_time = date('Y-m-d H:i:s', strtotime($note->created_at));
-                        $note_time_ago = human_time_diff(strtotime($note->created_at), current_time('timestamp'));
-                    ?>
-                        <li>
-                            <div class="robodesk-note-meta">
-                                <?php if ($user): ?>
-                                    <strong><?php echo esc_html($user_name); ?></strong> - <?php echo esc_html($note_time) . ' (' . $note_time_ago . ')'; ?>
-                                <?php else: ?>
-                                    <strong>Guest</strong> - <?php echo esc_html($note_time) . ' (' . $note_time_ago . ')'; ?>
-                                <?php endif; ?>
-                            </div>
-                            <div class="robodesk-note-content">
-                                <?php echo wp_kses_post($note->note_content); ?>
-                                <?php if ($attachments): ?>
-                                    <div class="robodesk-note-attachments">
-                                        <p><strong>Attachments:</strong></p>
-                                        <ul>
-                                            <?php foreach ($attachments as $attachment): ?>
-                                                <li><a href="<?php echo wp_get_attachment_url($attachment->ID); ?>" target="_blank" rel="noopener noreferrer"><?php echo esc_html($attachment->post_title); ?></a></li>
-                                            <?php endforeach; ?>
-                                        </ul>
-                                    </div>
-                                <?php endif; ?>
-                            </div>
-                        </li>
-                    <?php endforeach; ?>
-                </ul>
-            <?php else : ?>
-                <p>No notes yet.</p>
-            <?php endif; ?>
-            <form id="robodesk-add-note" enctype="multipart/form-data"> <--- Add enctype for file uploads
-                    <?php if ($show_private_checkbox): ?>
-                    <label for="is_private">Private Note (Visible to Admins, Editors, Support Agents, and Support Managers only)</label>
-                    <input type="checkbox" id="is_private" name="is_private" value="1"><br>
-                <?php endif; ?>
-
+            <div class="robodesk-ticket-notes">
+                <h3>Ticket Notes</h3>
                 <?php
-                $settings = array(
-                    'media_buttons' => true,
-                    'textarea_name' => 'note_content',
-                    'textarea_rows' => 10,
-                    'tinymce' => array(
-                        'wp_autoresize_on_load' => true,
-                        'toolbar1' => 'bold,italic,underline,link,unlink,bullist,numlist',
-                        'toolbar2' => '',
-                        'toolbar3' => '',
-                        'toolbar4' => '',
-                    ), 
-                    'quicktags' => false, 
-                );
-                wp_editor('', 'note_content', $settings); 
-                ?>
-                <div class="file-upload-wrapper">
-                    <label for="note_attachment" class="custom-file-upload">Upload File</label>
-                    <input type="file" name="note_content_ifr" id="note_attachment" style="display: none;" multiple>
-                    <div id="file-list"></div>
-                </div>
-                <input type="hidden" name="action" value="robodesk_add_ticket_note">
-                <input type="hidden" name="ticket_id" value="<?php echo esc_attr($ticket_id); ?>">
-                <?php wp_nonce_field('robodesk_add_ticket_note_nonce'); ?>
-                <input type="submit" value="Add Note">
-            </form>
+                global $wpdb;
+                $notes_table = $wpdb->prefix . 'robodesk_ticket_notes';
+                // $notes = $wpdb->get_results("SELECT * FROM $notes_table WHERE ticket_id = $ticket_id ORDER BY created_at ASC");
+
+                $current_user = wp_get_current_user();
+                $allowed_roles = array('administrator', 'editor', 'support_agent', 'support_manager');
+                $is_allowed_to_view_private = array_intersect($allowed_roles, $current_user->roles);
+
+
+                $notes_query = "SELECT * FROM $notes_table WHERE ticket_id = $ticket_id AND type = 'user_note'";
+                if (!$is_allowed_to_view_private) {
+                    $notes_query .= " AND is_private = 0";
+                }
+                $notes_query .= " ORDER BY created_at ASC";
+                $notes = $wpdb->get_results($notes_query);
+
+
+                /**
+            $notes_query = "SELECT * FROM $notes_table WHERE ticket_id = $ticket_id AND type = 'user_note'";
+            if (!$is_allowed_to_view_private) {
+                $notes_query .= " AND is_private = 0";
+            }
+            $notes_query .= " ORDER BY created_at ASC";
+            $notes = $wpdb->get_results($notes_query);
+                 **/
+                if ($notes) : ?>
+                    <ul>
+                        <?php foreach ($notes as $note) :
+
+                            $attachments = get_posts(array(
+                                'post_type' => 'attachment',
+                                'meta_key' => '_robodesk_ticket_note_id',
+                                'meta_value' => $note->id,
+                                'posts_per_page' => -1
+                            ));
+                            $user = get_user_by('id', $note->user_id);
+                            $user_name = $user ? $user->display_name : 'Guest';
+                            $note_time = date('Y-m-d H:i:s', strtotime($note->created_at));
+                            $note_time_ago = human_time_diff(strtotime($note->created_at), current_time('timestamp'));
+                        ?>
+                            <li>
+                                <div class="robodesk-note-meta">
+                                    <?php if ($user): ?>
+                                        <strong><?php echo esc_html($user_name); ?></strong> - <?php echo esc_html($note_time) . ' (' . $note_time_ago . ')'; ?>
+                                    <?php else: ?>
+                                        <strong>Guest</strong> - <?php echo esc_html($note_time) . ' (' . $note_time_ago . ')'; ?>
+                                    <?php endif; ?>
+                                </div>
+                                <div class="robodesk-note-content">
+                                    <?php echo wp_kses_post($note->note_content); ?>
+                                    <?php if ($attachments): ?>
+                                        <div class="robodesk-note-attachments">
+                                            <p><strong>Attachments:</strong></p>
+                                            <ul>
+                                                <?php foreach ($attachments as $attachment): ?>
+                                                    <li><a href="<?php echo wp_get_attachment_url($attachment->ID); ?>" target="_blank" rel="noopener noreferrer"><?php echo esc_html($attachment->post_title); ?></a></li>
+                                                <?php endforeach; ?>
+                                            </ul>
+                                        </div>
+                                    <?php endif; ?>
+                                </div>
+                            </li>
+                        <?php endforeach; ?>
+                    </ul>
+                <?php else : ?>
+                    <p>No notes yet.</p>
+                <?php endif; ?>
+                <form id="robodesk-add-note" enctype="multipart/form-data"> <--- Add enctype for file uploads
+                        <?php if ($show_private_checkbox): ?>
+                        <label for="is_private">Private Note (Visible to Admins, Editors, Support Agents, and Support Managers only)</label>
+                        <input type="checkbox" id="is_private" name="is_private" value="1"><br>
+                    <?php endif; ?>
+
+                    <?php
+                    $settings = array(
+                        'media_buttons' => true,
+                        'textarea_name' => 'note_content',
+                        'textarea_rows' => 10,
+                        'tinymce' => array(
+                            'wp_autoresize_on_load' => true,
+                            'toolbar1' => 'bold,italic,underline,link,unlink,bullist,numlist',
+                            'toolbar2' => '',
+                            'toolbar3' => '',
+                            'toolbar4' => '',
+                        ),
+                        'quicktags' => false,
+                    );
+                    wp_editor('', 'note_content', $settings);
+                    ?>
+                    <div class="file-upload-wrapper">
+                        <label for="note_attachment" class="custom-file-upload">Upload File</label>
+                        <input type="file" name="note_content_ifr" id="note_attachment" style="display: none;" multiple>
+                        <div id="file-list"></div>
+                    </div>
+                    <input type="hidden" name="action" value="robodesk_add_ticket_note">
+                    <input type="hidden" name="ticket_id" value="<?php echo esc_attr($ticket_id); ?>">
+                    <?php wp_nonce_field('robodesk_add_ticket_note_nonce'); ?>
+                    <input type="submit" value="Add Note">
+                </form>
+            </div>
+        <?php endif; ?>
+
+        <div class="robodesk-ticket-comments">
+            <?php
+
+            if (comments_open($ticket_id) || get_comments_number($ticket_id) > 0) {
+                
+                $plugin_template = plugin_dir_path(dirname(__FILE__, 2)) . 'templates/comments-ticket.php';
+                
+                add_filter('comments_template', function($theme_template) use ($plugin_template) {
+                    if (file_exists($plugin_template)) {
+                        return $plugin_template;
+                    }
+                    return $theme_template;
+                });
+                
+               comments_template();
+             
+            } else {
+                echo '<p>Comments are closed.</p>';
+            }
+            ?>
         </div>
-        <?php endif;
-          
-          $args = array(
-            'post_id' => $ticket_id,
-            'status' => 'approve',
-            'type' => 'robodesk_ticket', 
-            'order' => 'ASC',
-        );
-        
-        $comments = get_comments($args);
-        
-        // var_dump($comments);
-        
-        ?>
-        
-        <!--  -->
-        <!-- is_admin condition closed -->
-       
     </div>
+    <script type="text/javascript">
+        jQuery(document).ready(function($) {
+            $('.robodesk-ticket-comments #commentform').on('submit', function(e) {
+                e.preventDefault();
+                var form = $(this);
+                var formData = new FormData(this);
+                formData.append('action', 'robodesk_submit_comment');
+
+                $.ajax({
+                    url: '<?php echo admin_url('admin-ajax.php'); ?>',
+                    type: 'POST',
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    success: function(response) {
+                        if (response.success) {
+                            location.reload(); 
+                        } else {
+                            alert('Error: ' + response.data.message);
+                        }
+                    },
+                    error: function() {
+                        alert('An error occurred while submitting the comment.');
+                    }
+                });
+            });
+
+            $('.robodesk-ticket-comments .comment-reply-link').on('click', function(e) {
+                e.preventDefault();
+                var commentId = $(this).data('commentid');
+                $('#comment_parent').val(commentId);
+                $('#respond').insertAfter($(this).closest('.comment-body'));
+                $('#cancel-comment-reply-link').show();
+            });
+        });
+    </script>
 <?php
     return ob_get_clean();
 }
 add_shortcode('robodesk_single_ticket', 'robodesk_single_ticket_shortcode');
 
+function robodesk_submit_comment()
+{
+    $comment = wp_handle_comment_submission(wp_unslash($_POST));
 
-function robodesk_get_comments($ticketid){
-    
-    $args = array(
-        'post_id' => $ticketid,
-        'status' => 'approve',
-        'type' => 'robodesk_ticket', // Only get robodesk_note comments
-        'order' => 'ASC',
-    );
-    $comments = get_comments($args);
-
-    if ($comments) {
-        wp_list_comments(array(
-            'style' => 'ul',
-            'callback' => 'robodesk_comment_callback', 
-            'reverse_top_level' => false, 
-        ), $comments);
+    if (is_wp_error($comment)) {
+        wp_send_json_error(array(
+            'message' => $comment->get_error_message()
+        ));
+    } else {
+        wp_send_json_success();
     }
-    
 }
-
-function robodesk_comment_callback($comment, $args, $depth) {
-
-
-    ?>
-    <li <?php comment_class(); ?> id="comment-<?php comment_ID(); ?>">
-        <div class="comment-author vcard">
-            <?php echo get_avatar($comment, 48); ?>
-            <cite class="fn"><?php echo esc_html($comment->comment_author); ?></cite> 
-            <span class="says">says:</span>
-        </div>
-        
-        <?php if ($comment->comment_approved == '0') : ?>
-            <em><?php _e('Your comment is awaiting moderation.'); ?></em>
-            <br />
-        <?php endif; ?>
-
-        <div class="comment-meta commentmetadata">
-            <a href="<?php echo esc_url(get_comment_link($comment->comment_ID)); ?>">
-                <?php printf(__('%1$s at %2$s'), get_comment_date(), get_comment_time()); ?>
-            </a>
-        </div>
-
-        <div class="comment-content">
-            <?php comment_text(); ?>
-        </div>
-    </li>
-    <?php
-}
-
+add_action('wp_ajax_robodesk_submit_comment', 'robodesk_submit_comment');
+add_action('wp_ajax_nopriv_robodesk_submit_comment', 'robodesk_submit_comment');
 
 //Shortcode for login form
 function robodesk_login_form_shortcode()

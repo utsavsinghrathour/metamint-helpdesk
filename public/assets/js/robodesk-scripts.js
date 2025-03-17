@@ -65,6 +65,7 @@ jQuery(document).ready(function($) {
         });
     });
 
+
     // FAQ Voting
     $('.robodesk-faq-vote-button').click(function() {
         var faqId = $(this).data('faq-id');
