@@ -691,7 +691,6 @@ function robodesk_create_ticket_page()
 function robodesk_dashboard_content_page($notification_count, $open_tickets, $total_tickets)
 {
 
-    // ... infographs code
     ob_start();
     ?>
     <div class="robodesk-infographs">
@@ -774,19 +773,18 @@ add_filter('query_vars', 'robodesk_add_query_vars');
 
 function robodesk_single_ticket_shortcode($atts)
 {
-    // Extract shortcode attributes
+   
     $atts = shortcode_atts(array(
-        'id' => 0, // Default ticket ID is 0
+        'id' => 0, 
     ), $atts);
 
     $ticket_id = intval($atts['id']);
 
-    // Check if the ticket ID is valid
+   
     if ($ticket_id <= 0 || get_post_type($ticket_id) !== 'robodesk_ticket') {
         return '<div class="robodesk-container"><p>Invalid ticket ID.</p></div>';
     }
 
-    // Get ticket data
     $ticket = get_post($ticket_id);
     $status = get_post_meta($ticket_id, '_robodesk_ticket_status', true);
     $priority_terms = wp_get_object_terms($ticket_id, 'robodesk_ticket_priority');
