@@ -278,7 +278,7 @@ function robodesk_frontend_dashboard_shortcode()
         $total_tickets_query = new WP_Query($total_tickets_args);
         $total_tickets = $total_tickets_query->post_count;
 
-        // Get Notification Count
+
         global $wpdb;
         $notification_table = $wpdb->prefix . 'robodesk_ticket_notes';
         $notification_count = $wpdb->get_var("SELECT COUNT(*) FROM $notification_table WHERE user_id = $user_id AND status = 'unread'");
