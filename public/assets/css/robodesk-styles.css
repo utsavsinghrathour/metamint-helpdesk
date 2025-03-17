@@ -447,3 +447,12 @@
     display: table;
     clear: both;
 }
+
+
+#add-credential-button{
+    background-color: #333; 
+    border: none;
+    padding: 20px 65px;
+    font-size: var(--WooParagraph-smaller-font);
+    cursor: pointer;
+}

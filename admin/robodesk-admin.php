@@ -138,12 +138,10 @@ function set_default_taxonomy_order($term_id, $tt_id, $taxonomy) {
         $new_order = (!empty($terms) && get_term_meta($terms[0], 'taxonomy_order', true) !== '') 
             ? (int)get_term_meta($terms[0], 'taxonomy_order', true) + 1 
             : 0;
-            
         update_term_meta($term_id, 'taxonomy_order', $new_order);
     }
 }
 add_action('created_term', 'set_default_taxonomy_order', 10, 3);
-
 
 function custom_taxonomy_order($terms, $taxonomies, $args) {
     if (is_admin() && 
