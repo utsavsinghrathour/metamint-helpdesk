@@ -151,8 +151,12 @@ function custom_taxonomy_order($terms, $taxonomies, $args) {
         !isset($_GET['orderby'])) {
         
         usort($terms, function($a, $b) {
-            $a_order = get_term_meta($a->term_id, 'taxonomy_order', true);
-            $b_order = get_term_meta($b->term_id, 'taxonomy_order', true);
+            
+            $a_id = is_object($a) ? $a->term_id : $a;
+            $b_id = is_object($b) ? $b->term_id : $b;
+            
+            $a_order = get_term_meta($a_id, 'taxonomy_order', true);
+            $b_order = get_term_meta($b_id, 'taxonomy_order', true);
             $a_order = $a_order !== '' ? (int)$a_order : PHP_INT_MAX;
             $b_order = $b_order !== '' ? (int)$b_order : PHP_INT_MAX;
             
