@@ -302,12 +302,12 @@ function robodesk_frontend_dashboard_shortcode()
             </nav>
             <div class="robodesk-dashboard-content">
                 <?php
-                if (!empty($ticket_id) && get_post_type($ticket_id) == 'robodesk_ticket') { // Check if ticket_id is set and is a valid ticket
-                    // Display single ticket
-                    echo do_shortcode('[robodesk_single_ticket id="' . $ticket_id . '"]'); // Use your existing single ticket shortcode
+                if (!empty($ticket_id) && get_post_type($ticket_id) == 'robodesk_ticket') { 
+                  
+                    echo do_shortcode('[robodesk_single_ticket id="' . $ticket_id . '"]'); 
                 } else if (array_key_exists($current_page, $menu_items)) {
                     if ($current_page == 'dashboard') {
-                        echo $menu_items[$current_page]['function']($notification_count, $open_tickets, $total_tickets); // Pass the variables
+                        echo $menu_items[$current_page]['function']($notification_count, $open_tickets, $total_tickets); 
                     } else {
                         echo $menu_items[$current_page]['function']();
                     }
