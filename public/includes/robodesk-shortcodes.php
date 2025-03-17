@@ -41,8 +41,6 @@ function robodesk_ticket_form_shortcode()
             </form>
         </div>
     <?php
-
-
         if (isset($_POST['ticket_title']) && isset($_POST['ticket_content']) && isset($_POST['ticket_origin']) && isset($_POST['ticket_priority'])) {
             $ticket_title = sanitize_text_field($_POST['ticket_title']);
             $ticket_content = sanitize_textarea_field($_POST['ticket_content']);
@@ -971,7 +969,6 @@ function robodesk_single_ticket_shortcode($atts)
                 var form = $(this);
                 var formData = new FormData(this);
                 formData.append('action', 'robodesk_submit_comment');
-
                 $.ajax({
                     url: '<?php echo admin_url('admin-ajax.php'); ?>',
                     type: 'POST',
