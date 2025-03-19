@@ -105,7 +105,7 @@ function robodesk_register_ticket_post_type()
     $ticket_priority_args = array(
         'hierarchical'      => true,
         'labels'            => $ticket_priority_labels,
-        'publicly_queryable'=> true,
+        'publicly_queryable' => true,
         'show_ui'           => true,
         'show_admin_column' => true,
         'query_var'         => true,
