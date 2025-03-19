@@ -71,7 +71,8 @@ function robodesk_ticket_form_shortcode()
     }
 }
 
-function order_posts_by_term_meta($clauses, $query) {
+function order_posts_by_term_meta($clauses, $query)
+{
     // Check if our custom query parameter is set
     if (!$query->get('order_by_tax_priority')) {
         return $clauses;
@@ -97,16 +98,16 @@ function order_posts_by_term_meta($clauses, $query) {
     $clauses['fields'] .= ", COALESCE(MIN(CAST(tm.meta_value AS UNSIGNED)), 9999) as term_order";
 
     // Order by the computed term_order and post_date (latest first)
-    
+
     // if($query->get('orderby')== 'date'){
-      
+
     // }
-   
+
     $clauses['orderby'] = "term_order ASC, {$wpdb->posts}.post_date {$query->get('order')}";
     return $clauses;
 }
 // add_filter('posts_clauses', 'order_posts_by_term_meta', 10, 2);
-   
+
 
 add_shortcode('robodesk_my_tickets', 'robodesk_my_tickets_shortcode');
 
@@ -114,17 +115,17 @@ add_shortcode('robodesk_my_tickets', 'robodesk_my_tickets_shortcode');
 function robodesk_my_tickets_shortcode()
 {
     global $wp;
-        
+
     $user_id = get_current_user_id();
-    
+
     $paged = (get_query_var('paged')) ? absint(get_query_var('paged')) : 1;
 
     $orderby = isset($_GET['orderby']) ? sanitize_text_field($_GET['orderby']) : 'date';
 
-    $obystatus = trim($orderby) == 'meta_value'? true : false; 
+    $obystatus = trim($orderby) == 'meta_value' ? true : false;
 
     $order  = isset($_GET['order']) ? sanitize_text_field($_GET['order']) : 'DESC';
-    
+
     $args = array(
         'post_type' => 'robodesk_ticket',
         'author' => $user_id,
@@ -134,10 +135,10 @@ function robodesk_my_tickets_shortcode()
         'order' => $order,
         // 'order_by_tax_priority' => true,
     );
-    
+
     $selected_priority = isset($_GET['robodesk_ticket_priority']) ? sanitize_text_field($_GET['robodesk_ticket_priority']) : '';
     $selected_status = isset($_GET['robodesk_ticket_status']) ? sanitize_text_field($_GET['robodesk_ticket_status']) : '';
-    
+
     if (!empty($selected_priority)) {
         $args['tax_query'] = array(
             array(
@@ -157,8 +158,8 @@ function robodesk_my_tickets_shortcode()
             ),
         );
     }
-    
-    
+
+
     $query = new WP_Query($args);
 
     $priority_terms = get_terms(array(
@@ -210,8 +211,8 @@ function robodesk_my_tickets_shortcode()
             <?php if ($query->have_posts()) : while ($query->have_posts()) : $query->the_post();
                     $status = get_post_meta(get_the_ID(), '_robodesk_ticket_status', true);
                     $terms = get_the_terms(get_the_ID(), 'robodesk_ticket_priority');
-                    
-   
+
+
                     $priority_name = '';
                     if ($terms && !is_wp_error($terms)) {
                         $priority_name = $terms[0]->name;
@@ -323,12 +324,12 @@ function robodesk_frontend_dashboard_shortcode()
             </nav>
             <div class="robodesk-dashboard-content">
                 <?php
-                if (!empty($ticket_id) && get_post_type($ticket_id) == 'robodesk_ticket') { 
-                  
-                    echo do_shortcode('[robodesk_single_ticket id="' . $ticket_id . '"]'); 
+                if (!empty($ticket_id) && get_post_type($ticket_id) == 'robodesk_ticket') {
+
+                    echo do_shortcode('[robodesk_single_ticket id="' . $ticket_id . '"]');
                 } else if (array_key_exists($current_page, $menu_items)) {
                     if ($current_page == 'dashboard') {
-                        echo $menu_items[$current_page]['function']($notification_count, $open_tickets, $total_tickets); 
+                        echo $menu_items[$current_page]['function']($notification_count, $open_tickets, $total_tickets);
                     } else {
                         echo $menu_items[$current_page]['function']();
                     }
@@ -791,14 +792,14 @@ add_filter('query_vars', 'robodesk_add_query_vars');
 
 function robodesk_single_ticket_shortcode($atts)
 {
- 
+
     $atts = shortcode_atts(array(
-        'id' => 0, 
+        'id' => 0,
     ), $atts);
 
     $ticket_id = intval($atts['id']);
 
-   
+
     if ($ticket_id <= 0 || get_post_type($ticket_id) !== 'robodesk_ticket') {
         return '<div class="robodesk-container"><p>Invalid ticket ID.</p></div>';
     }
@@ -960,18 +961,17 @@ function robodesk_single_ticket_shortcode($atts)
             <?php
 
             if (comments_open($ticket_id) || get_comments_number($ticket_id) > 0) {
-                
+
                 $plugin_template = plugin_dir_path(dirname(__FILE__, 2)) . 'templates/comments-ticket.php';
-                
-                add_filter('comments_template', function($theme_template) use ($plugin_template) {
+
+                add_filter('comments_template', function ($theme_template) use ($plugin_template) {
                     if (file_exists($plugin_template)) {
                         return $plugin_template;
                     }
                     return $theme_template;
                 });
-                
-               comments_template();
-             
+
+                comments_template();
             } else {
                 echo '<p>Comments are closed.</p>';
             }
@@ -993,7 +993,7 @@ function robodesk_single_ticket_shortcode($atts)
                     contentType: false,
                     success: function(response) {
                         if (response.success) {
-                            location.reload(); 
+                            location.reload();
                         } else {
                             alert('Error: ' + response.data.message);
                         }
