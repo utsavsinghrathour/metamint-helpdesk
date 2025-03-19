@@ -105,7 +105,7 @@ function order_posts_by_term_meta($clauses, $query) {
     $clauses['orderby'] = "term_order ASC, {$wpdb->posts}.post_date {$query->get('order')}";
     return $clauses;
 }
-add_filter('posts_clauses', 'order_posts_by_term_meta', 10, 2);
+// add_filter('posts_clauses', 'order_posts_by_term_meta', 10, 2);
    
 
 add_shortcode('robodesk_my_tickets', 'robodesk_my_tickets_shortcode');
@@ -160,7 +160,7 @@ function robodesk_my_tickets_shortcode()
     
     
     $query = new WP_Query($args);
-    remove_filter('posts_orderby', 'custom_orderby_filter');
+
     $priority_terms = get_terms(array(
         'taxonomy' => 'robodesk_ticket_priority',
         'hide_empty' => false,
