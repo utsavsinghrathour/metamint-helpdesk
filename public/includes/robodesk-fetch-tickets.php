@@ -4,7 +4,7 @@
 
 function robodesk_fetch_emails_callback()
 {
-    echo '<h1>Email To Post</h1>';
+    echo '<h1>Email To Ticket</h1>';
     echo '<p>Click the button below to fetch Tickets</p>';
     echo '<form method="post" action="">';
     wp_nonce_field('robodesk_fetch_emails_action', 'robodesk_fetch_emails_nonce'); // Add nonce field for security
