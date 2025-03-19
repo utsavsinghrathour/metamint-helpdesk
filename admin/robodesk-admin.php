@@ -3,7 +3,7 @@
 // Include admin-side post types
 require_once ROBODESK_PLUGIN_PATH . 'admin/includes/post-types/robodesk-ticket-post-type.php';
 require_once ROBODESK_PLUGIN_PATH . 'admin/includes/post-types/robodesk-faq-post-type.php';
-require_once ROBODESK_PLUGIN_PATH . 'public/includes/robodesk-fetch-tickets.php';
+require_once ROBODESK_PLUGIN_PATH . 'public/includes/robodesk-fetch-tickets.php'; // Include the email-to-ticket function
 
 
 // Add Admin Menu Pages (if needed)

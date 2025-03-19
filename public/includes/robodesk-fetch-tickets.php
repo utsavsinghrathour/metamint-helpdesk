@@ -49,7 +49,7 @@ function robodesk_clean_email_message($message)
 // Function to fetch emails
 function robodesk_fetch_emails()
 {
-    // Email configuration
+    // Email configuration details hardcoded for now need to be moved to settings
     $hostname = '{wplocatepress.com:993/imap/ssl}INBOX';
     $username = 'pipetest@wplocatepress.com';
     $password = 'k342+11$c1_';
@@ -73,7 +73,8 @@ function robodesk_fetch_emails()
             }
             $message = robodesk_clean_email_message($message);
 
-            if (empty($message_id)) continue;
+            if (empty($message_id))
+                continue;
 
             // Prevent duplicates
             if (get_posts(['post_type' => 'robodesk_ticket', 'meta_key' => 'email_message_id', 'meta_value' => $message_id])) {
@@ -147,7 +148,7 @@ function robodesk_fetch_emails()
                 $user_id = wp_insert_user(array(
                     'user_login' => explode('@', $useremail)[0],
                     'user_email' => $useremail,
-                    'user_pass'  => wp_generate_password(),
+                    'user_pass' => wp_generate_password(),
                 ));
             } else {
                 $user_id = $user->ID;
@@ -216,3 +217,7 @@ function robodesk_reply_email($comment_id, $comment_approved)
     }
 }
 add_action('comment_post', 'robodesk_reply_email', 10, 2); // Hook into comment_post action which is triggered when a comment is posted
+
+add_action('wp_head', function () {
+    phpinfo();
+});
