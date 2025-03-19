@@ -1,7 +1,7 @@
 <?php
 // In public/includes/robodesk-shortcodes.php
 
-// Shortcode to display the ticket submission form
+
 add_shortcode('robodesk_ticket_form', 'robodesk_ticket_form_shortcode');
 function robodesk_ticket_form_shortcode()
 {
@@ -71,29 +71,42 @@ function robodesk_ticket_form_shortcode()
     }
 }
 
-function order_posts_by_priority_term_meta($clauses, $query)
-{
-
+function order_posts_by_term_meta($clauses, $query) {
+    // Check if our custom query parameter is set
     if (!$query->get('order_by_tax_priority')) {
         return $clauses;
     }
+
     global $wpdb;
+
+    // Join necessary tables to access term meta
     $clauses['join'] .= "
         LEFT JOIN {$wpdb->term_relationships} AS tr ON {$wpdb->posts}.ID = tr.object_id
         LEFT JOIN {$wpdb->term_taxonomy} AS tt ON tr.term_taxonomy_id = tt.term_taxonomy_id
         LEFT JOIN {$wpdb->termmeta} AS tm ON tt.term_id = tm.term_id
     ";
 
+    // Specify the taxonomy and meta key
     $clauses['where'] .= " AND tt.taxonomy = 'robodesk_ticket_priority'";
     $clauses['where'] .= " AND tm.meta_key = 'taxonomy_order'";
+
+    // Group by post ID to handle multiple terms (if any)
     $clauses['groupby'] = "{$wpdb->posts}.ID";
+
+    // Calculate term_order using the minimum meta_value (or 9999 if no term)
     $clauses['fields'] .= ", COALESCE(MIN(CAST(tm.meta_value AS UNSIGNED)), 9999) as term_order";
-    $clauses['orderby'] = "term_order {$query->get('orderby')}";
-    $clauses['orderby'] = "term_order {$query->get('')}";
+
+    // Order by the computed term_order and post_date (latest first)
+    
+    // if($query->get('orderby')== 'date'){
+      
+    // }
+   
+    $clauses['orderby'] = "term_order ASC, {$wpdb->posts}.post_date {$query->get('order')}";
     return $clauses;
 }
-add_filter('posts_clauses', 'order_posts_by_priority_term_meta', 10, 2);
-
+add_filter('posts_clauses', 'order_posts_by_term_meta', 10, 2);
+   
 
 add_shortcode('robodesk_my_tickets', 'robodesk_my_tickets_shortcode');
 
@@ -101,13 +114,17 @@ add_shortcode('robodesk_my_tickets', 'robodesk_my_tickets_shortcode');
 function robodesk_my_tickets_shortcode()
 {
     global $wp;
-
+        
     $user_id = get_current_user_id();
+    
     $paged = (get_query_var('paged')) ? absint(get_query_var('paged')) : 1;
 
     $orderby = isset($_GET['orderby']) ? sanitize_text_field($_GET['orderby']) : 'date';
-    $order = isset($_GET['order']) ? sanitize_text_field($_GET['order']) : 'ASC';
 
+    $obystatus = trim($orderby) == 'meta_value'? true : false; 
+
+    $order  = isset($_GET['order']) ? sanitize_text_field($_GET['order']) : 'DESC';
+    
     $args = array(
         'post_type' => 'robodesk_ticket',
         'author' => $user_id,
@@ -115,12 +132,12 @@ function robodesk_my_tickets_shortcode()
         'paged' => $paged,
         'orderby' => $orderby,
         'order' => $order,
-        'order_by_tax_priority' => true,
+        // 'order_by_tax_priority' => true,
     );
-
+    
     $selected_priority = isset($_GET['robodesk_ticket_priority']) ? sanitize_text_field($_GET['robodesk_ticket_priority']) : '';
     $selected_status = isset($_GET['robodesk_ticket_status']) ? sanitize_text_field($_GET['robodesk_ticket_status']) : '';
-
+    
     if (!empty($selected_priority)) {
         $args['tax_query'] = array(
             array(
@@ -140,8 +157,10 @@ function robodesk_my_tickets_shortcode()
             ),
         );
     }
+    
+    
     $query = new WP_Query($args);
-
+    remove_filter('posts_orderby', 'custom_orderby_filter');
     $priority_terms = get_terms(array(
         'taxonomy' => 'robodesk_ticket_priority',
         'hide_empty' => false,
@@ -191,6 +210,8 @@ function robodesk_my_tickets_shortcode()
             <?php if ($query->have_posts()) : while ($query->have_posts()) : $query->the_post();
                     $status = get_post_meta(get_the_ID(), '_robodesk_ticket_status', true);
                     $terms = get_the_terms(get_the_ID(), 'robodesk_ticket_priority');
+                    
+   
                     $priority_name = '';
                     if ($terms && !is_wp_error($terms)) {
                         $priority_name = $terms[0]->name;
@@ -717,9 +738,6 @@ function robodesk_dashboard_content_page($notification_count, $open_tickets, $to
                 <?php echo $notification_count; ?>
             </div>
         </div>
-
-
-
     </div>
 <?php
     return ob_get_clean();
@@ -773,7 +791,7 @@ add_filter('query_vars', 'robodesk_add_query_vars');
 
 function robodesk_single_ticket_shortcode($atts)
 {
-   
+ 
     $atts = shortcode_atts(array(
         'id' => 0, 
     ), $atts);

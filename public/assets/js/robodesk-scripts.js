@@ -190,7 +190,7 @@ jQuery(document).ready(function($) {
     // ... other code
 
     $('#robodesk-add-note').submit(function(e) { // Select the form by ID
-        e.preventDefault(); // Prevent default form submission
+        e.preventDefault(); 
 
         var formData = $(this).serialize();
 
@@ -230,7 +230,7 @@ jQuery(document).ready(function($) {
 
     // Show/Hide Add Credential Form
     $('#add-credential-button').click(function() {
-        //alert('hi');
+       
         $('#credential-form').toggle();
     });
 
@@ -347,11 +347,7 @@ jQuery(document).ready(function($) {
             
             
         });
-  
-    
 
-
-    // ... other JavaScript code
 });
 
 
