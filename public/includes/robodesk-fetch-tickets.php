@@ -154,15 +154,32 @@ function robodesk_fetch_emails()
                 $user_id = $user->ID;
             }
 
-            // Create new post
+            // Ensure the "Email" term exists in the taxonomy
+            $term = term_exists('Email', 'robodesk_ticket_origin');
+
+            if (!$term) {
+                // Create the term if it doesn't exist
+                $term = wp_insert_term('Email', 'robodesk_ticket_origin');
+            }
+
+            // Extract term ID if term creation was successful
+            $term_id = (!is_wp_error($term) && isset($term['term_id'])) ? $term['term_id'] : null;
+
+            // Create new post With taxonomy Email
             $post_id = wp_insert_post([
-                'post_title' => $subject,
+                'post_title'   => $subject,
                 'post_content' => $message,
-                'post_date' => $date,
-                'post_status' => 'publish',
-                'post_author' => $user_id,
-                'post_type' => 'robodesk_ticket'
+                'post_date'    => $date,
+                'post_status'  => 'publish',
+                'post_author'  => $user_id,
+                'post_type'    => 'robodesk_ticket',
             ]);
+
+            // Assign taxonomy only if the post was created and the term ID exists
+            if ($post_id && $term_id) {
+                wp_set_post_terms($post_id, [$term_id], 'robodesk_ticket_origin', false);
+            }
+
 
             if (!is_wp_error($post_id)) {
                 add_post_meta($post_id, 'email_message_id', $message_id);
@@ -217,4 +234,3 @@ function robodesk_reply_email($comment_id, $comment_approved)
     }
 }
 add_action('comment_post', 'robodesk_reply_email', 10, 2); // Hook into comment_post action which is triggered when a comment is posted
-
