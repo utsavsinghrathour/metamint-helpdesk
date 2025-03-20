@@ -153,15 +153,24 @@ function robodesk_fetch_emails()
             }
 
             // Ensure the "Email" term exists in the taxonomy
-            $term = term_exists('Email', 'robodesk_ticket_origin');
+            $term_email = term_exists('Email', 'robodesk_ticket_origin');
+            // Ensure the "Medium" term exists in the taxonomy
+            $term_priority = term_exists('Medium', 'robodesk_ticket_priority');
 
-            if (!$term) {
+            if (!$term_email) {
                 // Create the term if it doesn't exist
-                $term = wp_insert_term('Email', 'robodesk_ticket_origin');
+                $term_email = wp_insert_term('Email', 'robodesk_ticket_origin');
             }
 
-            // Extract term ID if term creation was successful
-            $term_id = (!is_wp_error($term) && isset($term['term_id'])) ? $term['term_id'] : null;
+            if (!$term_priority) {
+                // Create the term if it doesn't exist
+                $term_priority = wp_insert_term('Medium', 'robodesk_ticket_priority');
+            }
+
+            // Extract term ID if term creation was successful for origin
+            $term_email_id = (!is_wp_error($term_email) && isset($term_email['term_id'])) ? $term_email['term_id'] : null;
+            // Extract term ID if term creation was successful for priority
+            $term_priority_id = (!is_wp_error($term_priority) && isset($term_priority['term_id'])) ? $term_priority['term_id'] : null;
 
             // Create new post With taxonomy Email
             $post_id = wp_insert_post([
@@ -171,12 +180,20 @@ function robodesk_fetch_emails()
                 'post_status'  => 'publish',
                 'post_author'  => $user_id,
                 'post_type'    => 'robodesk_ticket',
+
             ]);
 
             // Assign taxonomy only if the post was created and the term ID exists
-            if ($post_id && $term_id) {
-                wp_set_post_terms($post_id, [$term_id], 'robodesk_ticket_origin', false);
+            if ($post_id && $term_email_id) {
+                wp_set_post_terms($post_id, [$term_email_id], 'robodesk_ticket_origin', false);
             }
+            // Assign priority only if the post was created and the term ID exists
+            if ($post_id && $term_priority_id) {
+                wp_set_post_terms($post_id, [$term_priority_id], 'robodesk_ticket_priority', false);
+            }
+
+            // Set default ticket status to 'open'
+            update_post_meta($post_id, '_robodesk_ticket_status', 'open');
 
             if (!is_wp_error($post_id)) {
                 add_post_meta($post_id, 'email_message_id', $message_id);
@@ -229,3 +246,5 @@ function robodesk_reply_email($comment_id, $comment_approved)
     }
 }
 add_action('comment_post', 'robodesk_reply_email', 10, 2); // Hook into comment_post action which is triggered when a comment is posted
+
+//added the taxonomy for email origin and default value of email priority set to medium 
