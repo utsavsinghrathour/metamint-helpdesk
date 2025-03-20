@@ -195,3 +195,12 @@ function set_robodesk_comment_type($commentdata) {
     }
     return $commentdata;
 }
+
+
+add_action('manage_comments_custom_column', 'display_comment_type_column', 10, 2);
+function display_comment_type_column($column, $comment_id) {
+    if ($column === 'comment_type') {
+        $comment = get_comment($comment_id);
+        echo esc_html($comment->comment_type);
+    }
+}

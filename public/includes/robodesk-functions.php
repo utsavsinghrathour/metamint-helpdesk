@@ -87,14 +87,15 @@ $robodesk_notifications_table = $wpdb->prefix . 'robodesk_notifications';
 //     ) $charset_collate;";
 
 //     require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
-  
+
 //     dbDelta($sql);
-    
+
 // }
 // register_activation_hook(__FILE__, 'robodesk_create_ticket_notes_table');
 
 //needed to do this coz itz not working on plugin activation hook
-function robodesk_maybe_create_ticket_notes_table() {
+function robodesk_maybe_create_ticket_notes_table()
+{
     global $wpdb;
     $table_name = $wpdb->prefix . 'robodesk_ticket_notes';
 
@@ -126,7 +127,8 @@ function robodesk_maybe_create_ticket_notes_table() {
 // Call the function on WordPress initialization
 add_action('init', 'robodesk_maybe_create_ticket_notes_table');
 
-function robodesk_maybe_create_notifications_table() {
+function robodesk_maybe_create_notifications_table()
+{
     global $wpdb;
     $table_name = $wpdb->prefix . 'robodesk_notifications';
 
@@ -156,7 +158,7 @@ add_action('init', 'robodesk_maybe_create_notifications_table');
 
 
 // Function to create a notification
-function robodesk_create_notification($user_id, $message, $ticket_id = null, $created_by)
+function robodesk_create_notification($user_id, $message, $ticket_id, $created_by)
 {
     global $wpdb;
     $table_name = $wpdb->prefix . 'robodesk_notifications';
@@ -281,9 +283,101 @@ function robodesk_credentials_page()
                 <p>No credentials saved yet.</p>
             <?php endif; ?>
         </div>
-<?php
+    <?php
         return ob_get_clean();
     } else {
         return '<div class="robodesk-container"><p>Please <a href="' . wp_login_url(get_permalink('login')) . '">login</a> to view your credentials.</p></div>';
+    }
+}
+
+
+add_action('woocommerce_after_my_account', 'add_custom_table_to_my_account');
+function add_custom_table_to_my_account()
+{
+    // Check if the user is logged in
+    if (is_user_logged_in()) {
+        global $wp;
+        $user_id = get_current_user_id();
+        $paged = (get_query_var('paged')) ? absint(get_query_var('paged')) : 1;
+        $args = array(
+            'post_type' => 'robodesk_ticket',
+            'author' => $user_id,
+            'posts_per_page' => 5,
+            'paged' => $paged,
+            'orderby' => 'date',
+            'order' => 'DESC',
+            // 'meta_query' => array(
+            //     array(
+            //         'key' => 'robodesk_ticket_status',
+            //         'value' => 'open',
+            //         'compare' => '='
+            //     )
+            // )
+        );
+
+        $query = new WP_Query($args);
+        $ticket_url = add_query_arg(array('robodesk_page' => 'my-tickets', 'tid' => get_the_ID()), site_url('/dashboard/'));
+        $create_ticket_url = add_query_arg(array('robodesk_page' => 'create-ticket'), site_url('/dashboard/'));
+
+    ?>
+        <h3>Get Support Ticket</h3>
+        <a href="<?php echo esc_url($create_ticket_url);?>">Create Ticket</a>
+        <table style="margin-top: 30px;">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Support Type</th>
+                    <th>Reason</th>
+                    <th>Date</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php if ($query->have_posts()) : while ($query->have_posts()) : $query->the_post();
+                        $status = get_post_meta(get_the_ID(), '_robodesk_ticket_status', true);
+                        $terms = get_the_terms(get_the_ID(), 'robodesk_ticket_priority');
+                        $origin = get_the_terms(get_the_ID(), 'robodesk_ticket_origin');
+                        $author = get_the_author();
+       
+                        $author_id = get_the_author_meta('ID');
+                        $user = get_userdata($author_id);
+                        $author_roles = $user->roles;
+                        $author_role = !empty($author_roles) ? $author_roles[0] : false;
+
+                        $priority_name = '-';
+                        if ($terms && !is_wp_error($terms)) {
+                            $priority_name = $terms[0]->name;
+                        }
+                        
+                        
+                        $origin_name = '-';
+                        if ($origin && !is_wp_error($origin)) {
+                            $origin_name = $origin[0]->name;
+                        }
+
+                        $ticket_url = add_query_arg(array('robodesk_page' => 'my-tickets', 'tid' => get_the_ID()), site_url('/dashboard/'));
+
+                ?>
+                        <tr>
+                            <td>
+                                <span class="ticket-author-name"><?php echo $author; ?></span>
+                                <p class="ticket-author-role"><?php echo ucwords($author_role); ?></p>
+                            </td>
+                            <td><?php echo $origin_name; ?></td>
+                            <td><a href="<?php echo esc_url($ticket_url); ?>"><?php the_title(); ?></a</td>
+                            <td><?php echo get_the_date('dS M Y'); ?></td>
+                            <td><?php echo esc_html($status); ?></td>
+                        </tr>
+                    <?php endwhile;
+                    wp_reset_postdata();
+                else : ?>
+                    <tr>
+                        <td colspan="4">No tickets found.</td>
+                    </tr>
+                <?php endif; ?>
+            </tbody>
+        </table>
+
+<?php
     }
 }
