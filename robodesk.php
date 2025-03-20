@@ -194,21 +194,3 @@ function robodesk_decrypt($ciphertext, $key)
     return openssl_decrypt($encrypted_data, "AES-256-CBC", $key, $options = 0, $iv);
 }
 
-
-function robodesk_hide_admin_bar_for_support_customer()
-{
-    if (is_user_logged_in()) {
-        $user = wp_get_current_user();
-        if (in_array('robodesk_support_customer', (array) $user->roles)) {
-            show_admin_bar(false);
-        }
-    }
-}
-add_action('init', 'robodesk_hide_admin_bar_for_support_customer');
-
-
-
-add_action('wp_head', function(){
-
-
-});

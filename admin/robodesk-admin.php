@@ -18,7 +18,7 @@ function robodesk_add_admin_menu()
 {
     add_menu_page(
         'Robodesk',
-        'Support',
+        'Robodesk Support',
         'manage_options',
         'edit.php?post_type=robodesk_ticket',
         '',
