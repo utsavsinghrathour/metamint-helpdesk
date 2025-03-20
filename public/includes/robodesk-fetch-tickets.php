@@ -228,7 +228,7 @@ function robodesk_reply_email($comment_id, $comment_approved)
         $reply_message = "On " . date("Y-m-d H:i:s", strtotime($post->post_date)) . ", $email_from wrote:\n\n" . $comment_content;
 
         $headers = [
-            'From: Email To Post <pipetest@wplocatepress.com>',
+            'From: Robodesk Support <pipetest@wplocatepress.com>',
             'Reply-To: ' . $reply_to,
             'References: ' . $email_message_id,
             'In-Reply-To: ' . $email_message_id,
@@ -246,5 +246,3 @@ function robodesk_reply_email($comment_id, $comment_approved)
     }
 }
 add_action('comment_post', 'robodesk_reply_email', 10, 2); // Hook into comment_post action which is triggered when a comment is posted
-
-//added the taxonomy for email origin and default value of email priority set to medium 
