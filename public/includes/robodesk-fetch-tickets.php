@@ -36,7 +36,6 @@ function robodesk_fetch_emails_callback()
     echo '</table>';
 }
 
-
 // Function to clean the email message 
 function robodesk_clean_email_message($message)
 {
@@ -140,7 +139,6 @@ function robodesk_fetch_emails()
                 continue; // Skip creating a new post
             }
 
-
             // If no post exists, create a new one (for first-time emails)
             $useremail = $headerInfo->from[0]->mailbox . '@' . $headerInfo->from[0]->host;
             $user = get_user_by('email', $useremail);
@@ -180,7 +178,6 @@ function robodesk_fetch_emails()
                 wp_set_post_terms($post_id, [$term_id], 'robodesk_ticket_origin', false);
             }
 
-
             if (!is_wp_error($post_id)) {
                 add_post_meta($post_id, 'email_message_id', $message_id);
                 add_post_meta($post_id, 'email_from', $from);
@@ -190,21 +187,19 @@ function robodesk_fetch_emails()
     imap_close($email);
 }
 
-// adding a feature that allows the user to reply to the email from the post original mail from email pipetest@wplocatepress.com through comment section of the post
-// imap cannot be used to send emails, so we will use wp_mail() function to send emails. email from must be pipetest@wplocatepress.com and the email to must be the post author email
 // Post comments as email replies
 function robodesk_reply_email($comment_id, $comment_approved)
 {
     if ($comment_approved) {
         $comment = get_comment($comment_id); // Get the comment object
         $post = get_post($comment->comment_post_ID); // Get the post object
-        $email_from = get_post_meta($post->ID, 'email_from', true); //  Get the email from the post meta
+        $email_from = get_post_meta($post->ID, 'email_from', true); // Get the email from the post meta
         $email_message_id = get_post_meta($post->ID, 'email_message_id', true); // Get the email message id from the post meta
 
         preg_match('/<(.*?)>/', $email_from, $matches); // Extract email from angle brackets
         $pure_email = $matches[1] ?? $email_from;       // Get email without angle brackets
 
-        //validate email
+        // Validate email
         if (!filter_var($pure_email, FILTER_VALIDATE_EMAIL)) {
             error_log('Invalid sender email: ' . $pure_email);
             return;
