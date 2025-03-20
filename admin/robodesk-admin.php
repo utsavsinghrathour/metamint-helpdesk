@@ -184,3 +184,14 @@ function custom_taxonomy_order($terms, $taxonomies, $args)
     return $terms;
 }
 add_filter('get_terms', 'custom_taxonomy_order', 10, 3);
+
+
+
+add_filter('preprocess_comment', 'set_robodesk_comment_type');
+function set_robodesk_comment_type($commentdata) {
+    $post_id = $commentdata['comment_post_ID'];
+    if (get_post_type($post_id) === 'robodesk_ticket') {
+        $commentdata['comment_type'] = 'robodesk_ticket';
+    }
+    return $commentdata;
+}
