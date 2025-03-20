@@ -218,6 +218,3 @@ function robodesk_reply_email($comment_id, $comment_approved)
 }
 add_action('comment_post', 'robodesk_reply_email', 10, 2); // Hook into comment_post action which is triggered when a comment is posted
 
-add_action('wp_head', function () {
-    phpinfo();
-});
