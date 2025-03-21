@@ -1040,7 +1040,7 @@ function robodesk_login_form_shortcode()
         $dashboard_page = get_page_by_path('dashboard');
         $redirect_url = $dashboard_page ? get_permalink($dashboard_page->ID) : home_url();
 
-        wp_safe_redirect($redirect_url); // Use wp_safe_redirect
+        wp_safe_redirect($redirect_url); 
         exit;
     }
 

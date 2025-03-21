@@ -161,4 +161,41 @@ function robodesk_save_status_meta_box_data($post_id)
         update_post_meta($post_id, '_robodesk_ticket_status', sanitize_text_field($_POST['robodesk_ticket_status']));
     }
 }
+
+//Adding Ticket Status on  admin_column
+add_filter('manage_robodesk_ticket_posts_columns', 'add_robodesk_ticket_status_column');
+
+function add_robodesk_ticket_status_column($columns) {
+    $columns['_robodesk_ticket_status'] = 'Ticket Status';
+    return $columns;
+}
+
+add_action('manage_robodesk_ticket_posts_custom_column', 'fill_robodesk_ticket_status_column', 10, 2);
+
+function fill_robodesk_ticket_status_column($column, $post_id) {
+    if ($column == '_robodesk_ticket_status') {
+        $status = get_post_meta($post_id, '_robodesk_ticket_status', true);
+        echo esc_html($status);
+    }
+}
+
+add_filter('manage_edit-robodesk_ticket_sortable_columns', 'make_robodesk_ticket_status_column_sortable');
+
+function make_robodesk_ticket_status_column_sortable($columns) {
+    $columns['_robodesk_ticket_status'] = '_robodesk_ticket_status';
+    return $columns;
+}
+
+add_action('pre_get_posts', 'sort_robodesk_ticket_status_column');
+
+function sort_robodesk_ticket_status_column($query) {
+    if (!is_admin() || !$query->is_main_query()) {
+        return;
+    }
+
+    if ($query->get('orderby') == '_robodesk_ticket_status') {
+        $query->set('meta_key', '_robodesk_ticket_status');
+        $query->set('orderby', 'meta_value');
+    }
+}
 ?>

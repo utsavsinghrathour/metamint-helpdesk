@@ -291,26 +291,36 @@ function robodesk_credentials_page()
 }
 
 
+add_filter('posts_clauses', 'debug_query_clauses', 10, 2);
+function debug_query_clauses($clauses, $query) {
+    if ($query->get('post_type') === 'robodesk_ticket') {
+        error_log(print_r($clauses, true));
+    }
+    return $clauses;
+}
+
+
 add_action('woocommerce_after_my_account', 'add_custom_table_to_my_account');
 function add_custom_table_to_my_account()
 {
     // Check if the user is logged in
+    // var_dump(is_user_logged_in());
     if (is_user_logged_in()) {
         global $wp;
         $user_id = get_current_user_id();
+
         $paged = (get_query_var('paged')) ? absint(get_query_var('paged')) : 1;
         $args = array(
             'post_type' => 'robodesk_ticket',
             'author' => $user_id,
             'posts_per_page' => 5,
-            'paged' => $paged,
             'orderby' => 'date',
             'order' => 'DESC',
             // 'meta_query' => array(
             //     array(
             //         'key' => 'robodesk_ticket_status',
             //         'value' => 'open',
-            //         'compare' => '='
+            //         'compare' => 'like'
             //     )
             // )
         );
