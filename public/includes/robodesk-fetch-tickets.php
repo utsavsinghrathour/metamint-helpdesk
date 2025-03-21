@@ -164,6 +164,7 @@ function robodesk_fetch_emails()
                     'user_login' => explode('@', $useremail)[0],
                     'user_email' => $useremail,
                     'user_pass' => wp_generate_password(),
+                    'role' => 'robodesk_support_customer',
                 ));
             } else {
                 $user_id = $user->ID;

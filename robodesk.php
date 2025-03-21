@@ -29,9 +29,9 @@ function robodesk_activate()
         $admin_role->add_cap('delete_ticket');
     }
     add_role('robodesk_support_manager', 'Support Manager', array('read' => true, 'manage_options' => true, 'create_tickets' => true, 'edit_tickets' => true, 'edit_others_tickets' => true, 'publish_tickets' => true, 'read_private_tickets' => true, 'read_ticket' => true, 'delete_ticket' => true));
-    
+
     add_role('robodesk_support_staff', 'Support Staff', array('read' => true, 'edit_posts' => true, 'create_tickets' => true, 'edit_tickets' => true, 'read_ticket' => true));
-    
+
     add_role('robodesk_support_customer', 'Support Customer', array('read' => true, 'create_tickets' => true, 'read_ticket' => true));
 }
 
@@ -44,14 +44,15 @@ function robodesk_deactivate()
 
 // Include necessary files
 // if (is_admin()) {
-    require_once ROBODESK_PLUGIN_PATH . 'admin/robodesk-admin.php';
-    
-    
+require_once ROBODESK_PLUGIN_PATH . 'admin/robodesk-admin.php';
+
+
 // } else {
-    require_once ROBODESK_PLUGIN_PATH . 'public/includes/robodesk-functions.php';
-    require_once ROBODESK_PLUGIN_PATH . 'public/includes/robodesk-shortcodes.php';
-    require_once ROBODESK_PLUGIN_PATH . 'public/includes/robodesk-ajax.php';
-    require_once ROBODESK_PLUGIN_PATH . 'public/includes/robodesk-notes.php';
+require_once ROBODESK_PLUGIN_PATH . 'public/includes/robodesk-fetch-tickets.php';
+require_once ROBODESK_PLUGIN_PATH . 'public/includes/robodesk-functions.php';
+require_once ROBODESK_PLUGIN_PATH . 'public/includes/robodesk-shortcodes.php';
+require_once ROBODESK_PLUGIN_PATH . 'public/includes/robodesk-ajax.php';
+require_once ROBODESK_PLUGIN_PATH . 'public/includes/robodesk-notes.php';
 // }
 
 // Enqueue Scripts
@@ -62,11 +63,10 @@ function robodesk_enqueue_scripts()
     wp_enqueue_script('jquery');
     if (is_admin()) {
         add_action('admin_enqueue_scripts', 'robodesk_enqueue_admin_scripts');
-      
     } else {
-        
+
         wp_enqueue_style('robodesk-styles', ROBODESK_PLUGIN_URL . 'public/assets/css/robodesk-styles.css', array(), '1.0');
-    
+
         wp_enqueue_script('robodesk-scripts', ROBODESK_PLUGIN_URL . 'public/assets/js/robodesk-scripts.js', array('jquery'), time(), true);
 
         wp_localize_script('robodesk-scripts', 'robodesk_ajax_object', array(
@@ -96,9 +96,9 @@ function robodesk_enqueue_admin_scripts($hook)
 {
     global $post;
     wp_enqueue_script('jquery');
-    if(!empty($_GET) && isset($_GET['taxonomy']) && $_GET['taxonomy'] == 'robodesk_ticket_priority' && $_GET['post_type'] == 'robodesk_ticket' ){
+    if (!empty($_GET) && isset($_GET['taxonomy']) && $_GET['taxonomy'] == 'robodesk_ticket_priority' && $_GET['post_type'] == 'robodesk_ticket') {
         wp_enqueue_script('jquery-ui-sortable');
-        wp_enqueue_script('custom-taxonomy-order',ROBODESK_PLUGIN_URL . 'admin/assets/js/custom-taxonomy-order.js', array('jquery', 'jquery-ui-sortable'), time(), true);
+        wp_enqueue_script('custom-taxonomy-order', ROBODESK_PLUGIN_URL . 'admin/assets/js/custom-taxonomy-order.js', array('jquery', 'jquery-ui-sortable'), time(), true);
         wp_localize_script('custom-taxonomy-order', 'taxonomyOrderData', array(
             'ajax_url' => admin_url('admin-ajax.php'),
             'nonce'    => wp_create_nonce('taxonomy_order_nonce')
@@ -109,11 +109,9 @@ function robodesk_enqueue_admin_scripts($hook)
     if (!isset($post) || $post->post_type != 'robodesk_ticket') return;
 
     wp_enqueue_style('robodesk-admin-styles', ROBODESK_PLUGIN_URL . 'admin/assets/css/robodesk-admin-styles.css', array(), '1.0');
-   
+
     wp_enqueue_script('robodesk-admin-scripts', ROBODESK_PLUGIN_URL . 'admin/assets/js/robodesk-admin-scripts.js', array('jquery'), '1.0', true);
     wp_localize_script('robodesk-admin-scripts', 'robodesk_ajax_object', array('ajax_url' => admin_url('admin-ajax.php'), 'ticket_id' => $post->ID, 'nonce' => wp_create_nonce('robodesk_change_ticket_nonce'), 'faq_nonce' => wp_create_nonce('robodesk_faq_vote_nonce'), 'credentials_nonce' => wp_create_nonce('robodesk_credentials_nonce')));
-    
-
 }
 add_action('admin_enqueue_scripts', 'robodesk_enqueue_admin_scripts');
 
@@ -147,7 +145,8 @@ add_action('admin_enqueue_scripts', 'robodesk_enqueue_admin_scripts');
 
 
 // Function to create the table
-function robodesk_create_credentials_table() {
+function robodesk_create_credentials_table()
+{
     global $wpdb;
 
     $table_name = $wpdb->prefix . 'robodesk_credentials'; // Add WordPress table prefix
@@ -193,4 +192,3 @@ function robodesk_decrypt($ciphertext, $key)
     list($encrypted_data, $iv) = explode('::', base64_decode($ciphertext), 2);
     return openssl_decrypt($encrypted_data, "AES-256-CBC", $key, $options = 0, $iv);
 }
-
