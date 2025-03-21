@@ -48,10 +48,11 @@ function robodesk_clean_email_message($message)
 // Function to fetch emails
 function robodesk_fetch_emails()
 {
-    // Email configuration details hardcoded for now need to be moved to settings
+    // Email configuration details
     $hostname = '{wplocatepress.com:993/imap/ssl}INBOX';
     $username = 'pipetest@wplocatepress.com';
     $password = 'k342+11$c1_';
+
     // Connect to email
     $email = imap_open($hostname, $username, $password) or die('Cannot connect to email: ' . imap_last_error());
     $emails = imap_search($email, 'ALL'); // Search for all emails
@@ -72,10 +73,26 @@ function robodesk_fetch_emails()
             }
             $message = robodesk_clean_email_message($message);
 
-            if (empty($message_id))
+            if (empty($message_id)) {
                 continue;
+            }
 
-            // Prevent duplicates
+            // Prevent duplicates (tickets that have already been fetched)
+            $existing_ticket = get_posts([
+                'post_type' => 'robodesk_ticket',
+                'meta_key' => 'email_message_id',
+                'meta_value' => $message_id
+            ]);
+
+            // If the email is already fetched (ticket exists), check if it's a reply and skip if not
+            if (!empty($existing_ticket)) {
+                // This is a reply, so we fetch it
+                if (empty($in_reply_to) && empty($references)) {
+                    continue; // No reply, skip this email
+                }
+            }
+
+            // Prevent duplicate emails (if ticket doesn't exist)
             if (get_posts(['post_type' => 'robodesk_ticket', 'meta_key' => 'email_message_id', 'meta_value' => $message_id])) {
                 continue;
             }
@@ -90,7 +107,7 @@ function robodesk_fetch_emails()
                 $first_message_id = null;
             }
 
-            // Find the original post 
+            // Find the original post for replies
             if (!empty($first_message_id)) {
                 $original_query = new WP_Query([
                     'meta_key' => 'email_message_id',
@@ -136,7 +153,7 @@ function robodesk_fetch_emails()
                     }
                 }
 
-                continue; // Skip creating a new post
+                continue; // Skip creating a new post for replies
             }
 
             // If no post exists, create a new one (for first-time emails)
@@ -154,22 +171,17 @@ function robodesk_fetch_emails()
 
             // Ensure the "Email" term exists in the taxonomy
             $term_email = term_exists('Email', 'robodesk_ticket_origin');
-            // Ensure the "Medium" term exists in the taxonomy
             $term_priority = term_exists('Medium', 'robodesk_ticket_priority');
 
             if (!$term_email) {
-                // Create the term if it doesn't exist
                 $term_email = wp_insert_term('Email', 'robodesk_ticket_origin');
             }
 
             if (!$term_priority) {
-                // Create the term if it doesn't exist
                 $term_priority = wp_insert_term('Medium', 'robodesk_ticket_priority');
             }
 
-            // Extract term ID if term creation was successful for origin
             $term_email_id = (!is_wp_error($term_email) && isset($term_email['term_id'])) ? $term_email['term_id'] : null;
-            // Extract term ID if term creation was successful for priority
             $term_priority_id = (!is_wp_error($term_priority) && isset($term_priority['term_id'])) ? $term_priority['term_id'] : null;
 
             // Create new post With taxonomy Email
@@ -180,19 +192,16 @@ function robodesk_fetch_emails()
                 'post_status'  => 'publish',
                 'post_author'  => $user_id,
                 'post_type'    => 'robodesk_ticket',
-
             ]);
 
-            // Assign taxonomy only if the post was created and the term ID exists
             if ($post_id && $term_email_id) {
                 wp_set_post_terms($post_id, [$term_email_id], 'robodesk_ticket_origin', false);
             }
-            // Assign priority only if the post was created and the term ID exists
+
             if ($post_id && $term_priority_id) {
                 wp_set_post_terms($post_id, [$term_priority_id], 'robodesk_ticket_priority', false);
             }
 
-            // Set default ticket status to 'open'
             update_post_meta($post_id, '_robodesk_ticket_status', 'open');
 
             if (!is_wp_error($post_id)) {
