@@ -53,9 +53,6 @@ function robodesk_fetch_emails()
     $username = 'pipetest@wplocatepress.com';
     $password = 'k342+11$c1_';
 
-    // Retrieve the date of the last fetched email (if any)
-    $last_fetched_time = get_option('robodesk_last_fetched_time', '2000-01-01 00:00:00'); // Default to an old date if no email has been fetched yet.
-
     // Connect to email
     $email = imap_open($hostname, $username, $password) or die('Cannot connect to email: ' . imap_last_error());
     $emails = imap_search($email, 'ALL'); // Search for all emails
@@ -69,11 +66,6 @@ function robodesk_fetch_emails()
             $message_id = $headerInfo->message_id ?? ''; // Unique identifier for the email
             $in_reply_to = $headerInfo->in_reply_to ?? ''; // Message ID of the email being replied to
             $references = $headerInfo->references ?? ''; // Message IDs of previous emails in the thread
-
-            // If the email's date is older than the last fetched time, skip it
-            if (strtotime($date) <= strtotime($last_fetched_time)) {
-                continue; // Skip if the email is not newer than the last fetched time
-            }
 
             $message = imap_fetchbody($email, $email_number, 1.1);
             if (empty($message)) {
@@ -217,17 +209,9 @@ function robodesk_fetch_emails()
                 add_post_meta($post_id, 'email_from', $from);
             }
         }
-
-        // Update the last fetched time to the latest email date
-        update_option('robodesk_last_fetched_time', max(array_map(function ($email_number) use ($email) {
-            $headerInfo = imap_headerinfo($email, $email_number);
-            return strtotime($headerInfo->date);
-        }, $emails)));
     }
     imap_close($email);
 }
-
-
 
 // Post comments as email replies
 function robodesk_reply_email($comment_id, $comment_approved)
