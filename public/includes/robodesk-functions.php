@@ -432,3 +432,38 @@ function robodesk_flush_rewrite_rules() {
     flush_rewrite_rules();
 }
 register_activation_hook(__FILE__, 'robodesk_flush_rewrite_rules');
+
+
+function robodesk_frontend_tinymce_comment_form() {
+
+    if (!is_admin()) {
+        ob_start();
+        wp_editor('', 'comment', array(
+            'textarea_name' => 'comment',
+            'textarea_rows' => 15,
+            'media_buttons' => false,
+            'teeny' => true,
+            'quicktags' => false,
+            'tinymce' => array(
+                'toolbar1' => 'bold,italic,underline,link,unlink,bullist,numlist',
+                'toolbar2' => '',
+            )
+        ));
+        $editor = ob_get_contents();
+        ob_end_clean();
+        
+
+        add_filter('comment_form_field_comment', function($field) use ($editor) {
+            return $editor;
+        });
+        
+
+        add_action('wp_enqueue_scripts', 'frontend_tinymce_enqueue_scripts');
+    }
+}
+add_action('init', 'robodesk_frontend_tinymce_comment_form');
+
+function frontend_tinymce_enqueue_scripts() {
+    wp_enqueue_editor();
+    wp_enqueue_script('tinymce-comments', get_template_directory_uri() . '/js/tinymce-comments.js', array('jquery'), null, true);
+}

@@ -132,7 +132,6 @@ function modify_taxonomy_query($query)
 }
 add_action('pre_get_terms', 'modify_taxonomy_query');
 
-
 function set_default_taxonomy_order($term_id, $tt_id, $taxonomy)
 {
     if ($taxonomy === 'robodesk_ticket_priority') {
@@ -183,6 +182,7 @@ add_filter('get_terms', 'custom_taxonomy_order', 10, 3);
 function add_custom_comment_type($commentdata) {
     if (get_post_type($commentdata['comment_post_ID']) === 'robodesk_ticket') {
         $commentdata['comment_type'] = 'ticket_replies';
+        $commentdata['comment_content'] = wp_kses_post($commentdata['comment_content']);
     }
     return $commentdata;
 }

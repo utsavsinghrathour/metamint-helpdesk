@@ -873,6 +873,7 @@ function robodesk_single_ticket_shortcode($atts)
     <script type="text/javascript">
         jQuery(document).ready(function($) {
             $('.robodesk-ticket-comments #commentform').on('submit', function(e) {
+                var button = $(this).find('input[type="submit"]');
                 e.preventDefault();
                 var form = $(this);
                 var formData = new FormData(this);
@@ -884,6 +885,10 @@ function robodesk_single_ticket_shortcode($atts)
                     data: formData,
                     processData: false,
                     contentType: false,
+                    beforeSend: function() {
+                        button.val('Poosting...');
+                        button.prop('disabled', true);
+                    },
                     success: function(response) {
                         if (response.success) {
                             location.reload();
@@ -893,6 +898,10 @@ function robodesk_single_ticket_shortcode($atts)
                     },
                     error: function() {
                         alert('An error occurred while submitting the comment.');
+                    },
+
+                    complete: function() {
+                        button.val('Post Comment');
                     }
                 });
             });
@@ -922,7 +931,7 @@ function robodesk_submit_comment()
         ));
     } else {
         $comment_id = $comment->comment_ID;
-        
+
         $wpdb->update(
             $wpdb->comments,
             array('comment_type' => 'robodesk_ticket_replies'),
@@ -931,7 +940,6 @@ function robodesk_submit_comment()
             array('%d')
         );
         wp_send_json_success();
-  
     }
 }
 add_action('wp_ajax_robodesk_submit_comment', 'robodesk_submit_comment');
