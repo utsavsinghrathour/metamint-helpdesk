@@ -886,7 +886,7 @@ function robodesk_single_ticket_shortcode($atts)
                     processData: false,
                     contentType: false,
                     beforeSend: function() {
-                        button.val('Poosting...');
+                        button.val('Posting...');
                         button.prop('disabled', true);
                     },
                     success: function(response) {

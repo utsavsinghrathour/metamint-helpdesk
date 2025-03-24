@@ -309,13 +309,13 @@ function add_custom_table_to_my_account()
             'posts_per_page' => 5,
             'orderby' => 'date',
             'order' => 'DESC',
-            // 'meta_query' => array(
-            //     array(
-            //         'key' => 'robodesk_ticket_status',
-            //         'value' => 'open',
-            //         'compare' => 'like'
-            //     )
-            // )
+            'meta_query' => array(
+                array(
+                    'key' => '_robodesk_ticket_status',
+                    'value' => 'open',
+                    'compare' => 'like'
+                )
+            )
         );
 
         $query = new WP_Query($args);
