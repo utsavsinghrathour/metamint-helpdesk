@@ -297,8 +297,7 @@ function robodesk_credentials_page()
 add_action('woocommerce_after_my_account', 'add_custom_table_to_my_account');
 function add_custom_table_to_my_account()
 {
-    // Check if the user is logged in
-    // var_dump(is_user_logged_in());
+   
     if (is_user_logged_in()) {
         global $wp;
         $user_id = get_current_user_id();
@@ -386,3 +385,50 @@ function add_custom_table_to_my_account()
     }
 }
     
+/**
+ * Add Support menu item to My Account page
+ */
+function robodesk_add_custom_menu_item_to_my_account($items) {
+
+    $new_items = array(
+        'robodesk-support' => __('Support', 'robodesk')
+    );
+
+    $position = array_search('orders', array_keys($items)) + 1;
+    $items = array_slice($items, 0, $position, true) + 
+             $new_items + 
+             array_slice($items, $position, count($items) - $position, true);
+    
+    return $items;
+}
+add_filter('woocommerce_account_menu_items', 'robodesk_add_custom_menu_item_to_my_account');
+
+/**
+ * Register the custom endpoint
+ */
+function robodesk_add_support_endpoint() {
+    add_rewrite_endpoint('robodesk-support', EP_ROOT | EP_PAGES);
+}
+add_action('init', 'robodesk_add_support_endpoint');
+
+/**
+ * Handle the redirect
+ */
+function robodesk_handle_support_redirect() {
+    global $wp_query;
+    
+    if (isset($wp_query->query_vars['robodesk-support']) && !is_admin()) {
+        wp_redirect(site_url('/dashboard/'));
+        exit;
+    }
+}
+add_action('template_redirect', 'robodesk_handle_support_redirect');
+
+/**
+ * Flush rewrite rules on activation
+ */
+function robodesk_flush_rewrite_rules() {
+    robodesk_add_support_endpoint();
+    flush_rewrite_rules();
+}
+register_activation_hook(__FILE__, 'robodesk_flush_rewrite_rules');

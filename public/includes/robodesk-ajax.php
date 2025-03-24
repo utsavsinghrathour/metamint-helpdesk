@@ -55,12 +55,32 @@ function robodesk_create_new_ticket_callback()
         if ($priority > 0) {
             wp_set_object_terms($post_id, $priority, 'robodesk_ticket_priority');
         }
+        
+        $origin =  create_term_if_not_exists();
+        
+        wp_set_object_terms($post_id, (int) $origin['term_id'], 'robodesk_ticket_origin');
+        
         wp_send_json_success(array('message' => 'Ticket created successfully!'));
     }
 }
 
+
+function create_term_if_not_exists($term_name='Web', $taxonomy = 'robodesk_ticket_origin') {
+    // Check if term exists
+    $term = term_exists($term_name, $taxonomy);
+    
+    // If it doesn't exist, create it
+    if ($term === 0 || $term === null) {
+        $term = wp_insert_term($term_name, $taxonomy);
+    }
+    
+    return $term;
+}
+
+
+
 add_action('wp_ajax_robodesk_create_new_ticket', 'handle_robodesk_ticket_submission');
-// add_action('wp_ajax_nopriv_robodesk_create_new_ticket', 'handle_robodesk_ticket_submission');
+add_action('wp_ajax_nopriv_robodesk_create_new_ticket', 'handle_robodesk_ticket_submission');
 
 function handle_robodesk_ticket_submission() {
 

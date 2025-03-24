@@ -191,7 +191,7 @@ add_filter('preprocess_comment', 'add_custom_comment_type');
 
 add_action( 'pre_get_comments', 'exclude_ticket_replies' );
 function exclude_ticket_replies( $query ) {
-    if ( is_admin() ) { // Only apply on frontend
+    if ( is_admin() ) { 
         $query->query_vars['type__not_in'] = array( 'ticket_replies' );
     }
 }

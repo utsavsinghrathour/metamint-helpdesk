@@ -786,10 +786,6 @@ function robodesk_add_query_vars($vars)
 add_filter('query_vars', 'robodesk_add_query_vars');
 
 
-
-
-
-
 function robodesk_single_ticket_shortcode($atts)
 {
 
