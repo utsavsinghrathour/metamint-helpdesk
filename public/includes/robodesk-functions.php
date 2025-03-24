@@ -291,13 +291,7 @@ function robodesk_credentials_page()
 }
 
 
-add_filter('posts_clauses', 'debug_query_clauses', 10, 2);
-function debug_query_clauses($clauses, $query) {
-    if ($query->get('post_type') === 'robodesk_ticket') {
-        error_log(print_r($clauses, true));
-    }
-    return $clauses;
-}
+
 
 
 add_action('woocommerce_after_my_account', 'add_custom_table_to_my_account');
@@ -391,3 +385,4 @@ function add_custom_table_to_my_account()
 <?php
     }
 }
+    

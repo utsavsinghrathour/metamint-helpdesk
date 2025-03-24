@@ -11,6 +11,7 @@ if (post_password_required()) {
             <?php
             wp_list_comments(array(
                 'style' => 'ol',
+                'type' => 'ticket_replies',
                 'callback' => function($comment, $args, $depth) {
                     ?>
                     <li <?php comment_class(); ?> id="comment-<?php comment_ID(); ?>">

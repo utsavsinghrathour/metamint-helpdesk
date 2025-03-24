@@ -180,21 +180,18 @@ function custom_taxonomy_order($terms, $taxonomies, $args)
 add_filter('get_terms', 'custom_taxonomy_order', 10, 3);
 
 
-
-add_filter('preprocess_comment', 'set_robodesk_comment_type');
-function set_robodesk_comment_type($commentdata) {
-    $post_id = $commentdata['comment_post_ID'];
-    if (get_post_type($post_id) === 'robodesk_ticket') {
-        $commentdata['comment_type'] = 'robodesk_ticket';
+function add_custom_comment_type($commentdata) {
+    if (get_post_type($commentdata['comment_post_ID']) === 'robodesk_ticket') {
+        $commentdata['comment_type'] = 'ticket_replies';
     }
     return $commentdata;
 }
+add_filter('preprocess_comment', 'add_custom_comment_type');
 
 
-add_action('manage_comments_custom_column', 'display_comment_type_column', 10, 2);
-function display_comment_type_column($column, $comment_id) {
-    if ($column === 'comment_type') {
-        $comment = get_comment($comment_id);
-        echo esc_html($comment->comment_type);
+add_action( 'pre_get_comments', 'exclude_ticket_replies' );
+function exclude_ticket_replies( $query ) {
+    if ( is_admin() ) { // Only apply on frontend
+        $query->query_vars['type__not_in'] = array( 'ticket_replies' );
     }
 }
