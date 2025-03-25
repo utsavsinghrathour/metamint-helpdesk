@@ -290,10 +290,9 @@ function robodesk_credentials_page()
     }
 }
 
-
-
-
-
+/**
+ * Displaying a table to show open tickets after my-account page 
+ */
 add_action('woocommerce_after_my_account', 'add_custom_table_to_my_account');
 function add_custom_table_to_my_account()
 {
@@ -434,6 +433,11 @@ function robodesk_flush_rewrite_rules() {
 register_activation_hook(__FILE__, 'robodesk_flush_rewrite_rules');
 
 
+/**
+ * Replacing default text area editor on comments frontend
+ *
+ * @return void
+ */
 function robodesk_frontend_tinymce_comment_form() {
 
     if (!is_admin()) {
