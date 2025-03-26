@@ -436,3 +436,21 @@ function robodesk_flush_rewrite_rules()
 }
 register_activation_hook(__FILE__, 'robodesk_flush_rewrite_rules');
 
+
+add_filter('comment_form_defaults', 'add_tinymce_to_comments');
+
+function add_tinymce_to_comments($defaults) {
+    ob_start();
+    wp_editor('', 'comment', array(
+        'media_buttons' => false, 
+        'textarea_rows' => 10,    
+        'teeny'         => true,  
+        'quicktags'     => false, 
+        'tinymce'       => array(
+            'toolbar1' => 'bold italic underline link | fullscreen',
+            'toolbar2' => '', 
+        ),
+    ));
+    $defaults['comment_field'] = ob_get_clean();
+    return $defaults;
+}

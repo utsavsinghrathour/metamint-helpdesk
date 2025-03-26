@@ -102,7 +102,7 @@ function order_posts_by_term_meta($clauses, $query)
     $clauses['orderby'] = "term_order ASC, {$wpdb->posts}.post_date {$query->get('order')}";
     return $clauses;
 }
-// add_filter('posts_clauses', 'order_posts_by_term_meta', 10, 2);
+add_filter('posts_clauses', 'order_posts_by_term_meta', 10, 2);
 
 
 add_shortcode('robodesk_my_tickets', 'robodesk_my_tickets_shortcode');
@@ -129,7 +129,7 @@ function robodesk_my_tickets_shortcode()
         'paged' => $paged,
         'orderby' => $orderby,
         'order' => $order,
-        // 'order_by_tax_priority' => true,
+        'order_by_tax_priority' => true,
     );
 
     $selected_priority = isset($_GET['robodesk_ticket_priority']) ? sanitize_text_field($_GET['robodesk_ticket_priority']) : '';
@@ -908,8 +908,6 @@ function robodesk_single_ticket_shortcode($atts)
                     }
                 });
             });
-
-
 
             $('.robodesk-ticket-comments .comment-reply-link').on('click', function(e) {
                 e.preventDefault();

@@ -194,21 +194,3 @@ function robodesk_decrypt($ciphertext, $key)
     return openssl_decrypt($encrypted_data, "AES-256-CBC", $key, $options = 0, $iv);
 }
 
-
-add_filter('comment_form_defaults', 'add_tinymce_to_comments');
-
-function add_tinymce_to_comments($defaults) {
-    ob_start();
-    wp_editor('', 'comment', array(
-        'media_buttons' => false, 
-        'textarea_rows' => 10,    
-        'teeny'         => true,  
-        'quicktags'     => false, 
-        'tinymce'       => array(
-            'toolbar1' => 'bold italic underline link | fullscreen',
-            'toolbar2' => '', 
-        ),
-    ));
-    $defaults['comment_field'] = ob_get_clean();
-    return $defaults;
-}
