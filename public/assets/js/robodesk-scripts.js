@@ -347,8 +347,6 @@ jQuery(document).ready(function($) {
             
             
         });
+        
 
 });
-
-
-// $('#robodesk-create-ticket')

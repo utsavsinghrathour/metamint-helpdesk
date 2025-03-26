@@ -99,10 +99,6 @@ function order_posts_by_term_meta($clauses, $query)
 
     // Order by the computed term_order and post_date (latest first)
 
-    // if($query->get('orderby')== 'date'){
-
-    // }
-
     $clauses['orderby'] = "term_order ASC, {$wpdb->posts}.post_date {$query->get('order')}";
     return $clauses;
 }
@@ -872,13 +868,19 @@ function robodesk_single_ticket_shortcode($atts)
     </div>
     <script type="text/javascript">
         jQuery(document).ready(function($) {
+            var originalFormParent = $('#respond').parent();
+            var originalFormSibling = $('#respond').next();
             $('.robodesk-ticket-comments #commentform').on('submit', function(e) {
+                if (typeof tinymce !== 'undefined' && tinymce.get('comment')) {
+                    tinymce.triggerSave();
+                    setTimeout(function() {}, 100);
+                }
                 var button = $(this).find('input[type="submit"]');
                 e.preventDefault();
                 var form = $(this);
                 var formData = new FormData(this);
+
                 formData.append('action', 'robodesk_submit_comment');
-                console.log(formData);
                 $.ajax({
                     url: '<?php echo admin_url('admin-ajax.php'); ?>',
                     type: 'POST',
@@ -902,9 +904,12 @@ function robodesk_single_ticket_shortcode($atts)
 
                     complete: function() {
                         button.val('Post Comment');
+                        button.prop('disabled', false);
                     }
                 });
             });
+
+
 
             $('.robodesk-ticket-comments .comment-reply-link').on('click', function(e) {
                 e.preventDefault();
@@ -912,6 +917,44 @@ function robodesk_single_ticket_shortcode($atts)
                 $('#comment_parent').val(commentId);
                 $('#respond').insertAfter($(this).closest('.comment-body'));
                 $('#cancel-comment-reply-link').show();
+                var commentId = $(this).data('commentid');
+                var postId = $(this).data('postid');
+                var belowElement = $(this).data('belowelement');
+                var respondElement = $(this).data('respondelement');
+
+                if (typeof tinymce !== 'undefined' && tinymce.get('comment')) {
+                    tinymce.EditorManager.execCommand('mceRemoveEditor', true, 'comment');
+                }
+
+                if (typeof addComment !== 'undefined' && addComment.moveForm) {
+                    addComment.moveForm(belowElement, commentId, respondElement, postId);
+                }
+
+                if (typeof tinymce !== 'undefined') {
+                    tinymce.EditorManager.execCommand('mceAddEditor', true, 'comment');
+                }
+            });
+
+            $('#cancel-comment-reply-link').on('click', function(e) {
+                e.preventDefault();
+
+                if (typeof tinymce !== 'undefined' && tinymce.get('comment')) {
+                    tinymce.EditorManager.execCommand('mceRemoveEditor', true, 'comment');
+                }
+
+                if (originalFormSibling.length) {
+                    originalFormParent.insertBefore($('#respond'), originalFormSibling);
+                } else {
+                    originalFormParent.append($('#respond'));
+                }
+
+  
+                $(this).hide();
+                $('#comment_parent').val('');
+
+                if (typeof tinymce !== 'undefined') {
+                    tinymce.EditorManager.execCommand('mceAddEditor', true, 'comment');
+                }
             });
         });
     </script>

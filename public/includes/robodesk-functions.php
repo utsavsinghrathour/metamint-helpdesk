@@ -296,7 +296,7 @@ function robodesk_credentials_page()
 add_action('woocommerce_after_my_account', 'add_custom_table_to_my_account');
 function add_custom_table_to_my_account()
 {
-   
+
     if (is_user_logged_in()) {
         global $wp;
         $user_id = get_current_user_id();
@@ -323,7 +323,7 @@ function add_custom_table_to_my_account()
 
     ?>
         <h3>Get Support Ticket</h3>
-        <a href="<?php echo esc_url($create_ticket_url);?>">Create Ticket</a>
+        <a href="<?php echo esc_url($create_ticket_url); ?>">Create Ticket</a>
         <table style="margin-top: 30px;">
             <thead>
                 <tr>
@@ -340,7 +340,7 @@ function add_custom_table_to_my_account()
                         $terms = get_the_terms(get_the_ID(), 'robodesk_ticket_priority');
                         $origin = get_the_terms(get_the_ID(), 'robodesk_ticket_origin');
                         $author = get_the_author();
-       
+
                         $author_id = get_the_author_meta('ID');
                         $user = get_userdata($author_id);
                         $author_roles = $user->roles;
@@ -350,8 +350,8 @@ function add_custom_table_to_my_account()
                         if ($terms && !is_wp_error($terms)) {
                             $priority_name = $terms[0]->name;
                         }
-                        
-                        
+
+
                         $origin_name = '-';
                         if ($origin && !is_wp_error($origin)) {
                             $origin_name = $origin[0]->name;
@@ -366,7 +366,7 @@ function add_custom_table_to_my_account()
                                 <p class="ticket-author-role"><?php echo ucwords($author_role); ?></p>
                             </td>
                             <td><?php echo $origin_name; ?></td>
-                            <td><a href="<?php echo esc_url($ticket_url); ?>"><?php the_title(); ?></a</td>
+                            <td><a href="<?php echo esc_url($ticket_url); ?>"><?php the_title(); ?></a< /td>
                             <td><?php echo get_the_date('dS M Y'); ?></td>
                             <td><?php echo esc_html($status); ?></td>
                         </tr>
@@ -380,24 +380,25 @@ function add_custom_table_to_my_account()
             </tbody>
         </table>
 
-<?php
+    <?php
     }
 }
-    
+
 /**
  * Add Support menu item to My Account page
  */
-function robodesk_add_custom_menu_item_to_my_account($items) {
+function robodesk_add_custom_menu_item_to_my_account($items)
+{
 
     $new_items = array(
         'robodesk-support' => __('Support', 'robodesk')
     );
 
     $position = array_search('orders', array_keys($items)) + 1;
-    $items = array_slice($items, 0, $position, true) + 
-             $new_items + 
-             array_slice($items, $position, count($items) - $position, true);
-    
+    $items = array_slice($items, 0, $position, true) +
+        $new_items +
+        array_slice($items, $position, count($items) - $position, true);
+
     return $items;
 }
 add_filter('woocommerce_account_menu_items', 'robodesk_add_custom_menu_item_to_my_account');
@@ -405,7 +406,8 @@ add_filter('woocommerce_account_menu_items', 'robodesk_add_custom_menu_item_to_m
 /**
  * Register the custom endpoint
  */
-function robodesk_add_support_endpoint() {
+function robodesk_add_support_endpoint()
+{
     add_rewrite_endpoint('robodesk-support', EP_ROOT | EP_PAGES);
 }
 add_action('init', 'robodesk_add_support_endpoint');
@@ -413,9 +415,10 @@ add_action('init', 'robodesk_add_support_endpoint');
 /**
  * Handle the redirect
  */
-function robodesk_handle_support_redirect() {
+function robodesk_handle_support_redirect()
+{
     global $wp_query;
-    
+
     if (isset($wp_query->query_vars['robodesk-support']) && !is_admin()) {
         wp_redirect(site_url('/dashboard/'));
         exit;
@@ -426,48 +429,10 @@ add_action('template_redirect', 'robodesk_handle_support_redirect');
 /**
  * Flush rewrite rules on activation
  */
-function robodesk_flush_rewrite_rules() {
+function robodesk_flush_rewrite_rules()
+{
     robodesk_add_support_endpoint();
     flush_rewrite_rules();
 }
 register_activation_hook(__FILE__, 'robodesk_flush_rewrite_rules');
 
-
-/**
- * Replacing default text area editor on comments frontend
- *
- * @return void
- */
-function robodesk_frontend_tinymce_comment_form() {
-
-    if (!is_admin()) {
-        ob_start();
-        wp_editor('', 'comment', array(
-            'textarea_name' => 'comment',
-            'textarea_rows' => 15,
-            'media_buttons' => false,
-            'teeny' => true,
-            'quicktags' => false,
-            'tinymce' => array(
-                'toolbar1' => 'bold,italic,underline,link,unlink,bullist,numlist',
-                'toolbar2' => '',
-            )
-        ));
-        $editor = ob_get_contents();
-        ob_end_clean();
-        
-
-        add_filter('comment_form_field_comment', function($field) use ($editor) {
-            return $editor;
-        });
-        
-
-        add_action('wp_enqueue_scripts', 'frontend_tinymce_enqueue_scripts');
-    }
-}
-add_action('init', 'robodesk_frontend_tinymce_comment_form');
-
-function frontend_tinymce_enqueue_scripts() {
-    wp_enqueue_editor();
-    wp_enqueue_script('tinymce-comments', get_template_directory_uri() . '/js/tinymce-comments.js', array('jquery'), null, true);
-}

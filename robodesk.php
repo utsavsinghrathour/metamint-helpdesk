@@ -61,13 +61,14 @@ function robodesk_enqueue_scripts()
 {
 
     wp_enqueue_script('jquery');
+
     if (is_admin()) {
         add_action('admin_enqueue_scripts', 'robodesk_enqueue_admin_scripts');
     } else {
-
+        wp_enqueue_script('tinymce');
         wp_enqueue_style('robodesk-styles', ROBODESK_PLUGIN_URL . 'public/assets/css/robodesk-styles.css', array(), '1.0');
 
-        wp_enqueue_script('robodesk-scripts', ROBODESK_PLUGIN_URL . 'public/assets/js/robodesk-scripts.js', array('jquery'), time(), true);
+        wp_enqueue_script('robodesk-scripts', ROBODESK_PLUGIN_URL . 'public/assets/js/robodesk-scripts.js', array('jquery', 'tinymce'), time(), true);
 
         wp_localize_script('robodesk-scripts', 'robodesk_ajax_object', array(
             'ajax_url' => admin_url('admin-ajax.php'),
@@ -191,4 +192,19 @@ function robodesk_decrypt($ciphertext, $key)
 {
     list($encrypted_data, $iv) = explode('::', base64_decode($ciphertext), 2);
     return openssl_decrypt($encrypted_data, "AES-256-CBC", $key, $options = 0, $iv);
+}
+
+// Replace the default textarea with TinyMCE editor
+add_filter('comment_form_defaults', 'add_tinymce_to_comments');
+
+function add_tinymce_to_comments($defaults) {
+    ob_start();
+    wp_editor('', 'comment', array(
+        'media_buttons' => false, // No media upload button
+        'textarea_rows' => 10,    // Editor height
+        'teeny'         => true,  // Minimal toolbar
+        'quicktags'     => false, // Disable HTML editor
+    ));
+    $defaults['comment_field'] = ob_get_clean();
+    return $defaults;
 }
