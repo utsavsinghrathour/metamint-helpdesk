@@ -200,10 +200,14 @@ add_filter('comment_form_defaults', 'add_tinymce_to_comments');
 function add_tinymce_to_comments($defaults) {
     ob_start();
     wp_editor('', 'comment', array(
-        'media_buttons' => false, // No media upload button
-        'textarea_rows' => 10,    // Editor height
-        'teeny'         => true,  // Minimal toolbar
-        'quicktags'     => false, // Disable HTML editor
+        'media_buttons' => false, 
+        'textarea_rows' => 10,    
+        'teeny'         => true,  
+        'quicktags'     => false, 
+        'tinymce'       => array(
+            'toolbar1' => 'bold italic underline link | fullscreen',
+            'toolbar2' => '', 
+        ),
     ));
     $defaults['comment_field'] = ob_get_clean();
     return $defaults;
