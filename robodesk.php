@@ -187,14 +187,14 @@ function robodesk_encrypt($plaintext, $key)
     return base64_encode($ciphertext . '::' . $iv);
 }
 
-// Decryption function
+
 function robodesk_decrypt($ciphertext, $key)
 {
     list($encrypted_data, $iv) = explode('::', base64_decode($ciphertext), 2);
     return openssl_decrypt($encrypted_data, "AES-256-CBC", $key, $options = 0, $iv);
 }
 
-// Replace the default textarea with TinyMCE editor
+
 add_filter('comment_form_defaults', 'add_tinymce_to_comments');
 
 function add_tinymce_to_comments($defaults) {
