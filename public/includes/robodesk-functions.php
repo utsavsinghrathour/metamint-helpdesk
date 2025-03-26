@@ -454,3 +454,17 @@ function add_tinymce_to_comments($defaults) {
     $defaults['comment_field'] = ob_get_clean();
     return $defaults;
 }
+
+/** Disable single page for robodesk  */
+
+function remove_cpt_single_rewrite() {
+
+    global $wp_post_types;
+    if (isset($wp_post_types['robodesk_ticket'])) {
+        $wp_post_types['robodesk_ticket']->publicly_queryable = false;
+        $wp_post_types['robodesk_ticket']->query_var = false;
+    }
+    
+    // flush_rewrite_rules();
+}
+add_action('init', 'remove_cpt_single_rewrite', 20);
