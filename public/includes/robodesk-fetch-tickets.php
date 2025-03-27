@@ -231,39 +231,68 @@ function robodesk_reply_email($comment_id, $comment_approved)
     if ($comment_approved) {
         $comment = get_comment($comment_id); // Get the comment object
         $post = get_post($comment->comment_post_ID); // Get the post object
-        $email_from = get_post_meta($post->ID, 'email_from', true); // Get the email from the post meta
-        $email_message_id = get_post_meta($post->ID, 'email_message_id', true); // Get the email message id from the post meta
 
-        preg_match('/<(.*?)>/', $email_from, $matches); // Extract email from angle brackets
-        $pure_email = $matches[1] ?? $email_from;       // Get email without angle brackets
+        // Get the original sender's email from post meta (the person who created the ticket)
+        $email_from = get_post_meta($post->ID, 'email_from', true);
+        $email_message_id = get_post_meta($post->ID, 'email_message_id', true);
 
-        // Validate email
-        if (!filter_var($pure_email, FILTER_VALIDATE_EMAIL)) {
-            error_log('Invalid sender email: ' . $pure_email);
+        // Get the email of the comment author (the person who replied)
+        $comment_author_email = $comment->comment_author_email;
+
+        // Extract clean emails if they are inside angle brackets
+        preg_match('/<(.*?)>/', $email_from, $matches);
+        $pure_email_from = $matches[1] ?? $email_from;
+
+        preg_match('/<(.*?)>/', $comment_author_email, $matches);
+        $pure_email_to = $matches[1] ?? $comment_author_email;
+
+        // Validate emails
+        if (!filter_var($pure_email_from, FILTER_VALIDATE_EMAIL) || !filter_var($pure_email_to, FILTER_VALIDATE_EMAIL)) {
+            error_log('Invalid email addresses: From - ' . $pure_email_from . ', To - ' . $pure_email_to);
             return;
         }
 
-        $reply_to = $pure_email;
+        // Swap emails correctly:
+        // - "To" should be the original sender (the ticket creator).
+        // - "Reply-To" should be the commenter's email (the person replying).
+        $to = $pure_email_from;
+        $reply_to = $pure_email_to;
+
         $subject = 'Re: ' . $post->post_title;
         $comment_content = $comment->comment_content;
-        $reply_message = "On " . date("Y-m-d H:i:s", strtotime($post->post_date)) . ", $email_from wrote:\n\n" . $comment_content;
 
+        // Format the reply email
+        $reply_message = "On " . date("Y-m-d H:i:s", strtotime($post->post_date)) . ", $pure_email_from wrote:\n\n" . $comment_content;
+
+        // Construct email headers
         $headers = [
             'From: Robodesk Support <pipetest@wplocatepress.com>',
-            'Reply-To: ' . $reply_to,
-            'References: ' . $email_message_id,
-            'In-Reply-To: ' . $email_message_id,
+            'To: ' . $to,
+            'Reply-To: ' . $reply_to,  // Ensures replies go to the right person
             'MIME-Version: 1.0',
             'Content-Type: text/plain; charset=UTF-8'
         ];
 
-        $mail_sent = wp_mail($reply_to, $subject, $reply_message, $headers); // Send email
+        // Include threading headers if available
+        if ($email_message_id) {
+            $headers[] = 'References: ' . $email_message_id;
+            $headers[] = 'In-Reply-To: ' . $email_message_id;
+        }
 
+        // Debug: Log headers before sending
+        error_log('Email To: ' . $to);
+        error_log('Reply-To: ' . $reply_to);
+        error_log('Email Headers: ' . print_r($headers, true));
+
+        // Send the email
+        $mail_sent = wp_mail($to, $subject, $reply_message, $headers);
+
+        // Log results
         if (!$mail_sent) {
-            error_log('Email failed to send to ' . $reply_to); // Log error if email fails to send
+            error_log('Email failed to send to ' . $to);
         } else {
-            error_log('Email successfully sent to ' . $reply_to); // Log success if email is sent
+            error_log('Email successfully sent to ' . $to);
         }
     }
 }
-add_action('comment_post', 'robodesk_reply_email', 10, 2); // Hook into comment_post action which is triggered when a comment is posted
+add_action('comment_post', 'robodesk_reply_email', 10, 2);
