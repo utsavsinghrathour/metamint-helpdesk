@@ -197,7 +197,7 @@ function robodesk_fetch_emails()
             'post_date'    => $date,
             'post_status'  => 'publish',
             'post_author'  => $user_id,
-            'post_type'    => 'robodesk_ticket',
+            'post_type'    => 'robodesk_support_customer',
         ]);
 
         if ($post_id && $term_email_id) {
