@@ -3,6 +3,28 @@
  * Hooks and modifications related to woocommerce are added here
  */
 
+// Might be required later for disabling block support
+//  use Automattic\WooCommerce\Packages;
+
+//  add_action( 'plugins_loaded', function() {
+//      if ( ! class_exists( Packages::class ) ) {
+//          return;
+//      }
+//      // Dependencies are require for Woo admin screens.
+//      if ( ! empty( $_GET['page'] ) && is_admin() && str_starts_with( $_GET['page'], 'wc-' ) ) {
+//          return;
+//      }
+//      $override = new class() extends Packages {
+//          public function __construct() {
+//          }
+//          public function remove_woocommerce_blocks() : void {
+//              unset( static::$packages['woocommerce-blocks'] );
+//          }
+//      };
+//      $override->remove_woocommerce_blocks();
+//  }, 6 );
+
+
 // Add Support menu item to My Account page
 
 function robodesk_add_custom_menu_item_to_my_account($items)

@@ -842,17 +842,6 @@ function robodesk_single_ticket_shortcode($atts)
                 <div class="robodesk-ticket-content">
                     <?php echo apply_filters('the_content', $ticket->post_content); ?>
                 </div>
-                <?php if (in_array('administrator', $current_user->roles)) : ?>
-                    <div class="robodesk-ticket-actions">
-                        <select id="change-ticket-status" data-ticket-id="<?php echo esc_attr($ticket_id); ?>">
-                            <option value="new" <?php selected($status, 'new'); ?>>New</option>
-                            <option value="in-progress" <?php selected($status, 'in-progress'); ?>>In Progress</option>
-                            <option value="archived" <?php selected($status, 'archived'); ?>>Archived</option>
-                            <option value="completed" <?php selected($status, 'completed'); ?>>Completed</option>
-                        </select>
-                    </div>
-                <?php endif; ?>
-
                 <div class="robodesk-ticket-comments">
                     <?php
 
