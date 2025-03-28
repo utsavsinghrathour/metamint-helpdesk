@@ -230,8 +230,11 @@ function robodesk_my_tickets_shortcode()
                     $terms = get_the_terms(get_the_ID(), 'robodesk_ticket_priority');
                     $comment_count = get_comments_number(get_the_ID());
                     $priority_name = '';
+                    $priority_color = false;
                     if ($terms && !is_wp_error($terms)) {
                         $priority_name = $terms[0]->name;
+                        $priority_color =get_term_meta($terms[0]->term_id, 'priority_color', true);
+                        
                     }
                     $comments = get_comments(array(
                         'post_id' =>get_the_ID(),
@@ -255,8 +258,8 @@ function robodesk_my_tickets_shortcode()
                         </td>
                         <td><?php echo  $comment_count;?></td>
                         <td><?php echo $human_readable_time ? $human_readable_time .' ago' : '-'?></td>
-                        <td><span class="robodesk-status-pill"> <?php echo esc_html(ucwords($status)); ?></span></td>
-                        <td><?php echo esc_html($priority_name); ?></td>
+                        <td><span class="robodesk-status-pill <?php echo strtolower($status); ?>"> <?php echo esc_html(ucwords($status)); ?></span></td>
+                        <td><span class="robodesk-priority-pill <?php echo strtolower($priority_name);?>"></span><?php echo esc_html($priority_name); ?></td>
                     </tr>
                 <?php endwhile;
                 wp_reset_postdata();

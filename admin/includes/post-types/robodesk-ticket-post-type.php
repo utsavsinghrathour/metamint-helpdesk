@@ -198,4 +198,88 @@ function sort_robodesk_ticket_status_column($query) {
         $query->set('orderby', 'meta_value');
     }
 }
+
+// Add this code to your theme's functions.php file or a custom plugin
+
+// Step 1: Register the term meta for 'robodesk_ticket_priority'
+function register_ticket_priority_color_meta() {
+    register_term_meta('robodesk_ticket_priority', 'priority_color', array(
+        'type' => 'string',
+        'description' => 'Color for the ticket priority',
+        'single' => true,
+        'show_in_rest' => true, // Optional: Expose in REST API
+    ));
+}
+add_action('init', 'register_ticket_priority_color_meta');
+
+// Step 2a: Add color picker field to "Add New Term" form
+function add_color_picker_to_new_term($taxonomy) {
+    if ($taxonomy === 'robodesk_ticket_priority') {
+        ?>
+        <div class="form-field term-colorpicker-wrap">
+            <label for="priority_color">Priority Color</label>
+            <input type="text" name="priority_color" id="priority_color" value="#ffffff" class="color-picker-field" />
+            <p>Select a color for this priority.</p>
+        </div>
+        <?php
+    }
+}
+add_action('robodesk_ticket_priority_add_form_fields', 'add_color_picker_to_new_term', 10, 1);
+
+// Step 2b: Add color picker field to "Edit Term" form
+function add_color_picker_to_edit_term($term) {
+    $color = get_term_meta($term->term_id, 'priority_color', true);
+    $color = !empty($color) ? $color : '#ffffff'; // Default to white if no color is set
+    
+    // var_dump($color);
+    ?>
+    <tr class="form-field term-colorpicker-wrap">
+        <th scope="row"><label for="priority_color">Priority Color</label></th>
+        <td>
+            <input type="text" name="priority_color" id="priority_color" value="<?php echo esc_attr($color); ?>" class="color-picker-field" />
+            <p class="description">Select a color for this priority.</p>
+        </td>
+    </tr>
+    <?php
+}
+add_action('robodesk_ticket_priority_edit_form_fields', 'add_color_picker_to_edit_term', 10, 1);
+
+// Step 3: Enqueue WordPress color picker scripts and styles
+function enqueue_color_picker_scripts($taxonomy) {
+    // Only load on the edit tags screen for 'robodesk_ticket_priority'
+    $screen = get_current_screen();
+    if ($screen->id === 'edit-robodesk_ticket_priority') {
+        wp_enqueue_style('wp-color-picker');
+        wp_enqueue_script('wp-color-picker');
+    
+        add_action('admin_footer', 'initialize_color_picker');
+    }
+}
+add_action('admin_enqueue_scripts', 'enqueue_color_picker_scripts');
+
+function initialize_color_picker() {
+    ?>
+    <script type="text/javascript">
+        jQuery(document).ready(function($) {
+            $('.color-picker-field').wpColorPicker();
+        });
+    </script>
+    <?php
+}
+
+// Step 4: Save the color value when the term is created or updated
+function save_priority_color_meta($term_id) {
+    if (isset($_POST['priority_color'])) {
+        $color = sanitize_hex_color($_POST['priority_color']); // Sanitize the hex color
+        if ($color) {
+            update_term_meta($term_id, 'priority_color', $color);
+        } else {
+            delete_term_meta($term_id, 'priority_color');
+        }
+    }
+}
+add_action('created_robodesk_ticket_priority', 'save_priority_color_meta');
+add_action('edited_robodesk_ticket_priority', 'save_priority_color_meta');
+
+
 ?>
