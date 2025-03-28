@@ -224,7 +224,7 @@ function robodesk_my_tickets_shortcode()
 
                             <p class="ticket-date"><?php echo get_the_date('dS M Y'); ?></p>
                         </td>
-                        <td><?php echo esc_html($status); ?></td>
+                        <td><?php echo esc_html(ucwords($status)); ?></td>
                         <td><?php echo esc_html($priority_name); ?></td>
                     </tr>
                 <?php endwhile;
