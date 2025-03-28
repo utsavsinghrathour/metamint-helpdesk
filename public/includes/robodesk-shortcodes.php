@@ -820,220 +820,225 @@ function robodesk_single_ticket_shortcode($atts)
     $original_post = $post;
     $post = $ticket;
     $withcomments = true;
-
     ob_start();
 ?>
     <div class="robodesk-single-ticket robodesk-container">
         <h2><?php echo esc_html($ticket->post_title); ?></h2>
         <div class="robodesk-ticket-meta">
-            <p><strong>Status:</strong> <?php echo esc_html($status); ?></p>
-            <p><strong>Priority:</strong> <?php echo esc_html($priority); ?></p>
-            <p><strong>Created At:</strong> <?php echo esc_html($created_date); ?></p>
-            <p class=" <?php echo $time_ago_class; ?>"><strong>Last Updated:</strong> <?php echo esc_html($updated_date) . ' (' . $time_ago . ')'; ?></p>
-        </div>
-        <div class="robodesk-ticket-content">
-            <?php echo apply_filters('the_content', $ticket->post_content); ?>
-        </div>
-        <?php if (in_array('administrator', $current_user->roles)) : ?>
-            <div class="robodesk-ticket-actions">
-                <select id="change-ticket-status" data-ticket-id="<?php echo esc_attr($ticket_id); ?>">
-                    <option value="new" <?php selected($status, 'new'); ?>>New</option>
-                    <option value="in-progress" <?php selected($status, 'in-progress'); ?>>In Progress</option>
-                    <option value="archived" <?php selected($status, 'archived'); ?>>Archived</option>
-                    <option value="completed" <?php selected($status, 'completed'); ?>>Completed</option>
-                </select>
+            <div class="robodesk-ticket-status-priority">
+                <p><strong>Ticket id:</strong> <?php echo esc_html($ticket_id); ?></p>
+                <p><strong>Status:</strong> <?php echo esc_html($status); ?></p>
+                <p><strong>Priority:</strong> <?php echo esc_html($priority); ?></p>
             </div>
-        <?php endif; ?>
 
-        <div class="robodesk-ticket-comments">
-            <?php
+            <div class="robodesk-ticket-dates">
+                <p><strong>Created At:</strong> <?php echo esc_html($created_date); ?></p>
+                <p class=" <?php echo $time_ago_class; ?>"><strong>Last Updated:</strong> <?php echo esc_html($updated_date) . ' (' . $time_ago . ')'; ?></p>
+            </div>
+            <div>
+                <div class="robodesk-ticket-content">
+                    <?php echo apply_filters('the_content', $ticket->post_content); ?>
+                </div>
+                <?php if (in_array('administrator', $current_user->roles)) : ?>
+                    <div class="robodesk-ticket-actions">
+                        <select id="change-ticket-status" data-ticket-id="<?php echo esc_attr($ticket_id); ?>">
+                            <option value="new" <?php selected($status, 'new'); ?>>New</option>
+                            <option value="in-progress" <?php selected($status, 'in-progress'); ?>>In Progress</option>
+                            <option value="archived" <?php selected($status, 'archived'); ?>>Archived</option>
+                            <option value="completed" <?php selected($status, 'completed'); ?>>Completed</option>
+                        </select>
+                    </div>
+                <?php endif; ?>
 
-            if (comments_open($ticket_id) || get_comments_number($ticket_id) > 0) {
+                <div class="robodesk-ticket-comments">
+                    <?php
 
-                $plugin_template = plugin_dir_path(dirname(__FILE__, 2)) . 'templates/comments-ticket.php';
+                    if (comments_open($ticket_id) || get_comments_number($ticket_id) > 0) {
 
-                add_filter('comments_template', function ($theme_template) use ($plugin_template) {
-                    if (file_exists($plugin_template)) {
-                        return $plugin_template;
+                        $plugin_template = plugin_dir_path(dirname(__FILE__, 2)) . 'templates/comments-ticket.php';
+
+                        add_filter('comments_template', function ($theme_template) use ($plugin_template) {
+                            if (file_exists($plugin_template)) {
+                                return $plugin_template;
+                            }
+                            return $theme_template;
+                        });
+
+                        comments_template();
+                    } else {
+                        echo '<p>Comments are closed.</p>';
                     }
-                    return $theme_template;
-                });
-
-                comments_template();
-            } else {
-                echo '<p>Comments are closed.</p>';
-            }
-            ?>
-        </div>
-    </div>
-    <script type="text/javascript">
-        jQuery(document).ready(function($) {
-            var originalFormParent = $('#respond').parent();
-            var originalFormSibling = $('#respond').next();
-            $('.robodesk-ticket-comments #commentform').on('submit', function(e) {
-                if (typeof tinymce !== 'undefined' && tinymce.get('comment')) {
-                    tinymce.triggerSave();
-                    setTimeout(function() {}, 100);
-                }
-                var button = $(this).find('input[type="submit"]');
-                e.preventDefault();
-                var form = $(this);
-                var formData = new FormData(this);
-
-                formData.append('action', 'robodesk_submit_comment');
-                $.ajax({
-                    url: '<?php echo admin_url('admin-ajax.php'); ?>',
-                    type: 'POST',
-                    data: formData,
-                    processData: false,
-                    contentType: false,
-                    beforeSend: function() {
-                        button.val('Posting...');
-                        button.prop('disabled', true);
-                    },
-                    success: function(response) {
-                        if (response.success) {
-                            location.reload();
-                        } else {
-                            alert('Error: ' + response.data.message);
+                    ?>
+                </div>
+            </div>
+            <script type="text/javascript">
+                jQuery(document).ready(function($) {
+                    var originalFormParent = $('#respond').parent();
+                    var originalFormSibling = $('#respond').next();
+                    $('.robodesk-ticket-comments #commentform').on('submit', function(e) {
+                        if (typeof tinymce !== 'undefined' && tinymce.get('comment')) {
+                            tinymce.triggerSave();
+                            setTimeout(function() {}, 100);
                         }
-                    },
-                    error: function() {
-                        alert('An error occurred while submitting the comment.');
-                    },
+                        var button = $(this).find('input[type="submit"]');
+                        e.preventDefault();
+                        var form = $(this);
+                        var formData = new FormData(this);
 
-                    complete: function() {
-                        button.val('Post Comment');
-                        button.prop('disabled', false);
-                    }
+                        formData.append('action', 'robodesk_submit_comment');
+                        $.ajax({
+                            url: '<?php echo admin_url('admin-ajax.php'); ?>',
+                            type: 'POST',
+                            data: formData,
+                            processData: false,
+                            contentType: false,
+                            beforeSend: function() {
+                                button.val('Posting...');
+                                button.prop('disabled', true);
+                            },
+                            success: function(response) {
+                                if (response.success) {
+                                    location.reload();
+                                } else {
+                                    alert('Error: ' + response.data.message);
+                                }
+                            },
+                            error: function() {
+                                alert('An error occurred while submitting the comment.');
+                            },
+
+                            complete: function() {
+                                button.val('Post Comment');
+                                button.prop('disabled', false);
+                            }
+                        });
+                    });
+
+                    $('.robodesk-ticket-comments .comment-reply-link').on('click', function(e) {
+                        e.preventDefault();
+                        var commentId = $(this).data('commentid');
+                        $('#comment_parent').val(commentId);
+                        $('#respond').insertAfter($(this).closest('.comment-body'));
+                        $('#cancel-comment-reply-link').show();
+                        var commentId = $(this).data('commentid');
+                        var postId = $(this).data('postid');
+                        var belowElement = $(this).data('belowelement');
+                        var respondElement = $(this).data('respondelement');
+
+                        if (typeof tinymce !== 'undefined' && tinymce.get('comment')) {
+                            tinymce.EditorManager.execCommand('mceRemoveEditor', true, 'comment');
+                        }
+
+                        if (typeof addComment !== 'undefined' && addComment.moveForm) {
+                            addComment.moveForm(belowElement, commentId, respondElement, postId);
+                        }
+
+                        if (typeof tinymce !== 'undefined') {
+                            tinymce.EditorManager.execCommand('mceAddEditor', true, 'comment');
+                        }
+                    });
+
+                    $('#cancel-comment-reply-link').on('click', function(e) {
+                        e.preventDefault();
+
+                        if (typeof tinymce !== 'undefined' && tinymce.get('comment')) {
+                            tinymce.EditorManager.execCommand('mceRemoveEditor', true, 'comment');
+                        }
+
+                        if (originalFormSibling.length) {
+                            originalFormParent.insertBefore($('#respond'), originalFormSibling);
+                        } else {
+                            originalFormParent.append($('#respond'));
+                        }
+
+
+                        $(this).hide();
+                        $('#comment_parent').val('');
+
+                        if (typeof tinymce !== 'undefined') {
+                            tinymce.EditorManager.execCommand('mceAddEditor', true, 'comment');
+                        }
+                    });
                 });
-            });
-
-            $('.robodesk-ticket-comments .comment-reply-link').on('click', function(e) {
-                e.preventDefault();
-                var commentId = $(this).data('commentid');
-                $('#comment_parent').val(commentId);
-                $('#respond').insertAfter($(this).closest('.comment-body'));
-                $('#cancel-comment-reply-link').show();
-                var commentId = $(this).data('commentid');
-                var postId = $(this).data('postid');
-                var belowElement = $(this).data('belowelement');
-                var respondElement = $(this).data('respondelement');
-
-                if (typeof tinymce !== 'undefined' && tinymce.get('comment')) {
-                    tinymce.EditorManager.execCommand('mceRemoveEditor', true, 'comment');
-                }
-
-                if (typeof addComment !== 'undefined' && addComment.moveForm) {
-                    addComment.moveForm(belowElement, commentId, respondElement, postId);
-                }
-
-                if (typeof tinymce !== 'undefined') {
-                    tinymce.EditorManager.execCommand('mceAddEditor', true, 'comment');
-                }
-            });
-
-            $('#cancel-comment-reply-link').on('click', function(e) {
-                e.preventDefault();
-
-                if (typeof tinymce !== 'undefined' && tinymce.get('comment')) {
-                    tinymce.EditorManager.execCommand('mceRemoveEditor', true, 'comment');
-                }
-
-                if (originalFormSibling.length) {
-                    originalFormParent.insertBefore($('#respond'), originalFormSibling);
-                } else {
-                    originalFormParent.append($('#respond'));
-                }
-
-  
-                $(this).hide();
-                $('#comment_parent').val('');
-
-                if (typeof tinymce !== 'undefined') {
-                    tinymce.EditorManager.execCommand('mceAddEditor', true, 'comment');
-                }
-            });
-        });
-    </script>
-<?php
-    return ob_get_clean();
-}
-add_shortcode('robodesk_single_ticket', 'robodesk_single_ticket_shortcode');
-
-function robodesk_submit_comment()
-{
-    $comment = wp_handle_comment_submission(wp_unslash($_POST));
-
-    global $wpdb;
-    if (is_wp_error($comment)) {
-        wp_send_json_error(array(
-            'message' => $comment->get_error_message()
-        ));
-    } else {
-        $comment_id = $comment->comment_ID;
-
-        $wpdb->update(
-            $wpdb->comments,
-            array('comment_type' => 'robodesk_ticket_replies'),
-            array('comment_ID' => $comment_id),
-            array('%s'),
-            array('%d')
-        );
-        wp_send_json_success();
+            </script>
+        <?php
+        return ob_get_clean();
     }
-}
-add_action('wp_ajax_robodesk_submit_comment', 'robodesk_submit_comment');
-add_action('wp_ajax_nopriv_robodesk_submit_comment', 'robodesk_submit_comment');
+    add_shortcode('robodesk_single_ticket', 'robodesk_single_ticket_shortcode');
 
+    function robodesk_submit_comment()
+    {
+        $comment = wp_handle_comment_submission(wp_unslash($_POST));
 
-//Shortcode for login form
-function robodesk_login_form_shortcode()
-{
-    if (is_user_logged_in()) {
-        $dashboard_page = get_page_by_path('dashboard');
-        $redirect_url = $dashboard_page ? get_permalink($dashboard_page->ID) : home_url();
+        global $wpdb;
+        if (is_wp_error($comment)) {
+            wp_send_json_error(array(
+                'message' => $comment->get_error_message()
+            ));
+        } else {
+            $comment_id = $comment->comment_ID;
 
-        wp_safe_redirect($redirect_url);
-        exit;
+            $wpdb->update(
+                $wpdb->comments,
+                array('comment_type' => 'robodesk_ticket_replies'),
+                array('comment_ID' => $comment_id),
+                array('%s'),
+                array('%d')
+            );
+            wp_send_json_success();
+        }
     }
+    add_action('wp_ajax_robodesk_submit_comment', 'robodesk_submit_comment');
+    add_action('wp_ajax_nopriv_robodesk_submit_comment', 'robodesk_submit_comment');
 
-    if (isset($_GET['login']) && $_GET['login'] == 'failed') {
-        $error_message = '<p class="robodesk-error">Invalid username or password.</p>';
-    } else {
-        $error_message = '';
+
+    //Shortcode for login form
+    function robodesk_login_form_shortcode()
+    {
+        if (is_user_logged_in()) {
+            $dashboard_page = get_page_by_path('dashboard');
+            $redirect_url = $dashboard_page ? get_permalink($dashboard_page->ID) : home_url();
+
+            wp_safe_redirect($redirect_url);
+            exit;
+        }
+
+        if (isset($_GET['login']) && $_GET['login'] == 'failed') {
+            $error_message = '<p class="robodesk-error">Invalid username or password.</p>';
+        } else {
+            $error_message = '';
+        }
+
+        ob_start();
+        ?>
+            <div class="robodesk-login-form robodesk-container">
+                <h2>Login</h2>
+                <?php echo $error_message; ?>
+                <form name="robodesk-login-form" id="robodesk-login-form" action="<?php echo esc_url(site_url('wp-login.php')); ?>" method="post">
+                    <p>
+                        <label for="user_login">Username or Email<br />
+                            <input type="text" name="log" id="user_login" class="input" value="<?php echo esc_attr(wp_unslash(isset($_POST['log']) ? $_POST['log'] : '')); ?>" size="20" autocapitalize="off" />
+                        </label>
+                    </p>
+                    <p>
+                        <label for="user_pass">Password<br />
+                            <input type="password" name="pwd" id="user_pass" class="input" value="" size="20" />
+                        </label>
+                    </p>
+                    <p class="forgetmenot"><label for="rememberme"><input name="rememberme" type="checkbox" id="rememberme" value="forever" /> Remember Me</label></p>
+                    <p class="submit">
+                        <input type="submit" name="wp-submit" id="wp-submit" class="button button-primary" value="Log In" />
+                        <input type="hidden" name="redirect_to" value="<?php echo esc_url(get_permalink()); ?>" />
+                    </p>
+                </form>
+                <p id="nav">
+                    <a href="<?php echo esc_url(wp_lostpassword_url()); ?>">Lost your password?</a>
+                </p>
+            </div>
+        <?php
+        return ob_get_clean();
     }
-
-    ob_start();
-?>
-    <div class="robodesk-login-form robodesk-container">
-        <h2>Login</h2>
-        <?php echo $error_message; ?>
-        <form name="robodesk-login-form" id="robodesk-login-form" action="<?php echo esc_url(site_url('wp-login.php')); ?>" method="post">
-            <p>
-                <label for="user_login">Username or Email<br />
-                    <input type="text" name="log" id="user_login" class="input" value="<?php echo esc_attr(wp_unslash(isset($_POST['log']) ? $_POST['log'] : '')); ?>" size="20" autocapitalize="off" />
-                </label>
-            </p>
-            <p>
-                <label for="user_pass">Password<br />
-                    <input type="password" name="pwd" id="user_pass" class="input" value="" size="20" />
-                </label>
-            </p>
-            <p class="forgetmenot"><label for="rememberme"><input name="rememberme" type="checkbox" id="rememberme" value="forever" /> Remember Me</label></p>
-            <p class="submit">
-                <input type="submit" name="wp-submit" id="wp-submit" class="button button-primary" value="Log In" />
-                <input type="hidden" name="redirect_to" value="<?php echo esc_url(get_permalink()); ?>" />
-            </p>
-        </form>
-        <p id="nav">
-            <a href="<?php echo esc_url(wp_lostpassword_url()); ?>">Lost your password?</a>
-        </p>
-    </div>
-<?php
-    return ob_get_clean();
-}
-add_shortcode('robodesk_login_form', 'robodesk_login_form_shortcode');
+    add_shortcode('robodesk_login_form', 'robodesk_login_form_shortcode');
 
 
-?>
+        ?>

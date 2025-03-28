@@ -455,7 +455,7 @@ function add_tinymce_to_comments($defaults) {
     return $defaults;
 }
 
-/** Disable single page for robodesk  */
+/** Disable single page for robodesk ticket */
 
 function remove_cpt_single_rewrite() {
 
