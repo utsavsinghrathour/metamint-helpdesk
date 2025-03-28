@@ -241,7 +241,6 @@ function robodesk_my_tickets_shortcode()
                         'order' => 'DESC'
                     ));
                     $last_activity = !empty($comments) ?  strtotime($comments[0]->comment_date_gmt) : get_the_modified_time('U');
-                
                     $human_readable_time = human_time_diff($last_activity, current_time('U'));
                     
             ?>
