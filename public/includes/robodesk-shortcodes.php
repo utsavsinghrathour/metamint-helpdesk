@@ -827,7 +827,7 @@ function robodesk_single_ticket_shortcode($atts)
         <div class="robodesk-ticket-meta">
             <div class="robodesk-ticket-status-priority">
                 <p><strong>Ticket id:</strong> <?php echo esc_html('#'.$ticket_id); ?></p>
-                <p><strong>Status:</strong> <?php echo esc_html($status); ?></p>
+                <p><strong>Status:</strong> <?php echo esc_html(ucwords($status)); ?></p>
                 <p><strong>Priority:</strong> <?php echo esc_html($priority); ?></p>
             </div>
 
