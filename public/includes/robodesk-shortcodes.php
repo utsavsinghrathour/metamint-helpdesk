@@ -108,6 +108,24 @@ add_filter('posts_clauses', 'order_posts_by_term_meta', 10, 2);
 add_shortcode('robodesk_my_tickets', 'robodesk_my_tickets_shortcode');
 
 
+function robodesk_count_comments($post_type) {
+    global $wpdb;
+
+    // SQL query to count approved comments for the custom post type
+    $count = $wpdb->get_var(
+        $wpdb->prepare(
+            "SELECT COUNT(*) 
+             FROM $wpdb->comments 
+             INNER JOIN $wpdb->posts ON $wpdb->comments.comment_post_ID = $wpdb->posts.ID 
+             WHERE $wpdb->posts.post_type = %s 
+             AND $wpdb->comments.comment_approved = '1'",
+            $post_type
+        )
+    );
+
+    return (int) $count;
+}
+
 function robodesk_my_tickets_shortcode()
 {
     global $wp;
@@ -199,21 +217,33 @@ function robodesk_my_tickets_shortcode()
         <thead>
             <tr>
                 <th>Title</th>
+                <th>Replies</th>
+                <th>Last Update</th>
                 <th>Status</th>
                 <th>Priority</th>
             </tr>
         </thead>
         <tbody>
             <?php if ($query->have_posts()) : while ($query->have_posts()) : $query->the_post();
+                    global $post;
                     $status = get_post_meta(get_the_ID(), '_robodesk_ticket_status', true);
                     $terms = get_the_terms(get_the_ID(), 'robodesk_ticket_priority');
-
-
+                    $comment_count = get_comments_number(get_the_ID());
                     $priority_name = '';
                     if ($terms && !is_wp_error($terms)) {
                         $priority_name = $terms[0]->name;
                     }
-
+                    $comments = get_comments(array(
+                        'post_id' =>get_the_ID(),
+                        'number' => 1, 
+                        'status' => 'approve', 
+                        'orderby' => 'comment_date_gmt',
+                        'order' => 'DESC'
+                    ));
+                    $last_activity = !empty($comments) ?  strtotime($comments[0]->comment_date_gmt) : get_the_modified_time('U');
+                
+                    $human_readable_time = human_time_diff($last_activity, current_time('U'));
+                    
             ?>
                     <tr>
                         <td>
@@ -224,6 +254,8 @@ function robodesk_my_tickets_shortcode()
 
                             <p class="ticket-date"><?php echo get_the_date('dS M Y'); ?></p>
                         </td>
+                        <td><?php echo  $comment_count;?></td>
+                        <td><?php echo $human_readable_time ? $human_readable_time .' ago' : '-'?></td>
                         <td><?php echo esc_html(ucwords($status)); ?></td>
                         <td><?php echo esc_html($priority_name); ?></td>
                     </tr>
