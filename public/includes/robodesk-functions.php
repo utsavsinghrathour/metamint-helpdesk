@@ -1,5 +1,9 @@
 <?php
-// In public/includes/robodesk-functions.php
+if (class_exists('WooCommerce')) {
+    require_once('robodesk-woocommerce.php');
+}
+
+require_once('robodesk-comments.php');
 
 // Function to send notification email
 function robodesk_send_ticket_update_email($ticket_id, $comment_content, $update_type)
@@ -380,91 +384,6 @@ function add_custom_table_to_my_account()
             </tbody>
         </table>
 
-    <?php
+<?php
     }
 }
-
-/**
- * Add Support menu item to My Account page
- */
-function robodesk_add_custom_menu_item_to_my_account($items)
-{
-
-    $new_items = array(
-        'robodesk-support' => __('Support', 'robodesk')
-    );
-
-    $position = array_search('orders', array_keys($items)) + 1;
-    $items = array_slice($items, 0, $position, true) +
-        $new_items +
-        array_slice($items, $position, count($items) - $position, true);
-
-    return $items;
-}
-add_filter('woocommerce_account_menu_items', 'robodesk_add_custom_menu_item_to_my_account');
-
-/**
- * Register the custom endpoint
- */
-function robodesk_add_support_endpoint()
-{
-    add_rewrite_endpoint('robodesk-support', EP_ROOT | EP_PAGES);
-}
-add_action('init', 'robodesk_add_support_endpoint');
-
-/**
- * Handle the redirect
- */
-function robodesk_handle_support_redirect()
-{
-    global $wp_query;
-
-    if (isset($wp_query->query_vars['robodesk-support']) && !is_admin()) {
-        wp_redirect(site_url('/dashboard/'));
-        exit;
-    }
-}
-add_action('template_redirect', 'robodesk_handle_support_redirect');
-
-/**
- * Flush rewrite rules on activation
- */
-function robodesk_flush_rewrite_rules()
-{
-    robodesk_add_support_endpoint();
-    flush_rewrite_rules();
-}
-register_activation_hook(__FILE__, 'robodesk_flush_rewrite_rules');
-
-
-add_filter('comment_form_defaults', 'add_tinymce_to_comments');
-
-function add_tinymce_to_comments($defaults) {
-    ob_start();
-    wp_editor('', 'comment', array(
-        'media_buttons' => false, 
-        'textarea_rows' => 10,    
-        'teeny'         => true,  
-        'quicktags'     => false, 
-        'tinymce'       => array(
-            'toolbar1' => 'bold italic underline link | fullscreen',
-            'toolbar2' => '', 
-        ),
-    ));
-    $defaults['comment_field'] = ob_get_clean();
-    return $defaults;
-}
-
-/** Disable single page for robodesk ticket */
-
-function remove_cpt_single_rewrite() {
-
-    global $wp_post_types;
-    if (isset($wp_post_types['robodesk_ticket'])) {
-        $wp_post_types['robodesk_ticket']->publicly_queryable = false;
-        $wp_post_types['robodesk_ticket']->query_var = false;
-    }
-    
-    // flush_rewrite_rules();
-}
-add_action('init', 'remove_cpt_single_rewrite', 20);
