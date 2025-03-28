@@ -259,7 +259,7 @@ function robodesk_my_tickets_shortcode()
                         <td><?php echo  $comment_count;?></td>
                         <td><?php echo $human_readable_time ? $human_readable_time .' ago' : '-'?></td>
                         <td><span class="robodesk-status-pill <?php echo strtolower($status); ?>"> <?php echo esc_html(ucwords($status)); ?></span></td>
-                        <td><span class="robodesk-priority-pill <?php echo strtolower($priority_name);?>"></span><?php echo esc_html($priority_name); ?></td>
+                        <td><span data-color="<?php echo esc_attr($priority_color); ?>" class="robodesk-priority-pill <?php echo strtolower($priority_name);?>" style="background:<?php echo esc_attr($priority_color) ?>"><?php echo esc_html($priority_name); ?></span></td>
                     </tr>
                 <?php endwhile;
                 wp_reset_postdata();
@@ -841,6 +841,19 @@ function robodesk_single_ticket_shortcode($atts)
     $updated_date = get_the_modified_date('Y-m-d H:i:s', $ticket);
     $time_ago = human_time_diff(get_the_modified_time('U', $ticket), current_time('timestamp'));
     $time_ago_class = '';
+    
+
+    $comments = get_comments(array(
+        'post_id' =>$ticket_id,
+        'number' => 1, 
+        'status' => 'approve', 
+        'orderby' => 'comment_date_gmt',
+        'order' => 'DESC'
+    ));
+    $last_activity = !empty($comments) ?  strtotime($comments[0]->comment_date_gmt) : get_the_modified_time('U',$ticket);
+    $human_readable_time = human_time_diff($last_activity, current_time('U'));
+
+    //new code ends
 
     $current_user = wp_get_current_user();
     $caps = $current_user->caps;
@@ -870,7 +883,7 @@ function robodesk_single_ticket_shortcode($atts)
 
             <div class="robodesk-ticket-dates">
                 <p><strong>Created At:</strong> <?php echo esc_html($created_date); ?></p>
-                <p class=" <?php echo $time_ago_class; ?>"><strong>Last Updated:</strong> <?php echo esc_html($updated_date) . ' (' . $time_ago . ')'; ?></p>
+                <p class=" <?php echo $time_ago_class; ?>"><strong>Last Updated:</strong> <?php echo $human_readable_time ? $human_readable_time .' ago' : ''?></p>
             </div>
             <div>
                 <div class="robodesk-ticket-content">
