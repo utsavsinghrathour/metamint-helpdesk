@@ -255,7 +255,7 @@ function robodesk_my_tickets_shortcode()
                         </td>
                         <td><?php echo  $comment_count;?></td>
                         <td><?php echo $human_readable_time ? $human_readable_time .' ago' : '-'?></td>
-                        <td><?php echo esc_html(ucwords($status)); ?></td>
+                        <td><span class="robodesk-status-pill"> <?php echo esc_html(ucwords($status)); ?></span></td>
                         <td><?php echo esc_html($priority_name); ?></td>
                     </tr>
                 <?php endwhile;
