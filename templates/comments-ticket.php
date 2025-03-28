@@ -50,7 +50,7 @@ if (post_password_required()) {
     <?php endif; ?>
 
     <?php if (comments_open()) : ?>
-        <div id="respond" class="comment-respond">
+       
             <?php
             comment_form(array(
                 'title_reply' => 'Leave a Reply',
@@ -63,6 +63,6 @@ if (post_password_required()) {
                 'action' => '' 
             ));
             ?>
-        </div>
+    
     <?php endif; ?>
 </div>
