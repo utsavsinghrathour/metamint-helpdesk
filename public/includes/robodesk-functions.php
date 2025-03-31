@@ -335,7 +335,7 @@ function add_custom_table_to_my_account()
                 <tr>
                     <th>Title</th>
                     <th>Replies</th>
-                    <th>Last Update</th>
+                    <th>Last Reply</th>
                     <th>Status</th>
                     <th>Priority</th>
                 </tr>
@@ -359,27 +359,36 @@ function add_custom_table_to_my_account()
                             'orderby' => 'comment_date_gmt',
                             'order' => 'DESC'
                         ));
+                        
+                        // var_dump($comments);
+                        
+                        
+                        
                         $last_activity = !empty($comments) ?  strtotime($comments[0]->comment_date_gmt) : get_the_modified_time('U');
+                        
                         $human_readable_time = human_time_diff($last_activity, current_time('U'));
+                        
+                        $comment_author = !empty($comments) ? get_the_author_meta( 'display_name', $comments[0]->user_id ) : 
+                        get_the_author_meta( 'display_name', $post->post_author ); 
 
                 ?>
                         <tr>
                             <td>
                                 <?php
-                                $ticket_url = add_query_arg(array('robodesk_page' => 'my-tickets', 'tid' => get_the_ID()), site_url($wp->request));
+                                $ticket_url = add_query_arg(array('robodesk_page' => 'my-tickets', 'tid' => get_the_ID()), site_url('/dashboard/'));
                                 ?>
                                 <a href="<?php echo esc_url($ticket_url); ?>"><?php the_title(); ?></a>
 
                                 <p class="ticket-date"><?php echo get_the_date('dS M Y'); ?></p>
                             </td>
                             <td><?php echo  $comment_count; ?></td>
-                            <td><?php echo $human_readable_time ? $human_readable_time . ' ago' : '-' ?></td>
+                            <td><?php echo $human_readable_time ? $human_readable_time . ' ago' : '-' ?><p class="ticket-comment-by">By, <?php echo $comment_author; ?></p></td>
                             <td><span class="robodesk-status-pill <?php echo strtolower($status); ?>"> <?php echo esc_html(ucwords($status)); ?></span></td>
                             <td><span data-color="<?php echo esc_attr($priority_color); ?>" class="robodesk-priority-pill <?php echo strtolower($priority_name); ?>" style="background:<?php echo esc_attr($priority_color) ?>"><?php echo esc_html($priority_name); ?></span></td>
                         </tr>
                     <?php endwhile;
                     wp_reset_postdata();
-                else : ?>
+                    else : ?>
                     <tr>
                         <td colspan="3">No tickets found.</td>
                     </tr>
