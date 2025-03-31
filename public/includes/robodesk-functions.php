@@ -1,7 +1,7 @@
 <?php
 
 // Woocommerce modifications
-if (in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', get_option( 'active_plugins' )))) {
+if (in_array('woocommerce/woocommerce.php', apply_filters('active_plugins', get_option('active_plugins')))) {
     require_once('robodesk-woocommerce.php');
 }
 // for comments
@@ -326,61 +326,62 @@ function add_custom_table_to_my_account()
         $query = new WP_Query($args);
         $ticket_url = add_query_arg(array('robodesk_page' => 'my-tickets', 'tid' => get_the_ID()), site_url('/dashboard/'));
         $create_ticket_url = add_query_arg(array('robodesk_page' => 'create-ticket'), site_url('/dashboard/'));
-
+        ##Aby##   
     ?>
         <h3>Get Support Ticket</h3>
         <a href="<?php echo esc_url($create_ticket_url); ?>">Create Ticket</a>
         <table style="margin-top: 30px;">
             <thead>
                 <tr>
-                    <th>Name</th>
-                    <th>Support Type</th>
-                    <th>Reason</th>
-                    <th>Date</th>
+                    <th>Title</th>
+                    <th>Replies</th>
+                    <th>Last Update</th>
                     <th>Status</th>
+                    <th>Priority</th>
                 </tr>
             </thead>
             <tbody>
                 <?php if ($query->have_posts()) : while ($query->have_posts()) : $query->the_post();
+                        global $post;
                         $status = get_post_meta(get_the_ID(), '_robodesk_ticket_status', true);
                         $terms = get_the_terms(get_the_ID(), 'robodesk_ticket_priority');
-                        $origin = get_the_terms(get_the_ID(), 'robodesk_ticket_origin');
-                        $author = get_the_author();
-
-                        $author_id = get_the_author_meta('ID');
-                        $user = get_userdata($author_id);
-                        $author_roles = $user->roles;
-                        $author_role = !empty($author_roles) ? $author_roles[0] : false;
-
-                        $priority_name = '-';
+                        $comment_count = get_comments_number(get_the_ID());
+                        $priority_name = '';
+                        $priority_color = false;
                         if ($terms && !is_wp_error($terms)) {
                             $priority_name = $terms[0]->name;
+                            $priority_color = get_term_meta($terms[0]->term_id, 'priority_color', true);
                         }
-
-
-                        $origin_name = '-';
-                        if ($origin && !is_wp_error($origin)) {
-                            $origin_name = $origin[0]->name;
-                        }
-
-                        $ticket_url = add_query_arg(array('robodesk_page' => 'my-tickets', 'tid' => get_the_ID()), site_url('/dashboard/'));
+                        $comments = get_comments(array(
+                            'post_id' => get_the_ID(),
+                            'number' => 1,
+                            'status' => 'approve',
+                            'orderby' => 'comment_date_gmt',
+                            'order' => 'DESC'
+                        ));
+                        $last_activity = !empty($comments) ?  strtotime($comments[0]->comment_date_gmt) : get_the_modified_time('U');
+                        $human_readable_time = human_time_diff($last_activity, current_time('U'));
 
                 ?>
                         <tr>
                             <td>
-                                <span class="ticket-author-name"><?php echo $author; ?></span>
-                                <p class="ticket-author-role"><?php echo ucwords($author_role); ?></p>
+                                <?php
+                                $ticket_url = add_query_arg(array('robodesk_page' => 'my-tickets', 'tid' => get_the_ID()), site_url($wp->request));
+                                ?>
+                                <a href="<?php echo esc_url($ticket_url); ?>"><?php the_title(); ?></a>
+
+                                <p class="ticket-date"><?php echo get_the_date('dS M Y'); ?></p>
                             </td>
-                            <td><?php echo $origin_name; ?></td>
-                            <td><a href="<?php echo esc_url($ticket_url); ?>"><?php the_title(); ?></a< /td>
-                            <td><?php echo get_the_date('dS M Y'); ?></td>
-                            <td><?php echo esc_html($status); ?></td>
+                            <td><?php echo  $comment_count; ?></td>
+                            <td><?php echo $human_readable_time ? $human_readable_time . ' ago' : '-' ?></td>
+                            <td><span class="robodesk-status-pill <?php echo strtolower($status); ?>"> <?php echo esc_html(ucwords($status)); ?></span></td>
+                            <td><span data-color="<?php echo esc_attr($priority_color); ?>" class="robodesk-priority-pill <?php echo strtolower($priority_name); ?>" style="background:<?php echo esc_attr($priority_color) ?>"><?php echo esc_html($priority_name); ?></span></td>
                         </tr>
                     <?php endwhile;
                     wp_reset_postdata();
                 else : ?>
                     <tr>
-                        <td colspan="4">No tickets found.</td>
+                        <td colspan="3">No tickets found.</td>
                     </tr>
                 <?php endif; ?>
             </tbody>
@@ -389,5 +390,3 @@ function add_custom_table_to_my_account()
 <?php
     }
 }
-
-
