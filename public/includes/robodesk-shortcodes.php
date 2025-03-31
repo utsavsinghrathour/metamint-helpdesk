@@ -836,7 +836,16 @@ function robodesk_single_ticket_shortcode($atts)
     $ticket = get_post($ticket_id);
     $status = get_post_meta($ticket_id, '_robodesk_ticket_status', true);
     $priority_terms = wp_get_object_terms($ticket_id, 'robodesk_ticket_priority');
+    
     $priority = !empty($priority_terms) && !is_wp_error($priority_terms) ? $priority_terms[0]->name : 'N/A';
+    
+    $priority_color = false;
+    if (!empty($priority_terms)) {
+       
+        $priority_color =get_term_meta($priority_terms[0]->term_id, 'priority_color', true);
+        
+    }
+    
     $created_date = get_the_date('Y-m-d H:i:s', $ticket);
     $updated_date = get_the_modified_date('Y-m-d H:i:s', $ticket);
     $time_ago = human_time_diff(get_the_modified_time('U', $ticket), current_time('timestamp'));
@@ -859,6 +868,9 @@ function robodesk_single_ticket_shortcode($atts)
     $caps = $current_user->caps;
 
     $allowed_roles = array('administrator', 'editor', 'support_agent', 'support_manager');
+    
+  
+
 
     $show_private_checkbox = array_intersect($allowed_roles, $current_user->roles);
 
@@ -871,14 +883,21 @@ function robodesk_single_ticket_shortcode($atts)
     $post = $ticket;
     $withcomments = true;
     ob_start();
+    /**  
+    
+    <td><?php echo $human_readable_time ? $human_readable_time .' ago' : '-'?></td>
+    <td><span class="robodesk-status-pill <?php echo strtolower($status); ?>"> <?php echo esc_html(ucwords($status)); ?></span></td>
+    <td><span data-color="<?php echo esc_attr($priority_color); ?>" class="robodesk-priority-pill <?php echo strtolower($priority_name);?>" style="background:<?php echo esc_attr($priority_color) ?>"><?php echo esc_html($priority_name); ?></span></td>
+    */
 ?>
     <div class="robodesk-single-ticket robodesk-container">
         <h2><?php echo esc_html($ticket->post_title); ?></h2>
+        
         <div class="robodesk-ticket-meta">
             <div class="robodesk-ticket-status-priority">
                 <p><strong>Ticket id:</strong> <?php echo esc_html('#'.$ticket_id); ?></p>
-                <p><strong>Status:</strong> <?php echo esc_html(ucwords($status)); ?></p>
-                <p><strong>Priority:</strong> <?php echo esc_html($priority); ?></p>
+                <p><strong>Status:</strong> <span class="robodesk-status-pill <?php echo strtolower($status); ?>"> <?php echo esc_html(ucwords($status)); ?></span></p>
+                <p><strong>Priority:</strong><span class="robodesk-priority-pill <?php echo strtolower($priority);?>" style="background:<?php echo esc_attr($priority_color) ?>"><?php echo esc_html(ucwords($priority)); ?></span></p>
             </div>
 
             <div class="robodesk-ticket-dates">

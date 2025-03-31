@@ -18,7 +18,7 @@ require_once ROBODESK_PLUGIN_PATH . 'public/includes/robodesk-shortcodes.php';
 
 function robodesk_activate()
 {
-    $admin_role = get_role('administrator'); // Get the administrator role
+    $admin_role = get_role('administrator'); 
     if ($admin_role) {
         $admin_role->add_cap('create_tickets');
         $admin_role->add_cap('edit_tickets');
@@ -53,6 +53,8 @@ require_once ROBODESK_PLUGIN_PATH . 'public/includes/robodesk-functions.php';
 require_once ROBODESK_PLUGIN_PATH . 'public/includes/robodesk-shortcodes.php';
 require_once ROBODESK_PLUGIN_PATH . 'public/includes/robodesk-ajax.php';
 require_once ROBODESK_PLUGIN_PATH . 'public/includes/robodesk-notes.php';
+
+
 // }
 
 // Enqueue Scripts

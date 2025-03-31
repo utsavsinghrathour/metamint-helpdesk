@@ -1,8 +1,10 @@
 <?php
-if (class_exists('WooCommerce')) {
+
+// Woocommerce modifications
+if (in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', get_option( 'active_plugins' )))) {
     require_once('robodesk-woocommerce.php');
 }
-
+// for comments
 require_once('robodesk-comments.php');
 
 // Function to send notification email

@@ -7,6 +7,7 @@
 //  use Automattic\WooCommerce\Packages;
 
 //  add_action( 'plugins_loaded', function() {
+
 //      if ( ! class_exists( Packages::class ) ) {
 //          return;
 //      }
@@ -71,3 +72,6 @@ function robodesk_flush_rewrite_rules()
     flush_rewrite_rules();
 }
 register_activation_hook(__FILE__, 'robodesk_flush_rewrite_rules');
+
+
+
