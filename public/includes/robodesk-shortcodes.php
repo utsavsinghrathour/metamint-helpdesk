@@ -108,7 +108,8 @@ add_filter('posts_clauses', 'order_posts_by_term_meta', 10, 2);
 add_shortcode('robodesk_my_tickets', 'robodesk_my_tickets_shortcode');
 
 
-function robodesk_count_comments($post_type) {
+function robodesk_count_comments($post_type)
+{
     global $wpdb;
 
     // SQL query to count approved comments for the custom post type
@@ -151,7 +152,7 @@ function robodesk_my_tickets_shortcode()
     );
 
     $selected_priority = isset($_GET['robodesk_ticket_priority']) ? sanitize_text_field($_GET['robodesk_ticket_priority']) : '';
-    $selected_status = isset($_GET['robodesk_ticket_status']) ? sanitize_text_field($_GET['robodesk_ticket_status']) : '';
+    $selected_status = isset($_GET['robodesk_ticket_status']) ? sanitize_text_field($_GET['robodesk_ticket_status']) : 'active-tickets';
 
     if (!empty($selected_priority)) {
         $args['tax_query'] = array(
@@ -163,7 +164,24 @@ function robodesk_my_tickets_shortcode()
         );
     }
 
-    if (!empty($selected_status)) {
+    if ($selected_status == 'active-tickets') {
+
+        $args['meta_query'] = array(
+            'relation' => 'OR',
+            array(
+                'key' => '_robodesk_ticket_status',
+                'value' => 'open',
+                'compare' => '=',
+            ),
+            array(
+                'key' => '_robodesk_ticket_status',
+                'value' => 'in-progress',
+                'compare' => '=',
+            ),
+        );
+    } else {
+
+
         $args['meta_query'] = array(
             array(
                 'key' => '_robodesk_ticket_status',
@@ -182,7 +200,15 @@ function robodesk_my_tickets_shortcode()
     ));
 
 
-    $statuses = array('open', 'in-progress', 'archived', 'closed');
+    // $statuses = array('active-tickets', 'open', 'in-progress', 'archived', 'closed');
+
+    $statuses = [
+        'active-tickets' => 'Active Tickets',
+        'open' => 'Open',
+        'in-progress' => 'In Progress',
+        'archived' => 'Archived',
+        'closed' => 'Closed',
+    ];
 
     ob_start();
     ?>
@@ -197,9 +223,10 @@ function robodesk_my_tickets_shortcode()
             <?php endif; ?>
         </select>
         <select name="robodesk_ticket_status">
-            <option value="">All Statuses</option>
-            <?php foreach ($statuses as $status) : ?>
-                <option value="<?php echo esc_attr($status); ?>" <?php selected($selected_status, $status); ?>><?php echo esc_html(ucfirst($status)); ?></option>
+            <?php foreach ($statuses as $key => $val) : ?>
+                <option value="<?php echo esc_attr($key); ?>" <?php selected($selected_status, $key); ?>><?php echo esc_html(ucfirst($val)); ?>
+
+                </option>
             <?php endforeach; ?>
         </select>
         <select name="orderby">
@@ -233,24 +260,23 @@ function robodesk_my_tickets_shortcode()
                     $priority_color = false;
                     if ($terms && !is_wp_error($terms)) {
                         $priority_name = $terms[0]->name;
-                        $priority_color =get_term_meta($terms[0]->term_id, 'priority_color', true);
-                        
+                        $priority_color = get_term_meta($terms[0]->term_id, 'priority_color', true);
                     }
                     $comments = get_comments(array(
-                        'post_id' =>get_the_ID(),
-                        'number' => 1, 
-                        'status' => 'approve', 
+                        'post_id' => get_the_ID(),
+                        'number' => 1,
+                        'status' => 'approve',
                         'orderby' => 'comment_date_gmt',
                         'order' => 'DESC'
                     ));
-                    
+
                     // var_dump($comments);
                     $last_activity = !empty($comments) ?  strtotime($comments[0]->comment_date_gmt) : get_the_modified_time('U');
-                    $comment_author = !empty($comments) ? get_the_author_meta( 'display_name', $comments[0]->user_id ) : 
-                                                          get_the_author_meta( 'display_name', $post->post_author ); 
-                    
+                    $comment_author = !empty($comments) ? get_the_author_meta('display_name', $comments[0]->user_id) :
+                        get_the_author_meta('display_name', $post->post_author);
+
                     $human_readable_time = human_time_diff($last_activity, current_time('U'));
-                    
+
             ?>
                     <tr>
                         <td>
@@ -261,16 +287,27 @@ function robodesk_my_tickets_shortcode()
 
                             <p class="ticket-date"><?php echo get_the_date('dS M Y'); ?></p>
                         </td>
-                        <td><?php echo  $comment_count;?></td>
-                        <td><?php echo $human_readable_time ? $human_readable_time .' ago' : '-'?><p class="ticket-comment-by">By, <?php echo $comment_author; ?></p></td>
-                        <td><span class="robodesk-status-pill <?php echo strtolower($status); ?>"> <?php echo esc_html(ucwords($status)); ?></span></td>
-                        <td><span data-color="<?php echo esc_attr($priority_color); ?>" class="robodesk-priority-pill <?php echo strtolower($priority_name);?>" style="background:<?php echo esc_attr($priority_color) ?>"><?php echo esc_html($priority_name); ?></span></td>
+                        <td><?php echo  $comment_count; ?></td>
+                        <td><?php echo $human_readable_time ? $human_readable_time . ' ago' : '-' ?><p class="ticket-comment-by">By, <?php echo $comment_author; ?></p>
+                        </td>
+                        <!-- Status -->
+                        <td>
+                            <span class="robodesk-status-pill <?php echo strtolower($status); ?>">
+                                <?php echo $statuses[$status];?>
+                            </span>
+                        </td>
+                        <!-- Priority -->
+                        <td>
+                            <span data-color="<?php echo esc_attr($priority_color); ?>" class="robodesk-priority-pill <?php echo strtolower($priority_name); ?>" style="background:<?php echo esc_attr($priority_color) ?>">
+                                <?php echo esc_html($priority_name); ?>
+                            </span>
+                        </td>
                     </tr>
                 <?php endwhile;
                 wp_reset_postdata();
             else : ?>
                 <tr>
-                    <td colspan="3">No tickets found.</td>
+                    <td colspan="5">No tickets found.</td>
                 </tr>
             <?php endif; ?>
         </tbody>
@@ -841,30 +878,29 @@ function robodesk_single_ticket_shortcode($atts)
     $ticket = get_post($ticket_id);
     $status = get_post_meta($ticket_id, '_robodesk_ticket_status', true);
     $priority_terms = wp_get_object_terms($ticket_id, 'robodesk_ticket_priority');
-    
+
     $priority = !empty($priority_terms) && !is_wp_error($priority_terms) ? $priority_terms[0]->name : 'N/A';
-    
+
     $priority_color = false;
     if (!empty($priority_terms)) {
-       
-        $priority_color =get_term_meta($priority_terms[0]->term_id, 'priority_color', true);
-        
+
+        $priority_color = get_term_meta($priority_terms[0]->term_id, 'priority_color', true);
     }
-    
+
     $created_date = get_the_date('Y-m-d H:i:s', $ticket);
     $updated_date = get_the_modified_date('Y-m-d H:i:s', $ticket);
     $time_ago = human_time_diff(get_the_modified_time('U', $ticket), current_time('timestamp'));
     $time_ago_class = '';
-    
+
 
     $comments = get_comments(array(
-        'post_id' =>$ticket_id,
-        'number' => 1, 
-        'status' => 'approve', 
+        'post_id' => $ticket_id,
+        'number' => 1,
+        'status' => 'approve',
         'orderby' => 'comment_date_gmt',
         'order' => 'DESC'
     ));
-    $last_activity = !empty($comments) ?  strtotime($comments[0]->comment_date_gmt) : get_the_modified_time('U',$ticket);
+    $last_activity = !empty($comments) ?  strtotime($comments[0]->comment_date_gmt) : get_the_modified_time('U', $ticket);
     $human_readable_time = human_time_diff($last_activity, current_time('U'));
 
     //new code ends
@@ -873,8 +909,8 @@ function robodesk_single_ticket_shortcode($atts)
     $caps = $current_user->caps;
 
     $allowed_roles = array('administrator', 'editor', 'support_agent', 'support_manager');
-    
-  
+
+
 
 
     $show_private_checkbox = array_intersect($allowed_roles, $current_user->roles);
@@ -893,21 +929,21 @@ function robodesk_single_ticket_shortcode($atts)
     <td><?php echo $human_readable_time ? $human_readable_time .' ago' : '-'?></td>
     <td><span class="robodesk-status-pill <?php echo strtolower($status); ?>"> <?php echo esc_html(ucwords($status)); ?></span></td>
     <td><span data-color="<?php echo esc_attr($priority_color); ?>" class="robodesk-priority-pill <?php echo strtolower($priority_name);?>" style="background:<?php echo esc_attr($priority_color) ?>"><?php echo esc_html($priority_name); ?></span></td>
-    */
+     */
 ?>
     <div class="robodesk-single-ticket robodesk-container">
         <h2><?php echo esc_html($ticket->post_title); ?></h2>
-        
+
         <div class="robodesk-ticket-meta">
             <div class="robodesk-ticket-status-priority">
-                <p><strong>Ticket id:</strong> <?php echo esc_html('#'.$ticket_id); ?></p>
+                <p><strong>Ticket id:</strong> <?php echo esc_html('#' . $ticket_id); ?></p>
                 <p><strong>Status:</strong> <span class="robodesk-status-pill <?php echo strtolower($status); ?>"> <?php echo esc_html(ucwords($status)); ?></span></p>
-                <p><strong>Priority:</strong><span class="robodesk-priority-pill <?php echo strtolower($priority);?>" style="background:<?php echo esc_attr($priority_color) ?>"><?php echo esc_html(ucwords($priority)); ?></span></p>
+                <p><strong>Priority:</strong><span class="robodesk-priority-pill <?php echo strtolower($priority); ?>" style="background:<?php echo esc_attr($priority_color) ?>"><?php echo esc_html(ucwords($priority)); ?></span></p>
             </div>
 
             <div class="robodesk-ticket-dates">
                 <p><strong>Created At:</strong> <?php echo esc_html($created_date); ?></p>
-                <p class=" <?php echo $time_ago_class; ?>"><strong>Last Updated:</strong> <?php echo $human_readable_time ? $human_readable_time .' ago' : ''?></p>
+                <p class=" <?php echo $time_ago_class; ?>"><strong>Last Updated:</strong> <?php echo $human_readable_time ? $human_readable_time . ' ago' : '' ?></p>
             </div>
             <div>
                 <div class="robodesk-ticket-content">
@@ -1104,4 +1140,4 @@ function robodesk_single_ticket_shortcode($atts)
     add_shortcode('robodesk_login_form', 'robodesk_login_form_shortcode');
 
 
-?>
+        ?>
