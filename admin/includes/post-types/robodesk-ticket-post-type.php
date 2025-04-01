@@ -132,6 +132,7 @@ function robodesk_status_meta_box_callback($post)
         <option value="open" <?php selected($value, 'open'); ?>>Open</option>
         <option value="in-progress" <?php selected($value, 'in-progress'); ?>>In Progress</option>
         <option value="closed" <?php selected($value, 'closed'); ?>>Closed</option>
+        <option value="archived" <?php selected($value, 'closed'); ?>>Archived</option>
     </select>
 <?php
 }
