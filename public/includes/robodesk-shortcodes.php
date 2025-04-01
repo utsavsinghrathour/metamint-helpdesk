@@ -285,7 +285,8 @@ function robodesk_my_tickets_shortcode()
                             ?>
                             <a href="<?php echo esc_url($ticket_url); ?>"><?php the_title(); ?></a>
 
-                            <p class="ticket-date"><?php echo get_the_date('dS M Y'); ?></p>
+                            <p class="ticket-date">
+                            <span class="ticket-num"><?php echo '#'.get_the_id(); ?></span> <span class="dashicons-calendar"> <?php  echo get_the_date('m/d/Y'); ?></span></p>
                         </td>
                         <td><?php echo  $comment_count; ?></td>
                         <td><?php echo $human_readable_time ? $human_readable_time . ' ago' : '-' ?><p class="ticket-comment-by">by <?php echo $comment_author; ?></p>
