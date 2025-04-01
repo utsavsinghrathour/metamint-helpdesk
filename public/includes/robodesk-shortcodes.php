@@ -288,7 +288,7 @@ function robodesk_my_tickets_shortcode()
                             <p class="ticket-date"><?php echo get_the_date('dS M Y'); ?></p>
                         </td>
                         <td><?php echo  $comment_count; ?></td>
-                        <td><?php echo $human_readable_time ? $human_readable_time . ' ago' : '-' ?><p class="ticket-comment-by">By, <?php echo $comment_author; ?></p>
+                        <td><?php echo $human_readable_time ? $human_readable_time . ' ago' : '-' ?><p class="ticket-comment-by">by <?php echo $comment_author; ?></p>
                         </td>
                         <!-- Status -->
                         <td>
