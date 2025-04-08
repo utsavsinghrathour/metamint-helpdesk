@@ -1,25 +1,19 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { IoIosSend } from "react-icons/io";
 import '../styles/SendMessageField.css';
 
-const SendMessageField = () => {
+const SendMessageField = ({ setShowLogin }) => {
   const [message, setMessage] = useState('');
-  const navigate = useNavigate();
-  const isLoggedIn = false; // Replace with actual auth logic (e.g., context, token check)
 
   const handleInputChange = (e) => {
     setMessage(e.target.value);
   };
 
   const handleSend = () => {
-    if (!isLoggedIn) {
-      navigate('/login'); // Redirect to Login.jsx if not logged in
-      return;
-    }
     if (message.trim()) {
       console.log('Sending message:', message);
       setMessage('');
+      setShowLogin(true); // Trigger Login display
     }
   };
 
@@ -45,7 +39,7 @@ const SendMessageField = () => {
           className="rd-bg-transparent rd-border-none rd-text-blue"
           disabled={!message.trim()}
         >
-          <IoIosSend />
+          <IoIosSend/>
         </button>
       </div>
     </div>
