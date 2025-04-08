@@ -1,0 +1,91 @@
+/* FAQ.css */
+.rd-faq-container {
+  max-width: 600px;
+  font-family: Arial, sans-serif;
+}
+
+.rd-faq-item {
+ padding: 12px 20px;
+ cursor: pointer;
+}
+.rd-faq-item p{
+    margin-top: 8px;
+}
+.rd-faq-item svg{
+    height: 15px;
+    width: 15px;
+}
+.rd-faq-content {
+  flex-grow: 1;
+}
+
+.rd-faq-paragraph {
+  font-size: 14px;
+  color: #666;
+}
+
+.rd-faq-icon {
+  width: 20px;
+  height: 20px;
+  margin-left: 15px;
+}
+
+.rd-faq-item:last-child{
+  border-bottom: none;
+}
+/* css for search header */
+.back-button {
+  background-color: #007bff;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  cursor: pointer;
+  margin-bottom: 15px;
+}
+.rd-search-header .rd-search-bar input{
+  background-color: #fff;
+  padding: 14px 15px;
+}
+.rd-search-header .rd-search-bar svg{
+  position: absolute;
+  right: 10px;
+  height: 16px;
+  width: 16px;
+  top: 50%;
+  transform: translate(-50%, -50%);
+}
+.rd-search-header .back-button {
+  position: absolute;
+  left: 18px;
+  top: 20px;
+}
+.rd-search-header{
+  padding: 18px 18px 12px 18px;
+}
+/* css for search header end */
+
+/* css for single faq */
+.rd-author-avatar img{
+  height: 30px;
+  width: 30px;
+  object-fit: cover;
+  border-radius: 50%;
+}
+.rd-single-faq-footer{
+  padding-left: 10px;
+  padding-right: 10px;
+  margin: 30px 0;
+}
+.rd-faq-actions{
+  gap: 40px;
+  margin-bottom: 15px;
+}
+.rd-faq-actions svg path{
+  fill: #555555;
+}
+.liked svg path{
+  fill: var(--primary-blue);
+}
+.disliked svg path{
+  fill: #EF2C3F;
+}

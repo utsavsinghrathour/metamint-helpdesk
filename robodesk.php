@@ -63,6 +63,8 @@ function robodesk_enqueue_scripts()
 {
 
     wp_enqueue_script('jquery');
+    wp_enqueue_style('robodesk-styles', ROBODESK_PLUGIN_URL . 'public/assets/css/robodesk-styles.css', array(), '1.0');
+    wp_enqueue_script('robodesk-scripts', ROBODESK_PLUGIN_URL . 'public/assets/js/robodesk-scripts.js', array('jquery'), time(), true);
 
     if (is_admin()) {
         add_action('admin_enqueue_scripts', 'robodesk_enqueue_admin_scripts');
@@ -81,7 +83,28 @@ function robodesk_enqueue_scripts()
             'add_credential_nonce' => wp_create_nonce('robodesk_add_credential_nonce'), // New nonce
             'delete_credential_nonce' => wp_create_nonce('robodesk_delete_credential_nonce'), // New nonce
         ));
+        $asset_file = file_exists(ROBODESK_PLUGIN_PATH . 'public/build/index.asset.php')
+        ? include ROBODESK_PLUGIN_PATH . 'public/build/index.asset.php'
+        : array('dependencies' => array('wp-element'), 'version' => '1.0.6');
+        wp_enqueue_script(
+            'robodesk-react-script',
+            ROBODESK_PLUGIN_URL . 'public/build/index.js',
+            array_merge(array('jquery'), $asset_file['dependencies']), // Include jQuery if needed
+            $asset_file['version'],
+            true
+        );
+    
+        wp_enqueue_style(
+            'robodesk-react-style',
+            ROBODESK_PLUGIN_URL . 'public/build/index.css',
+            array(),
+            $asset_file['version']
+        );
     }
+    add_action('wp_footer', 'robodesk_add_plugin');
+function robodesk_add_plugin() {
+    echo '<div id="robodesk-plugin"></div>';
+}
 }
 
 

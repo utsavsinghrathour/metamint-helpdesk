@@ -1,0 +1,26 @@
+{
+  "name": "robodesk",
+  "version": "1.0.0",
+  "description": "A WordPress plugin with a toggleable React popup",
+  "main": "index.js",
+  "scripts": {
+    "start": "wp-scripts start",
+    "build": "wp-scripts build"
+  },
+  "keywords": [
+    "wordpress",
+    "plugin",
+    "react"
+  ],
+  "author": "Arpan Adhikari",
+  "license": "ISC",
+  "devDependencies": {
+    "@wordpress/scripts": "^30.14.1"
+  },
+  "dependencies": {
+    "emoji-picker-react": "^4.12.2",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-icons": "^5.5.0"
+  }
+}
