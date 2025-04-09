@@ -11,19 +11,11 @@ import { IoClose } from "react-icons/io5";
 const SingleTicket = ({ ticket, onBack }) => {
   const [message, setMessage] = useState('');
   const [showPicker, setShowPicker] = useState(false);
-  const [previewImage, setPreviewImage] = useState(null); // State for image preview
-  const [chatMessages, setChatMessages] = useState([
-    { id: 1, text: 'Hi, how can I help you today?', sender: 'other', image: ticket.authorImage },
-    { id: 2, text: 'I need assistance with my website.', sender: 'me' },
-    { id: 3, text: 'Can you describe the issue?', sender: 'other', image: ticket.authorImage },
-    { id: 4, text: 'I need assistance with my website.', sender: 'me' },
-    { id: 5, text: 'Hi, how can I help you today?', sender: 'other', image: ticket.authorImage },
-    { id: 6, text: 'I need assistance with my website.', sender: 'me' },
-    { id: 7, text: 'Can you describe the issue?', sender: 'other', image: ticket.authorImage },
-    { id: 8, text: 'I need assistance with my website.', sender: 'me' },
-  ]);
+  const [previewImage, setPreviewImage] = useState(null);
+  const [chatMessages, setChatMessages] = useState(ticket.messages || []); // Use ticket.messages
   const textareaRef = useRef(null);
   const fileInputRef = useRef(null);
+  const chatContainerRef = useRef(null);
 
   useEffect(() => {
     const textarea = textareaRef.current;
@@ -33,6 +25,13 @@ const SingleTicket = ({ ticket, onBack }) => {
     }
   }, [message]);
 
+  useEffect(() => {
+    const chatContainer = chatContainerRef.current;
+    if (chatContainer) {
+      chatContainer.scrollTop = chatContainer.scrollHeight;
+    }
+  }, [chatMessages]);
+
   const handleSend = () => {
     if (message.trim() || previewImage) {
       setChatMessages((prev) => [
@@ -41,11 +40,11 @@ const SingleTicket = ({ ticket, onBack }) => {
           id: Date.now(), 
           text: message || '', 
           sender: 'me',
-          ...(previewImage && { imageUrl: previewImage }) // Add image if present
+          ...(previewImage && { imageUrl: previewImage })
         },
       ]);
       setMessage('');
-      setPreviewImage(null); // Clear preview after sending
+      setPreviewImage(null);
     }
   };
 
@@ -63,7 +62,7 @@ const SingleTicket = ({ ticket, onBack }) => {
     if (file && file.type.startsWith('image/')) {
       const reader = new FileReader();
       reader.onload = () => {
-        setPreviewImage(reader.result); // Set preview image
+        setPreviewImage(reader.result);
       };
       reader.readAsDataURL(file);
     }
@@ -79,7 +78,7 @@ const SingleTicket = ({ ticket, onBack }) => {
       <div className="single-ticket-header rd-flex-col rd-flex rd-align-center rd-justify-between rd-border-bottom-light rd-px-18 rd-py-15">
         <div className="rd-flex rd-align-center">
           <button
-            className="back-button rd-flex rd-items-center rd-bg-transparent rd-border-none icon-dark rd-p-0 rd-m-0 rd-back-arrow-position"
+            className="icon-dark back-button rd-flex rd-items-center rd-bg-transparent rd-border-none  rd-p-0 rd-m-0 rd-back-arrow-position"
             onClick={onBack}
           >
             <FaChevronLeft />
@@ -93,7 +92,10 @@ const SingleTicket = ({ ticket, onBack }) => {
           </p>
         </div>
       </div>
-      <div className="chat-container rd-flex rd-flex-col rd-flex-grow rd-px-18 rd-py-15 rd-overflow-auto">
+      <div 
+        ref={chatContainerRef}
+        className="chat-container rd-flex rd-flex-col rd-flex-grow rd-px-18 rd-py-15 rd-overflow-auto"
+      >
         {chatMessages.map((msg) => (
           <div
             key={msg.id}
@@ -102,10 +104,10 @@ const SingleTicket = ({ ticket, onBack }) => {
             }`}
             style={{
               maxWidth: '70%',
-              padding: '8px 16px',
               borderRadius: '10px',
               backgroundColor: msg.sender === 'me' ? '#EEEEEE' : 'transparent',
               marginLeft: msg.sender === 'me' ? 'auto' : '0',
+              padding: msg.sender === 'me' ? '8px 16px' : '0',
             }}
           >
             {msg.sender === 'other' && (
@@ -113,7 +115,7 @@ const SingleTicket = ({ ticket, onBack }) => {
                 src={msg.image}
                 alt="Sender"
                 className="rd-rounded-full rd-object-cover"
-                style={{ height: '30px', width: '30px', borderRadius: '50px' }}
+                style={{ height: '30px', width: '30px', borderRadius: '50px', aspectRatio: '1', }}
               />
             )}
             {msg.text && <span className="rd-body-text single-message">{msg.text}</span>}
@@ -136,7 +138,7 @@ const SingleTicket = ({ ticket, onBack }) => {
               src={previewImage}
               alt="Preview"
               className="rd-max-w-full rd-h-auto rd-border-radius-md"
-              style={{ maxWidth: '80px' }} // Smaller preview size
+              style={{ maxWidth: '80px' }}
             />
             <button
               onClick={() => setPreviewImage(null)}

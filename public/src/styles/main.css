@@ -1,3 +1,4 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap');
 :root {
   /* Global CSS variables */
   --primary-blue: rgba(0, 74, 255, 1);
@@ -16,6 +17,7 @@
   font-family: "Inter", sans-serif;
   font-optical-sizing: auto;
   font-style: normal;
+  letter-spacing: 0 !important;
 }
 *:focus-visible{
   outline: none;
@@ -28,6 +30,9 @@ button.no-bg, .button.no-bg{
   border: 1px solid var(--primary-blue);
   font-weight: 400;
   padding: 10px 12px;
+  text-decoration: none;
+}
+.rd-decoration-none{
   text-decoration: none;
 }
 .rd-flex {
@@ -101,6 +106,9 @@ button.no-bg, .button.no-bg{
 .rd-p-10 {
   padding: 10px;
 }
+.rd-p-12{
+  padding: 12px;
+}
 .rd-px-20{
   padding-left: 20px;
   padding-right: 20px;
@@ -128,6 +136,10 @@ padding-right: 18px;
 .rd-m-10 {
   margin: 10px;
 }
+.rd-my-30{
+  margin-top: 30px;
+  margin-bottom: 30px;
+}
 .rd-mt-20{
   margin-top: 20px;
 }
@@ -139,6 +151,9 @@ padding-right: 18px;
 }
 .rd-mt-10{
   margin-top: 10px;
+}
+.rd-mt-15{
+  margin-top: 15px;
 }
 .rd-mb-10{
   margin-bottom: 10px;
@@ -153,6 +168,9 @@ padding-right: 18px;
 .rd-mb-20{
   margin-bottom: 20px;
 }
+.rd-mb-30{
+  margin-bottom: 30px;
+}
 .rd-w-full {
   width: 100%;
 }
@@ -166,6 +184,9 @@ padding-right: 18px;
 }
 .rd-position-absolute{
   position: absolute;
+}
+.rd-hover:hover{
+  background-color: #f5f5f5;
 }
 .rd-top-100{
   top: 100%;
@@ -201,10 +222,13 @@ padding-right: 18px;
   border: 1px solid var(--primary-blue);
 }
 .rd-text-blue{
-  color: var(--primary-blue);
+  color: var(--primary-blue) !important;
 }
 .rd-text-white{
   color: #fff;
+}
+.rd-fw-medium{
+  font-weight: 500 !important;
 }
 .rd-border-radius-md{
   border-radius: 10px;
@@ -265,6 +289,9 @@ h5.sub-text{
 }
 .color-body-text{
   color: var(--body-text);
+}
+.rd-color-gray{
+  color: rgba(132, 129, 138, 1) !important;
 }
 .rd-rounded-border{
   border-radius: var(--border-rounded);
@@ -327,7 +354,7 @@ input::placeholder{
   transform: rotate(180deg);
 }
 .robodesk-popup.open {
-  max-height: 600px;
+  max-height: 750px;
 }
 
 .robodesk-popup.closed {

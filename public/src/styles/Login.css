@@ -1,0 +1,21 @@
+.rd-login-button{
+    background-color: var(--primary-blue);
+    font-size: 14px;
+    color: #fff;
+    padding: 12px;
+    border: transparent;
+    margin-top: 25px;
+}
+.login-container{
+    padding-top: 35px;
+    padding-bottom: 35px;
+}
+.login-container input::placeholder{
+    font-size: 14px;
+}
+.login-container button{
+    cursor: pointer;
+}
+.rd-search-header.login-wrap{
+    padding: 20px;
+}

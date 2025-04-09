@@ -11,6 +11,9 @@
 .rd-faq-item p{
     margin-top: 8px;
 }
+.rd-faq-item:hover{
+  background-color: #f5f5f5;
+}
 .rd-faq-item svg{
     height: 15px;
     width: 15px;

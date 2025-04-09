@@ -1,67 +1,93 @@
-.rd-message-tab .rd-search-header{
-    padding: 20px;
+.rd-message-tab .rd-search-header {
+  padding: 20px;
 }
-.single-rd-ticket
-{
-    padding: 16px 20px;
+.single-rd-ticket {
+  padding: 16px 20px;
 }
-.rd-tickets .single-ticket-title{
-    padding: 0 20px;
-    margin-bottom: 5px;
+.rd-tickets .single-ticket-title {
+  padding: 0 20px;
+  margin-bottom: 5px;
 }
-.rd-tickets{
-    margin: 24px 0;
+/* .rd-tickets {
+  margin: 24px 0;
+} */
+.rd-closed-tickets {
+  margin-bottom: 0;
 }
-.rd-closed-tickets{
-    margin-bottom: 0;
+.single-rd-active-ticket svg {
+  height: 15px;
+  width: 15px;
 }
-.single-rd-active-ticket svg{
-    height: 15px;
-    width: 15px;
+.rd-messge-wrapper {
+  max-height: 300px;
+  overflow: auto;
 }
-.rd-messge-wrapper{
-    max-height: 300px;
-    overflow: auto;
+
+.rd-send-message a {
+  width: fit-content;
+  margin: auto;
 }
-.rd-send-message{
-    margin-bottom: 30px;
-    margin-top: 30px;
+.chat-message.recieved .single-message {
+  border: 1px solid #eee;
+  display: flex;
+  align-items: center;
+  padding: 8px 16px;
+  border-radius: 10px;
 }
-.rd-send-message a{
-    width: fit-content;
-    margin: auto;
+.chat-container {
+  overflow: auto;
+  max-height: 300px;
 }
-.chat-message.recieved .single-message{
-    border: 1px solid #eee;
-    display: flex;
-    align-items: center;
-    padding: 8px 16px;
-    border-radius: 10px;
-}
-.chat-container{
-    overflow: auto;
-    max-height: 300px;
-}
-.chat-input textarea::placeholder{
-    font-size: 12px;
-    font-weight: 400;
+.chat-input textarea::placeholder {
+  font-size: 12px;
+  font-weight: 400;
 }
 .chat-input textarea {
-    max-height: 80px;
-    overflow-y: auto; 
-  }
-.emoji-picker-wrap{
-    height: fit-content;
+  max-height: 80px;
+  overflow-y: auto;
 }
-.remove-preview{
-    right: -3px;
-    top: -5px;
-    background-color: #000;
-    display: flex;
-    border-radius: 50%;
-    color: #fff;
-    height: 20px;
-    width: 20px;
-    align-items: center;
-    justify-content: center;
+.emoji-picker-wrap {
+  height: fit-content;
+}
+.remove-preview {
+  right: -3px;
+  top: -5px;
+  background-color: #000;
+  display: flex;
+  border-radius: 50%;
+  color: #fff;
+  height: 20px;
+  width: 20px;
+  align-items: center;
+  justify-content: center;
+}
+.active-ticket-tab {
+  border-bottom: 2px solid var(--primary-blue) !important;
+  color: var(--primary-blue) !important;
+}
+.rd-urgent{
+  color: rgba(234, 0, 72, 1) !important;
+  background-color: rgba(255, 216, 228, 1);
+}
+.rd-medium {
+  color: rgba(0, 74, 255, 1) !important;
+  background-color: rgba(182, 203, 255, 1);
+}
+.rd-low {
+  color: rgba(0, 99, 34, 1) !important;
+  background-color: rgba(216, 255, 227, 1);
+}
+.rd-priority{
+    padding: 2px 6px;
+    border-radius: 8px;
+    font-size: 10px !important;
+}
+.rd-message-tab-content input,
+.rd-message-tab-content select {
+  min-width: 150px;
+}
+.rd-message-tab-content select,
+.rd-message-tab-content input::placeholder{
+    font-size: 14px;
+    color: rgba(85, 85, 85, 1);
 }
