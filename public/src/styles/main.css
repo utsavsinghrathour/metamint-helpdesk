@@ -14,19 +14,24 @@
   margin: 0;
   padding: 0;
   box-sizing: border-box;
-  font-family: "Inter", sans-serif;
+  font-family: "Inter", sans-serif !important;
   font-optical-sizing: auto;
   font-style: normal;
   letter-spacing: 0 !important;
+  border: 0;
 }
 *:focus-visible{
   outline: none;
+}
+.robodesk-plugin{
+  z-index: 9999 !important;
 }
 button.no-bg, .button.no-bg{
   background-color: transparent;
   border-radius: 10px;
   color: var(--primary-blue);
   font-size: 14px;
+  line-height: 18px;
   border: 1px solid var(--primary-blue);
   font-weight: 400;
   padding: 10px 12px;
@@ -94,7 +99,7 @@ button.no-bg, .button.no-bg{
   gap: 20px;
 }
 .rd-p-0{
-  padding: 0;
+  padding: 0 !important;
 }
 .rd-p-5 {
   padding: 5px;
@@ -236,10 +241,12 @@ padding-right: 18px;
 .rd-title-text{
   color: var(--title-color);
   font-size: 14px;
+  line-height: 18px;
   font-weight: 500;
 }
 .rd-text-small{
   font-size: 10px;
+  line-height: 12px;
   font-weight: 400;
   color: var(--body-text);
 }
@@ -251,21 +258,25 @@ padding-right: 18px;
 }
 h3.heading-3{
   font-size: 20px;
+  line-height: 24px;
   font-weight: 600;
   color: var(--title-color);
 }
 h4.heading-4{
   font-size: 18px;
+  line-height: 22px;
   font-weight: 500;
   transition: font-size 0.5s ease;
 }
 h5.heading-5{
   font-size: 16px;
+  line-height: 20px;
   font-weight: 400;
 }
 h5.sub-text{
   color: var(--body-text);
   font-size: 14px;
+  line-height: 18px;
   font-weight: 400;
 }
 .rd-border-light{
@@ -284,6 +295,7 @@ h5.sub-text{
 .rd-body-text{
   color: var(--body-text);
   font-size: 12px;
+  line-height: 16px;
   font-weight: 400;
   transition: font-size 0.5s ease;
 }
@@ -307,6 +319,7 @@ h5.sub-text{
 }
 input::placeholder{
   font-size: 16px;
+  line-height: 20px;
 }
 .robodesk-toggle-btn{
   aspect-ratio: 44 / 44;
@@ -344,10 +357,12 @@ input::placeholder{
 }
 .robodesk-popup.expanded .rd-faq-detail .rd-body-text{
   font-size: 14px;
+  line-height: 18px;
   transition: font 0.5s ease;
 }
 .robodesk-popup.expanded .rd-faq-detail .rd-faq-title{
   font-size: 20px;
+  line-height: 24px;
   transition: font 0.5s ease;
 }
 .expand-popup.expanded {
