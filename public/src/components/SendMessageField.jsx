@@ -35,7 +35,7 @@ const SendMessageField = ({ setShowLogin }) => {
         />
         <button
           onClick={handleSend}
-          className="rd-bg-transparent rd-border-none rd-text-blue rd-p-0 rd-m-0"
+          className="rd-bg-transparent rd-border-none rd-text-blue rd-p-0"
           disabled={!message.trim()}
         >
           <svg xmlns="http://www.w3.org/2000/svg" width="17" height="16" viewBox="0 0 17 16" fill="none">
