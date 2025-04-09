@@ -83,7 +83,7 @@ const Footer = ({ activeTab, setActiveTab, showCopyrightOnly = false }) => {
             aria-selected={activeTab === tab.id}
             aria-controls={`tabpanel-${tab.id}`}
             id={`tab-${tab.id}`}
-            className={`rd-flex rd-align-center rd-gap-5 rd-border-none rd-bg-transparent icon-dark rd-cursor-pointer ${
+            className={`rd-p-0 rd-flex rd-align-center rd-gap-5 rd-border-none rd-bg-transparent icon-dark rd-cursor-pointer ${
               activeTab === tab.id ? 'active-tab' : ''
             }`}
             onClick={() => setActiveTab(tab.id)}

@@ -234,7 +234,7 @@ const MessageTabs = ({ setActiveTab, setIsOpen, isExpanded, setIsExpanded, activ
                 <option value="resolved">Resolved</option>
               </select>
               <button
-                className={`rd-cursor-pointer rd-flex rd-gap-8 rd-align-center rd-color-gray rd-title-text ticket-tab rd-px-10 rd-py-5 rd-bg-transparent rd-border-none ${
+                className={`rd-p-0 rd-cursor-pointer rd-flex rd-gap-8 rd-align-center rd-color-gray rd-title-text ticket-tab rd-px-10 rd-py-5 rd-bg-transparent rd-border-none ${
                   currentTab === 'new' ? 'rd-text-blue rd-font-bold active-ticket-tab' : 'rd-text-gray'
                 }`}
                 onClick={() => setCurrentTab('new')}
@@ -268,7 +268,7 @@ const MessageTabs = ({ setActiveTab, setIsOpen, isExpanded, setIsExpanded, activ
                 New
               </button>
               <button
-                className={`rd-cursor-pointer ticket-tab rd-flex rd-gap-8 rd-align-center rd-color-gray rd-title-text rd-px-10 rd-py-5 rd-bg-transparent rd-border-none ${
+                className={`rd-p-0 rd-cursor-pointer ticket-tab rd-flex rd-gap-8 rd-align-center rd-color-gray rd-title-text rd-px-10 rd-py-5 rd-bg-transparent rd-border-none ${
                   currentTab === 'ongoing' ? 'rd-text-blue rd-font-bold active-ticket-tab' : 'rd-text-gray'
                 }`}
                 onClick={() => setCurrentTab('ongoing')}
