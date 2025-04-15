@@ -69,6 +69,7 @@ function robodesk_enqueue_scripts()
     if (is_admin()) {
         add_action('admin_enqueue_scripts', 'robodesk_enqueue_admin_scripts');
     } else {
+        wp_enqueue_style('dashicons');
         wp_enqueue_script('tinymce');
         wp_enqueue_style('robodesk-styles', ROBODESK_PLUGIN_URL . 'public/assets/css/robodesk-styles.css', array(), '1.0');
 
