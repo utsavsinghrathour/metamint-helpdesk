@@ -86,7 +86,7 @@ const SingleTicket = ({ ticket, onBack }) => {
           <img src={Logo} alt="Plugin Logo" className="rd-h-auto rd-header-logo" />
         </div>
         <div className="rd-body-text rd-mt-30">
-          <p className="rd-text-center">
+          <p className="rd-text-center rd-body-text">
             If you are interested in working with us, take a step towards discovering exciting opportunities by reaching
             out to us. We look forward to talking with you soon!
           </p>
@@ -176,7 +176,7 @@ const SingleTicket = ({ ticket, onBack }) => {
                 <EmojiPicker onEmojiClick={handleEmojiClick} />
               </div>
             )}
-            <div>
+            <div className='rd-flex'>
               <input
                 type="file"
                 ref={fileInputRef}
@@ -186,7 +186,7 @@ const SingleTicket = ({ ticket, onBack }) => {
               />
               <button
                 onClick={triggerFileInput}
-                className="rd-bg-transparent rd-border-none rd-mr-10 rd-cursor-pointer rd-p-0"
+                className="rd-bg-transparent rd-border-none rd-mr-10 rd-cursor-pointer rd-p-0 icon-dark"
               >
                 <FiPaperclip className="icon-dark" size={20} />
               </button>
