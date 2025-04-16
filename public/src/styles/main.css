@@ -9,20 +9,50 @@
   --border-none: 0;
   --icon-dark: rgba(51, 51, 51, 1);
 }
+.robodesk-plugin::-webkit-scrollbar {
+  width: 3px; 
+  height: 3px;
+}
 
+.robodesk-plugin::-webkit-scrollbar-thumb {
+  background-color: #004aff;
+  border-radius: 10px;
+}
+.rd-main-content{
+  min-height: 508px;
+}
+.rd-main-content.no-footer{
+  min-height: 570px;
+}
+.expanded .rd-main-content.no-footer{
+  min-height: 670px;
+}
+.expanded .single-faq-content{
+  max-height: 600px;
+}
+.robodesk-plugin::-webkit-scrollbar-track {
+  background: transparent;
+}
 *{
   margin: 0;
   padding: 0;
   box-sizing: border-box;
-  font-family: "Inter", sans-serif !important;
   font-optical-sizing: auto;
   font-style: normal;
   letter-spacing: 0 !important;
   border: 0;
+  scrollbar-width: thin;
+  scrollbar-color: #004aff transparent;
 }
 *:focus-visible{
   outline: none;
 }
+*:not(i){
+  font-family: "Inter", sans-serif !important;
+}
+/* h1, h2, h3, h4, h5, h6, p, span, a, input, input::placeholder, textarea, textarea::placeholder, select{
+
+} */
 .robodesk-plugin{
   z-index: 9999 !important;
 }
@@ -37,11 +67,22 @@ button.no-bg, .button.no-bg{
   padding: 10px 12px;
   text-decoration: none;
 }
+.rd-overflow-h-320{
+  max-height: 240px;
+  overflow: auto;
+}
 .rd-decoration-none{
   text-decoration: none;
 }
+.rd-header-logo{
+  max-width: 100px;
+ object-fit: contain; 
+}
 .rd-flex {
   display: flex;
+}
+.flex-1{
+  flex: 1;
 }
 .icon-dark svg{
   fill: var(--icon-dark);
@@ -340,7 +381,7 @@ input::placeholder{
 /* popup expanded and contract, open css */
 .robodesk-popup {
   width: 400px;
-  transition: width 0.5s ease;
+  transition: width 0.5s ease, height 0.5s ease;
   background-color: #fff;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
   display: flex;
@@ -349,9 +390,7 @@ input::placeholder{
   overflow: hidden;
   margin-bottom: 10px; 
 }
-.robodesk-popup.expanded{
-  width: 600px;
-}
+
 .expand-popup {
   transition: transform 0.5s ease;
 }
@@ -369,9 +408,15 @@ input::placeholder{
   transform: rotate(180deg);
 }
 .robodesk-popup.open {
-  max-height: 750px;
+  max-height: 600px;
+  min-height: 600px;
+  height: 600px;
 }
-
+.robodesk-popup.expanded{
+  width: 600px;
+  height: 700px;
+  max-height: 700px;
+}
 .robodesk-popup.closed {
   max-height: 0; 
 }

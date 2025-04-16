@@ -1,11 +1,22 @@
 .robodesk-header {
-    padding: 15px 20px;
-    border-bottom: 1px solid var(--border-light-gray);
+  padding: 15px 20px;
+  border-bottom: 1px solid var(--border-light-gray);
+}
+.robodesk-plugin {
+  position: fixed;
+  left: auto;
+  right: 50px;
+  bottom: 40px;
+  top: auto;
+}
+@media screen and (max-width: 767px) {
+  .robodesk-plugin {
+    right: 10px;
+    bottom: 10px;
   }
-  .robodesk-plugin{
-    position: fixed;
-left: auto;
-right: 50px;
-bottom: 10px;
-top: auto;
+  .robodesk-popup.open,
+  .robodesk-popup.open.expanded
+  {
+    width: 375px;
+  }
 }

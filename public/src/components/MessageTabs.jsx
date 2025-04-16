@@ -7,6 +7,7 @@ import { LuDot } from 'react-icons/lu';
 import { IoIosSend } from 'react-icons/io';
 import Footer from './Footer';
 import { RiPencilFill } from "react-icons/ri";
+import Preloader from '../images/preloader.svg'; // Adjust the path based on your project structure
 
 const SingleTicket = React.lazy(() => import('./SingleTicket'));
 
@@ -183,11 +184,11 @@ const MessageTabs = ({ setActiveTab, setIsOpen, isExpanded, setIsExpanded, activ
   console.log('MessageTabs Render - selectedTicket:', selectedTicket);
 
   return (
-    <div className="rd-message-tab">
+    <div className="rd-main-content">
       {selectedTicket ? (
-        <Suspense fallback={<div className='rd-title-text rd-p-10'>Loading ticket...</div>}>
-          <SingleTicket ticket={selectedTicket} onBack={() => setSelectedTicket(null)} />
-        </Suspense>
+        <Suspense fallback={<img src={Preloader} alt="Loading" className="rd-preloader" />}>
+        <SingleTicket ticket={selectedTicket} onBack={() => setSelectedTicket(null)} />
+      </Suspense>
       ) : (
         <>
           <div className="rd-px-18 rd-search-header rd-bg-blue rd-flex rd-items-center rd-justify-between rd-flex-col">
@@ -201,18 +202,18 @@ const MessageTabs = ({ setActiveTab, setIsOpen, isExpanded, setIsExpanded, activ
           </div>
           <div className="rd-message-tab-content">
             {/* Search and Priority Filter */}
-            <div className="rd-px-18 rd-py-15 rd-flex rd-gap-10 rd-align-center rd-justify-center">
+            <div className="rd-px-18 rd-py-15 rd-flex rd-gap-10 rd-align-center rd-justify-between">
               <input
                 type="text"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 placeholder="Search for ticket"
-                className="rd-border-light rd-border-radius-md rd-p-10"
+                className="rd-border-light rd-border-radius-md rd-p-10 rd-color-gray rd-fw-medium flex-1"
               />
               <select
                 value={priorityFilter}
                 onChange={(e) => setPriorityFilter(e.target.value)}
-                className="rd-border-light rd-p-10 rd-body-text rd-border-radius-md"
+                className="rd-border-light rd-p-10 rd-body-text rd-border-radius-md rd-color-gray rd-fw-medium flex-1"
               >
                 <option value="all">All Priorities</option>
                 <option value="Urgent">Urgent</option>
@@ -226,7 +227,7 @@ const MessageTabs = ({ setActiveTab, setIsOpen, isExpanded, setIsExpanded, activ
               <select
                 value={currentTab}
                 onChange={(e) => setCurrentTab(e.target.value)}
-                className="rd-p-10 rd-py-5 rd-border-light rd-border-radius-md rd-body-text ticket-tab"
+                className="rd-p-10 rd-py-5 rd-border-light rd-border-radius-md rd-body-text ticket-tab rd-color-gray rd-fw-medium"
               >
                 <option value="all">All Tickets</option>
                 <option value="new">New</option>
@@ -332,8 +333,8 @@ const MessageTabs = ({ setActiveTab, setIsOpen, isExpanded, setIsExpanded, activ
                <RiPencilFill />
               </a>
             </div>
+            </div>
             <Footer activeTab={activeTab} setActiveTab={setActiveTab} />
-          </div>
         </>
       )}
     </div>

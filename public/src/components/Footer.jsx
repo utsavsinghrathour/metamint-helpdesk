@@ -66,7 +66,7 @@ const Footer = ({ activeTab, setActiveTab, showCopyrightOnly = false }) => {
       <footer className="robodesk-footer">
         <div className="robodesk-footer-text rd-text-center rd-py-10">
           <h6 className="rd-m-0">
-            Powered by <span className="rd-text-blue">Robodesk</span>
+            Powered by <a href="http://robodesk.io/" target='_blank' className='rd-decoration-none'><span className="rd-text-blue rd-decoration-none">Robodesk</span></a>
           </h6>
         </div>
       </footer>
@@ -95,7 +95,7 @@ const Footer = ({ activeTab, setActiveTab, showCopyrightOnly = false }) => {
       </div>
       <div className="robodesk-footer-text rd-text-center rd-py-10">
         <h6 className="rd-m-0">
-          Powered by <span className="rd-text-blue">Robodesk</span>
+        Powered by <a href="http://robodesk.io/" target='_blank' className='rd-decoration-none'><span className="rd-text-blue rd-decoration-none">Robodesk</span></a>
         </h6>
       </div>
     </footer>

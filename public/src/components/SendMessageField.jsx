@@ -11,8 +11,11 @@ const SendMessageField = ({ setShowLogin }) => {
   const handleSend = () => {
     if (message.trim()) {
       console.log('Sending message:', message);
-      setMessage('');
+      console.log('Calling setShowLogin(true)');
       setShowLogin(true); // Trigger Login display
+      setMessage('');
+    } else {
+      console.log('No message entered');
     }
   };
 
@@ -29,12 +32,16 @@ const SendMessageField = ({ setShowLogin }) => {
           onKeyPress={(e) => {
             if (e.key === 'Enter' && !e.shiftKey) {
               e.preventDefault();
+              console.log('Enter key pressed, calling handleSend');
               handleSend();
             }
           }}
         />
         <button
-          onClick={handleSend}
+          onClick={() => {
+            console.log('Send button clicked, calling handleSend');
+            handleSend();
+          }}
           className="rd-bg-transparent rd-border-none rd-text-blue rd-p-0"
           disabled={!message.trim()}
         >

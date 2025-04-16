@@ -10,10 +10,20 @@ const App = () => {
   const [activeTab, setActiveTab] = useState(0);
   const [isExpanded, setIsExpanded] = useState(false);
 
-  console.log('App Render - isOpen:', isOpen, 'activeTab:', activeTab); // Debug log
+  console.log('App Render - isOpen:', isOpen, 'activeTab:', activeTab, 'isExpanded:', isExpanded); // Debug log
 
   const tabs = [
-    { id: 0, component: <HomeTabs setActiveTab={setActiveTab} setIsOpen={setIsOpen} /> },
+    {
+      id: 0,
+      component: (
+        <HomeTabs
+          setActiveTab={setActiveTab}
+          setIsOpen={setIsOpen}
+          isExpanded={isExpanded}
+          setIsExpanded={setIsExpanded}
+        />
+      ),
+    },
     {
       id: 1,
       component: (

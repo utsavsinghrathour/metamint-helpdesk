@@ -33,7 +33,7 @@
   margin-left: 15px;
 }
 
-.rd-faq-item:last-child{
+.rd-faq-item:last-child:not(.featured-faq .rd-faq-item){
   border-bottom: none;
 }
 /* css for search header */
@@ -91,4 +91,8 @@
 }
 .disliked svg path{
   fill: #EF2C3F;
+}
+.single-faq-content{
+  max-height: 500px;
+  overflow: auto;
 }

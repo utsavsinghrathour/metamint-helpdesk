@@ -19,7 +19,7 @@
   width: 15px;
 }
 .rd-messge-wrapper {
-  max-height: 300px;
+  max-height: 240px;
   overflow: auto;
 }
 
@@ -79,15 +79,27 @@
 }
 .rd-priority{
     padding: 2px 6px;
-    border-radius: 8px;
+    border-radius: 20px;
     font-size: 10px !important;
 }
 .rd-message-tab-content input,
 .rd-message-tab-content select {
   min-width: 150px;
 }
+.rd-message-tab-content input::placeholder{
+  color: #84818a !important;
+}
 .rd-message-tab-content select,
 .rd-message-tab-content input::placeholder{
     font-size: 14px;
     color: rgba(85, 85, 85, 1);
+}
+.rd-single-ticket .chat-container{
+  min-height: 410px;
+}
+.rd-preloader{
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
 }

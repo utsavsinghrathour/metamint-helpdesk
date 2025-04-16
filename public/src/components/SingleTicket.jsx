@@ -4,7 +4,7 @@ import { FaRegFaceSmileBeam } from 'react-icons/fa6';
 import { PiPaperPlaneRightFill } from 'react-icons/pi';
 import { FiPaperclip } from 'react-icons/fi';
 import EmojiPicker from 'emoji-picker-react';
-import Logo from '../images/White_Label_logo.png';
+import Logo from '../images/wooescrow-logo.png';
 import '../styles/MessageTabs.css';
 import { IoClose } from "react-icons/io5";
 
@@ -83,7 +83,7 @@ const SingleTicket = ({ ticket, onBack }) => {
           >
             <FaChevronLeft />
           </button>
-          <img src={Logo} alt="Plugin Logo" className="rd-h-auto" />
+          <img src={Logo} alt="Plugin Logo" className="rd-h-auto rd-header-logo" />
         </div>
         <div className="rd-body-text rd-mt-30">
           <p className="rd-text-center">
@@ -142,7 +142,7 @@ const SingleTicket = ({ ticket, onBack }) => {
             />
             <button
               onClick={() => setPreviewImage(null)}
-              className="rd-ml-10 rd-text-red-500 rd-border-none rd-cursor-pointer remove-preview rd-position-absolute"
+              className="rd-ml-10 rd-text-red-500 rd-border-none rd-cursor-pointer remove-preview rd-position-absolute rd-p-0"
             >
               <IoClose />
             </button>
@@ -167,7 +167,7 @@ const SingleTicket = ({ ticket, onBack }) => {
           <div className="rd-flex rd-gap-20 rd-relative">
             <button
               onClick={toggleEmojiPicker}
-              className="rd-bg-transparent rd-border-none rd-mr-10 icon-dark rd-cursor-pointer"
+              className="rd-bg-transparent rd-border-none rd-mr-10 icon-dark rd-cursor-pointer rd-p-0"
             >
               <FaRegFaceSmileBeam className="icon-dark" size={20} />
             </button>
@@ -186,12 +186,12 @@ const SingleTicket = ({ ticket, onBack }) => {
               />
               <button
                 onClick={triggerFileInput}
-                className="rd-bg-transparent rd-border-none rd-mr-10 rd-cursor-pointer"
+                className="rd-bg-transparent rd-border-none rd-mr-10 rd-cursor-pointer rd-p-0"
               >
                 <FiPaperclip className="icon-dark" size={20} />
               </button>
             </div>
-            <button onClick={handleSend} className="rd-bg-transparent rd-border-none rd-ml-10 icon-dark rd-cursor-pointer">
+            <button onClick={handleSend} className="rd-bg-transparent rd-border-none rd-ml-10 icon-dark rd-cursor-pointer rd-p-0">
               <PiPaperPlaneRightFill className="icon-dark" size={20} />
             </button>
           </div>

@@ -1,11 +1,11 @@
 import React from 'react';
-import Logo from '../images/White_Label_logo.png';
+import Logo from '../images/wooescrow-logo.png';
 import '../styles/header.css';
 
 const Header = ({ onClose }) => {
   return (
     <header className="robodesk-header rd-flex rd-justify-between">
-      <img src={Logo} alt="Plugin Logo" className="rd-h-auto" />
+      <img src={Logo} alt="Plugin Logo" className="rd-h-auto rd-header-logo" />
       <button className="robodesk-close-btn rd-m-5 rd-border-none rd-bg-transparent rd-p-0" onClick={onClose}>
         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20" fill="none">
           <path
