@@ -47,4 +47,3 @@ function robodesk_ticket_messaging_template_redirect() {
 }
 add_action('template_redirect', 'robodesk_ticket_messaging_template_redirect');
 
-?>

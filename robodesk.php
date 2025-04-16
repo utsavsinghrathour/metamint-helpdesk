@@ -69,7 +69,7 @@ function robodesk_enqueue_scripts()
     if (is_admin()) {
         add_action('admin_enqueue_scripts', 'robodesk_enqueue_admin_scripts');
     } else {
-        wp_enqueue_style('dashicons');
+       
         wp_enqueue_script('tinymce');
         wp_enqueue_style('robodesk-styles', ROBODESK_PLUGIN_URL . 'public/assets/css/robodesk-styles.css', array(), '1.0');
 
@@ -84,6 +84,7 @@ function robodesk_enqueue_scripts()
             'add_credential_nonce' => wp_create_nonce('robodesk_add_credential_nonce'), // New nonce
             'delete_credential_nonce' => wp_create_nonce('robodesk_delete_credential_nonce'), // New nonce
         ));
+        
         $asset_file = file_exists(ROBODESK_PLUGIN_PATH . 'public/build/index.asset.php')
         ? include ROBODESK_PLUGIN_PATH . 'public/build/index.asset.php'
         : array('dependencies' => array('wp-element'), 'version' => '1.0.6');
@@ -102,11 +103,14 @@ function robodesk_enqueue_scripts()
             $asset_file['version']
         );
     }
-    add_action('wp_footer', 'robodesk_add_plugin');
+
+}
+add_action('wp_footer', 'robodesk_add_plugin');
 function robodesk_add_plugin() {
     echo '<div id="robodesk-plugin"></div>';
 }
-}
+
+
 
 
 /**

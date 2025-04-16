@@ -89,4 +89,3 @@ function robodesk_note_form_shortcode($atts)
 <?php
     return ob_get_clean();
 }
-?>

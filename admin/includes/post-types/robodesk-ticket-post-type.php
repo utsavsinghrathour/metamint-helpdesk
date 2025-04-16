@@ -282,5 +282,3 @@ function save_priority_color_meta($term_id) {
 add_action('created_robodesk_ticket_priority', 'save_priority_color_meta');
 add_action('edited_robodesk_ticket_priority', 'save_priority_color_meta');
 
-
-?>
