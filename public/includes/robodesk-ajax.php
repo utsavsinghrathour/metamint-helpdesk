@@ -24,10 +24,10 @@ function robodesk_change_ticket_status_callback()
 }
 
 // Create New Ticket
-// add_action('wp_ajax_robodesk_create_new_ticket', 'robodesk_create_new_ticket_callback');
+add_action('wp_ajax_robodesk_create_new_ticket', 'robodesk_create_new_ticket_callback');
 function robodesk_create_new_ticket_callback()
 {
-    check_ajax_referer('robodesk_create_ticket_nonce');
+    // check_ajax_referer('robodesk_create_ticket_nonce');
 
     $title = isset($_POST['ticket_title']) ? sanitize_text_field($_POST['ticket_title']) : '';
     $content = isset($_POST['ticket_content']) ? wp_kses_post($_POST['ticket_content']) : '';

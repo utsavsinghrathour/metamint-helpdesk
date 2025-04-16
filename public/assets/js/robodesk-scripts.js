@@ -303,7 +303,8 @@ jQuery(document).ready(function($) {
   
         $('body').append('<div class="spinner"></div>');
         $('#robodesk-create-ticket').submit(function (e) {
-            e.preventDefault(); 
+            e.preventDefault();
+         
             $('#robodesk-response-message').html('');
             var formData = {
                 action: 'robodesk_create_new_ticket', 
