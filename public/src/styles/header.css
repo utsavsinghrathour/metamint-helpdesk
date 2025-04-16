@@ -14,9 +14,11 @@
     right: 10px;
     bottom: 10px;
   }
-  .robodesk-popup.open,
-  .robodesk-popup.open.expanded
+  .robodesk-popup.open
   {
     width: 375px;
+  }
+  .robodesk-popup.open.expanded{
+    width: 98%;
   }
 }
