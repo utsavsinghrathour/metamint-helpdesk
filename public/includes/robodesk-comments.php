@@ -68,5 +68,3 @@ function remove_cpt_single_rewrite()
     // flush_rewrite_rules();
 }
 add_action('init', 'remove_cpt_single_rewrite', 20);
-
-?>
