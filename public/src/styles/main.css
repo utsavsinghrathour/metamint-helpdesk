@@ -19,16 +19,16 @@
   border-radius: 10px;
 }
 .rd-main-content{
-  min-height: 508px;
+  min-height: 468px;
 }
 .rd-main-content.no-footer{
-  min-height: 570px;
+  min-height: 530px;
 }
 .expanded .rd-main-content.no-footer{
-  min-height: 670px;
+  min-height: 570px;
 }
 .expanded .single-faq-content{
-  max-height: 600px;
+  max-height: 500px;
 }
 .robodesk-plugin::-webkit-scrollbar-track {
   background: transparent;
@@ -41,14 +41,14 @@
   font-style: normal;
   letter-spacing: 0 !important;
   border: 0;
-  scrollbar-width: thin;
-  scrollbar-color: #004aff transparent;
 }
 *:focus-visible{
   outline: none;
 }
 .robodesk-plugin *:not(i){
   font-family: "Inter", sans-serif !important;
+  scrollbar-width: thin;
+  scrollbar-color: #004aff transparent;
 }
 /* h1, h2, h3, h4, h5, h6, p, span, a, input, input::placeholder, textarea, textarea::placeholder, select{
 
@@ -68,7 +68,7 @@ button.no-bg, .button.no-bg{
   text-decoration: none;
 }
 .rd-overflow-h-320{
-  max-height: 240px;
+  max-height: 200px;
   overflow: auto;
 }
 .rd-decoration-none{
@@ -281,7 +281,7 @@ padding-right: 18px;
 }
 .rd-title-text{
   color: var(--title-color);
-  font-size: 14px;
+  font-size: 15px;
   line-height: 18px;
   font-weight: 500;
 }
@@ -335,8 +335,8 @@ h5.sub-text{
 }
 .rd-body-text{
   color: var(--body-text);
-  font-size: 12px;
-  line-height: 16px;
+  font-size: 13px;
+  line-height: 18px;
   font-weight: 400;
   transition: font-size 0.5s ease;
 }
@@ -377,6 +377,10 @@ input::placeholder{
 .rd-hidden{
   display: none;
 }
+.custom-svg svg{
+  height: 20px;
+  width: 20px;
+}
 
 /* popup expanded and contract, open css */
 .robodesk-popup {
@@ -394,11 +398,11 @@ input::placeholder{
 .expand-popup {
   transition: transform 0.5s ease;
 }
-.robodesk-popup.expanded .rd-faq-detail .rd-body-text{
+/* .robodesk-popup.expanded .rd-faq-detail .rd-body-text{
   font-size: 14px;
   line-height: 18px;
   transition: font 0.5s ease;
-}
+} */
 .robodesk-popup.expanded .rd-faq-detail .rd-faq-title{
   font-size: 20px;
   line-height: 24px;
@@ -408,14 +412,14 @@ input::placeholder{
   transform: rotate(180deg);
 }
 .robodesk-popup.open {
-  max-height: 600px;
-  min-height: 600px;
-  height: 600px;
+  max-height: 560px;
+  min-height: 560px;
+  height: 560px;
 }
 .robodesk-popup.expanded{
   width: 600px;
-  height: 700px;
-  max-height: 700px;
+  height: 600px;
+  max-height: 600px;
 }
 .robodesk-popup.closed {
   max-height: 0; 
