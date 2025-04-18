@@ -4,6 +4,7 @@
 require_once ROBODESK_PLUGIN_PATH . 'admin/includes/post-types/robodesk-ticket-post-type.php';
 require_once ROBODESK_PLUGIN_PATH . 'admin/includes/post-types/robodesk-faq-post-type.php';
 require_once ROBODESK_PLUGIN_PATH . 'public/includes/robodesk-fetch-tickets.php'; 
+require_once ROBODESK_PLUGIN_PATH . 'admin/includes/post-types/robodesk-notice-post-type.php'; 
 
 
 // Other admin related functions can go here
