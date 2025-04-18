@@ -48,17 +48,8 @@ function robodesk_register_faq_post_type()
     );
 
     register_post_type('robodesk_faq', $faq_args);
-    
-    register_post_meta('robodesk_faq', '_robodesk_featured', array(
-        'type' => 'string',
-        'single' => true,
-        'show_in_rest' => array(
-            'schema' => array(
-                'type' => 'boolean',
-            ),
-        ),
-    ));
-    
+
+
 
     // FAQ Category Taxonomy
     $faq_category_labels = array(
@@ -91,6 +82,16 @@ function robodesk_register_faq_post_type()
     register_taxonomy('robodesk_faq_category', 'robodesk_faq', $faq_category_args);
 }
 
+
+register_post_meta('robodesk_faq', '_robodesk_featured', array(
+    'type' => 'string',
+    'single' => true,
+    'show_in_rest' => array(
+        'schema' => array(
+            'type' => 'boolean',
+        ),
+    ),
+));
 // Add Featured metabox to FAQ post type
 add_action('add_meta_boxes', 'robodesk_add_featured_metabox');
 function robodesk_add_featured_metabox() {
@@ -115,7 +116,7 @@ function robodesk_render_featured_metabox($post) {
     // Output the checkbox
     ?>
     <label for="robodesk_featured">
-        <input type="checkbox" id="robodesk_featured" name="robodesk_featured" value="yes" <?php checked($featured, 'yes'); ?> />
+        <input type="checkbox" id="robodesk_featured" name="robodesk_featured" value="true" <?php checked($featured, 'true'); ?> />
         <?php _e('Mark as featured', 'robodesk-support-ticket'); ?>
     </label>
     <?php
@@ -150,6 +151,6 @@ function robodesk_save_featured_metabox($post_id) {
     }
     
     // Update the meta field
-    $featured = isset($_POST['robodesk_featured']) ? 'yes' : 'no';
+    $featured = (isset($_POST['robodesk_featured']) && $_POST['robodesk_featured'] === 'true') ? 'true' : 'false';
     update_post_meta($post_id, '_robodesk_featured', $featured);
 }
