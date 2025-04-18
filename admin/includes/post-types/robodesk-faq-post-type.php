@@ -165,7 +165,7 @@ function robodesk_filter_faqs_by_featured($args, $request) {
         $args['meta_query'] = array(
             array(
                 'key' => '_robodesk_featured',
-                'value' => 'false',
+                'value' => 'true',
                 'compare' => '='
             )
         );
