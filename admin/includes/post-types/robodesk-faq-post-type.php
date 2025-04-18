@@ -172,16 +172,27 @@ function robodesk_filter_faqs_by_featured($args, $request) {
     return $args;
 }
 
-add_action( 'rest_api_init', function() {
-    register_rest_field( 'robodesk_faq', 'author_name', array(
-        'get_callback' => function( $post_arr ) {
-            $author = get_userdata( $post_arr['author'] );
-            return $author ? $author->display_name : '';
-        },
-        'schema' => array(
-            'description' => 'The display name of the post author.',
-            'type'        => 'string',
-            'context'     => array( 'view', 'edit' )
-        ),
-    ) );
-} );
+
+register_rest_field( 'robodesk_faq', 'author_name', array(
+    'get_callback' => function( $post_arr ) {
+        $post_id = $post_arr['id'];
+        $post = get_post( $post_id );
+        $author = get_userdata( $post->post_author );
+        return $author ? $author->display_name : 'Unknown Author';
+    },
+) );
+// add_action( 'rest_api_init', function() {
+//     register_rest_field( 'robodesk_faq', 'author_name', array(
+//         'get_callback' => function( $post_arr ) {
+         
+//             $author = get_userdata( $post_arr['author'] );
+        
+//             return $author ? $author->display_name : '';
+//         },
+//         'schema' => array(
+//             'description' => 'The display name of the post author.',
+//             'type'        => 'string',
+//             'context'     => array( 'view', 'edit' )
+//         ),
+//     ) );
+// } );
