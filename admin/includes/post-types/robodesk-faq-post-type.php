@@ -37,6 +37,7 @@ function robodesk_register_faq_post_type()
         'show_ui'            => true,
         'show_in_menu'       => false,
         'show_in_menu'       => true,
+        'show_in_rest'       => true,
         'query_var'          => true,
         'rewrite'            => array('slug' => 'faqs'),
         'capability_type'    => 'post',

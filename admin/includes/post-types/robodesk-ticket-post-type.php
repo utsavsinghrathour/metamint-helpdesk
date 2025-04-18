@@ -40,6 +40,7 @@ function robodesk_register_ticket_post_type()
         'publicly_queryable' => is_user_logged_in(), // Only logged in users can view tickets
         'show_ui'            => true,
         'show_in_menu'       => false,
+        'show_in_rest'       => true,
         'query_var'          => true,
         'rewrite'            => array('slug' => 'robodesk-tickets'),
         'capability_type'    => 'post',
