@@ -44,7 +44,7 @@ function robodesk_register_faq_post_type()
         'has_archive'        => true,
         'hierarchical'       => false,
         'menu_position'      => null,
-        'supports'           => array('title', 'editor', 'excerpt', 'custom-fields', 'thumbnail'), // Added 'thumbnail' support
+        'supports'           => array('title', 'editor', 'excerpt', 'author', 'custom-fields', 'thumbnail'), 
     );
 
     register_post_type('robodesk_faq', $faq_args);
@@ -159,9 +159,7 @@ function robodesk_save_featured_metabox($post_id) {
 add_filter('rest_robodesk_faq_query', 'robodesk_filter_faqs_by_featured', 10, 2);
 function robodesk_filter_faqs_by_featured($args, $request) {
 
-
     if (isset($request['featured']) && $request['featured'] === 'true') {
-      
         $args['meta_query'] = array(
             array(
                 'key' => '_robodesk_featured',
@@ -173,3 +171,17 @@ function robodesk_filter_faqs_by_featured($args, $request) {
     }
     return $args;
 }
+
+add_action( 'rest_api_init', function() {
+    register_rest_field( 'robodesk_faq', 'author_name', array(
+        'get_callback' => function( $post_arr ) {
+            $author = get_userdata( $post_arr['author'] );
+            return $author ? $author->display_name : '';
+        },
+        'schema' => array(
+            'description' => 'The display name of the post author.',
+            'type'        => 'string',
+            'context'     => array( 'view', 'edit' )
+        ),
+    ) );
+} );
