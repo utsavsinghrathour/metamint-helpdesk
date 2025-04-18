@@ -48,6 +48,17 @@ function robodesk_register_faq_post_type()
     );
 
     register_post_type('robodesk_faq', $faq_args);
+    
+    register_post_meta('robodesk_faq', '_robodesk_featured', array(
+        'type' => 'string',
+        'single' => true,
+        'show_in_rest' => array(
+            'schema' => array(
+                'type' => 'boolean',
+            ),
+        ),
+    ));
+    
 
     // FAQ Category Taxonomy
     $faq_category_labels = array(
