@@ -154,3 +154,22 @@ function robodesk_save_featured_metabox($post_id) {
     $featured = (isset($_POST['robodesk_featured']) && $_POST['robodesk_featured'] === 'true') ? 'true' : 'false';
     update_post_meta($post_id, '_robodesk_featured', $featured);
 }
+
+
+add_filter('rest_robodesk_faq_query', 'robodesk_filter_faqs_by_featured', 10, 2);
+function robodesk_filter_faqs_by_featured($args, $request) {
+
+
+    if (isset($request['featured']) && $request['featured'] === 'true') {
+      
+        $args['meta_query'] = array(
+            array(
+                'key' => '_robodesk_featured',
+                'value' => 'false',
+                'compare' => '='
+            )
+        );
+      
+    }
+    return $args;
+}
