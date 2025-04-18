@@ -79,3 +79,66 @@ function robodesk_register_faq_post_type()
 
     register_taxonomy('robodesk_faq_category', 'robodesk_faq', $faq_category_args);
 }
+
+// Add Featured metabox to FAQ post type
+add_action('add_meta_boxes', 'robodesk_add_featured_metabox');
+function robodesk_add_featured_metabox() {
+    add_meta_box(
+        'robodesk_featured_metabox',
+        __('Featured?', 'robodesk-support-ticket'),
+        'robodesk_render_featured_metabox',
+        'robodesk_faq',
+        'side',
+        'default'
+    );
+}
+
+// Render the Featured metabox
+function robodesk_render_featured_metabox($post) {
+    // Get the current value
+    $featured = get_post_meta($post->ID, '_robodesk_featured', true);
+    
+    // Output the nonce field
+    wp_nonce_field('robodesk_featured_metabox', 'robodesk_featured_metabox_nonce');
+    
+    // Output the checkbox
+    ?>
+    <label for="robodesk_featured">
+        <input type="checkbox" id="robodesk_featured" name="robodesk_featured" value="yes" <?php checked($featured, 'yes'); ?> />
+        <?php _e('Mark as featured', 'robodesk-support-ticket'); ?>
+    </label>
+    <?php
+}
+
+// Save the Featured metabox data
+add_action('save_post', 'robodesk_save_featured_metabox');
+function robodesk_save_featured_metabox($post_id) {
+    // Check if our nonce is set
+    if (!isset($_POST['robodesk_featured_metabox_nonce'])) {
+        return;
+    }
+    
+    // Verify the nonce
+    if (!wp_verify_nonce($_POST['robodesk_featured_metabox_nonce'], 'robodesk_featured_metabox')) {
+        return;
+    }
+    
+    // Check if this is an autosave
+    if (defined('DOING_AUTOSAVE') && DOING_AUTOSAVE) {
+        return;
+    }
+    
+    // Check the user's permissions
+    if (!current_user_can('edit_post', $post_id)) {
+        return;
+    }
+    
+    // Check the post type
+    if (get_post_type($post_id) !== 'robodesk_faq') {
+        return;
+    }
+    
+    // Update the meta field
+    $featured = isset($_POST['robodesk_featured']) ? 'yes' : 'no';
+    update_post_meta($post_id, '_robodesk_featured', $featured);
+}
