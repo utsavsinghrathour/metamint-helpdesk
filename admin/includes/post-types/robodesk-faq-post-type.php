@@ -181,18 +181,3 @@ register_rest_field( 'robodesk_faq', 'author_name', array(
         return $author ? $author->display_name : 'Unknown Author';
     },
 ) );
-// add_action( 'rest_api_init', function() {
-//     register_rest_field( 'robodesk_faq', 'author_name', array(
-//         'get_callback' => function( $post_arr ) {
-         
-//             $author = get_userdata( $post_arr['author'] );
-        
-//             return $author ? $author->display_name : '';
-//         },
-//         'schema' => array(
-//             'description' => 'The display name of the post author.',
-//             'type'        => 'string',
-//             'context'     => array( 'view', 'edit' )
-//         ),
-//     ) );
-// } );
