@@ -57,14 +57,14 @@ add_action('add_meta_boxes', 'robodesk_add_notice_meta_boxes');
 function notice_active_callback($post) {
     wp_nonce_field('save_notice_active', 'notice_active_nonce');
     $value = get_post_meta($post->ID, 'notice_active', true);
-    echo '<label><input type="checkbox" name="notice_active" value="1" ' . checked($value, '1', false) . ' /> Active?</label>';
+    echo '<label><input type="checkbox" name="notice_active" value="true" ' . checked($value, 'true', false) . ' /> Active?</label>';
 }
 
 // Callback function for 'Feature?' meta box
 function notice_feature_callback($post) {
     wp_nonce_field('save_notice_feature', 'notice_feature_nonce');
     $value = get_post_meta($post->ID, 'notice_feature', true);
-    echo '<label><input type="checkbox" name="notice_feature" value="1" ' . checked($value, '1', false) . ' /> Feature?</label>';
+    echo '<label><input type="checkbox" name="notice_feature" value="true" ' . checked($value, 'true', false) . ' /> Feature?</label>';
 }
 
 // Save the meta data when the post is saved
@@ -84,8 +84,8 @@ function save_notice_meta($post_id) {
 
     // Save 'Active?' checkbox
     if (isset($_POST['notice_active_nonce']) && wp_verify_nonce($_POST['notice_active_nonce'], 'save_notice_active')) {
-        if (isset($_POST['notice_active']) && $_POST['notice_active'] === '1') {
-            update_post_meta($post_id, 'notice_active', '1');
+        if (isset($_POST['notice_active']) && $_POST['notice_active'] === 'true') {
+            update_post_meta($post_id, 'notice_active', 'true');
         } else {
             delete_post_meta($post_id, 'notice_active');
         }
@@ -93,8 +93,8 @@ function save_notice_meta($post_id) {
 
     // Save 'Feature?' checkbox
     if (isset($_POST['notice_feature_nonce']) && wp_verify_nonce($_POST['notice_feature_nonce'], 'save_notice_feature')) {
-        if (isset($_POST['notice_feature']) && $_POST['notice_feature'] === '1') {
-            update_post_meta($post_id, 'notice_feature', '1');
+        if (isset($_POST['notice_feature']) && $_POST['notice_feature'] === 'true') {
+            update_post_meta($post_id, 'notice_feature', 'true');
         } else {
             delete_post_meta($post_id, 'notice_feature');
         }

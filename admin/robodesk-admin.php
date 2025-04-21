@@ -24,7 +24,7 @@ function robodesk_add_admin_menu()
         'edit.php?post_type=robodesk_ticket',
         'All Tickets',
         'All Tickets',
-        'edit_tickets', // Use custom capability for the submenus
+        'edit_tickets', 
         'edit.php?post_type=robodesk_ticket'
     );
     
@@ -71,13 +71,12 @@ function robodesk_add_admin_menu()
         'manage_categories',
         'edit-tags.php?taxonomy=robodesk_faq_category&post_type=robodesk_faq'
     );
-    // making the submenu page for the email-to-ticket plugin functions to be under the robodesk menu
     
     add_submenu_page(
         'edit.php?post_type=robodesk_ticket',
         'All Notices',
         'All Notices',
-        'edit_posts', // Use default post capability
+        'edit_posts', 
         'edit.php?post_type=notice'
     );
     
@@ -85,7 +84,7 @@ function robodesk_add_admin_menu()
         'edit.php?post_type=robodesk_ticket',
         'Add New Notice',
         'Add New Notice',
-        'edit_posts', // Use default post capability
+        'edit_posts', 
         'post-new.php?post_type=notice'
     );
 }
