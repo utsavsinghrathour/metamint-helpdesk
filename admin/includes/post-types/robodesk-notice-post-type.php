@@ -20,16 +20,31 @@ function robodesk_register_notice_post_type() {
     $args = array(
         'labels'             => $labels,
         'public'             => true,
+        'publicly_queryable' => true,
         'show_in_menu'       => false,
         'has_archive'        => true,
-        'rewrite'            => array('slug' => 'notice'),
-        'supports'           => array('title', 'editor'),
         'show_in_rest'       => true, 
+        'supports'           => array('title', 'editor','excerpt' ,'author','thumbnail'),
         
     );
 
     register_post_type('notice', $args);
 }
+
+// 'labels'             => $faq_labels,
+// 'public'             => true,
+// 'publicly_queryable' => true,
+// 'show_ui'            => true,
+// 'show_in_menu'       => false,
+// 'show_in_rest'       => true,
+// 'query_var'          => true,
+// 'rewrite'            => array('slug' => 'faqs'),
+// 'capability_type'    => 'post',
+// 'has_archive'        => true,
+// 'hierarchical'       => false,
+// 'menu_position'      => null,
+// 'supports'           => array('title', 'editor', 'excerpt', 'author', 'custom-fields', 'thumbnail'), 
+
 add_action('init', 'robodesk_register_notice_post_type');
 
 // Add meta boxes for 'Active?' and 'Feature?' checkboxes
@@ -104,9 +119,9 @@ add_action('save_post', 'save_notice_meta');
 
 //Rest filters and hooks 
 
-add_filter('rest_robodesk_notice_query', 'robodesk_filter_notice_by_featured_and_active', 10, 2);
+add_filter('rest_notice_query', 'robodesk_filter_notice_by_featured_and_active', 10, 2);
 function robodesk_filter_notice_by_featured_and_active($args, $request) {
-
+ 
     if (isset($request['featured']) && $request['featured'] === 'true' && isset($request['active']) && $request['active'] === 'true') {
         $args['meta_query'] = array(
             'relation' => 'AND',
