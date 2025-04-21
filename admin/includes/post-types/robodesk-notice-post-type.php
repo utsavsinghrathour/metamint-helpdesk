@@ -20,6 +20,7 @@ function robodesk_register_notice_post_type() {
     $args = array(
         'labels'             => $labels,
         'public'             => true,
+        'show_in_menu'       => false,
         'has_archive'        => true,
         'rewrite'            => array('slug' => 'notice'),
         'supports'           => array('title', 'editor'),
