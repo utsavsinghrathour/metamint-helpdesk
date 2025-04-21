@@ -96,3 +96,7 @@
   max-height: 460px;
   overflow: auto;
 }
+.rd-wiki-wrap{
+  max-height: 320px;
+  overflow: auto;
+}
