@@ -110,7 +110,7 @@ const Footer = ({ activeTab, setActiveTab, showCopyrightOnly = false }) => {
 
   return (
     <footer className="robodesk-footer">
-      <div className="tab-container rd-flex rd-justify-between" role="tablist">
+      <div className="tab-container rd-flex rd-justify-between test-class" role="tablist">
         {tabs.map((tab) => (
           <button
             key={tab.id}

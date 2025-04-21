@@ -36,7 +36,6 @@ function robodesk_register_faq_post_type()
         'publicly_queryable' => true,
         'show_ui'            => true,
         'show_in_menu'       => false,
-        'show_in_menu'       => true,
         'show_in_rest'       => true,
         'query_var'          => true,
         'rewrite'            => array('slug' => 'faqs'),
@@ -156,6 +155,7 @@ function robodesk_save_featured_metabox($post_id) {
 }
 
 
+
 add_filter('rest_robodesk_faq_query', 'robodesk_filter_faqs_by_featured', 10, 2);
 function robodesk_filter_faqs_by_featured($args, $request) {
 
@@ -178,21 +178,6 @@ register_rest_field( 'robodesk_faq', 'author_name', array(
         $post_id = $post_arr['id'];
         $post = get_post( $post_id );
         $author = get_userdata( $post->post_author );
-        return $author ? $author->display_name : 'Unknown Author';
+        return $author ? $author->display_name : false;
     },
 ) );
-// add_action( 'rest_api_init', function() {
-//     register_rest_field( 'robodesk_faq', 'author_name', array(
-//         'get_callback' => function( $post_arr ) {
-         
-//             $author = get_userdata( $post_arr['author'] );
-        
-//             return $author ? $author->display_name : '';
-//         },
-//         'schema' => array(
-//             'description' => 'The display name of the post author.',
-//             'type'        => 'string',
-//             'context'     => array( 'view', 'edit' )
-//         ),
-//     ) );
-// } );
