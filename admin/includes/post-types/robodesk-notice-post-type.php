@@ -117,35 +117,6 @@ function save_notice_meta($post_id) {
 }
 add_action('save_post', 'save_notice_meta');
 
-//Rest filters and hooks 
-
-// add_filter('rest_notice_query', 'robodesk_filter_notice_by_featured_and_active', 10, 2);
-// function robodesk_filter_notice_by_featured_and_active($args, $request) {
-//     $meta_query = array();
-
-//     if (isset($request['featured']) && $request['featured'] === 'true') {
-//         $meta_query[] = array(
-//             'key'     => '_robodesk_notice_feature',
-//             'value'   => 'true',
-//             'compare' => '='
-//         );
-//     }
-
-//     if (isset($request['active']) && $request['active'] === 'true') {
-//         $meta_query[] = array(
-//             'key'     => '_robodesk_notice_active',
-//             'value'   => 'true',
-//             'compare' => '='
-//         );
-//     }
-
-
-//     if (!empty($meta_query)) {
-//         $args['meta_query'] = $meta_query;
-//     }
-
-//     return $args;
-// }
 
 add_filter('rest_notice_query', 'robodesk_filter_notice_by_featured_and_active', 10, 2);
 function robodesk_filter_notice_by_featured_and_active($args, $request) {

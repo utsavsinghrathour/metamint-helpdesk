@@ -283,3 +283,16 @@ function save_priority_color_meta($term_id) {
 add_action('created_robodesk_ticket_priority', 'save_priority_color_meta');
 add_action('edited_robodesk_ticket_priority', 'save_priority_color_meta');
 
+// rest api functions to get tickets 
+add_filter('rest_robodesk_ticket_query', 'robodesk_ticket_query', 10, 2);
+function robodesk_ticket_query($args, $request) {
+
+    //ticket_id==> id 
+    //ticket title ==> title
+    //ticket_update_date ===> ticket last updated date
+    //ticket_priority ==> taxonomy=robodesk_ticket_priority
+    //ticket_status ==>
+    //ticket_origin ==> taxonomy=robodesk_ticket_origin
+    //author ==> author display_name
+
+}

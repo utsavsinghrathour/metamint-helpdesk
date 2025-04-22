@@ -87,6 +87,15 @@ function robodesk_add_admin_menu()
         'edit_posts', 
         'post-new.php?post_type=notice'
     );
+        
+    add_submenu_page(
+        'edit.php?post_type=robodesk_ticket',
+        'Fetch Tickets',
+        'Fetch Tickets',
+        'manage_options',
+        'robodesk-email-to-ticket',
+        'robodesk_fetch_emails_callback'
+    );
 }
 
 function update_taxonomy_order()
