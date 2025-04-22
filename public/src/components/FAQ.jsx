@@ -1,14 +1,36 @@
 import React, { useState, useEffect } from 'react';
-import '../styles/FAQ.css';
 import { FaChevronRight, FaChevronLeft, FaSearch } from 'react-icons/fa';
+import parse from 'html-react-parser';
+import DOMPurify from 'dompurify';
 import Logo from '../images/wooescrow-logo.png';
 import Footer from './Footer';
 import Author1 from '../images/person1.jpeg';
 import Author2 from '../images/person2.jpeg';
+import '../styles/FAQ.css';
 
-// Utility function to strip HTML tags
+// Utility function to strip HTML tags for plain text
 const stripHtml = (html) => {
   return html.replace(/(<([^>]+)>|&[a-zA-Z0-9#]+;)/gi, '').trim();
+};
+
+// Utility function to mimic WordPress wp_trim_words
+const wpTrimWords = (text, numWords) => {
+  const words = stripHtml(text).split(/\s+/);
+  return words.slice(0, numWords).join(' ') + (words.length > numWords ? '...' : '');
+};
+
+// Utility function to normalize image paths
+const normalizeImagePaths = (html, baseUrl = 'http://localhost:10094') => {
+  return html.replace(
+    /(<img[^>]+src=['"])(\/[^'"]+)(['"][^>]*>)/gi,
+    (match, prefix, path, suffix) => {
+      // If the path is relative (starts with /), prepend the base URL
+      if (path.startsWith('/')) {
+        return `${prefix}${baseUrl}${path}${suffix}`;
+      }
+      return match;
+    }
+  );
 };
 
 const FAQDetail = ({ faq, onBack, isExpanded, setIsExpanded }) => {
@@ -33,6 +55,43 @@ const FAQDetail = ({ faq, onBack, isExpanded, setIsExpanded }) => {
     setIsExpanded(false);
     onBack();
   };
+
+  // Normalize image paths before sanitization
+  const normalizedAnswer = normalizeImagePaths(faq.answer);
+
+  // Sanitize HTML, allowing iframes for YouTube and images
+  const sanitizedAnswer = DOMPurify.sanitize(normalizedAnswer, {
+    ADD_TAGS: ['iframe', 'img'],
+    ADD_ATTR: ['allow', 'allowfullscreen', 'frameborder', 'src', 'alt', 'title', 'width', 'height'],
+    ALLOWED_URI_REGEXP: /^(?:https?:\/\/|\/|data:image\/)/,
+  });
+
+  // Debug: Log raw, normalized, and sanitized HTML, plus image src URLs
+  console.log('Raw FAQ Answer:', faq.answer);
+  console.log('Normalized FAQ Answer:', normalizedAnswer);
+  console.log('Sanitized FAQ Answer:', sanitizedAnswer);
+  const imageSrcs = (faq.answer.match(/<img[^>]+src=['"]([^'"]+)['"]/gi) || []).map((img) =>
+    img.match(/src=['"]([^'"]+)['"]/)[1]
+  );
+  console.log('Image src URLs:', imageSrcs);
+
+  // Add error handling for image loading
+  const handleImageError = (e) => {
+    console.error('Image failed to load:', e.target.src);
+  };
+
+  // Modify parsed HTML to add onError handler to images
+  const parsedContent = parse(sanitizedAnswer, {
+    replace: (domNode) => {
+      if (domNode.name === 'img') {
+        domNode.attribs = {
+          ...domNode.attribs,
+          onError: (e) => handleImageError(e),
+        };
+      }
+      return domNode;
+    },
+  });
 
   return (
     <div className="rd-faq-detail">
@@ -90,7 +149,7 @@ const FAQDetail = ({ faq, onBack, isExpanded, setIsExpanded }) => {
         <div className="rd-px-20 rd-py-15 single-faq-content">
           <div>
             <h4 className="rd-faq-title heading-4">{faq.question}</h4>
-            <p className="rd-body-text rd-my-10">{faq.answer}</p>
+            <div className="rd-body-text rd-my-10">{parsedContent}</div>
           </div>
           <div className="rd-single-faq-footer rd-py-10 rd-border-vertical-light">
             <div className="rd-flex rd-justify-between rd-align-center">
@@ -99,8 +158,8 @@ const FAQDetail = ({ faq, onBack, isExpanded, setIsExpanded }) => {
                 <h5 className="sub-text">By Utsav and DJbaba</h5>
               </div>
               <div className="rd-author-avatar rd-flex rd-align-center">
-                <img src={Author1} alt="Author Logo" />
-                <img src={Author2} alt="Author Logo" />
+                <img src={Author1} alt="Author Utsav" />
+                <img src={Author2} alt="Author DJbaba" />
               </div>
             </div>
           </div>
@@ -157,13 +216,16 @@ const FAQ = ({ setActiveTab, setIsOpen, isExpanded, setIsExpanded, activeTab }) 
   const [faqs, setFaqs] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
-
+  const wpHomeUrl = window.robodeskData?.home_url || '';
   // Fetch FAQs from WordPress REST API
   useEffect(() => {
     const fetchFAQs = async () => {
       try {
         setIsLoading(true);
-        const response = await fetch('http://localhost:10094/wp-json/wp/v2/robodesk_faq'); // Adjust URL
+        // const response = await fetch({wpHomeUrl}/'wp-json/wp/v2/robodesk_faq');
+        const response = await fetch(
+          `${wpHomeUrl}/wp-json/wp/v2/robodesk_faq`
+        );
         if (!response.ok) {
           throw new Error('Failed to fetch FAQs');
         }
@@ -173,8 +235,8 @@ const FAQ = ({ setActiveTab, setIsOpen, isExpanded, setIsExpanded, activeTab }) 
         const formattedFaqs = data.map((faq) => ({
           id: faq.id,
           question: faq.title.rendered,
-          summary: stripHtml(faq.excerpt.rendered || wpTrimWords(faq.content.rendered, 20)), // Trim content if no excerpt
-          answer: stripHtml(faq.content.rendered),
+          summary: stripHtml(faq.excerpt.rendered || wpTrimWords(faq.content.rendered, 20)),
+          answer: faq.content.rendered, // Preserve raw HTML for rendering
         }));
 
         setFaqs(formattedFaqs);
@@ -188,16 +250,10 @@ const FAQ = ({ setActiveTab, setIsOpen, isExpanded, setIsExpanded, activeTab }) 
     fetchFAQs();
   }, []);
 
-  // Utility function to mimic WordPress wp_trim_words
-  const wpTrimWords = (text, numWords) => {
-    const words = stripHtml(text).split(/\s+/);
-    return words.slice(0, numWords).join(' ') + (words.length > numWords ? '...' : '');
-  };
-
   const handleBackToHome = () => {
     if (setActiveTab) {
       setActiveTab(0); // Switch to HomeTabs (tab ID 0)
-      setIsExpanded(false); // Reset expanded state, but keep popup open
+      setIsExpanded(false); // Reset expanded state
     }
   };
 

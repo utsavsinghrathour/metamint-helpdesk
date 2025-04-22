@@ -7,17 +7,17 @@ import SingleQuestionBox from './SingleQuestionBox';
 import Login from './Login.jsx';
 import '../styles/HomeTabs.css';
 
-const HomeTabs = ({ setActiveTab, setIsOpen, isExpanded, setIsExpanded }) => {
+const HomeTabs = ({ setActiveTab, setIsOpen, isExpanded, setIsExpanded, handleClose }) => {
   const [showLogin, setShowLogin] = useState(false);
   const [showHeaderFooter, setShowHeaderFooter] = useState(true);
 
   return (
     <div className="rd-flex rd-flex-col rd-h-full featured-faq">
       <div className="rd-main-content">
-        {!showLogin && showHeaderFooter && <Header onClose={() => setIsOpen(false)} />}
+        {!showLogin && showHeaderFooter && <Header onClose={handleClose} />}
         <div className="rd-flex-1 rd-overflow-auto">
           {showLogin ? (
-            <Login setShowLogin={setShowLogin} /> // Pass setShowLogin to Login
+            <Login setShowLogin={setShowLogin} />
           ) : (
             <SingleQuestionBox
               setShowHeaderFooter={setShowHeaderFooter}

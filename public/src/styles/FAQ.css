@@ -93,10 +93,20 @@
   fill: #EF2C3F;
 }
 .single-faq-content{
-  max-height: 460px;
+  max-height: 468px;
   overflow: auto;
+  min-height: 468px;
 }
 .rd-wiki-wrap{
   max-height: 320px;
   overflow: auto;
+}
+.single-faq-content .wp-block-image img,
+.rd-notice-item .wp-block-image img{
+  margin: 15px 0;
+}
+.single-faq-content iframe{
+  width: 100%;
+  min-height: 250px;
+  margin: 15px 0;
 }
