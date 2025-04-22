@@ -227,3 +227,17 @@ function robodesk_decrypt($ciphertext, $key)
     return openssl_decrypt($encrypted_data, "AES-256-CBC", $key, $options = 0, $iv);
 }
 
+
+function rbd_log($message) {
+    $log_file = plugin_dir_path(__FILE__) . 'logs/debug.log';
+
+    if ( ! file_exists(dirname($log_file)) ) {
+        mkdir(dirname($log_file), 0755, true);
+    }
+
+    if (is_array($message) || is_object($message)) {
+        $message = print_r($message, true);
+    }
+
+    error_log(date('[Y-m-d H:i:s] ') . $message . PHP_EOL, 3, $log_file);
+}

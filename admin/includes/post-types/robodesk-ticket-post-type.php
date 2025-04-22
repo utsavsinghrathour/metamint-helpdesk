@@ -296,3 +296,17 @@ function robodesk_ticket_query($args, $request) {
     //author ==> author display_name
 
 }
+
+
+register_rest_field( 'robodesk_ticket', 'author_name', array(
+    'get_callback' => function( $post_arr ) {
+        $post_id = $post_arr['id'];
+        $post = get_post( $post_id );
+        $author = get_userdata( $post->post_author );
+        return $author ? $author->display_name : false;
+    },
+));
+
+
+
+error_log("Custom log entry", 3, "");
