@@ -67,7 +67,7 @@ const ActiveFeatured = ({ onNoticeSelect }) => {
         notices.length > 0 && (
           <>
             <button
-              className="rd-close-all-button rd-bg-transparent rd-border-none rd-cursor-pointer rd-text-gray-600 hover:rd-text-gray-800"
+              className="rd-close-all-button rd-bg-transparent rd-border-none rd-cursor-pointer rd-text-gray-600 hover:rd-text-gray-800 rd-p-0"
               onClick={handleCloseAllNotices}
               title="Close all notices"
             >

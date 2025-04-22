@@ -7,8 +7,11 @@ import Footer from './Footer';
 import '../styles/SingleQuestionBox.css';
 import Logo from '../images/wooescrow-logo.png';
 
+// Get WordPress home URL from robodeskData
+const wpHomeUrl = window.robodeskData?.home_url || '';
+
 // Utility function to normalize image paths
-const normalizeImagePaths = (html, baseUrl = 'http://localhost:10094') => {
+const normalizeImagePaths = (html, baseUrl = wpHomeUrl) => {
   return html.replace(
     /(<img[^>]+src=['"])(\/[^'"]+)(['"][^>]*>)/gi,
     (match, prefix, path, suffix) => {
@@ -35,7 +38,7 @@ const SingleQuestionBox = ({ setShowHeaderFooter, showHeaderFooter, isExpanded, 
       try {
         setIsLoading(true);
         const response = await fetch(
-          'http://localhost:10094/wp-json/wp/v2/robodesk_faq?featured=true&_fields=id,title.rendered,excerpt.rendered'
+          `${wpHomeUrl}/wp-json/wp/v2/robodesk_faq?featured=true&_fields=id,title.rendered,excerpt.rendered`
         );
         if (!response.ok) {
           throw new Error('Failed to fetch FAQs');
@@ -70,7 +73,7 @@ const SingleQuestionBox = ({ setShowHeaderFooter, showHeaderFooter, isExpanded, 
 
       try {
         const response = await fetch(
-          `http://localhost:10094/wp-json/wp/v2/robodesk_faq/${selectedQuestion.id}?_fields=content.rendered`
+          `${wpHomeUrl}/wp-json/wp/v2/robodesk_faq/${selectedQuestion.id}?_fields=content.rendered`
         );
         if (!response.ok) {
           throw new Error('Failed to fetch full content');
