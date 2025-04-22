@@ -284,52 +284,52 @@ add_action('created_robodesk_ticket_priority', 'save_priority_color_meta');
 add_action('edited_robodesk_ticket_priority', 'save_priority_color_meta');
 
 // rest api functions to get tickets 
-add_filter('rest_robodesk_ticket_query', 'robodesk_ticket_query', 10, 2);
-function robodesk_ticket_query($args, $request) {
+// add_filter('rest_robodesk_ticket_query', 'robodesk_ticket_query', 10, 2);
+// function robodesk_ticket_query($args, $request) {
 
-    //ticket_id==> id 
-    //ticket title ==> title
-    //ticket_update_date ===> ticket last updated date
-    //ticket_priority ==> taxonomy=robodesk_ticket_priority
-    //ticket_status ==>
-    //ticket_origin ==> taxonomy=robodesk_ticket_origin
-    //author ==> author display_name
+//     //ticket_id==> id 
+//     //ticket title ==> title
+//     //ticket_update_date ===> ticket last updated date
+//     //ticket_priority ==> taxonomy=robodesk_ticket_priority
+//     //ticket_status ==>
+//     //ticket_origin ==> taxonomy=robodesk_ticket_origin
+//     //author ==> author display_name
 
-}
+// }
 
 
 add_filter('rest_prepare_robodesk_ticket', 'customize_robodesk_ticket_response', 10, 3);
 
 function customize_robodesk_ticket_response($response, $post, $request) {
 
-    $response->data['ticket_id'] = $post->ID;
+    // $response->data['ticket_id'] = $post->ID;
 
-    $response->data['ticket_title'] = $response->data['title']['rendered'];
+    $response->data['robodesk_ticket_title'] = $response->data['title']['rendered'];
 
-    $response->data['ticket_update_date'] = $response->data['modified'];
+    $response->data['robodesk_ticket_updated_date'] = $response->data['modified'];
 
     $priority_terms = get_the_terms($post->ID, 'robodesk_ticket_priority');
     if ($priority_terms && !is_wp_error($priority_terms)) {
-        $response->data['ticket_priority'] = wp_list_pluck($priority_terms, 'name');
+        $response->data['robodesk_ticket_priority'] = wp_list_pluck($priority_terms, 'name');
     } else {
-        $response->data['ticket_priority'] = [];
+        $response->data['robodesk_ticket_priority'] = [];
     }
 
 
-    $ticket_status = get_post_meta($post->ID, 'ticket_status', true);
-    $response->data['ticket_status'] = $ticket_status ? $ticket_status : '';
+    $ticket_status = get_post_meta($post->ID, '_robodesk_ticket_status', true);
+    $response->data['robodesk_ticket_status'] = $ticket_status ? $ticket_status : '';
 
 
     $origin_terms = get_the_terms($post->ID, 'robodesk_ticket_origin');
     if ($origin_terms && !is_wp_error($origin_terms)) {
-        $response->data['ticket_origin'] = wp_list_pluck($origin_terms, 'name');
+        $response->data['robodesk_ticket_origin'] = wp_list_pluck($origin_terms, 'name');
     } else {
-        $response->data['ticket_origin'] = [];
+        $response->data['robodesk_ticket_origin'] = [];
     }
 
 
     $author = get_user_by('id', $post->post_author);
-    $response->data['author'] = $author ? $author->display_name : '';
+    $response->data['robodesk_ticket_author'] = $author ? $author->display_name : '';
 
     return $response;
 }
