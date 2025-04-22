@@ -302,8 +302,6 @@ add_filter('rest_prepare_robodesk_ticket', 'customize_robodesk_ticket_response',
 
 function customize_robodesk_ticket_response($response, $post, $request) {
 
-    // $response->data['ticket_id'] = $post->ID;
-
     $response->data['robodesk_ticket_title'] = $response->data['title']['rendered'];
 
     $response->data['robodesk_ticket_updated_date'] = $response->data['modified'];
