@@ -316,16 +316,12 @@ function customize_robodesk_ticket_response($response, $post, $request) {
 
     $ticket_status = get_post_meta($post->ID, '_robodesk_ticket_status', true);
     $response->data['robodesk_ticket_status'] = $ticket_status ? $ticket_status : '';
-
-
     $origin_terms = get_the_terms($post->ID, 'robodesk_ticket_origin');
     if ($origin_terms && !is_wp_error($origin_terms)) {
         $response->data['robodesk_ticket_origin'] = wp_list_pluck($origin_terms, 'name');
     } else {
         $response->data['robodesk_ticket_origin'] = [];
     }
-
-
     $author = get_user_by('id', $post->post_author);
     $response->data['robodesk_ticket_author'] = $author ? $author->display_name : '';
 
