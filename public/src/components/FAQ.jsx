@@ -216,13 +216,16 @@ const FAQ = ({ setActiveTab, setIsOpen, isExpanded, setIsExpanded, activeTab }) 
   const [faqs, setFaqs] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
-
+  const wpHomeUrl = window.robodeskData?.home_url || '';
   // Fetch FAQs from WordPress REST API
   useEffect(() => {
     const fetchFAQs = async () => {
       try {
         setIsLoading(true);
-        const response = await fetch('http://localhost:10094/wp-json/wp/v2/robodesk_faq');
+        // const response = await fetch({wpHomeUrl}/'wp-json/wp/v2/robodesk_faq');
+        const response = await fetch(
+          `${wpHomeUrl}/wp-json/wp/v2/robodesk_faq`
+        );
         if (!response.ok) {
           throw new Error('Failed to fetch FAQs');
         }

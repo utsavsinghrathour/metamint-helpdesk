@@ -3,6 +3,10 @@ import '../styles/ActiveFeatured.css';
 import { FaTimes } from "react-icons/fa";
 import Bell from '../images/alarm-gif.gif';
 
+// Get WordPress home URL from robodeskData
+const wpHomeUrl = window.robodeskData?.home_url || '';
+
+
 const ActiveFeatured = ({ onNoticeSelect }) => {
   const [notices, setNotices] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -15,7 +19,7 @@ const ActiveFeatured = ({ onNoticeSelect }) => {
       try {
         setIsLoading(true);
         const response = await fetch(
-          'http://localhost:10094/wp-json/wp/v2/notice?featured=true&active=true&_fields=id,title.rendered,link,content.rendered'
+          `${wpHomeUrl}/wp-json/wp/v2/notice?featured=true&active=true&_fields=id,title.rendered,link,content.rendered`
         );
         if (!response.ok) {
           throw new Error('Failed to fetch notices');

@@ -7,8 +7,11 @@ import DOMPurify from 'dompurify';
 import '../styles/NoticeTabs.css';
 import Logo from '../images/wooescrow-logo.png';
 
+// Get WordPress home URL from robodeskData
+const wpHomeUrl = window.robodeskData?.home_url || '';
+
 // Utility function to normalize image paths
-const normalizeImagePaths = (html, baseUrl = 'http://localhost:10094') => {
+const normalizeImagePaths = (html, baseUrl = wpHomeUrl) => {
   return html.replace(
     /(<img[^>]+src=['"])(\/[^'"]+)(['"][^>]*>)/gi,
     (match, prefix, path, suffix) => {
@@ -50,7 +53,7 @@ const NoticeTabs = ({
       try {
         setIsLoading(true);
         const response = await fetch(
-          'http://localhost:10094/wp-json/wp/v2/notice?_fields=id,title.rendered,excerpt.rendered'
+          `${wpHomeUrl}/wp-json/wp/v2/notice?_fields=id,title.rendered,excerpt.rendered`
         );
         if (!response.ok) {
           throw new Error('Failed to fetch notices');
@@ -90,7 +93,7 @@ const NoticeTabs = ({
         } else {
           // Fetch content if not provided
           const response = await fetch(
-            `http://localhost:10094/wp-json/wp/v2/notice/${selectedNotice.id}?_fields=content.rendered`
+            `${wpHomeUrl}/wp-json/wp/v2/notice/${selectedNotice.id}?_fields=content.rendered`
           );
           if (!response.ok) {
             throw new Error('Failed to fetch notice content');
