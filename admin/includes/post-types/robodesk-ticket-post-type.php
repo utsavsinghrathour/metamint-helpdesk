@@ -308,5 +308,3 @@ register_rest_field( 'robodesk_ticket', 'author_name', array(
 ));
 
 
-
-error_log("Custom log entry", 3, "");
