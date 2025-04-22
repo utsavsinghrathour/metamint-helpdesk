@@ -102,7 +102,7 @@ function save_notice_meta($post_id) {
         if (isset($_POST['_robodesk_notice_active']) && $_POST['_robodesk_notice_active'] === 'true') {
             update_post_meta($post_id, '_robodesk_notice_active', 'true');
         } else {
-            delete_post_meta($post_id, '_robodesk_notice_active');
+            update_post_meta($post_id, '_robodesk_notice_active', 'false');
         }
     }
 
@@ -111,7 +111,7 @@ function save_notice_meta($post_id) {
         if (isset($_POST['_robodesk_notice_feature']) && $_POST['_robodesk_notice_feature'] === 'true') {
             update_post_meta($post_id, '_robodesk_notice_feature', 'true');
         } else {
-            delete_post_meta($post_id, '_robodesk_notice_feature');
+            update_post_meta($post_id, '_robodesk_notice_feature', 'false');
         }
     }
 }
@@ -119,23 +119,61 @@ add_action('save_post', 'save_notice_meta');
 
 //Rest filters and hooks 
 
+// add_filter('rest_notice_query', 'robodesk_filter_notice_by_featured_and_active', 10, 2);
+// function robodesk_filter_notice_by_featured_and_active($args, $request) {
+//     $meta_query = array();
+
+//     if (isset($request['featured']) && $request['featured'] === 'true') {
+//         $meta_query[] = array(
+//             'key'     => '_robodesk_notice_feature',
+//             'value'   => 'true',
+//             'compare' => '='
+//         );
+//     }
+
+//     if (isset($request['active']) && $request['active'] === 'true') {
+//         $meta_query[] = array(
+//             'key'     => '_robodesk_notice_active',
+//             'value'   => 'true',
+//             'compare' => '='
+//         );
+//     }
+
+
+//     if (!empty($meta_query)) {
+//         $args['meta_query'] = $meta_query;
+//     }
+
+//     return $args;
+// }
+
 add_filter('rest_notice_query', 'robodesk_filter_notice_by_featured_and_active', 10, 2);
 function robodesk_filter_notice_by_featured_and_active($args, $request) {
- 
-    if (isset($request['featured']) && $request['featured'] === 'true' && isset($request['active']) && $request['active'] === 'true') {
-        $args['meta_query'] = array(
-            'relation' => 'AND',
-            array(
-                'key'     => '_robodesk_notice_feature',
-                'value'   => 'true',
-                'compare' => '='
-            ),
-            array(
-                'key'     => '_robodesk_notice_active',
-                'value'   => 'true',
-                'compare' => '='
-            )
+    $meta_query = array();
+
+    // Filter by 'featured' parameter
+    if (isset($request['featured'])) {
+        $featured_value = $request['featured'] === 'true' ? 'true' : 'false';
+        $meta_query[] = array(
+            'key'     => '_robodesk_notice_feature',
+            'value'   => $featured_value,
+            'compare' => '='
         );
+    }
+
+    // Filter by 'active' parameter
+    if (isset($request['active'])) {
+        $active_value = $request['active'] === 'true' ? 'true' : 'false';
+        $meta_query[] = array(
+            'key'     => '_robodesk_notice_active',
+            'value'   => $active_value,
+            'compare' => '='
+        );
+    }
+
+    // Apply meta_query if conditions are set
+    if (!empty($meta_query)) {
+        $args['meta_query'] = $meta_query;
     }
 
     return $args;
