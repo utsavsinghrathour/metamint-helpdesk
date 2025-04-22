@@ -3,8 +3,8 @@
 // Include admin-side post types
 require_once ROBODESK_PLUGIN_PATH . 'admin/includes/post-types/robodesk-ticket-post-type.php';
 require_once ROBODESK_PLUGIN_PATH . 'admin/includes/post-types/robodesk-faq-post-type.php';
-require_once ROBODESK_PLUGIN_PATH . 'public/includes/robodesk-fetch-tickets.php'; 
-require_once ROBODESK_PLUGIN_PATH . 'admin/includes/post-types/robodesk-notice-post-type.php'; 
+require_once ROBODESK_PLUGIN_PATH . 'public/includes/robodesk-fetch-tickets.php';
+require_once ROBODESK_PLUGIN_PATH . 'admin/includes/post-types/robodesk-notice-post-type.php';
 
 
 // Other admin related functions can go here
@@ -24,10 +24,10 @@ function robodesk_add_admin_menu()
         'edit.php?post_type=robodesk_ticket',
         'All Tickets',
         'All Tickets',
-        'edit_tickets', 
+        'edit_tickets',
         'edit.php?post_type=robodesk_ticket'
     );
-    
+
     add_submenu_page(
         'edit.php?post_type=robodesk_ticket',
         'Add New Ticket',
@@ -71,23 +71,23 @@ function robodesk_add_admin_menu()
         'manage_categories',
         'edit-tags.php?taxonomy=robodesk_faq_category&post_type=robodesk_faq'
     );
-    
+
     add_submenu_page(
         'edit.php?post_type=robodesk_ticket',
         'All Notices',
         'All Notices',
-        'edit_posts', 
+        'edit_posts',
         'edit.php?post_type=notice'
     );
-    
+
     add_submenu_page(
         'edit.php?post_type=robodesk_ticket',
         'Add New Notice',
         'Add New Notice',
-        'edit_posts', 
+        'edit_posts',
         'post-new.php?post_type=notice'
     );
-        
+
     add_submenu_page(
         'edit.php?post_type=robodesk_ticket',
         'Fetch Tickets',
@@ -197,7 +197,8 @@ function custom_taxonomy_order($terms, $taxonomies, $args)
 add_filter('get_terms', 'custom_taxonomy_order', 10, 3);
 
 
-function add_custom_comment_type($commentdata) {
+function add_custom_comment_type($commentdata)
+{
     if (get_post_type($commentdata['comment_post_ID']) === 'robodesk_ticket') {
         $commentdata['comment_type'] = 'ticket_replies';
         $commentdata['comment_content'] = wp_kses_post($commentdata['comment_content']);
@@ -207,9 +208,10 @@ function add_custom_comment_type($commentdata) {
 add_filter('preprocess_comment', 'add_custom_comment_type');
 
 
-add_action( 'pre_get_comments', 'exclude_ticket_replies' );
-function exclude_ticket_replies( $query ) {
-    if ( is_admin() ) { 
-        $query->query_vars['type__not_in'] = array( 'ticket_replies' );
+add_action('pre_get_comments', 'exclude_ticket_replies');
+function exclude_ticket_replies($query)
+{
+    if (is_admin()) {
+        $query->query_vars['type__not_in'] = array('ticket_replies');
     }
 }

@@ -48,42 +48,102 @@ function robodesk_clean_email_message($message)
 // Function to fetch emails
 function robodesk_fetch_emails()
 {
+    error_log('Starting email fetch process');
+
+    // Verify the custom post type exists
+    if (!post_type_exists('robodesk_ticket')) {
+        echo '<div class="error"><p>Custom post type "robodesk_ticket" does not exist!</p></div>';
+        error_log('Custom post type "robodesk_ticket" does not exist!');
+        return;
+    }
+
+    // Check if required taxonomies exist
+    if (!taxonomy_exists('robodesk_ticket_origin')) {
+        echo '<div class="error"><p>Taxonomy "robodesk_ticket_origin" does not exist!</p></div>';
+        error_log('Taxonomy "robodesk_ticket_origin" does not exist!');
+        return;
+    }
+
+    if (!taxonomy_exists('robodesk_ticket_priority')) {
+        echo '<div class="error"><p>Taxonomy "robodesk_ticket_priority" does not exist!</p></div>';
+        error_log('Taxonomy "robodesk_ticket_priority" does not exist!');
+        return;
+    }
+
     $last_fetched_date = get_option('robodesk_last_fetched_date', '2021-01-01 00:00:00');
+    error_log('Last fetched date: ' . $last_fetched_date);
 
     // Convert last fetched date into IMAP format
     $since_date = date('d-M-Y', strtotime($last_fetched_date));
+    error_log('IMAP since date format: ' . $since_date);
 
     // Email configuration details
     $hostname = '{wplocatepress.com:993/imap/ssl}INBOX';
     $username = 'pipetest@wplocatepress.com';
     $password = 'k342+11$c1_';
 
-    // Connect to email
-    $email = imap_open($hostname, $username, $password) or die('Cannot connect to email: ' . imap_last_error());
+    error_log('Attempting to connect to IMAP server: ' . $hostname);
+
+    // Connect to email with error handling
+    $email = @imap_open($hostname, $username, $password);
+    if (!$email) {
+        $error_message = 'Cannot connect to email: ' . imap_last_error();
+        error_log($error_message);
+        echo '<div class="error"><p>' . esc_html($error_message) . '</p></div>';
+        return;
+    }
+
+    error_log('Successfully connected to IMAP server');
 
     // Fetch emails received after last fetched date (both read and unread)
-    $emails = imap_search($email, 'SINCE "' . $since_date . '"');
+    $search_criteria = 'SINCE "' . $since_date . '"';
+    error_log('Search criteria: ' . $search_criteria);
+
+    $emails = imap_search($email, $search_criteria);
 
     if (!$emails) {
+        $notice = 'No new emails found since ' . $since_date;
+        error_log($notice);
+        echo '<div class="notice"><p>' . esc_html($notice) . '</p></div>';
         imap_close($email);
-        return; // No new emails found
+        return;
     }
+
+    error_log('Found ' . count($emails) . ' emails to process');
 
     // Sort emails oldest to newest
     sort($emails);
 
+    $processed_count = 0;
+    $skipped_count = 0;
+    $reply_count = 0;
+    $error_count = 0;
+
     foreach ($emails as $email_number) {
+        error_log('Processing email #' . $email_number);
+
         $headerInfo = imap_headerinfo($email, $email_number);
+        if (!$headerInfo) {
+            error_log('Failed to get header info for email #' . $email_number);
+            $error_count++;
+            continue;
+        }
+
         $message_id = $headerInfo->message_id ?? '';
 
         if (empty($message_id)) {
+            error_log('Email #' . $email_number . ' has no message ID, skipping');
+            $skipped_count++;
             continue;
         }
 
         $date = date("Y-m-d H:i:s", strtotime($headerInfo->date ?? 'now'));
+        error_log('Email date: ' . $date . ', Last fetched: ' . $last_fetched_date);
 
         // Ensure only emails received AFTER last fetched date are processed
         if (strtotime($date) <= strtotime($last_fetched_date)) {
+            error_log('Skipping email #' . $email_number . ' as it\'s older than last fetch date');
+            $skipped_count++;
             continue; // Skip old emails
         }
 
@@ -95,17 +155,28 @@ function robodesk_fetch_emails()
         ]);
 
         if (!empty($existing_ticket)) {
+            error_log('Skipping email #' . $email_number . ' as a ticket already exists with message ID: ' . $message_id);
+            $skipped_count++;
             continue; // Skip already fetched emails
         }
 
         $from = $headerInfo->fromaddress ?? 'Unknown Sender';
         $subject = $headerInfo->subject ?? 'No Subject';
+        error_log('Email from: ' . $from . ', Subject: ' . $subject);
 
         // Fetch email body
         $message = imap_fetchbody($email, $email_number, 1.1);
         if (empty($message)) {
+            error_log('Trying alternate body part for email #' . $email_number);
             $message = imap_fetchbody($email, $email_number, 1);
         }
+
+        if (empty($message)) {
+            error_log('Could not retrieve body for email #' . $email_number);
+            $error_count++;
+            continue;
+        }
+
         $message = robodesk_clean_email_message($message);
 
         // Handle replies
@@ -114,7 +185,9 @@ function robodesk_fetch_emails()
         $original_post_id = null;
 
         if (!empty($in_reply_to) || !empty($references)) {
+            error_log('Email #' . $email_number . ' appears to be a reply');
             $first_message_id = !empty($references) ? explode(' ', trim($references))[0] : $in_reply_to;
+            error_log('Looking for original ticket with message ID: ' . $first_message_id);
 
             $original_query = new WP_Query([
                 'meta_key' => 'email_message_id',
@@ -126,6 +199,7 @@ function robodesk_fetch_emails()
 
             if (!empty($original_query->posts)) {
                 $original_post_id = $original_query->posts[0];
+                error_log('Found original ticket with ID: ' . $original_post_id);
 
                 // Prevent duplicate comments
                 $existing_comments = get_comments([
@@ -138,12 +212,14 @@ function robodesk_fetch_emails()
                 foreach ($existing_comments as $comment) {
                     if (trim($comment->comment_content) == trim($message)) {
                         $is_duplicate = true;
+                        error_log('Skipping duplicate comment for ticket ID: ' . $original_post_id);
                         break;
                     }
                 }
 
                 if (!$is_duplicate) {
                     // Insert reply as comment
+                    error_log('Adding comment to ticket ID: ' . $original_post_id);
                     $comment_id = wp_insert_comment([
                         'comment_post_ID' => $original_post_id,
                         'comment_author' => $from,
@@ -154,25 +230,56 @@ function robodesk_fetch_emails()
 
                     if (!is_wp_error($comment_id)) {
                         add_comment_meta($comment_id, 'email_message_id', $message_id, true);
+                        error_log('Successfully added comment ID: ' . $comment_id);
+                        $reply_count++;
+                    } else {
+                        error_log('Failed to add comment: ' . $comment_id->get_error_message());
+                        $error_count++;
                     }
+                } else {
+                    $skipped_count++;
                 }
 
-                continue; // ✅ Skip creating a new ticket for replies
+                continue; // Skip creating a new ticket for replies
+            } else {
+                error_log('Could not find original ticket for reply, creating new ticket instead');
             }
         }
 
         // Create new ticket (if it's not a reply)
         $useremail = $headerInfo->from[0]->mailbox . '@' . $headerInfo->from[0]->host;
+        error_log('Creating new ticket from email: ' . $useremail);
+
         $user = get_user_by('email', $useremail);
         if (!$user) {
+            error_log('User not found, creating new user with email: ' . $useremail);
+
+            // Check if role exists
+            $roles = wp_roles();
+            if (!isset($roles->roles['robodesk_support_customer'])) {
+                error_log('Warning: Role "robodesk_support_customer" does not exist, using "subscriber" instead');
+                $role = 'subscriber';
+            } else {
+                $role = 'robodesk_support_customer';
+            }
+
             $user_id = wp_insert_user([
                 'user_login' => explode('@', $useremail)[0],
                 'user_email' => $useremail,
                 'user_pass' => wp_generate_password(),
-                'role' => 'robodesk_support_customer',
+                'role' => $role,
             ]);
+
+            if (is_wp_error($user_id)) {
+                error_log('Failed to create user: ' . $user_id->get_error_message());
+                $error_count++;
+                continue;
+            } else {
+                error_log('Created new user with ID: ' . $user_id);
+            }
         } else {
             $user_id = $user->ID;
+            error_log('Using existing user with ID: ' . $user_id);
         }
 
         // Ensure the "Email" term exists
@@ -180,48 +287,76 @@ function robodesk_fetch_emails()
         $term_priority = term_exists('Medium', 'robodesk_ticket_priority');
 
         if (!$term_email) {
+            error_log('Creating "Email" term in robodesk_ticket_origin taxonomy');
             $term_email = wp_insert_term('Email', 'robodesk_ticket_origin');
         }
 
         if (!$term_priority) {
+            error_log('Creating "Medium" term in robodesk_ticket_priority taxonomy');
             $term_priority = wp_insert_term('Medium', 'robodesk_ticket_priority');
         }
 
         $term_email_id = (!is_wp_error($term_email) && isset($term_email['term_id'])) ? $term_email['term_id'] : null;
         $term_priority_id = (!is_wp_error($term_priority) && isset($term_priority['term_id'])) ? $term_priority['term_id'] : null;
 
+        if (is_wp_error($term_email)) {
+            error_log('Error creating term "Email": ' . $term_email->get_error_message());
+        }
+
+        if (is_wp_error($term_priority)) {
+            error_log('Error creating term "Medium": ' . $term_priority->get_error_message());
+        }
+
         // Create new ticket post
+        error_log('Inserting new ticket post');
         $post_id = wp_insert_post([
             'post_title'   => $subject,
             'post_content' => $message,
             'post_date'    => $date,
             'post_status'  => 'publish',
             'post_author'  => $user_id,
-            'post_type'    => 'robodesk_support_customer',
+            'post_type'    => 'robodesk_ticket', // Ensure post type is specified
         ]);
 
+        if (is_wp_error($post_id)) {
+            error_log('Failed to create ticket: ' . $post_id->get_error_message());
+            $error_count++;
+            continue;
+        }
+
+        error_log('Created new ticket with ID: ' . $post_id);
+
         if ($post_id && $term_email_id) {
-            wp_set_post_terms($post_id, [$term_email_id], 'robodesk_ticket_origin', false);
+            $result = wp_set_post_terms($post_id, [$term_email_id], 'robodesk_ticket_origin', false);
+            if (is_wp_error($result)) {
+                error_log('Failed to set origin term: ' . $result->get_error_message());
+            }
         }
 
         if ($post_id && $term_priority_id) {
-            wp_set_post_terms($post_id, [$term_priority_id], 'robodesk_ticket_priority', false);
+            $result = wp_set_post_terms($post_id, [$term_priority_id], 'robodesk_ticket_priority', false);
+            if (is_wp_error($result)) {
+                error_log('Failed to set priority term: ' . $result->get_error_message());
+            }
         }
 
         update_post_meta($post_id, '_robodesk_ticket_status', 'open');
+        add_post_meta($post_id, 'email_message_id', $message_id);
+        add_post_meta($post_id, 'email_from', $from);
 
-        if (!is_wp_error($post_id)) {
-            add_post_meta($post_id, 'email_message_id', $message_id);
-            add_post_meta($post_id, 'email_from', $from);
-        }
+        $processed_count++;
 
-        // Update last fetched date
+        // Update last fetched date for each email to prevent issues if process fails halfway
         update_option('robodesk_last_fetched_date', $date);
     }
 
     imap_close($email);
-}
 
+    // Display summary
+    $summary = "Email processing complete. Processed: $processed_count, Replies: $reply_count, Skipped: $skipped_count, Errors: $error_count";
+    error_log($summary);
+    echo '<div class="updated"><p>' . esc_html($summary) . '</p></div>';
+}
 
 
 
