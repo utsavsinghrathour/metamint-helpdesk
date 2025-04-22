@@ -1,86 +1,193 @@
 import React from 'react';
 import '../styles/Login.css';
+import { useState } from 'react';
 
-const Login = () => {
+const Login = ({ setShowLogin }) => {
+  const [formData, setFormData] = useState({ email: '', password: '' });
+  const [errors, setErrors] = useState({ email: '', password: '' });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const validateForm = () => {
+    const newErrors = { email: '', password: '' };
+    let isValid = true;
+
+    if (!formData.email) {
+      newErrors.email = 'Email is required';
+      isValid = false;
+    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+      newErrors.email = 'Invalid email format';
+      isValid = false;
+    }
+
+    if (!formData.password) {
+      newErrors.password = 'Password is required';
+      isValid = false;
+    } else if (formData.password.length < 8) {
+      newErrors.password = 'Password must be at least 8 characters';
+      isValid = false;
+    }
+
+    setErrors(newErrors);
+    return isValid;
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+
+    if (validateForm()) {
+      try {
+        // Simulate API call
+        console.log('Submitting:', formData);
+        // await loginAPI(formData); // Replace with actual API call
+      } catch (error) {
+        setErrors({ email: '', password: 'Login failed. Please try again.' });
+      }
+    }
+
+    setIsSubmitting(false);
+  };
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData({ ...formData, [name]: value });
+  };
+
   return (
     <>
-    <div className="rd-px-18 rd-search-header rd-bg-blue rd-flex rd-items-center rd-justify-between rd-flex-col login-wrap">
-        <h5 className="heading-5 rd-text-white rd-text-center">Login</h5>
-      </div>
-    <div className="login-container rd-px-18">
-      <div className="login-card">
-        <button className="rd-w-full rd-bg-transparent rd-border-blue rd-text-blue rd-border-radius-md rd-flex rd-justify-center rd-align-center rd-gap-15 rd-p-10">
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="18px"
-            height="18px"
-            viewBox="-3 0 262 262"
-            preserveAspectRatio="xMidYMid"
+      <div className="rd-px-18 rd-search-header rd-bg-blue rd-flex rd-items-center rd-justify-between rd-flex-col login-wrap">
+        <div className="rd-flex rd-items-center rd-w-full rd-justify-center">
+          <button
+            type="button"
+            className="rd-bg-transparent rd-text-white rd-p-0 rd-m-0 back-button rd-flex rd-items-center"
+            aria-label="Go back to home"
+            onClick={() => setShowLogin(false)} // Toggle showLogin to false
           >
-            <path
-              d="M255.878 133.451c0-10.734-.871-18.567-2.756-26.69H130.55v48.448h71.947c-1.45 12.04-9.283 30.172-26.69 42.356l-.244 1.622 38.755 30.023 2.685.268c24.659-22.774 38.875-56.282 38.875-96.027"
-              fill="#4285F4"
-            />
-            <path
-              d="M130.55 261.1c35.248 0 64.839-11.605 86.453-31.622l-41.196-31.913c-11.024 7.688-25.82 13.055-45.257 13.055-34.523 0-63.824-22.773-74.269-54.25l-1.531.13-40.298 31.187-.527 1.465C35.393 231.798 79.49 261.1 130.55 261.1"
-              fill="#34A853"
-            />
-            <path
-              d="M56.281 156.37c-2.756-8.123-4.351-16.827-4.351-25.82 0-8.994 1.595-17.697 4.206-25.82l-.073-1.73L15.26 71.312l-1.335.635C5.077 89.644 0 109.517 0 130.55s5.077 40.905 13.925 58.602l42.356-32.782"
-              fill="#FBBC05"
-            />
-            <path
-              d="M130.55 50.479c24.514 0 41.05 10.589 50.479 19.438l36.844-35.974C195.245 12.91 165.798 0 130.55 0 79.49 0 35.393 29.301 13.925 71.947l42.211 32.783c10.59-31.477 39.891-54.251 74.414-54.251"
-              fill="#EB4335"
-            />
-          </svg>
-          <span className="rd-title-text rd-text-blue">Continue with Google</span>
-        </button>
-
-        <div className="rd-text-center rd-body-text rd-my-30">-----or Sign in with Email------</div>
-
-        <div>
-          <div>
-            <label htmlFor="email"></label>
-            <input
-              type="email"
-              id="email"
-              placeholder="Email"
-              className="rd-w-full rd-border-light rd-p-12 rd-border-radius-md"
-            />
-          </div>
-
-          <div className="rd-mt-15">
-            <label htmlFor="password"></label>
-            <input
-              type="password"
-              id="password"
-              placeholder="Password"
-              className="rd-w-full rd-border-light rd-p-12 rd-border-radius-md"
-            />
-          </div>
-
-          <div className="rd-mt-15 rd-flex rd-justify-between">
-            <div className="rd-flex rd-body-text rd-gap-8">
-              <input type="checkbox" id="remember" />
-              <label htmlFor="remember">Remember me</label>
-            </div>
-            <a href="#" className="rd-body-text rd-decoration-none rd-text-blue">
-              Forgot Password?
-            </a>
-          </div>
-
-          <button className="rd-login-button rd-w-full rd-border-radius-md">Login</button>
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M15 18l-6-6 6-6" />
+            </svg>
+          </button>
+          <h5 className="heading-5 rd-text-white rd-text-center rd-flex-1">Login</h5>
         </div>
-
-        {/* <p className="mt-4 text-center text-sm text-gray-600">
-      Don't have an account?{' '}
-      <a href="#" className="text-blue-600 hover:underline">
-        Sign up
-      </a>
-    </p> */}
       </div>
-    </div>
+      <div className="login-container rd-px-18">
+        <div className="login-card">
+          <button
+            type="button"
+            className="rd-w-full rd-bg-transparent rd-border-blue rd-text-blue rd-border-radius-md rd-flex rd-justify-center rd-align-center rd-gap-15 rd-p-10"
+            aria-label="Sign in with Google"
+            onClick={() => console.log('Google Sign-In')} // Replace with Google OAuth
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              x="0px"
+              y="0px"
+              width="20"
+              height="20"
+              viewBox="0 0 48 48"
+            >
+              <path
+                fill="#fbc02d"
+                d="M43.611,20.083H42V20H24v8h11.303c-1.649,4.657-6.08,8-11.303,8c-6.627,0-12-5.373-12-12 s5.373-12,12-12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C12.955,4,4,12.955,4,24s8.955,20,20,20 s20-8.955,20-20C44,22.659,43.862,21.35,43.611,20.083z"
+              ></path>
+              <path
+                fill="#e53935"
+                d="M6.306,14.691l6.571,4.819C14.655,15.108,18.961,12,24,12c3.059,0,5.842,1.154,7.961,3.039 l5.657-5.657C34.046,6.053,29.268,4,24,4C16.318,4,9.656,8.337,6.306,14.691z"
+              ></path>
+              <path
+                fill="#4caf50"
+                d="M24,44c5.166,0,9.86-1.977,13.409-5.192l-6.19-5.238C29.211,35.091,26.715,36,24,36 c-5.202,0-9.619-3.317-11.283-7.946l-6.522,5.025C9.505,39.556,16.227,44,24,44z"
+              ></path>
+              <path
+                fill="#1565c0"
+                d="M43.611,20.083L43.595,20L42,20H24v8h11.303c-0.792,2.237-2.231,4.166-4.087,5.571 c0.001-0.001,0.002-0.001,0.003-0.002l6.19,5.238C36.971,39.205,44,34,44,24C44,22.659,43.862,21.35,43.611,20.083z"
+              ></path>
+            </svg>
+            <span className="rd-title-text rd-text-blue">Continue with Google</span>
+          </button>
+
+          <div className="rd-text-center rd-body-text rd-my-30">
+            <span className="rd-px-10 rd-bg-white">----- or Sign in with Email -----</span>
+          </div>
+
+          <form onSubmit={handleSubmit} noValidate>
+            <div>
+              <label htmlFor="email" className="rd-body-text"></label>
+              <input
+                type="email"
+                id="email"
+                name="email"
+                value={formData.email}
+                onChange={handleChange}
+                placeholder="Email"
+                className="rd-w-full rd-border-light rd-p-12 rd-border-radius-md"
+                required
+                aria-describedby="email-error"
+              />
+              {errors.email && (
+                <p id="email-error" className="rd-text-red rd-text-sm rd-mt-5 form-err-msg">
+                  {errors.email}
+                </p>
+              )}
+            </div>
+
+            <div className="rd-mt-15">
+              <label htmlFor="password" className="rd-body-text"></label>
+              <input
+                type="password"
+                id="password"
+                name="password"
+                value={formData.password}
+                onChange={handleChange}
+                placeholder="Password"
+                className="rd-w-full rd-border-light rd-p-12 rd-border-radius-md"
+                required
+                aria-describedby="password-error"
+              />
+              {errors.password && (
+                <p id="password-error" className="rd-text-red rd-text-sm rd-mt-5 form-err-msg">
+                  {errors.password}
+                </p>
+              )}
+            </div>
+
+            <div className="rd-mt-15 rd-flex rd-justify-between">
+              <div className="rd-flex rd-body-text rd-gap-8">
+                <input type="checkbox" id="remember" />
+                <label htmlFor="remember">Remember me</label>
+              </div>
+              <a href="#" className="rd-body-text rd-decoration-none rd-text-blue">
+                Forgot Password?
+              </a>
+            </div>
+
+            <button
+              type="submit"
+              className="rd-login-button rd-w-full rd-border-radius-md"
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? 'Logging in...' : 'Login'}
+            </button>
+          </form>
+
+          <p className="rd-mt-15 rd-text-center rd-body-text rd-text-gray">
+            Don't have an account?{' '}
+            <a href="#" className="rd-text-blue rd-hover-underline">
+              Sign up
+            </a>
+          </p>
+        </div>
+      </div>
     </>
   );
 };

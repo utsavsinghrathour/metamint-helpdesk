@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import Header from './Header.jsx';
 import Footer from './Footer.jsx';
 import SendMessageField from './SendMessageField';
@@ -12,21 +13,21 @@ const HomeTabs = ({ setActiveTab, setIsOpen, isExpanded, setIsExpanded }) => {
 
   return (
     <div className="rd-flex rd-flex-col rd-h-full featured-faq">
-      <div className='rd-main-content'>
-      {!showLogin && showHeaderFooter && <Header onClose={() => setIsOpen(false)} />}
-      <div className="rd-flex-1 rd-overflow-auto">
-        {showLogin ? (
-          <Login />
-        ) : (
-          <SingleQuestionBox
-            setShowHeaderFooter={setShowHeaderFooter}
-            showHeaderFooter={showHeaderFooter}
-            isExpanded={isExpanded}
-            setIsExpanded={setIsExpanded}
-            setShowLogin={setShowLogin} // Pass setShowLogin
-          />
-        )}
-      </div>
+      <div className="rd-main-content">
+        {!showLogin && showHeaderFooter && <Header onClose={() => setIsOpen(false)} />}
+        <div className="rd-flex-1 rd-overflow-auto">
+          {showLogin ? (
+            <Login setShowLogin={setShowLogin} /> // Pass setShowLogin to Login
+          ) : (
+            <SingleQuestionBox
+              setShowHeaderFooter={setShowHeaderFooter}
+              showHeaderFooter={showHeaderFooter}
+              isExpanded={isExpanded}
+              setIsExpanded={setIsExpanded}
+              setShowLogin={setShowLogin}
+            />
+          )}
+        </div>
       </div>
       {showHeaderFooter && <Footer activeTab={0} setActiveTab={setActiveTab} />}
     </div>

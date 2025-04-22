@@ -7,8 +7,10 @@
     margin-top: 25px;
 }
 .login-container{
-    padding-top: 35px;
-    padding-bottom: 35px;
+    padding-top: 30px;
+    padding-bottom: 30px;
+    max-height: 400px;
+    overflow: auto;
 }
 .login-container input::placeholder{
     font-size: 14px;

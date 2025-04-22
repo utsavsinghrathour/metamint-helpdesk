@@ -1,10 +1,15 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import '../styles/FAQ.css';
 import { FaChevronRight, FaChevronLeft, FaSearch } from 'react-icons/fa';
 import Logo from '../images/wooescrow-logo.png';
 import Footer from './Footer';
 import Author1 from '../images/person1.jpeg';
 import Author2 from '../images/person2.jpeg';
+
+// Utility function to strip HTML tags
+const stripHtml = (html) => {
+  return html.replace(/(<([^>]+)>|&[a-zA-Z0-9#]+;)/gi, '').trim();
+};
 
 const FAQDetail = ({ faq, onBack, isExpanded, setIsExpanded }) => {
   const [isLiked, setIsLiked] = useState(false);
@@ -136,10 +141,10 @@ const FAQDetail = ({ faq, onBack, isExpanded, setIsExpanded }) => {
 
 const FAQItem = ({ faq, onSelect }) => {
   return (
-    <div className="rd-faq-item rd-flex rd-align-start rd-border-bottom-light" onClick={() => onSelect(faq)}>
+    <div className="rd-faq-item rd-flex rd-align-start rd-border-bottom-light rd-gap-8" onClick={() => onSelect(faq)}>
       <div className="rd-faq-content">
         <h3 className="rd-faq-title rd-title-text">{faq.question}</h3>
-        <p className="rd-faq-paragraph rd-body-text">{faq.summary}</p>
+        <p className="rd-faq-paragraph rd-body-text truncate-3-lines">{faq.summary}</p>
       </div>
       <FaChevronRight />
     </div>
@@ -149,27 +154,45 @@ const FAQItem = ({ faq, onSelect }) => {
 const FAQ = ({ setActiveTab, setIsOpen, isExpanded, setIsExpanded, activeTab }) => {
   const [selectedFAQ, setSelectedFAQ] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [faqs, setFaqs] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  const faqs = [
-    {
-      question: 'How do I send you my login credentials?',
-      summary: 'Lorem ipsum dolor sit amet, consectetur elit adipiscing elit, sed do eiusmod tempor incididunt.',
-      answer:
-        'After you sign up with your website maintenance plans, you can securely share the website credentials you have created for us inside a reply to your welcome email just after you check out with all your login credential Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua After you sign up with your website maintenance plans, you can securely share the website credentials you have created for us inside a reply to your welcome email just after you check out with all your login credential Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua After you sign up with your website maintenance plans, you can securely share the website credentials you have created for us inside a reply to your welcome email just after you check out with all your login credential Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua After you sign up with your website maintenance plans, you can securely share the website credentials you have created for us inside a reply to your welcome email just after you check out with all your login credential Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua After you sign up with your website maintenance plans, you can securely share the website credentials you have created for us inside a reply to your welcome email just after you check out with all your login credential Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua After you sign up with your website maintenance plans, you can securely share the website credentials you have created for us inside a reply to your welcome email just after you check out with all your login credential Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua After you sign up with your website maintenance plans, you can securely share the website credentials you have created for us inside a reply to your welcome email just after you check out with all your login credential Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua After you sign up with your website maintenance plans, you can securely share the website credentials you have created for us inside a reply to your welcome email just after you check out with all your login credential Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua',
-    },
-    {
-      question: 'How does JSX work?',
-      summary: 'Lorem ipsum dolor sit amet, consectetur elit adipiscing elit, sed do eiusmod tempor incididunt.',
-      answer:
-        'JSX is a syntax extension for JavaScript that looks similar to HTML and is used with React to describe what the UI should look like.',
-    },
-    {
-      question: 'What is React?',
-      summary: 'A brief overview of React',
-      answer:
-        'React is a JavaScript library for building user interfaces, particularly single-page applications where you need a fast, interactive user experience.',
-    },
-  ];
+  // Fetch FAQs from WordPress REST API
+  useEffect(() => {
+    const fetchFAQs = async () => {
+      try {
+        setIsLoading(true);
+        const response = await fetch('http://localhost:10094/wp-json/wp/v2/robodesk_faq'); // Adjust URL
+        if (!response.ok) {
+          throw new Error('Failed to fetch FAQs');
+        }
+        const data = await response.json();
+
+        // Map API data to match the expected FAQ structure
+        const formattedFaqs = data.map((faq) => ({
+          id: faq.id,
+          question: faq.title.rendered,
+          summary: stripHtml(faq.excerpt.rendered || wpTrimWords(faq.content.rendered, 20)), // Trim content if no excerpt
+          answer: stripHtml(faq.content.rendered),
+        }));
+
+        setFaqs(formattedFaqs);
+        setIsLoading(false);
+      } catch (err) {
+        setError(err.message);
+        setIsLoading(false);
+      }
+    };
+
+    fetchFAQs();
+  }, []);
+
+  // Utility function to mimic WordPress wp_trim_words
+  const wpTrimWords = (text, numWords) => {
+    const words = stripHtml(text).split(/\s+/);
+    return words.slice(0, numWords).join(' ') + (words.length > numWords ? '...' : '');
+  };
 
   const handleBackToHome = () => {
     if (setActiveTab) {
@@ -213,12 +236,20 @@ const FAQ = ({ setActiveTab, setIsOpen, isExpanded, setIsExpanded, activeTab }) 
             <FaChevronLeft />
           </button>
         </div>
-        <div className="rd-mt-8 rd-mb-8">
-          {faqs
-            .filter((faq) => faq.question.toLowerCase().includes(searchTerm.toLowerCase()))
-            .map((faq, index) => (
-              <FAQItem key={index} faq={faq} onSelect={setSelectedFAQ} />
-            ))}
+        <div className="rd-mt-8 rd-mb-8 rd-wiki-wrap">
+          {isLoading ? (
+            <p className="rd-body-text rd-text-center">Loading FAQs...</p>
+          ) : error ? (
+            <p className="rd-body-text rd-text-red rd-text-center">Error: {error}</p>
+          ) : faqs.length === 0 ? (
+            <p className="rd-body-text rd-text-center">No FAQs found.</p>
+          ) : (
+            faqs
+              .filter((faq) => faq.question.toLowerCase().includes(searchTerm.toLowerCase()))
+              .map((faq) => (
+                <FAQItem key={faq.id} faq={faq} onSelect={setSelectedFAQ} />
+              ))
+          )}
         </div>
       </div>
       <Footer activeTab={activeTab} setActiveTab={setActiveTab} />

@@ -381,7 +381,11 @@ input::placeholder{
   height: 20px;
   width: 20px;
 }
-
+.disliked svg,
+.dislike svg path
+{
+  fill: red;
+}
 /* popup expanded and contract, open css */
 .robodesk-popup {
   width: 400px;
@@ -467,4 +471,16 @@ input::placeholder{
   opacity: 0;
   transform: translateY(50px);
   visibility: hidden;
+}
+.form-err-msg {
+  color: red;
+  font-size: 12px;
+  font-weight: 500;
+}
+.truncate-3-lines{
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;  
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
