@@ -355,12 +355,17 @@ function robodesk_handle_tickets_webhook(WP_REST_Request $request) {
         
         $title    = sanitize_text_field($data['data']['title'] ?? '');
         $content  = sanitize_textarea_field($data['data']['description'] ?? '');
+        $author = sanitize_text_field($data['data']['uid'] ?? '');
 
         $ticket = wp_insert_post(array(
             'post_type'   => 'robodesk_ticket',
             'post_title' => $title,
             'post_content' => $content,
-            'post_status' => 'publish'
+            'post_status' => 'publish',
+            'post_author' => $author,
+            'meta_input'   => array(
+			    '_robodesk_ticket_status' => 'new'
+			),
         ));
         
 
@@ -370,7 +375,39 @@ function robodesk_handle_tickets_webhook(WP_REST_Request $request) {
                 $ticket,
                 $title
             ));
+
+            // Set taxonomy for the ticket origin
+            $term_origin = term_exists('chat', 'robodesk_ticket_origin');
+
+            if ($term_origin) {
+                
+                $term_id = $term_origin['term_id'];
+            } else {
+               
+                $result = wp_insert_term(
+                    'Chat',
+                    'robodesk_ticket_origin',
+                    array(
+                        'description' => 'Chat origin tickets',
+                        'slug'        => 'chat'
+                    )
+                );
+                
+              
+                if (!is_wp_error($result)) {
+                    $term_id = $result['term_id'];
+                } else {
+                  
+                    error_log('Failed to create term: ' . $result->get_error_message());
+                    $term_id = null;
+                }
+            }
             
+            // If we have a valid term ID (either from existing term or newly created one), assign it to the post
+            if ($term_id) {
+                wp_set_post_terms($ticket, array($term_id), 'robodesk_ticket_origin');
+            }
+
             return rest_ensure_response(array(
                 'status'  => 'success',
                 'message' => 'Ticket created successfully',
@@ -407,7 +444,8 @@ function robodesk_handle_tickets_webhook(WP_REST_Request $request) {
             'comment_post_ID' => $ticket_id,
             'comment_author'  => $user_id,
             'comment_content' => $reply,
-            'comment_approved' => 1
+            'comment_approved' => 1,
+            'comment_type' => 'ticket_replies'
         ));
 
         if ($comment_id) {
