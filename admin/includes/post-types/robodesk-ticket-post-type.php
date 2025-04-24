@@ -313,7 +313,6 @@ function customize_robodesk_ticket_response($response, $post, $request) {
         $response->data['robodesk_ticket_priority'] = [];
     }
 
-
     $ticket_status = get_post_meta($post->ID, '_robodesk_ticket_status', true);
     $response->data['robodesk_ticket_status'] = $ticket_status ? $ticket_status : '';
     $origin_terms = get_the_terms($post->ID, 'robodesk_ticket_origin');
@@ -327,3 +326,110 @@ function customize_robodesk_ticket_response($response, $post, $request) {
 
     return $response;
 }
+
+add_action( 'rest_api_init', function () {
+    register_rest_route( 'chat/v1', '/tickets', array(
+        'methods'  => 'POST',
+        'callback' => 'robodesk_handle_tickets_webhook',
+        'permission_callback' => '__return_true',
+    ) );
+} );
+
+
+
+function robodesk_handle_tickets_webhook(WP_REST_Request $request) {
+    $payload = $request->get_body();
+    $data    = json_decode($payload, true);
+
+    // Validate payload
+    if (empty($payload) || json_last_error() !== JSON_ERROR_NONE) {
+        return new WP_Error(
+            'invalid_payload',
+            'Invalid JSON payload',
+            array('status' => 400)
+        );
+    }
+
+    // Handle ticket creation event
+    if (isset($data['event']) && 'ticket.created' === $data['event']) {
+        
+        $title    = sanitize_text_field($data['data']['title'] ?? '');
+        $content  = sanitize_textarea_field($data['data']['description'] ?? '');
+
+        $ticket = wp_insert_post(array(
+            'post_type'   => 'robodesk_ticket',
+            'post_title' => $title,
+            'post_content' => $content,
+            'post_status' => 'publish'
+        ));
+        
+
+        if (!is_wp_error($ticket)) {
+            rbd_log(sprintf(
+                "Ticket #%s created with title: %s\n",
+                $ticket,
+                $title
+            ));
+            
+            return rest_ensure_response(array(
+                'status'  => 'success',
+                'message' => 'Ticket created successfully',
+                'data'    => array('ticket_id' => $ticket)
+            ));
+        }
+    }
+
+    // Handle ticket reply event
+    if (isset($data['event']) && 'replies.receive' === $data['event']) {
+        $ticket_id  = sanitize_text_field($data['data']['ticket_id'] ?? '');
+        $user_id   = sanitize_text_field($data['data']['user_id'] ?? '');
+        $reply     = sanitize_textarea_field($data['data']['message'] ?? '');
+
+        if (empty($ticket_id)) {
+            return new WP_Error(
+                'missing_ticket_id',
+                'Ticket ID is required',
+                array('status' => 400)
+            );
+        }
+
+        $ticket = get_post($ticket_id);
+        if (!$ticket) {
+            return new WP_Error(
+                'ticket_not_found',
+                'Ticket not found',
+                array('status' => 404)
+            );
+        }
+
+        // Add reply to ticket
+        $comment_id = wp_insert_comment(array(
+            'comment_post_ID' => $ticket_id,
+            'comment_author'  => $user_id,
+            'comment_content' => $reply,
+            'comment_approved' => 1
+        ));
+
+        if ($comment_id) {
+            rbd_log(sprintf(
+                "Comment received for ticket #%s: %s\n",
+                $ticket_id,
+                $reply
+            ));
+            
+            return rest_ensure_response(array(
+                'status'  => 'success',
+                'message' => 'Reply added successfully',
+                'data'    => array('ticket_id' => $ticket_id, 'reply_id' => $comment_id)
+            ));
+        }
+    }
+
+    // Handle unknown events
+    return new WP_Error(
+        'invalid_event',
+        'Invalid event type',
+        array('status' => 400)
+    );
+}
+
