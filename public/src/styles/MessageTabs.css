@@ -85,6 +85,7 @@
 .rd-message-tab-content input,
 .rd-message-tab-content select {
   min-width: 150px;
+  font-weight: 500 !important;
 }
 .rd-message-tab-content input::placeholder{
   color: #84818a !important;

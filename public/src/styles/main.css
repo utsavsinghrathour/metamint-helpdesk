@@ -336,11 +336,13 @@ h5.sub-text{
   border-top: 1px solid var(--border-light-gray);
   border-bottom: 1px solid var(--border-light-gray);
 }
-.rd-body-text{
-  color: var(--body-text);
-  font-size: 13px;
-  line-height: 18px;
-  font-weight: 400;
+.rd-body-text,
+.rd-body-text p
+{
+  color: var(--body-text) !important;
+  font-size: 13px !important;
+  line-height: 18px !important;
+  font-weight: 400 !important;
   transition: font-size 0.5s ease;
 }
 .color-body-text{

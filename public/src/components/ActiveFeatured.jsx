@@ -1,11 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import '../styles/ActiveFeatured.css';
-import { FaTimes } from "react-icons/fa";
+import { FaTimes } from 'react-icons/fa';
 import Bell from '../images/alarm-gif.gif';
 
 // Get WordPress home URL from robodeskData
 const wpHomeUrl = window.robodeskData?.home_url || '';
-
 
 const ActiveFeatured = ({ onNoticeSelect }) => {
   const [notices, setNotices] = useState([]);
@@ -36,32 +35,35 @@ const ActiveFeatured = ({ onNoticeSelect }) => {
     fetchNotices();
   }, []);
 
-  // Delay appearance of the component
+  // Check sessionStorage to determine visibility
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setIsVisible(true);
-    }, 1000); 
+    const isPopupClosed = sessionStorage.getItem('popupClosed');
+    if (!isPopupClosed && !isLoading && !error && notices.length > 0) {
+      const timer = setTimeout(() => {
+        setIsVisible(true);
+      }, 1000); // 1-second delay
 
-    return () => clearTimeout(timer); // Cleanup on unmount
-  }, []);
+      return () => clearTimeout(timer); // Cleanup on unmount
+    }
+  }, [isLoading, error, notices.length]);
 
   const handleNoticeClick = (notice) => {
     onNoticeSelect(notice); // Pass the selected notice to App.jsx
   };
 
   const handleCloseAllNotices = () => {
-    setNotices([]);
+    sessionStorage.setItem('popupClosed', 'true'); // Set flag in sessionStorage
+    setIsVisible(false); // Hide the popup
+    setNotices([]); // Clear notices
   };
 
   return (
     <div
       className={`rd-active-featured rd-position-relative ${
-        !isVisible || (!isLoading && !error && notices.length === 0) ? 'rd-hidden' : ''
+        !isVisible || isLoading || error || notices.length === 0 ? 'rd-hidden' : ''
       } ${isVisible ? 'rd-fade-in' : ''}`}
     >
-      {isLoading ? (
-        <p className="rd-body-text rd-text-center rd-p-20">Loading notices...</p>
-      ) : error ? (
+      {error ? (
         <p className="rd-text-red rd-body-text">Error: {error}</p>
       ) : (
         notices.length > 0 && (
