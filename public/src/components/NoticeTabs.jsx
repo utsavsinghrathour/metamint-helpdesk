@@ -62,7 +62,7 @@ const NoticeItem = memo(({ notice, onSelect }) => {
   );
 });
 
-const SingleNoticeView = memo(({ notice, onBack, isExpanded, setIsExpanded, handleLike, handleDislike, isLiked, isDisliked }) => {
+const SingleNoticeView = memo(({ notice, onBack, isExpanded, setIsExpanded }) => {
   const [content, setContent] = useState(null);
   const wpHomeUrl = window.robodeskData?.home_url || '';
 
@@ -199,8 +199,6 @@ const NoticeTabs = ({
   setShowActiveFeatured,
 }) => {
   const [selectedNotice, setSelectedNotice] = useState(initialSelectedNotice);
-  const [isLiked, setIsLiked] = useState(false);
-  const [isDisliked, setIsDisliked] = useState(false);
   const [showHeaderFooter, setShowHeaderFooter] = useState(true);
   const [notices, setNotices] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -255,20 +253,8 @@ const NoticeTabs = ({
     setShowHeaderFooter(!selectedNotice);
   }, [selectedNotice]);
 
-  const handleLike = () => {
-    setIsLiked(!isLiked);
-    if (isDisliked) setIsDisliked(false);
-  };
-
-  const handleDislike = () => {
-    setIsDisliked(!isDisliked);
-    if (isLiked) setIsLiked(false);
-  };
-
   const handleBackClick = () => {
     setSelectedNotice(null);
-    setIsLiked(false);
-    setIsDisliked(false);
     setIsExpanded(false);
   };
 
@@ -283,10 +269,6 @@ const NoticeTabs = ({
             onBack={handleBackClick}
             isExpanded={isExpanded}
             setIsExpanded={setIsExpanded}
-            handleLike={handleLike}
-            handleDislike={handleDislike}
-            isLiked={isLiked}
-            isDisliked={isDisliked}
           />
         ) : (
           <>
@@ -303,11 +285,7 @@ const NoticeTabs = ({
               <div className="rd-px-18 rd-mt-20 rd-mb-15 rd-overflow-h-320 notice-tab-content">
                 <div className="rd-flex rd-flex-col rd-gap-20 featured-faq">
                   {isLoading ? (
-                    <div className="rd-skeleton">
-                      {[...Array(5)].map((_, i) => (
-                        <div key={i} className="rd-skeleton-item rd-mb-10 rd-p-20 rd-bg-gray-200 rd-rounded"></div>
-                      ))}
-                    </div>
+                    <p className="rd-body-text rd-text-center">Loading notices...</p>
                   ) : notices.length === 0 ? (
                     <p className="rd-body-text">No notices found.</p>
                   ) : (
