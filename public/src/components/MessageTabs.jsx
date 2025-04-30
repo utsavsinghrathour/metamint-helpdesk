@@ -4,9 +4,8 @@ import '../styles/MessageTabs.css';
 import Author1 from '../images/person1.jpeg';
 import Author2 from '../images/person2.jpeg';
 import { LuDot } from 'react-icons/lu';
-import { IoIosSend } from 'react-icons/io';
+import { RiPencilFill } from 'react-icons/ri';
 import Footer from './Footer';
-import { RiPencilFill } from "react-icons/ri";
 import Preloader from '../images/preloader.svg'; // Adjust the path based on your project structure
 
 const SingleTicket = React.lazy(() => import('./SingleTicket'));
@@ -27,21 +26,26 @@ const TicketItem = ({ ticket, onSelect }) => {
         />
       </div>
       <div className="rd-flex rd-justify-between rd-w-full">
-        <div>
+        <div className="rd-message-list-wrap">
           <h5 className="sub-text rd-title-color">{ticket.title}</h5>
           <div className="rd-text-small rd-mt-5 rd-flex rd-gap-5">
-            <span className='rd-flex'>{ticket.source} <LuDot /> {ticket.timeAgo}</span>
+            <span className="rd-flex">
+              {ticket.source} <LuDot /> {ticket.timeAgo}
+            </span>
           </div>
-          <div className='rd-flex rd-align-center rd-gap-10 rd-mt-10'>
-            <span className={` rd-priority rd-fw-medium ${
-              ticket.priority === 'Urgent' ? 'rd-urgent' : 
-              ticket.priority === 'Medium' ? 'rd-medium' : 'rd-low'
-            }`}>
+          <div className="rd-flex rd-align-center rd-gap-10 rd-mt-10">
+            <span
+              className={`rd-priority rd-fw-medium ${
+                ticket.priority === 'Urgent'
+                  ? 'rd-urgent'
+                  : ticket.priority === 'Medium'
+                  ? 'rd-medium'
+                  : 'rd-low'
+              }`}
+            >
               {ticket.priority}
             </span>
-            <span className='rd-text-small rd-fw-medium'>
-              (#{ticket.ticketNumber})
-            </span>
+            <span className="rd-text-small rd-fw-medium">(#{ticket.ticketNumber})</span>
           </div>
         </div>
         <FaChevronRight />
@@ -86,7 +90,6 @@ const MessageTabs = ({ setActiveTab, setIsOpen, isExpanded, setIsExpanded, activ
         { id: 2, text: 'We’re looking into it, please wait.', sender: 'other', image: Author2 },
       ],
     },
-
     // On Going Tickets
     {
       id: 3,
@@ -116,7 +119,6 @@ const MessageTabs = ({ setActiveTab, setIsOpen, isExpanded, setIsExpanded, activ
         { id: 2, text: 'Can you share the error message?', sender: 'other', image: Author2 },
       ],
     },
-
     // Resolved Tickets
     {
       id: 5,
@@ -172,10 +174,26 @@ const MessageTabs = ({ setActiveTab, setIsOpen, isExpanded, setIsExpanded, activ
     }
   };
 
+  const handleAddTicket = () => {
+    // Create a new ticket with no messages
+    const newTicket = {
+      id: tickets.length + 1, // Simple ID generation; replace with proper logic if needed
+      ticketNumber: `TCKT-${String(tickets.length + 1).padStart(3, '0')}`,
+      title: 'New Ticket',
+      source: 'White Label WP',
+      timeAgo: 'Just now',
+      authorImage: Author1, // Default image; adjust as needed
+      status: 'new',
+      priority: 'Medium', // Default priority; adjust as needed
+      messages: [], // Empty messages array
+    };
+    setSelectedTicket(newTicket);
+  };
+
   const filteredTickets = tickets.filter((ticket) => {
     const matchesTab = currentTab === 'all' || ticket.status === currentTab;
     const matchesPriority = priorityFilter === 'all' || ticket.priority === priorityFilter;
-    const matchesSearch = 
+    const matchesSearch =
       ticket.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       ticket.ticketNumber.toLowerCase().includes(searchTerm.toLowerCase());
     return matchesTab && matchesPriority && matchesSearch;
@@ -187,8 +205,8 @@ const MessageTabs = ({ setActiveTab, setIsOpen, isExpanded, setIsExpanded, activ
     <div className="rd-main-content">
       {selectedTicket ? (
         <Suspense fallback={<img src={Preloader} alt="Loading" className="rd-preloader" />}>
-        <SingleTicket ticket={selectedTicket} onBack={() => setSelectedTicket(null)} />
-      </Suspense>
+          <SingleTicket ticket={selectedTicket} onBack={() => setSelectedTicket(null)} />
+        </Suspense>
       ) : (
         <>
           <div className="rd-px-18 rd-search-header rd-bg-blue rd-flex rd-items-center rd-justify-between rd-flex-col">
@@ -223,7 +241,7 @@ const MessageTabs = ({ setActiveTab, setIsOpen, isExpanded, setIsExpanded, activ
             </div>
 
             {/* Tabs */}
-            <div className="rd-flex rd-justify-between rd-py-15 rd-px-20 rd-gap-10 rd-border-bottom-light">
+            <div className="rd-flex rd-justify-between rd-py-10 rd-px-20 rd-gap-10 rd-border-bottom-light">
               <select
                 value={currentTab}
                 onChange={(e) => setCurrentTab(e.target.value)}
@@ -240,30 +258,36 @@ const MessageTabs = ({ setActiveTab, setIsOpen, isExpanded, setIsExpanded, activ
                 }`}
                 onClick={() => setCurrentTab('new')}
               >
-                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 21 20" fill="none">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="18"
+                  height="18"
+                  viewBox="0 0 21 20"
+                  fill="none"
+                >
                   <path
                     d="M19.0448 8.75V12.9167C19.0448 15.8333 17.3738 17.0833 14.8673 17.0833H6.51223C4.00572 17.0833 2.33472 15.8333 2.33472 12.9167V7.08333C2.33472 4.16666 4.00572 2.91666 6.51223 2.91666H12.3608"
                     stroke="#84818A"
-                    stroke-width="1.5"
-                    stroke-miterlimit="10"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
+                    strokeWidth="1.5"
+                    strokeMiterlimit="10"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
                   />
                   <path
                     d="M6.51221 7.5L9.12734 9.58333C9.9879 10.2667 11.3999 10.2667 12.2605 9.58333L13.2464 8.8"
                     stroke="#84818A"
-                    stroke-width="1.5"
-                    stroke-miterlimit="10"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
+                    strokeWidth="1.5"
+                    strokeMiterlimit="10"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
                   />
                   <path
                     d="M16.956 6.66667C18.1096 6.66667 19.0448 5.73393 19.0448 4.58333C19.0448 3.43274 18.1096 2.5 16.956 2.5C15.8024 2.5 14.8672 3.43274 14.8672 4.58333C14.8672 5.73393 15.8024 6.66667 16.956 6.66667Z"
                     stroke="#84818A"
-                    stroke-width="1.5"
-                    stroke-miterlimit="10"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
+                    strokeWidth="1.5"
+                    strokeMiterlimit="10"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
                   />
                 </svg>
                 New
@@ -274,38 +298,44 @@ const MessageTabs = ({ setActiveTab, setIsOpen, isExpanded, setIsExpanded, activ
                 }`}
                 onClick={() => setCurrentTab('ongoing')}
               >
-                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 21 20" fill="none">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="18"
+                  height="18"
+                  viewBox="0 0 21 20"
+                  fill="none"
+                >
                   <path
                     d="M1.99854 7.08333C1.99854 4.16666 3.66954 2.91666 6.17605 2.91666H14.5311C17.0376 2.91666 18.7086 4.16666 18.7086 7.08333V12.9167C18.7086 15.8333 17.0376 17.0833 14.5311 17.0833H6.17605"
                     stroke="#84818A"
-                    stroke-width="1.5"
-                    stroke-miterlimit="10"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
+                    strokeWidth="1.5"
+                    strokeMiterlimit="10"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
                   />
                   <path
                     d="M14.5311 7.5L11.9159 9.58333C11.0554 10.2667 9.64336 10.2667 8.78279 9.58333L6.17603 7.5"
                     stroke="#84818A"
-                    stroke-width="1.5"
-                    stroke-miterlimit="10"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
+                    strokeWidth="1.5"
+                    strokeMiterlimit="10"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
                   />
                   <path
                     d="M1.99854 13.75H7.01155"
                     stroke="#84818A"
-                    stroke-width="1.5"
-                    stroke-miterlimit="10"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
+                    strokeWidth="1.5"
+                    strokeMiterlimit="10"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
                   />
                   <path
                     d="M1.99854 10.4167H4.50504"
                     stroke="#84818A"
-                    stroke-width="1.5"
-                    stroke-miterlimit="10"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
+                    strokeWidth="1.5"
+                    strokeMiterlimit="10"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
                   />
                 </svg>
                 On Going
@@ -327,14 +357,17 @@ const MessageTabs = ({ setActiveTab, setIsOpen, isExpanded, setIsExpanded, activ
               </div>
             </div>
 
-            <div className="rd-send-message rd-text-center rd-px-18 rd-py-15">
-              <a href="#" className="button no-bg rd-flex rd-align-center rd-gap-10">
-               Add Ticket
-               <RiPencilFill />
-              </a>
+            <div className="rd-send-message rd-text-center rd-px-18 rd-py-15 rd-flex rd-justify-center">
+              <button
+                className="button no-bg rd-flex rd-align-center rd-gap-10 rd-cursor-pointer"
+                onClick={handleAddTicket}
+              >
+                Add Ticket
+                <RiPencilFill />
+              </button>
             </div>
-            </div>
-            <Footer activeTab={activeTab} setActiveTab={setActiveTab} />
+          </div>
+          <Footer activeTab={activeTab} setActiveTab={setActiveTab} />
         </>
       )}
     </div>
