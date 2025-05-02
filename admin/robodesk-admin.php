@@ -24,7 +24,7 @@ function robodesk_add_admin_menu()
         'edit.php?post_type=robodesk_ticket',
         'All Tickets',
         'All Tickets',
-        'edit_tickets',
+        'edit_posts',
         'edit.php?post_type=robodesk_ticket'
     );
 
@@ -32,7 +32,7 @@ function robodesk_add_admin_menu()
         'edit.php?post_type=robodesk_ticket',
         'Add New Ticket',
         'Add New Ticket',
-        'edit_tickets',
+        'edit_posts',
         'post-new.php?post_type=robodesk_ticket'
     );
     add_submenu_page(
