@@ -183,4 +183,4 @@ register_rest_field( 'robodesk_faq', 'author_name', array(
 ) );
 
 
-// Filter FAQs by featured with transient caching
+// Filter FAQs by featured with transient caching //removed cached
