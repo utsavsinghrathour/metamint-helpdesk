@@ -156,102 +156,31 @@ function robodesk_save_featured_metabox($post_id) {
 
 
 
-// add_filter('rest_robodesk_faq_query', 'robodesk_filter_faqs_by_featured', 10, 2);
-// function robodesk_filter_faqs_by_featured($args, $request) {
-
-//     if (isset($request['featured']) && $request['featured'] === 'true') {
-//         $args['meta_query'] = array(
-//             array(
-//                 'key' => '_robodesk_featured',
-//                 'value' => 'true',
-//                 'compare' => '='
-//             )
-//         );
-      
-//     }
-//     return $args;
-// }
-
-
-// register_rest_field( 'robodesk_faq', 'author_name', array(
-//     'get_callback' => function( $post_arr ) {
-//         $post_id = $post_arr['id'];
-//         $post = get_post( $post_id );
-//         $author = get_userdata( $post->post_author );
-//         return $author ? $author->display_name : false;
-//     },
-// ) );
-
-
-// Filter FAQs by featured with transient caching
 add_filter('rest_robodesk_faq_query', 'robodesk_filter_faqs_by_featured', 10, 2);
 function robodesk_filter_faqs_by_featured($args, $request) {
-    // Generate a cache key based on request parameters
-    $cache_key = 'robodesk_faqs_' . md5(serialize($request->get_params()));
-    $cached = get_transient($cache_key);
-    
-    if ($cached !== false) {
-        return $cached;
-    }
-    
-    // Add meta query for featured FAQs
+
     if (isset($request['featured']) && $request['featured'] === 'true') {
         $args['meta_query'] = array(
             array(
-                'key'     => '_robodesk_featured',
-                'value'   => 'true',
+                'key' => '_robodesk_featured',
+                'value' => 'true',
                 'compare' => '='
             )
         );
+      
     }
-    
-    // Cache the query args for 1 hour
-    set_transient($cache_key, $args, HOUR_IN_SECONDS);
     return $args;
 }
 
-// Clear cache when a FAQ is updated
-add_action('save_post_robodesk_faq', function($post_id, $post, $update) {
-    global $wpdb;
-    // Clear all FAQ-related transients
-    $wpdb->query("DELETE FROM {$wpdb->options} WHERE option_name LIKE '_transient_robodesk_faqs_%' OR option_name LIKE '_transient_timeout_robodesk_faqs_%'");
-}, 10, 3);
 
-// Add author_name field efficiently
-add_filter('rest_prepare_robodesk_faq', function($response, $post, $request) {
-    static $users_cache = array();
-    
-    // Collect author IDs
-    $author_ids = array();
-    if (isset($response->data['id'])) {
-        // Single FAQ response
-        $author_ids[] = $post->post_author;
-    } elseif (is_array($response->data)) {
-        // Collection response
-        $author_ids = array_unique(wp_list_pluck($response->data, 'author'));
-    }
-    
-    // Preload user data in bulk
-    if (!empty($author_ids)) {
-        $users = get_users(array(
-            'include' => $author_ids,
-            'fields'  => array('ID', 'display_name'),
-        ));
-        foreach ($users as $user) {
-            $users_cache[$user->ID] = $user->display_name;
-        }
-    }
-    
-    // Add author_name to response
-    if (isset($response->data['id'])) {
-        // Single FAQ
-        $response->data['author_name'] = isset($users_cache[$post->post_author]) ? $users_cache[$post->post_author] : false;
-    } elseif (is_array($response->data)) {
-        // Collection of FAQs
-        foreach ($response->data as &$item) {
-            $item['author_name'] = isset($users_cache[$item['author']]) ? $users_cache[$item['author']] : false;
-        }
-    }
-    
-    return $response;
-}, 10, 3);
+register_rest_field( 'robodesk_faq', 'author_name', array(
+    'get_callback' => function( $post_arr ) {
+        $post_id = $post_arr['id'];
+        $post = get_post( $post_id );
+        $author = get_userdata( $post->post_author );
+        return $author ? $author->display_name : false;
+    },
+) );
+
+
+// Filter FAQs by featured with transient caching
