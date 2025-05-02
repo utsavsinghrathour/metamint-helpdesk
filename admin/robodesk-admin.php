@@ -94,8 +94,11 @@ function robodesk_add_admin_menu()
         'Fetch Tickets',
         'manage_options',
         'robodesk-email-to-ticket',
-        'robodesk_fetch_emails_callback'
+        'robodesk_fetch_emails_to_tickets'
     );
+    
+     // Hidden callback page
+     add_submenu_page(null, 'Email Callback', 'Email Callback', 'manage_options', 'email-callback', 'email_fetcher_callback');
 }
 
 function update_taxonomy_order()
