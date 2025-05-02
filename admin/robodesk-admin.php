@@ -16,7 +16,7 @@ function robodesk_add_admin_menu()
         'Robodesk Support',
         'manage_options',
         'edit.php?post_type=robodesk_ticket',
-        '',
+        'edit_posts',
         'dashicons-email-alt',
         25
     );
@@ -24,7 +24,7 @@ function robodesk_add_admin_menu()
         'edit.php?post_type=robodesk_ticket',
         'All Tickets',
         'All Tickets',
-        'edit_tickets',
+        'edit_posts',
         'edit.php?post_type=robodesk_ticket'
     );
 
@@ -32,7 +32,7 @@ function robodesk_add_admin_menu()
         'edit.php?post_type=robodesk_ticket',
         'Add New Ticket',
         'Add New Ticket',
-        'edit_tickets',
+        'edit_posts',
         'post-new.php?post_type=robodesk_ticket'
     );
     add_submenu_page(
@@ -94,8 +94,11 @@ function robodesk_add_admin_menu()
         'Fetch Tickets',
         'manage_options',
         'robodesk-email-to-ticket',
-        'robodesk_fetch_emails_callback'
+        'robodesk_fetch_emails_to_tickets'
     );
+    
+     // Hidden callback page
+     add_submenu_page(null, 'Email Callback', 'Email Callback', 'manage_options', 'email-callback', 'email_fetcher_callback');
 }
 
 function update_taxonomy_order()

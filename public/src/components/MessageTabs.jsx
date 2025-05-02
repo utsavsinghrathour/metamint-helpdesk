@@ -6,7 +6,7 @@ import Author2 from '../images/person2.jpeg';
 import { LuDot } from 'react-icons/lu';
 import { RiPencilFill } from 'react-icons/ri';
 import Footer from './Footer';
-import Preloader from '../images/preloader.svg'; // Adjust the path based on your project structure
+import Preloader from '../images/preloader.svg';
 
 const SingleTicket = React.lazy(() => import('./SingleTicket'));
 
