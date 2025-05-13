@@ -1,4 +1,4 @@
-import React, { useState, Suspense } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import { FaChevronRight, FaChevronLeft } from 'react-icons/fa';
 import '../styles/MessageTabs.css';
 import Author1 from '../images/person1.jpeg';
@@ -7,6 +7,7 @@ import { LuDot } from 'react-icons/lu';
 import { RiPencilFill } from 'react-icons/ri';
 import Footer from './Footer';
 import Preloader from '../images/preloader.svg';
+import axios from 'axios'; // For making API requests
 
 const SingleTicket = React.lazy(() => import('./SingleTicket'));
 
@@ -59,112 +60,84 @@ const MessageTabs = ({ setActiveTab, setIsOpen, isExpanded, setIsExpanded, activ
   const [selectedTicket, setSelectedTicket] = useState(null);
   const [currentTab, setCurrentTab] = useState('all');
   const [priorityFilter, setPriorityFilter] = useState('all');
+  const [tickets, setTickets] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const tickets = [
-    // New Tickets
-    {
-      id: 1,
-      ticketNumber: 'TCKT-001',
-      title: 'How can we assist you today?',
-      source: 'White Label WP',
-      timeAgo: '4d ago',
-      authorImage: Author1,
-      status: 'new',
-      priority: 'Medium',
-      messages: [
-        { id: 1, text: 'Hi, how can I help you today?', sender: 'other', image: Author1 },
-        { id: 2, text: 'I need assistance with my website.', sender: 'me' },
-      ],
-    },
-    {
-      id: 2,
-      ticketNumber: 'TCKT-002',
-      title: 'Payment gateway not working',
-      source: 'White Label WP',
-      timeAgo: '2d ago',
-      authorImage: Author2,
-      status: 'new',
-      priority: 'Urgent',
-      messages: [
-        { id: 1, text: 'My payment gateway is down.', sender: 'me' },
-        { id: 2, text: 'We’re looking into it, please wait.', sender: 'other', image: Author2 },
-      ],
-    },
-    // On Going Tickets
-    {
-      id: 3,
-      ticketNumber: 'TCKT-003',
-      title: 'Need help with SEO',
-      source: 'White Label WP',
-      timeAgo: '1d ago',
-      authorImage: Author1,
-      status: 'ongoing',
-      priority: 'Low',
-      messages: [
-        { id: 1, text: 'Can you improve my site’s SEO?', sender: 'me' },
-        { id: 2, text: 'Yes, let’s discuss your goals.', sender: 'other', image: Author1 },
-      ],
-    },
-    {
-      id: 4,
-      ticketNumber: 'TCKT-004',
-      title: 'Plugin installation issue',
-      source: 'White Label WP',
-      timeAgo: '3h ago',
-      authorImage: Author2,
-      status: 'ongoing',
-      priority: 'Medium',
-      messages: [
-        { id: 1, text: 'The plugin won’t install.', sender: 'me' },
-        { id: 2, text: 'Can you share the error message?', sender: 'other', image: Author2 },
-      ],
-    },
-    // Resolved Tickets
-    {
-      id: 5,
-      ticketNumber: 'TCKT-005',
-      title: 'Website down issue resolved',
-      source: 'White Label WP',
-      timeAgo: '5d ago',
-      authorImage: Author2,
-      status: 'resolved',
-      priority: 'Urgent',
-      messages: [
-        { id: 1, text: 'My website is down!', sender: 'me' },
-        { id: 2, text: 'We’ve fixed the issue, it’s back up.', sender: 'other', image: Author2 },
-        { id: 3, text: 'Thanks, it’s working now!', sender: 'me' },
-      ],
-    },
-    {
-      id: 6,
-      ticketNumber: 'TCKT-006',
-      title: 'Billing question answered',
-      source: 'White Label WP',
-      timeAgo: '1w ago',
-      authorImage: Author1,
-      status: 'resolved',
-      priority: 'Low',
-      messages: [
-        { id: 1, text: 'Why was I charged twice?', sender: 'me' },
-        { id: 2, text: 'It was a glitch, refunded now.', sender: 'other', image: Author1 },
-      ],
-    },
-    {
-      id: 7,
-      ticketNumber: 'TCKT-007',
-      title: 'Theme update completed',
-      source: 'White Label WP',
-      timeAgo: '2w ago',
-      authorImage: Author2,
-      status: 'resolved',
-      priority: 'Medium',
-      messages: [
-        { id: 1, text: 'Can you update my theme?', sender: 'me' },
-        { id: 2, text: 'Theme updated successfully.', sender: 'other', image: Author2 },
-        { id: 3, text: 'Great, thanks!', sender: 'me' },
-      ],
-    },
-  ];
+  // Fetch tickets from WordPress REST API
+  useEffect(() => {
+    const fetchTickets = async () => {
+      try {
+        setLoading(true);
+        const response = await axios.get('/wp-json/wp/v2/robodesk_ticket', {
+          params: {
+            per_page: 100,
+            _embed: 'wp:comment', // Only embed comments, as terms are directly included
+          },
+        });
+  
+        const mappedTickets = response.data.map((post) => {
+          // Get priority term (keep embedded logic if priority is not directly included)
+          const priorityTerm = post._embedded?.['wp:term']?.find((tax) =>
+            tax.some((t) => t.taxonomy === 'robodesk_ticket_priority')
+          )?.[0]?.name || post.robodesk_ticket_priority?.[0] || 'Medium';
+  
+          // Get source (origin) term directly from post
+          const sourceTerm = post.robodesk_ticket_origin && post.robodesk_ticket_origin.length > 0 
+            ? post.robodesk_ticket_origin[0] 
+            : 'Unknown';
+          console.log(`Ticket ID ${post.id} - Origin:`, post.robodesk_ticket_origin, 'Selected Source:', sourceTerm);
+  
+          // Get comments (ticket replies)
+          const messages = post._embedded?.['wp:comment']
+            ?.filter((comment) => comment.type === 'ticket_replies')
+            ?.map((comment) => ({
+              id: comment.id,
+              text: comment.content.rendered.replace(/<[^>]+>/g, ''),
+              sender: comment.author === 0 ? 'me' : 'other',
+              image: comment.author === 0 ? Author1 : Author2,
+            })) || [];
+  
+          // Calculate time ago
+          const postDate = new Date(post.date);
+          const now = new Date();
+          const diffInSeconds = Math.floor((now - postDate) / 1000);
+          let timeAgo = 'Just now';
+          if (diffInSeconds >= 60 * 60 * 24 * 7) {
+            timeAgo = `${Math.floor(diffInSeconds / (60 * 60 * 24 * 7))}w ago`;
+          } else if (diffInSeconds >= 60 * 60 * 24) {
+            timeAgo = `${Math.floor(diffInSeconds / (60 * 60 * 24))}d ago`;
+          } else if (diffInSeconds >= 60 * 60) {
+            timeAgo = `${Math.floor(diffInSeconds / (60 * 60))}h ago`;
+          } else if (diffInSeconds >= 60) {
+            timeAgo = `${Math.floor(diffInSeconds / 60)}m ago`;
+          }
+  
+          // Determine status
+          const status = post.ticket_status || 'new';
+  
+          return {
+            id: post.id,
+            ticketNumber: post.ticket_number || `TCKT-${String(post.id).padStart(3, '0')}`,
+            title: post.title.rendered,
+            source: sourceTerm,
+            timeAgo,
+            authorImage: post.author_image || (post.id % 2 === 0 ? Author1 : Author2),
+            status,
+            priority: priorityTerm,
+            messages,
+          };
+        });
+  
+        setTickets(mappedTickets);
+        setLoading(false);
+      } catch (error) {
+        console.error('Error fetching tickets:', error);
+        setLoading(false);
+      }
+    };
+  
+    fetchTickets();
+  }, []);
 
   const handleBackToHome = () => {
     console.log('handleBackToHome called');
@@ -174,20 +147,51 @@ const MessageTabs = ({ setActiveTab, setIsOpen, isExpanded, setIsExpanded, activ
     }
   };
 
-  const handleAddTicket = () => {
-    // Create a new ticket with no messages
-    const newTicket = {
-      id: tickets.length + 1, // Simple ID generation; replace with proper logic if needed
-      ticketNumber: `TCKT-${String(tickets.length + 1).padStart(3, '0')}`,
-      title: 'New Ticket',
-      source: 'White Label WP',
-      timeAgo: 'Just now',
-      authorImage: Author1, // Default image; adjust as needed
-      status: 'new',
-      priority: 'Medium', // Default priority; adjust as needed
-      messages: [], // Empty messages array
-    };
-    setSelectedTicket(newTicket);
+  const handleAddTicket = async () => {
+    try {
+      const defaultOrigin = 'Web'; // Use a valid term slug (e.g., 'Web', 'Email')
+  
+      const response = await axios.post(
+        '/wp-json/wp/v2/robodesk_ticket',
+        {
+          title: 'New Ticket',
+          status: 'publish',
+          ticket_status: 'new',
+          ticket_number: `TCKT-${String(tickets.length + 1).padStart(3, '0')}`,
+          tax_input: {
+            robodesk_ticket_priority: 'Medium',
+            robodesk_ticket_origin: defaultOrigin,
+          },
+        },
+        {
+          headers: {
+            'X-WP-Nonce': window.wpApiSettings.nonce,
+          },
+        }
+      );
+  
+      // Use the origin directly from the response
+      const sourceTerm = response.data.robodesk_ticket_origin && response.data.robodesk_ticket_origin.length > 0 
+        ? response.data.robodesk_ticket_origin[0] 
+        : defaultOrigin;
+  
+      const newTicket = {
+        id: response.data.id,
+        ticketNumber: response.data.ticket_number || `TCKT-${String(tickets.length + 1).padStart(3, '0')}`,
+        title: response.data.title.rendered,
+        source: sourceTerm,
+        timeAgo: 'Just now',
+        authorImage: Author1,
+        status: 'new',
+        priority: 'Medium',
+        messages: [],
+      };
+  
+      setTickets([newTicket, ...tickets]);
+      setSelectedTicket(newTicket);
+    } catch (error) {
+      console.error('Error creating ticket:', error);
+    }
   };
 
   const filteredTickets = tickets.filter((ticket) => {
@@ -253,7 +257,7 @@ const MessageTabs = ({ setActiveTab, setIsOpen, isExpanded, setIsExpanded, activ
                 <option value="resolved">Resolved</option>
               </select>
               <button
-                className={`rd-p-0 rd-cursor-pointer rd-flex rd-gap-8 rd-align-center rd-color-gray rd-title-text ticket-tab rd-px-10 rd-py-5 rd-bg-transparent rd-border-none ${
+                className={`rd-hover-underline rd-p-0 rd-cursor-pointer rd-flex rd-gap-8 rd-align-center rd-color-gray rd-title-text ticket-tab rd-px-10 rd-py-5 rd-bg-transparent rd-border-none ${
                   currentTab === 'new' ? 'rd-text-blue rd-font-bold active-ticket-tab' : 'rd-text-gray'
                 }`}
                 onClick={() => setCurrentTab('new')}
@@ -293,7 +297,7 @@ const MessageTabs = ({ setActiveTab, setIsOpen, isExpanded, setIsExpanded, activ
                 New
               </button>
               <button
-                className={`rd-p-0 rd-cursor-pointer ticket-tab rd-flex rd-gap-8 rd-align-center rd-color-gray rd-title-text rd-px-10 rd-py-5 rd-bg-transparent rd-border-none ${
+                className={`rd-hover-underline rd-p-0 rd-cursor-pointer ticket-tab rd-flex rd-gap-8 rd-align-center rd-color-gray rd-title-text rd-px-10 rd-py-5 rd-bg-transparent rd-border-none ${
                   currentTab === 'ongoing' ? 'rd-text-blue rd-font-bold active-ticket-tab' : 'rd-text-gray'
                 }`}
                 onClick={() => setCurrentTab('ongoing')}
@@ -346,12 +350,14 @@ const MessageTabs = ({ setActiveTab, setIsOpen, isExpanded, setIsExpanded, activ
             <div className="rd-messge-wrapper">
               <div className="rd-tickets">
                 <div className="rd-active-tickets-wrap">
-                  {filteredTickets.length > 0 ? (
+                  {loading ? (
+                    <img src={Preloader} alt="Loading" className="rd-preloader" />
+                  ) : filteredTickets.length > 0 ? (
                     filteredTickets.map((ticket) => (
                       <TicketItem key={ticket.id} ticket={ticket} onSelect={setSelectedTicket} />
                     ))
                   ) : (
-                    <p className="rd-text-center rd-text-gray">No tickets found</p>
+                    <p className="rd-text-center rd-text-gray rd-m-5 err_msg">No tickets found</p>
                   )}
                 </div>
               </div>

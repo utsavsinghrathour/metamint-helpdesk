@@ -70,11 +70,7 @@
   .rd-like.liked svg path {
     fill: #004AFF;
   }
-  
-  .rd-dislike.disliked svg path {
-    fill: #555555;
-  }
-  
+    
   .rd-border-bottom-light {
     border-bottom: 1px solid #e0e0e0;
   }

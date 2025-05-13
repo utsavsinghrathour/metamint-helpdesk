@@ -3,19 +3,58 @@ import { FaChevronLeft } from 'react-icons/fa';
 import { FaRegFaceSmileBeam } from 'react-icons/fa6';
 import { PiPaperPlaneRightFill } from 'react-icons/pi';
 import { FiPaperclip } from 'react-icons/fi';
+import { LuDot } from 'react-icons/lu';
+import { IoClose } from 'react-icons/io5';
 import EmojiPicker from 'emoji-picker-react';
 import Logo from '../images/wooescrow-logo.png';
 import '../styles/MessageTabs.css';
-import { IoClose } from "react-icons/io5";
+import axios from 'axios';
 
 const SingleTicket = ({ ticket, onBack }) => {
   const [message, setMessage] = useState('');
   const [showPicker, setShowPicker] = useState(false);
   const [previewImage, setPreviewImage] = useState(null);
-  const [chatMessages, setChatMessages] = useState(ticket.messages || []); // Use ticket.messages
+  const [chatMessages, setChatMessages] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const textareaRef = useRef(null);
   const fileInputRef = useRef(null);
   const chatContainerRef = useRef(null);
+
+  // Fetch messages from WordPress
+  const fetchMessages = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const response = await axios.get('/wp-json/wp/v2/comments', {
+        params: {
+          post: ticket.id,
+          type: 'ticket_replies',
+          per_page: 100,
+        },
+      });
+
+      const messages = response.data.map((comment) => ({
+        id: comment.id,
+        text: comment.content.rendered.replace(/<[^>]+>/g, ''),
+        sender: comment.author === 0 ? 'me' : 'other', // Adjust based on user ID
+        image: comment.author === 0 ? '/path/to/me.jpg' : '/path/to/other.jpg', // Replace with actual images
+        created_at: comment.date,
+      }));
+
+      setChatMessages(messages);
+      setLoading(false);
+    } catch (err) {
+      console.error('Error fetching messages:', err);
+      setError('Failed to load messages. Please try again.');
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    console.log('SingleTicket ticket prop:', ticket);
+    fetchMessages();
+  }, [ticket.id]);
 
   useEffect(() => {
     const textarea = textareaRef.current;
@@ -32,19 +71,44 @@ const SingleTicket = ({ ticket, onBack }) => {
     }
   }, [chatMessages]);
 
-  const handleSend = () => {
+  const handleSend = async () => {
     if (message.trim() || previewImage) {
-      setChatMessages((prev) => [
-        ...prev,
-        { 
-          id: Date.now(), 
-          text: message || '', 
+      try {
+        const newMessage = {
+          id: Date.now(),
+          text: message || '',
           sender: 'me',
-          ...(previewImage && { imageUrl: previewImage })
-        },
-      ]);
-      setMessage('');
-      setPreviewImage(null);
+          created_at: new Date().toISOString(),
+          ...(previewImage && { imageUrl: previewImage }),
+        };
+
+        setChatMessages((prev) => [...prev, newMessage]);
+
+        await axios.post(
+          '/wp-json/wp/v2/comments',
+          {
+            post: ticket.id,
+            content: message || (previewImage ? 'Image attachment' : ''),
+            type: 'ticket_replies',
+            author: 0, // Adjust based on user authentication
+          },
+          {
+            headers: {
+              'X-WP-Nonce': window.wpApiSettings.nonce,
+            },
+          }
+        );
+
+        // Refresh messages to get server data
+        await fetchMessages();
+
+        setMessage('');
+        setPreviewImage(null);
+      } catch (err) {
+        console.error('Error sending message:', err);
+        setChatMessages((prev) => prev.filter((msg) => msg.id !== newMessage.id));
+        setError('Failed to send message. Please try again.');
+      }
     }
   };
 
@@ -73,16 +137,22 @@ const SingleTicket = ({ ticket, onBack }) => {
     fileInputRef.current.click();
   };
 
+  const formatTimestamp = (timestamp) => {
+    const date = new Date(timestamp);
+    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  };
+
   return (
     <div className="rd-single-ticket rd-flex rd-flex-col rd-h-full">
       <div className="single-ticket-header rd-flex-col rd-flex rd-align-center rd-justify-between rd-border-bottom-light rd-px-18 rd-py-15">
         <div className="rd-flex rd-align-center">
           <button
-            className="icon-dark back-button rd-flex rd-items-center rd-bg-transparent rd-border-none  rd-p-0 rd-m-0 rd-back-arrow-position"
+            className="icon-dark back-button rd-flex rd-items-center rd-bg-transparent rd-border-none rd-p-0 rd-m-0 rd-back-arrow-position"
             onClick={onBack}
           >
             <FaChevronLeft />
           </button>
+          
           <img src={Logo} alt="Plugin Logo" className="rd-h-auto rd-header-logo" />
         </div>
         <div className="rd-body-text rd-mt-30">
@@ -92,60 +162,97 @@ const SingleTicket = ({ ticket, onBack }) => {
           </p>
         </div>
       </div>
-      <div 
+      <div
         ref={chatContainerRef}
         className="chat-container rd-flex rd-flex-col rd-flex-grow rd-px-18 rd-py-15 rd-overflow-auto"
       >
-        {chatMessages.map((msg) => (
-          <div
-            key={msg.id}
-            className={`chat-message rd-mb-10 rd-flex rd-align-center ${
-              msg.sender === 'me' ? 'rd-ml-auto rd-bg-light-gray sent' : 'rd-flex rd-items-start rd-gap-8 recieved'
-            }`}
-            style={{
-              maxWidth: '70%',
-              borderRadius: '10px',
-              backgroundColor: msg.sender === 'me' ? '#EEEEEE' : 'transparent',
-              marginLeft: msg.sender === 'me' ? 'auto' : '0',
-              padding: msg.sender === 'me' ? '8px 16px' : '0',
-            }}
-          >
-            {msg.sender === 'other' && (
-              <img
-                src={msg.image}
-                alt="Sender"
-                className="rd-rounded-full rd-object-cover"
-                style={{ height: '30px', width: '30px', borderRadius: '50px', aspectRatio: '1', }}
-              />
-            )}
-            {msg.text && <span className="rd-body-text single-message">{msg.text}</span>}
-            {msg.imageUrl && (
-              <img
-                src={msg.imageUrl}
-                alt="Uploaded"
-                className="rd-max-w-full rd-h-auto rd-rounded"
-                style={{ maxWidth: '200px' }}
-              />
-            )}
-          </div>
-        ))}
+        {loading ? (
+          <p className="rd-text-center rd-body-text">Loading messages...</p>
+        ) : error ? (
+          <p className="err_msg rd-text-center">{error}</p>
+        ) : chatMessages.length === 0 ? (
+          <p className="rd-text-center rd-body-text">No messages yet.</p>
+        ) : (
+          chatMessages.map((msg, index) => {
+            const prevMsg = index > 0 ? chatMessages[index - 1] : null;
+            const isSameSender = prevMsg && prevMsg.sender === msg.sender;
+            const marginBottom = isSameSender ? '4px' : '12px';
+
+            return (
+              <div
+                key={msg.id}
+                className={`chat-message rd-flex rd-items-start ${
+                  msg.sender === 'me' ? 'rd-ml-auto sent' : 'rd-flex rd-gap-8 received'
+                }`}
+                style={{
+                  maxWidth: '70%',
+                  marginBottom,
+                  marginTop: index === 0 || !isSameSender ? '12px' : '4px',
+                }}
+              >
+                {msg.sender === 'other' && !isSameSender && (
+                  <img
+                    src={msg.image}
+                    alt="Sender"
+                    className="rd-rounded-full rd-object-cover"
+                    style={{ height: '30px', width: '30px', borderRadius: '50px', aspectRatio: '1' }}
+                  />
+                )}
+                {msg.sender === 'other' && isSameSender && (
+                  <div style={{ width: '30px', height: '30px' }} />
+                )}
+                <div
+                  className="message-content"
+                  style={{
+                    backgroundColor: msg.sender === 'me' ? '#007BFF' : '#FFFFFF',
+                    color: msg.sender === 'me' ? '#FFFFFF' : '#000000',
+                    border: msg.sender === 'other' ? '1px solid #E0E0E0' : 'none',
+                    borderRadius: '10px',
+                    padding: '8px 12px',
+                    maxWidth: '100%',
+                  }}
+                >
+                  {msg.text && <span className="rd-body-text single-message">{msg.text}</span>}
+                  {msg.imageUrl && (
+                    <img
+                      src={msg.imageUrl}
+                      alt="Uploaded"
+                      className="rd-max-w-full rd-h-auto rd-rounded"
+                      style={{ maxWidth: '200px', marginTop: msg.text ? '8px' : '0' }}
+                    />
+                  )}
+                  <div
+                    className="rd-text-small rd-text-gray"
+                    style={{
+                      marginTop: '4px',
+                      textAlign: msg.sender === 'me' ? 'right' : 'left',
+                      fontSize: '0.75rem',
+                    }}
+                  >
+                    {formatTimestamp(msg.created_at)}
+                  </div>
+                </div>
+              </div>
+            );
+          })
+        )}
       </div>
       <div className="chat-input rd-flex rd-flex-col rd-px-18 rd-py-15 rd-border-top-light rd-bg-white">
         {previewImage && (
           <div className="rd-mb-10 rd-flex rd-align-center">
-            <div className='rd-position-relative'>
-            <img
-              src={previewImage}
-              alt="Preview"
-              className="rd-max-w-full rd-h-auto rd-border-radius-md"
-              style={{ maxWidth: '80px' }}
-            />
-            <button
-              onClick={() => setPreviewImage(null)}
-              className="rd-ml-10 rd-text-red-500 rd-border-none rd-cursor-pointer remove-preview rd-position-absolute rd-p-0"
-            >
-              <IoClose />
-            </button>
+            <div className="rd-position-relative">
+              <img
+                src={previewImage}
+                alt="Preview"
+                className="rd-max-w-full rd-h-auto rd-border-radius-md"
+                style={{ maxWidth: '80px' }}
+              />
+              <button
+                onClick={() => setPreviewImage(null)}
+                className="rd-ml-10 rd-text-red-500 rd-border-none rd-cursor-pointer remove-preview rd-position-absolute rd-p-0"
+              >
+                <IoClose />
+              </button>
             </div>
           </div>
         )}
@@ -176,7 +283,7 @@ const SingleTicket = ({ ticket, onBack }) => {
                 <EmojiPicker onEmojiClick={handleEmojiClick} />
               </div>
             )}
-            <div className='rd-flex'>
+            <div className="rd-flex">
               <input
                 type="file"
                 ref={fileInputRef}

@@ -21,6 +21,7 @@
 .rd-messge-wrapper {
   max-height: 220px;
   overflow: auto;
+  min-height: 220px;
 }
 
 .rd-send-message a {
