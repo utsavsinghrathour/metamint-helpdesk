@@ -241,3 +241,17 @@ function rbd_log($message) {
 
     error_log(date('[Y-m-d H:i:s] ') . $message . PHP_EOL, 3, $log_file);
 }
+
+if ( is_admin() ) {
+    add_filter( 'use_block_editor_for_post', 'disable_block_for_post_type', 10, 2 );
+}
+
+function disable_block_for_post_type( $use_block_editor, $post ) {
+    if ( 'robodesk_faq' === $post->post_type ) {
+        return false;
+    };
+    if ( 'notice' === $post->post_type ) {
+        return false;
+    };
+    return $use_block_editor;
+}
