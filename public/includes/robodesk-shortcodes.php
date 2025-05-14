@@ -152,7 +152,9 @@ function robodesk_my_tickets_shortcode()
     );
 
     $selected_priority = isset($_GET['robodesk_ticket_priority']) ? sanitize_text_field($_GET['robodesk_ticket_priority']) : '';
-    $selected_status = isset($_GET['robodesk_ticket_status']) ? sanitize_text_field($_GET['robodesk_ticket_status']) : 'active-tickets';
+    $selected_status =  isset($_GET['robodesk_ticket_status']) ? sanitize_text_field($_GET['robodesk_ticket_status']) : 'active-tickets';
+    
+    // var_dump($selected_status);
 
     if (!empty($selected_priority)) {
         $args['tax_query'] = array(
@@ -176,6 +178,11 @@ function robodesk_my_tickets_shortcode()
             array(
                 'key' => '_robodesk_ticket_status',
                 'value' => 'in-progress',
+                'compare' => '=',
+            ),
+            array(
+                'key' => '_robodesk_ticket_status',
+                'value' => 'new',
                 'compare' => '=',
             ),
         );
@@ -208,6 +215,7 @@ function robodesk_my_tickets_shortcode()
         'in-progress' => 'In Progress',
         'archived' => 'Archived',
         'closed' => 'Closed',
+        
     ];
 
     ob_start();
@@ -256,6 +264,7 @@ function robodesk_my_tickets_shortcode()
                     $status = get_post_meta(get_the_ID(), '_robodesk_ticket_status', true);
                     $terms = get_the_terms(get_the_ID(), 'robodesk_ticket_priority');
                     $comment_count = get_comments_number(get_the_ID());
+                   
                     $priority_name = '';
                     $priority_color = false;
                     if ($terms && !is_wp_error($terms)) {
@@ -286,7 +295,7 @@ function robodesk_my_tickets_shortcode()
                             <a href="<?php echo esc_url($ticket_url); ?>"><?php the_title(); ?></a>
 
                             <p class="ticket-date">
-                            <span class="ticket-num"><?php echo '#'.get_the_id(); ?></span> <span class="dashicons-calendar"> <?php  echo get_the_date('m/d/Y'); ?></span></p>
+                            <span class="ticket-num"><?php echo '#'.get_the_id(); ?></span> |<span class="dashicons-calendar"><?php  echo get_the_date('m/d/Y'); ?></span></p>
                         </td>
                         <td><?php echo  $comment_count; ?></td>
                         <td><?php echo $human_readable_time ? $human_readable_time . ' ago' : '-' ?><p class="ticket-comment-by">by <?php echo $comment_author; ?></p>
@@ -927,9 +936,7 @@ function robodesk_single_ticket_shortcode($atts)
     ob_start();
     /**  
     
-    <td><?php echo $human_readable_time ? $human_readable_time .' ago' : '-'?></td>
-    <td><span class="robodesk-status-pill <?php echo strtolower($status); ?>"> <?php echo esc_html(ucwords($status)); ?></span></td>
-    <td><span data-color="<?php echo esc_attr($priority_color); ?>" class="robodesk-priority-pill <?php echo strtolower($priority_name);?>" style="background:<?php echo esc_attr($priority_color) ?>"><?php echo esc_html($priority_name); ?></span></td>
+    
      */
 ?>
     <div class="robodesk-single-ticket robodesk-container">

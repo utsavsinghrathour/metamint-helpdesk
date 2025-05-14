@@ -51,7 +51,7 @@ function robodesk_create_new_ticket_callback()
     if (is_wp_error($post_id)) {
         wp_send_json_error(array('message' => $post_id->get_error_message()));
     } else {
-        update_post_meta($post_id, '_robodesk_ticket_status', 'new');
+        update_post_meta($post_id, '_robodesk_ticket_status', 'open');
         if ($priority > 0) {
             wp_set_object_terms($post_id, $priority, 'robodesk_ticket_priority');
         }
