@@ -430,4 +430,4 @@ function robodesk_reply_email($comment_id, $comment_approved)
         }
     }
 }
-add_action('comment_post', 'robodesk_reply_email', 10, 2);
+add_action('comment_post', 'robodesk_reply_email', 10, 2);// Hook to send email when a comment is posted
