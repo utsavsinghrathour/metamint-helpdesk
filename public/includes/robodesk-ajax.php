@@ -31,7 +31,7 @@ function robodesk_create_new_ticket_callback()
 
     $title = isset($_POST['ticket_title']) ? sanitize_text_field($_POST['ticket_title']) : '';
     $content = isset($_POST['ticket_content']) ? wp_kses_post($_POST['ticket_content']) : '';
-    $priority = isset($_POST['ticket_priority']) ? (int)$_POST['ticket_priority'] : 0;
+    $priority = isset($_POST['ticket_priority']) ? (int)$_POST['ticket_priority'] : 'medium';
     $user_id = get_current_user_id();
 
     if (empty($title) || empty($content)) {
@@ -54,6 +54,8 @@ function robodesk_create_new_ticket_callback()
         update_post_meta($post_id, '_robodesk_ticket_status', 'open');
         if ($priority > 0) {
             wp_set_object_terms($post_id, $priority, 'robodesk_ticket_priority');
+        }else{
+          
         }
         
         $origin =  create_term_if_not_exists();

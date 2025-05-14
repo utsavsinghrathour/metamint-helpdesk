@@ -154,7 +154,7 @@ function robodesk_my_tickets_shortcode()
     $selected_priority = isset($_GET['robodesk_ticket_priority']) ? sanitize_text_field($_GET['robodesk_ticket_priority']) : '';
     $selected_status =  isset($_GET['robodesk_ticket_status']) ? sanitize_text_field($_GET['robodesk_ticket_status']) : 'active-tickets';
     
-    // var_dump($selected_status);
+
 
     if (!empty($selected_priority)) {
         $args['tax_query'] = array(
@@ -178,11 +178,6 @@ function robodesk_my_tickets_shortcode()
             array(
                 'key' => '_robodesk_ticket_status',
                 'value' => 'in-progress',
-                'compare' => '=',
-            ),
-            array(
-                'key' => '_robodesk_ticket_status',
-                'value' => 'new',
                 'compare' => '=',
             ),
         );
