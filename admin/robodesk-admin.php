@@ -94,7 +94,7 @@ function robodesk_add_admin_menu()
         'Fetch Tickets',
         'manage_options',
         'robodesk-email-to-ticket',
-        'robodesk_fetch_emails_to_tickets'
+        'robodesk_fetch_emails_callback'
     );
     
      // Hidden callback page
