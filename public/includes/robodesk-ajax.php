@@ -55,7 +55,7 @@ function robodesk_create_new_ticket_callback()
         if ($priority > 0) {
             wp_set_object_terms($post_id, $priority, 'robodesk_ticket_priority');
         }else{
-          
+           wp_set_object_terms($post_id, 31, 'robodesk_ticket_priority');
         }
         
         $origin =  create_term_if_not_exists();
@@ -68,10 +68,10 @@ function robodesk_create_new_ticket_callback()
 
 
 function create_term_if_not_exists($term_name='Web', $taxonomy = 'robodesk_ticket_origin') {
-    // Check if term exists
+  
     $term = term_exists($term_name, $taxonomy);
     
-    // If it doesn't exist, create it
+
     if ($term === 0 || $term === null) {
         $term = wp_insert_term($term_name, $taxonomy);
     }
@@ -332,3 +332,5 @@ function robodesk_add_ticket_note_callback()
         wp_send_json_error(array('message' => 'Error adding note.'));
     }
 }
+
+

@@ -471,3 +471,9 @@ function robodesk_handle_tickets_webhook(WP_REST_Request $request) {
     );
 }
 
+add_filter('use_block_editor_for_post_type', function($use_block_editor, $post_type) {
+    if ($post_type === 'robodesk_ticket') {
+        return false;
+    }
+    return $use_block_editor;
+}, 10, 2);
