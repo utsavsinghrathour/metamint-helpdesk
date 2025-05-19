@@ -24,47 +24,47 @@ function robodesk_change_ticket_status_callback()
 }
 
 // Create New Ticket
-add_action('wp_ajax_robodesk_create_new_ticket', 'robodesk_create_new_ticket_callback');
-function robodesk_create_new_ticket_callback()
-{
-    // check_ajax_referer('robodesk_create_ticket_nonce');
+// add_action('wp_ajax_robodesk_create_new_ticket', 'robodesk_create_new_ticket_callback');
+// function robodesk_create_new_ticket_callback()
+// {
+//     // check_ajax_referer('robodesk_create_ticket_nonce');
 
-    $title = isset($_POST['ticket_title']) ? sanitize_text_field($_POST['ticket_title']) : '';
-    $content = isset($_POST['ticket_content']) ? wp_kses_post($_POST['ticket_content']) : '';
-    $priority = isset($_POST['ticket_priority']) ? (int)$_POST['ticket_priority'] : 'medium';
-    $user_id = get_current_user_id();
+//     $title = isset($_POST['ticket_title']) ? sanitize_text_field($_POST['ticket_title']) : '';
+//     $content = isset($_POST['ticket_content']) ? wp_kses_post($_POST['ticket_content']) : '';
+//     $priority = isset($_POST['ticket_priority']) ? (int)$_POST['ticket_priority'] : 'medium';
+//     $user_id = get_current_user_id();
 
-    if (empty($title) || empty($content)) {
-        wp_send_json_error(array('message' => 'Please fill in all required fields.'));
-    }
+//     if (empty($title) || empty($content)) {
+//         wp_send_json_error(array('message' => 'Please fill in all required fields.'));
+//     }
 
-    $post_data = array(
-        'post_title'    => $title,
-        'post_content'  => $content,
-        'post_status'   => 'publish',
-        'post_type'     => 'robodesk_ticket',
-        'post_author' => $user_id
-    );
+//     $post_data = array(
+//         'post_title'    => $title,
+//         'post_content'  => $content,
+//         'post_status'   => 'publish',
+//         'post_type'     => 'robodesk_ticket',
+//         'post_author' => $user_id
+//     );
 
-    $post_id = wp_insert_post($post_data);
+//     $post_id = wp_insert_post($post_data);
 
-    if (is_wp_error($post_id)) {
-        wp_send_json_error(array('message' => $post_id->get_error_message()));
-    } else {
-        update_post_meta($post_id, '_robodesk_ticket_status', 'open');
-        if ($priority > 0) {
-            wp_set_object_terms($post_id, $priority, 'robodesk_ticket_priority');
-        }else{
-           wp_set_object_terms($post_id, 31, 'robodesk_ticket_priority');
-        }
+//     if (is_wp_error($post_id)) {
+//         wp_send_json_error(array('message' => $post_id->get_error_message()));
+//     } else {
+//         update_post_meta($post_id, '_robodesk_ticket_status', 'open');
+//         if ($priority > 0) {
+//             wp_set_object_terms($post_id, $priority, 'robodesk_ticket_priority');
+//         }else{
+//            wp_set_object_terms($post_id, 31, 'robodesk_ticket_priority');
+//         }
         
-        $origin =  create_term_if_not_exists();
+//         $origin =  create_term_if_not_exists();
         
-        wp_set_object_terms($post_id, (int) $origin['term_id'], 'robodesk_ticket_origin');
+//         wp_set_object_terms($post_id, (int) $origin['term_id'], 'robodesk_ticket_origin');
         
-        wp_send_json_success(array('message' => 'Ticket created successfully!'));
-    }
-}
+//         wp_send_json_success(array('message' => 'Ticket created successfully!'));
+//     }
+// }
 
 
 function create_term_if_not_exists($term_name='Web', $taxonomy = 'robodesk_ticket_origin') {
@@ -112,10 +112,17 @@ function handle_robodesk_ticket_submission() {
     if (is_wp_error($post_id)) {
         wp_send_json_error(array('message' => $post_id->get_error_message()));
     } else {
-        update_post_meta($post_id, '_robodesk_ticket_status', 'new');
+        update_post_meta($post_id, '_robodesk_ticket_status', 'open');
         if ($priority > 0) {
             wp_set_object_terms($post_id, $priority, 'robodesk_ticket_priority');
+        }else{
+           wp_set_object_terms($post_id, 31, 'robodesk_ticket_priority');
         }
+        
+        $origin =  create_term_if_not_exists();
+        
+        wp_set_object_terms($post_id, (int) $origin['term_id'], 'robodesk_ticket_origin');
+        
         wp_send_json_success(array('message' => 'Ticket created successfully!'));
     }
 }

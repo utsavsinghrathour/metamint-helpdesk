@@ -364,7 +364,7 @@ function robodesk_handle_tickets_webhook(WP_REST_Request $request) {
             'post_status' => 'publish',
             'post_author' => $author,
             'meta_input'   => array(
-			    '_robodesk_ticket_status' => 'new'
+			    '_robodesk_ticket_status' => 'open'
 			),
         ));
         
