@@ -255,3 +255,83 @@ function disable_block_for_post_type( $use_block_editor, $post ) {
     };
     return $use_block_editor;
 }
+
+
+
+/**
+ * Create a support dashboard page on plugin activation
+ */
+function robodesk_create_support_page() {
+    
+    $support_page = get_page_by_title('Robodesk Support');
+    
+
+    error_log('Robodesk activation hook triggered');
+    
+
+    if (!$support_page) {
+        error_log('Creating Robodesk Support page');
+        
+  
+        $page_data = array(
+            'post_title'    => 'Robodesk Support',
+            'post_content'  => '[robodesk_frontend_dashboard]',
+            'post_status'   => 'publish',
+            'post_author'   => 1,
+            'post_type'     => 'page',
+        );
+        
+
+        $page_id = wp_insert_post($page_data);
+        
+        if ($page_id && !is_wp_error($page_id)) {
+            
+            update_option('robodesk_support_page_id', $page_id);
+            update_post_meta($page_id, 'page_state', '--support dashboard');
+            
+           
+        }
+    } else {
+        error_log('Robodesk Support page already exists with ID: ' . $support_page->ID);
+    }
+}
+
+/**
+ * Delete the support dashboard page on plugin deactivation
+ */
+function robodesk_delete_support_page() {
+
+
+    $page_id = get_option('robodesk_support_page_id');
+    
+
+    if ($page_id) {
+        wp_delete_post($page_id, true); 
+        error_log('Deleted Robodesk Support page with ID: ' . $page_id);
+    } else {
+        // As fallback, try to find the page by title
+        $support_page = get_page_by_title('Robodesk Support');
+        if ($support_page) {
+            wp_delete_post($support_page->ID, true);
+        } else {
+            error_log('No Robodesk Support page found to delete');
+        }
+    }
+
+    delete_option('robodesk_support_page_id');
+}
+
+register_activation_hook(__FILE__, 'robodesk_create_support_page');
+register_deactivation_hook(__FILE__, 'robodesk_delete_support_page');
+
+
+function robodesk_check_support_page() {
+    // Only run this once
+    if (!get_option('robodesk_page_check_complete')) {
+        robodesk_create_support_page();
+        update_option('robodesk_page_check_complete', true);
+    }
+}
+add_action('plugins_loaded', 'robodesk_check_support_page');
+register_activation_hook(__FILE__, 'robodesk_create_support_page');
+register_deactivation_hook(__FILE__, 'robodesk_delete_support_page');
