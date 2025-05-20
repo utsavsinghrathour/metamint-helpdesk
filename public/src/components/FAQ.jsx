@@ -223,10 +223,12 @@ const FAQ = ({ setActiveTab, setIsOpen, isExpanded, setIsExpanded, activeTab }) 
           return;
         }
 
-        console.log('Fetching from API, wpHomeUrl:', wpHomeUrl);
+
         const response = await fetch(
           `${wpHomeUrl}/wp-json/wp/v2/robodesk_faq?_fields=id,title.rendered,excerpt.rendered,content.rendered&per_page=100&page=1`
         );
+        
+        console.log(wpHomeUrl);
         console.log('Response status:', response.status, response.statusText);
 
         if (!response.ok) {
