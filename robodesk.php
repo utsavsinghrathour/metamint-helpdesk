@@ -46,8 +46,6 @@ function robodesk_deactivate()
 // if (is_admin()) {
 require_once ROBODESK_PLUGIN_PATH . 'admin/robodesk-admin.php';
 
-
-// } else {
 require_once ROBODESK_PLUGIN_PATH . 'public/includes/robodesk-fetch-tickets.php';
 require_once ROBODESK_PLUGIN_PATH . 'public/includes/robodesk-functions.php';
 require_once ROBODESK_PLUGIN_PATH . 'public/includes/robodesk-shortcodes.php';
