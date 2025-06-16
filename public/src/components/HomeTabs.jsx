@@ -10,15 +10,14 @@ import '../styles/HomeTabs.css';
 const HomeTabs = ({ setActiveTab, setIsOpen, isExpanded, setIsExpanded, handleClose }) => {
   const [showLogin, setShowLogin] = useState(false);
   const [showHeaderFooter, setShowHeaderFooter] = useState(true);
-  const [loggedIn, setloggedIn] = useState( wpAuth.isLoggedIn) ;
-  const [isLoading, setIsLoading] = useState(true);
+
   return (
     <div className="rd-flex rd-flex-col rd-h-full featured-faq">
       <div className="rd-main-content">
         {!showLogin && showHeaderFooter && <Header onClose={handleClose} />}
         <div className="rd-flex-1 rd-overflow-auto">
           {showLogin   ? (
-            <Login setShowLogin={setShowLogin} />
+            <Login setShowLogin={setShowLogin} setActiveTab={setActiveTab}/>
           ) : (
             <SingleQuestionBox
               setShowHeaderFooter={setShowHeaderFooter}
@@ -26,6 +25,7 @@ const HomeTabs = ({ setActiveTab, setIsOpen, isExpanded, setIsExpanded, handleCl
               isExpanded={isExpanded}
               setIsExpanded={setIsExpanded}
               setShowLogin={setShowLogin}
+              setActiveTab={setActiveTab}
             />
           )}
         </div>

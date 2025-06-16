@@ -1,64 +1,17 @@
 import React, { useState } from "react";
+import { createTicket } from "../utils/modules";
 import "../styles/SendMessageField.css";
 
-const SendMessageField = ({ setShowLogin }) => {
+const SendMessageField = ({ setShowLogin , setActiveTab} ) => {
   const [message, setMessage] = useState("");
   const [loggedIn, setLoggedIn] = useState(wpAuth.isLoggedIn);
   const [userId, setUserId] = useState(wpAuth.loggedInUserId);
+  const [placeHolderText , setplaceHolderText] = useState('Send us a message')
+  
+  
 
   const handleInputChange = (e) => {
     setMessage(e.target.value);
-  };
-
-//   const createTicket = async (ticketData) => {
-//     const webhookUrl = "/wp-json/chat/v1/tickets";
-
-//     try {
-//       const response = await fetch(webhookUrl, {
-//         method: "POST",
-//         headers: {
-//           "Content-Type": "application/json",
-//           Accept: "application/json",
-//         },
-//         body: JSON.stringify(ticketData),
-//       });
-
-//       const responseData = await response.json();
-//       return responseData;
-//     } catch (error) {
-//       console.error("Error:", error);
-//       throw error;
-//     }
-//   };
-
-  const createTicket = async (userId, title, message) => {
-    const webhookUrl = "/wp-json/chat/v1/tickets";
-
-    const ticketData = {
-      event: "ticket.created",
-      data: {
-        title: title,
-        description: message,
-        uid: userId,
-      },
-    };
-
-    try {
-      const response = await fetch(webhookUrl, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-        },
-        body: JSON.stringify(ticketData),
-      });
-
-      const responseData = await response.json();
-      return responseData;
-    } catch (error) {
-      console.error("Error:", error);
-      throw error;
-    }
   };
 
   const handleSend = async () => {
@@ -71,14 +24,17 @@ const SendMessageField = ({ setShowLogin }) => {
   
     if (loggedIn == 'false') {
       setShowLogin(true);
-      sessionStorage.setItem('temp_ticket_title', message);
+      localStorage.setItem('temp_ticket_title', message);
       return;
     }
   
     try {
       const result = await createTicket(userId, message, '');
       console.log("Ticket Created:", result);
+      
+    //   change the tab to tickets
       setMessage("");
+      setActiveTab(1);
     } catch (error) {
       console.error("Failed to create ticket:", error);
     }
@@ -90,7 +46,7 @@ const SendMessageField = ({ setShowLogin }) => {
       <div className="rd-position-relative">
         <textarea
           className="rd-w-full rd-border-blue rd-border-radius-md"
-          placeholder="Send us a message"
+          placeholder={placeHolderText}
           value={message}
           onChange={handleInputChange}
           rows={1}
