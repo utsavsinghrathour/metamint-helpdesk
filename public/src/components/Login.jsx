@@ -1,8 +1,8 @@
 import React from "react";
 import "../styles/Login.css";
 import { useState } from "react";
-
-const Login = ({ setShowLogin }) => {
+import { createTicket } from "../utils/modules";
+const Login = ({ setShowLogin ,  setActiveTab }) => {
   const [formData, setFormData] = useState({ email: "", password: "" });
   const [errors, setErrors] = useState({ email: "", password: "" });
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -23,7 +23,7 @@ const Login = ({ setShowLogin }) => {
     if (!formData.password) {
       newErrors.password = "Password is required";
       isValid = false;
-    } else if (formData.password.length < 8) {
+    } else if (formData.password.length < 5) {
       newErrors.password = "Password must be at least 8 characters";
       isValid = false;
     }
@@ -32,54 +32,135 @@ const Login = ({ setShowLogin }) => {
     return isValid;
   };
 
-  const handleSubmit = async (e) => {
+//   const handleSubmit = async (e) => {
+//     e.preventDefault();
+//     setIsSubmitting(true);
+
+//     if (validateForm()) {
+//       try {
+
+//         console.log("Submitting:", formData);
+//         console.log(formData);
+//         const response = await fetch('/wp-json/custom/v1/login', {
+//             method: 'POST',
+//             headers: {
+//               'Content-Type': 'application/json',
+//             },
+//             credentials: 'include', 
+//             body: JSON.stringify({
+//               username: formData.email,
+//               password: formData.password,
+//             }),
+//           });
+    
+//           const data = await response.json();
+          
+//           if (!response.ok) {
+//             throw new Error(data.message || 'An error occurred during login.');
+         
+//           }
+              
+//           if (data.success) {
+//             const ticketTitle = localStorage.getItem('temp_ticket_title');
+            
+//             try {
+//                 const result = await createTicket(data.user_id, localStorage.getItem('temp_ticket_title'), '');
+               
+//                 if(result.success){
+//                   console.log("Ticket Created:", result);
+//                   setActiveTab(1);
+//                   localStorage.removeItem("temp_ticket_title");
+                
+//                 }
+//                 // setMessage("");
+            
+//               } catch (error) {
+//                 console.error("Failed to create ticket:", error);
+//                 localStorage.removeItem("temp_ticket_title");
+//               }
+            
+//           }
+          
+//       } catch (error) {
+//         setErrors({ email: "", password: "Login failed. Please try again." });
+//       }
+//         setIsSubmitting(false);
+    
+//     }
+
+
+//   };
+
+
+const handleSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
-
-    if (validateForm()) {
-      try {
-
-        console.log("Submitting:", formData);
-        console.log(formData);
-        const response = await fetch('/wp-json/custom/v1/login', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            credentials: 'include', 
-            body: JSON.stringify({
-              username: formData.email,
-              password: formData.password,
-            }),
-          });
-    
-          const data = await response.json();
-          
-          if (!response.ok) {
-            throw new Error(data.message || 'An error occurred during login.');
-          }
-          
-          
-      if (data.success) {
-        // Store user details in localStorage (optional, for UI purposes)
-        localStorage.setItem('logged_in', true);
-        localStorage.setItem('user_id', data.user_id);
-        localStorage.setItem('user_email', data.user_email);
-        localStorage.setItem('user_display_name', data.user_display_name);
-        // const currentUrl = new URL(window.location.href);
-
-        // window.location.href = currentUrl.href;
-      }
-          
-      } catch (error) {
-        setErrors({ email: "", password: "Login failed. Please try again." });
-      }finally {
-        setIsSubmitting(false);
-      }
+    setErrors({ email: "", password: "" });
+  
+    if (!validateForm()) {
+      setIsSubmitting(false);
+      return;
     }
-
-
+  
+    try {
+      // 1. Login
+      const loginResponse = await fetch('/wp-json/custom/v1/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          username: formData.email,
+          password: formData.password,
+        }),
+      });
+  
+      const loginData = await loginResponse.json();
+      
+      if (!loginResponse.ok) {
+        throw new Error(loginData.message || 'Login failed');
+      }
+      
+      // 2. Create Ticket (if temp title exists)
+      const ticketTitle = localStorage.getItem('temp_ticket_title');
+      if (ticketTitle) {
+        try {
+          const ticketResponse = await createTicket(loginData.user_id, ticketTitle, '');
+          
+          // Check if ticket was created regardless of response format
+          if (ticketResponse.id || ticketResponse.success) { 
+            console.log("Ticket created successfully");
+            localStorage.removeItem("temp_ticket_title");
+            setShowLogin(false);
+            setActiveTab(1); // Switch to Tickets tab
+          } else {
+            console.warn("Ticket may have been created but response format unexpected");
+            // Still proceed to tickets tab since creation likely succeeded
+            setShowLogin(false);
+            setActiveTab(1);
+          }
+        } catch (ticketError) {
+          console.error("Ticket creation error:", ticketError);
+     
+          setShowLogin(false);
+          setActiveTab(1);
+          localStorage.removeItem("temp_ticket_title");
+        }
+      } else {
+       
+        setShowLogin(false);
+      }
+    } catch (loginError) {
+      console.error("Login error:", loginError);
+      setErrors({ 
+        email: "", 
+        password: loginError.message || "Login failed. Please try again." 
+      });
+    }
+    
+    setIsSubmitting(false);
   };
+
+
 
   const handleChange = (e) => {
     const { name, value } = e.target;

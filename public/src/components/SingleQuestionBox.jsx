@@ -24,7 +24,7 @@ const normalizeImagePaths = (html, baseUrl = wpHomeUrl) => {
   );
 };
 
-const SingleQuestionBox = ({ setShowHeaderFooter, showHeaderFooter, isExpanded, setIsExpanded, setShowLogin }) => {
+const SingleQuestionBox = ({ setShowHeaderFooter, showHeaderFooter, isExpanded, setIsExpanded, setShowLogin , setActiveTab }) => {
   const [selectedQuestion, setSelectedQuestion] = useState(null);
   const [isLiked, setIsLiked] = useState(false);
   const [isDisliked, setIsDisliked] = useState(false);
@@ -277,7 +277,7 @@ const SingleQuestionBox = ({ setShowHeaderFooter, showHeaderFooter, isExpanded, 
                 <h3 className="heading-3">Have Questions?</h3>
                 <h5 className="sub-text">Have any questions or need a quote? Leave us a message.</h5>
               </div>
-              <SendMessageField setShowLogin={setShowLogin} />
+              <SendMessageField setShowLogin={setShowLogin} setActiveTab={setActiveTab} />
             </>
           )}
           <div className="rd-px-18 rd-mt-20 rd-mb-15 rd-overflow-h-320">
