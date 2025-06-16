@@ -12,13 +12,15 @@ const ActiveFeatured = ({ onNoticeSelect }) => {
   const [error, setError] = useState(null);
   const [isVisible, setIsVisible] = useState(false);
 
+
   // Fetch active and featured notices
   useEffect(() => {
+//   console.log('Hoem:',wpHomeUrl);
     const fetchNotices = async () => {
       try {
         setIsLoading(true);
         const response = await fetch(
-          `${wpHomeUrl}/wp-json/wp/v2/notice?featured=true&active=true&_fields=id,title.rendered,link,content.rendered`
+          `/wp-json/wp/v2/notice?featured=true&active=true&_fields=id,title.rendered,link,content.rendered`
         );
         if (!response.ok) {
           throw new Error('Failed to fetch notices');

@@ -73,7 +73,7 @@ const SingleQuestionBox = ({ setShowHeaderFooter, showHeaderFooter, isExpanded, 
 
       try {
         const response = await fetch(
-          `${wpHomeUrl}/wp-json/wp/v2/robodesk_faq/${selectedQuestion.id}?_fields=content.rendered`
+          `/wp-json/wp/v2/robodesk_faq/${selectedQuestion.id}?_fields=content.rendered`
         );
         if (!response.ok) {
           throw new Error('Failed to fetch full content');
