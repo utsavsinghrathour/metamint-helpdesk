@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { createContext, useState , useEffect } from 'react';
 import HomeTabs from './components/HomeTabs.jsx';
 import MessageTabs from './components/MessageTabs.jsx';
 import NoticeTabs from './components/NoticeTabs.jsx';
@@ -12,22 +12,9 @@ const App = () => {
   const [isExpanded, setIsExpanded] = useState(false);
   const [selectedNotice, setSelectedNotice] = useState(null);
   const [showActiveFeatured, setShowActiveFeatured] = useState(true);
-
-  console.log(
-    'App Render - isOpen:',
-    isOpen,
-    'activeTab:',
-    activeTab,
-    'isExpanded:',
-    isExpanded,
-    'selectedNotice:',
-    selectedNotice,
-    'showActiveFeatured:',
-    showActiveFeatured
-  ); // Debug log
-
+    
   const handleNoticeSelect = (notice) => {
-    console.log('handleNoticeSelect - notice:', notice);
+
     setSelectedNotice(notice);
     setShowActiveFeatured(false);
     setActiveTab(2);

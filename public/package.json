@@ -15,7 +15,7 @@
   "author": "Arpan Adhikari",
   "license": "ISC",
   "devDependencies": {
-    "@wordpress/scripts": "^30.14.1"
+    "@wordpress/scripts": "^30.18.0"
   },
   "dependencies": {
     "dompurify": "^3.2.5",

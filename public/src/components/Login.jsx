@@ -1,29 +1,30 @@
-import React from 'react';
-import '../styles/Login.css';
-import { useState } from 'react';
+import React from "react";
+import "../styles/Login.css";
+import { useState } from "react";
 
 const Login = ({ setShowLogin }) => {
-  const [formData, setFormData] = useState({ email: '', password: '' });
-  const [errors, setErrors] = useState({ email: '', password: '' });
+  const [formData, setFormData] = useState({ email: "", password: "" });
+  const [errors, setErrors] = useState({ email: "", password: "" });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  
 
   const validateForm = () => {
-    const newErrors = { email: '', password: '' };
+    const newErrors = { email: "", password: "" };
     let isValid = true;
 
     if (!formData.email) {
-      newErrors.email = 'Email is required';
+      newErrors.email = "Email is required";
       isValid = false;
     } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      newErrors.email = 'Invalid email format';
+      newErrors.email = "Invalid email format";
       isValid = false;
     }
 
     if (!formData.password) {
-      newErrors.password = 'Password is required';
+      newErrors.password = "Password is required";
       isValid = false;
     } else if (formData.password.length < 8) {
-      newErrors.password = 'Password must be at least 8 characters';
+      newErrors.password = "Password must be at least 8 characters";
       isValid = false;
     }
 
@@ -37,15 +38,47 @@ const Login = ({ setShowLogin }) => {
 
     if (validateForm()) {
       try {
-        // Simulate API call
-        console.log('Submitting:', formData);
-        // await loginAPI(formData); // Replace with actual API call
+
+        console.log("Submitting:", formData);
+        console.log(formData);
+        const response = await fetch('/wp-json/custom/v1/login', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            credentials: 'include', 
+            body: JSON.stringify({
+              username: formData.email,
+              password: formData.password,
+            }),
+          });
+    
+          const data = await response.json();
+          
+          if (!response.ok) {
+            throw new Error(data.message || 'An error occurred during login.');
+          }
+          
+          
+      if (data.success) {
+        // Store user details in localStorage (optional, for UI purposes)
+        localStorage.setItem('logged_in', true);
+        localStorage.setItem('user_id', data.user_id);
+        localStorage.setItem('user_email', data.user_email);
+        localStorage.setItem('user_display_name', data.user_display_name);
+        // const currentUrl = new URL(window.location.href);
+
+        // window.location.href = currentUrl.href;
+      }
+          
       } catch (error) {
-        setErrors({ email: '', password: 'Login failed. Please try again.' });
+        setErrors({ email: "", password: "Login failed. Please try again." });
+      }finally {
+        setIsSubmitting(false);
       }
     }
 
-    setIsSubmitting(false);
+
   };
 
   const handleChange = (e) => {
@@ -77,7 +110,9 @@ const Login = ({ setShowLogin }) => {
               <path d="M15 18l-6-6 6-6" />
             </svg>
           </button>
-          <h5 className="heading-5 rd-text-white rd-text-center rd-flex-1">Login</h5>
+          <h5 className="heading-5 rd-text-white rd-text-center rd-flex-1">
+            Login
+          </h5>
         </div>
       </div>
       <div className="login-container rd-px-18">
@@ -86,7 +121,7 @@ const Login = ({ setShowLogin }) => {
             type="button"
             className="rd-w-full rd-bg-transparent rd-border-blue rd-text-blue rd-border-radius-md rd-flex rd-justify-center rd-align-center rd-gap-15 rd-p-10"
             aria-label="Sign in with Google"
-            onClick={() => console.log('Google Sign-In')} // Replace with Google OAuth
+            onClick={() => console.log("Google Sign-In")} // Replace with Google OAuth
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -113,11 +148,15 @@ const Login = ({ setShowLogin }) => {
                 d="M43.611,20.083L43.595,20L42,20H24v8h11.303c-0.792,2.237-2.231,4.166-4.087,5.571 c0.001-0.001,0.002-0.001,0.003-0.002l6.19,5.238C36.971,39.205,44,34,44,24C44,22.659,43.862,21.35,43.611,20.083z"
               ></path>
             </svg>
-            <span className="rd-title-text rd-text-blue">Continue with Google</span>
+            <span className="rd-title-text rd-text-blue">
+              Continue with Google
+            </span>
           </button>
 
           <div className="rd-text-center rd-body-text rd-my-30">
-            <span className="rd-px-10 rd-bg-white">----- or Sign in with Email -----</span>
+            <span className="rd-px-10 rd-bg-white">
+              ----- or Sign in with Email -----
+            </span>
           </div>
 
           <form onSubmit={handleSubmit} noValidate>
@@ -135,7 +174,10 @@ const Login = ({ setShowLogin }) => {
                 aria-describedby="email-error"
               />
               {errors.email && (
-                <p id="email-error" className="rd-text-red rd-text-sm rd-mt-5 form-err-msg">
+                <p
+                  id="email-error"
+                  className="rd-text-red rd-text-sm rd-mt-5 form-err-msg"
+                >
                   {errors.email}
                 </p>
               )}
@@ -155,7 +197,10 @@ const Login = ({ setShowLogin }) => {
                 aria-describedby="password-error"
               />
               {errors.password && (
-                <p id="password-error" className="rd-text-red rd-text-sm rd-mt-5 form-err-msg">
+                <p
+                  id="password-error"
+                  className="rd-text-red rd-text-sm rd-mt-5 form-err-msg"
+                >
                   {errors.password}
                 </p>
               )}
@@ -166,7 +211,10 @@ const Login = ({ setShowLogin }) => {
                 <input type="checkbox" id="remember" />
                 <label htmlFor="remember">Remember me</label>
               </div>
-              <a href="#" className="rd-body-text rd-decoration-none rd-text-blue">
+              <a
+                href="#"
+                className="rd-body-text rd-decoration-none rd-text-blue"
+              >
                 Forgot Password?
               </a>
             </div>
@@ -176,12 +224,12 @@ const Login = ({ setShowLogin }) => {
               className="rd-login-button rd-w-full rd-border-radius-md"
               disabled={isSubmitting}
             >
-              {isSubmitting ? 'Logging in...' : 'Login'}
+              {isSubmitting ? "Logging in..." : "Login"}
             </button>
           </form>
 
           <p className="rd-mt-15 rd-text-center rd-body-text rd-text-gray">
-            Don't have an account?{' '}
+            Don't have an account?{" "}
             <a href="#" className="rd-text-blue rd-hover-underline">
               Sign up
             </a>

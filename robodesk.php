@@ -1,5 +1,4 @@
 <?php
-ob_start();
 /**
  * Plugin Name: Robodesk Support Ticket System
  * Description: A support ticket and FAQ system.
@@ -51,7 +50,7 @@ require_once ROBODESK_PLUGIN_PATH . 'public/includes/robodesk-functions.php';
 require_once ROBODESK_PLUGIN_PATH . 'public/includes/robodesk-shortcodes.php';
 require_once ROBODESK_PLUGIN_PATH . 'public/includes/robodesk-ajax.php';
 require_once ROBODESK_PLUGIN_PATH . 'public/includes/robodesk-notes.php';
-
+require_once ROBODESK_PLUGIN_PATH . 'public/includes/robodesk-custom-rest.php';
 
 // }
 
@@ -92,10 +91,20 @@ function robodesk_enqueue_scripts()
             'robodesk-react-script',
             ROBODESK_PLUGIN_URL . 'public/build/index.js',
             array_merge(array('jquery'), $asset_file['dependencies']), // Include jQuery if needed
-            $asset_file['version'],
+            time(),
             true
         );
-    
+        
+        // wp_add_inline_script( 'robodesk-react-script', 'const custom = ' . json_encode( array(
+        //     'isLoggedIn' => is_user_logged_in() ? 'true' : 'false',
+        //     'loggedInUserId' => is_user_logged_in() ? get_current_user_id() : 'false',
+        // ) ), 'before' );
+        
+        wp_localize_script( 'robodesk-react-script', 'wpAuth', array(
+            'isLoggedIn' => is_user_logged_in() ? 'true' : 'false',
+            'loggedInUserId' => is_user_logged_in() ? get_current_user_id() : 'false',
+        ) );
+        
         wp_enqueue_style(
             'robodesk-react-style',
             ROBODESK_PLUGIN_URL . 'public/build/index.css',
@@ -333,3 +342,15 @@ function robodesk_check_support_page() {
 add_action('plugins_loaded', 'robodesk_check_support_page');
 register_activation_hook(__FILE__, 'robodesk_create_support_page');
 register_deactivation_hook(__FILE__, 'robodesk_delete_support_page');
+
+
+
+// add_action( 'wp_footer', function() {
+//     echo '<script>console.log("wpAuth:", window.wpAuth);</script>';
+// });
+
+
+// add_action('wp_head', function(){
+    
+//     var_dump(is_admin());
+// });

@@ -1,22 +1,88 @@
-import React, { useState } from 'react';
-import '../styles/SendMessageField.css';
+import React, { useState } from "react";
+import "../styles/SendMessageField.css";
 
 const SendMessageField = ({ setShowLogin }) => {
-  const [message, setMessage] = useState('');
+  const [message, setMessage] = useState("");
+  const [loggedIn, setLoggedIn] = useState(wpAuth.isLoggedIn);
+  const [userId, setUserId] = useState(wpAuth.loggedInUserId);
 
   const handleInputChange = (e) => {
     setMessage(e.target.value);
   };
 
-  const handleSend = () => {
-    if (message.trim()) {
-      console.log('Sending message:', message);
-      console.log('Calling setShowLogin(true)');
-      setShowLogin(true); // Trigger Login display
-      setMessage('');
-    } else {
-      console.log('No message entered');
+//   const createTicket = async (ticketData) => {
+//     const webhookUrl = "/wp-json/chat/v1/tickets";
+
+//     try {
+//       const response = await fetch(webhookUrl, {
+//         method: "POST",
+//         headers: {
+//           "Content-Type": "application/json",
+//           Accept: "application/json",
+//         },
+//         body: JSON.stringify(ticketData),
+//       });
+
+//       const responseData = await response.json();
+//       return responseData;
+//     } catch (error) {
+//       console.error("Error:", error);
+//       throw error;
+//     }
+//   };
+
+  const createTicket = async (userId, title, message) => {
+    const webhookUrl = "/wp-json/chat/v1/tickets";
+
+    const ticketData = {
+      event: "ticket.created",
+      data: {
+        title: title,
+        description: message,
+        uid: userId,
+      },
+    };
+
+    try {
+      const response = await fetch(webhookUrl, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        body: JSON.stringify(ticketData),
+      });
+
+      const responseData = await response.json();
+      return responseData;
+    } catch (error) {
+      console.error("Error:", error);
+      throw error;
     }
+  };
+
+  const handleSend = async () => {
+    // e.preventDefault();
+  
+    if (!message.trim()) {
+      console.log("No message entered");
+      return;
+    }
+  
+    if (loggedIn == 'false') {
+      setShowLogin(true);
+      sessionStorage.setItem('temp_ticket_title', message);
+      return;
+    }
+  
+    try {
+      const result = await createTicket(userId, message, '');
+      console.log("Ticket Created:", result);
+      setMessage("");
+    } catch (error) {
+      console.error("Failed to create ticket:", error);
+    }
+
   };
 
   return (
@@ -28,24 +94,30 @@ const SendMessageField = ({ setShowLogin }) => {
           value={message}
           onChange={handleInputChange}
           rows={1}
-          style={{ minHeight: '42px', maxHeight: '200px' }}
+          style={{ minHeight: "42px", maxHeight: "200px" }}
           onKeyPress={(e) => {
-            if (e.key === 'Enter' && !e.shiftKey) {
+            if (e.key === "Enter" && !e.shiftKey) {
               e.preventDefault();
-              console.log('Enter key pressed, calling handleSend');
+              console.log("Enter key pressed, calling handleSend");
               handleSend();
             }
           }}
         />
         <button
           onClick={() => {
-            console.log('Send button clicked, calling handleSend');
+            console.log("Send button clicked, calling handleSend");
             handleSend();
           }}
           className="rd-bg-transparent rd-border-none rd-text-blue rd-p-0"
           disabled={!message.trim()}
         >
-          <svg xmlns="http://www.w3.org/2000/svg" width="17" height="16" viewBox="0 0 17 16" fill="none">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="17"
+            height="16"
+            viewBox="0 0 17 16"
+            fill="none"
+          >
             <path
               d="M15.3728 0.0985297L0.886843 8.45568C0.321158 8.78071 0.39304 9.5683 0.955601 9.80582L4.27783 11.1997L13.2569 3.28637C13.4288 3.13323 13.6726 3.36763 13.5257 3.54577L5.99677 12.7186V15.2345C5.99677 15.9721 6.88749 16.2628 7.32503 15.7283L9.30962 13.3124L13.2038 14.9439C13.6476 15.1314 14.1539 14.8532 14.2351 14.3751L16.4854 0.873613C16.5917 0.242295 15.9135 -0.214004 15.3728 0.0985297Z"
               fill="#004AFF"
