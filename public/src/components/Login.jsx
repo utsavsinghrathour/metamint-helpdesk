@@ -5,97 +5,105 @@ import { createTicket } from "../utils/modules";
 import Signup from "./Signup";
 
 const Login = ({ setShowLogin, setActiveTab }) => {
-    const [isSignup, setIsSignup] = useState(false);
-    const [formData, setFormData] = useState({ email: "", password: "" });
-    const [errors, setErrors] = useState({ email: "", password: "" });
-    const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSignup, setIsSignup] = useState(false);
+  const [formData, setFormData] = useState({ email: "", password: "" });
+  const [errors, setErrors] = useState({ email: "", password: "" });
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-    const validateForm = () => {
-        const newErrors = { email: "", password: "" };
-        let isValid = true;
-    
-        if (!formData.email) {
-          newErrors.email = "Email is required";
-          isValid = false;
-        } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-          newErrors.email = "Invalid email format";
-          isValid = false;
-        }
-    
-        if (!formData.password) {
-          newErrors.password = "Password is required";
-          isValid = false;
-        } else if (formData.password.length < 8) {
-          newErrors.password = "Password must be at least 8 characters";
-          isValid = false;
-        }
-    
-        setErrors(newErrors);
-        return isValid;
-      };
+  const validateForm = () => {
+    const newErrors = { email: "", password: "" };
+    let isValid = true;
 
-      const handleSubmit = async (e) => {
-        e.preventDefault();
-        setIsSubmitting(true);
-        setErrors({ email: "", password: "" });
-    
-        if (!validateForm()) {
-          setIsSubmitting(false);
-          return;
-        }
-    
-        try {
-          const loginResponse = await fetch('/wp-json/custom/v1/login', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            credentials: 'include',
-            body: JSON.stringify({
-              username: formData.email,
-              password: formData.password,
-            }),
-          });
-    
-          const loginData = await loginResponse.json();
-          
-          if (!loginResponse.ok) {
-            throw new Error(loginData.message || 'Login failed');
-          }
-          
-          const ticketTitle = localStorage.getItem('temp_ticket_title');
-          if (ticketTitle) {
-            try {
-              const ticketResponse = await createTicket(loginData.user_id, ticketTitle, '');
-              console.log('Anils console', ticketResponse);
-    
-              if (ticketResponse.status == 'success') { 
-                console.log(ticketResponse.message);
-                localStorage.removeItem("temp_ticket_title");
-                setShowLogin(false);
-                setActiveTab(1); 
-              } else {
-                console.warn("Ticket may have been created but response format unexpected");
-                setShowLogin(false);
-                setActiveTab(1);
-              }
-            } catch (ticketError) {
-              console.error("Ticket creation error:", ticketError);
+    if (!formData.email) {
+      newErrors.email = "Email is required";
+      isValid = false;
+    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+      newErrors.email = "Invalid email format";
+      isValid = false;
+    }
+
+    if (!formData.password) {
+      newErrors.password = "Password is required";
+      isValid = false;
+    } else if (formData.password.length < 8) {
+      newErrors.password = "Password must be at least 8 characters";
+      isValid = false;
+    }
+
+    setErrors(newErrors);
+    return isValid;
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    setErrors({ email: "", password: "" });
+
+    if (!validateForm()) {
+      setIsSubmitting(false);
+      return;
+    }
+
+    try {
+      const loginResponse = await fetch('/wp-json/custom/v1/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          username: formData.email,
+          password: formData.password,
+        }),
+      });
+
+      const loginData = await loginResponse.json();
+
+      if (!loginResponse.ok) {
+        throw new Error(loginData.message || loginData.data?.message || 'Login failed');
+      }
+
+      if (loginData.success && loginData.token) {
+        // Store JWT token securely
+        localStorage.setItem('jwt_token', loginData.token);
+
+        const ticketTitle = localStorage.getItem('temp_ticket_title');
+        if (ticketTitle) {
+          try {
+            // Update createTicket to include JWT in headers
+            const ticketResponse = await createTicket(loginData.user_id, ticketTitle, '');
+
+            if (ticketResponse.status === 'success') {
+              console.log(ticketResponse.message);
+              localStorage.removeItem("temp_ticket_title");
               setShowLogin(false);
               setActiveTab(1);
-              localStorage.removeItem("temp_ticket_title");
+            } else {
+              console.warn("Ticket may have been created but response format unexpected");
+              setShowLogin(false);
+              setActiveTab(1);
             }
-          } else {
+          } catch (ticketError) {
+            console.error("Ticket creation error:", ticketError);
             setShowLogin(false);
+            setActiveTab(1);
+            localStorage.removeItem("temp_ticket_title");
           }
-        } catch (error) {
-          console.error("Login error:", error);
-          setErrors({ 
-            email: error.message.includes("email") ? error.message : "", 
-            password: error.message || "Login failed. Please try again."
-          });
+        } else {
+          setShowLogin(false);
         }
-        
-        setIsSubmitting(false);
-      };
+      } else {
+        throw new Error('Invalid response format');
+      }
+    } catch (error) {
+      console.error("Login error:", error);
+      setErrors({
+        email: error.message.includes("email") ? error.message : "",
+        password: error.message.includes("credentials") || error.message.includes("Login failed") 
+          ? error.message 
+          : "Login failed. Please try again."
+      });
+    }
+
+    setIsSubmitting(false);
+  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -104,10 +112,10 @@ const Login = ({ setShowLogin, setActiveTab }) => {
 
   const switchToLogin = (message = "") => {
     setIsSignup(false);
-    setErrors({ 
-      email: "", 
+    setErrors({
+      email: "",
       password: message || "",
-      confirmPassword: "" 
+      confirmPassword: ""
     });
     setFormData({ email: "", password: "", confirmPassword: "" });
   };
@@ -260,7 +268,7 @@ const Login = ({ setShowLogin, setActiveTab }) => {
 
               <p className="rd-mt-15 rd-text-center rd-body-text rd-text-gray">
                 Don't have an account?{" "}
-                <button 
+                <button
                   onClick={() => setIsSignup(true)}
                   className="rd-text-blue rd-hover-underline rd-bg-transparent rd-border-none rd-cursor-pointer"
                 >
