@@ -63,7 +63,7 @@
 // });
 
 
-require_once plugin_dir_path(__FILE__) . 'vendor/autoload.php'; // Ensure Firebase JWT is included
+// require_once plugin_dir_path(__FILE__) . 'vendor/autoload.php'; // Ensure Firebase JWT is included
 use \Firebase\JWT\JWT;
 use \Firebase\JWT\Key;
 
@@ -215,5 +215,5 @@ add_action('rest_api_init', function () {
 
 // Secure the secret key
 if (!defined('JWT_AUTH_SECRET_KEY')) {
-    define('JWT_AUTH_SECRET_KEY', wp_generate_password(64, true, true));
+    define('JWT_AUTH_SECRET_KEY', 'robodesk-secret');
 }
