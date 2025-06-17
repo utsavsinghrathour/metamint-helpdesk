@@ -2,169 +2,114 @@ import React from "react";
 import "../styles/Login.css";
 import { useState } from "react";
 import { createTicket } from "../utils/modules";
-const Login = ({ setShowLogin ,  setActiveTab }) => {
-  const [formData, setFormData] = useState({ email: "", password: "" });
-  const [errors, setErrors] = useState({ email: "", password: "" });
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  
+import Signup from "./Signup";
 
-  const validateForm = () => {
-    const newErrors = { email: "", password: "" };
-    let isValid = true;
+const Login = ({ setShowLogin, setActiveTab }) => {
+    const [isSignup, setIsSignup] = useState(false);
+    const [formData, setFormData] = useState({ email: "", password: "" });
+    const [errors, setErrors] = useState({ email: "", password: "" });
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
-    if (!formData.email) {
-      newErrors.email = "Email is required";
-      isValid = false;
-    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      newErrors.email = "Invalid email format";
-      isValid = false;
-    }
-
-    if (!formData.password) {
-      newErrors.password = "Password is required";
-      isValid = false;
-    } else if (formData.password.length < 5) {
-      newErrors.password = "Password must be at least 8 characters";
-      isValid = false;
-    }
-
-    setErrors(newErrors);
-    return isValid;
-  };
-
-//   const handleSubmit = async (e) => {
-//     e.preventDefault();
-//     setIsSubmitting(true);
-
-//     if (validateForm()) {
-//       try {
-
-//         console.log("Submitting:", formData);
-//         console.log(formData);
-//         const response = await fetch('/wp-json/custom/v1/login', {
-//             method: 'POST',
-//             headers: {
-//               'Content-Type': 'application/json',
-//             },
-//             credentials: 'include', 
-//             body: JSON.stringify({
-//               username: formData.email,
-//               password: formData.password,
-//             }),
-//           });
+    const validateForm = () => {
+        const newErrors = { email: "", password: "" };
+        let isValid = true;
     
-//           const data = await response.json();
-          
-//           if (!response.ok) {
-//             throw new Error(data.message || 'An error occurred during login.');
-         
-//           }
-              
-//           if (data.success) {
-//             const ticketTitle = localStorage.getItem('temp_ticket_title');
-            
-//             try {
-//                 const result = await createTicket(data.user_id, localStorage.getItem('temp_ticket_title'), '');
-               
-//                 if(result.success){
-//                   console.log("Ticket Created:", result);
-//                   setActiveTab(1);
-//                   localStorage.removeItem("temp_ticket_title");
-                
-//                 }
-//                 // setMessage("");
-            
-//               } catch (error) {
-//                 console.error("Failed to create ticket:", error);
-//                 localStorage.removeItem("temp_ticket_title");
-//               }
-            
-//           }
-          
-//       } catch (error) {
-//         setErrors({ email: "", password: "Login failed. Please try again." });
-//       }
-//         setIsSubmitting(false);
-    
-//     }
-
-
-//   };
-
-
-const handleSubmit = async (e) => {
-    e.preventDefault();
-    setIsSubmitting(true);
-    setErrors({ email: "", password: "" });
-  
-    if (!validateForm()) {
-      setIsSubmitting(false);
-      return;
-    }
-  
-    try {
-      // 1. Login
-      const loginResponse = await fetch('/wp-json/custom/v1/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({
-          username: formData.email,
-          password: formData.password,
-        }),
-      });
-  
-      const loginData = await loginResponse.json();
-      
-      if (!loginResponse.ok) {
-        throw new Error(loginData.message || 'Login failed');
-      }
-      
-      // 2. Create Ticket (if temp title exists)
-      const ticketTitle = localStorage.getItem('temp_ticket_title');
-      if (ticketTitle) {
-        try {
-          const ticketResponse = await createTicket(loginData.user_id, ticketTitle, '');
-          
-          // Check if ticket was created regardless of response format
-          if (ticketResponse.id || ticketResponse.success) { 
-            console.log("Ticket created successfully");
-            localStorage.removeItem("temp_ticket_title");
-            setShowLogin(false);
-            setActiveTab(1); // Switch to Tickets tab
-          } else {
-            console.warn("Ticket may have been created but response format unexpected");
-            // Still proceed to tickets tab since creation likely succeeded
-            setShowLogin(false);
-            setActiveTab(1);
-          }
-        } catch (ticketError) {
-          console.error("Ticket creation error:", ticketError);
-     
-          setShowLogin(false);
-          setActiveTab(1);
-          localStorage.removeItem("temp_ticket_title");
+        if (!formData.email) {
+          newErrors.email = "Email is required";
+          isValid = false;
+        } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+          newErrors.email = "Invalid email format";
+          isValid = false;
         }
-      } else {
-       
-        setShowLogin(false);
-      }
-    } catch (loginError) {
-      console.error("Login error:", loginError);
-      setErrors({ 
-        email: "", 
-        password: loginError.message || "Login failed. Please try again." 
-      });
-    }
     
-    setIsSubmitting(false);
-  };
+        if (!formData.password) {
+          newErrors.password = "Password is required";
+          isValid = false;
+        } else if (formData.password.length < 8) {
+          newErrors.password = "Password must be at least 8 characters";
+          isValid = false;
+        }
+    
+        setErrors(newErrors);
+        return isValid;
+      };
 
-
+      const handleSubmit = async (e) => {
+        e.preventDefault();
+        setIsSubmitting(true);
+        setErrors({ email: "", password: "" });
+    
+        if (!validateForm()) {
+          setIsSubmitting(false);
+          return;
+        }
+    
+        try {
+          const loginResponse = await fetch('/wp-json/custom/v1/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({
+              username: formData.email,
+              password: formData.password,
+            }),
+          });
+    
+          const loginData = await loginResponse.json();
+          
+          if (!loginResponse.ok) {
+            throw new Error(loginData.message || 'Login failed');
+          }
+          
+          const ticketTitle = localStorage.getItem('temp_ticket_title');
+          if (ticketTitle) {
+            try {
+              const ticketResponse = await createTicket(loginData.user_id, ticketTitle, '');
+              console.log('Anils console', ticketResponse);
+    
+              if (ticketResponse.status == 'success') { 
+                console.log(ticketResponse.message);
+                localStorage.removeItem("temp_ticket_title");
+                setShowLogin(false);
+                setActiveTab(1); 
+              } else {
+                console.warn("Ticket may have been created but response format unexpected");
+                setShowLogin(false);
+                setActiveTab(1);
+              }
+            } catch (ticketError) {
+              console.error("Ticket creation error:", ticketError);
+              setShowLogin(false);
+              setActiveTab(1);
+              localStorage.removeItem("temp_ticket_title");
+            }
+          } else {
+            setShowLogin(false);
+          }
+        } catch (error) {
+          console.error("Login error:", error);
+          setErrors({ 
+            email: error.message.includes("email") ? error.message : "", 
+            password: error.message || "Login failed. Please try again."
+          });
+        }
+        
+        setIsSubmitting(false);
+      };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
+  };
+
+  const switchToLogin = (message = "") => {
+    setIsSignup(false);
+    setErrors({ 
+      email: "", 
+      password: message || "",
+      confirmPassword: "" 
+    });
+    setFormData({ email: "", password: "", confirmPassword: "" });
   };
 
   return (
@@ -175,7 +120,7 @@ const handleSubmit = async (e) => {
             type="button"
             className="rd-bg-transparent rd-text-white rd-p-0 rd-m-0 back-button rd-flex rd-items-center"
             aria-label="Go back to home"
-            onClick={() => setShowLogin(false)} // Toggle showLogin to false
+            onClick={() => setShowLogin(false)}
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -192,7 +137,7 @@ const handleSubmit = async (e) => {
             </svg>
           </button>
           <h5 className="heading-5 rd-text-white rd-text-center rd-flex-1">
-            Login
+            {isSignup ? "Sign Up" : "Login"}
           </h5>
         </div>
       </div>
@@ -202,7 +147,7 @@ const handleSubmit = async (e) => {
             type="button"
             className="rd-w-full rd-bg-transparent rd-border-blue rd-text-blue rd-border-radius-md rd-flex rd-justify-center rd-align-center rd-gap-15 rd-p-10"
             aria-label="Sign in with Google"
-            onClick={() => console.log("Google Sign-In")} // Replace with Google OAuth
+            onClick={() => console.log("Google Sign-In")}
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -234,87 +179,96 @@ const handleSubmit = async (e) => {
             </span>
           </button>
 
-          <div className="rd-text-center rd-body-text rd-my-30">
-            <span className="rd-px-10 rd-bg-white">
-              ----- or Sign in with Email -----
-            </span>
-          </div>
-
-          <form onSubmit={handleSubmit} noValidate>
-            <div>
-              <label htmlFor="email" className="rd-body-text"></label>
-              <input
-                type="email"
-                id="email"
-                name="email"
-                value={formData.email}
-                onChange={handleChange}
-                placeholder="Email"
-                className="rd-w-full rd-border-light rd-p-12 rd-border-radius-md"
-                required
-                aria-describedby="email-error"
-              />
-              {errors.email && (
-                <p
-                  id="email-error"
-                  className="rd-text-red rd-text-sm rd-mt-5 form-err-msg"
-                >
-                  {errors.email}
-                </p>
-              )}
-            </div>
-
-            <div className="rd-mt-15">
-              <label htmlFor="password" className="rd-body-text"></label>
-              <input
-                type="password"
-                id="password"
-                name="password"
-                value={formData.password}
-                onChange={handleChange}
-                placeholder="Password"
-                className="rd-w-full rd-border-light rd-p-12 rd-border-radius-md"
-                required
-                aria-describedby="password-error"
-              />
-              {errors.password && (
-                <p
-                  id="password-error"
-                  className="rd-text-red rd-text-sm rd-mt-5 form-err-msg"
-                >
-                  {errors.password}
-                </p>
-              )}
-            </div>
-
-            <div className="rd-mt-15 rd-flex rd-justify-between">
-              <div className="rd-flex rd-body-text rd-gap-8">
-                <input type="checkbox" id="remember" />
-                <label htmlFor="remember">Remember me</label>
+          {isSignup ? (
+            <Signup switchToLogin={switchToLogin} />
+          ) : (
+            <>
+              <div className="rd-text-center rd-body-text rd-my-30">
+                <span className="rd-px-10 rd-bg-white">
+                  ----- or Sign in with Email -----
+                </span>
               </div>
-              <a
-                href="#"
-                className="rd-body-text rd-decoration-none rd-text-blue"
-              >
-                Forgot Password?
-              </a>
-            </div>
 
-            <button
-              type="submit"
-              className="rd-login-button rd-w-full rd-border-radius-md"
-              disabled={isSubmitting}
-            >
-              {isSubmitting ? "Logging in..." : "Login"}
-            </button>
-          </form>
+              <form onSubmit={handleSubmit} noValidate>
+                <div>
+                  <label htmlFor="email" className="rd-body-text"></label>
+                  <input
+                    type="email"
+                    id="email"
+                    name="email"
+                    value={formData.email}
+                    onChange={handleChange}
+                    placeholder="Email"
+                    className="rd-w-full rd-border-light rd-p-12 rd-border-radius-md"
+                    required
+                    aria-describedby="email-error"
+                  />
+                  {errors.email && (
+                    <p
+                      id="email-error"
+                      className="rd-text-red rd-text-sm rd-mt-5 form-err-msg"
+                    >
+                      {errors.email}
+                    </p>
+                  )}
+                </div>
 
-          <p className="rd-mt-15 rd-text-center rd-body-text rd-text-gray">
-            Don't have an account?{" "}
-            <a href="#" className="rd-text-blue rd-hover-underline">
-              Sign up
-            </a>
-          </p>
+                <div className="rd-mt-15">
+                  <label htmlFor="password" className="rd-body-text"></label>
+                  <input
+                    type="password"
+                    id="password"
+                    name="password"
+                    value={formData.password}
+                    onChange={handleChange}
+                    placeholder="Password"
+                    className="rd-w-full rd-border-light rd-p-12 rd-border-radius-md"
+                    required
+                    aria-describedby="password-error"
+                  />
+                  {errors.password && (
+                    <p
+                      id="password-error"
+                      className="rd-text-red rd-text-sm rd-mt-5 form-err-msg"
+                    >
+                      {errors.password}
+                    </p>
+                  )}
+                </div>
+
+                <div className="rd-mt-15 rd-flex rd-justify-between">
+                  <div className="rd-flex rd-body-text rd-gap-8">
+                    <input type="checkbox" id="remember" />
+                    <label htmlFor="remember">Remember me</label>
+                  </div>
+                  <a
+                    href="#"
+                    className="rd-body-text rd-decoration-none rd-text-blue"
+                  >
+                    Forgot Password?
+                  </a>
+                </div>
+
+                <button
+                  type="submit"
+                  className="rd-login-button rd-w-full rd-border-radius-md"
+                  disabled={isSubmitting}
+                >
+                  {isSubmitting ? "Logging in..." : "Login"}
+                </button>
+              </form>
+
+              <p className="rd-mt-15 rd-text-center rd-body-text rd-text-gray">
+                Don't have an account?{" "}
+                <button 
+                  onClick={() => setIsSignup(true)}
+                  className="rd-text-blue rd-hover-underline rd-bg-transparent rd-border-none rd-cursor-pointer"
+                >
+                  Sign up
+                </button>
+              </p>
+            </>
+          )}
         </div>
       </div>
     </>
