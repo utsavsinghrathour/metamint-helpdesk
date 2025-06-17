@@ -28,7 +28,23 @@ export const createTicket = async (userId, title, message = "") => {
     }
   };
   
+//   For user login
+  export const login = async(emailAddress , password) => {
+    const response = await fetch('/wp-json/custom/v1/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        email: emailAddress,
+        password: password,
+      }),
+    });
+    const data = await response.json();
+    return data;
+  }         
   
+//for user signup
+
+//for forgot password
   
   
   
