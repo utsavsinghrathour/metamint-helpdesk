@@ -5,6 +5,7 @@ import NoticeTabs from './components/NoticeTabs.jsx';
 import HelpTabs from './components/HelpTabs.jsx';
 import ActiveFeatured from './components/ActiveFeatured.jsx';
 import './styles/main.css';
+import { userStatus } from './utils/modules';
 
 const App = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -12,12 +13,28 @@ const App = () => {
   const [isExpanded, setIsExpanded] = useState(false);
   const [selectedNotice, setSelectedNotice] = useState(null);
   const [showActiveFeatured, setShowActiveFeatured] = useState(true);
-    
+  
+  useEffect(() => {
+    const updateUserStatus = async () => {
+      try {
+        const status = await userStatus();
+        sessionStorage.setItem('userStatus', JSON.stringify(status));
+      } catch (error) {
+        sessionStorage.setItem('userStatus', JSON.stringify({ 
+          isLoggedIn: false, 
+          loggedInUserId: false 
+        }));
+      }
+    };
+  
+    updateUserStatus();
+  }, []);
+  
   const handleNoticeSelect = (notice) => {
 
     setSelectedNotice(notice);
     setShowActiveFeatured(false);
-    setActiveTab(2);
+    setActiveTab(1);
     setIsOpen(true);
   };
 
@@ -38,7 +55,7 @@ const App = () => {
     setSelectedNotice(null);
     setShowActiveFeatured(true);
   };
-
+console.log(activeTab);
   const tabs = [
     {
       id: 0,
@@ -52,20 +69,21 @@ const App = () => {
         />
       ),
     },
+    // {
+    //   id: 1,
+    //   component: (
+    //     <MessageTabs
+    //       setActiveTab={setActiveTab}
+    //       setIsOpen={setIsOpen}
+    //       isExpanded={isExpanded}
+    //       setIsExpanded={setIsExpanded}
+    //       activeTab={activeTab}
+    //     />
+    //   ),
+    // },
     {
+    
       id: 1,
-      component: (
-        <MessageTabs
-          setActiveTab={setActiveTab}
-          setIsOpen={setIsOpen}
-          isExpanded={isExpanded}
-          setIsExpanded={setIsExpanded}
-          activeTab={activeTab}
-        />
-      ),
-    },
-    {
-      id: 2,
       component: (
         <NoticeTabs
           setActiveTab={setActiveTab}
@@ -79,7 +97,7 @@ const App = () => {
       ),
     },
     {
-      id: 3,
+      id: 2,
       component: (
         <HelpTabs
           setActiveTab={setActiveTab}

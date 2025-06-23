@@ -64,7 +64,7 @@ const NoticeItem = memo(({ notice, onSelect }) => {
 
 const SingleNoticeView = memo(({ notice, onBack, isExpanded, setIsExpanded }) => {
   const [content, setContent] = useState(null);
-  const wpHomeUrl = window.robodeskData?.home_url || '';
+
 
   useEffect(() => {
     const fetchContent = async () => {
@@ -77,7 +77,7 @@ const SingleNoticeView = memo(({ notice, onBack, isExpanded, setIsExpanded }) =>
         }
 
         const response = await fetch(
-          `${wpHomeUrl}/wp-json/wp/v2/notice/${notice.id}?_fields=content.rendered`
+          `/wp-json/wp/v2/notice/${notice.id}?_fields=content.rendered`
         );
         if (!response.ok) throw new Error('Failed to fetch notice content');
         const data = await response.json();
@@ -296,7 +296,7 @@ const NoticeTabs = ({
                 </div>
               </div>
             </div>
-            {showHeaderFooter && <Footer activeTab={2} setActiveTab={setActiveTab} />}
+            {showHeaderFooter && <Footer activeTab={1} setActiveTab={setActiveTab} />}
           </>
         )}
       </div>
