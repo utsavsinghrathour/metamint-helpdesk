@@ -467,4 +467,4 @@ function robodesk_reply_email($comment_id, $comment_approved)
     }
 }
 add_action('comment_post', 'robodesk_reply_email', 10, 2);
-//have reverted from old commit
+//At this point, we have a function that fetches emails, processes them into tickets, and handles replies as comments. The email sending functionality is also integrated to ensure replies are sent correctly.
