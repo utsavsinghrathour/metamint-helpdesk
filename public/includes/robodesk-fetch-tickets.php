@@ -36,7 +36,7 @@ function robodesk_fetch_emails_callback()
     echo '</table>';
 }
 
-// Basic email cleaning function
+// Basic email cleaning function ( or we can use a library like PHP-MIME-Mail-Parser )
 function robodesk_clean_email_message($message)
 {
     // Remove quoted replies, signatures, and excessive whitespace
@@ -80,7 +80,7 @@ function robodesk_fetch_emails()
     $since_date = date('d-M-Y H:i:s', strtotime($last_fetched_date));
     error_log('IMAP since date format: ' . $since_date);
 
-    // Email configuration details (static as requested)
+    // Email configuration details 
     $hostname = '{wplocatepress.com:993/imap/ssl}INBOX';
     $username = 'pipetest@wplocatepress.com';
     $password = 'k342+11$c1_';
@@ -97,7 +97,7 @@ function robodesk_fetch_emails()
     }
 
     error_log('Successfully connected to IMAP server');
-
+    // Check if the mailbox is empty
     try {
         // Fetch emails received after last fetched date
         $search_criteria = 'SINCE "' . $since_date . '"';
@@ -177,7 +177,7 @@ function robodesk_fetch_emails()
             $subject = $headerInfo->subject ?? 'No Subject';
             error_log('Email from: ' . $from . ', Subject: ' . $subject);
 
-            // Fetch email body with robust MIME handling
+            // Fetch email body with robust MIME handling( we assume plain text for simplicity)
             $structure = imap_fetchstructure($email, $email_number);
             $message = '';
             if ($structure->type == 1 && isset($structure->parts)) { // Multipart
@@ -204,7 +204,7 @@ function robodesk_fetch_emails()
 
             $message = robodesk_clean_email_message($message);
 
-            // Handle replies
+            // Handle replies for parent tickets
             $in_reply_to = $headerInfo->in_reply_to ?? '';
             $references = $headerInfo->references ?? '';
             $original_post_id = null;
@@ -269,7 +269,7 @@ function robodesk_fetch_emails()
                     }
 
                     // Update last fetched date
-                    update_option('robodesk_last_fetched_date', $date);
+                    update_option('robodesk_last_fetched_date', $date); // Update last fetched date to current email date
                     continue; // Skip creating a new ticket for replies
                 } else {
                     error_log('Could not find original ticket for reply, creating new ticket instead');
@@ -396,9 +396,7 @@ function robodesk_fetch_emails()
     }
 }
 
-
-
-// Post comments as email replies
+// Post comments as email replies 
 function robodesk_reply_email($comment_id, $comment_approved)
 {
     if ($comment_approved) {
