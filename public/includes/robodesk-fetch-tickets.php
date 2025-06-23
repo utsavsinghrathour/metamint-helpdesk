@@ -309,14 +309,21 @@ function robodesk_fetch_emails()
                     continue;
                 } else {
                     error_log('Created new user with ID: ' . $user_id);
-                    // send a email notification to the user for account creation 
+
+                    // Send an email notification to the user for account creation with password reset link
                     $subject = 'Your Robodesk Account';
-                    $message = 'Hello, your Robodesk account has been created successfully. You can now
-                    log in with your email: ' . $useremail . ' and a randomly generated password. Please change your password after logging in for the first time.';
+                    // Generate password reset link
+                    $user_obj = get_user_by('ID', $user_id);
+                    $reset_key = get_password_reset_key($user_obj);
+                    if (is_wp_error($reset_key)) {
+                        error_log('Failed to generate password reset key for user ' . $useremail . ': ' . $reset_key->get_error_message());
+                        $message = "Hello,\n\nYour Robodesk account has been created successfully with email: $useremail. Unfortunately, we could not generate a password reset link. Please contact support to set your password.\n\nBest regards,\nRobodesk Support";
+                    } else {
+                        $reset_url = network_site_url("wp-login.php?action=rp&key=$reset_key&login=" . rawurlencode($user_login), 'login');
+                        $message = "Hello,\n\nYour Robodesk account has been created successfully with email: $useremail.\n\nPlease set your password using this link: $reset_url\n\nThis link will expire in 24 hours. If you need assistance, contact our support team.\n\nBest regards,\nRobodesk Support";
+                    }
                     $headers = [
                         'From: Robodesk Support <pipetest@wplocatepress.com>',
-                        'To: ' . $to,
-                        'Reply-To: ' . $reply_to,  // Ensures replies go to the right person
                         'MIME-Version: 1.0',
                         'Content-Type: text/plain; charset=UTF-8'
                     ];
