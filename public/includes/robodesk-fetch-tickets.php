@@ -309,6 +309,23 @@ function robodesk_fetch_emails()
                     continue;
                 } else {
                     error_log('Created new user with ID: ' . $user_id);
+                    // send a email notification to the user for account creation 
+                    $subject = 'Your Robodesk Account';
+                    $message = 'Hello, your Robodesk account has been created successfully. You can now
+                    log in with your email: ' . $useremail . ' and a randomly generated password. Please change your password after logging in for the first time.';
+                    $headers = [
+                        'From: Robodesk Support <pipetest@wplocatepress.com>',
+                        'To: ' . $to,
+                        'Reply-To: ' . $reply_to,  // Ensures replies go to the right person
+                        'MIME-Version: 1.0',
+                        'Content-Type: text/plain; charset=UTF-8'
+                    ];
+                    $mail_sent = wp_mail($useremail, $subject, $message, $headers);
+                    if (!$mail_sent) {
+                        error_log('Failed to send account creation email to ' . $useremail);
+                    } else {
+                        error_log('Account creation email sent to ' . $useremail);
+                    }
                 }
             } else {
                 $user_id = $user->ID;
