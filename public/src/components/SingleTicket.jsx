@@ -9,6 +9,7 @@ import EmojiPicker from 'emoji-picker-react';
 import Logo from '../images/wooescrow-logo.png';
 import '../styles/MessageTabs.css';
 import axios from 'axios';
+import {  getMessages } from "../utils/modules";   
 
 const SingleTicket = ({ ticket, onBack }) => {
   const [message, setMessage] = useState('');
@@ -26,22 +27,24 @@ const SingleTicket = ({ ticket, onBack }) => {
     try {
       setLoading(true);
       setError(null);
-      const response = await axios.get('/wp-json/wp/v2/comments', {
-        params: {
-          post: ticket.id,
-          type: 'ticket_replies',
-          per_page: 100,
-        },
-      });
 
+      const response = await getMessages(ticket.id);
+      if(response.code === 400){
+        setError('Nothing to show');
+        setLoading(false);
+        return;
+      }
       const messages = response.data.map((comment) => ({
         id: comment.id,
-        text: comment.content.rendered.replace(/<[^>]+>/g, ''),
-        sender: comment.author === 0 ? 'me' : 'other', // Adjust based on user ID
-        image: comment.author === 0 ? '/path/to/me.jpg' : '/path/to/other.jpg', // Replace with actual images
-        created_at: comment.date,
+        text:  comment.content.replace(/<[^>]+>/g, ''),
+        sender:  comment.author_id === '46' ? 'me' : 'other', // Compare with current user ID
+        senderName: comment.author_name,
+        image:  comment.author_image ?? '/default-avatar.jpg', // Use WordPress avatar if available
+        created_at: comment.created_at,
+        isAdmin: comment.author_id !== ticket.author_id // Assuming you want to mark non-author as admin
       }));
-
+      
+      console.log(messages);
       setChatMessages(messages);
       setLoading(false);
     } catch (err) {
@@ -50,6 +53,56 @@ const SingleTicket = ({ ticket, onBack }) => {
       setLoading(false);
     }
   };
+
+// const fetchMessages = async () => {
+
+//     const response = await axios.post('/wp-json/wp/v2/comments', {
+//         params: {
+//           post: ticket.id,
+//           type: 'ticket_replies',
+//           per_page: 100,
+//           order: 'asc', // To get messages in chronological order
+//           _fields: 'id,content,author,author_name,date,author_avatar_urls' // Only request needed fields
+//         }
+//       });
+      
+//       console.log('responseabcd', response);
+      
+//     //   console.log('response');
+//     try {
+//       setLoading(true);
+//       setError(null);
+
+//       const response = await axios.get('/wp-json/wp/v2/comments', {
+//         params: {
+//           post: ticket.id,
+//           type: 'ticket_replies',
+//           per_page: 100,
+//           order: 'asc', // To get messages in chronological order
+//           _fields: 'id,content,author,author_name,date,author_avatar_urls' // Only request needed fields
+//         }
+//       });
+  
+//     //   console.log('Ticket replies:', response.data);
+  
+//       const messages = response.data.map((comment) => ({
+//         id: comment.id,
+//         text: comment.content.rendered.replace(/<[^>]+>/g, '').trim(),
+//         sender: comment.author === currentUser.id ? 'me' : 'other', // Compare with current user ID
+//         senderName: comment.author_name,
+//         image: comment.author_avatar_urls?.['96'] || '/default-avatar.jpg', // Use WordPress avatar if available
+//         created_at: comment.date,
+//         isAdmin: comment.author !== ticket.author_id // Assuming you want to mark non-author as admin
+//       }));
+  
+//       setChatMessages(messages);
+//       setLoading(false);
+//     } catch (err) {
+//       console.error('Error fetching messages:', err);
+//       setError('Failed to load messages. Please try again.hellow');
+//       setLoading(false);
+//     }
+// };
 
   useEffect(() => {
     console.log('SingleTicket ticket prop:', ticket);

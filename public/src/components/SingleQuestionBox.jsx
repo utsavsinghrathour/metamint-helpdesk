@@ -38,7 +38,7 @@ const SingleQuestionBox = ({ setShowHeaderFooter, showHeaderFooter, isExpanded, 
       try {
         setIsLoading(true);
         const response = await fetch(
-          `${wpHomeUrl}/wp-json/wp/v2/robodesk_faq?featured=true&_fields=id,title.rendered,excerpt.rendered`
+          `/wp-json/wp/v2/robodesk_faq?featured=true&_fields=id,title.rendered,excerpt.rendered`
         );
         if (!response.ok) {
           throw new Error('Failed to fetch FAQs');
