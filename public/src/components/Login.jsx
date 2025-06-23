@@ -25,7 +25,7 @@ const Login = ({ setShowLogin, setActiveTab }) => {
     if (!formData.password) {
       newErrors.password = "Password is required";
       isValid = false;
-    } else if (formData.password.length < 8) {
+    } else if (formData.password.length < 5) {
       newErrors.password = "Password must be at least 8 characters";
       isValid = false;
     }
@@ -55,6 +55,8 @@ const Login = ({ setShowLogin, setActiveTab }) => {
       });
 
       const loginData = await loginResponse.json();
+      
+      console.log(loginData);
 
       if (!loginResponse.ok) {
         throw new Error(loginData.message || loginData.data?.message || 'Login failed');

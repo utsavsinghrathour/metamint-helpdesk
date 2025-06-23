@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { createTicket } from "../utils/modules";
+import { createTicket , getMessages } from "../utils/modules";
 import "../styles/SendMessageField.css";
 
 const SendMessageField = ({ setShowLogin , setActiveTab} ) => {
@@ -27,12 +27,12 @@ const SendMessageField = ({ setShowLogin , setActiveTab} ) => {
       localStorage.setItem('temp_ticket_title', message);
       return;
     }
+          
   
     try {
       const result = await createTicket(userId, message, '');
       console.log("Ticket Created:", result);
-      
-    //   change the tab to tickets
+
       setMessage("");
       setActiveTab(1);
     } catch (error) {

@@ -1,7 +1,5 @@
 <?php 
 
-
-
 // add_action('rest_api_init', function () {
 //     register_rest_route('custom/v1', '/login', array(
 //         'methods' => 'POST',
@@ -9,7 +7,6 @@
 //         'permission_callback' => '__return_true', // Allow public access to the endpoint
 //     ));
 // });
-
 
 // function custom_login_endpoint(WP_REST_Request $request) {
 //     $username = sanitize_text_field($request->get_param('username'));
@@ -199,19 +196,7 @@ add_filter('rest_pre_serve_request', function ($value) {
     return $value;
 });
 
-// Handle preflight OPTIONS request
-add_action('rest_api_init', function () {
-    add_filter('rest_pre_dispatch', function ($result, WP_REST_Server $server, WP_REST_Request $request) {
-        if ($request->get_method() === 'OPTIONS') {
-            header('Access-Control-Allow-Origin: ' . esc_url_raw(site_url()));
-            header('Access-Control-Allow-Methods: POST, GET, OPTIONS');
-            header('Access-Control-Allow-Headers: Content-Type, Authorization');
-            header('Access-Control-Max-Age: 86400');
-            exit;
-        }
-        return $result;
-    }, 10, 3);
-});
+
 
 // Secure the secret key
 if (!defined('JWT_AUTH_SECRET_KEY')) {

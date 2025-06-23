@@ -9,13 +9,14 @@ import Author1 from '../images/person1.jpeg';
 import Author2 from '../images/person2.jpeg';
 import '../styles/FAQ.css';
 
+
 const stripHtml = (html) => he.decode(html.replace(/<[^>]+>/g, '')).trim();
 const wpTrimWords = (text, numWords) => {
   const words = stripHtml(text).split(/\s+/);
   return words.slice(0, numWords).join(' ') + (words.length > numWords ? '...' : '');
 };
 
-const normalizeImagePaths = (html, baseUrl = 'http://localhost:10106') => {
+const normalizeImagePaths = (html, baseUrl = '/') => {
   return html.replace(/(<img[^>]+src=['"])(\/[^'"]+)(['"][^>]*>)/gi, (match, prefix, path, suffix) => {
     if (path.startsWith('/')) {
       return `${prefix}${baseUrl}${path}${suffix}`;
@@ -29,13 +30,13 @@ const FAQDetail = memo(({ faq, onBack, isExpanded, setIsExpanded }) => {
   const [isDisliked, setIsDisliked] = useState(false);
   const [fullContent, setFullContent] = useState(null);
   const [authorNames, setAuthorNames] = useState([]);
-  const wpHomeUrl = window.robodeskData?.home_url || 'http://localhost:10106';
+  const wpHomeUrl = window.robodeskData?.home_url || 'http://localhost:10135/';
 
   useEffect(() => {
     const fetchFAQDetails = async () => {
       try {
         const response = await fetch(
-          `${wpHomeUrl}/wp-json/wp/v2/robodesk_faq/${faq.id}?_fields=content.rendered,author_name`
+          `/wp-json/wp/v2/robodesk_faq/${faq.id}?_fields=content.rendered,author_name`
         );
         if (!response.ok) throw new Error('Failed to fetch FAQ details');
         const data = await response.json();
@@ -203,7 +204,7 @@ const FAQ = ({ setActiveTab, setIsOpen, isExpanded, setIsExpanded, activeTab }) 
   const [faqs, setFaqs] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
-  const wpHomeUrl = window.robodeskData?.home_url || 'http://localhost:10106';
+  const wpHomeUrl = window.robodeskData?.home_url || 'http://localhost:10135/';
 
   useEffect(() => {
     const fetchFAQs = async () => {
@@ -225,7 +226,7 @@ const FAQ = ({ setActiveTab, setIsOpen, isExpanded, setIsExpanded, activeTab }) 
 
 
         const response = await fetch(
-          `${wpHomeUrl}/wp-json/wp/v2/robodesk_faq?_fields=id,title.rendered,excerpt.rendered,content.rendered&per_page=100&page=1`
+          `/wp-json/wp/v2/robodesk_faq?_fields=id,title.rendered,excerpt.rendered,content.rendered&per_page=100&page=1`
         );
         
         console.log(wpHomeUrl);

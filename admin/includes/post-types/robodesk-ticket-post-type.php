@@ -355,7 +355,7 @@ function robodesk_handle_tickets_webhook(WP_REST_Request $request) {
         
         $title    = sanitize_text_field($data['data']['title'] ?? '');
         $content  = sanitize_textarea_field($data['data']['description'] ?? '');
-        $author = sanitize_text_field($data['data']['uid'] ?? '');
+        $author   = sanitize_text_field($data['data']['uid'] ?? '');
 
         $ticket = wp_insert_post(array(
             'post_type'   => 'robodesk_ticket',
@@ -368,7 +368,6 @@ function robodesk_handle_tickets_webhook(WP_REST_Request $request) {
 			),
         ));
         
-
         if (!is_wp_error($ticket)) {
             rbd_log(sprintf(
                 "Ticket #%s created with title: %s\n",
@@ -461,6 +460,40 @@ function robodesk_handle_tickets_webhook(WP_REST_Request $request) {
                 'data'    => array('ticket_id' => $ticket_id, 'reply_id' => $comment_id)
             ));
         }
+    }
+    
+    // Get ticket Comments
+    if (isset($data['event']) && 'comments.get' === $data['event']){
+        $loggedinuserid   = sanitize_text_field($data['data']['uid'] ?? '');
+        $ticketID =  sanitize_text_field($data['data']['ticket_id'] ?? '');
+        
+        $comments = get_comments([
+            'post_id' => $ticketID, 
+            'order' => 'ASC', 
+        ]);
+        
+        if(empty($comments)){
+            return new WP_Error(
+                400,
+                'Comments Not found',
+            );
+        }
+        $formatted_comments = [];
+        foreach($comments as $comment){
+            $formatted_comments[] = [
+                'id' => $comment->comment_ID,
+                'author' => $comment->comment_author,
+                'author_id' => $comment->user_id,
+                'author_image' => get_avatar_url($comment->user_id, ['size' => 96]),
+                'content' => $comment->comment_content,
+                'created_at' => $comment->comment_date,
+            ];
+        }
+        return rest_ensure_response(array(
+            'status'  => 'success',
+            'message' => 'Comments found',
+            'data'=> $formatted_comments,       
+        ));
     }
 
     // Handle unknown events
