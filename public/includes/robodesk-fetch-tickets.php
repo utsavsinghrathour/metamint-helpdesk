@@ -41,7 +41,7 @@ function robodesk_clean_email_message($message)
 {
     // Remove quoted replies, signatures, and excessive whitespace
     $message = preg_replace('/^>.*$/m', '', $message); // Remove lines starting with ">"
-    $message = preg_replace('/--\s*Signature.*$/s', '', $message); // Remove signature
+    // $message = preg_replace('/--\s*Signature.*$/s', '', $message); // Remove signature
     $message = strip_tags($message); // Remove HTML tags
     // dont remove line breaks
     $message = preg_replace('/\s+/', ' ', $message); // Replace multiple spaces with a single space
