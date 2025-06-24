@@ -254,6 +254,7 @@ function robodesk_fetch_emails()
                             'comment_content' => $message,
                             'comment_date' => $date,
                             'comment_approved' => 1,
+                            'comment_type' => 'ticket_replies', // Custom comment type for ticket replies
                         ]);
 
                         if (!is_wp_error($comment_id)) {
@@ -301,7 +302,10 @@ function robodesk_fetch_emails()
                     'user_email' => $useremail,
                     'user_pass' => wp_generate_password(),
                     'role' => $role,
-                ]);
+                ], true);
+
+                wp_send_new_user_notifications($user_id, 'both');
+
 
                 if (is_wp_error($user_id)) {
                     error_log('Failed to create user: ' . $user_id->get_error_message());
@@ -309,30 +313,6 @@ function robodesk_fetch_emails()
                     continue;
                 } else {
                     error_log('Created new user with ID: ' . $user_id);
-
-                    // Send an email notification to the user for account creation with password reset link
-                    $subject = 'Your Robodesk Account';
-                    // Generate password reset link
-                    $user_obj = get_user_by('ID', $user_id);
-                    $reset_key = get_password_reset_key($user_obj);
-                    if (is_wp_error($reset_key)) {
-                        error_log('Failed to generate password reset key for user ' . $useremail . ': ' . $reset_key->get_error_message());
-                        $message = "Hello,\n\nYour Robodesk account has been created successfully with email: $useremail. Unfortunately, we could not generate a password reset link. Please contact support to set your password.\n\nBest regards,\nRobodesk Support";
-                    } else {
-                        $reset_url = network_site_url("wp-login.php?action=rp&key=$reset_key&login=" . rawurlencode($user_login), 'login');
-                        $message = "Hello,\n\nYour Robodesk account has been created successfully with email: $useremail.\n\nPlease set your password using this link: $reset_url\n\nThis link will expire in 24 hours. If you need assistance, contact our support team.\n\nBest regards,\nRobodesk Support";
-                    }
-                    $headers = [
-                        'From: Robodesk Support <pipetest@wplocatepress.com>',
-                        'MIME-Version: 1.0',
-                        'Content-Type: text/plain; charset=UTF-8'
-                    ];
-                    $mail_sent = wp_mail($useremail, $subject, $message, $headers);
-                    if (!$mail_sent) {
-                        error_log('Failed to send account creation email to ' . $useremail);
-                    } else {
-                        error_log('Account creation email sent to ' . $useremail);
-                    }
                 }
             } else {
                 $user_id = $user->ID;
@@ -420,75 +400,80 @@ function robodesk_fetch_emails()
     }
 }
 
-// Post comments as email replies 
 function robodesk_reply_email($comment_id, $comment_approved)
 {
-    if ($comment_approved) {
-        $comment = get_comment($comment_id); // Get the comment object
-        $post = get_post($comment->comment_post_ID); // Get the post object
+    if (!$comment_approved) return;
 
-        // Get the original sender's email from post meta (the person who created the ticket)
-        $email_from = get_post_meta($post->ID, 'email_from', true);
-        $email_message_id = get_post_meta($post->ID, 'email_message_id', true);
+    $comment = get_comment($comment_id);
 
-        // Get the email of the comment author (the person who replied)
-        $comment_author_email = $comment->comment_author_email;
+    // Only process ticket replies
+    if ($comment->comment_type !== 'ticket_replies') return;
 
-        // Extract clean emails if they are inside angle brackets
-        preg_match('/<(.*?)>/', $email_from, $matches);
-        $pure_email_from = $matches[1] ?? $email_from;
+    $post = get_post($comment->comment_post_ID);
 
-        preg_match('/<(.*?)>/', $comment_author_email, $matches);
-        $pure_email_to = $matches[1] ?? $comment_author_email;
+    // Get ticket creator email (from post meta)
+    $ticket_creator_email = get_post_meta($post->ID, 'email_from', true);
+    $email_message_id = get_post_meta($post->ID, 'email_message_id', true);
+    $comment_author_email = $comment->comment_author_email;
 
-        // Validate emails
-        if (!filter_var($pure_email_from, FILTER_VALIDATE_EMAIL) || !filter_var($pure_email_to, FILTER_VALIDATE_EMAIL)) {
-            error_log('Invalid email addresses: From - ' . $pure_email_from . ', To - ' . $pure_email_to);
-            return;
-        }
+    // Clean the emails (remove <> if present)
+    preg_match('/<(.*?)>/', $ticket_creator_email, $matches);
+    $pure_creator_email = $matches[1] ?? $ticket_creator_email;
 
-        // Swap emails correctly:
-        // - "To" should be the original sender (the ticket creator).
-        // - "Reply-To" should be the commenter's email (the person replying).
-        $to = $pure_email_from;
-        $reply_to = $pure_email_to;
+    preg_match('/<(.*?)>/', $comment_author_email, $matches);
+    $pure_commenter_email = $matches[1] ?? $comment_author_email;
 
-        $subject = 'Re: ' . $post->post_title;
-        $comment_content = $comment->comment_content;
+    // Validate emails
+    if (!filter_var($pure_creator_email, FILTER_VALIDATE_EMAIL) || !filter_var($pure_commenter_email, FILTER_VALIDATE_EMAIL)) {
+        error_log("Invalid emails: Creator - $pure_creator_email | Commenter - $pure_commenter_email");
+        return;
+    }
 
-        // Format the reply email
-        $reply_message = "On " . date("Y-m-d H:i:s", strtotime($post->post_date)) . ", $pure_email_from wrote:\n\n" . $comment_content;
+    //  If the ticket creator is commenting on their own ticket, skip
+    if (strtolower($pure_creator_email) === strtolower($pure_commenter_email)) {
+        error_log("No email sent: Ticket creator commented on their own ticket.");
+        return;
+    }
 
-        // Construct email headers
-        $headers = [
-            'From: Robodesk Support <pipetest@wplocatepress.com>',
-            'To: ' . $to,
-            'Reply-To: ' . $reply_to,  // Ensures replies go to the right person
-            'MIME-Version: 1.0',
-            'Content-Type: text/plain; charset=UTF-8'
-        ];
+    //  Someone else commented → send email to ticket creator
+    $to = $pure_creator_email;
+    $reply_to = $pure_commenter_email;
+    $subject = 'Re: ' . $post->post_title;
+    $comment_content = $comment->comment_content;
 
-        // Include threading headers if available
-        if ($email_message_id) {
-            $headers[] = 'References: ' . $email_message_id;
-            $headers[] = 'In-Reply-To: ' . $email_message_id;
-        }
+    // Artifact code starts here
+    $user = get_user_by('email', $pure_creator_email);
+    $user_name = $user ? $user->display_name : $pure_creator_email;
 
-        // Debug: Log headers before sending
-        error_log('Email To: ' . $to);
-        error_log('Reply-To: ' . $reply_to);
-        error_log('Email Headers: ' . print_r($headers, true));
+    $ticket_url = esc_url(admin_url("post.php?post=$post->ID&action=edit"));
 
-        // Send the email
-        $mail_sent = wp_mail($to, $subject, $reply_message, $headers);
+    $reply_message = '<html><body>';
+    $reply_message .= '<p>Hi ' . esc_html($user_name) . '</p>';
+    $reply_message .= '<p>A new reply has been added to your ticket <a href="' . $ticket_url . '">#' . esc_html($post->ID) . '</a>.</p>';
+    $reply_message .= '<p>"' . nl2br(esc_html($comment_content)) . '"</p>';
+    $reply_message .= '<p><a href="' . $ticket_url . '" style="display: inline-block; padding: 10px 20px; background-color: #0073aa; color: #ffffff; text-decoration: none; border-radius: 5px;">Reply</a></p>';
+    $reply_message .= '</body></html>';
 
-        // Log results
-        if (!$mail_sent) {
-            error_log('Email failed to send to ' . $to);
-        } else {
-            error_log('Email successfully sent to ' . $to);
-        }
+    $headers = [
+        'From: Robodesk Support <pipetest@wplocatepress.com>',
+        'Reply-To: ' . $reply_to,
+        'MIME-Version: 1.0',
+        'Content-Type: text/html; charset=UTF-8'
+    ];
+    if ($email_message_id) {
+        $headers[] = 'References: ' . $email_message_id;
+        $headers[] = 'In-Reply-To: ' . $email_message_id;
+    }
+
+    error_log("Email sending to ticket creator: $to");
+
+    $mail_sent = wp_mail($to, $subject, $reply_message, $headers);
+
+    if (!$mail_sent) {
+        error_log("Failed to send email to $to");
+    } else {
+        error_log("Email sent to $to");
     }
 }
+// Hook to send email when a comment is posted
 add_action('comment_post', 'robodesk_reply_email', 10, 2);
-//At this point, we have a function that fetches emails, processes them into tickets, and handles replies as comments. The email sending functionality is also integrated to ensure replies are sent correctly.
