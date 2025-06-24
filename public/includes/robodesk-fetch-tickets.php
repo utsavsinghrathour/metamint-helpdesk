@@ -43,6 +43,10 @@ function robodesk_clean_email_message($message)
     $message = preg_replace('/^>.*$/m', '', $message); // Remove lines starting with ">"
     $message = preg_replace('/--\s*Signature.*$/s', '', $message); // Remove signature
     $message = strip_tags($message); // Remove HTML tags
+    // dont remove line breaks
+    $message = preg_replace('/\s+/', ' ', $message); // Replace multiple spaces with a single space
+    $message = preg_replace('/\n+/', "\n", $message); // Replace multiple newlines with a single newline
+
     return trim($message);
 }
 
