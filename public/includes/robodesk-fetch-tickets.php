@@ -308,7 +308,7 @@ function robodesk_fetch_emails()
                     'role' => $role,
                 ], true);
 
-                wp_send_new_user_notifications($user_id, 'both');
+                wp_send_new_user_notifications($user_id, 'user'); // send notification to the new user
 
 
                 if (is_wp_error($user_id)) {
@@ -481,3 +481,7 @@ function robodesk_reply_email($comment_id, $comment_approved)
 }
 // Hook to send email when a comment is posted
 add_action('comment_post', 'robodesk_reply_email', 10, 2);
+
+// Disable default WordPress notifications for new users and password changes
+add_filter('send_password_change_email', '__return_false');
+remove_action('after_password_reset', 'wp_password_change_notification');
