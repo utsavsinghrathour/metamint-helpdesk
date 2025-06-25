@@ -242,7 +242,7 @@ function robodesk_credentials_page()
                     <input type="text" id="credential_url" name="credential_url"><br><br>
 
                     <label for="credential_notes">Notes:</label><br>
-                    <textarea id="credential_notes" name="credential_notes"></textarea><br><br>
+                    <textarea id="credential_notes" name="credential_notes" rows="4" style="border: 1px solid #DDD; width:100%" ></textarea><br><br>
 
                     <input type="hidden" name="action" value="robodesk_add_credential">
                     <?php wp_nonce_field('robodesk_add_credential_nonce'); ?>
