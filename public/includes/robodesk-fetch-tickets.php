@@ -1,7 +1,7 @@
 <?php
 // robodesk-email-to-ticket
-// Function to display the email to ticket
 
+// Function to display the email to ticket
 function robodesk_fetch_emails_callback()
 {
     echo '<h1>Email To Ticket</h1>';
@@ -36,7 +36,7 @@ function robodesk_fetch_emails_callback()
     echo '</table>';
 }
 
-// Basic email cleaning function ( or we can use a library like PHP-MIME-Mail-Parser )
+// Basic email cleaning function
 function robodesk_clean_email_message($message)
 {
     // Remove quoted replies, signatures, and excessive whitespace
