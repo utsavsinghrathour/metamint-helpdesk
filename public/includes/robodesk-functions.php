@@ -251,7 +251,12 @@ function robodesk_credentials_page()
             </div>
 
             <h3>My Credentials</h3>
-            <?php if ($credentials): ?>
+            <?php if ($credentials): 
+                // var_dump($credentials);
+                //  $asp = robodesk_decrypt('tram', 'robodesk');
+                 
+                //  var_dump()
+                ?>
                 <table>
                     <thead>
                         <tr>
@@ -266,20 +271,28 @@ function robodesk_credentials_page()
                     <tbody>
                         <?php foreach ($credentials as $credential): ?>
                             <tr>
+                                <!-- Name -->
                                 <td><?php echo esc_html($credential->name); ?></td>
+                                <!-- User name -->
                                 <td><?php echo esc_html($credential->username); ?></td>
+                               <!-- Password -->
                                 <td><span class="password-hidden">********</span>
                                     <?php $enc =  robodesk_encrypt($credential->password, 'robodesk'); ?>
                                     <button class="show-password" data-password="
-                                    <?php echo robodesk_decrypt($credential->password, 'robodesk');
-                                    ?>">Show</button>
+                                    <?php echo robodesk_decrypt($enc, 'robodesk');
+                                    ?>" style="color: black; background-color: #DDD;">Show</button>
 
                                 </td>
 
-                                <td><a href="<?php echo esc_url($credential->url); ?>" target="_blank" rel="noopener noreferrer"><?php echo esc_html($credential->url); ?></a></td>
-                                <td><?php echo esc_html($credential->notes); ?></td>
+                                <!-- URL -->
                                 <td>
-                                    <button class="delete-credential" data-credential-id="<?php echo esc_attr($credential->id); ?>">Delete</button>
+                                    <a href="<?php echo esc_url($credential->url); ?>" target="_blank" rel="noopener noreferrer"><?php echo esc_html($credential->url); ?></a>
+                                </td>
+                                <!-- Notes -->
+                                <td><?php echo esc_html($credential->notes); ?></td>
+                                <!-- Actions -->
+                                <td>
+                                    <button class="delete-credential" data-credential-id="<?php echo esc_attr($credential->id); ?>" style="color: black; background-color: #DDD;">Delete</button>
                                 </td>
                             </tr>
                         <?php endforeach; ?>

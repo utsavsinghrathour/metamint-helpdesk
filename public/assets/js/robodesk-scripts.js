@@ -237,13 +237,14 @@ jQuery(document).ready(function($) {
     // Add Credential AJAX
     $('#robodesk-add-credential').submit(function(e) {
         e.preventDefault();
-        alert('robodesk-scripts.js here');
+       
         var formData = $(this).serialize();
         $.ajax({
             url: robodesk_ajax_object.ajax_url,
             type: 'POST',
             data: formData,
             success: function(response) {
+                console.log(response);
                 if (response.success) {
                     $('#robodesk-add-credential')[0].reset();
                     location.reload();
