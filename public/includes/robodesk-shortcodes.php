@@ -856,9 +856,7 @@ function robodesk_notifications_content_page()
 {
     // ... notifications page content
     ob_start();
-?>
-    <div>Notifications Page Content</div>
-<?php
+
     robodesk_notifications_content();
     return ob_get_clean();
 }

@@ -199,8 +199,8 @@ function robodesk_faq_vote_callback()
 add_action('wp_ajax_robodesk_add_credential', 'robodesk_add_credential_callback');
 function robodesk_add_credential_callback()
 {
-    echo 'asdfasdfasdfasdf';
-    echo '<script>alert("asdfasdfasdf" );</script>';
+    // echo 'asdfasdfasdfasdf';
+    // echo '<script>alert("asdfasdfasdf" );</script>';
     check_ajax_referer('robodesk_add_credential_nonce');
     global $wpdb;
     $credentials_table = $wpdb->prefix . 'robodesk_credentials';
