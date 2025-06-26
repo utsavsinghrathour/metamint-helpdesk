@@ -8,8 +8,6 @@ const SendMessageField = ({ setShowLogin , setActiveTab} ) => {
   const [userId, setUserId] = useState(wpAuth.loggedInUserId);
   const [placeHolderText , setplaceHolderText] = useState('Send us a message')
   
-  
-
   const handleInputChange = (e) => {
     setMessage(e.target.value);
   };
@@ -24,11 +22,11 @@ const SendMessageField = ({ setShowLogin , setActiveTab} ) => {
   
     if (loggedIn == 'false') {
       setShowLogin(true);
+      setActiveTab(1);
       localStorage.setItem('temp_ticket_title', message);
       return;
     }
-          
-  
+    setMessage(message);    
     try {
       const result = await createTicket(userId, message, '');
       console.log("Ticket Created:", result);
