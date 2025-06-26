@@ -7,6 +7,8 @@ import DOMPurify from 'dompurify';
 import '../styles/NoticeTabs.css';
 import Logo from '../images/wooescrow-logo.png';
 
+import { useCachedFetch } from '../utils/modules';
+
 const wpHomeUrl = window.robodeskData?.home_url || '';
 
 const normalizeImagePaths = (html, baseUrl = wpHomeUrl) => {
@@ -64,31 +66,34 @@ const NoticeItem = memo(({ notice, onSelect }) => {
 
 const SingleNoticeView = memo(({ notice, onBack, isExpanded, setIsExpanded }) => {
   const [content, setContent] = useState(null);
-  const wpHomeUrl = window.robodeskData?.home_url || '';
+
 
   useEffect(() => {
-    const fetchContent = async () => {
+    // console.log('Our notice',notice);
+    const fetchContent = () => {
       try {
-        const cacheKey = `notice_content_${notice.id}`;
-        const cachedContent = localStorage.getItem(cacheKey);
-        if (cachedContent) {
-          setContent(cachedContent);
-          return;
-        }
+        // const cacheKey = `notice_content_${notice.id}`;
+        // const cachedContent = localStorage.getItem(cacheKey);
+        // if (cachedContent) {
+        //   setContent(cachedContent);
+        //   return;
+        // }
 
-        const response = await fetch(
-          `${wpHomeUrl}/wp-json/wp/v2/notice/${notice.id}?_fields=content.rendered`
-        );
-        if (!response.ok) throw new Error('Failed to fetch notice content');
-        const data = await response.json();
-        const normalizedContent = normalizeImagePaths(data.content.rendered);
+        // const response = await fetch(
+        //   `/wp-json/wp/v2/notice/${notice.id}?_fields=content.rendered`
+        // );
+        // if (!response.ok) throw new Error('Failed to fetch notice content');
+        // const data = await response.json();
+        // console.log('Jpt Notice',notice);
+       
+        const normalizedContent = normalizeImagePaths(notice.content);
         const sanitizedContent = DOMPurify.sanitize(normalizedContent, {
           ADD_TAGS: ['iframe', 'img'],
           ADD_ATTR: ['allow', 'allowfullscreen', 'frameborder', 'src', 'alt', 'title', 'width', 'height'],
           ALLOWED_URI_REGEXP: /^(?:https?:\/\/|\/|data:image\/)/,
         });
         setContent(sanitizedContent);
-        localStorage.setItem(cacheKey, sanitizedContent);
+        // localStorage.setItem(cacheKey, sanitizedContent);
       } catch (err) {
         console.error('Failed to fetch content:', err);
         setContent('Error loading content');
@@ -189,6 +194,125 @@ const SingleNoticeView = memo(({ notice, onBack, isExpanded, setIsExpanded }) =>
   );
 });
 
+// const NoticeTabs = ({
+//   setActiveTab,
+//   setIsOpen,
+//   isExpanded,
+//   setIsExpanded,
+//   activeTab,
+//   selectedNotice: initialSelectedNotice,
+//   setShowActiveFeatured,
+// }) => {
+//   const [selectedNotice, setSelectedNotice] = useState(initialSelectedNotice);
+//   const [showHeaderFooter, setShowHeaderFooter] = useState(true);
+//   const [notices, setNotices] = useState([]);
+//   const [isLoading, setIsLoading] = useState(true);
+//   const [error, setError] = useState(null);
+  
+//   const { data, err, loading } = useCachedFetch('/wp-json/wp/v2/notice?_fields=id,title.rendered,excerpt.rendered,content.rendered');
+
+//   useEffect(() => {
+//     setSelectedNotice(initialSelectedNotice);
+//   }, [initialSelectedNotice]);
+
+//   useEffect(() => {
+//     const fetchNotices = async () => {
+//       try {
+//         setIsLoading(true);
+//         const cacheKey = 'notices';
+//         const cachedNotices = localStorage.getItem(cacheKey);
+//         const cacheTime = localStorage.getItem('notices_cache_time');
+//         if (cachedNotices && cacheTime && Date.now() - cacheTime < 24 * 60 * 60 * 1000) {
+//           setNotices(JSON.parse(cachedNotices));
+//           setIsLoading(false);
+//           return;
+//         }
+        
+//         const response = await fetch(
+//           `/wp-json/wp/v2/notice?_fields=id,title.rendered,excerpt.rendered,content.rendered`
+//         );
+//         if (!response.ok) throw new Error('Failed to fetch notices');
+//         const data = await response.json();
+//         console.log('Notices Data', data);
+//         const formattedNotices = data.map((notice) => ({
+//           id: notice.id,
+//           title: notice.title.rendered,
+//           content: notice.content.rendered,
+//           excerpt: DOMPurify.sanitize(notice.excerpt.rendered, {
+//             ADD_TAGS: ['p', 'strong', 'em'],
+//             ADD_ATTR: [],
+//           }),
+          
+//         }));
+
+//         setNotices(formattedNotices);
+//         localStorage.setItem(cacheKey, JSON.stringify(formattedNotices));
+//         localStorage.setItem('notices_cache_time', Date.now());
+//         setIsLoading(false);
+//       } catch (err) {
+//         setError(err.message);
+//         setIsLoading(false);
+//       }
+//     };
+
+//     fetchNotices();
+//   }, []);
+
+//   useEffect(() => {
+//     setShowHeaderFooter(!selectedNotice);
+//   }, [selectedNotice]);
+
+//   const handleBackClick = () => {
+//     setSelectedNotice(null);
+//     setIsExpanded(false);
+//   };
+
+//   return (
+//     <ErrorBoundary>
+//       <div className="rd-flex rd-flex-col rd-h-full">
+//         {error ? (
+//           <p className="rd-text-red rd-body-text rd-text-center">Error: {error}</p>
+//         ) : selectedNotice ? (
+//           <SingleNoticeView
+//             notice={selectedNotice}
+//             onBack={handleBackClick}
+//             isExpanded={isExpanded}
+//             setIsExpanded={setIsExpanded}
+//           />
+//         ) : (
+//           <>
+//             <div className="rd-main-content">
+//               {showHeaderFooter && (
+//                 <>
+//                   <Header onClose={() => setIsOpen(false)} />
+//                   <div className="rd-text-center rd-px-20 rd-flex rd-flex-col rd-gap-5 rd-mb-20 notice-tab-title home-tab-title">
+//                     <h3 className="heading-3">Notices</h3>
+//                     <h5 className="sub-text">Stay updated with our latest announcements.</h5>
+//                   </div>
+//                 </>
+//               )}
+//               <div className="rd-px-18 rd-mt-20 rd-mb-15 rd-overflow-h-320 notice-tab-content">
+//                 <div className="rd-flex rd-flex-col rd-gap-20 featured-faq">
+//                   {isLoading ? (
+//                     <p className="rd-body-text rd-text-center">Loading notices...</p>
+//                   ) : notices.length === 0 ? (
+//                     <p className="rd-body-text">No notices found.</p>
+//                   ) : (
+//                     notices.map((notice) => (
+//                       <NoticeItem key={notice.id} notice={notice} onSelect={setSelectedNotice} />
+//                     ))
+//                   )}
+//                 </div>
+//               </div>
+//             </div>
+//             {showHeaderFooter && <Footer activeTab={1} setActiveTab={setActiveTab} />}
+//           </>
+//         )}
+//       </div>
+//     </ErrorBoundary>
+//   );
+// };
+
 const NoticeTabs = ({
   setActiveTab,
   setIsOpen,
@@ -201,54 +325,36 @@ const NoticeTabs = ({
   const [selectedNotice, setSelectedNotice] = useState(initialSelectedNotice);
   const [showHeaderFooter, setShowHeaderFooter] = useState(true);
   const [notices, setNotices] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState(null);
 
+  // Use the useCachedFetch hook
+  const { data, error, loading } = useCachedFetch(
+    '/wp-json/wp/v2/notice?_fields=id,title.rendered,excerpt.rendered,content.rendered'
+  );
+  console.log('On nOtice tabs');
+  console.log('New Way' , data , error,loading);
+
+  // Process fetched data
+  useEffect(() => {
+    if (data) {
+      const formattedNotices = data.map((notice) => ({
+        id: notice.id,
+        title: notice.title.rendered,
+        content: notice.content.rendered,
+        excerpt: DOMPurify.sanitize(notice.excerpt.rendered, {
+          ADD_TAGS: ['p', 'strong', 'em'],
+          ADD_ATTR: [],
+        }),
+      }));
+      setNotices(formattedNotices);
+    }
+  }, [data]);
+
+  // Sync selectedNotice with initialSelectedNotice
   useEffect(() => {
     setSelectedNotice(initialSelectedNotice);
   }, [initialSelectedNotice]);
 
-  useEffect(() => {
-    const fetchNotices = async () => {
-      try {
-        setIsLoading(true);
-        const cacheKey = 'notices';
-        const cachedNotices = localStorage.getItem(cacheKey);
-        const cacheTime = localStorage.getItem('notices_cache_time');
-        if (cachedNotices && cacheTime && Date.now() - cacheTime < 24 * 60 * 60 * 1000) {
-          setNotices(JSON.parse(cachedNotices));
-          setIsLoading(false);
-          return;
-        }
-
-        const response = await fetch(
-          `${wpHomeUrl}/wp-json/wp/v2/notice?_fields=id,title.rendered,excerpt.rendered`
-        );
-        if (!response.ok) throw new Error('Failed to fetch notices');
-        const data = await response.json();
-
-        const formattedNotices = data.map((notice) => ({
-          id: notice.id,
-          title: notice.title.rendered,
-          excerpt: DOMPurify.sanitize(notice.excerpt.rendered, {
-            ADD_TAGS: ['p', 'strong', 'em'],
-            ADD_ATTR: [],
-          }),
-        }));
-
-        setNotices(formattedNotices);
-        localStorage.setItem(cacheKey, JSON.stringify(formattedNotices));
-        localStorage.setItem('notices_cache_time', Date.now());
-        setIsLoading(false);
-      } catch (err) {
-        setError(err.message);
-        setIsLoading(false);
-      }
-    };
-
-    fetchNotices();
-  }, []);
-
+  // Update header/footer visibility based on selectedNotice
   useEffect(() => {
     setShowHeaderFooter(!selectedNotice);
   }, [selectedNotice]);
@@ -284,7 +390,7 @@ const NoticeTabs = ({
               )}
               <div className="rd-px-18 rd-mt-20 rd-mb-15 rd-overflow-h-320 notice-tab-content">
                 <div className="rd-flex rd-flex-col rd-gap-20 featured-faq">
-                  {isLoading ? (
+                  {loading ? (
                     <p className="rd-body-text rd-text-center">Loading notices...</p>
                   ) : notices.length === 0 ? (
                     <p className="rd-body-text">No notices found.</p>
@@ -296,7 +402,7 @@ const NoticeTabs = ({
                 </div>
               </div>
             </div>
-            {showHeaderFooter && <Footer activeTab={2} setActiveTab={setActiveTab} />}
+            {showHeaderFooter && <Footer activeTab={1} setActiveTab={setActiveTab} />}
           </>
         )}
       </div>
@@ -305,3 +411,5 @@ const NoticeTabs = ({
 };
 
 export default NoticeTabs;
+
+// export default NoticeTabs;
