@@ -55,7 +55,7 @@ const App = () => {
     setSelectedNotice(null);
     setShowActiveFeatured(true);
   };
-console.log(activeTab);
+// console.log(activeTab);
   const tabs = [
     {
       id: 0,

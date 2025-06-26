@@ -6,7 +6,8 @@ import DOMPurify from 'dompurify';
 import Footer from './Footer';
 import '../styles/SingleQuestionBox.css';
 import Logo from '../images/wooescrow-logo.png';
-
+import { useCachedFetch } from '../utils/modules';
+const faqCache = {};
 // Get WordPress home URL from robodeskData
 const wpHomeUrl = window.robodeskData?.home_url || '';
 
@@ -30,31 +31,80 @@ const SingleQuestionBox = ({ setShowHeaderFooter, showHeaderFooter, isExpanded, 
   const [isDisliked, setIsDisliked] = useState(false);
   const [questions, setQuestions] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState(null);
+//   const [error, setError] = useState(null);
+  
+    const { data, error, loading } = useCachedFetch(
+    '/wp-json/wp/v2/robodesk_faq?featured=true&_fields=id,title.rendered,excerpt.rendered,content.rendered'
+  );
+//   console.log('On nOtice tabs');
+//   console.log('New Way' , data , error,loading);
+
 
   // Fetch FAQs with excerpts for QuestionItem
+//   useEffect(() => {
+  
+  
+//     const fetchFAQs = async () => {
+//       try {
+//         setIsLoading(true);
+//         const response = await fetch(
+//           `/wp-json/wp/v2/robodesk_faq?featured=true&_fields=id,title.rendered,excerpt.rendered,content.rendered`
+//         );
+//         if (!response.ok) {
+//           throw new Error('Failed to fetch FAQs');
+//         }
+//         const data = await response.json();
+//         const formattedQuestions = data.map((faq) => ({
+//           id: faq.id,
+//           title: faq.title.rendered,
+//           content: faq.content.rendered,    
+//           excerpt: DOMPurify.sanitize(faq.excerpt.rendered, {
+//             ADD_TAGS: ['p', 'strong', 'em'],
+//             ADD_ATTR: [],
+//           }), // Sanitize excerpt for plain text
+//         }));
+
+//         setQuestions(formattedQuestions);
+//         setIsLoading(false);
+//       } catch (err) {
+//         setError(err.message);
+//         setIsLoading(false);
+//       }
+//     };
+
+//     fetchFAQs();
+//   }, []);
   useEffect(() => {
     const fetchFAQs = async () => {
+      // Check if data exists in cache
+      const cacheKey = 'featured_faqs';
+      if (faqCache[cacheKey]) {
+        setQuestions(faqCache[cacheKey]);
+        setIsLoading(false);
+        return; // Skip fetching if cached
+      }
+
       try {
         setIsLoading(true);
         const response = await fetch(
-          `/wp-json/wp/v2/robodesk_faq?featured=true&_fields=id,title.rendered,excerpt.rendered`
+          `/wp-json/wp/v2/robodesk_faq?featured=true&_fields=id,title.rendered,excerpt.rendered,content.rendered`
         );
         if (!response.ok) {
           throw new Error('Failed to fetch FAQs');
         }
         const data = await response.json();
-
-        // Map API data to include sanitized excerpt
         const formattedQuestions = data.map((faq) => ({
           id: faq.id,
           title: faq.title.rendered,
+          content: faq.content.rendered,
           excerpt: DOMPurify.sanitize(faq.excerpt.rendered, {
             ADD_TAGS: ['p', 'strong', 'em'],
             ADD_ATTR: [],
-          }), // Sanitize excerpt for plain text
+          }),
         }));
 
+        // Store in cache
+        faqCache[cacheKey] = formattedQuestions;
         setQuestions(formattedQuestions);
         setIsLoading(false);
       } catch (err) {
@@ -65,50 +115,55 @@ const SingleQuestionBox = ({ setShowHeaderFooter, showHeaderFooter, isExpanded, 
 
     fetchFAQs();
   }, []);
+//   useEffect(() => {
+//         console.log('Homepage Faqs');
+//         console.log(data, error , loading);
+//         // console.log('Homepage loading', loading);
+//   },[data]);
 
   // Fetch full content for SingleQuestionView when a question is selected
-  useEffect(() => {
-    const fetchFullContent = async () => {
-      if (!selectedQuestion) return;
+//   useEffect(() => {
+//     const fetchFullContent = async () => {
+//       if (!selectedQuestion) return;
 
-      try {
-        const response = await fetch(
-          `/wp-json/wp/v2/robodesk_faq/${selectedQuestion.id}?_fields=content.rendered`
-        );
-        if (!response.ok) {
-          throw new Error('Failed to fetch full content');
-        }
-        const data = await response.json();
+//       try {
+//         const response = await fetch(
+//           `/wp-json/wp/v2/robodesk_faq/${selectedQuestion.id}?_fields=content.rendered`
+//         );
+//         if (!response.ok) {
+//           throw new Error('Failed to fetch full content');
+//         }
+//         const data = await response.json();
 
-        // Normalize image paths and sanitize content
-        const normalizedContent = normalizeImagePaths(data.content.rendered);
-        const sanitizedContent = DOMPurify.sanitize(normalizedContent, {
-          ADD_TAGS: ['iframe', 'img'],
-          ADD_ATTR: ['allow', 'allowfullscreen', 'frameborder', 'src', 'alt', 'title', 'width', 'height'],
-          ALLOWED_URI_REGEXP: /^(?:https?:\/\/|\/|data:image\/)/,
-        });
+//         // Normalize image paths and sanitize content
+//         const normalizedContent = normalizeImagePaths(data.content.rendered);
+//         const sanitizedContent = DOMPurify.sanitize(normalizedContent, {
+//           ADD_TAGS: ['iframe', 'img'],
+//           ADD_ATTR: ['allow', 'allowfullscreen', 'frameborder', 'src', 'alt', 'title', 'width', 'height'],
+//           ALLOWED_URI_REGEXP: /^(?:https?:\/\/|\/|data:image\/)/,
+//         });
 
-        // Debug: Log content stages
-        console.log('Raw Content:', data.content.rendered);
-        console.log('Normalized Content:', normalizedContent);
-        console.log('Sanitized Content:', sanitizedContent);
-        const imageSrcs = (data.content.rendered.match(/<img[^>]+src=['"]([^'"]+)['"]/gi) || []).map((img) =>
-          img.match(/src=['"]([^'"]+)['"]/)[1]
-        );
-        console.log('Image src URLs:', imageSrcs);
+//         // Debug: Log content stages
+//         console.log('Raw Content:', data.content.rendered);
+//         console.log('Normalized Content:', normalizedContent);
+//         console.log('Sanitized Content:', sanitizedContent);
+//         const imageSrcs = (data.content.rendered.match(/<img[^>]+src=['"]([^'"]+)['"]/gi) || []).map((img) =>
+//           img.match(/src=['"]([^'"]+)['"]/)[1]
+//         );
+//         console.log('Image src URLs:', imageSrcs);
 
-        // Update selectedQuestion with sanitized content
-        setSelectedQuestion((prev) => ({
-          ...prev,
-          content: sanitizedContent,
-        }));
-      } catch (err) {
-        setError(err.message);
-      }
-    };
+//         // Update selectedQuestion with sanitized content
+//         setSelectedQuestion((prev) => ({
+//           ...prev,
+//           content: sanitizedContent,
+//         }));
+//       } catch (err) {
+//         setError(err.message);
+//       }
+//     };
 
-    fetchFullContent();
-  }, [selectedQuestion?.id]);
+//     fetchFullContent();
+//   }, [selectedQuestion?.id]);
 
   useEffect(() => {
     setShowHeaderFooter(!selectedQuestion);

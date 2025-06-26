@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+// import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import Header from './Header.jsx';
 import Footer from './Footer.jsx';
-import SendMessageField from './SendMessageField';
+// import SendMessageField from './SendMessageField';
 import SingleQuestionBox from './SingleQuestionBox';
-import Login from './Login.jsx';
+// import Login from './Login.jsx';
 import '../styles/HomeTabs.css';
 
 const HomeTabs = ({ setActiveTab, setIsOpen, isExpanded, setIsExpanded, handleClose }) => {
@@ -16,17 +16,16 @@ const HomeTabs = ({ setActiveTab, setIsOpen, isExpanded, setIsExpanded, handleCl
       <div className="rd-main-content">
         {!showLogin && showHeaderFooter && <Header onClose={handleClose} />}
         <div className="rd-flex-1 rd-overflow-auto">
-          {showLogin ? (
-            <Login setShowLogin={setShowLogin} />
-          ) : (
+
             <SingleQuestionBox
               setShowHeaderFooter={setShowHeaderFooter}
               showHeaderFooter={showHeaderFooter}
               isExpanded={isExpanded}
               setIsExpanded={setIsExpanded}
               setShowLogin={setShowLogin}
+              setActiveTab={setActiveTab}
             />
-          )}
+       
         </div>
       </div>
       {showHeaderFooter && <Footer activeTab={0} setActiveTab={setActiveTab} />}
