@@ -15,7 +15,7 @@ function robodesk_fetch_emails_callback()
         robodesk_fetch_emails();
     }
 
-    echo '<table class="wp-list-table widefat fixed striped ">';
+    echo '<table class="wp-list-table widefat fixed striped  ">';
     echo '<tr><th>From</th><th>Subject</th><th>Date</th><th>Message</th></tr>';
 
     $posts = get_posts(
@@ -307,8 +307,8 @@ function robodesk_fetch_emails()
                     'user_pass' => wp_generate_password(),
                     'role' => $role,
                 ], true);
-
-                wp_send_new_user_notifications($user_id, 'user'); // send notification to the new user
+                // send notification to the new user
+                wp_send_new_user_notifications($user_id, 'user');
 
 
                 if (is_wp_error($user_id)) {
@@ -393,7 +393,8 @@ function robodesk_fetch_emails()
         }
 
         // Display summary
-        $summary = "Email processing complete. Processed: $processed_count, Replies: $reply_count, Skipped: $skipped_count, Errors: $error_count";
+        // $summary = "Email processing complete. Processed: $processed_count, Replies: $reply_count, Skipped: $skipped_count, Errors: $error_count";
+        $summary = "Email processing complete. Processed: $processed_count, Replies: $reply_count, Errors: $error_count";
         error_log($summary);
         echo '<div class="updated"><p>' . esc_html($summary) . '</p></div>';
     } finally {
@@ -445,7 +446,7 @@ function robodesk_reply_email($comment_id, $comment_approved)
     $subject = 'Re: ' . $post->post_title;
     $comment_content = $comment->comment_content;
 
-    // Artifact code starts here
+
     $user = get_user_by('email', $pure_creator_email);
     $user_name = $user ? $user->display_name : $pure_creator_email;
 
