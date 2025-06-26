@@ -33,14 +33,14 @@ const FAQDetail = memo(({ faq, onBack, isExpanded, setIsExpanded }) => {
   const wpHomeUrl = window.robodeskData?.home_url || 'http://localhost:10135/';
 
   useEffect(() => {
-    const fetchFAQDetails = async () => {
+    const fetchFAQDetails = () => {
       try {
-        const response = await fetch(
-          `/wp-json/wp/v2/robodesk_faq/${faq.id}?_fields=content.rendered,author_name`
-        );
-        if (!response.ok) throw new Error('Failed to fetch FAQ details');
-        const data = await response.json();
-        setFullContent(data.content.rendered);
+        // const response = await fetch(
+        //   `/wp-json/wp/v2/robodesk_faq/${faq.id}?_fields=content.rendered,author_name`
+        // );
+        // if (!response.ok) throw new Error('Failed to fetch FAQ details');
+        // const data = await response.json();
+        setFullContent(faq.content);
         setAuthorNames(data.author_name ? data.author_name.split(',').map((name) => name.trim()) : ['Unknown']);
       } catch (err) {
         console.error('Failed to fetch FAQ details:', err);
@@ -205,25 +205,33 @@ const FAQ = ({ setActiveTab, setIsOpen, isExpanded, setIsExpanded, activeTab }) 
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
   const wpHomeUrl = window.robodeskData?.home_url || 'http://localhost:10135/';
-
+ const CACHE_EXPIRY = 24 * 60 * 60 * 1000;
   useEffect(() => {
     const fetchFAQs = async () => {
       try {
         setIsLoading(true);
         setError(null);
         const cacheKey = `faqs_page_1`;
+        const cacheTimestampKey = `${cacheKey}_timestamp`;
 
-        // Clear cache to ensure fresh data (remove after testing)
-        localStorage.removeItem(cacheKey);
-
+        // Check cached data and its timestamp
         const cachedFaqs = localStorage.getItem(cacheKey);
-        if (cachedFaqs) {
-          console.log('Using cached FAQs:', JSON.parse(cachedFaqs));
-          setFaqs(JSON.parse(cachedFaqs));
-          setIsLoading(false);
-          return;
-        }
+        const cachedTimestamp = localStorage.getItem(cacheTimestampKey);
+        const currentTime = new Date().getTime();
 
+        if (cachedFaqs && cachedTimestamp) {
+          const isCacheValid = currentTime - parseInt(cachedTimestamp) < CACHE_EXPIRY;
+          if (isCacheValid) {
+            console.log('Using cached FAQs:', JSON.parse(cachedFaqs));
+            setFaqs(JSON.parse(cachedFaqs));
+            setIsLoading(false);
+            return;
+          } else {
+            // Clear expired cache
+            localStorage.removeItem(cacheKey);
+            localStorage.removeItem(cacheTimestampKey);
+          }
+        }
 
         const response = await fetch(
           `/wp-json/wp/v2/robodesk_faq?_fields=id,title.rendered,excerpt.rendered,content.rendered&per_page=100&page=1`
@@ -254,28 +262,24 @@ const FAQ = ({ setActiveTab, setIsOpen, isExpanded, setIsExpanded, activeTab }) 
             : faq.content?.rendered
             ? wpTrimWords(stripHtml(faq.content.rendered), 20)
             : 'No summary available';
-          console.log(
-            'Raw title:',
-            faq.title.rendered,
-            'Question:',
-            question,
-            'Excerpt:',
-            faq.excerpt?.rendered,
-            'Content:',
-            faq.content?.rendered,
-            'Summary:',
-            summary
-          );
+            
+          const content = faq.content?.rendered
+            ? faq.content.rendered
+            : 'No content available';               
+            
           return {
             id: faq.id,
             question,
             summary,
+            content,
+            author: faq.author_name,
           };
         });
 
         console.log('Formatted FAQs:', formattedFaqs);
         setFaqs(formattedFaqs);
         localStorage.setItem(cacheKey, JSON.stringify(formattedFaqs));
+        localStorage.setItem(cacheTimestampKey, currentTime.toString());
       } catch (err) {
         console.error('Fetch Error:', err);
         setError(err.message);
