@@ -1,10 +1,9 @@
-import React from "react";
 import "../styles/Login.css";
 import { useState } from "react";
 import { createTicket } from "../utils/modules";
 import Signup from "./Signup";
 
-const Login = ({ setShowLogin, setActiveTab }) => {
+const Login = ({ setShowLogin }) => {
   const [isSignup, setIsSignup] = useState(false);
   const [formData, setFormData] = useState({ email: "", password: "" });
   const [errors, setErrors] = useState({ email: "", password: "" });
@@ -33,80 +32,153 @@ const Login = ({ setShowLogin, setActiveTab }) => {
     setErrors(newErrors);
     return isValid;
   };
+  
+const loginUser = async(email,pwd) => {
+    
+}  
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setIsSubmitting(true);
-    setErrors({ email: "", password: "" });
 
-    if (!validateForm()) {
-      setIsSubmitting(false);
-      return;
-    }
+//   const handleSubmit = async (e) => {
+//     e.preventDefault();
+//     setIsSubmitting(true);
+//     setErrors({ email: "", password: "" });
 
-    try {
-      const loginResponse = await fetch('/wp-json/custom/v1/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          username: formData.email,
-          password: formData.password,
-        }),
-      });
+//     if (!validateForm()) {
+//       setIsSubmitting(false);
+//       return;
+//     }
 
-      const loginData = await loginResponse.json();
+//     try {
+    
+//       const loginResponse = await fetch('/wp-json/custom/v1/login', {
+//         method: 'POST',
+//         headers: { 'Content-Type': 'application/json' },
+//         body: JSON.stringify({
+//           username: formData.email,
+//           password: formData.password,
+//         }),
+//       });
+
+//       const loginData = await loginResponse.json();
       
-      console.log(loginData);
+//       console.log('Here we are',loginData);
 
-      if (!loginResponse.ok) {
-        throw new Error(loginData.message || loginData.data?.message || 'Login failed');
-      }
+//       if (!loginResponse.ok) {
+//         throw new Error(loginData.message || loginData.data?.message || 'Login failed');
+//       }
 
-      if (loginData.success && loginData.token) {
-        // Store JWT token securely
-        localStorage.setItem('jwt_token', loginData.token);
+//       if (loginData.success && loginData.token) {
+      
+//     //   console.log('we are creating ticket now');
+//         // Store JWT token securely
+//         localStorage.setItem('jwt_token', loginData.token);
 
-        const ticketTitle = localStorage.getItem('temp_ticket_title');
-        if (ticketTitle) {
-          try {
-            // Update createTicket to include JWT in headers
-            const ticketResponse = await createTicket(loginData.user_id, ticketTitle, '');
+//         const ticketTitle = localStorage.getItem('temp_ticket_title');
 
-            if (ticketResponse.status === 'success') {
-              console.log(ticketResponse.message);
-              localStorage.removeItem("temp_ticket_title");
-              setShowLogin(false);
-              setActiveTab(1);
-            } else {
-              console.warn("Ticket may have been created but response format unexpected");
-              setShowLogin(false);
-              setActiveTab(1);
-            }
-          } catch (ticketError) {
-            console.error("Ticket creation error:", ticketError);
-            setShowLogin(false);
-            setActiveTab(1);
-            localStorage.removeItem("temp_ticket_title");
-          }
-        } else {
-          setShowLogin(false);
-        }
-      } else {
-        throw new Error('Invalid response format');
-      }
-    } catch (error) {
-      console.error("Login error:", error);
-      setErrors({
-        email: error.message.includes("email") ? error.message : "",
-        password: error.message.includes("credentials") || error.message.includes("Login failed") 
-          ? error.message 
-          : "Login failed. Please try again."
-      });
+//         if (ticketTitle) {
+//           try {
+//             // Update createTicket to include JWT in headers
+//             const ticketResponse = await createTicket(loginData.user_id, ticketTitle, '');
+
+//             if (ticketResponse.status === 'success') {
+//               console.log(ticketResponse.message);
+//               localStorage.removeItem("temp_ticket_title");
+//               setShowLogin(false);
+//               setActiveTab(1);
+//             } else {
+//               console.warn("Ticket may have been created but response format unexpected");
+//               setShowLogin(false);
+//               setActiveTab(1);
+//             }
+//           } catch (ticketError) {
+//             console.error("Ticket creation error:", ticketError);
+//             setShowLogin(false);
+//             setActiveTab(1);
+//             localStorage.removeItem("temp_ticket_title");
+//           }
+//         } else {
+//           setShowLogin(false);
+//         }
+//       } else {
+//         throw new Error('Invalid response format');
+//       }
+//     } catch (error) {
+//       console.error("Login error:", error);
+//       setErrors({
+//         email: error.message.includes("email") ? error.message : "",
+//         password: error.message.includes("credentials") || error.message.includes("Login failed") 
+//           ? error.message 
+//           : "Login failed. Please try again."
+//       });
+//     }
+
+//     setIsSubmitting(false);
+//   };
+const handleSubmit = async (e) => {
+  e.preventDefault();
+  setIsSubmitting(true);
+  setErrors({ email: "", password: "" });
+
+  if (!validateForm()) {
+    setIsSubmitting(false);
+    return;
+  }
+
+  try {
+    const loginResponse = await fetch('/wp-json/custom/v1/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        username: formData.email,
+        password: formData.password,
+      }),
+    });
+
+    const loginData = await loginResponse.json();
+    
+    console.log('The users data is',loginData);
+
+    if (!loginResponse.ok) {
+      throw new Error(loginData.message || loginData.data?.message || 'Login failed');
     }
 
+    if (loginData.success && loginData.token) {
+      localStorage.setItem('jwt_token', loginData.token);
+      sessionStorage.setItem('user_details', JSON.stringify(loginData));
+      const ticketTitle = localStorage.getItem('temp_ticket_title'); 
+      if (ticketTitle) {
+        try {
+          const ticketResponse = await createTicket(loginData.user_id, ticketTitle, '');
+          console.log('Ticket created:', ticketResponse);
+          if (ticketResponse.status === 'success') {
+            localStorage.removeItem('temp_ticket_title');
+          } else {
+            console.warn('Unexpected ticket response format');
+          }
+        } catch (ticketError) {
+          console.error('Ticket creation error:', ticketError);
+          localStorage.removeItem('temp_ticket_title'); // Clean up even on error
+        }
+      }
+      
+      setShowLogin(true);
+   
+    } else {
+      throw new Error('Invalid response format');
+    }
+  } catch (error) {
+    console.error('Login error:', error);
+    setShowLogin(false);
+    setErrors({
+      email: error.message.includes('email') ? error.message : '',
+      password: error.message.includes('credentials') || error.message.includes('Login failed')
+        ? error.message
+        : 'Login failed. Please try again.',
+    });
+  } finally {
     setIsSubmitting(false);
-  };
-
+  }
+};
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });

@@ -402,7 +402,7 @@ const NoticeTabs = ({
                 </div>
               </div>
             </div>
-            {showHeaderFooter && <Footer activeTab={1} setActiveTab={setActiveTab} />}
+            {showHeaderFooter && <Footer activeTab={2} setActiveTab={setActiveTab} />}
           </>
         )}
       </div>

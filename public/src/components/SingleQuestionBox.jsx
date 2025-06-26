@@ -31,11 +31,11 @@ const SingleQuestionBox = ({ setShowHeaderFooter, showHeaderFooter, isExpanded, 
   const [isDisliked, setIsDisliked] = useState(false);
   const [questions, setQuestions] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
-//   const [error, setError] = useState(null);
+  const [error, setError] = useState(null);
   
-    const { data, error, loading } = useCachedFetch(
-    '/wp-json/wp/v2/robodesk_faq?featured=true&_fields=id,title.rendered,excerpt.rendered,content.rendered'
-  );
+//     const { data, error, loading } = useCachedFetch(
+//     '/wp-json/wp/v2/robodesk_faq?featured=true&_fields=id,title.rendered,excerpt.rendered,content.rendered'
+//   );
 //   console.log('On nOtice tabs');
 //   console.log('New Way' , data , error,loading);
 

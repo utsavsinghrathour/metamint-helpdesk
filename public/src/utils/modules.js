@@ -70,7 +70,7 @@ export const userStatus = () => {
       isLoggedIn: false,
       loggedInUserId: false,
     };
-  };
+};
   
   
 const cache = {};

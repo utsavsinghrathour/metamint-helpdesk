@@ -69,21 +69,23 @@ const App = () => {
         />
       ),
     },
-    // {
-    //   id: 1,
-    //   component: (
-    //     <MessageTabs
-    //       setActiveTab={setActiveTab}
-    //       setIsOpen={setIsOpen}
-    //       isExpanded={isExpanded}
-    //       setIsExpanded={setIsExpanded}
-    //       activeTab={activeTab}
-    //     />
-    //   ),
-    // },
+    {
+      id: 1,
+      component: (
+        <MessageTabs
+          setActiveTab={setActiveTab}
+          setIsOpen={setIsOpen}
+          isExpanded={isExpanded}
+          setIsExpanded={setIsExpanded}
+          activeTab={activeTab}
+          
+        />
+      ),
+    },
+
     {
     
-      id: 1,
+      id: 2,
       component: (
         <NoticeTabs
           setActiveTab={setActiveTab}
@@ -97,7 +99,7 @@ const App = () => {
       ),
     },
     {
-      id: 2,
+      id: 3,
       component: (
         <HelpTabs
           setActiveTab={setActiveTab}

@@ -9,8 +9,8 @@ import Footer from "./Footer";
 import Login from "./Login";
 import Preloader from "../images/preloader.svg";
 import axios from "axios"; // For making API requests
-import { userStatus } from "../utils/modules";
-import { createTicket } from "../utils/modules";
+// import { userStatus } from "../utils/modules";
+// import { createTicket } from "../utils/modules";
 
 const SingleTicket = React.lazy(() => import("./SingleTicket"));
 
@@ -73,19 +73,50 @@ const MessageTabs = ({
   const [priorityFilter, setPriorityFilter] = useState("all");
   const [tickets, setTickets] = useState([]);
   const [loading, setLoading] = useState(true);
-  const { isLoggedIn, loggedInUserId } = userStatus();
+  const [isLoggedIn, setIsLoggedIn] = useState(false); // Fixed naming consistency
+  const [loggedInuserData , setloggedInuserData] = useState(false);
 
-  useEffect(() => {
-    if (isLoggedIn) {
+  const handleLogin = (loginStatus) => {
+    setIsLoggedIn(loginStatus);
+    if (loginStatus) {
       fetchTickets();
     }
-  }, []);
+  };
+                       
+  useEffect(() => {
+    const userDetails = sessionStorage.getItem('user_details');
+    if (userDetails) {
+      try {
+        const parsedData = JSON.parse(userDetails);
+        if (parsedData && parsedData.user_id) {
+          setloggedInuserData(parsedData.user_id);
+          setIsLoggedIn(true);
+          fetchTickets();
+        }
+      } catch (error) {
+        console.error('Error parsing user_details from sessionStorage', error);
+      }
+    }
+  },[isLoggedIn]);                     
+
+//   useEffect(() => {
+  
+  
+//     if (isLoggedIn) {
+//       fetchTickets();
+//     }
+//   }, []);
+  
   const fetchTickets = async () => {
+    console.log('Hellow',loggedInuserData);
+    if (!loggedInuserData) return;
+    
     try {
       setLoading(true);
       const response = await axios.get("/wp-json/wp/v2/robodesk_ticket", {
         params: {
           per_page: 100,
+         author: loggedInuserData,
           _embed: "wp:comment", // Only embed comments, as terms are directly included
         },
       });
@@ -162,6 +193,83 @@ const MessageTabs = ({
       setLoading(false);
     }
   };
+
+// const fetchTickets = async () => {
+//   if (!loggedInuserData) return; // Exit early if user is not logged in
+
+//   try {
+//     setLoading(true);
+//     const response = await axios.get("/wp-json/wp/v2/robodesk_ticket", {
+//       params: {
+//         per_page: 100,
+//         author: loggedInUserData,  // 👈 Fetch tickets by the user ID
+//         _embed: "wp:comment",      // Embed comments only
+//       },
+//     });
+
+//     const mappedTickets = response.data.map((post) => {
+//       const priorityTerm =
+//         post._embedded?.["wp:term"]?.find((tax) =>
+//           tax.some((t) => t.taxonomy === "robodesk_ticket_priority")
+//         )?.[0]?.name ||
+//         post.robodesk_ticket_priority?.[0] ||
+//         "Medium";
+
+//       const sourceTerm =
+//         post.robodesk_ticket_origin && post.robodesk_ticket_origin.length > 0
+//           ? post.robodesk_ticket_origin[0]
+//           : "Unknown";
+
+//       const messages =
+//         post._embedded?.["wp:comment"]
+//           ?.filter((comment) => comment.type === "ticket_replies")
+//           ?.map((comment) => ({
+//             id: comment.id,
+//             text: comment.content.rendered.replace(/<[^>]+>/g, ""),
+//             sender: comment.author === 0 ? "me" : "other",
+//             image: comment.author === 0 ? Author1 : Author2,
+//           })) || [];
+
+//       const postDate = new Date(post.date);
+//       const now = new Date();
+//       const diffInSeconds = Math.floor((now - postDate) / 1000);
+//       let timeAgo = "Just now";
+//       if (diffInSeconds >= 60 * 60 * 24 * 7) {
+//         timeAgo = `${Math.floor(diffInSeconds / (60 * 60 * 24 * 7))}w ago`;
+//       } else if (diffInSeconds >= 60 * 60 * 24) {
+//         timeAgo = `${Math.floor(diffInSeconds / (60 * 60 * 24))}d ago`;
+//       } else if (diffInSeconds >= 60 * 60) {
+//         timeAgo = `${Math.floor(diffInSeconds / (60 * 60))}h ago`;
+//       } else if (diffInSeconds >= 60) {
+//         timeAgo = `${Math.floor(diffInSeconds / 60)}m ago`;
+//       }
+
+//       const status = post.ticket_status || "new";
+
+//       return {
+//         id: post.id,
+//         ticketNumber:
+//           post.ticket_number || `TCKT-${String(post.id).padStart(3, "0")}`,
+//         title: post.title.rendered,
+//         source: sourceTerm,
+//         timeAgo,
+//         authorImage:
+//           post.author_image || (post.id % 2 === 0 ? Author1 : Author2),
+//         status,
+//         priority: priorityTerm,
+//         messages,
+//       };
+//     });
+
+//     setTickets(mappedTickets);
+//     setLoading(false);
+//   } catch (error) {
+//     console.error("Error fetching tickets:", error);
+//     setLoading(false);
+//   }
+// };
+
+  
   const handleBackToHome = () => {
     console.log("handleBackToHome called");
     if (setActiveTab) {
@@ -220,6 +328,10 @@ const MessageTabs = ({
       console.error("Error creating ticket:", error);
     }
   };
+  
+//   const handleLogindata = () => {
+  
+//   }
 
   const filteredTickets = tickets.filter((ticket) => {
     const matchesTab = currentTab === "all" || ticket.status === currentTab;
@@ -431,7 +543,7 @@ const MessageTabs = ({
           )}
         </>
       ) : (
-        <Login/>
+       <Login setShowLogin={handleLogin} />
       )}
       <Footer activeTab={activeTab} setActiveTab={setActiveTab} />
     </div>
