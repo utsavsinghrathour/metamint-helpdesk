@@ -323,6 +323,7 @@ function customize_robodesk_ticket_response($response, $post, $request) {
     }
     $author = get_user_by('id', $post->post_author);
     $response->data['robodesk_ticket_author'] = $author ? $author->display_name : '';
+    $response->data['robodesk_ticket_author_image'] = $author ? get_avatar_url($author->ID) : '';
 
     return $response;
 }
