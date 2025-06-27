@@ -89,6 +89,11 @@ function robodesk_fetch_emails()
     $username = 'pipetest@wplocatepress.com';
     $password = 'k342+11$c1_';
 
+    // Uncomment below for Zoho email configuration
+    // $hostname = '{imap.zoho.com:993/imap/ssl}INBOX';
+    // $username = 'hello@dzyns.com';
+    // $password = 'pumecU7U@/T00';
+
     error_log('Attempting to connect to IMAP server: ' . $hostname);
 
     // Connect to email with error handling
