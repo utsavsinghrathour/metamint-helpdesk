@@ -100,15 +100,6 @@ function robodesk_fetch_emails()
     $username = $settings['username'];
     $password = $settings['password'];
 
-    // Email configuration details 
-    // $hostname = '{wplocatepress.com:993/imap/ssl}INBOX';
-    // $username = 'pipetest@wplocatepress.com';
-    // $password = 'k342+11$c1_';
-
-    // Uncomment below for Zoho email configuration
-    // $hostname = '{imap.zoho.com:993/imap/ssl}INBOX';
-    // $username = 'hello@dzyns.com';
-    // $password = 'pumecU7U@/T00';
 
     error_log('Attempting to connect to IMAP server: ' . $hostname);
 
@@ -511,13 +502,10 @@ function robodesk_reply_email($comment_id, $comment_approved)
 // Hook to send email when a comment is posted
 add_action('comment_post', 'robodesk_reply_email', 10, 2);
 
+
 // Disable default WordPress notifications for new users and password changes
 add_filter('send_password_change_email', '__return_false');
 remove_action('after_password_reset', 'wp_password_change_notification');
-
-
-
-
 
 
 // Function to display the IMAP settings page
@@ -583,6 +571,7 @@ function robodesk_imap_settings_callback()
                     <th scope="row"><label for="robodesk_imap_hostname">IMAP Hostname</label></th>
                     <td><input type="text" name="robodesk_imap_hostname" id="robodesk_imap_hostname" value="<?php echo esc_attr($hostname); ?>" class="regular-text">
                         <p class="description">Example: <code>imappro.zoho.com</code></p>
+                        <p class="description">For DEV: <code>{imappro.zoho.com:{port}/imap/ssl}INBOX</code></p>
                     </td>
                 </tr>
                 <tr>
@@ -594,7 +583,7 @@ function robodesk_imap_settings_callback()
                 <tr>
                     <th scope="row"><label for="robodesk_imap_username">IMAP Username</label></th>
                     <td><input type="email" name="robodesk_imap_username" id="robodesk_imap_username" value="<?php echo esc_attr($username); ?>" class="regular-text">
-                        <p class="description">Your email address</p>
+                        <p class="description">Your email address , from where email will be fetched</p>
                     </td>
                 </tr>
                 <tr>
