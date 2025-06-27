@@ -15,7 +15,9 @@ import { userStatus } from "../utils/modules";
 const SingleTicket = React.lazy(() => import("./SingleTicket"));
 
 const TicketItem = ({ ticket, onSelect }) => {
-  console.log("Rendering TicketItem:", ticket.title);
+
+// console.log(ticket);
+
   return (
     <div
       className="rd-hover single-rd-ticket rd-flex rd-align-center rd-gap-8 rd-border-bottom-light rd-cursor-pointer single-rd-active-ticket"
@@ -106,7 +108,7 @@ const MessageTabs = ({
       }
     }
   }
-}, [isLoggedIn]);
+}, [isLoggedIn,loggedInuserData]);
 
                        
 //   useEffect(() => {
@@ -139,169 +141,168 @@ const MessageTabs = ({
 //     }
 //   }, []);
   
-  const fetchTickets = async () => {
-    // console.log('Logged In user:',loggedInuserData);
-    if (!loggedInuserData) return;
+//   const fetchTickets = async () => {
+//     // console.log('Logged In user:',loggedInuserData);
+//     if (!loggedInuserData) return;
     
-    try {
-      setLoading(true);
-      const response = await axios.get("/wp-json/wp/v2/robodesk_ticket", {
-        params: {
-          per_page: 10,
-         author: loggedInuserData,
-          _embed: "wp:comment", // Only embed comments, as terms are directly included
-        },
-      });
+//     try {
+//       setLoading(true);
+//       const response = await axios.get("/wp-json/wp/v2/robodesk_ticket", {
+//         params: {
+//           per_page: 10,
+//          author: loggedInuserData,
+//           _embed: "wp:comment", // Only embed comments, as terms are directly included
+//         },
+//       });
 
-      const mappedTickets = response.data.map((post) => {
-        // Get priority term (keep embedded logic if priority is not directly included)
-        const priorityTerm =
-          post._embedded?.["wp:term"]?.find((tax) =>
-            tax.some((t) => t.taxonomy === "robodesk_ticket_priority")
-          )?.[0]?.name ||
-          post.robodesk_ticket_priority?.[0] ||
-          "Medium";
+//       const mappedTickets = response.data.map((post) => {
+//         // Get priority term (keep embedded logic if priority is not directly included)
+//         const priorityTerm =
+//           post._embedded?.["wp:term"]?.find((tax) =>
+//             tax.some((t) => t.taxonomy === "robodesk_ticket_priority")
+//           )?.[0]?.name ||
+//           post.robodesk_ticket_priority?.[0] ||
+//           "Medium";
 
-        // Get source (origin) term directly from post
-        const sourceTerm =
-          post.robodesk_ticket_origin && post.robodesk_ticket_origin.length > 0
-            ? post.robodesk_ticket_origin[0]
-            : "Unknown";
-        console.log(
-          `Ticket ID ${post.id} - Origin:`,
-          post.robodesk_ticket_origin,
-          "Selected Source:",
-          sourceTerm
-        );
+//         // Get source (origin) term directly from post
+//         const sourceTerm =
+//           post.robodesk_ticket_origin && post.robodesk_ticket_origin.length > 0
+//             ? post.robodesk_ticket_origin[0]
+//             : "Unknown";
+//         console.log(
+//           `Ticket ID ${post.id} - Origin:`,
+//           post.robodesk_ticket_origin,
+//           "Selected Source:",
+//           sourceTerm
+//         );
 
-        // Get comments (ticket replies)
-        const messages =
-          post._embedded?.["wp:comment"]
-            ?.filter((comment) => comment.type === "ticket_replies")
-            ?.map((comment) => ({
-              id: comment.id,
-              text: comment.content.rendered.replace(/<[^>]+>/g, ""),
-              sender: comment.author === 0 ? "me" : "other",
-              image: comment.author === 0 ? Author1 : Author2,
-            })) || [];
+//         // Get comments (ticket replies)
+//         const messages =
+//           post._embedded?.["wp:comment"]
+//             ?.filter((comment) => comment.type === "ticket_replies")
+//             ?.map((comment) => ({
+//               id: comment.id,
+//               text: comment.content.rendered.replace(/<[^>]+>/g, ""),
+//               sender: comment.author === 0 ? "me" : "other",
+//               image: comment.author === 0 ? Author1 : Author2,
+//             })) || [];
 
-        // Calculate time ago
-        const postDate = new Date(post.date);
-        const now = new Date();
-        const diffInSeconds = Math.floor((now - postDate) / 1000);
-        let timeAgo = "Just now";
-        if (diffInSeconds >= 60 * 60 * 24 * 7) {
-          timeAgo = `${Math.floor(diffInSeconds / (60 * 60 * 24 * 7))}w ago`;
-        } else if (diffInSeconds >= 60 * 60 * 24) {
-          timeAgo = `${Math.floor(diffInSeconds / (60 * 60 * 24))}d ago`;
-        } else if (diffInSeconds >= 60 * 60) {
-          timeAgo = `${Math.floor(diffInSeconds / (60 * 60))}h ago`;
-        } else if (diffInSeconds >= 60) {
-          timeAgo = `${Math.floor(diffInSeconds / 60)}m ago`;
-        }
+//         // Calculate time ago
+//         const postDate = new Date(post.date);
+//         const now = new Date();
+//         const diffInSeconds = Math.floor((now - postDate) / 1000);
+//         let timeAgo = "Just now";
+//         if (diffInSeconds >= 60 * 60 * 24 * 7) {
+//           timeAgo = `${Math.floor(diffInSeconds / (60 * 60 * 24 * 7))}w ago`;
+//         } else if (diffInSeconds >= 60 * 60 * 24) {
+//           timeAgo = `${Math.floor(diffInSeconds / (60 * 60 * 24))}d ago`;
+//         } else if (diffInSeconds >= 60 * 60) {
+//           timeAgo = `${Math.floor(diffInSeconds / (60 * 60))}h ago`;
+//         } else if (diffInSeconds >= 60) {
+//           timeAgo = `${Math.floor(diffInSeconds / 60)}m ago`;
+//         }
 
-        // Determine status
-        const status = post.ticket_status || "new";
+//         // Determine status
+//         const status = post.ticket_status || "new";
 
-        return {
-          id: post.id,
-          ticketNumber:
-            post.ticket_number || `TCKT-${String(post.id).padStart(3, "0")}`,
-          title: post.title.rendered,
-          source: sourceTerm,
-          timeAgo,
-          authorImage:
-            post.author_image || (post.id % 2 === 0 ? Author1 : Author2),
-          status,
-          priority: priorityTerm,
-          messages,
-        };
-      });
+//         return {
+//           id: post.id,
+//           ticketNumber:
+//             post.ticket_number || `TCKT-${String(post.id).padStart(3, "0")}`,
+//           title: post.title.rendered,
+//           source: sourceTerm,
+//           timeAgo,
+//           authorImage:
+//             post.author_image || (post.id % 2 === 0 ? Author1 : Author2),
+//           status,
+//           priority: priorityTerm,
+//           messages,
+//         };
+//       });
 
-      setTickets(mappedTickets);
+//       setTickets(mappedTickets);
      
-    } catch (error) {
-      console.error("Error fetching tickets:", error);
-      setLoading(false);
-    }finally{
-     setLoading(false);
-    }
-  };
+//     } catch (error) {
+//       console.error("Error fetching tickets:", error);
+//       setLoading(false);
+//     }
+//   };
 
-// const fetchTickets = async () => {
-//   if (!loggedInuserData) return; // Exit early if user is not logged in
+const fetchTickets = async () => {
+  if (!loggedInuserData) return; // Exit early if user is not logged in
+    console.log('We are here ', loggedInuserData);
+  try {
+    setLoading(true);
+    const response = await axios.get("/wp-json/wp/v2/robodesk_ticket", {
+      params: {
+        per_page: 100,
+        author: loggedInuserData,  // 👈 Fetch tickets by the user ID
+        _embed: "wp:comment",      // Embed comments only
+      },
+    });
 
-//   try {
-//     setLoading(true);
-//     const response = await axios.get("/wp-json/wp/v2/robodesk_ticket", {
-//       params: {
-//         per_page: 100,
-//         author: loggedInUserData,  // 👈 Fetch tickets by the user ID
-//         _embed: "wp:comment",      // Embed comments only
-//       },
-//     });
+    const mappedTickets = response.data.map((post) => {
+    
+  
+      const priorityTerm =
+        post._embedded?.["wp:term"]?.find((tax) =>
+          tax.some((t) => t.taxonomy === "robodesk_ticket_priority")
+        )?.[0]?.name ||
+        post.robodesk_ticket_priority?.[0] ||
+        "Medium";
 
-//     const mappedTickets = response.data.map((post) => {
-//       const priorityTerm =
-//         post._embedded?.["wp:term"]?.find((tax) =>
-//           tax.some((t) => t.taxonomy === "robodesk_ticket_priority")
-//         )?.[0]?.name ||
-//         post.robodesk_ticket_priority?.[0] ||
-//         "Medium";
+      const sourceTerm =
+        post.robodesk_ticket_origin && post.robodesk_ticket_origin.length > 0
+          ? post.robodesk_ticket_origin[0]
+          : "Unknown";
 
-//       const sourceTerm =
-//         post.robodesk_ticket_origin && post.robodesk_ticket_origin.length > 0
-//           ? post.robodesk_ticket_origin[0]
-//           : "Unknown";
+      const messages =
+        post._embedded?.["wp:comment"]
+          ?.filter((comment) => comment.type === "ticket_replies")
+          ?.map((comment) => ({
+            id: comment.id,
+            text: comment.content.rendered.replace(/<[^>]+>/g, ""),
+            sender: comment.author === 0 ? "me" : "other",
+            image: comment.author === 0 ? Author1 : Author2,
+          })) || [];
 
-//       const messages =
-//         post._embedded?.["wp:comment"]
-//           ?.filter((comment) => comment.type === "ticket_replies")
-//           ?.map((comment) => ({
-//             id: comment.id,
-//             text: comment.content.rendered.replace(/<[^>]+>/g, ""),
-//             sender: comment.author === 0 ? "me" : "other",
-//             image: comment.author === 0 ? Author1 : Author2,
-//           })) || [];
+      const postDate = new Date(post.date);
+      const now = new Date();
+      const diffInSeconds = Math.floor((now - postDate) / 1000);
+      let timeAgo = "Just now";
+      if (diffInSeconds >= 60 * 60 * 24 * 7) {
+        timeAgo = `${Math.floor(diffInSeconds / (60 * 60 * 24 * 7))}w ago`;
+      } else if (diffInSeconds >= 60 * 60 * 24) {
+        timeAgo = `${Math.floor(diffInSeconds / (60 * 60 * 24))}d ago`;
+      } else if (diffInSeconds >= 60 * 60) {
+        timeAgo = `${Math.floor(diffInSeconds / (60 * 60))}h ago`;
+      } else if (diffInSeconds >= 60) {
+        timeAgo = `${Math.floor(diffInSeconds / 60)}m ago`;
+      }
 
-//       const postDate = new Date(post.date);
-//       const now = new Date();
-//       const diffInSeconds = Math.floor((now - postDate) / 1000);
-//       let timeAgo = "Just now";
-//       if (diffInSeconds >= 60 * 60 * 24 * 7) {
-//         timeAgo = `${Math.floor(diffInSeconds / (60 * 60 * 24 * 7))}w ago`;
-//       } else if (diffInSeconds >= 60 * 60 * 24) {
-//         timeAgo = `${Math.floor(diffInSeconds / (60 * 60 * 24))}d ago`;
-//       } else if (diffInSeconds >= 60 * 60) {
-//         timeAgo = `${Math.floor(diffInSeconds / (60 * 60))}h ago`;
-//       } else if (diffInSeconds >= 60) {
-//         timeAgo = `${Math.floor(diffInSeconds / 60)}m ago`;
-//       }
+      const status = post.ticket_status || "new";
 
-//       const status = post.ticket_status || "new";
-
-//       return {
-//         id: post.id,
-//         ticketNumber:
-//           post.ticket_number || `TCKT-${String(post.id).padStart(3, "0")}`,
-//         title: post.title.rendered,
-//         source: sourceTerm,
-//         timeAgo,
-//         authorImage:
-//           post.author_image || (post.id % 2 === 0 ? Author1 : Author2),
-//         status,
-//         priority: priorityTerm,
-//         messages,
-//       };
-//     });
-
-//     setTickets(mappedTickets);
-//     setLoading(false);
-//   } catch (error) {
-//     console.error("Error fetching tickets:", error);
-//     setLoading(false);
-//   }
-// };
+      return {
+        id: post.id,
+        ticketNumber:
+          post.ticket_number || `TCKT-${String(post.id).padStart(3, "0")}`,
+        title: post.title.rendered,
+        source: sourceTerm,
+        timeAgo,
+        authorImage:post.robodesk_ticket_author_image,
+        status,
+        priority: priorityTerm,
+        messages,
+      };
+    });
+    console.log('THe final ticket data is' , mappedTickets);
+    setTickets(mappedTickets);
+    setLoading(false);
+  } catch (error) {
+    console.error("Error fetching tickets:", error);
+    setLoading(false);
+  }
+};
 
   
   const handleBackToHome = () => {
@@ -366,7 +367,7 @@ const MessageTabs = ({
 //   const handleLogindata = () => {
   
 //   }
-
+    console.log(tickets);
   const filteredTickets = tickets.filter((ticket) => {
     const matchesTab = currentTab === "all" || ticket.status === currentTab;
     const matchesPriority =
@@ -376,8 +377,10 @@ const MessageTabs = ({
       ticket.ticketNumber.toLowerCase().includes(searchTerm.toLowerCase());
     return matchesTab && matchesPriority && matchesSearch;
   });
-
-
+  
+  console.log(filteredTickets);
+  console.log(isLoggedIn);
+    
   return (
     <div className="rd-main-content">
       {isLoggedIn ? (

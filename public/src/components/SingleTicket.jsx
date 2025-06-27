@@ -3,7 +3,7 @@ import { FaChevronLeft } from 'react-icons/fa';
 import { FaRegFaceSmileBeam } from 'react-icons/fa6';
 import { PiPaperPlaneRightFill } from 'react-icons/pi';
 import { FiPaperclip } from 'react-icons/fi';
-import { LuDot } from 'react-icons/lu';
+// import { LuDot } from 'react-icons/lu';
 import { IoClose } from 'react-icons/io5';
 import EmojiPicker from 'emoji-picker-react';
 import Logo from '../images/wooescrow-logo.png';
