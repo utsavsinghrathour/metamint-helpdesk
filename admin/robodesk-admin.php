@@ -96,9 +96,18 @@ function robodesk_add_admin_menu()
         'robodesk-email-to-ticket',
         'robodesk_fetch_emails_callback'
     );
-    
-     // Hidden callback page
-     add_submenu_page(null, 'Email Callback', 'Email Callback', 'manage_options', 'email-callback', 'email_fetcher_callback');
+
+    add_submenu_page(
+        'edit.php?post_type=robodesk_ticket',
+        'Robodesk Settings for Email',
+        'Robodesk Settings for Email',
+        'manage_options',
+        'robodesk_imap_settings',
+        'robodesk_imap_settings_callback'
+    );
+
+    // Hidden callback page
+    add_submenu_page(null, 'Email Callback', 'Email Callback', 'manage_options', 'email-callback', 'email_fetcher_callback');
 }
 
 function update_taxonomy_order()

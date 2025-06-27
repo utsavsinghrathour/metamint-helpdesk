@@ -520,19 +520,19 @@ remove_action('after_password_reset', 'wp_password_change_notification');
 
 // settings page for IMAP configuration
 // Add a menu item for IMAP settings
-function robodesk_imap_settings_page()
-{
-    add_menu_page(
-        'Robodesk IMAP Settings',
-        'Robodesk IMAP',
-        'manage_options',
-        'robodesk-imap-settings',
-        'robodesk_imap_settings_callback',
-        'dashicons-email-alt2',
-        25
-    );
-}
-add_action('admin_menu', 'robodesk_imap_settings_page');
+// function robodesk_imap_settings_page()
+// {
+//     add_menu_page(
+//         'Robodesk IMAP Settings',
+//         'Robodesk IMAP',
+//         'manage_options',
+//         'robodesk-imap-settings',
+//         'robodesk_imap_settings_callback',
+//         'dashicons-email-alt2',
+//         25
+//     );
+// }
+// add_action('admin_menu', 'robodesk_imap_settings_page');
 
 function robodesk_imap_settings_callback()
 {
