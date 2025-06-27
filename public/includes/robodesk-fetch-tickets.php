@@ -84,10 +84,26 @@ function robodesk_fetch_emails()
     $since_date = date('d-M-Y H:i:s', strtotime($last_fetched_date));
     error_log('IMAP since date format: ' . $since_date);
 
+
+
+
+    // Retrieve IMAP settings from options
+    $settings = get_option('robodesk_imap_settings', array(
+        'hostname' => '',
+        'port'     => 993,
+        'username' => '',
+        'password' => '',
+    ));
+
+    // Construct the IMAP connection string
+    $hostname = '{' . $settings['hostname'] . ':' . $settings['port'] . '/imap/ssl}INBOX';
+    $username = $settings['username'];
+    $password = $settings['password'];
+
     // Email configuration details 
-    $hostname = '{wplocatepress.com:993/imap/ssl}INBOX';
-    $username = 'pipetest@wplocatepress.com';
-    $password = 'k342+11$c1_';
+    // $hostname = '{wplocatepress.com:993/imap/ssl}INBOX';
+    // $username = 'pipetest@wplocatepress.com';
+    // $password = 'k342+11$c1_';
 
     // Uncomment below for Zoho email configuration
     // $hostname = '{imap.zoho.com:993/imap/ssl}INBOX';
@@ -491,3 +507,119 @@ add_action('comment_post', 'robodesk_reply_email', 10, 2);
 // Disable default WordPress notifications for new users and password changes
 add_filter('send_password_change_email', '__return_false');
 remove_action('after_password_reset', 'wp_password_change_notification');
+
+
+
+
+// settings page for IMAP configuration
+// Add a menu item for IMAP settings
+function robodesk_imap_settings_page()
+{
+    add_menu_page(
+        'Robodesk IMAP Settings',
+        'Robodesk IMAP',
+        'manage_options',
+        'robodesk-imap-settings',
+        'robodesk_imap_settings_callback',
+        'dashicons-email-alt2',
+        25
+    );
+}
+add_action('admin_menu', 'robodesk_imap_settings_page');
+
+function robodesk_imap_settings_callback()
+{
+    if (!current_user_can('manage_options')) {
+        wp_die(__('You do not have sufficient permissions to access this page.'));
+    }
+
+    // Handle form submission for saving settings
+    if (isset($_POST['robodesk_imap_save'])) {
+        check_admin_referer('robodesk_imap_settings_action', 'robodesk_imap_settings_nonce');
+
+        $settings = array(
+            'hostname' => sanitize_text_field($_POST['robodesk_imap_hostname']),
+            'port'     => intval($_POST['robodesk_imap_port']),
+            'username' => sanitize_email($_POST['robodesk_imap_username']),
+            'password' => sanitize_text_field($_POST['robodesk_imap_password']),
+        );
+
+        update_option('robodesk_imap_settings', $settings);
+
+        echo '<div class="updated"><p>IMAP settings saved successfully.</p></div>';
+    }
+
+    // Handle connection test
+    if (isset($_POST['robodesk_imap_test'])) {
+        check_admin_referer('robodesk_imap_settings_action', 'robodesk_imap_settings_nonce');
+
+        $hostname = '{' . $_POST['robodesk_imap_hostname'] . ':' . $_POST['robodesk_imap_port'] . '/imap/ssl}INBOX';
+        $username = $_POST['robodesk_imap_username'];
+        $password = $_POST['robodesk_imap_password'];
+
+        $mailbox = @imap_open($hostname, $username, $password);
+        if ($mailbox) {
+            echo '<div class="updated"><p>IMAP connection successful!</p></div>';
+            imap_close($mailbox);
+        } else {
+            echo '<div class="error"><p>IMAP connection failed: ' . imap_last_error() . '</p></div>';
+        }
+    }
+
+    // Load saved settings or use provided defaults
+    $settings = get_option('robodesk_imap_settings', array(
+        'hostname' => 'email.example.com', // Default hostname
+        'port'     => 993,
+        'username' => 'password',
+        'password' => '', // Avoid hardcoding password
+    ));
+
+    $hostname = $settings['hostname'];
+    $port     = $settings['port'];
+    $username = $settings['username'];
+    $password = $settings['password'];
+?>
+
+    <div class="wrap">
+        <h1>Robodesk IMAP Settings</h1>
+        <form method="post" action="">
+            <?php wp_nonce_field('robodesk_imap_settings_action', 'robodesk_imap_settings_nonce'); ?>
+            <table class="form-table">
+                <tr>
+                    <th scope="row"><label for="robodesk_imap_hostname">IMAP Hostname</label></th>
+                    <td><input type="text" name="robodesk_imap_hostname" id="robodesk_imap_hostname" value="<?php echo esc_attr($hostname); ?>" class="regular-text">
+                        <p class="description">Example: <code>imappro.zoho.com</code></p>
+                    </td>
+                </tr>
+                <tr>
+                    <th scope="row"><label for="robodesk_imap_port">IMAP Port</label></th>
+                    <td><input type="number" name="robodesk_imap_port" id="robodesk_imap_port" value="<?php echo esc_attr($port); ?>" class="small-text">
+                        <p class="description">Default: <code>993</code> for SSL</p>
+                    </td>
+                </tr>
+                <tr>
+                    <th scope="row"><label for="robodesk_imap_username">IMAP Username</label></th>
+                    <td><input type="email" name="robodesk_imap_username" id="robodesk_imap_username" value="<?php echo esc_attr($username); ?>" class="regular-text">
+                        <p class="description">Your email address</p>
+                    </td>
+                </tr>
+                <tr>
+                    <th scope="row"><label for="robodesk_imap_password">IMAP Password</label></th>
+                    <td><input type="password" name="robodesk_imap_password" id="robodesk_imap_password" value="<?php echo esc_attr($password); ?>" class="regular-text">
+                        <p class="description"> Password</p>
+                    </td>
+                </tr>
+            </table>
+            <p class="submit">
+                <input type="submit" name="robodesk_imap_save" class="button button-primary" value="Save Settings">
+                <input type="submit" name="robodesk_imap_test" class="button button-secondary" value="Test Connection">
+            </p>
+        </form>
+    </div>
+
+<?php
+    // Debugging (remove in production)
+    // echo '<pre>';
+    // print_r($settings);
+    // echo '</pre>';
+}
