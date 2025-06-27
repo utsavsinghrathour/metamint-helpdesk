@@ -85,9 +85,13 @@ function robodesk_fetch_emails()
     error_log('IMAP since date format: ' . $since_date);
 
     // Email configuration details 
-    $hostname = '{wplocatepress.com:993/imap/ssl}INBOX';
-    $username = 'pipetest@wplocatepress.com';
-    $password = 'k342+11$c1_';
+    // $hostname = '{wplocatepress.com:993/imap/ssl}INBOX';
+    // $username = 'pipetest@wplocatepress.com';
+    // $password = 'k342+11$c1_';
+
+    $hostname = '{imap.zoho.com:993/imap/ssl}INBOX';
+    $username = 'hello@dzyns.com';
+    $password = 'pumecU7U@/T00';
 
     error_log('Attempting to connect to IMAP server: ' . $hostname);
 
