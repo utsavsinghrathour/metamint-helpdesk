@@ -32,10 +32,7 @@ const Login = ({ setShowLogin }) => {
     setErrors(newErrors);
     return isValid;
   };
-  
-const loginUser = async(email,pwd) => {
-    
-}  
+
 
 
 //   const handleSubmit = async (e) => {

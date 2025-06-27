@@ -9,7 +9,7 @@ import Footer from "./Footer";
 import Login from "./Login";
 import Preloader from "../images/preloader.svg";
 import axios from "axios"; // For making API requests
-// import { userStatus } from "../utils/modules";
+import { userStatus } from "../utils/modules";
 // import { createTicket } from "../utils/modules";
 
 const SingleTicket = React.lazy(() => import("./SingleTicket"));
@@ -78,12 +78,20 @@ const MessageTabs = ({
 
   const handleLogin = (loginStatus) => {
     setIsLoggedIn(loginStatus);
+    console.log('the login status', loginStatus);
     if (loginStatus) {
       fetchTickets();
     }
   };
-                       
+  
   useEffect(() => {
+  const usStat = userStatus();
+
+  if (usStat.isLoggedIn && usStat.loggedInUserId) {
+    setloggedInuserData(usStat.loggedInUserId);
+    setIsLoggedIn(true);
+    fetchTickets();
+  } else {
     const userDetails = sessionStorage.getItem('user_details');
     if (userDetails) {
       try {
@@ -91,13 +99,37 @@ const MessageTabs = ({
         if (parsedData && parsedData.user_id) {
           setloggedInuserData(parsedData.user_id);
           setIsLoggedIn(true);
-          fetchTickets();
+          fetchTickets(); 
         }
       } catch (error) {
         console.error('Error parsing user_details from sessionStorage', error);
       }
     }
-  },[isLoggedIn]);                     
+  }
+}, [isLoggedIn]);
+
+                       
+//   useEffect(() => {
+  
+//     const usrStat = userStatus();
+    
+//     console.log('saved user stata', usrStat);
+    
+//     const userDetails = sessionStorage.getItem('user_details');
+//     // const savedUserDetails = 
+//     if (userDetails) {
+//       try {
+//         const parsedData = JSON.parse(userDetails);
+//         if (parsedData && parsedData.user_id) {
+//           setloggedInuserData(parsedData.user_id);
+//           setIsLoggedIn(true);
+//           fetchTickets();
+//         }
+//       } catch (error) {
+//         console.error('Error parsing user_details from sessionStorage', error);
+//       }
+//     }
+//   },[isLoggedIn]);                     
 
 //   useEffect(() => {
   
@@ -108,14 +140,14 @@ const MessageTabs = ({
 //   }, []);
   
   const fetchTickets = async () => {
-    console.log('Hellow',loggedInuserData);
+    // console.log('Logged In user:',loggedInuserData);
     if (!loggedInuserData) return;
     
     try {
       setLoading(true);
       const response = await axios.get("/wp-json/wp/v2/robodesk_ticket", {
         params: {
-          per_page: 100,
+          per_page: 10,
          author: loggedInuserData,
           _embed: "wp:comment", // Only embed comments, as terms are directly included
         },
@@ -187,10 +219,12 @@ const MessageTabs = ({
       });
 
       setTickets(mappedTickets);
-      setLoading(false);
+     
     } catch (error) {
       console.error("Error fetching tickets:", error);
       setLoading(false);
+    }finally{
+     setLoading(false);
     }
   };
 
@@ -343,7 +377,6 @@ const MessageTabs = ({
     return matchesTab && matchesPriority && matchesSearch;
   });
 
-  console.log("MessageTabs Render - selectedTicket:", selectedTicket);
 
   return (
     <div className="rd-main-content">
