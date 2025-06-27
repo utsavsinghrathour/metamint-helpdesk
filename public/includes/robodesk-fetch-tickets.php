@@ -87,7 +87,7 @@ function robodesk_fetch_emails()
 
 
 
-    // Retrieve IMAP settings from options
+    // // Retrieve IMAP settings from options
     $settings = get_option('robodesk_imap_settings', array(
         'hostname' => '',
         'port'     => 993,
@@ -194,6 +194,13 @@ function robodesk_fetch_emails()
             // Check for duplicate tickets
             if (in_array($message_id, $existing_message_ids)) {
                 error_log('Skipping email #' . $email_number . ' as a ticket already exists with message ID: ' . $message_id);
+                $skipped_count++;
+                continue;
+            }
+
+            // if email is from Mail Delivery System of email Mailer-Daemon@antispam.mailspamprotection.com  skip it
+            if (stripos($headerInfo->fromaddress ?? '', 'Mailer-Daemon') !== false || stripos($headerInfo->fromaddress ?? '', 'Mail Delivery System') !== false) {
+                error_log('Skipping email #' . $email_number . ' as it is from Mail Delivery System');
                 $skipped_count++;
                 continue;
             }
