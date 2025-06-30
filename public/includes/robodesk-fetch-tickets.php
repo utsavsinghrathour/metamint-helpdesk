@@ -571,7 +571,7 @@ function robodesk_imap_settings_callback()
                     <th scope="row"><label for="robodesk_imap_hostname">IMAP Hostname</label></th>
                     <td><input type="text" name="robodesk_imap_hostname" id="robodesk_imap_hostname" value="<?php echo esc_attr($hostname); ?>" class="regular-text">
                         <p class="description">Example: <code>imappro.zoho.com</code></p>
-                        <p class="description">For DEV: <code>{imappro.zoho.com:{port}/imap/ssl}INBOX</code></p>
+                        <p class="description">For DEV:( how it would be stored) <code>{imappro.zoho.com:{port}/imap/ssl}INBOX</code></p>
                     </td>
                 </tr>
                 <tr>
