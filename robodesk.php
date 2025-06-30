@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Plugin Name: Robodesk Support Ticket System
  * Description: A support ticket and FAQ system.
@@ -17,7 +18,7 @@ require_once ROBODESK_PLUGIN_PATH . 'public/includes/robodesk-shortcodes.php';
 
 function robodesk_activate()
 {
-    $admin_role = get_role('administrator'); 
+    $admin_role = get_role('administrator');
     if ($admin_role) {
         $admin_role->add_cap('create_tickets');
         $admin_role->add_cap('edit_tickets');
@@ -44,7 +45,7 @@ function robodesk_deactivate()
 // Include necessary files
 // if (is_admin()) {
 require_once ROBODESK_PLUGIN_PATH . 'admin/robodesk-admin.php';
-
+require_once ROBODESK_PLUGIN_PATH . 'public/includes/robodesk-dashboard.php';
 require_once ROBODESK_PLUGIN_PATH . 'public/includes/robodesk-fetch-tickets.php';
 require_once ROBODESK_PLUGIN_PATH . 'public/includes/robodesk-functions.php';
 require_once ROBODESK_PLUGIN_PATH . 'public/includes/robodesk-shortcodes.php';
@@ -62,15 +63,20 @@ function robodesk_enqueue_scripts()
 {
 
     wp_enqueue_script('jquery');
+
     wp_enqueue_style('robodesk-styles', ROBODESK_PLUGIN_URL . 'public/assets/css/robodesk-styles.css', array(), '1.0');
-    wp_enqueue_script('robodesk-scripts', ROBODESK_PLUGIN_URL . 'public/assets/js/robodesk-scripts.js', array('jquery'), time(), true);
+
+
+    wp_enqueue_script('robodesk-scripts', ROBODESK_PLUGIN_URL . 'public/assets/js/robodesk-scripts.css', array('jquery'), time(), true);
+
+
 
     if (is_admin()) {
         add_action('admin_enqueue_scripts', 'robodesk_enqueue_admin_scripts');
     } else {
-       
+
         wp_enqueue_script('tinymce');
-        
+
         wp_enqueue_style('robodesk-styles', ROBODESK_PLUGIN_URL . 'public/assets/css/robodesk-styles.css', array(), time());
 
         wp_enqueue_script('robodesk-scripts', ROBODESK_PLUGIN_URL . 'public/assets/js/robodesk-scripts.js', array('jquery', 'tinymce'), time(), true);
@@ -84,11 +90,11 @@ function robodesk_enqueue_scripts()
             'add_credential_nonce' => wp_create_nonce('robodesk_add_credential_nonce'), // New nonce
             'delete_credential_nonce' => wp_create_nonce('robodesk_delete_credential_nonce'), // New nonce
         ));
-        
+
         $asset_file = file_exists(ROBODESK_PLUGIN_PATH . 'public/build/index.asset.php')
-        ? include ROBODESK_PLUGIN_PATH . 'public/build/index.asset.php'
-        : array('dependencies' => array('wp-element'), 'version' => '1.0.6');
-        
+            ? include ROBODESK_PLUGIN_PATH . 'public/build/index.asset.php'
+            : array('dependencies' => array('wp-element'), 'version' => '1.0.6');
+
         wp_enqueue_script(
             'robodesk-react-script',
             ROBODESK_PLUGIN_URL . 'public/build/index.js',
@@ -96,17 +102,17 @@ function robodesk_enqueue_scripts()
             time(),
             true
         );
-        
+
         // wp_add_inline_script( 'robodesk-react-script', 'const custom = ' . json_encode( array(
         //     'isLoggedIn' => is_user_logged_in() ? 'true' : 'false',
         //     'loggedInUserId' => is_user_logged_in() ? get_current_user_id() : 'false',
         // ) ), 'before' );
-        
-        wp_localize_script( 'robodesk-react-script', 'wpAuth', array(
+
+        wp_localize_script('robodesk-react-script', 'wpAuth', array(
             'isLoggedIn' => is_user_logged_in() ? 'true' : 'false',
             'loggedInUserId' => is_user_logged_in() ? get_current_user_id() : 'false',
-        ) );
-        
+        ));
+
         wp_enqueue_style(
             'robodesk-react-style',
             ROBODESK_PLUGIN_URL . 'public/build/index.css',
@@ -114,11 +120,11 @@ function robodesk_enqueue_scripts()
             $asset_file['version']
         );
     }
-
 }
 
 add_action('wp_footer', 'robodesk_add_plugin');
-function robodesk_add_plugin() {
+function robodesk_add_plugin()
+{
     echo '<div id="robodesk-plugin"></div>';
 }
 
@@ -237,10 +243,11 @@ function robodesk_decrypt($ciphertext, $key)
 }
 
 
-function rbd_log($message) {
+function rbd_log($message)
+{
     $log_file = plugin_dir_path(__FILE__) . 'logs/debug.log';
 
-    if ( ! file_exists(dirname($log_file)) ) {
+    if (! file_exists(dirname($log_file))) {
         mkdir(dirname($log_file), 0755, true);
     }
 
@@ -251,15 +258,16 @@ function rbd_log($message) {
     error_log(date('[Y-m-d H:i:s] ') . $message . PHP_EOL, 3, $log_file);
 }
 
-if ( is_admin() ) {
-    add_filter( 'use_block_editor_for_post', 'disable_block_for_post_type', 10, 2 );
+if (is_admin()) {
+    add_filter('use_block_editor_for_post', 'disable_block_for_post_type', 10, 2);
 }
 
-function disable_block_for_post_type( $use_block_editor, $post ) {
-    if ( 'robodesk_faq' === $post->post_type ) {
+function disable_block_for_post_type($use_block_editor, $post)
+{
+    if ('robodesk_faq' === $post->post_type) {
         return false;
     };
-    if ( 'notice' === $post->post_type ) {
+    if ('notice' === $post->post_type) {
         return false;
     };
     return $use_block_editor;
@@ -270,18 +278,19 @@ function disable_block_for_post_type( $use_block_editor, $post ) {
 /**
  * Create a support dashboard page on plugin activation
  */
-function robodesk_create_support_page() {
-    
+function robodesk_create_support_page()
+{
+
     $support_page = get_page_by_title('Robodesk Support');
-    
+
 
     error_log('Robodesk activation hook triggered');
-    
+
 
     if (!$support_page) {
         error_log('Creating Robodesk Support page');
-        
-  
+
+
         $page_data = array(
             'post_title'    => 'Robodesk Support',
             'post_content'  => '[robodesk_frontend_dashboard]',
@@ -289,16 +298,14 @@ function robodesk_create_support_page() {
             'post_author'   => 1,
             'post_type'     => 'page',
         );
-        
+
 
         $page_id = wp_insert_post($page_data);
-        
+
         if ($page_id && !is_wp_error($page_id)) {
-            
+
             update_option('robodesk_support_page_id', $page_id);
             update_post_meta($page_id, 'page_state', '--support dashboard');
-            
-           
         }
     } else {
         error_log('Robodesk Support page already exists with ID: ' . $support_page->ID);
@@ -308,14 +315,15 @@ function robodesk_create_support_page() {
 /**
  * Delete the support dashboard page on plugin deactivation
  */
-function robodesk_delete_support_page() {
+function robodesk_delete_support_page()
+{
 
 
     $page_id = get_option('robodesk_support_page_id');
-    
+
 
     if ($page_id) {
-        wp_delete_post($page_id, true); 
+        wp_delete_post($page_id, true);
         error_log('Deleted Robodesk Support page with ID: ' . $page_id);
     } else {
         // As fallback, try to find the page by title
@@ -334,7 +342,16 @@ register_activation_hook(__FILE__, 'robodesk_create_support_page');
 register_deactivation_hook(__FILE__, 'robodesk_delete_support_page');
 
 
-function robodesk_check_support_page() {
+
+
+
+
+
+
+
+
+function robodesk_check_support_page()
+{
     // Only run this once
     if (!get_option('robodesk_page_check_complete')) {
         robodesk_create_support_page();
@@ -353,6 +370,36 @@ register_deactivation_hook(__FILE__, 'robodesk_delete_support_page');
 
 
 // add_action('wp_head', function(){
-    
+
 //     var_dump(is_admin());
 // });
+
+
+
+
+function robodesk_enqueue_tailwind_and_styles()
+{
+    // Load Tailwind CDN browser runtime (supports <style type="text/tailwindcss">)
+    wp_enqueue_script(
+        'tailwind-browser-cdn',
+        'https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4',
+        array(),
+        null,
+        false
+    );
+
+    // Load your custom CSS file
+    wp_enqueue_style(
+        'robodesk-dashboard-styles',
+        plugin_dir_url(__FILE__) . 'public/assets/css/robodesk-dashboard.css',
+        [],
+        '1.0.0'
+    );
+    // Enqueue custom JavaScript (path to public/includes/assets/js/script.js)
+    wp_enqueue_script('robodesk-dashboard-script', plugin_dir_url(__FILE__) . '/public/assets/js/robodesk-dashboard.js', ['jquery'], '1.0.0', true);
+
+    // Enqueue Font Awesome for icons
+    wp_enqueue_style('font-awesome', 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css', [], '6.0.0');
+}
+add_action('admin_enqueue_scripts', 'robodesk_enqueue_tailwind_and_styles');
+add_action('wp_enqueue_scripts', 'robodesk_enqueue_tailwind_and_styles'); // if needed on frontend

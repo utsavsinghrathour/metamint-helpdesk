@@ -22,6 +22,14 @@ function robodesk_add_admin_menu()
     );
     add_submenu_page(
         'edit.php?post_type=robodesk_ticket',
+        'Dashboard',
+        'Dashboard',
+        'manage_options',
+        'robodesk-dashboard',
+        'robodesk_dashboard_callback'
+    );
+    add_submenu_page(
+        'edit.php?post_type=robodesk_ticket',
         'All Tickets',
         'All Tickets',
         'edit_posts',
