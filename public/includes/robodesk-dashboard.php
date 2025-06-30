@@ -523,41 +523,89 @@ function robodesk_dashboard_callback()
                             </div>
                         </div>
 
+                        <?php
+                        add_action('wp_ajax_robodesk_test_imap_connection', 'robodesk_test_imap_connection');
+
+                        function robodesk_test_imap_connection()
+                        {
+                            check_ajax_referer('robodesk_imap_settings_action', 'security');
+
+                            $auth_type = ($_POST['auth'] == '1') ? 'ssl' : 'tls';
+                            $hostname = '{' . sanitize_text_field($_POST['hostname']) . ':' . intval($_POST['port']) . '/imap/' . $auth_type . '}INBOX';
+                            $username = sanitize_email($_POST['username']);
+                            $password = $_POST['password']; // Keep as-is
+
+                            imap_errors(); // Clear previous errors
+
+                            $mailbox = @imap_open($hostname, $username, $password);
+
+                            if ($mailbox) {
+                                imap_close($mailbox);
+                                wp_send_json_success('✅ IMAP connection successful!');
+                            } else {
+                                $error = imap_last_error();
+                                wp_send_json_error('❌ IMAP connection failed: ' . esc_html($error));
+                            }
+
+                            wp_die();
+                        }
+
+                        ?>
+
                         <!-- IMAP Settings Tab -->
                         <div id="imap-tab" class="settings-tab-content hidden">
                             <h3 class="text-lg font-medium text-gray-900 mb-6">IMAP Settings</h3>
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700">IMAP Host</label>
-                                    <input type="text" value="imap.example.com" class="styled-input mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+
+                            <form method="post" action="">
+                                <?php wp_nonce_field('robodesk_imap_settings_action', 'robodesk_imap_settings_nonce'); ?>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div>
+                                        <label for="robodesk_imap_hostname" class="block text-sm font-medium text-gray-700">IMAP Host</label>
+                                        <input type="text" name="robodesk_imap_hostname" id="robodesk_imap_hostname"
+                                            value="<?php echo esc_attr($hostname); ?>"
+                                            class="styled-input mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                                    </div>
+                                    <div>
+                                        <label for="robodesk_imap_port" class="block text-sm font-medium text-gray-700">Port</label>
+                                        <input type="number" name="robodesk_imap_port" id="robodesk_imap_port"
+                                            value="<?php echo esc_attr($port); ?>"
+                                            class="styled-input mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                                    </div>
+                                    <div>
+                                        <label for="robodesk_imap_username" class="block text-sm font-medium text-gray-700">Username</label>
+                                        <input type="email" name="robodesk_imap_username" id="robodesk_imap_username"
+                                            value="<?php echo esc_attr($username); ?>"
+                                            class="styled-input mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                                    </div>
+                                    <div>
+                                        <label for="robodesk_imap_password" class="block text-sm font-medium text-gray-700">Password</label>
+                                        <input type="password" name="robodesk_imap_password" id="robodesk_imap_password"
+                                            value="<?php echo esc_attr($password); ?>"
+                                            class="styled-input mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                                    </div>
+                                    <div>
+                                        <label for="robodesk_imap_auth" class="block text-sm font-medium text-gray-700">Encryption</label>
+                                        <select name="robodesk_imap_auth" id="robodesk_imap_auth"
+                                            class="styled-select mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                                            <option value="1" <?php selected($auth, true); ?>>SSL</option>
+                                            <option value="0" <?php selected($auth, false); ?>>TLS</option>
+                                        </select>
+                                    </div>
                                 </div>
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700">Port</label>
-                                    <input type="text" value="993" class="styled-input mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                                <div class="mt-6 flex gap-4">
+                                    <button type="button" id="robodesk-imap-test"
+                                        class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">
+                                        Test Connection
+                                    </button>
+                                    <div id="imap-test-message" class="mt-4"></div>
                                 </div>
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700">Username</label>
-                                    <input type="email" value="support@example.com" class="styled-input mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
-                                </div>
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700">Password</label>
-                                    <input type="password" class="styled-input mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
-                                </div>
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700">Encryption</label>
-                                    <select class="styled-select mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
-                                        <option value="ssl">SSL</option>
-                                        <option value="tls">TLS</option>
-                                        <option value="none">None</option>
-                                    </select>
-                                </div>
-                            </div>
-                            <div class="mt-6">
-                                <button class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">
-                                    Test Connection
+                                <button type="submit" name="robodesk_imap_save"
+                                    class="bg-gray-600 text-white px-4 py-2 rounded-md hover:bg-gray-700">
+                                    Save Settings
                                 </button>
-                            </div>
+                            </form>
                         </div>
+
 
                         <!-- Email Templates Tab -->
                         <div id="templates-tab" class="settings-tab-content hidden">
@@ -677,7 +725,7 @@ function robodesk_dashboard_callback()
 
                         <div class="mt-8 pt-6 border-t border-gray-200">
                             <button onclick="saveSettings()" class="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-                                Save Settings
+                                Save SettingsCAZDSA
                             </button>
                         </div>
                     </div>
