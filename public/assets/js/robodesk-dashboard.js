@@ -1018,3 +1018,45 @@ document.addEventListener("click", function (event) {
     hideCustomerTickets();
   }
 });
+// IMAP test connection function
+// This function tests the IMAP connection using AJAX
+document.addEventListener("DOMContentLoaded", function () {
+  const testBtn = document.getElementById("robodesk-imap-test");
+  const messageBox = document.getElementById("imap-test-message");
+
+  testBtn.addEventListener("click", function () {
+    const nonce = document.getElementById("robodesk_imap_settings_nonce").value;
+
+    const data = {
+      action: "robodesk_test_imap_connection",
+      security: nonce,
+      hostname: document.getElementById("robodesk_imap_hostname").value,
+      port: document.getElementById("robodesk_imap_port").value,
+      username: document.getElementById("robodesk_imap_username").value,
+      password: document.getElementById("robodesk_imap_password").value,
+      auth: document.getElementById("robodesk_imap_auth").value,
+    };
+
+    messageBox.innerHTML =
+      '<p class="text-blue-600">🔄 Testing connection...</p>';
+
+    fetch(ajaxurl, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      body: new URLSearchParams(data).toString(),
+    })
+      .then((response) => response.json())
+      .then((result) => {
+        if (result.success) {
+          messageBox.innerHTML = `<p class="text-green-600">${result.data}</p>`;
+        } else {
+          messageBox.innerHTML = `<p class="text-red-600">${result.data}</p>`;
+        }
+      })
+      .catch(() => {
+        messageBox.innerHTML = `<p class="text-red-600">❌ AJAX request failed.</p>`;
+      });
+  });
+});
