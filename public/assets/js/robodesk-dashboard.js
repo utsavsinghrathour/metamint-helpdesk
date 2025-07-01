@@ -980,12 +980,9 @@ function showSettingsTab(tabName) {
 }
 
 function saveSettings() {
-  if (success === false) {
-    showToast("Failed to save settings", "error");
-  } else {
+  
     showToast("Settings saved successfully", "success");
   }
-}
 
 function testConnection() {
   if (currentTab === "imap-tab") {
@@ -1035,77 +1032,98 @@ document.addEventListener("click", function (event) {
 
 // IMAP Save Settings AJAX handler
 jQuery(document).ready(function ($) {
-  $("#save-settings-btn").on("click", function (e) {
-    e.preventDefault();
+    // Use event delegation to handle clicks on buttons in the IMAP tab
+    $(document).on('click', '#imap-tab #robodesk-imap-test', function (e) {
+        e.preventDefault();
 
-    var $form = $("#robodesk-imap-form");
-    var $saveButton = $(this);
-    $saveButton.prop("disabled", true).text("Saving...");
-    $.ajax({
-      url: ajaxurl,
-      type: "POST",
-      data: {
-        action: "robodesk_imap_save_settings",
-        nonce: $form.find('input[name="robodesk_imap_settings_nonce"]').val(),
-        robodesk_imap_hostname: $form.find("#robodesk_imap_hostname").val(),
-        robodesk_imap_port: $form.find("#robodesk_imap_port").val(),
-        robodesk_imap_username: $form.find("#robodesk_imap_username").val(),
-        robodesk_imap_password: $form.find("#robodesk_imap_password").val(),
-        robodesk_imap_auth: $form.find("#robodesk_imap_auth").val(),
-      },
-      success: function (response) {
-        if (response.success) {
-          showToast(response.data.message, "success");
-        } else {
-          showToast(response.data.message, "error");
+        // Ensure the IMAP tab is active
+        if (!$(this).closest('#imap-tab').is(':visible')) {
+            console.log('IMAP tab is not visible');
+            return;
         }
-      },
-      error: function () {
-        showToast("An error occurred. Please try again.", "error");
-      },
-      complete: function () {
-        $saveButton.prop("disabled", false).text("Save Settings");
-      },
-      // timeout: 5000,
+
+        var $form = $("#robodesk-imap-form");
+        var $testButton = $(this);
+
+        $testButton.prop("disabled", true).text("Testing...");
+
+        $.ajax({
+            url: ajaxurl,
+            type: "POST",
+            data: {
+                action: "robodesk_imap_test_connection",
+                nonce: $form.find('input[name="robodesk_imap_settings_nonce"]').val(),
+                robodesk_imap_hostname: $form.find("#robodesk_imap_hostname").val(),
+                robodesk_imap_port: $form.find("#robodesk_imap_port").val(),
+                robodesk_imap_username: $form.find("#robodesk_imap_username").val(),
+                robodesk_imap_password: $form.find("#robodesk_imap_password").val(),
+                robodesk_imap_auth: $form.find("#robodesk_imap_auth").val(),
+            },
+            success: function (response) {
+                console.log('Test Response:', response);
+                if (response.success) {
+                    showToast(response.data.message, "success");
+                } else {
+                    showToast(response.data.message, "error");
+                }
+            },
+            error: function (xhr, status, error) {
+                console.log('Test AJAX Error:', xhr, status, error);
+                console.log('Response Text:', xhr.responseText);
+                showToast("Test connection failed: " + error, "error");
+            },
+            complete: function () {
+                $testButton.prop("disabled", false).text("Test Connection");
+            },
+            timeout: 30000 // 30-second timeout
+        });
     });
-  });
+
+    $(document).on('click', '#imap-tab #save-settings-btn', function (e) {
+        e.preventDefault();
+
+        // Ensure the IMAP tab is active
+        if (!$(this).closest('#imap-tab').is(':visible')) {
+            console.log('IMAP tab is not visible');
+            return;
+        }
+
+        var $form = $("#robodesk-imap-form");
+        var $saveButton = $(this);
+
+        $saveButton.prop("disabled", true).text("Saving...");
+
+        $.ajax({
+            url: ajaxurl,
+            type: "POST",
+            data: {
+                action: "robodesk_imap_save_settings",
+                nonce: $form.find('input[name="robodesk_imap_settings_nonce"]').val(),
+                robodesk_imap_hostname: $form.find("#robodesk_imap_hostname").val(),
+                robodesk_imap_port: $form.find("#robodesk_imap_port").val(),
+                robodesk_imap_username: $form.find("#robodesk_imap_username").val(),
+                robodesk_imap_password: $form.find("#robodesk_imap_password").val(),
+                robodesk_imap_auth: $form.find("#robodesk_imap_auth").val(),
+            },
+            success: function (response) {
+                console.log('Save Response:', response);
+                if (response.success) {
+                    showToast(response.data.message, "success");
+                } else {
+                    showToast(response.data.message, "error");
+                }
+            },
+            error: function (xhr, status, error) {
+                console.log('Save AJAX Error:', xhr, status, error);
+                console.log('Response Text:', xhr.responseText);
+                showToast("Save settings failed: " + error, "error");
+            },
+            complete: function () {
+                $saveButton.prop("disabled", false).text("Save Settings");
+            },
+            timeout: 30000 // 30-second timeout
+        });
+    });
 });
 
-// Handle Test Connection
-jQuery(document).ready(function ($) {
-  $(document).on("click", "#robodesk-imap-test", function () {
-    var $form = $("#robodesk-imap-form");
-    var $testButton = $(this);
-
-    $testButton.prop("disabled", true).text("Testing...");
-
-    $.ajax({
-      url: ajaxurl, // Ensure ajaxurl is defined via wp_localize_script
-      type: "POST",
-      data: {
-        action: "robodesk_imap_test_connection",
-        nonce: $form.find('input[name="robodesk_imap_settings_nonce"]').val(),
-        robodesk_imap_hostname: $form.find("#robodesk_imap_hostname").val(),
-        robodesk_imap_port: $form.find("#robodesk_imap_port").val(),
-        robodesk_imap_username: $form.find("#robodesk_imap_username").val(),
-        robodesk_imap_password: $form.find("#robodesk_imap_password").val(),
-        robodesk_imap_auth: $form.find("#robodesk_imap_auth").val(),
-      },
-      success: function (response) {
-        console.log(response); // Debug response
-        if (response.success) {
-          showToast(response.data.message, "success");
-        } else {
-          showToast(response.data.message, "error");
-        }
-      },
-      error: function (xhr, status, error) {
-        console.log("AJAX Error:", xhr, status, error);
-        showToast("AJAX request failed: " + error, "error");
-      },
-      complete: function () {
-        $testButton.prop("disabled", false).text("Test Connection");
-      },
-    });
-  });
-});
+// for the email template editor
