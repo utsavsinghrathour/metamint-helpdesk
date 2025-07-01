@@ -1021,45 +1021,44 @@ document.addEventListener("click", function (event) {
 // IMAP test connection function
 // This function tests the IMAP connection using AJAX
 
-$("#robodesk-imap-form").on("click", function (e) {
-  e.preventDefault();
+// IMAP Save Settings AJAX handler
+// jQuery(document).ready(function ($) {
+//   $("#robodesk-imap-save").on("click", function (e) {
+//     e.preventDefault();
 
-  var $form = $(this);
-  var $messageDiv = $("#imap-message");
-  var $saveButton = $("#robodesk-imap-save");
-
-  $messageDiv.html("").removeClass("text-green-600 text-red-600");
-  $saveButton.prop("disabled", true).text("Saving...");
-
-  $.ajax({
-    url: ajaxurl,
-    type: "POST",
-    data: {
-      action: "robodesk_imap_save_settings",
-      nonce: $form.find("#robodesk_imap_settings_nonce").val(),
-      robodesk_imap_hostname: $form.find("#robodesk_imap_hostname").val(),
-      robodesk_imap_port: $form.find("#robodesk_imap_port").val(),
-      robodesk_imap_username: $form.find("#robodesk_imap_username").val(),
-      robodesk_imap_password: $form.find("#robodesk_imap_password").val(),
-      robodesk_imap_auth: $form.find("#robodesk_imap_auth").val(),
-    },
-    success: function (response) {
-      if (response.success) {
-        $messageDiv.addClass("text-green-600").html(response.data.message);
-      } else {
-        $messageDiv.addClass("text-red-600").html(response.data.message);
-      }
-    },
-    error: function () {
-      $messageDiv
-        .addClass("text-red-600")
-        .html("An error occurred. Please try again.");
-    },
-    complete: function () {
-      $saveButton.prop("disabled", false).text("Save Settings");
-    },
-  });
-});
+//     var $form = $("#robodesk-imap-form");
+//     var $messageDiv = $("#imap-message");
+//     var $saveButton = $(this);
+//     $.ajax({
+//       url: ajaxurl,
+//       type: "POST",
+//       data: {
+//         action: "robodesk_imap_save_settings",
+//         nonce: $form.find('input[name="robodesk_imap_settings_nonce"]').val(),
+//         robodesk_imap_hostname: $form.find("#robodesk_imap_hostname").val(),
+//         robodesk_imap_port: $form.find("#robodesk_imap_port").val(),
+//         robodesk_imap_username: $form.find("#robodesk_imap_username").val(),
+//         robodesk_imap_password: $form.find("#robodesk_imap_password").val(),
+//         robodesk_imap_auth: $form.find("#robodesk_imap_auth").val(),
+//       },
+//       success: function (response) {
+//         if (response.success) {
+//           $messageDiv.addClass("text-green-600").html(response.data.message);
+//         } else {
+//           $messageDiv.addClass("text-red-600").html(response.data.message);
+//         }
+//       },
+//       error: function () {
+//         $messageDiv
+//           .addClass("text-red-600")
+//           .html("An error occurred. Please try again.");
+//       },
+//       complete: function () {
+//         $saveButton.prop("disabled", false).text("Save Settings");
+//       },
+//     });
+//   });
+// });
 
 // Handle Test Connection
 jQuery(document).ready(function ($) {

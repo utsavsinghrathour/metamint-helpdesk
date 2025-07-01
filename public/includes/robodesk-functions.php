@@ -419,14 +419,8 @@ function add_custom_table_to_my_account()
     }
 }
 
-add_action('admin_enqueue_scripts', function () {
-    // wp_enqueue_script('robodesk-imap-js', plugin_dir_url(__FILE__) . 'js/imap.js', ['jquery'], null, true);
-    wp_localize_script('robodesk-imap-js', 'robodesk_ajax', [
-        'ajax_url' => admin_url('admin-ajax.php'),
-        'nonce'    => wp_create_nonce('robodesk_imap_settings_action'),
-    ]);
-});
-
+// Ajax handler for testing credential for IMAP connection
+// This function will be called via AJAX to test the IMAP connection
 add_action('wp_ajax_robodesk_imap_test_connection', 'robodesk_imap_test_connection');
 function robodesk_imap_test_connection()
 {
@@ -480,3 +474,6 @@ function new_robodesk_enqueue_scripts()
     ));
 }
 add_action('admin_enqueue_scripts', 'robodesk_enqueue_scripts');
+
+
+//function to save the credentials
