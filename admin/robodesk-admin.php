@@ -266,5 +266,9 @@ function robodesk_enqueue_tailwind_and_styles()
         'ajaxurl' => admin_url('admin-ajax.php'),
         'nonce' => wp_create_nonce('robodesk_imap_settings_action')
     ));
+    wp_localize_script('robodesk-script', 'robodeskAjax', [
+        'ajax_url' => admin_url('admin-ajax.php'),
+        'nonce' => wp_create_nonce('robodesk_email_template_action'),
+    ]);
 }
 add_action('admin_enqueue_scripts', 'robodesk_enqueue_tailwind_and_styles');

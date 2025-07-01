@@ -613,53 +613,49 @@ function robodesk_dashboard_callback()
                         <!-- Email Templates Tab -->
                         <div id="templates-tab" class="settings-tab-content hidden">
                             <h3 class="text-lg font-medium text-gray-900 mb-6">Email Templates</h3>
-                            <div class="space-y-6">
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-2">New Ticket Notification</label>
-                                    <div class="editor-toolbar mb-2">
-                                        <button type="button" onclick="formatText('bold', 'new-ticket-template')" class="editor-btn"><i class="fas fa-bold"></i></button>
-                                        <button type="button" onclick="formatText('italic', 'new-ticket-template')" class="editor-btn"><i class="fas fa-italic"></i></button>
-                                        <button type="button" onclick="formatText('underline', 'new-ticket-template')" class="editor-btn"><i class="fas fa-underline"></i></button>
-                                        <button type="button" onclick="formatText('insertUnorderedList', 'new-ticket-template')" class="editor-btn"><i class="fas fa-list-ul"></i></button>
-                                        <button type="button" onclick="formatText('insertOrderedList', 'new-ticket-template')" class="editor-btn"><i class="fas fa-list-ol"></i></button>
+                            <form id="robodesk_email_template_save" class="space-y-6">
+                                <input type="hidden" name="robodesk_email_template_nonce" value="<?php echo wp_create_nonce('robodesk_email_template_action'); ?>">
+                                <div class="space-y-6">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">New Ticket Notification</label>
+                                        <div class="editor-toolbar mb-2">
+                                            <button type="button" onclick="formatText('bold', 'new-ticket-template')" class="editor-btn"><i class="fas fa-bold"></i></button>
+                                            <button type="button" onclick="formatText('italic', 'new-ticket-template')" class="editor-btn"><i class="fas fa-italic"></i></button>
+                                            <button type="button" onclick="formatText('underline', 'new-ticket-template')" class="editor-btn"><i class="fas fa-underline"></i></button>
+                                            <button type="button" onclick="formatText('insertUnorderedList', 'new-ticket-template')" class="editor-btn"><i class="fas fa-list-ul"></i></button>
+                                            <button type="button" onclick="formatText('insertOrderedList', 'new-ticket-template')" class="editor-btn"><i class="fas fa-list-ol"></i></button>
+                                        </div>
+                                        <div id="new-ticket-template" class="editor-content" contenteditable="true"><?php echo wp_kses_post(get_option('robodesk_email_template_new-ticket', 'Thank you for contacting us. We have received your ticket and will respond soon.')); ?></div>
                                     </div>
-                                    <div id="new-ticket-template" class="editor-content" contenteditable="true">
-                                        Thank you for contacting us. We have received your ticket and will respond soon.
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">Ticket Resolved</label>
+                                        <div class="editor-toolbar mb-2">
+                                            <button type="button" onclick="formatText('bold', 'ticket-resolved-template')" class="editor-btn"><i class="fas fa-bold"></i></button>
+                                            <button type="button" onclick="formatText('italic', 'ticket-resolved-template')" class="editor-btn"><i class="fas fa-italic"></i></button>
+                                            <button type="button" onclick="formatText('underline', 'ticket-resolved-template')" class="editor-btn"><i class="fas fa-underline"></i></button>
+                                            <button type="button" onclick="formatText('insertUnorderedList', 'ticket-resolved-template')" class="editor-btn"><i class="fas fa-list-ul"></i></button>
+                                            <button type="button" onclick="formatText('insertOrderedList', 'ticket-resolved-template')" class="editor-btn"><i class="fas fa-list-ol"></i></button>
+                                        </div>
+                                        <div id="ticket-resolved-template" class="editor-content" contenteditable="true"><?php echo wp_kses_post(get_option('robodesk_email_template_ticket-resolved', 'Your ticket has been resolved. Please let us know if you need further assistance.')); ?></div>
                                     </div>
-                                </div>
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-2">Ticket Resolved</label>
-                                    <div class="editor-toolbar mb-2">
-                                        <button type="button" onclick="formatText('bold', 'ticket-resolved-template')" class="editor-btn"><i class="fas fa-bold"></i></button>
-                                        <button type="button" onclick="formatText('italic', 'ticket-resolved-template')" class="editor-btn"><i class="fas fa-italic"></i></button>
-                                        <button type="button" onclick="formatText('underline', 'ticket-resolved-template')" class="editor-btn"><i class="fas fa-underline"></i></button>
-                                        <button type="button" onclick="formatText('insertUnorderedList', 'ticket-resolved-template')" class="editor-btn"><i class="fas fa-list-ul"></i></button>
-                                        <button type="button" onclick="formatText('insertOrderedList', 'ticket-resolved-template')" class="editor-btn"><i class="fas fa-list-ol"></i></button>
-                                    </div>
-                                    <div id="ticket-resolved-template" class="editor-content" contenteditable="true">
-                                        Your ticket has been resolved. Please let us know if you need further assistance.
-                                    </div>
-                                </div>
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-2">Auto Reply</label>
-                                    <div class="editor-toolbar mb-2">
-                                        <button type="button" onclick="formatText('bold', 'auto-reply-template')" class="editor-btn"><i class="fas fa-bold"></i></button>
-                                        <button type="button" onclick="formatText('italic', 'auto-reply-template')" class="editor-btn"><i class="fas fa-italic"></i></button>
-                                        <button type="button" onclick="formatText('underline', 'auto-reply-template')" class="editor-btn"><i class="fas fa-underline"></i></button>
-                                        <button type="button" onclick="formatText('insertUnorderedList', 'auto-reply-template')" class="editor-btn"><i class="fas fa-list-ul"></i></button>
-                                        <button type="button" onclick="formatText('insertOrderedList', 'auto-reply-template')" class="editor-btn"><i class="fas fa-list-ol"></i></button>
-                                    </div>
-                                    <div id="auto-reply-template" class="editor-content" contenteditable="true">
-                                        This is an automated response. We will get back to you within 24 hours.
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">Auto Reply</label>
+                                        <div class="editor-toolbar mb-2">
+                                            <button type="button" onclick="formatText('bold', 'auto-reply-template')" class="editor-btn"><i class="fas fa-bold"></i></button>
+                                            <button type="button" onclick="formatText('italic', 'auto-reply-template')" class="editor-btn"><i class="fas fa-italic"></i></button>
+                                            <button type="button" onclick="formatText('underline', 'auto-reply-template')" class="editor-btn"><i class="fas fa-underline"></i></button>
+                                            <button type="button" onclick="formatText('insertUnorderedList', 'auto-reply-template')" class="editor-btn"><i class="fas fa-list-ul"></i></button>
+                                            <button type="button" onclick="formatText('insertOrderedList', 'auto-reply-template')" class="editor-btn"><i class="fas fa-list-ol"></i></button>
+                                        </div>
+                                        <div id="auto-reply-template" class="editor-content" contenteditable="true"><?php echo wp_kses_post(get_option('robodesk_email_template_auto-reply', 'This is an automated response. We will get back to you within 24 hours.')); ?></div>
                                     </div>
                                 </div>
-                            </div>
-                            <hr class="my-6 border-gray-200">
-                            <button type="button" id="save-templates" class="mt-6 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">
-                                Save Templates
-                            </button>
+                                <hr class="my-6 border-gray-200">
+                                <button type="button" id="robodesk-save-templates" class="mt-6 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">
+                                    Save Templates
+                                </button>
+                            </form>
                         </div>
-
                         <!-- Fetch Tickets Tab -->
                         <div id="fetch-tab" class="settings-tab-content hidden">
                             <h3 class="text-lg font-medium text-gray-900 mb-6">Fetch Tickets</h3>

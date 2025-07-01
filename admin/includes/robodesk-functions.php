@@ -98,3 +98,76 @@ function robodesk_imap_save_settings()
         wp_send_json_error(['message' => $message]);
     }
 }
+
+// email template save function
+add_action('wp_ajax_robodesk_email_template_save', 'robodesk_email_template_save');
+
+function robodesk_email_template_save()
+{
+    // Verify nonce
+    if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'robodesk_email_template_action')) {
+        wp_send_json_error(['message' => 'Security check failed']);
+        exit;
+    }
+
+    // Check if templates array is provided
+    if (empty($_POST['templates']) || !is_array($_POST['templates'])) {
+        wp_send_json_error(['message' => 'No templates provided']);
+        exit;
+    }
+
+    // Define allowed HTML tags for template content
+    $allowed_tags = [
+        'strong' => [],
+        'em' => [],
+        'u' => [],
+        'ul' => [],
+        'ol' => [],
+        'li' => [],
+        'p' => [],
+        'br' => [],
+    ];
+
+    $results = [];
+    // Define expected template keys
+    $valid_templates = ['new-ticket', 'ticket-resolved', 'auto-reply'];
+
+    foreach ($_POST['templates'] as $template_name => $template_content) {
+        // Validate template name
+        if (!in_array($template_name, $valid_templates)) {
+            $results[$template_name] = ['status' => 'error', 'message' => 'Invalid template name'];
+            continue;
+        }
+
+        // Sanitize inputs
+        $template_name = sanitize_text_field($template_name);
+        $template_content = wp_kses($template_content, $allowed_tags);
+
+        if (empty($template_content)) {
+            $results[$template_name] = ['status' => 'error', 'message' => 'Template content cannot be empty'];
+            continue;
+        }
+
+        // Save to options table
+        $option_name = 'robodesk_email_template_' . sanitize_title($template_name);
+        $success = update_option($option_name, $template_content);
+
+        $results[$template_name] = [
+            'status' => $success || get_option($option_name) === $template_content ? 'success' : 'error',
+            'message' => $success || get_option($option_name) === $template_content
+                ? 'Template saved successfully'
+                : 'Failed to save template',
+        ];
+    }
+
+    // Check if all templates were processed successfully
+    $all_success = array_reduce($results, function ($carry, $result) {
+        return $carry && $result['status'] === 'success';
+    }, true);
+
+    if ($all_success && count($results) === count($valid_templates)) {
+        wp_send_json_success(['message' => 'All templates saved successfully', 'details' => $results]);
+    } else {
+        wp_send_json_error(['message' => 'Some templates failed to save or were missing', 'details' => $results]);
+    }
+}
