@@ -235,3 +235,39 @@ function exclude_ticket_replies($query)
         $query->query_vars['type__not_in'] = array('ticket_replies');
     }
 }
+
+
+
+// Enqueue Tailwind CSS and custom styles
+function robodesk_enqueue_tailwind_and_styles()
+{
+    // Load Tailwind CDN browser runtime (supports <style type="text/tailwindcss">)
+    wp_enqueue_script(
+        'tailwind-browser-cdn',
+        'https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4',
+        array(),
+        null,
+        false
+    );
+
+    // Load your custom CSS file
+    wp_enqueue_style(
+        'robodesk-dashboard-styles',
+        plugin_dir_url(__FILE__) . '/assets/css/robodesk-dashboard.css',
+        [],
+        '1.0.0'
+    );
+    // Enqueue custom JavaScript (path to public/includes/assets/js/script.js)
+    wp_enqueue_script('robodesk-dashboard-script', plugin_dir_url(__FILE__) . '/assets/js/robodesk-dashboard.js', ['jquery'], '1.0.0', true);
+
+    // Enqueue Font Awesome for icons
+    wp_enqueue_style('font-awesome', 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css', [], '6.0.0');
+
+
+    wp_localize_script('robodesk-script', 'robodesk_ajax', array(
+        'ajaxurl' => admin_url('admin-ajax.php'),
+        'nonce' => wp_create_nonce('robodesk_imap_settings_action')
+    ));
+}
+add_action('admin_enqueue_scripts', 'robodesk_enqueue_tailwind_and_styles');
+// add_action('wp_enqueue_scripts', 'robodesk_enqueue_tailwind_and_styles'); // if needed on frontend
