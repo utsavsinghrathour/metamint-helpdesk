@@ -497,45 +497,91 @@ function robodesk_dashboard_callback()
                             </button>
                         </nav>
                     </div>
-
+                    <!-- overall setting page with all the tabs -->
                     <div class="p-6">
                         <!-- Basic Settings Tab -->
                         <div id="basic-tab" class="settings-tab-content">
                             <h3 class="text-lg font-medium text-gray-900 mb-6">Basic Settings</h3>
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700">Site Name</label>
-                                    <input type="text" value="Robodesk Support" class="styled-input mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
-                                </div>
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700">Admin Email</label>
-                                    <input type="email" value="admin@example.com" class="styled-input mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
-                                </div>
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700">Timezone</label>
-                                    <select class="styled-select mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
-                                        <option value="UTC">UTC</option>
-                                        <option value="EST">Eastern Time</option>
-                                        <option value="PST">Pacific Time</option>
-                                        <option value="GMT">GMT</option>
-                                    </select>
-                                </div>
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700">Language</label>
-                                    <select class="styled-select mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
-                                        <option value="en">English</option>
-                                        <option value="es">Spanish</option>
-                                        <option value="fr">French</option>
-                                        <option value="de">German</option>
-                                    </select>
-                                </div>
-                            </div>
-                            <hr class="my-6 border-gray-200">
-                            <button type="button" id="save-basic-settings" class="mt-6 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">
-                                Save Settings
-                            </button>
-                        </div>
+                            <form id="robodesk-basic-settings-form" class="space-y-6">
+                                <input type="hidden" name="robodesk_basic_settings_nonce" value="<?php echo wp_create_nonce('robodesk_basic_settings_action'); ?>">
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div>
+                                        <label for="site_name" class="block text-sm font-medium text-gray-700">Site Name</label>
+                                        <input type="text" name="site_name" id="site_name" value="<?php echo esc_attr(get_option('robodesk_site_name', 'Robodesk Support')); ?>" class="styled-input mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                                    </div>
+                                    <div>
+                                        <label for="admin_email" class="block text-sm font-medium text-gray-700">Admin Email</label>
+                                        <input type="email" name="admin_email" id="admin_email" value="<?php echo esc_attr(get_option('robodesk_admin_email', 'admin@example.com')); ?>" class="styled-input mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                                    </div>
+                                    <div>
+                                        <label for="timezone" class="block text-sm font-medium text-gray-700">Timezone</label>
+                                        <select name="timezone" id="timezone" class="styled-select mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                                            <?php
+                                            $saved_timezone = get_option('robodesk_timezone', 'UTC');
+                                            $timezones = ['UTC', 'America/New_York', 'America/Los_Angeles', 'GMT'];
+                                            foreach ($timezones as $tz) {
+                                                echo '<option value="' . esc_attr($tz) . '"' . selected($saved_timezone, $tz, false) . '>' . esc_html($tz) . '</option>';
+                                            }
+                                            ?>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label for="language" class="block text-sm font-medium text-gray-700">Language</label>
+                                        <select name="language" id="language" class="styled-select mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                                            <?php
+                                            $saved_language = get_option('robodesk_language', 'en');
+                                            $languages = ['en' => 'English', 'es' => 'Spanish', 'fr' => 'French', 'de' => 'German'];
+                                            foreach ($languages as $code => $name) {
+                                                echo '<option value="' . esc_attr($code) . '"' . selected($saved_language, $code, false) . '>' . esc_html($name) . '</option>';
+                                            }
+                                            ?>
+                                        </select>
+                                    </div>
+                                    <!-- Image Fields -->
+                                    <div>
+                                        <label for="popover_icon" class="block text-sm font-medium text-gray-700">Pop over Icon/Image</label>
+                                        <input type="file" accept="image/*" name="popover_icon" id="popover_icon" class="styled-input mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 ">
 
+                                        <div class="mt-2">
+                                            <img id="popover-icon-preview" src="<?php echo esc_url(get_option('robodesk_popover_icon', '')); ?>" alt="Pop over Icon Preview" class="hidden max-w-[150px] h-auto rounded-md">
+                                        </div>
+                                        <input type="hidden" name="robodesk_popover_icon" id="robodesk_popover_icon" value="<?php echo esc_attr(get_option('robodesk_popover_icon', '')); ?>">
+                                    </div>
+                                    <div>
+                                        <label for="popover_top_icon" class="block text-sm font-medium text-gray-700">Pop over Top Icon/Image</label>
+                                        <input type="file" accept="image/*" name="popover_top_icon" id="popover_top_icon" class="styled-input mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+
+                                        <div class="mt-2">
+                                            <img id="popover-top-icon-preview" src="<?php echo esc_url(get_option('robodesk_popover_top_icon', '')); ?>" alt="Pop over Top Icon Preview" class="hidden max-w-[150px] h-auto rounded-md">
+                                        </div>
+                                        <input type="hidden" name="robodesk_popover_top_icon" id="robodesk_popover_top_icon" value="<?php echo esc_attr(get_option('robodesk_popover_top_icon', '')); ?>">
+                                    </div>
+                                    <div>
+                                        <label for="logo" class="block text-sm font-medium text-gray-700">Logo</label>
+                                        <input type="file" accept="image/*" name="logo" id="logo" class="styled-input mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+
+                                        <div class="mt-2">
+                                            <img id="logo-preview" src="<?php echo esc_url(get_option('robodesk_logo', '')); ?>" alt="Logo Preview" class="hidden max-w-[150px] h-auto rounded-md">
+                                        </div>
+                                        <input type="hidden" name="robodesk_logo" id="robodesk_logo" value="<?php echo esc_attr(get_option('robodesk_logo', '')); ?>">
+                                    </div>
+                                    <div>
+                                        <label for="wide_logo" class="block text-sm font-medium text-gray-700">Wide Logo</label>
+                                        <input type="file" accept="image/*" name="wide_logo" id="wide_logo" class="styled-input mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+
+                                        <div class="mt-2">
+                                            <img id="wide-logo-preview" src="<?php echo esc_url(get_option('robodesk_wide_logo', '')); ?>" alt="Wide Logo Preview" class="hidden max-w-[150px] h-auto rounded-md">
+                                        </div>
+                                        <input type="hidden" name="robodesk_wide_logo" id="robodesk_wide_logo" value="<?php echo esc_attr(get_option('robodesk_wide_logo', '')); ?>">
+                                    </div>
+                                </div>
+                                <hr class="my-6 border-gray-200">
+                                <button type="button" id="save-basic-settings" class="mt-6 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">
+                                    Save Settings
+                                </button>
+                            </form>
+                        </div>
+                        <!-- IMAP Settings load saved settings -->
                         <?php
                         // Load saved settings
                         $settings = get_option('robodesk_imap_settings', array(
