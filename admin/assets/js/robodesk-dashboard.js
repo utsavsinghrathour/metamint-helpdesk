@@ -1030,12 +1030,13 @@ document.addEventListener("click", function (event) {
     hideCustomerTickets();
   }
 });
+
 // IMAP test connection function
 // This function tests the IMAP connection using AJAX
 
 // IMAP Save Settings AJAX handler
 jQuery(document).ready(function ($) {
-  $("#save-settings-btn").on("click", function (e) {
+  $("#save-imap-settings").on("click", function (e) {
     e.preventDefault();
 
     var $form = $("#robodesk-imap-form");
@@ -1109,3 +1110,5 @@ jQuery(document).ready(function ($) {
     });
   });
 });
+
+// basic settings AJAX handler

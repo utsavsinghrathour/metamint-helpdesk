@@ -24,7 +24,6 @@ function robodesk_imap_test_connection()
 
     $auth_type = ($_POST['robodesk_imap_auth'] == '1') ? 'ssl' : 'tls';
     $hostname = '{' . sanitize_text_field($_POST['robodesk_imap_hostname']) . ':' . intval($_POST['robodesk_imap_port']) . '/imap/' . $auth_type . '/novalidate-cert}INBOX';
-    $hostname_view = ($_POST['robodesk_imap_hostname']);
     $username = sanitize_text_field($_POST['robodesk_imap_username']);
     $password = $_POST['robodesk_imap_password'];
 
@@ -70,7 +69,6 @@ function robodesk_imap_save_settings()
 
     $auth_type = ($_POST['robodesk_imap_auth'] == '1') ? 'ssl' : 'tls';
     $hostname = '{' . sanitize_text_field($_POST['robodesk_imap_hostname']) . ':' . intval($_POST['robodesk_imap_port']) . '/imap/' . $auth_type . '/novalidate-cert}INBOX';
-
     $username = sanitize_text_field($_POST['robodesk_imap_username']);
     $password = $_POST['robodesk_imap_password'];
 

@@ -530,6 +530,10 @@ function robodesk_dashboard_callback()
                                     </select>
                                 </div>
                             </div>
+                            <hr class="my-6 border-gray-200">
+                            <button type="button" id="save-basic-settings" class="mt-6 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">
+                                Save Settings
+                            </button>
                         </div>
 
                         <?php
@@ -594,6 +598,12 @@ function robodesk_dashboard_callback()
                                     <button type="button" id="robodesk-imap-test" onclick="testConnection()"
                                         class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">
                                         Test Connection
+                                    </button>
+                                </div>
+                                <hr class="my-6 border-gray-200">
+                                <div>
+                                    <button type="button" id="save-imap-settings" class="mt-6 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">
+                                        Save Settings
                                     </button>
                                 </div>
                             </form>
@@ -716,11 +726,11 @@ function robodesk_dashboard_callback()
                             </div>
                         </div>
 
-                        <div class="mt-8 pt-6 border-t border-gray-200">
+                        <!-- <div class="mt-8 pt-6 border-t border-gray-200">
                             <button onclick="saveSettings()" id="save-settings-btn" class="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-                                Save Settings-Main
+                                Save Settings
                             </button>
-                        </div>
+                        </div> -->
                     </div>
                 </div>
             </div>

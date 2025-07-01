@@ -343,14 +343,6 @@ register_activation_hook(__FILE__, 'robodesk_create_support_page');
 register_deactivation_hook(__FILE__, 'robodesk_delete_support_page');
 
 
-
-
-
-
-
-
-
-
 function robodesk_check_support_page()
 {
     // Only run this once
