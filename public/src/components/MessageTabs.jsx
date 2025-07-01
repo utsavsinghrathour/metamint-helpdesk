@@ -16,8 +16,6 @@ const SingleTicket = React.lazy(() => import("./SingleTicket"));
 
 const TicketItem = ({ ticket, onSelect }) => {
 
-// console.log(ticket);
-
   return (
     <div
       className="rd-hover single-rd-ticket rd-flex rd-align-center rd-gap-8 rd-border-bottom-light rd-cursor-pointer single-rd-active-ticket"
@@ -80,7 +78,6 @@ const MessageTabs = ({
 
   const handleLogin = (loginStatus) => {
     setIsLoggedIn(loginStatus);
-    console.log('the login status', loginStatus);
     if (loginStatus) {
       fetchTickets();
     }
@@ -230,7 +227,7 @@ const MessageTabs = ({
 
 const fetchTickets = async () => {
   if (!loggedInuserData) return; // Exit early if user is not logged in
-    console.log('We are here ', loggedInuserData);
+    // console.log('We are here ', loggedInuserData);
   try {
     setLoading(true);
     const response = await axios.get("/wp-json/wp/v2/robodesk_ticket", {
@@ -295,7 +292,7 @@ const fetchTickets = async () => {
         messages,
       };
     });
-    console.log('THe final ticket data is' , mappedTickets);
+    // console.log('THe final ticket data is' , mappedTickets);
     setTickets(mappedTickets);
     setLoading(false);
   } catch (error) {
@@ -367,7 +364,6 @@ const fetchTickets = async () => {
 //   const handleLogindata = () => {
   
 //   }
-    console.log(tickets);
   const filteredTickets = tickets.filter((ticket) => {
     const matchesTab = currentTab === "all" || ticket.status === currentTab;
     const matchesPriority =
@@ -378,8 +374,7 @@ const fetchTickets = async () => {
     return matchesTab && matchesPriority && matchesSearch;
   });
   
-  console.log(filteredTickets);
-  console.log(isLoggedIn);
+
     
   return (
     <div className="rd-main-content">
@@ -394,6 +389,7 @@ const fetchTickets = async () => {
               <SingleTicket
                 ticket={selectedTicket}
                 onBack={() => setSelectedTicket(null)}
+                loggedInUser = { loggedInuserData }
               />
             </Suspense>
           ) : (

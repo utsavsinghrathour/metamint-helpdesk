@@ -1,70 +1,76 @@
-<?php 
+<?php
 
-// add_action('rest_api_init', function () {
-//     register_rest_route('custom/v1', '/login', array(
-//         'methods' => 'POST',
-//         'callback' => 'custom_login_endpoint',
-//         'permission_callback' => '__return_true', // Allow public access to the endpoint
-//     ));
-// });
-
-// function custom_login_endpoint(WP_REST_Request $request) {
-//     $username = sanitize_text_field($request->get_param('username'));
-//     $password = $request->get_param('password');
-
-//     if (empty($username) || empty($password)) {
-//         return new WP_Error('missing_credentials', 'Username and password are required.', array('status' => 400));
-//     }
-    
-//     if (is_email($username)) {
-//         $user = get_user_by('email', $username);
-//         if (!$user) {
-//             return new WP_Error('invalid_email', 'No user found with this email.', array('status' => 404));
-//         }
-//         $username = $user->user_login;
-//     } 
-
-//     // Authenticate user
-//     $creds = array(
-//         'user_login' => $username,
-//         'user_password' => $password,
-//         'remember' => true,
-//     );
-
-//     $user = wp_signon($creds, is_ssl());
-
-//     if (is_wp_error($user)) {
-//         return new WP_Error('invalid_credentials', 'Invalid username or password.', array('status' => 401));
-//     }
-
-//     // Set authentication cookies
-//     wp_set_auth_cookie($user->ID, true, is_ssl());
-
-//     // Return user details
-//     return array(
-//         'success' => true,
-//         'user_id' => $user->ID,
-//         'user_email' => $user->user_email,
-//         'user_display_name' => $user->display_name,
-//         'message' => 'Login successful.',
-//     );
-// }
-
-
-// add_filter('rest_pre_serve_request', function ($value) {
-//     header('Access-Control-Allow-Origin:'.site_url()); 
-//     header('Access-Control-Allow-Methods: POST, GET, OPTIONS');
-//     header('Access-Control-Allow-Credentials: true');
-//     header('Access-Control-Allow-Headers: Content-Type');
-//     return $value;
-// });
-
-
-// require_once plugin_dir_path(__FILE__) . 'vendor/autoload.php'; // Ensure Firebase JWT is included
 use \Firebase\JWT\JWT;
 use \Firebase\JWT\Key;
 
-add_action('rest_api_init', function () {
+// Defining JWT secret keys
+if (!defined('JWT_AUTH_SECRET_KEY')) {
+    define('JWT_AUTH_SECRET_KEY', 'robodesk-secret');
+}
+
+/**
+ * Generate JWT token for a given WordPress user.
+ *
+ * @param WP_User|int $user WP_User object or user ID.
+ * @param int $expiration_in_days Number of days the token will be valid (default: 7).
+ * @return string|WP_Error JWT token string on success, WP_Error on failure.
+ */
+function robodesk_generate_token($user, $expiration_in_days = 7) {
+    if (is_numeric($user)) {
+        $user = get_user_by('id', $user);
+    }
+
+    if (!($user instanceof WP_User)) {
+        return new WP_Error('invalid_user', 'Invalid user object.');
+    }
+
+    // Generate or retrieve the secret key
+    $secret_key = defined('JWT_AUTH_SECRET_KEY')
+        ? JWT_AUTH_SECRET_KEY
+        : wp_generate_password(64, true, true);
+
+    // Set issued and expiration timestamps
+    $issued_at = time();
+    $expire = $issued_at + (DAY_IN_SECONDS * $expiration_in_days);
+
+    // Token payload
+    $token = array(
+        'iss'  => get_site_url(),
+        'iat'  => $issued_at,
+        'exp'  => $expire,
+        'data' => array(
+            'user_id'    => $user->ID,
+            'user_email' => $user->user_email,
+        ),
+    );
+
+    try {
+        $jwt = JWT::encode($token, $secret_key, 'HS256');
+        return $jwt;
+    } catch (Exception $e) {
+        return new WP_Error('jwt_generation_failed', 'Failed to generate JWT: ' . $e->getMessage());
+    }
+}
+
+
+
+/* 
+The Hook to allow  headers to the response to allow Cross-Origin Resource Sharing (CORS) for the REST API requests. CORS is a security feature implemented by webbrowsers to restrict web pages from making requests to a different domain than the one that served
+the original page. 
+*/
+add_filter('rest_pre_serve_request', function ($value) {
+    header('Access-Control-Allow-Origin: ' . esc_url_raw(site_url()));
+    header('Access-Control-Allow-Methods: POST, GET, OPTIONS');
+    header('Access-Control-Allow-Headers: Content-Type, Authorization');
+    header('Access-Control-Max-Age: 86400');
+    return $value;
+});
+
+
+/* Public Rest Api registration hooks */
+
+add_action('rest_api_init', callback: function () {
+
     register_rest_route('custom/v1', '/login', array(
         'methods' => 'POST',
         'callback' => 'secure_login_endpoint',
@@ -74,11 +80,21 @@ add_action('rest_api_init', function () {
     register_rest_route('custom/v1', '/protected', array(
         'methods' => 'GET',
         'callback' => 'protected_endpoint',
-        'permission_callback' => 'validate_jwt_token',
+        'permission_callback' => 'robodesk_validate_token',
     ));
+
+    // Robodesk Registration Rest Api Registration
+    register_rest_route('robodesk/v1', '/signup', array(
+        'methods' => 'POST',
+        'callback' => 'robodesk_user_signup',
+        'permission_callback' => '__return_true',
+    ));
+
+
 });
 
-function secure_login_endpoint(WP_REST_Request $request) {
+function secure_login_endpoint(WP_REST_Request $request)
+{
     $username = sanitize_text_field($request->get_param('username'));
     $password = $request->get_param('password');
 
@@ -139,9 +155,10 @@ function secure_login_endpoint(WP_REST_Request $request) {
     }
 }
 
-function validate_jwt_token(WP_REST_Request $request) {
-    $auth_header = $request->get_header('Authorization');
-    
+function robodesk_validate_token(WP_REST_Request $request)
+{
+    $auth_header = $request->get_header(key: 'Authorization');
+
     if (!$auth_header) {
         return new WP_Error('no_token', 'Authorization header missing.', array('status' => 401));
     }
@@ -152,7 +169,7 @@ function validate_jwt_token(WP_REST_Request $request) {
 
     try {
         $decoded = JWT::decode($token, new Key($secret_key, 'HS256'));
-        
+
         // Verify issuer
         if ($decoded->iss !== get_site_url()) {
             return new WP_Error('invalid_token', 'Invalid token issuer.', array('status' => 401));
@@ -172,13 +189,13 @@ function validate_jwt_token(WP_REST_Request $request) {
         // Set current user for the request
         wp_set_current_user($user->ID);
         return true;
-
     } catch (Exception $e) {
         return new WP_Error('invalid_token', 'Invalid token: ' . $e->getMessage(), array('status' => 401));
     }
 }
 
-function protected_endpoint(WP_REST_Request $request) {
+function protected_endpoint(WP_REST_Request $request)
+{
     $user = wp_get_current_user();
     return array(
         'success' => true,
@@ -188,17 +205,62 @@ function protected_endpoint(WP_REST_Request $request) {
     );
 }
 
-add_filter('rest_pre_serve_request', function ($value) {
-    header('Access-Control-Allow-Origin: ' . esc_url_raw(site_url()));
-    header('Access-Control-Allow-Methods: POST, GET, OPTIONS');
-    header('Access-Control-Allow-Headers: Content-Type, Authorization');
-    header('Access-Control-Max-Age: 86400');
-    return $value;
-});
+// User Signup/registration Rest Api callback function
+function robodesk_user_signup(WP_REST_Request $request)
+{
+    $params = $request->get_json_params();
+    $username = sanitize_user($params['username']);
+    $email = sanitize_email($params['email']);
+    $password = $params['password'];
+    $confirm_password = $params['confirmPass'];                
+
+    if (empty($username) || empty($email) || empty($password) ) {
+        return new WP_Error(
+                'invalid_data',
+                __('Missing required fields','robodesk'),
+                array('status' => 400));
+    }
+
+    if (username_exists($username) || email_exists($email)) {
+        return new WP_Error(
+            'user_exists',
+            __('Username or email already exists', 'robodesk'),
+            array('status' => 409)
+        );
+    }
+
+    // Create user
+    $user_id = wp_create_user($username, $password, $email);
+    if (is_wp_error($user_id)) {
+        return new WP_Error(
+            'user_creation_failed', 
+            $user_id->get_error_message(), 
+            array('status' => 500)
+        );
+    }
+
+    // Generate JWT token
+    $token = robodesk_generate_token($user_id);
+    
+    if (is_wp_error($token)) {
+        return new WP_Error(
+            'token_failed', 
+            __('Failed to generate token','robodesk'), 
+            array('status' => 500)
+        );
+    }
+
+    return new WP_REST_Response(array(
+        'message' => __('User created successfully','robodesk'),
+        'token' => $token,
+        'user_id' => $user_id,
+    ), 201);
+}
+
+
+
+
 
 
 
 // Secure the secret key
-if (!defined('JWT_AUTH_SECRET_KEY')) {
-    define('JWT_AUTH_SECRET_KEY', 'robodesk-secret');
-}

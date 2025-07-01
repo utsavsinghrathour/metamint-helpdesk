@@ -1,14 +1,17 @@
 import React from "react";
 import { useState, useEffect } from "react";
 import "../styles/Signup.css";
+import { registerUser } from "../utils/modules";
 
 const Signup = ({ switchToLogin }) => {
   const [formData, setFormData] = useState({
+    username: "",
     email: "",
     password: "",
     confirmPassword: ""
   });
   const [errors, setErrors] = useState({
+    username: "",
     email: "",
     password: "",
     confirmPassword: ""
@@ -60,8 +63,16 @@ const Signup = ({ switchToLogin }) => {
   };
 
   const validateForm = () => {
-    const newErrors = { email: "", password: "", confirmPassword: "" };
+    const newErrors = { username: "", email: "", password: "", confirmPassword: "" };
     let isValid = true;
+
+    if (!formData.username) {
+      newErrors.username = "Username is required";
+      isValid = false;
+    } else if (formData.username.length <= 5) {
+      newErrors.username = "Username must be more than 5 characters";
+      isValid = false;
+    }
 
     if (!formData.email) {
       newErrors.email = "Email is required";
@@ -97,7 +108,7 @@ const Signup = ({ switchToLogin }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
-    setErrors({ email: "", password: "", confirmPassword: "" });
+    setErrors({ username: "", email: "", password: "", confirmPassword: "" });
 
     if (!validateForm()) {
       setIsSubmitting(false);
@@ -105,29 +116,32 @@ const Signup = ({ switchToLogin }) => {
     }
 
     try {
-      // Handle signup logic
-      const signupResponse = await fetch('/wp-json/custom/v1/register', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          email: formData.email,
-          password: formData.password,
-        }),
+      // Call registerUser with the required fields
+      const signupResponse = await registerUser({
+        username: formData.username,
+        email: formData.email,
+        password: formData.password
       });
-      
-      const signupData = await signupResponse.json();
-      
-      if (!signupResponse.ok) {
-        throw new Error(signupData.message || 'Registration failed');
+
+      // Log response for debugging
+      console.log("Signup Response Status:", signupResponse.status);
+      console.log("Signup Response Data:", signupResponse);
+
+      // Check if response indicates success
+      if (signupResponse.success || signupResponse.message?.toLowerCase().includes("success")) {
+        switchToLogin("Registration successful! Please login.");
+      } else {
+        throw new Error(signupResponse.message || "Registration failed");
       }
       
-      // After successful signup, switch to login form
-      switchToLogin("Registration successful! Please login.");
     } catch (error) {
-      console.error("Signup error:", error);
+      console.error("Signup error:", error.message);
+      // Handle specific error messages from the server
+      let errorMessage = error.message || "Signup failed. Please try again.";
       setErrors({ 
-        email: error.message.includes("email") ? error.message : "", 
-        password: error.message || "Signup failed. Please try again.",
+        username: error.message.includes("username") ? errorMessage : "",
+        email: error.message.includes("email") ? errorMessage : "", 
+        password: error.message.includes("password") ? errorMessage : errorMessage,
         confirmPassword: ""
       });
     }
@@ -137,6 +151,7 @@ const Signup = ({ switchToLogin }) => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
+    
     setFormData({ ...formData, [name]: value });
   };
 
@@ -149,7 +164,31 @@ const Signup = ({ switchToLogin }) => {
       </div>
 
       <form onSubmit={handleSubmit} noValidate>
+      
         <div>
+          <label htmlFor="username" className="rd-body-text"></label>
+          <input
+            type="text"
+            id="username"
+            name="username"
+            value={formData.username}
+            onChange={handleChange}
+            placeholder="Username"
+            className="rd-w-full rd-border-light rd-p-12 rd-border-radius-md"
+            required
+            aria-describedby="username-error"
+          />
+          {errors.username && (
+            <p
+              id="username-error"
+              className="rd-text-red rd-text-sm rd-mt-5 form-err-msg"
+            >
+              {errors.username}
+            </p>
+          )}
+        </div>
+
+        <div className="rd-mt-15">
           <label htmlFor="email" className="rd-body-text"></label>
           <input
             type="email"

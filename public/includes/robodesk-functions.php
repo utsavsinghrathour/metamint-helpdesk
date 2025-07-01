@@ -1,10 +1,5 @@
 <?php
 
-// Prevent direct access to this file
-if (!defined('ABSPATH')) {
-    exit; // Exit if accessed directly
-}
-
 // Woocommerce modifications
 if (in_array('woocommerce/woocommerce.php', apply_filters('active_plugins', get_option('active_plugins')))) {
     require_once('robodesk-woocommerce.php');
@@ -247,65 +242,53 @@ function robodesk_credentials_page()
                     <input type="text" id="credential_url" name="credential_url"><br><br>
 
                     <label for="credential_notes">Notes:</label><br>
-                    <textarea id="credential_notes" name="credential_notes" rows="4" style="border: 1px solid #DDD; width:100%"></textarea><br><br>
+                    <textarea id="credential_notes" name="credential_notes"></textarea><br><br>
 
                     <input type="hidden" name="action" value="robodesk_add_credential">
                     <?php wp_nonce_field('robodesk_add_credential_nonce'); ?>
                     <input type="submit" value="Add">
                 </form>
             </div>
+            <div class="robodesk-my-credentials">
+                <h2>My Credentials</h3>
+                    <?php if ($credentials): ?>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Username</th>
+                                    <th>Password</th>
+                                    <th>URL</th>
+                                    <th>Notes</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php foreach ($credentials as $credential): ?>
+                                    <tr>
+                                        <td><?php echo esc_html($credential->name); ?></td>
+                                        <td><?php echo esc_html($credential->username); ?></td>
+                                        <td><span class="password-hidden">********</span>
+                                            <?php $enc =  robodesk_encrypt($credential->password, 'robodesk'); ?>
+                                            <button class="show-password" data-password="
+                                    <?php echo robodesk_decrypt($credential->password, 'robodesk');
+                                    ?>">Show</button>
 
-            <h3>My Credentials</h3>
-            <?php if ($credentials):
-                // var_dump($credentials);
-                //  $asp = robodesk_decrypt('tram', 'robodesk');
+                                        </td>
 
-                //  var_dump()
-            ?>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Name</th>
-                            <th>Username</th>
-                            <th>Password</th>
-                            <th>URL</th>
-                            <th>Notes</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php foreach ($credentials as $credential): ?>
-                            <tr>
-                                <!-- Name -->
-                                <td><?php echo esc_html($credential->name); ?></td>
-                                <!-- User name -->
-                                <td><?php echo esc_html($credential->username); ?></td>
-                                <!-- Password -->
-                                <td><span class="password-hidden">********</span>
-                                    <?php $enc =  robodesk_encrypt($credential->password, 'robodesk'); ?>
-                                    <button class="show-password" data-password="
-                                    <?php echo robodesk_decrypt($enc, 'robodesk');
-                                    ?>" style="color: black; background-color: #DDD;">Show</button>
-
-                                </td>
-
-                                <!-- URL -->
-                                <td>
-                                    <a href="<?php echo esc_url($credential->url); ?>" target="_blank" rel="noopener noreferrer"><?php echo esc_html($credential->url); ?></a>
-                                </td>
-                                <!-- Notes -->
-                                <td><?php echo esc_html($credential->notes); ?></td>
-                                <!-- Actions -->
-                                <td>
-                                    <button class="delete-credential" data-credential-id="<?php echo esc_attr($credential->id); ?>" style="color: black; background-color: #DDD;">Delete</button>
-                                </td>
-                            </tr>
-                        <?php endforeach; ?>
-                    </tbody>
-                </table>
-            <?php else: ?>
-                <p>No credentials saved yet.</p>
-            <?php endif; ?>
+                                        <td><a href="<?php echo esc_url($credential->url); ?>" target="_blank" rel="noopener noreferrer"><?php echo esc_html($credential->url); ?></a></td>
+                                        <td><?php echo esc_html($credential->notes); ?></td>
+                                        <td>
+                                            <button class="delete-credential" data-credential-id="<?php echo esc_attr($credential->id); ?>">Delete</button>
+                                        </td>
+                                    </tr>
+                                <?php endforeach; ?>
+                            </tbody>
+                        </table>
+                    <?php else: ?>
+                        <p>No credentials saved yet.</p>
+                    <?php endif; ?>
+            </div>
         </div>
     <?php
         return ob_get_clean();
