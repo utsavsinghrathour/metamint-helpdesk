@@ -533,8 +533,6 @@ function robodesk_dashboard_callback()
                         </div>
 
                         <?php
-
-
                         // Load saved settings
                         $settings = get_option('robodesk_imap_settings', array(
                             'hostname' => 'email.example.com',
@@ -542,7 +540,7 @@ function robodesk_dashboard_callback()
                             'username' => '',
                             'password' => '',
                             'auth'     => true,
-                            'hostname_view' => 'email.example.com',
+
                         ));
 
                         $hostname = $settings['hostname'];
@@ -550,20 +548,19 @@ function robodesk_dashboard_callback()
                         $username = $settings['username'];
                         $password = $settings['password'];
                         $auth     = isset($settings['auth']) ? $settings['auth'] : true;
-                        $hostname_view = $settings['hostname_view']; // For display purposes, you might want to format this differently
+
                         ?>
 
                         <!-- IMAP Settings Tab -->
                         <div id="imap-tab" class="settings-tab-content hidden">
                             <h3 class="text-lg font-medium text-gray-900 mb-6">IMAP Settings</h3>
-
                             <form method="post" action="" id="robodesk-imap-form" class="space-y-6">
                                 <?php wp_nonce_field('robodesk_imap_settings_action', 'robodesk_imap_settings_nonce'); ?>
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     <div>
                                         <label for="robodesk_imap_hostname" class="block text-sm font-medium text-gray-700">IMAP Host</label>
                                         <input type="text" name="robodesk_imap_hostname" id="robodesk_imap_hostname"
-                                            value="<?php echo esc_attr($hostname_view); ?>"
+                                            value="<?php echo esc_attr($hostname); ?>"
                                             class="styled-input mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
                                     </div>
                                     <div>
@@ -594,7 +591,7 @@ function robodesk_dashboard_callback()
                                     </div>
                                 </div>
                                 <div class="mt-6 flex gap-4">
-                                    <button type="button" id="robodesk-imap-test"
+                                    <button type="button" id="robodesk-imap-test" onclick="testConnection()"
                                         class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">
                                         Test Connection
                                     </button>
@@ -720,7 +717,7 @@ function robodesk_dashboard_callback()
                         </div>
 
                         <div class="mt-8 pt-6 border-t border-gray-200">
-                            <button onclick="saveSettings()" class="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                            <button onclick="saveSettings()" id="save-settings-btn" class="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
                                 Save Settings-Main
                             </button>
                         </div>
