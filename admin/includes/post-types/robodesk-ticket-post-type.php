@@ -135,7 +135,7 @@ function robodesk_status_meta_box_callback($post)
         <option value="closed" <?php selected($value, 'closed'); ?>>Closed</option>
         <option value="archived" <?php selected($value, 'archived'); ?>>Archived</option>
     </select>
-<?php
+    <?php
 }
 
 add_action('save_post', 'robodesk_save_status_meta_box_data');
@@ -167,14 +167,16 @@ function robodesk_save_status_meta_box_data($post_id)
 //Adding Ticket Status on  admin_column
 add_filter('manage_robodesk_ticket_posts_columns', 'add_robodesk_ticket_status_column');
 
-function add_robodesk_ticket_status_column($columns) {
+function add_robodesk_ticket_status_column($columns)
+{
     $columns['_robodesk_ticket_status'] = 'Ticket Status';
     return $columns;
 }
 
 add_action('manage_robodesk_ticket_posts_custom_column', 'fill_robodesk_ticket_status_column', 10, 2);
 
-function fill_robodesk_ticket_status_column($column, $post_id) {
+function fill_robodesk_ticket_status_column($column, $post_id)
+{
     if ($column == '_robodesk_ticket_status') {
         $status = get_post_meta($post_id, '_robodesk_ticket_status', true);
         echo esc_html($status);
@@ -183,14 +185,16 @@ function fill_robodesk_ticket_status_column($column, $post_id) {
 
 add_filter('manage_edit-robodesk_ticket_sortable_columns', 'make_robodesk_ticket_status_column_sortable');
 
-function make_robodesk_ticket_status_column_sortable($columns) {
+function make_robodesk_ticket_status_column_sortable($columns)
+{
     $columns['_robodesk_ticket_status'] = '_robodesk_ticket_status';
     return $columns;
 }
 
 add_action('pre_get_posts', 'sort_robodesk_ticket_status_column');
 
-function sort_robodesk_ticket_status_column($query) {
+function sort_robodesk_ticket_status_column($query)
+{
     if (!is_admin() || !$query->is_main_query()) {
         return;
     }
@@ -204,7 +208,8 @@ function sort_robodesk_ticket_status_column($query) {
 // Add this code to your theme's functions.php file or a custom plugin
 
 // Step 1: Register the term meta for 'robodesk_ticket_priority'
-function register_ticket_priority_color_meta() {
+function register_ticket_priority_color_meta()
+{
     register_term_meta('robodesk_ticket_priority', 'priority_color', array(
         'type' => 'string',
         'description' => 'Color for the ticket priority',
@@ -215,24 +220,26 @@ function register_ticket_priority_color_meta() {
 add_action('init', 'register_ticket_priority_color_meta');
 
 // Step 2a: Add color picker field to "Add New Term" form
-function add_color_picker_to_new_term($taxonomy) {
+function add_color_picker_to_new_term($taxonomy)
+{
     if ($taxonomy === 'robodesk_ticket_priority') {
-        ?>
+    ?>
         <div class="form-field term-colorpicker-wrap">
             <label for="priority_color">Priority Color</label>
             <input type="text" name="priority_color" id="priority_color" value="#ffffff" class="color-picker-field" />
             <p>Select a color for this priority.</p>
         </div>
-        <?php
+    <?php
     }
 }
 add_action('robodesk_ticket_priority_add_form_fields', 'add_color_picker_to_new_term', 10, 1);
 
 // Step 2b: Add color picker field to "Edit Term" form
-function add_color_picker_to_edit_term($term) {
+function add_color_picker_to_edit_term($term)
+{
     $color = get_term_meta($term->term_id, 'priority_color', true);
     $color = !empty($color) ? $color : '#ffffff'; // Default to white if no color is set
-    
+
     // var_dump($color);
     ?>
     <tr class="form-field term-colorpicker-wrap">
@@ -242,35 +249,38 @@ function add_color_picker_to_edit_term($term) {
             <p class="description">Select a color for this priority.</p>
         </td>
     </tr>
-    <?php
+<?php
 }
 add_action('robodesk_ticket_priority_edit_form_fields', 'add_color_picker_to_edit_term', 10, 1);
 
 // Step 3: Enqueue WordPress color picker scripts and styles
-function enqueue_color_picker_scripts($taxonomy) {
+function enqueue_color_picker_scripts($taxonomy)
+{
     // Only load on the edit tags screen for 'robodesk_ticket_priority'
     $screen = get_current_screen();
     if ($screen->id === 'edit-robodesk_ticket_priority') {
         wp_enqueue_style('wp-color-picker');
         wp_enqueue_script('wp-color-picker');
-    
+
         add_action('admin_footer', 'initialize_color_picker');
     }
 }
 add_action('admin_enqueue_scripts', 'enqueue_color_picker_scripts');
 
-function initialize_color_picker() {
-    ?>
+function initialize_color_picker()
+{
+?>
     <script type="text/javascript">
         jQuery(document).ready(function($) {
             $('.color-picker-field').wpColorPicker();
         });
     </script>
-    <?php
+<?php
 }
 
 // Step 4: Save the color value when the term is created or updated
-function save_priority_color_meta($term_id) {
+function save_priority_color_meta($term_id)
+{
     if (isset($_POST['priority_color'])) {
         $color = sanitize_hex_color($_POST['priority_color']); // Sanitize the hex color
         if ($color) {
@@ -300,7 +310,8 @@ add_action('edited_robodesk_ticket_priority', 'save_priority_color_meta');
 
 add_filter('rest_prepare_robodesk_ticket', 'customize_robodesk_ticket_response', 10, 3);
 
-function customize_robodesk_ticket_response($response, $post, $request) {
+function customize_robodesk_ticket_response($response, $post, $request)
+{
 
     $response->data['robodesk_ticket_title'] = $response->data['title']['rendered'];
 
@@ -328,17 +339,18 @@ function customize_robodesk_ticket_response($response, $post, $request) {
     return $response;
 }
 
-add_action( 'rest_api_init', function () {
-    register_rest_route( 'chat/v1', '/tickets', array(
+add_action('rest_api_init', function () {
+    register_rest_route('chat/v1', '/tickets', array(
         'methods'  => 'POST',
         'callback' => 'robodesk_handle_tickets_webhook',
         'permission_callback' => '__return_true',
-    ) );
-} );
+    ));
+});
 
 
 
-function robodesk_handle_tickets_webhook(WP_REST_Request $request) {
+function robodesk_handle_tickets_webhook(WP_REST_Request $request)
+{
     $payload = $request->get_body();
     $data    = json_decode($payload, true);
 
@@ -349,11 +361,11 @@ function robodesk_handle_tickets_webhook(WP_REST_Request $request) {
             'Invalid JSON payload',
             array('status' => 400)
         );
-    } 
+    }
 
     // Handle ticket creation event
     if (isset($data['event']) && 'ticket.created' === $data['event']) {
-        
+
         $title    = sanitize_text_field($data['data']['title'] ?? '');
         $content  = sanitize_textarea_field($data['data']['description'] ?? '');
         $author   = sanitize_text_field($data['data']['uid'] ?? '');
@@ -365,12 +377,12 @@ function robodesk_handle_tickets_webhook(WP_REST_Request $request) {
             'post_status' => 'publish',
             'post_author' => $author,
             'meta_input'   => array(
-			    '_robodesk_ticket_status' => 'open'
-			),
+                '_robodesk_ticket_status' => 'open'
+            ),
         ));
-        
+
         if (!is_wp_error($ticket)) {
-        
+
             rbd_log(sprintf(
                 "Ticket #%s created with title: %s\n",
                 $ticket,
@@ -381,10 +393,10 @@ function robodesk_handle_tickets_webhook(WP_REST_Request $request) {
             $term_origin = term_exists('chat', 'robodesk_ticket_origin');
 
             if ($term_origin) {
-                
+
                 $term_id = $term_origin['term_id'];
             } else {
-               
+
                 $result = wp_insert_term(
                     'Chat',
                     'robodesk_ticket_origin',
@@ -393,22 +405,22 @@ function robodesk_handle_tickets_webhook(WP_REST_Request $request) {
                         'slug'        => 'chat'
                     )
                 );
-                
-              
+
+
                 if (!is_wp_error($result)) {
                     $term_id = $result['term_id'];
                 } else {
-                  
+
                     error_log('Failed to create term: ' . $result->get_error_message());
                     $term_id = null;
                 }
             }
-            
+
             // If we have a valid term ID (either from existing term or newly created one), assign it to the post
             if ($term_id) {
                 wp_set_post_terms($ticket, array($term_id), 'robodesk_ticket_origin');
             }
-            
+
             $comment_id = wp_insert_comment(array(
                 'comment_post_ID' => $ticket,
                 'comment_author'  => $author,
@@ -416,69 +428,87 @@ function robodesk_handle_tickets_webhook(WP_REST_Request $request) {
                 'comment_approved' => 1,
                 'comment_type' => 'ticket_replies'
             ));
-            
+
             $reply_id = !is_wp_error($comment_id) ? $comment_id : false;
-            
-            $ticket_number = 'TCKT-'.str_pad($ticket, 3, '0', STR_PAD_LEFT);
+
+            $ticket_number = 'TCKT-' . str_pad($ticket, 3, '0', STR_PAD_LEFT);
+
+            $ticket_number = 'TCKT-' . str_pad($ticket, 3, '0', STR_PAD_LEFT);
+            $ticket_origin_terms = get_the_terms($ticket, 'robodesk_ticket_origin');
+            $ticket_origin =  !is_wp_error($ticket_origin_terms) ? $ticket_origin_terms[0]->name : false;
+            $ticket_priority_terms = get_the_terms($ticket, 'robodesk_ticket_priority');
+            $ticket_priority =  !is_wp_error($ticket_priority_terms) ? $ticket_priority_terms[0]->name : false;
+
+            $last_activity = get_post_time('U', true); // Get post creation time in UTC timestamp
+            $human_readable_time = human_time_diff($last_activity, current_time('U'));
 
             return rest_ensure_response(array(
                 'status'  => 'success',
                 'message' => 'Ticket created successfully',
-                'data'    => 
-                    array(
-                            'ticket_id' => $ticket , 
-                            'comment_id' =>$reply_id , 
-                            'ticket_number' => $ticket_number , 
-                            'ticket_title' => $title,
-                            'ticket_status' => 'open',
-                            'ticket_priority' => 'Medium',
-                            'ticket_origin' => 'Chat',
-                            'ticket_author' => get_user_by('id', $author)->display_name,
-                            'ticket_author_image' => get_avatar_url($author),
-                            'ticket_time_ago' => 'Just now',
-                            'ticket_messages' => [],
-                    )        
+                'data'    =>
+                array(
+                    'id' => $ticket,
+                    'ticket_number' => $ticket_number,
+                    'ticket_title' => get_the_title(),
+                    'ticket_status' => get_post_meta($ticket, '_robodesk_ticket_status', true),
+                    'ticket_priority' => $ticket_priority,
+                    'ticket_origin' => $ticket_origin,
+                    'ticket_author' => get_user_by('id', $author)->display_name,
+                    'ticket_author_image' => get_avatar_url($author),
+                    'ticket_time_ago' => $human_readable_time,
+                    'comment_id' => $reply_id,
+                )
             ));
         }
     }
-    
-    //get all tickets
-    if(isset($data['event']) && 'tickets.get' === $data['event']){
-        $user_id   = sanitize_text_field($data['data']['uid'] ?? '');
-        
-        
-        
-        $tickets   = get_posts([
+
+    //get all ticket
+    if (isset($data['event']) && 'tickets.get' === $data['event']) {
+        $user_id = sanitize_text_field($data['data']['uid'] ?? '');
+
+        $ticket_query = new WP_Query([
             'post_type' => 'robodesk_ticket',
             'post_status' => 'publish',
             'posts_per_page' => -1,
             'author' => $user_id,
         ]);
-        
+
         $formatted_tickets = [];
 
-        foreach ($tickets as $ticket) {
-            $ticket_number = 'TCKT-'.str_pad($ticket->ID, 3, '0', STR_PAD_LEFT);
-            $formatted_tickets[] = [
-                'id' => $ticket->ID,
-                'ticket_number' => $ticket_number,
-                'ticket_title' => $ticket->post_title,
-                'ticket_status' => get_post_meta($ticket->ID, '_robodesk_ticket_status', true),
-                'ticket_priority' => '' ,
-                'ticket_origin' => '' ,
-                'ticket_author' => get_user_by('id', $user_id)->display_name,
-                'ticket_author_image' => get_avatar_url($user_id),
-                'ticket_time_ago' => 'Just now',
-                'ticket_messages' => [],
-            ];
+        if ($ticket_query->have_posts()) {
+            while ($ticket_query->have_posts()) {
+                $ticket_query->the_post();
+                $ticket_id = get_the_ID();
+                $ticket_number = 'TCKT-' . str_pad($ticket_id, 3, '0', STR_PAD_LEFT);
+                $ticket_origin_terms = get_the_terms($ticket_id, 'robodesk_ticket_origin');
+                $ticket_origin =  !is_wp_error($ticket_origin_terms) ? $ticket_origin_terms[0]->name : false;
+                $ticket_priority_terms = get_the_terms($ticket_id, 'robodesk_ticket_priority');
+                $ticket_priority =  !is_wp_error($ticket_priority_terms) ? $ticket_priority_terms[0]->name : false;
+
+                $last_activity = get_post_time('U', true); // Get post creation time in UTC timestamp
+                $human_readable_time = human_time_diff($last_activity, current_time('U')); // Calculate human-readable time difference
+                $formatted_tickets[] = [
+                    'id' => $ticket_id,
+                    'ticket_number' => $ticket_number,
+                    'ticket_title' => get_the_title(),
+                    'ticket_status' => get_post_meta($ticket_id, '_robodesk_ticket_status', true),
+                    'ticket_priority' => $ticket_priority,
+                    'ticket_origin' => $ticket_origin,
+                    'ticket_author' => get_user_by('id', $user_id)->display_name,
+                    'ticket_author_image' => get_avatar_url($user_id),
+                    'ticket_time_ago' => $human_readable_time,
+
+                ];
+            }
+            wp_reset_postdata(); // Reset the global post object
         }
 
-        return rest_ensure_response(array(
-            'status'  => 'success',
+        return rest_ensure_response([
+            'status' => 'success',
             'message' => 'Tickets fetched successfully',
-            'data'    => $formatted_tickets
-        ));
-    }   
+            'data' => $formatted_tickets
+        ]);
+    }
 
     // Handle ticket reply event
     if (isset($data['event']) && 'replies.receive' === $data['event']) {
@@ -511,9 +541,9 @@ function robodesk_handle_tickets_webhook(WP_REST_Request $request) {
             'comment_approved' => 1,
             'comment_type' => 'ticket_replies'
         ));
-        
+
         $comment = get_comment($comment_id);
-        
+
         $data = [
             'id' => $comment->comment_ID,
             'author' => $comment->comment_author, // Display name
@@ -529,7 +559,7 @@ function robodesk_handle_tickets_webhook(WP_REST_Request $request) {
                 $ticket_id,
                 $reply
             ));
-            
+
             return rest_ensure_response(array(
                 'status'  => 'success',
                 'message' => 'Reply added successfully',
@@ -537,25 +567,25 @@ function robodesk_handle_tickets_webhook(WP_REST_Request $request) {
             ));
         }
     }
-    
+
     // Get ticket Comments
-    if (isset($data['event']) && 'comments.get' === $data['event']){
+    if (isset($data['event']) && 'comments.get' === $data['event']) {
         $loggedinuserid   = sanitize_text_field($data['data']['uid'] ?? '');
         $ticketID =  sanitize_text_field($data['data']['ticket_id'] ?? '');
-        
+
         $comments = get_comments([
-            'post_id' => $ticketID, 
-            'order' => 'ASC', 
+            'post_id' => $ticketID,
+            'order' => 'ASC',
         ]);
-        
-        if(empty($comments)){
+
+        if (empty($comments)) {
             return new WP_Error(
                 400,
                 'Comments Not found',
             );
         }
         $formatted_comments = [];
-        foreach($comments as $comment){
+        foreach ($comments as $comment) {
             $formatted_comments[] = [
                 'id' => $comment->comment_ID,
                 'author' => $comment->comment_author,
@@ -568,7 +598,7 @@ function robodesk_handle_tickets_webhook(WP_REST_Request $request) {
         return rest_ensure_response(array(
             'status'  => 'success',
             'message' => 'Comments found',
-            'data'=> $formatted_comments,       
+            'data' => $formatted_comments,
         ));
     }
 
@@ -580,9 +610,11 @@ function robodesk_handle_tickets_webhook(WP_REST_Request $request) {
     );
 }
 
-add_filter('use_block_editor_for_post_type', function($use_block_editor, $post_type) {
+add_filter('use_block_editor_for_post_type', function ($use_block_editor, $post_type) {
     if ($post_type === 'robodesk_ticket') {
         return false;
     }
     return $use_block_editor;
 }, 10, 2);
+
+
