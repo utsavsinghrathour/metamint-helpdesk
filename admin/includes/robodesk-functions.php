@@ -171,3 +171,67 @@ function robodesk_email_template_save()
         wp_send_json_error(['message' => 'Some templates failed to save or were missing', 'details' => $results]);
     }
 }
+
+
+// advance settings save function
+add_action('wp_ajax_robodesk_save_advanced_settings', 'robodesk_save_advanced_settings');
+
+function robodesk_save_advanced_settings()
+{
+    // Verify nonce
+    if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'robodesk_advanced_settings_action')) {
+        wp_send_json_error(['message' => 'Security check failed']);
+        exit;
+    }
+
+    // Check if settings array is provided
+    if (empty($_POST['settings']) || !is_array($_POST['settings'])) {
+        wp_send_json_error(['message' => 'No settings provided']);
+        exit;
+    }
+
+    $settings = $_POST['settings'];
+
+    // Define expected settings keys
+    $valid_settings = [
+        'enable_auto_assign',
+        'enable_notifications',
+        'enable_customer_portal',
+        'max_file_upload_size'
+    ];
+
+    $sanitized_settings = [];
+    $results = [];
+
+    foreach ($valid_settings as $key) {
+        if (!isset($settings[$key])) {
+            $results[$key] = ['status' => 'error', 'message' => 'Setting missing'];
+            continue;
+        }
+
+        if ($key === 'max_file_upload_size') {
+            // Sanitize and validate number input
+            $value = intval($settings[$key]);
+            if ($value < 1 || $value > 100) {
+                $results[$key] = ['status' => 'error', 'message' => 'Invalid file upload size (must be 1–100 MB)'];
+                continue;
+            }
+            $sanitized_settings[$key] = $value;
+        } else {
+            // Sanitize boolean inputs
+            $sanitized_settings[$key] = filter_var($settings[$key], FILTER_VALIDATE_BOOLEAN);
+        }
+
+        $results[$key] = ['status' => 'success', 'message' => 'Setting saved successfully'];
+    }
+
+    // Save all settings as a single option
+    $success = update_option('robodesk_advanced_settings', $sanitized_settings);
+
+    // Check if save was successful
+    if ($success || get_option('robodesk_advanced_settings') === $sanitized_settings) {
+        wp_send_json_success(['message' => 'Advanced settings saved successfully', 'details' => $results]);
+    } else {
+        wp_send_json_error(['message' => 'Failed to save some settings', 'details' => $results]);
+    }
+}

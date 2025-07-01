@@ -1155,3 +1155,48 @@ jQuery(document).ready(function ($) {
     });
   });
 });
+
+//advanced settings AJAX handler
+jQuery(document).ready(function ($) {
+  $(document).on("click", "#save-advanced-settings", function () {
+    var $form = $("#advanced-settings-form");
+    var $button = $(this);
+
+    $button.prop("disabled", true).text("Saving Advanced Settings...");
+
+    // Collect form data
+    var settings = {
+      enable_auto_assign: $("#enable-auto-assign").is(":checked"),
+      enable_notifications: $("#enable-notifications").is(":checked"),
+      enable_customer_portal: $("#enable-customer-portal").is(":checked"),
+      max_file_upload_size: $form.find('input[type="number"]').val(),
+    };
+
+    $.ajax({
+      url: ajaxurl, // Ensure ajaxurl is defined via wp_localize_script
+      type: "POST",
+      data: {
+        action: "robodesk_save_advanced_settings",
+        nonce: $form
+          .find('input[name="robodesk_advanced_settings_nonce"]')
+          .val(),
+        settings: settings,
+      },
+      success: function (response) {
+        console.log(response); // Debug response
+        if (response.success) {
+          showToast(response.data.message, "success");
+        } else {
+          showToast(response.data.message, "error");
+        }
+      },
+      error: function (xhr, status, error) {
+        console.log("AJAX Error:", xhr, status, error);
+        showToast("AJAX request failed: " + error, "error");
+      },
+      complete: function () {
+        $button.prop("disabled", false).text("Save Advanced Settings");
+      },
+    });
+  });
+});

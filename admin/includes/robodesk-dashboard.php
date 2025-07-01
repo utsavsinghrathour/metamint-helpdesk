@@ -702,36 +702,49 @@ function robodesk_dashboard_callback()
                         </div>
 
                         <!-- Advanced Settings Tab -->
+
+
+                        <?php
+                        $settings = get_option('robodesk_advanced_settings', [
+                            'enable_auto_assign' => false,
+                            'enable_notifications' => true,
+                            'enable_customer_portal' => true,
+                            'max_file_upload_size' => 10
+                        ]);
+                        ?>
                         <div id="advanced-tab" class="settings-tab-content hidden">
                             <h3 class="text-lg font-medium text-gray-900 mb-6">Advanced Settings</h3>
-                            <div class="space-y-4">
-                                <div class="flex items-center">
-                                    <input id="enable-auto-assign" type="checkbox" class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
-                                    <label for="enable-auto-assign" class="ml-2 block text-sm text-gray-900">
-                                        Enable auto-assignment of tickets
-                                    </label>
+                            <form id="advanced-settings-form" class="space-y-6">
+                                <input type="hidden" name="robodesk_advanced_settings_nonce" value="<?php echo wp_create_nonce('robodesk_advanced_settings_action'); ?>">
+                                <div class="space-y-4">
+                                    <div class="flex items-center">
+                                        <input id="enable-auto-assign" type="checkbox" <?php checked($settings['enable_auto_assign'], true); ?> class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                                        <label for="enable-auto-assign" class="ml-2 block text-sm text-gray-900">
+                                            Enable auto-assignment of tickets
+                                        </label>
+                                    </div>
+                                    <div class="flex items-center">
+                                        <input id="enable-notifications" type="checkbox" <?php checked($settings['enable_notifications'], true); ?> class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                                        <label for="enable-notifications" class="ml-2 block text-sm text-gray-900">
+                                            Enable email notifications
+                                        </label>
+                                    </div>
+                                    <div class="flex items-center">
+                                        <input id="enable-customer-portal" type="checkbox" <?php checked($settings['enable_customer_portal'], true); ?> class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                                        <label for="enable-customer-portal" class="ml-2 block text-sm text-gray-900">
+                                            Enable customer portal
+                                        </label>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700">Maximum file upload size (MB)</label>
+                                        <input type="number" name="max_file_upload_size" value="<?php echo esc_attr($settings['max_file_upload_size']); ?>" min="1" max="100" class="styled-input mt-1 block w-32 border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                                    </div>
                                 </div>
-                                <div class="flex items-center">
-                                    <input id="enable-notifications" type="checkbox" checked class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
-                                    <label for="enable-notifications" class="ml-2 block text-sm text-gray-900">
-                                        Enable email notifications
-                                    </label>
-                                </div>
-                                <div class="flex items-center">
-                                    <input id="enable-customer-portal" type="checkbox" checked class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
-                                    <label for="enable-customer-portal" class="ml-2 block text-sm text-gray-900">
-                                        Enable customer portal
-                                    </label>
-                                </div>
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700">Maximum file upload size (MB)</label>
-                                    <input type="number" value="10" class="styled-input mt-1 block w-32 border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
-                                </div>
-                            </div>
-                            <hr class="my-6 border-gray-200">
-                            <button type="button" id="save-advanced-settings" class="mt-6 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">
-                                Save Advanced Settings
-                            </button>
+                                <hr class="my-6 border-gray-200">
+                                <button type="button" id="save-advanced-settings" class="mt-6 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">
+                                    Save Advanced Settings
+                                </button>
+                            </form>
                         </div>
 
                         <!-- <div class="mt-8 pt-6 border-t border-gray-200">
