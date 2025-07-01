@@ -13,6 +13,7 @@ const App = () => {
   const [isExpanded, setIsExpanded] = useState(false);
   const [selectedNotice, setSelectedNotice] = useState(null);
   const [showActiveFeatured, setShowActiveFeatured] = useState(true);
+  const [selectedTicket, setSelectedTicket] = useState(true);
   
   useEffect(() => {
     const updateUserStatus = async () => {
@@ -66,6 +67,8 @@ const App = () => {
           isExpanded={isExpanded}
           setIsExpanded={setIsExpanded}
           handleClose={handleClose}
+          selectedTicket={selectedTicket}
+          setSelectedTicket={setSelectedTicket}
         />
       ),
     },
@@ -78,7 +81,7 @@ const App = () => {
           isExpanded={isExpanded}
           setIsExpanded={setIsExpanded}
           activeTab={activeTab}
-          
+          selectedNewTicket={selectedTicket}
         />
       ),
     },

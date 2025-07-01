@@ -2,7 +2,7 @@ import React, { useState , useEffect } from "react";
 import { createTicket , getMessages } from "../utils/modules";
 import "../styles/SendMessageField.css";
 
-const SendMessageField = ({ setShowLogin , setActiveTab} ) => {
+const SendMessageField = ({ setShowLogin , setActiveTab , setSelectedTicket } ) => {
   const [message, setMessage] = useState("");
   const [loggedIn, setLoggedIn] = useState(wpAuth.isLoggedIn);
   const [userId, setUserId] = useState(wpAuth.loggedInUserId);
@@ -27,13 +27,23 @@ const SendMessageField = ({ setShowLogin , setActiveTab} ) => {
       return;
     }
 
-   
     try {
     
       const result = await createTicket(userId, message, '');
       
-      console.log(result);
+       const newTicket = {
+            id: result.data.ticket_id,
+            ticketNumber: result.data.ticket_number,
+            title:result.data.ticket_title,
+            source:  "Web",
+            timeAgo: "Just now",
+            authorImage: result.data.ticket_author_image,
+            status: "new",
+            priority:  "Medium",
+            messages: [],
+        };
 
+      setSelectedTicket(newTicket);
       setMessage("");
       setActiveTab(1);
     } catch (error) {
@@ -80,7 +90,7 @@ const SendMessageField = ({ setShowLogin , setActiveTab} ) => {
               fill="#004AFF"
             />
           </svg>
-        </button>
+        </button>``
       </div>
     </div>
   );

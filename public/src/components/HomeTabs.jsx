@@ -7,7 +7,7 @@ import SingleQuestionBox from './SingleQuestionBox';
 // import Login from './Login.jsx';
 import '../styles/HomeTabs.css';
 
-const HomeTabs = ({ setActiveTab, setIsOpen, isExpanded, setIsExpanded, handleClose }) => {
+const HomeTabs = ({ setActiveTab, setIsOpen, isExpanded, setIsExpanded, handleClose , selectedTicket , setSelectedTicket }) => {
   const [showLogin, setShowLogin] = useState(false);
   const [showHeaderFooter, setShowHeaderFooter] = useState(true);
 
@@ -24,6 +24,8 @@ const HomeTabs = ({ setActiveTab, setIsOpen, isExpanded, setIsExpanded, handleCl
               setIsExpanded={setIsExpanded}
               setShowLogin={setShowLogin}
               setActiveTab={setActiveTab}
+            //   selectedTicket={selectedTicket}  
+              setSelectedTicket={setSelectedTicket}
             />
        
         </div>
