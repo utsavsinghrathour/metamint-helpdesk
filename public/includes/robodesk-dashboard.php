@@ -1,9 +1,18 @@
 <?php
 // File: robodesk_dashboard_callback.php (e.g., inside a WordPress plugin or theme file)
 
-// Prevent direct access to the file
+// Prevent direct access to the file and ensure WordPress functions are available
 if (!defined('ABSPATH')) {
     exit; // Exit if accessed directly
+}
+
+// Ensure WordPress core functions are available if not running in the admin context
+if (!function_exists('check_admin_referer')) {
+    if (file_exists(dirname(__FILE__, 6) . '/wp-load.php')) {
+        require_once dirname(__FILE__, 6) . '/wp-load.php';
+    } elseif (file_exists(dirname(__FILE__, 6) . '/wp-admin/includes/admin.php')) {
+        require_once dirname(__FILE__, 6) . '/wp-admin/includes/admin.php';
+    }
 }
 
 /**
@@ -29,7 +38,7 @@ function robodesk_dashboard_callback()
         <title>Robodesk - Support Ticket Dashboard</title>
         <script src="https://cdn.tailwindcss.com"></script>
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-        <link rel="stylesheet" href="styles.css">
+        <!-- <link rel="stylesheet" href="styles.css"> -->
     </head>
 
     <body class="min-h-screen bg-gray-100">
@@ -524,45 +533,37 @@ function robodesk_dashboard_callback()
                         </div>
 
                         <?php
-                        add_action('wp_ajax_robodesk_test_imap_connection', 'robodesk_test_imap_connection');
 
-                        function robodesk_test_imap_connection()
-                        {
-                            check_ajax_referer('robodesk_imap_settings_action', 'security');
 
-                            $auth_type = ($_POST['auth'] == '1') ? 'ssl' : 'tls';
-                            $hostname = '{' . sanitize_text_field($_POST['hostname']) . ':' . intval($_POST['port']) . '/imap/' . $auth_type . '}INBOX';
-                            $username = sanitize_email($_POST['username']);
-                            $password = $_POST['password']; // Keep as-is
+                        // Load saved settings
+                        $settings = get_option('robodesk_imap_settings', array(
+                            'hostname' => 'email.example.com',
+                            'port'     => 993,
+                            'username' => '',
+                            'password' => '',
+                            'auth'     => true,
+                            'hostname_view' => 'email.example.com',
+                        ));
 
-                            imap_errors(); // Clear previous errors
-
-                            $mailbox = @imap_open($hostname, $username, $password);
-
-                            if ($mailbox) {
-                                imap_close($mailbox);
-                                wp_send_json_success('✅ IMAP connection successful!');
-                            } else {
-                                $error = imap_last_error();
-                                wp_send_json_error('❌ IMAP connection failed: ' . esc_html($error));
-                            }
-
-                            wp_die();
-                        }
-
+                        $hostname = $settings['hostname'];
+                        $port     = $settings['port'];
+                        $username = $settings['username'];
+                        $password = $settings['password'];
+                        $auth     = isset($settings['auth']) ? $settings['auth'] : true;
+                        $hostname_view = $settings['hostname_view']; // For display purposes, you might want to format this differently
                         ?>
 
                         <!-- IMAP Settings Tab -->
                         <div id="imap-tab" class="settings-tab-content hidden">
                             <h3 class="text-lg font-medium text-gray-900 mb-6">IMAP Settings</h3>
 
-                            <form method="post" action="">
+                            <form method="post" action="" id="robodesk-imap-form" class="space-y-6">
                                 <?php wp_nonce_field('robodesk_imap_settings_action', 'robodesk_imap_settings_nonce'); ?>
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     <div>
                                         <label for="robodesk_imap_hostname" class="block text-sm font-medium text-gray-700">IMAP Host</label>
                                         <input type="text" name="robodesk_imap_hostname" id="robodesk_imap_hostname"
-                                            value="<?php echo esc_attr($hostname); ?>"
+                                            value="<?php echo esc_attr($hostname_view); ?>"
                                             class="styled-input mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
                                     </div>
                                     <div>
@@ -597,12 +598,7 @@ function robodesk_dashboard_callback()
                                         class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">
                                         Test Connection
                                     </button>
-                                    <div id="imap-test-message" class="mt-4"></div>
                                 </div>
-                                <button type="submit" name="robodesk_imap_save"
-                                    class="bg-gray-600 text-white px-4 py-2 rounded-md hover:bg-gray-700">
-                                    Save Settings
-                                </button>
                             </form>
                         </div>
 
@@ -725,7 +721,7 @@ function robodesk_dashboard_callback()
 
                         <div class="mt-8 pt-6 border-t border-gray-200">
                             <button onclick="saveSettings()" class="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-                                Save SettingsCAZDSA
+                                Save Settings-Main
                             </button>
                         </div>
                     </div>
@@ -741,7 +737,7 @@ function robodesk_dashboard_callback()
             </div>
         </div>
 
-        <script src="script.js"></script>
+        <!-- <script src="script.js"></script> -->
     </body>
 
     </html>

@@ -1,5 +1,10 @@
 <?php
 
+// Prevent direct access to this file
+if (!defined('ABSPATH')) {
+    exit; // Exit if accessed directly
+}
+
 // Woocommerce modifications
 if (in_array('woocommerce/woocommerce.php', apply_filters('active_plugins', get_option('active_plugins')))) {
     require_once('robodesk-woocommerce.php');
@@ -242,7 +247,7 @@ function robodesk_credentials_page()
                     <input type="text" id="credential_url" name="credential_url"><br><br>
 
                     <label for="credential_notes">Notes:</label><br>
-                    <textarea id="credential_notes" name="credential_notes" rows="4" style="border: 1px solid #DDD; width:100%" ></textarea><br><br>
+                    <textarea id="credential_notes" name="credential_notes" rows="4" style="border: 1px solid #DDD; width:100%"></textarea><br><br>
 
                     <input type="hidden" name="action" value="robodesk_add_credential">
                     <?php wp_nonce_field('robodesk_add_credential_nonce'); ?>
@@ -251,12 +256,12 @@ function robodesk_credentials_page()
             </div>
 
             <h3>My Credentials</h3>
-            <?php if ($credentials): 
+            <?php if ($credentials):
                 // var_dump($credentials);
                 //  $asp = robodesk_decrypt('tram', 'robodesk');
-                 
+
                 //  var_dump()
-                ?>
+            ?>
                 <table>
                     <thead>
                         <tr>
@@ -275,7 +280,7 @@ function robodesk_credentials_page()
                                 <td><?php echo esc_html($credential->name); ?></td>
                                 <!-- User name -->
                                 <td><?php echo esc_html($credential->username); ?></td>
-                               <!-- Password -->
+                                <!-- Password -->
                                 <td><span class="password-hidden">********</span>
                                     <?php $enc =  robodesk_encrypt($credential->password, 'robodesk'); ?>
                                     <button class="show-password" data-password="
@@ -372,17 +377,17 @@ function add_custom_table_to_my_account()
                             'orderby' => 'comment_date_gmt',
                             'order' => 'DESC'
                         ));
-                        
+
                         // var_dump($comments);
-                        
-                        
-                        
+
+
+
                         $last_activity = !empty($comments) ?  strtotime($comments[0]->comment_date_gmt) : get_the_modified_time('U');
-                        
+
                         $human_readable_time = human_time_diff($last_activity, current_time('U'));
-                        
-                        $comment_author = !empty($comments) ? get_the_author_meta( 'display_name', $comments[0]->user_id ) : 
-                        get_the_author_meta( 'display_name', $post->post_author ); 
+
+                        $comment_author = !empty($comments) ? get_the_author_meta('display_name', $comments[0]->user_id) :
+                            get_the_author_meta('display_name', $post->post_author);
 
                 ?>
                         <tr>
@@ -395,13 +400,14 @@ function add_custom_table_to_my_account()
                                 <p class="ticket-date"><?php echo get_the_date('dS M Y'); ?></p>
                             </td>
                             <td><?php echo  $comment_count; ?></td>
-                            <td><?php echo $human_readable_time ? $human_readable_time . ' ago' : '-' ?><p class="ticket-comment-by">By, <?php echo $comment_author; ?></p></td>
+                            <td><?php echo $human_readable_time ? $human_readable_time . ' ago' : '-' ?><p class="ticket-comment-by">By, <?php echo $comment_author; ?></p>
+                            </td>
                             <td><span class="robodesk-status-pill <?php echo strtolower($status); ?>"> <?php echo esc_html(ucwords($status)); ?></span></td>
                             <td><span data-color="<?php echo esc_attr($priority_color); ?>" class="robodesk-priority-pill <?php echo strtolower($priority_name); ?>" style="background:<?php echo esc_attr($priority_color) ?>"><?php echo esc_html($priority_name); ?></span></td>
                         </tr>
                     <?php endwhile;
                     wp_reset_postdata();
-                    else : ?>
+                else : ?>
                     <tr>
                         <td colspan="3">No tickets found.</td>
                     </tr>
@@ -412,3 +418,65 @@ function add_custom_table_to_my_account()
 <?php
     }
 }
+
+add_action('admin_enqueue_scripts', function () {
+    // wp_enqueue_script('robodesk-imap-js', plugin_dir_url(__FILE__) . 'js/imap.js', ['jquery'], null, true);
+    wp_localize_script('robodesk-imap-js', 'robodesk_ajax', [
+        'ajax_url' => admin_url('admin-ajax.php'),
+        'nonce'    => wp_create_nonce('robodesk_imap_settings_action'),
+    ]);
+});
+
+add_action('wp_ajax_robodesk_imap_test_connection', 'robodesk_imap_test_connection');
+function robodesk_imap_test_connection()
+{
+    // Verify nonce
+    if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'robodesk_imap_settings_action')) {
+        wp_send_json_error(['message' => 'Security check failed']);
+        exit;
+    }
+
+    // Validate inputs
+    if (empty($_POST['robodesk_imap_hostname']) || empty($_POST['robodesk_imap_port']) || empty($_POST['robodesk_imap_username']) || empty($_POST['robodesk_imap_password'])) {
+        wp_send_json_error(['message' => 'Missing required fields']);
+        exit;
+    }
+
+    // Check IMAP extension
+    if (!function_exists('imap_open')) {
+        wp_send_json_error(['message' => 'IMAP extension is not enabled on the server']);
+        exit;
+    }
+
+    $auth_type = ($_POST['robodesk_imap_auth'] == '1') ? 'ssl' : 'tls';
+    $hostname = '{' . sanitize_text_field($_POST['robodesk_imap_hostname']) . ':' . intval($_POST['robodesk_imap_port']) . '/imap/' . $auth_type . '/novalidate-cert}INBOX';
+    $hostname_view = ($_POST['robodesk_imap_hostname']);
+    $username = sanitize_text_field($_POST['robodesk_imap_username']);
+    $password = $_POST['robodesk_imap_password'];
+
+    // Clear previous errors
+    imap_errors();
+
+    $mailbox = @imap_open($hostname, $username, $password);
+
+    if ($mailbox) {
+        $message = '✅ IMAP connection successful!';
+        imap_close($mailbox);
+        wp_send_json_success(['message' => $message]);
+    } else {
+        $error = imap_last_error();
+        $message = '❌ IMAP connection failed: ' . esc_html($error);
+        wp_send_json_error(['message' => $message]);
+    }
+}
+
+// Enqueue script and localize
+function new_robodesk_enqueue_scripts()
+{
+    wp_enqueue_script('robodesk-script', plugins_url('public/assets/js/robodesk-dashboard.js', __FILE__), array('jquery'), '1.0', true);
+    wp_localize_script('robodesk-script', 'robodesk_ajax', array(
+        'ajaxurl' => admin_url('admin-ajax.php'),
+        'nonce'   => wp_create_nonce('robodesk_imap_settings_action')
+    ));
+}
+add_action('admin_enqueue_scripts', 'robodesk_enqueue_scripts');
