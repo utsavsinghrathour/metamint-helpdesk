@@ -1097,9 +1097,4 @@ jQuery(document).ready(function ($) {
       },
     });
   });
-
-  // Define showToast if not already defined
-  function showToast(message, type) {
-    alert(message); // Replace with your toast implementation
-  }
 });
