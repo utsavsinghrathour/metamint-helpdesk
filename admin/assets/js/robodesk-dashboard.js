@@ -1105,7 +1105,7 @@ jQuery(document).ready(function ($) {
         showToast("AJAX request failed: " + error, "error");
       },
       complete: function () {
-        $testButton.prop("disabled", false).text("Test Connection");
+        $testButton.prop("disabled", false).text("Test Connection Again");
       },
     });
   });

@@ -654,6 +654,10 @@ function robodesk_dashboard_callback()
                                     </div>
                                 </div>
                             </div>
+                            <hr class="my-6 border-gray-200">
+                            <button type="button" id="save-templates" class="mt-6 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">
+                                Save Templates
+                            </button>
                         </div>
 
                         <!-- Fetch Tickets Tab -->
@@ -695,6 +699,10 @@ function robodesk_dashboard_callback()
                                     </div>
                                 </div>
                             </div>
+                            <hr class="my-6 border-gray-200">
+                            <button type="button" id="save-fetch-settings" class="mt-6 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">
+                                Save Fetch Settings
+                            </button>
                         </div>
 
                         <!-- Advanced Settings Tab -->
@@ -724,6 +732,10 @@ function robodesk_dashboard_callback()
                                     <input type="number" value="10" class="styled-input mt-1 block w-32 border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
                                 </div>
                             </div>
+                            <hr class="my-6 border-gray-200">
+                            <button type="button" id="save-advanced-settings" class="mt-6 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">
+                                Save Advanced Settings
+                            </button>
                         </div>
 
                         <!-- <div class="mt-8 pt-6 border-t border-gray-200">
