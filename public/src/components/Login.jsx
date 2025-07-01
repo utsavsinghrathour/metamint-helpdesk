@@ -8,7 +8,7 @@ const Login = ({ setShowLogin }) => {
   const [formData, setFormData] = useState({ email: "", password: "" });
   const [errors, setErrors] = useState({ email: "", password: "" });
   const [isSubmitting, setIsSubmitting] = useState(false);
-
+  const [ successMessage , setSuccessMessage] = useState(false);
   const validateForm = () => {
     const newErrors = { email: "", password: "" };
     let isValid = true;
@@ -132,8 +132,6 @@ const handleSubmit = async (e) => {
     });
 
     const loginData = await loginResponse.json();
-    
-    console.log('The users data is',loginData);
 
     if (!loginResponse.ok) {
       throw new Error(loginData.message || loginData.data?.message || 'Login failed');
@@ -185,9 +183,10 @@ const handleSubmit = async (e) => {
     setIsSignup(false);
     setErrors({
       email: "",
-      password: message || "",
+      password: "",
       confirmPassword: ""
     });
+    setSuccessMessage(message);
     setFormData({ email: "", password: "", confirmPassword: "" });
   };
 
@@ -259,7 +258,7 @@ const handleSubmit = async (e) => {
           </button>
 
           {isSignup ? (
-            <Signup switchToLogin={switchToLogin} />
+            <Signup switchToLogin={switchToLogin}  />
           ) : (
             <>
               <div className="rd-text-center rd-body-text rd-my-30">
@@ -269,6 +268,11 @@ const handleSubmit = async (e) => {
               </div>
 
               <form onSubmit={handleSubmit} noValidate>
+                {successMessage && (
+                <p className="rd-text-green rd-text-sm rd-mt-5 rd-mb-10">
+                  {successMessage}
+                </p>
+              )}
                 <div>
                   <label htmlFor="email" className="rd-body-text"></label>
                   <input
