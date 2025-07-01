@@ -236,8 +236,6 @@ function exclude_ticket_replies($query)
     }
 }
 
-
-
 // Enqueue Tailwind CSS and custom styles
 function robodesk_enqueue_tailwind_and_styles()
 {
@@ -270,4 +268,3 @@ function robodesk_enqueue_tailwind_and_styles()
     ));
 }
 add_action('admin_enqueue_scripts', 'robodesk_enqueue_tailwind_and_styles');
-// add_action('wp_enqueue_scripts', 'robodesk_enqueue_tailwind_and_styles'); // if needed on frontend
