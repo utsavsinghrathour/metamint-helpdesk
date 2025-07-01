@@ -9,9 +9,9 @@ import EmojiPicker from 'emoji-picker-react';
 import Logo from '../images/wooescrow-logo.png';
 import '../styles/MessageTabs.css';
 import axios from 'axios';
-import {  getMessages } from "../utils/modules";   
+import {  getMessages , sendReply } from "../utils/modules";   
 
-const SingleTicket = ({ ticket, onBack }) => {
+const SingleTicket = ({ ticket, onBack , loggedInUserId }) => {
   const [message, setMessage] = useState('');
   const [showPicker, setShowPicker] = useState(false);
   const [previewImage, setPreviewImage] = useState(null);
@@ -27,24 +27,30 @@ const SingleTicket = ({ ticket, onBack }) => {
     try {
       setLoading(true);
       setError(null);
-
       const response = await getMessages(ticket.id);
+
       if(response.code === 400){
         setError('Nothing to show');
         setLoading(false);
         return;
       }
+      
+    //   console.log('THe response',response);
+    
+    //   console.log('The logged in user',loggedInUserId , response.data[9].);
       const messages = response.data.map((comment) => ({
         id: comment.id,
         text:  comment.content.replace(/<[^>]+>/g, ''),
-        sender:  comment.author_id === '46' ? 'me' : 'other', // Compare with current user ID
+        sender:  comment.author_id === loggedInUserId ? 'me' : 'other', // Compare with current user ID
         senderName: comment.author_name,
         image:  comment.author_image ?? '/default-avatar.jpg', // Use WordPress avatar if available
         created_at: comment.created_at,
         isAdmin: comment.author_id !== ticket.author_id // Assuming you want to mark non-author as admin
       }));
       
-      console.log(messages);
+      
+      
+      console.log('The chat messages',messages);
       setChatMessages(messages);
       setLoading(false);
     } catch (err) {
@@ -124,37 +130,34 @@ const SingleTicket = ({ ticket, onBack }) => {
     }
   }, [chatMessages]);
 
-  const handleSend = async () => {
+  const handleSend = async (e) => {
     if (message.trim() || previewImage) {
       try {
         const newMessage = {
           id: Date.now(),
           text: message || '',
-          sender: 'me',
+          sender: loggedInUserId,
           created_at: new Date().toISOString(),
           ...(previewImage && { imageUrl: previewImage }),
         };
 
         setChatMessages((prev) => [...prev, newMessage]);
 
-        await axios.post(
-          '/wp-json/wp/v2/comments',
-          {
-            post: ticket.id,
-            content: message || (previewImage ? 'Image attachment' : ''),
-            type: 'ticket_replies',
-            author: 0, // Adjust based on user authentication
-          },
-          {
-            headers: {
-              'X-WP-Nonce': window.wpApiSettings.nonce,
-            },
-          }
-        );
-
+        const result = await sendReply(ticket.id, loggedInUserId, message );
+        
+    // const messages = result.data.map((comment) => ({
+    //     id: comment.id,
+    //     text:  comment.content.replace(/<[^>]+>/g, ''),
+    //     sender:  comment.author_id === loggedInUserId ? 'me' : 'other', // Compare with current user ID
+    //     senderName: comment.author_name,
+    //     image:  comment.author_image ?? '/default-avatar.jpg', // Use WordPress avatar if available
+    //     created_at: comment.created_at,
+    //     isAdmin: comment.author_id !== ticket.author_id // Assuming you want to mark non-author as admin
+    //   }));
+        
+        console.log(result);
         // Refresh messages to get server data
         await fetchMessages();
-
         setMessage('');
         setPreviewImage(null);
       } catch (err) {
@@ -311,6 +314,7 @@ const SingleTicket = ({ ticket, onBack }) => {
         )}
         <div className="rd-flex rd-align-center rd-justify-between">
           <textarea
+            id='mesg'
             ref={textareaRef}
             value={message}
             onChange={(e) => setMessage(e.target.value)}

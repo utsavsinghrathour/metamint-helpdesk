@@ -407,11 +407,22 @@ function robodesk_handle_tickets_webhook(WP_REST_Request $request) {
             if ($term_id) {
                 wp_set_post_terms($ticket, array($term_id), 'robodesk_ticket_origin');
             }
+            
+            // $comment_id = wp_insert_comment(array(
+            //     'comment_post_ID' => $ticket,
+            //     'comment_author'  => $author,
+            //     'comment_content' => $title,
+            //     'comment_approved' => 1,
+            //     'comment_type' => 'ticket_replies'
+            // ));
+            
+            // $reply_id = !is_wp_error($comment_id) ? $comment_id : false;
 
             return rest_ensure_response(array(
                 'status'  => 'success',
                 'message' => 'Ticket created successfully',
-                'data'    => array('ticket_id' => $ticket)
+                 'data'    => array('ticket_id' => $ticket ),
+                // 'data'    => array('ticket_id' => $ticket , 'comment_id' =>$reply_id )
             ));
         }
     }
@@ -447,6 +458,17 @@ function robodesk_handle_tickets_webhook(WP_REST_Request $request) {
             'comment_approved' => 1,
             'comment_type' => 'ticket_replies'
         ));
+        
+        $comment = get_comment($comment_id);
+        
+        $data = [
+            'id' => $comment->comment_ID,
+            'author' => $comment->comment_author, // Display name
+            'author_id' => $comment->user_id,    // User ID
+            'author_image' => get_avatar_url($comment->user_id, ['size' => 96]),
+            'content' => $comment->comment_content,
+            'created_at' => $comment->comment_date,
+        ];
 
         if ($comment_id) {
             rbd_log(sprintf(
@@ -458,7 +480,7 @@ function robodesk_handle_tickets_webhook(WP_REST_Request $request) {
             return rest_ensure_response(array(
                 'status'  => 'success',
                 'message' => 'Reply added successfully',
-                'data'    => array('ticket_id' => $ticket_id, 'reply_id' => $comment_id)
+                'data'    => $data
             ));
         }
     }
