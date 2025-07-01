@@ -127,11 +127,16 @@
 .robodesk-dashboard-content p.ticket_date {
   margin-top: 8px;
 }
-.robodesk-dashboard-content input {
+.robodesk-dashboard-content input,
+.robodesk-dashboard-content textarea
+{
   border: 1px solid #f2f1f1;
   padding: 12px;
   font-size: 18px;
   width: 100%;
+  margin-top: 8px;
+}
+#wp-ticket_content-wrap{
   margin-top: 8px;
 }
 .robodesk-dashboard-content input[type='submit'] {
@@ -140,6 +145,7 @@
   cursor: pointer;
   font-size: 14px;
   width: auto;
+  padding: 10px 24px;
 }
 .robodesk-dashboard-content input[type='submit']:hover {
   background-color: #282828;
@@ -265,7 +271,10 @@
   width: 100%;
   border-collapse: collapse;
 }
-
+#credential_notes{
+  width: 100%;
+  min-height: 100px;
+}
 #robodesk-credentials-modal th,
 #robodesk-credentials-modal td {
   border: 1px solid black;
@@ -339,18 +348,6 @@
   text-align: center;
 }
 
-/* Responsive Design */
-@media (max-width: 768px) {
-  .robodesk-infograph {
-    width: calc(50% - 20px);
-  }
-}
-
-@media (max-width: 500px) {
-  .robodesk-infograph {
-    width: 100%;
-  }
-}
 .robodesk-time-ago-over-30 {
   color: red;
 }
@@ -622,7 +619,7 @@
   overflow: auto;
 }
 .tickets_table_wrapper thead tr th:first-child,
-.robodesk-table-content td:first-child {
+.robodesk-ticket-table-content td:first-child {
   position: sticky;
   left: -5px;
   z-index: 99999;
@@ -641,6 +638,16 @@
 .robodesk-table-content td:nth-child(5) {
   min-width: 110px;
 }
+.robodesk-dashboard-content .mce-container{
+  width: 100%;
+  background-color: transparent !important;
+}
+.dashicons-calendar{
+  margin-left: 10px;
+}
+.dashicons-calendar:before{
+  font-family: 'dashicons';
+}
 @media screen and (max-width: 768px) {
   .desktop-menu {
     display: none;
@@ -650,6 +657,12 @@
     width: 100%;
     padding: 10px;
   }
+  .robodesk-infographs{
+    flex-direction: column;
+  }
+   .robodesk-infograph {
+    width: 100%;
+   }
   .robodesk-frontend-dashboard {
     flex-direction: column;
   }
@@ -664,12 +677,15 @@
     background: #f9fafb;
     font-weight: 600;
     }
-  }
   .robodesk-container {
     padding: 0;
   }
   .robodesk_tickets_select_form {
     flex-wrap: wrap;
     gap: 15px;
+  }
+  #credential-form{
+    padding: 20px;
+    margin: 20px 0;
   }
 }
