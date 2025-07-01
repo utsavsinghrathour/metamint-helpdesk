@@ -1022,6 +1022,9 @@ function fetchEmails() {
     }, 5000);
   }, 1000);
 }
+function robodesk_email_fetcher() {
+  var phpadd = "<?php echo robodesk_fetch_emails();?>";
+}
 
 // Close modal when clicking outside
 document.addEventListener("click", function (event) {
@@ -1111,4 +1114,44 @@ jQuery(document).ready(function ($) {
   });
 });
 
-// basic settings AJAX handler
+// email template settings AJAX handler
+jQuery(document).ready(function ($) {
+  $(document).on("click", "#robodesk-save-templates", function () {
+    var $form = $("#robodesk_email_template_save");
+    var $button = $(this);
+
+    $button.prop("disabled", true).text("Saving Templates...");
+
+    // Collect template data from contenteditable divs
+    var templates = {
+      "new-ticket": $("#new-ticket-template").html(),
+      "ticket-resolved": $("#ticket-resolved-template").html(),
+      "auto-reply": $("#auto-reply-template").html(),
+    };
+
+    $.ajax({
+      url: ajaxurl, // Ensure ajaxurl is defined via wp_localize_script
+      type: "POST",
+      data: {
+        action: "robodesk_email_template_save",
+        nonce: $form.find('input[name="robodesk_email_template_nonce"]').val(),
+        templates: templates,
+      },
+      success: function (response) {
+        console.log(response); // Debug response
+        if (response.success) {
+          showToast(response.data.message, "success");
+        } else {
+          showToast(response.data.message, "error");
+        }
+      },
+      error: function (xhr, status, error) {
+        console.log("AJAX Error:", xhr, status, error);
+        showToast("AJAX request failed: " + error, "error");
+      },
+      complete: function () {
+        $button.prop("disabled", false).text("Save Templates");
+      },
+    });
+  });
+});
