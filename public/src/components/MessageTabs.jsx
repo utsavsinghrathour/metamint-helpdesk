@@ -66,9 +66,10 @@ const MessageTabs = ({
   isExpanded,
   setIsExpanded,
   activeTab,
+  selectedNewTicket
 }) => {
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedTicket, setSelectedTicket] = useState(null);
+  const [selectedTicket, setSelectedTicket] = useState(selectedNewTicket ? selectedNewTicket : null);
   const [currentTab, setCurrentTab] = useState("all");
   const [priorityFilter, setPriorityFilter] = useState("all");
   const [tickets, setTickets] = useState([]);
@@ -107,6 +108,12 @@ const MessageTabs = ({
   }
 }, [isLoggedIn,loggedInuserData]);
 
+// useEffect(() => {
+//     if (newTicket) {
+//       setSelectedTicket(newTicket); // Set the new ticket as selected
+//       setTickets([newTicket, ...tickets]); // Add new ticket to the list
+//     }
+//   }, [newTicket]);
                        
 //   useEffect(() => {
   
@@ -237,6 +244,7 @@ const fetchTickets = async () => {
         _embed: "wp:comment",      // Embed comments only
       },
     });
+    
 
     const mappedTickets = response.data.map((post) => {
     
