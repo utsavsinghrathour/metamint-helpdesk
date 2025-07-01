@@ -509,6 +509,7 @@ remove_action('after_password_reset', 'wp_password_change_notification');
 
 
 // Function to display the IMAP settings page
+// Function to display the IMAP settings page
 function robodesk_imap_settings_callback()
 {
     if (!current_user_can('manage_options')) {
