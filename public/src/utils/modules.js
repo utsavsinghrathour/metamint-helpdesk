@@ -1,4 +1,3 @@
-
 export const createTicket = async (userId, title, message = "") => {
   const webhookUrl = "/wp-json/chat/v1/tickets";
 
@@ -59,20 +58,19 @@ export const getMessages = async (ticketId, userId) => {
 };
 
 export const userStatus = () => {
-    if (typeof wpAuth !== "undefined" && wpAuth.isLoggedIn === "true") {
-      return {
-        isLoggedIn: true,
-        loggedInUserId: wpAuth.loggedInUserId || false,
-      };
-    }
-  
+  if (typeof wpAuth !== "undefined" && wpAuth.isLoggedIn === "true") {
     return {
-      isLoggedIn: false,
-      loggedInUserId: false,
+      isLoggedIn: true,
+      loggedInUserId: wpAuth.loggedInUserId || false,
     };
+  }
+
+  return {
+    isLoggedIn: false,
+    loggedInUserId: false,
+  };
 };
-  
-  
+
 const cache = {};
 export const useCachedFetch = (url) => {
   const [data, setData] = React.useState(null);
@@ -84,14 +82,14 @@ export const useCachedFetch = (url) => {
       try {
         if (cache[url]) {
           setData(cache[url]);
-           setLoading(false);
+          setLoading(false);
           return;
         }
 
         setLoading(true);
         const res = await fetch(url);
         if (!res.ok) {
-          throw new Error('Network response was not ok');
+          throw new Error("Network response was not ok");
         }
         const json = await res.json();
         cache[url] = json;
@@ -99,7 +97,6 @@ export const useCachedFetch = (url) => {
         setLoading(false);
       } catch (err) {
         setError(err.message);
-     
       } finally {
         setLoading(false);
       }
@@ -110,3 +107,60 @@ export const useCachedFetch = (url) => {
 
   return { data, error, loading };
 };
+
+export async function sendReply(ticketId, userId, message) {
+  const payload = {
+    event: "replies.receive",
+    data: {
+      ticket_id: ticketId,
+      user_id: userId,
+      message: message,
+    },
+  };
+
+  try {
+    const response = await fetch("/wp-json/chat/v1/tickets", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(payload),
+    });
+
+    const result = await response.json();
+
+    if (!response.ok) {
+      throw new Error(result.message || "Failed to send reply");
+    }
+
+    return result;
+  } catch (error) {
+    console.error("Error sending reply:", error.message);
+    throw error;
+  }
+}
+
+export async function registerUser({ username, email, password }) {
+  try {
+    const payload = {
+      username: username,
+      email: email,
+      password: password
+    };
+    const response = await fetch("/wp-json/robodesk/v1/signup", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(payload),
+    });
+    const result = await response.json();
+    if (!response.ok) {
+      throw new Error(result.message || "Failed register");
+    }
+    return result;
+  } catch (error) {
+    console.error("Error sending reply:", error.message);
+    throw error;
+  }
+}

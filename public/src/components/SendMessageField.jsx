@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState , useEffect } from "react";
 import { createTicket , getMessages } from "../utils/modules";
 import "../styles/SendMessageField.css";
 
@@ -11,25 +11,28 @@ const SendMessageField = ({ setShowLogin , setActiveTab} ) => {
   const handleInputChange = (e) => {
     setMessage(e.target.value);
   };
-
-  const handleSend = async () => {
-    // e.preventDefault();
   
+  const handleSend = async () => {
+
     if (!message.trim()) {
       console.log("No message entered");
       return;
     }
-  
+   
     if (loggedIn == 'false') {
+      localStorage.setItem('temp_ticket_title', message); 
       setShowLogin(true);
       setActiveTab(1);
-      localStorage.setItem('temp_ticket_title', message);
+     
       return;
     }
-    setMessage(message);    
+
+   
     try {
+    
       const result = await createTicket(userId, message, '');
-      console.log("Ticket Created:", result);
+      
+      console.log(result);
 
       setMessage("");
       setActiveTab(1);
