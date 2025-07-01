@@ -271,8 +271,7 @@ function robodesk_credentials_page()
                                             <td><?php echo esc_html($credential->username); ?></td>
                                             <td><span class="password-hidden">********</span>
                                                 <?php $enc =  robodesk_encrypt($credential->password, 'robodesk'); ?>
-                                                <button class="show-password" data-password="
-                                                 <?php echo robodesk_decrypt($credential->password, 'robodesk');
+                                                <button class="show-password" data-password="<?php echo  esc_attr(robodesk_decrypt($enc, 'robodesk'));  
                                                      ?>">Show</button>
                                             </td>
 

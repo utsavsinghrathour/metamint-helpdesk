@@ -278,7 +278,7 @@ function robodesk_my_tickets_shortcode()
                         $human_readable_time = human_time_diff($last_activity, current_time('U'));
 
                 ?>
-                        <tr class="robodesk-table-content">
+                        <tr class="robodesk-table-content robodesk-ticket-table-content">
                             <td>
                                 <?php
                                 $ticket_url = add_query_arg(array('robodesk_page' => 'my-tickets', 'tid' => get_the_ID()), site_url('/dashboard/'));
@@ -765,10 +765,16 @@ function robodesk_create_ticket_page()
                     'media_buttons' => false,
                     'textarea_name' => 'ticket_content',
                     'textarea_rows' => get_option('default_post_edit_rows', 10),
-                    'quicktags' => false,
+                    'quicktags'     => false,
+                    'tinymce'       => array(
+                        'toolbar1' => 'bold,italic,underline,bullist,numlist,link,unlink',
+                        'toolbar2' => '',
+                        'wp_autoresize_on' => true,
+                        'resize' => false,
+                        'menubar' => false,
+                    ),
                 );
-                wp_editor(false, 'ticket_content', $args);
-
+                wp_editor('', 'ticket_content', $args);
                 ?>
 
                 <label for="ticket_priority">Priority:</label><br>
