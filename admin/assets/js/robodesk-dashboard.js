@@ -1200,3 +1200,113 @@ jQuery(document).ready(function ($) {
     });
   });
 });
+
+// basic settings AJAX handler
+jQuery(document).ready(function ($) {
+  // Image preview handler for all file inputs
+  const imageFields = [
+    {
+      input: "popover_icon",
+      preview: "popover-icon-preview",
+      hidden: "robodesk_popover_icon",
+    },
+    {
+      input: "popover_top_icon",
+      preview: "popover-top-icon-preview",
+      hidden: "robodesk_popover_top_icon",
+    },
+    { input: "logo", preview: "logo-preview", hidden: "robodesk_logo" },
+    {
+      input: "wide_logo",
+      preview: "wide-logo-preview",
+      hidden: "robodesk_wide_logo",
+    },
+  ];
+
+  imageFields.forEach(function (field) {
+    // Show existing image on page load
+    const hiddenInput = $(`#${field.hidden}`);
+    if (hiddenInput.val()) {
+      $(`#${field.preview}`)
+        .removeClass("hidden")
+        .attr("src", hiddenInput.val());
+    }
+
+    // Handle file input change for preview
+    $(`input[name="${field.input}"]`).on("change", function (event) {
+      const file = event.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function (e) {
+          $(`#${field.preview}`)
+            .removeClass("hidden")
+            .attr("src", e.target.result);
+        };
+        reader.readAsDataURL(file);
+      }
+    });
+  });
+
+  // Handle form submission
+  $(document).on("click", "#save-basic-settings", function () {
+    const $form = $("#robodesk-basic-settings-form");
+    const $button = $(this);
+    const formData = new FormData();
+
+    // Append basic settings
+    formData.append("action", "robodesk_save_basic_settings");
+    formData.append(
+      "nonce",
+      $form.find('input[name="robodesk_basic_settings_nonce"]').val()
+    );
+    formData.append("settings[site_name]", $form.find("#site_name").val());
+    formData.append("settings[admin_email]", $form.find("#admin_email").val());
+    formData.append("settings[timezone]", $form.find("#timezone").val());
+    formData.append("settings[language]", $form.find("#language").val());
+
+    // Append image URLs and files
+    imageFields.forEach(function (field) {
+      formData.append(field.hidden, $(`#${field.hidden}`).val());
+      const fileInput = $(`input[name="${field.input}"]`)[0];
+      if (fileInput.files.length > 0) {
+        formData.append(field.input, fileInput.files[0]);
+      }
+    });
+
+    $button.prop("disabled", true).text("Saving Settings...");
+
+    $.ajax({
+      url: ajaxurl, // Ensure ajaxurl is defined via wp_localize_script
+      type: "POST",
+      data: formData,
+      processData: false, // Required for FormData with files
+      contentType: false, // Required for FormData with files
+      success: function (response) {
+        console.log(response); // Debug response
+        if (response.success) {
+          // Update hidden inputs with new image URLs
+          if (response.data.urls) {
+            imageFields.forEach(function (field) {
+              if (response.data.urls[field.hidden]) {
+                $(`#${field.hidden}`).val(response.data.urls[field.hidden]);
+                $(`#${field.preview}`)
+                  .removeClass("hidden")
+                  .attr("src", response.data.urls[field.hidden]);
+              }
+            });
+          }
+          showToast(response.data.message, "success");
+        } else {
+          showToast(response.data.message, "error");
+        }
+      },
+      error: function (xhr, status, error) {
+        console.log("AJAX Error:", xhr, status, error);
+        showToast("AJAX request failed: " + error, "error");
+      },
+      complete: function () {
+        $button.prop("disabled", false).text("Save Settings");
+      },
+    });
+  });
+});
