@@ -1,216 +1,43 @@
-/* General Styles */
-.robodesk-container {
-  /* A general container for consistent spacing */
-  max-width: 1360px;
-  margin: 0 auto;
-  padding: 20px;
-}
-.text-start {
-  text-align: start;
-}
-.flex-1 {
-  flex: 1;
-}
-.robodesk-dashboard-content h3 {
-  font-size: 16px;
-}
-/* Ticket Submission Form */
-.robodesk-ticket-form label {
-  display: block;
-  margin-bottom: 5px;
-  font-weight: bold;
+/* Custom styles for the Robodesk dashboard */
+
+/* Navigation styles */
+.nav-link {
+  transition: all 0.2s ease-in-out;
 }
 
-.robodesk-ticket-form input[type='text'],
-.robodesk-ticket-form input[type='email'],
-.robodesk-ticket-form textarea,
-.robodesk-ticket-form select {
-  width: 100%;
-  padding: 8px;
-  margin-bottom: 10px;
-  border: 1px solid #ddd;
-  box-sizing: border-box;
+.nav-link.active {
+  border-color: #3b82f6;
+  color: #2563eb;
 }
 
-.robodesk-ticket-form input[type='submit'] {
-  padding: 10px 20px;
-  background-color: #007cba;
-  color: white;
-  border: none;
-  cursor: pointer;
-}
-
-.robodesk-ticket-form input[type='submit']:hover {
-  background-color: #006ba1;
-}
-
-/* My Tickets Table */
-.robodesk-my-tickets table {
-  width: 100%;
-  border-collapse: collapse;
-  margin-top: 20px;
-}
-
-.robodesk-my-tickets th,
-.robodesk-my-tickets td {
-  border: 1px solid #ddd;
-  padding: 8px;
-  text-align: left;
-}
-
-.robodesk-my-tickets th {
-  background-color: #f0f0f0;
-  font-weight: bold;
-}
-
-/* Last Comment Section in My Tickets */
-.robodesk-last-comment {
-  display: flex;
-  align-items: center;
-}
-
-.robodesk-last-comment img {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  margin-right: 10px;
-}
-
-/* Frontend Dashboard */
-.robodesk-frontend-dashboard {
-  display: flex;
-}
-
-.robodesk-frontend-dashboard nav {
-  width: 250px;
-  background-color: #f9fafb;
-  padding: 0px;
-  border: 1px solid #f2f1f1;
-}
-
-.robodesk-frontend-dashboard nav ul {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
-
-.robodesk-frontend-dashboard nav li a {
-  display: block;
-  padding: 15px 15px;
-  text-decoration: none;
-  color: #333;
-  border-bottom: 1px solid #f2f1f1; /* Add a bottom border for separation */
-  font-size: 16px;
-}
-.robodesk-frontend-dashboard nav li:last-child a {
-  border-bottom: none;
-}
-
-.robodesk-frontend-dashboard nav li a:hover {
-  background-color: #f2f2f2;
-}
-
-.robodesk-frontend-dashboard nav li a.active {
-  background-color: #f2f2f2;
-  font-weight: bold;
-}
-
-.robodesk-dashboard-content {
-  flex-grow: 1;
-  padding: 20px;
-  border: 1px solid #f2f1f1;
-  border-left: none; /* Remove left border to join with nav */
-}
-.robodesk-dashboard-content p {
-  font-size: 14px;
-}
-.robodesk-dashboard-content p.ticket_date {
-  margin-top: 8px;
-}
-.robodesk-dashboard-content input {
-  border: 1px solid #f2f1f1;
-  padding: 12px;
-  font-size: 18px;
-  width: 100%;
-  margin-top: 8px;
-}
-.robodesk-dashboard-content input[type='submit'] {
-  background-color: #000;
-  color: #fff;
-  cursor: pointer;
-  font-size: 14px;
-  width: auto;
-}
-.robodesk-dashboard-content input[type='submit']:hover {
-  background-color: #282828;
-}
-.robodesk-dashboard-content label {
-  font-size: 14px;
-  font-weight: 500;
-}
-.robodesk-dashboard-content h2 {
-  margin-bottom: 20px;
-  font-size: 18px;
-  font-weight: 600;
-}
-.robodesk-dashboard-content select {
-  border: 1px solid #f2f1f1;
-  padding: 8px 20px;
-  margin-right: 10px;
-  font-size: 14px;
-  line-height: 18px;
-  flex: 1;
-}
-.robodesk-dashboard-content a {
-  text-decoration: none;
-}
-.robodesk_tickets_select_form {
-  display: flex;
-  align-items: center;
-}
-.robodesk_tickets_select_form input[type='submit'] {
-  width: fit-content;
-  font-size: 14px;
-  line-height: 18px;
-  padding: 8px 12px;
-  margin-top: 0;
-  border: transparent;
-  cursor: pointer;
-}
-.robodesk-table-content-title {
-  font-size: 14px;
-  font-weight: 400;
+.nav-link:not(.active) {
+  border-color: transparent;
   color: #6b7280;
-  line-height: 1.3;
 }
-.robodesk-table-content td {
-  font-size: 14px;
+
+.nav-link:not(.active):hover {
+  color: #374151;
+  border-color: #d1d5db;
 }
-.robodesk-table-content .ticket-comment-by {
-  font-weight: 500;
+
+/* Page content */
+.page-content {
+  animation: fadeIn 0.3s ease-in-out;
 }
-.robodesk-status-pill.open {
-  background-color: #fef2f2;
-  color: #dc2626;
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
-.robodesk-status-pill.closed {
-  background-color: #f0fdf4;
-  color: #16a34a;
-}
-.robodesk-status-pill.archived {
-  background-color: #f3e8ff;
-  color: #9333ea;
-}
-.robodesk-status-pill.in-progress {
-  background-color: #fffbeb;
-  color: #d97706;
-}
-.robodesk-priority-pill.highh {
-  background-color: #fef2f2;
-  color: #dc2626;
-}
-.robodesk-status-pill,
-.robodesk-priority-pill {
+
+/* Status badges */
+.status-badge {
   display: inline-flex;
   padding: 0.25rem 0.5rem;
   font-size: 0.75rem;
@@ -218,455 +45,369 @@
   border-radius: 9999px;
 }
 
-.ticket-num {
-  font-size: 14px;
-  font-weight: 500;
-  color: #000;
+.status-open {
+  background-color: #fef2f2;
+  color: #dc2626;
 }
-.ticket-date {
-  font-size: 14px;
+
+.status-in-progress {
+  background-color: #fffbeb;
+  color: #d97706;
+}
+
+.status-resolved {
+  background-color: #f0fdf4;
+  color: #16a34a;
+}
+
+.priority-high {
+  background-color: #fef2f2;
+  color: #dc2626;
+}
+
+.priority-medium {
+  background-color: #fffbeb;
+  color: #d97706;
+}
+
+.priority-low {
+  background-color: #f0fdf4;
+  color: #16a34a;
+}
+
+/* Tab styles */
+.ticket-tab.active,
+.settings-tab.active {
+  border-color: #3b82f6;
+  color: #2563eb;
+}
+
+.ticket-tab:not(.active),
+.settings-tab:not(.active) {
+  border-color: transparent;
   color: #6b7280;
 }
-/* FAQ Styles */
-.robodesk-faq-single {
-  margin-bottom: 20px;
-  border: 1px solid #f2f1f1;
-  padding: 15px;
+
+.ticket-tab:not(.active):hover,
+.settings-tab:not(.active):hover {
+  color: #374151;
+  border-color: #d1d5db;
 }
 
-.robodesk-faq-single h2 {
-  margin-top: 0;
+/* Dashboard filter buttons */
+.dashboard-filter-btn {
+  transition: all 0.2s ease-in-out;
 }
 
-.robodesk-faq-votes {
-  margin-top: 10px;
+.dashboard-filter-btn.active {
+  background-color: #3b82f6;
+  color: white;
+  border-color: #3b82f6;
 }
 
-.robodesk-faq-vote-button {
-  padding: 5px 10px;
-  margin-right: 5px;
+.dashboard-filter-btn:not(.active) {
+  background-color: white;
+  color: #6b7280;
+  border-color: #d1d5db;
+}
+
+.dashboard-filter-btn:not(.active):hover {
+  background-color: #f9fafb;
+  color: #374151;
+}
+
+/* Editable status and priority */
+.editable-status,
+.editable-priority {
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+}
+
+.editable-status:hover,
+.editable-priority:hover {
+  background-color: #f3f4f6;
+  border-radius: 4px;
+  transform: scale(1.05);
+}
+
+/* Customer stats */
+.customer-stat-card {
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 1rem;
+  text-align: center;
+  transition: all 0.2s ease-in-out;
   cursor: pointer;
 }
-.robodesk-faq-voted {
-  pointer-events: none;
-  opacity: 0.5;
-}
-.robodesk-notification-count {
-  background-color: red;
-  color: white;
-  padding: 2px 5px;
-  border-radius: 5px;
-  margin-left: 5px;
-  font-size: small;
+
+.customer-stat-card:hover {
+  background-color: #f9fafb;
+  border-color: #3b82f6;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
-#robodesk-credentials-modal table {
-  width: 100%;
-  border-collapse: collapse;
+.customer-stat-number {
+  font-weight: 700;
+  font-size: 1.5rem;
+  color: #1f2937;
 }
 
-#robodesk-credentials-modal th,
-#robodesk-credentials-modal td {
-  border: 1px solid black;
-  padding: 8px;
-  text-align: left;
-}
-
-/* robodesk-styles.css */
-.robodesk-infographs {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 20px;
-}
-
-.robodesk-infograph {
-  border: 1px solid #ededed;
-  padding: 20px;
-  width: calc(33.33% - 20px);
-  box-sizing: border-box;
-  text-align: center;
-}
-.robodesk-infograph h3 {
-  font-weight: 500;
-  font-size: 16px;
-}
-.robodesk-chart {
-  background-color: #eee;
-  height: 30px;
-  position: relative;
-  margin: 15px 0;
-}
-
-.robodesk-open-bar {
-  background-color: lightblue;
-  height: 100%;
-  position: absolute;
-  left: 0;
-  top: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: black;
-  font-size: 14px;
-  font-weight: 500;
-  transition: width 0.5s ease; /* Smooth width transition */
-}
-
-.robodesk-total-bar {
-  position: absolute;
-  right: 0;
-  top: 0;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  padding-right: 5px;
-  color: grey;
-  font-size: 14px;
-  font-weight: 500;
-}
-.robodesk-chart-label {
-  display: flex;
-  justify-content: space-between;
-}
-.robodesk-chart-label span {
-  font-size: 14px;
-  font-weight: 500;
-}
-.robodesk-notification-count-display {
-  font-size: 20px;
-  margin: 15px 0;
-  text-align: center;
-}
-
-/* Responsive Design */
-@media (max-width: 768px) {
-  .robodesk-infograph {
-    width: calc(50% - 20px);
-  }
-}
-
-@media (max-width: 500px) {
-  .robodesk-infograph {
-    width: 100%;
-  }
-}
-.robodesk-time-ago-over-30 {
-  color: red;
-}
-
-/* ... other CSS styles */
-
-.password-hidden {
-  display: inline-block;
-  width: 80px; /* Adjust as needed */
-  text-align: center;
-}
-
-.robodesk-container table {
-  width: 100%;
-  border-collapse: collapse;
-  margin-top: 20px;
-}
-
-.robodesk-container th,
-.robodesk-container td {
-  border: 1px solid #f2f1f1;
-  padding: 16px 10px;
-  text-align: left;
-}
-.robodesk-container th {
-  font-size: 12px;
+.customer-stat-label {
+  font-size: 0.875rem;
   color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
-.robodesk-container th {
+
+/* Customer tickets list */
+.customer-ticket-item {
+  padding: 0.75rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  margin-bottom: 0.5rem;
+  transition: all 0.2s ease-in-out;
+}
+
+.customer-ticket-item:hover {
+  background-color: #f9fafb;
+  border-color: #3b82f6;
+}
+
+/* Reply and note styles */
+.reply-customer {
+  background-color: #eff6ff;
+  border-left: 4px solid #3b82f6;
+}
+
+.reply-agent {
+  background-color: #f9fafb;
+  border-left: 4px solid #6b7280;
+}
+
+.note-internal {
+  background-color: #fffbeb;
+  border-left: 4px solid #f59e0b;
+}
+
+/* Styled inputs and selects */
+.styled-input {
+  transition: all 0.2s ease-in-out;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0.375rem;
+  background-color: white;
+  font-size: 0.875rem;
+  line-height: 1.25;
+}
+
+.styled-input:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 1px #3b82f6;
+}
+
+.styled-select {
+  transition: all 0.2s ease-in-out;
+  padding: 0.5rem 2.5rem 0.5rem 0.75rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0.375rem;
+  background-color: white;
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
+  background-position: right 0.5rem center;
+  background-repeat: no-repeat;
+  background-size: 1.5em 1.5em;
+  font-size: 0.875rem;
+  line-height: 1.25;
+  appearance: none;
+}
+
+.styled-select:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 1px #3b82f6;
+}
+
+/* Form validation */
+.form-error {
+  border-color: #dc2626;
+  box-shadow: 0 0 0 1px #dc2626;
+}
+
+.error-message {
+  color: #dc2626;
+  font-size: 0.75rem;
+  margin-top: 0.25rem;
+}
+
+/* Editor styles */
+.editor-toolbar {
+  display: flex;
+  gap: 0.25rem;
+  padding: 0.5rem;
+  background-color: #f9fafb;
+  border: 1px solid #d1d5db;
+  border-bottom: none;
+  border-radius: 0.375rem 0.375rem 0 0;
+}
+
+.editor-btn {
+  padding: 0.375rem 0.5rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0.25rem;
+  background-color: white;
+  color: #374151;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+}
+
+.editor-btn:hover {
+  background-color: #f3f4f6;
+}
+
+.editor-btn:active {
+  background-color: #e5e7eb;
+}
+
+.editor-content {
+  min-height: 100px;
+  padding: 0.75rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0 0 0.375rem 0.375rem;
+  background-color: white;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  outline: none;
+}
+
+.editor-content:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 1px #3b82f6;
+}
+
+/* Toast notification */
+.toast-success {
+  background-color: #f0fdf4;
+  border-color: #16a34a;
+  color: #15803d;
+}
+
+.toast-error {
+  background-color: #fef2f2;
+  border-color: #dc2626;
+  color: #dc2626;
+}
+
+/* Table hover effects */
+.table-row:hover {
   background-color: #f9fafb;
 }
 
-.custom-file-upload {
-  border: 1px solid #ccc;
-  display: inline-block;
-  padding: 6px 12px;
-  cursor: pointer;
-  background-color: #f0f0f0;
-  border-radius: 4px;
-}
-.file-upload-wrapper {
-  margin-top: 10px;
-}
-#file-list {
-  margin-top: 10px;
-}
-.media-frame-menu,
-.media-frame-menu-heading,
-#menu-item-browse,
-.media-sidebar,
-.media-frame-router {
-  display: none !important;
+/* Button hover effects */
+.btn-hover:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
-.media-frame-content {
-  border: 1px dashed gray;
-  max-width: 700px;
-  margin: auto !important;
-  max-height: 400px !important;
-}
-.button-hero {
-  border-radius: 20px !important;
-  color: white !important;
-  background: black !important;
-}
-#insert-media-button {
-  border-radius: 20px !important;
-  color: white !important;
-  background: black !important;
+/* Modal styles */
+.modal-backdrop {
+  backdrop-filter: blur(4px);
 }
 
-.wp-media-buttons {
-  float: right !important;
+/* Responsive design improvements */
+@media (max-width: 768px) {
+  .grid-responsive {
+    grid-template-columns: 1fr;
+  }
+
+  .nav-mobile {
+    display: block;
+  }
+
+  .nav-desktop {
+    display: none;
+  }
+
+  .dashboard-filter-btn {
+    font-size: 0.75rem;
+    padding: 0.375rem 0.75rem;
+  }
 }
 
-#mceu_11 {
-  background: black;
-  border-radius: 20px 20px 0px 0px !important;
-  border-bottom: none !important;
-}
-.wp-editor-container {
-  border: none !important;
-}
-
-.robodesk-login-form {
-  max-width: 400px;
-  margin: 20px auto;
-  padding: 20px;
-  border: 1px solid #ddd;
-  border-radius: 5px;
-}
-
-.robodesk-login-form label {
-  display: block;
-  margin-bottom: 5px;
-}
-
-.robodesk-login-form input[type='text'],
-.robodesk-login-form input[type='password'] {
-  width: 100%;
-  padding: 8px;
-  margin-bottom: 10px;
-  box-sizing: border-box;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-}
-
-.robodesk-login-form .robodesk-error {
-  color: red;
-  margin-bottom: 10px;
-}
-
-/* Blur effect for the form */
-.blurred {
-  filter: blur(2px);
-  pointer-events: none; /* Prevent interaction with the form */
-}
-
-/* Spinner styling */
+/* Loading animation */
 .spinner {
-  position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 40px;
-  height: 40px;
-  border: 4px solid #f3f3f3; /* Light grey */
-  border-top: 4px solid #3498db; /* Blue */
+  display: inline-block;
+  width: 1rem;
+  height: 1rem;
+  border: 2px solid #f3f3f3;
+  border-top: 2px solid #3b82f6;
   border-radius: 50%;
   animation: spin 1s linear infinite;
-  z-index: 1000;
-  display: none; /* Initially hidden */
 }
 
 @keyframes spin {
   0% {
-    transform: translate(-50%, -50%) rotate(0deg);
+    transform: rotate(0deg);
   }
   100% {
-    transform: translate(-50%, -50%) rotate(360deg);
+    transform: rotate(360deg);
   }
 }
 
-/*Pagination For my tickets table*/
-.pagination {
-  text-align: center;
-  margin-top: 20px;
-}
-.pagination a,
-.pagination span {
-  padding: 5px 10px;
-  margin: 0 2px;
-  border: 1px solid #ddd;
-  text-decoration: none;
-}
-.pagination .current {
-  background: #0073aa;
-  color: #fff;
-  border-color: #0073aa;
-}
-
-/* Tiny mce style */
-
-.tox-tbtn[aria-label='Fullscreen'] {
-  margin-left: auto;
-}
-
-.comments-area {
-  margin: 20px 0;
-}
-
-.comment-list {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
-
-.comment-list .children {
-  list-style: none;
-  padding-left: 20px; /* Indent replies */
-  margin: 0;
-}
-
-.comment-body {
-  margin-bottom: 20px;
-  padding: 15px;
-  border: 1px solid #eee;
-  background: #fff;
-  display: block; /* Ensure each comment is a block */
-}
-
-.comment-meta {
-  margin-bottom: 10px;
-}
-
-.comment-author {
-  display: flex;
-  align-items: center;
-  margin-bottom: 5px;
-}
-
-.comment-author img {
-  margin-right: 10px;
-  border-radius: 50%;
-}
-
-.comment-metadata {
-  font-size: 0.9em;
-  color: #666;
-}
-
-.comment-content {
-  margin-bottom: 10px;
-}
-
-.reply {
-  text-align: right;
-}
-
-.comment-respond {
-  margin-top: 20px;
-  padding: 15px;
-  background: #f9f9f9;
-  border: 1px solid #eee;
-}
-
-.form-submit {
-  margin-top: 10px;
-}
-
-/* Clear floats if any */
-.comment-body:after {
-  content: '';
-  display: table;
-  clear: both;
-}
-
-#add-credential-button {
-  background-color: #000;
-  border: none;
-  color: #fff;
-  padding: 10px 24px;
-  font-size: 14px;
-  cursor: pointer;
-}
-#credential-form {
-  border: 1px solid #f2f1f1;
-  margin: 40px 20px;
-  padding: 40px;
-  background: #f9fafb;
-}
-#credential-form h3 {
-  font-weight: 600;
-  margin-bottom: 20px;
-}
-.robodesk-my-credentials {
-  margin: 30px 0;
-}
-.desktop-menu {
-  display: block;
-}
-.mobile-menu {
-  display: none;
-}
-.tickets_table_wrapper {
-  max-width: 100%;
-  overflow: auto;
-}
-.tickets_table_wrapper thead tr th:first-child,
-.robodesk-table-content td:first-child {
-  position: sticky;
-  left: -5px;
-  z-index: 99999;
-  background: #fff;
-}
-.tickets_table_wrapper thead tr th:first-child {
+/* Ticket creation form */
+.form-section {
   background-color: #f9fafb;
+  padding: 1.5rem;
+  border-radius: 0.5rem;
+  margin-bottom: 1.5rem;
 }
-.robodesk-table-content td:first-child {
-  min-width: 150px;
+
+.form-section h4 {
+  font-weight: 600;
+  color: #1f2937;
+  margin-bottom: 1rem;
 }
-.robodesk-table-content td:nth-child(3) {
-  min-width: 120px;
+
+/* Priority indicators */
+.priority-indicator {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  display: inline-block;
+  margin-right: 0.5rem;
 }
-.robodesk-table-content td:nth-child(4),
-.robodesk-table-content td:nth-child(5) {
-  min-width: 110px;
+
+.priority-high-indicator {
+  background-color: #dc2626;
 }
-@media screen and (max-width: 768px) {
-  .desktop-menu {
-    display: none;
-  }
-  .mobile-menu {
-    display: block;
-    width: 100%;
-    padding: 10px;
-  }
-  .robodesk-frontend-dashboard {
-    flex-direction: column;
-  }
-  .robodesk-dashboard-content {
-    border: 1px solid #f2f1f1;
-  }
-  #mobile-menu {
-    border: 1px solid #f2f1f1;
-    border-radius: 50px;
-    padding: 15px;
-    margin-bottom: 20px;
-    background: #f9fafb;
-    font-weight: 600;
-    }
-  }
-  .robodesk-container {
-    padding: 0;
-  }
-  .robodesk_tickets_select_form {
-    flex-wrap: wrap;
-    gap: 15px;
-  }
+
+.priority-medium-indicator {
+  background-color: #d97706;
+}
+
+.priority-low-indicator {
+  background-color: #16a34a;
+}
+
+/* Status indicators */
+.status-indicator {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  display: inline-block;
+  margin-right: 0.5rem;
+}
+
+.status-open-indicator {
+  background-color: #dc2626;
+}
+
+.status-progress-indicator {
+  background-color: #d97706;
+}
+
+.status-resolved-indicator {
+  background-color: #16a34a;
 }

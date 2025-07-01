@@ -44,21 +44,6 @@ function robodesk_imap_test_connection()
     }
 }
 
-// Enqueue script and localize
-function new_robodesk_enqueue_scripts()
-{
-    //if page page=robodesk-dashboard
-    if (!isset($_GET['page']) || $_GET['page'] !== 'robodesk-dashboard') {
-        return;
-    }
-    wp_enqueue_script('robodesk-script', plugins_url('public/assets/js/robodesk-dashboard.js', __FILE__), array('jquery'), '1.0', true);
-    wp_localize_script('robodesk-script', 'robodesk_ajax', array(
-        'ajaxurl' => admin_url('admin-ajax.php'),
-        'nonce' => wp_create_nonce('robodesk_imap_settings_action')
-    ));
-}
-add_action('admin_enqueue_scripts', 'robodesk_enqueue_scripts');
-
 
 //function to save the credentials
 
