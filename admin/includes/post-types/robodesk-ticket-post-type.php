@@ -349,7 +349,7 @@ function robodesk_handle_tickets_webhook(WP_REST_Request $request) {
             'Invalid JSON payload',
             array('status' => 400)
         );
-    }
+    } 
 
     // Handle ticket creation event
     if (isset($data['event']) && 'ticket.created' === $data['event']) {
@@ -370,6 +370,7 @@ function robodesk_handle_tickets_webhook(WP_REST_Request $request) {
         ));
         
         if (!is_wp_error($ticket)) {
+        
             rbd_log(sprintf(
                 "Ticket #%s created with title: %s\n",
                 $ticket,
@@ -408,24 +409,76 @@ function robodesk_handle_tickets_webhook(WP_REST_Request $request) {
                 wp_set_post_terms($ticket, array($term_id), 'robodesk_ticket_origin');
             }
             
-            // $comment_id = wp_insert_comment(array(
-            //     'comment_post_ID' => $ticket,
-            //     'comment_author'  => $author,
-            //     'comment_content' => $title,
-            //     'comment_approved' => 1,
-            //     'comment_type' => 'ticket_replies'
-            // ));
+            $comment_id = wp_insert_comment(array(
+                'comment_post_ID' => $ticket,
+                'comment_author'  => $author,
+                'comment_content' => $title,
+                'comment_approved' => 1,
+                'comment_type' => 'ticket_replies'
+            ));
             
-            // $reply_id = !is_wp_error($comment_id) ? $comment_id : false;
+            $reply_id = !is_wp_error($comment_id) ? $comment_id : false;
+            
+            $ticket_number = 'TCKT-'.str_pad($ticket, 3, '0', STR_PAD_LEFT);
 
             return rest_ensure_response(array(
                 'status'  => 'success',
                 'message' => 'Ticket created successfully',
-                 'data'    => array('ticket_id' => $ticket ),
-                // 'data'    => array('ticket_id' => $ticket , 'comment_id' =>$reply_id )
+                'data'    => 
+                    array(
+                            'ticket_id' => $ticket , 
+                            'comment_id' =>$reply_id , 
+                            'ticket_number' => $ticket_number , 
+                            'ticket_title' => $title,
+                            'ticket_status' => 'open',
+                            'ticket_priority' => 'Medium',
+                            'ticket_origin' => 'Chat',
+                            'ticket_author' => get_user_by('id', $author)->display_name,
+                            'ticket_author_image' => get_avatar_url($author),
+                            'ticket_time_ago' => 'Just now',
+                            'ticket_messages' => [],
+                    )        
             ));
         }
     }
+    
+    //get all tickets
+    if(isset($data['event']) && 'tickets.get' === $data['event']){
+        $user_id   = sanitize_text_field($data['data']['uid'] ?? '');
+        
+        
+        
+        $tickets   = get_posts([
+            'post_type' => 'robodesk_ticket',
+            'post_status' => 'publish',
+            'posts_per_page' => -1,
+            'author' => $user_id,
+        ]);
+        
+        $formatted_tickets = [];
+
+        foreach ($tickets as $ticket) {
+            $ticket_number = 'TCKT-'.str_pad($ticket->ID, 3, '0', STR_PAD_LEFT);
+            $formatted_tickets[] = [
+                'id' => $ticket->ID,
+                'ticket_number' => $ticket_number,
+                'ticket_title' => $ticket->post_title,
+                'ticket_status' => get_post_meta($ticket->ID, '_robodesk_ticket_status', true),
+                'ticket_priority' => '' ,
+                'ticket_origin' => '' ,
+                'ticket_author' => get_user_by('id', $user_id)->display_name,
+                'ticket_author_image' => get_avatar_url($user_id),
+                'ticket_time_ago' => 'Just now',
+                'ticket_messages' => [],
+            ];
+        }
+
+        return rest_ensure_response(array(
+            'status'  => 'success',
+            'message' => 'Tickets fetched successfully',
+            'data'    => $formatted_tickets
+        ));
+    }   
 
     // Handle ticket reply event
     if (isset($data['event']) && 'replies.receive' === $data['event']) {
