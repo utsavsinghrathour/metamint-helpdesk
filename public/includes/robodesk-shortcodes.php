@@ -79,15 +79,6 @@ function order_posts_by_term_meta($clauses, $query)
     }
 
     global $wpdb;
-    
-    // $clauses['join'] .= " LEFT JOIN {$wpdb->term_relationships} ON {$wpdb->posts}.ID = {$wpdb->term_relationships}.object_id";
-    // $clauses['join'] .= " LEFT JOIN {$wpdb->term_taxonomy} ON {$wpdb->term_relationships}.term_taxonomy_id = {$wpdb->term_taxonomy}.term_taxonomy_id AND {$wpdb->term_taxonomy}.taxonomy = 'robodesk_ticket_priority'";
-    // $clauses['join'] .= " LEFT JOIN {$wpdb->termmeta} ON {$wpdb->term_taxonomy}.term_id = {$wpdb->termmeta}.term_id AND {$wpdb->termmeta}.meta_key = 'taxonomy_order'";
-
-    // // Order by the taxonomy_order meta value (cast to SIGNED for numerical sorting)
-    // $clauses['orderby'] = "COALESCE(CAST({$wpdb->termmeta}.meta_value AS SIGNED), 999) ASC";
-
-    // return $clauses;
 
     // Join necessary tables to access term meta
     $clauses['join'] .= "
@@ -221,7 +212,7 @@ function robodesk_my_tickets_shortcode()
 
     ob_start();
     ?>
-    <form method="get">
+    <form method="get" class="robodesk_tickets_select_form">
         <input type="hidden" name="robodesk_page" value="my-tickets">
         <select name="robodesk_ticket_priority">
             <option value="">All Priorities</option>
@@ -248,82 +239,82 @@ function robodesk_my_tickets_shortcode()
         </select>
         <input type="submit" value="Filter">
     </form>
-
-    <table>
-        <thead>
-            <tr>
-                <th>Title</th>
-                <th>Replies</th>
-                <th>Last Reply</th>
-                <th>Status</th>
-                <th>Priority</th>
-            </tr>
-        </thead>
-        <tbody>
-            <?php if ($query->have_posts()) : while ($query->have_posts()) : $query->the_post();
-                    global $post;
-                    $status = get_post_meta(get_the_ID(), '_robodesk_ticket_status', true);
-                    $terms = get_the_terms(get_the_ID(), 'robodesk_ticket_priority');
-                    $comment_count = get_comments_number(get_the_ID());
-                    $priority_name = '';
-                    $priority_color = false;
-                    if ($terms && !is_wp_error($terms)) {
-                        $priority_name = $terms[0]->name;
-                        $priority_color = get_term_meta($terms[0]->term_id, 'priority_color', true);
-                    }
-                    $comments = get_comments(array(
-                        'post_id' => get_the_ID(),
-                        'number' => 1,
-                        'status' => 'approve',
-                        'orderby' => 'comment_date_gmt',
-                        'order' => 'DESC'
-                    ));
-
-                    // var_dump($comments);
-                    $last_activity = !empty($comments) ?  strtotime($comments[0]->comment_date_gmt) : get_the_modified_time('U');
-                    $comment_author = !empty($comments) ? get_the_author_meta('display_name', $comments[0]->user_id) :
-                        get_the_author_meta('display_name', $post->post_author);
-
-                    $human_readable_time = human_time_diff($last_activity, current_time('U'));
-
-            ?>
-                    <tr>
-                        <td>
-                            <?php
-                            $ticket_url = add_query_arg(array('robodesk_page' => 'my-tickets', 'tid' => get_the_ID()), site_url('/dashboard/'));
-                            ?>
-                            <a href="<?php echo esc_url($ticket_url); ?>"><?php the_title(); ?></a>
-
-                            <p class="ticket-date">
-                                <span class="ticket-num"><?php echo '#'.get_the_id(); ?></span> 
-                                |<span class="dashicons-calendar"> <?php  echo get_the_date('m/d/Y'); ?></span>
-                            </p>
-                        </td>
-                        <td><?php echo  $comment_count; ?></td>
-                        <td><?php echo $human_readable_time ? $human_readable_time . ' ago' : '-' ?><p class="ticket-comment-by">by <?php echo $comment_author; ?></p>
-                        </td>
-                        <!-- Status -->
-                        <td>
-                            <span class="robodesk-status-pill <?php echo strtolower($status); ?>">
-                                <?php echo $statuses[$status];?>
-                            </span>
-                        </td>
-                        <!-- Priority -->
-                        <td>
-                            <span data-color="<?php echo esc_attr($priority_color); ?>" class="robodesk-priority-pill <?php echo strtolower($priority_name); ?>" style="background:<?php echo esc_attr($priority_color) ?>">
-                                <?php echo esc_html($priority_name); ?>
-                            </span>
-                        </td>
-                    </tr>
-                <?php endwhile;
-                wp_reset_postdata();
-            else : ?>
+    <div class="tickets_table_wrapper">
+        <table>
+            <thead>
                 <tr>
-                    <td colspan="5">No tickets found.</td>
+                    <th>Title</th>
+                    <th>Replies</th>
+                    <th>Last Reply</th>
+                    <th>Status</th>
+                    <th>Priority</th>
                 </tr>
-            <?php endif; ?>
-        </tbody>
-    </table>
+            </thead>
+            <tbody>
+                <?php if ($query->have_posts()) : while ($query->have_posts()) : $query->the_post();
+                        global $post;
+                        $status = get_post_meta(get_the_ID(), '_robodesk_ticket_status', true);
+                        $terms = get_the_terms(get_the_ID(), 'robodesk_ticket_priority');
+                        $comment_count = get_comments_number(get_the_ID());
+                        $priority_name = '';
+                        $priority_color = false;
+                        if ($terms && !is_wp_error($terms)) {
+                            $priority_name = $terms[0]->name;
+                            $priority_color = get_term_meta($terms[0]->term_id, 'priority_color', true);
+                        }
+                        $comments = get_comments(array(
+                            'post_id' => get_the_ID(),
+                            'number' => 1,
+                            'status' => 'approve',
+                            'orderby' => 'comment_date_gmt',
+                            'order' => 'DESC'
+                        ));
+
+                        // var_dump($comments);
+                        $last_activity = !empty($comments) ?  strtotime($comments[0]->comment_date_gmt) : get_the_modified_time('U');
+                        $comment_author = !empty($comments) ? get_the_author_meta('display_name', $comments[0]->user_id) :
+                            get_the_author_meta('display_name', $post->post_author);
+
+                        $human_readable_time = human_time_diff($last_activity, current_time('U'));
+
+                ?>
+                        <tr class="robodesk-table-content">
+                            <td>
+                                <?php
+                                $ticket_url = add_query_arg(array('robodesk_page' => 'my-tickets', 'tid' => get_the_ID()), site_url('/dashboard/'));
+                                ?>
+                                <a class="robodesk-table-content-title" href="<?php echo esc_url($ticket_url); ?>"><?php the_title(); ?></a>
+
+                                <p class="ticket-date">
+                                    <span class="ticket-num"><?php echo '#' . get_the_id(); ?></span> <span class="dashicons-calendar"> <?php echo get_the_date('m/d/Y'); ?></span>
+                                </p>
+                            </td>
+                            <td><?php echo  $comment_count; ?></td>
+                            <td><?php echo $human_readable_time ? $human_readable_time . ' ago' : '-' ?><p class="ticket-comment-by">by <?php echo $comment_author; ?></p>
+                            </td>
+                            <!-- Status -->
+                            <td>
+                                <span class="robodesk-status-pill <?php echo strtolower($status); ?>">
+                                    <?php echo $statuses[$status]; ?>
+                                </span>
+                            </td>
+                            <!-- Priority -->
+                            <td>
+                                <span data-color="<?php echo esc_attr($priority_color); ?>" class="robodesk-priority-pill <?php echo strtolower($priority_name); ?>" style="background:<?php echo esc_attr($priority_color) ?>">
+                                    <?php echo esc_html($priority_name); ?>
+                                </span>
+                            </td>
+                        </tr>
+                    <?php endwhile;
+                    wp_reset_postdata();
+                else : ?>
+                    <tr>
+                        <td colspan="5">No tickets found.</td>
+                    </tr>
+                <?php endif; ?>
+            </tbody>
+        </table>
+    </div>
     <?php
     $big = 999999999; // Need an unlikely integer
     $pagination = paginate_links(array(
@@ -395,7 +386,8 @@ function robodesk_frontend_dashboard_shortcode()
         ob_start();
     ?>
         <div class="robodesk-frontend-dashboard robodesk-container">
-            <nav>
+            <!-- Always render both, control visibility with CSS -->
+            <nav class="desktop-menu">
                 <ul>
                     <?php foreach ($menu_items as $slug => $menu_item):
                         $active_class = ($current_page == $slug) ? 'active' : '';
@@ -406,10 +398,20 @@ function robodesk_frontend_dashboard_shortcode()
                     <li><a href="<?php echo wp_logout_url(get_permalink()); ?>">Logout</a></li>
                 </ul>
             </nav>
+            <select id="mobile-menu" class="mobile-menu" onchange="window.location.href=this.value;">
+                <?php foreach ($menu_items as $slug => $menu_item):
+                    $active_class = ($current_page == $slug) ? 'selected' : '';
+                    $url = add_query_arg('robodesk_page', $slug, get_permalink());
+                ?>
+                    <option value="<?php echo esc_url($url); ?>" <?php echo $active_class; ?>>
+                        <?php echo esc_html($menu_item['title']); ?>
+                    </option>
+                <?php endforeach; ?>
+                <option value="<?php echo wp_logout_url(get_permalink()); ?>">Logout</option>
+            </select>
             <div class="robodesk-dashboard-content">
                 <?php
                 if (!empty($ticket_id) && get_post_type($ticket_id) == 'robodesk_ticket') {
-
                     echo do_shortcode('[robodesk_single_ticket id="' . $ticket_id . '"]');
                 } else if (array_key_exists($current_page, $menu_items)) {
                     if ($current_page == 'dashboard') {
@@ -804,8 +806,8 @@ function robodesk_dashboard_content_page($notification_count, $open_tickets, $to
     ?>
     <div class="robodesk-infographs">
 
-        <div class="robodesk-infograph">
-            <h3>Tickets</h3>
+        <div class="robodesk-infograph flex-1">
+            <h3 class="text-start">Tickets</h3>
             <div class="robodesk-chart">
                 <div class="robodesk-open-bar" style="width: <?php echo ($total_tickets > 0) ? ($open_tickets / $total_tickets * 100) : 0; ?>%;">
                     <span><?php echo $open_tickets; ?></span>
@@ -820,8 +822,8 @@ function robodesk_dashboard_content_page($notification_count, $open_tickets, $to
             </div>
         </div>
 
-        <div class="robodesk-infograph">
-            <h3>Notifications</h3>
+        <div class="robodesk-infograph flex-1">
+            <h3 class="text-start">Notifications</h3>
             <div class="robodesk-notification-count-display">
                 <?php echo $notification_count; ?>
             </div>
@@ -856,7 +858,9 @@ function robodesk_notifications_content_page()
 {
     // ... notifications page content
     ob_start();
-
+?>
+    <!-- <div>Notifications Page Content</div> -->
+<?php
     robodesk_notifications_content();
     return ob_get_clean();
 }
@@ -1148,4 +1152,3 @@ function robodesk_single_ticket_shortcode($atts)
         return ob_get_clean();
     }
     add_shortcode('robodesk_login_form', 'robodesk_login_form_shortcode');
-

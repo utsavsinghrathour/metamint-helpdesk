@@ -1,10 +1,5 @@
 <?php
 
-// Prevent direct access to this file
-if (!defined('ABSPATH')) {
-    exit; // Exit if accessed directly
-}
-
 // Woocommerce modifications
 if (in_array('woocommerce/woocommerce.php', apply_filters('active_plugins', get_option('active_plugins')))) {
     require_once('robodesk-woocommerce.php');
@@ -247,65 +242,53 @@ function robodesk_credentials_page()
                     <input type="text" id="credential_url" name="credential_url"><br><br>
 
                     <label for="credential_notes">Notes:</label><br>
-                    <textarea id="credential_notes" name="credential_notes" rows="4" style="border: 1px solid #DDD; width:100%"></textarea><br><br>
+                    <textarea id="credential_notes" name="credential_notes"></textarea><br><br>
 
                     <input type="hidden" name="action" value="robodesk_add_credential">
                     <?php wp_nonce_field('robodesk_add_credential_nonce'); ?>
                     <input type="submit" value="Add">
                 </form>
             </div>
+            <div class="robodesk-my-credentials">
+                <h2>My Credentials</h3>
+                    <?php if ($credentials): ?>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Username</th>
+                                    <th>Password</th>
+                                    <th>URL</th>
+                                    <th>Notes</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php foreach ($credentials as $credential): ?>
+                                    <tr>
+                                        <td><?php echo esc_html($credential->name); ?></td>
+                                        <td><?php echo esc_html($credential->username); ?></td>
+                                        <td><span class="password-hidden">********</span>
+                                            <?php $enc =  robodesk_encrypt($credential->password, 'robodesk'); ?>
+                                            <button class="show-password" data-password="
+                                    <?php echo robodesk_decrypt($credential->password, 'robodesk');
+                                    ?>">Show</button>
 
-            <h3>My Credentials</h3>
-            <?php if ($credentials):
-                // var_dump($credentials);
-                //  $asp = robodesk_decrypt('tram', 'robodesk');
+                                        </td>
 
-                //  var_dump()
-            ?>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Name</th>
-                            <th>Username</th>
-                            <th>Password</th>
-                            <th>URL</th>
-                            <th>Notes</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php foreach ($credentials as $credential): ?>
-                            <tr>
-                                <!-- Name -->
-                                <td><?php echo esc_html($credential->name); ?></td>
-                                <!-- User name -->
-                                <td><?php echo esc_html($credential->username); ?></td>
-                                <!-- Password -->
-                                <td><span class="password-hidden">********</span>
-                                    <?php $enc =  robodesk_encrypt($credential->password, 'robodesk'); ?>
-                                    <button class="show-password" data-password="
-                                    <?php echo robodesk_decrypt($enc, 'robodesk');
-                                    ?>" style="color: black; background-color: #DDD;">Show</button>
-
-                                </td>
-
-                                <!-- URL -->
-                                <td>
-                                    <a href="<?php echo esc_url($credential->url); ?>" target="_blank" rel="noopener noreferrer"><?php echo esc_html($credential->url); ?></a>
-                                </td>
-                                <!-- Notes -->
-                                <td><?php echo esc_html($credential->notes); ?></td>
-                                <!-- Actions -->
-                                <td>
-                                    <button class="delete-credential" data-credential-id="<?php echo esc_attr($credential->id); ?>" style="color: black; background-color: #DDD;">Delete</button>
-                                </td>
-                            </tr>
-                        <?php endforeach; ?>
-                    </tbody>
-                </table>
-            <?php else: ?>
-                <p>No credentials saved yet.</p>
-            <?php endif; ?>
+                                        <td><a href="<?php echo esc_url($credential->url); ?>" target="_blank" rel="noopener noreferrer"><?php echo esc_html($credential->url); ?></a></td>
+                                        <td><?php echo esc_html($credential->notes); ?></td>
+                                        <td>
+                                            <button class="delete-credential" data-credential-id="<?php echo esc_attr($credential->id); ?>">Delete</button>
+                                        </td>
+                                    </tr>
+                                <?php endforeach; ?>
+                            </tbody>
+                        </table>
+                    <?php else: ?>
+                        <p>No credentials saved yet.</p>
+                    <?php endif; ?>
+            </div>
         </div>
     <?php
         return ob_get_clean();
@@ -416,118 +399,5 @@ function add_custom_table_to_my_account()
         </table>
 
 <?php
-    }
-}
-
-// Ajax handler for testing credential for IMAP connection
-// This function will be called via AJAX to test the IMAP connection
-add_action('wp_ajax_robodesk_imap_test_connection', 'robodesk_imap_test_connection');
-function robodesk_imap_test_connection()
-{
-    // Verify nonce
-    if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'robodesk_imap_settings_action')) {
-        wp_send_json_error(['message' => 'Security check failed']);
-        exit;
-    }
-
-    // Validate inputs
-    if (empty($_POST['robodesk_imap_hostname']) || empty($_POST['robodesk_imap_port']) || empty($_POST['robodesk_imap_username']) || empty($_POST['robodesk_imap_password'])) {
-        wp_send_json_error(['message' => 'Missing required fields']);
-        exit;
-    }
-
-    // Check IMAP extension
-    if (!function_exists('imap_open')) {
-        wp_send_json_error(['message' => 'IMAP extension is not enabled on the server']);
-        exit;
-    }
-
-    $auth_type = ($_POST['robodesk_imap_auth'] == '1') ? 'ssl' : 'tls';
-    $hostname = '{' . sanitize_text_field($_POST['robodesk_imap_hostname']) . ':' . intval($_POST['robodesk_imap_port']) . '/imap/' . $auth_type . '/novalidate-cert}INBOX';
-    $hostname_view = ($_POST['robodesk_imap_hostname']);
-    $username = sanitize_text_field($_POST['robodesk_imap_username']);
-    $password = $_POST['robodesk_imap_password'];
-
-    // Clear previous errors
-    imap_errors();
-
-    $mailbox = @imap_open($hostname, $username, $password);
-
-    if ($mailbox) {
-        $message = ' IMAP connection successful!';
-        imap_close($mailbox);
-        wp_send_json_success(['message' => $message]);
-    } else {
-        $error = imap_last_error();
-        $message = ' IMAP connection failed: ' . esc_html($error);
-        wp_send_json_error(['message' => $message]);
-    }
-}
-
-// Enqueue script and localize
-function new_robodesk_enqueue_scripts()
-{
-    wp_enqueue_script('robodesk-script', plugins_url('public/assets/js/robodesk-dashboard.js', __FILE__), array('jquery'), '1.0', true);
-    wp_localize_script('robodesk-script', 'robodesk_ajax', array(
-        'ajaxurl' => admin_url('admin-ajax.php'),
-        'nonce'   => wp_create_nonce('robodesk_imap_settings_action')
-    ));
-}
-add_action('admin_enqueue_scripts', 'robodesk_enqueue_scripts');
-
-
-//function to save the credentials
-
-add_action('wp_ajax_robodesk_imap_save_settings', 'robodesk_imap_save_settings');
-function robodesk_imap_save_settings()
-{
-    // Verify nonce
-    if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'robodesk_imap_settings_action')) {
-        wp_send_json_error(['message' => 'Security check failed']);
-        exit;
-    }
-
-    // Validate inputs
-    if (empty($_POST['robodesk_imap_hostname']) || empty($_POST['robodesk_imap_port']) || empty($_POST['robodesk_imap_username']) || empty($_POST['robodesk_imap_password'])) {
-        wp_send_json_error(['message' => 'Missing required fields']);
-        exit;
-    }
-
-    // Check IMAP extension
-    if (!function_exists('imap_open')) {
-        wp_send_json_error(['message' => 'IMAP extension is not enabled on the server']);
-        exit;
-    }
-
-    $auth_type = ($_POST['robodesk_imap_auth'] == '1') ? 'ssl' : 'tls';
-    $hostname = '{' . sanitize_text_field($_POST['robodesk_imap_hostname']) . ':' . intval($_POST['robodesk_imap_port']) . '/imap/' . $auth_type . '/novalidate-cert}INBOX';
-
-    $username = sanitize_text_field($_POST['robodesk_imap_username']);
-    $password = $_POST['robodesk_imap_password'];
-
-    // Clear previous errors
-    imap_errors();
-
-    $mailbox = @imap_open($hostname, $username, $password);
-
-    if ($mailbox) {
-        $message = 'IMAP connection settings saved successfully!';
-        // Save settings to the database
-        $settings = array(
-            'hostname' => sanitize_text_field($_POST['robodesk_imap_hostname']),
-            'port'     => intval($_POST['robodesk_imap_port']),
-            'username' => sanitize_email($_POST['robodesk_imap_username']),
-            'password' => sanitize_text_field($_POST['robodesk_imap_password']),
-            'auth'     => sanitize_text_field($_POST['robodesk_imap_auth']),
-
-        );
-
-        update_option('robodesk_imap_settings', $settings); // Save the settings to the database
-        imap_close($mailbox);
-        wp_send_json_success(['message' => $message]);
-    } else {
-        $error = imap_last_error();
-        $message = 'IMAP connection settings not saved successfully! ' . esc_html($error);
-        wp_send_json_error(['message' => $message]);
     }
 }
