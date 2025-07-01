@@ -509,6 +509,7 @@ remove_action('after_password_reset', 'wp_password_change_notification');
 
 
 // Function to display the IMAP settings page
+// Function to display the IMAP settings page
 function robodesk_imap_settings_callback()
 {
     if (!current_user_can('manage_options')) {
@@ -524,7 +525,6 @@ function robodesk_imap_settings_callback()
             'port'     => intval($_POST['robodesk_imap_port']),
             'username' => sanitize_email($_POST['robodesk_imap_username']),
             'password' => sanitize_text_field($_POST['robodesk_imap_password']),
-            'auth'     => (bool) $_POST['robodesk_imap_auth'], // ✅ Fix added
         );
 
         update_option('robodesk_imap_settings', $settings);
@@ -536,81 +536,70 @@ function robodesk_imap_settings_callback()
     if (isset($_POST['robodesk_imap_test'])) {
         check_admin_referer('robodesk_imap_settings_action', 'robodesk_imap_settings_nonce');
 
-        $auth_type = ($_POST['robodesk_imap_auth'] == '1') ? 'ssl' : 'tls';
-        $hostname = '{' . $_POST['robodesk_imap_hostname'] . ':' . $_POST['robodesk_imap_port'] . '/imap/' . $auth_type . '}INBOX'; // ✅ Fixed dot
+        $hostname = '{' . $_POST['robodesk_imap_hostname'] . ':' . $_POST['robodesk_imap_port'] . '/imap/ssl}INBOX';
         $username = $_POST['robodesk_imap_username'];
         $password = $_POST['robodesk_imap_password'];
 
-        // Clear previous errors
-        imap_errors();
-
         $mailbox = @imap_open($hostname, $username, $password);
-
         if ($mailbox) {
             echo '<div class="updated"><p>IMAP connection successful!</p></div>';
             imap_close($mailbox);
         } else {
-            $error = imap_last_error();
-            echo '<div class="error"><p>IMAP connection failed: ' . esc_html($error) . '</p></div>';
+            echo '<div class="error"><p>IMAP connection failed: ' . imap_last_error() . '</p></div>';
         }
     }
 
-    // Load saved settings
+    // Load saved settings or use provided defaults
     $settings = get_option('robodesk_imap_settings', array(
-        'hostname' => 'email.example.com',
+        'hostname' => 'email.example.com', // Default hostname
         'port'     => 993,
-        'username' => '',
-        'password' => '',
-        'auth'     => true,
+        'username' => 'password',
+        'password' => '', // Avoid hardcoding password
     ));
 
     $hostname = $settings['hostname'];
     $port     = $settings['port'];
     $username = $settings['username'];
     $password = $settings['password'];
-    $auth     = isset($settings['auth']) ? $settings['auth'] : true;
 ?>
+
     <div class="wrap">
         <h1>Robodesk IMAP Settings</h1>
         <form method="post" action="">
             <?php wp_nonce_field('robodesk_imap_settings_action', 'robodesk_imap_settings_nonce'); ?>
             <table class="form-table">
                 <tr>
-                    <th><label for="robodesk_imap_hostname">IMAP Hostname</label></th>
-                    <td><input type="text" name="robodesk_imap_hostname" id="robodesk_imap_hostname" value="<?php echo esc_attr($hostname); ?>" class="regular-text" />
+                    <th scope="row"><label for="robodesk_imap_hostname">IMAP Hostname</label></th>
+                    <td><input type="text" name="robodesk_imap_hostname" id="robodesk_imap_hostname" value="<?php echo esc_attr($hostname); ?>" class="regular-text">
                         <p class="description">Example: <code>imappro.zoho.com</code></p>
+                        <p class="description">For DEV: <code>{imappro.zoho.com:{port}/imap/ssl}INBOX</code></p>
                     </td>
                 </tr>
                 <tr>
-                    <th><label for="robodesk_imap_port">IMAP Port</label></th>
-                    <td><input type="number" name="robodesk_imap_port" id="robodesk_imap_port" value="<?php echo esc_attr($port); ?>" class="small-text" />
+                    <th scope="row"><label for="robodesk_imap_port">IMAP Port</label></th>
+                    <td><input type="number" name="robodesk_imap_port" id="robodesk_imap_port" value="<?php echo esc_attr($port); ?>" class="small-text">
                         <p class="description">Default: <code>993</code> for SSL</p>
                     </td>
                 </tr>
                 <tr>
-                    <th><label for="robodesk_imap_username">IMAP Username</label></th>
-                    <td><input type="email" name="robodesk_imap_username" id="robodesk_imap_username" value="<?php echo esc_attr($username); ?>" class="regular-text" /></td>
+                    <th scope="row"><label for="robodesk_imap_username">IMAP Username</label></th>
+                    <td><input type="email" name="robodesk_imap_username" id="robodesk_imap_username" value="<?php echo esc_attr($username); ?>" class="regular-text">
+                        <p class="description">Your email address , from where email will be fetched</p>
+                    </td>
                 </tr>
                 <tr>
-                    <th><label for="robodesk_imap_password">IMAP Password</label></th>
-                    <td><input type="password" name="robodesk_imap_password" id="robodesk_imap_password" value="<?php echo esc_attr($password); ?>" class="regular-text" /></td>
-                </tr>
-                <tr>
-                    <th><label for="robodesk_imap_auth">IMAP Authentication</label></th>
-                    <td>
-                        <select name="robodesk_imap_auth" id="robodesk_imap_auth">
-                            <option value="1" <?php selected($auth, true); ?>>SSL</option>
-                            <option value="0" <?php selected($auth, false); ?>>TLS</option>
-                        </select>
-                        <p class="description">Choose encryption method.</p>
+                    <th scope="row"><label for="robodesk_imap_password">IMAP Password</label></th>
+                    <td><input type="password" name="robodesk_imap_password" id="robodesk_imap_password" value="<?php echo esc_attr($password); ?>" class="regular-text">
+                        <p class="description"> Password</p>
                     </td>
                 </tr>
             </table>
             <p class="submit">
-                <input type="submit" name="robodesk_imap_save" class="button button-primary" value="Save Settings" />
-                <input type="submit" name="robodesk_imap_test" class="button button-secondary" value="Test Connection" />
+                <input type="submit" name="robodesk_imap_save" class="button button-primary" value="Save Settings">
+                <input type="submit" name="robodesk_imap_test" class="button button-secondary" value="Test Connection">
             </p>
         </form>
     </div>
+
 <?php
 }

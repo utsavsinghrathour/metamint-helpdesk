@@ -1020,43 +1020,87 @@ document.addEventListener("click", function (event) {
 });
 // IMAP test connection function
 // This function tests the IMAP connection using AJAX
-document.addEventListener("DOMContentLoaded", function () {
-  const testBtn = document.getElementById("robodesk-imap-test");
-  const messageBox = document.getElementById("imap-test-message");
 
-  testBtn.addEventListener("click", function () {
-    const nonce = document.getElementById("robodesk_imap_settings_nonce").value;
+$("#robodesk-imap-form").on("click", function (e) {
+  e.preventDefault();
 
-    const data = {
-      action: "robodesk_test_imap_connection",
-      security: nonce,
-      hostname: document.getElementById("robodesk_imap_hostname").value,
-      port: document.getElementById("robodesk_imap_port").value,
-      username: document.getElementById("robodesk_imap_username").value,
-      password: document.getElementById("robodesk_imap_password").value,
-      auth: document.getElementById("robodesk_imap_auth").value,
-    };
+  var $form = $(this);
+  var $messageDiv = $("#imap-message");
+  var $saveButton = $("#robodesk-imap-save");
 
-    messageBox.innerHTML =
-      '<p class="text-blue-600">🔄 Testing connection...</p>';
+  $messageDiv.html("").removeClass("text-green-600 text-red-600");
+  $saveButton.prop("disabled", true).text("Saving...");
 
-    fetch(ajaxurl, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/x-www-form-urlencoded",
-      },
-      body: new URLSearchParams(data).toString(),
-    })
-      .then((response) => response.json())
-      .then((result) => {
-        if (result.success) {
-          messageBox.innerHTML = `<p class="text-green-600">${result.data}</p>`;
-        } else {
-          messageBox.innerHTML = `<p class="text-red-600">${result.data}</p>`;
-        }
-      })
-      .catch(() => {
-        messageBox.innerHTML = `<p class="text-red-600">❌ AJAX request failed.</p>`;
-      });
+  $.ajax({
+    url: ajaxurl,
+    type: "POST",
+    data: {
+      action: "robodesk_imap_save_settings",
+      nonce: $form.find("#robodesk_imap_settings_nonce").val(),
+      robodesk_imap_hostname: $form.find("#robodesk_imap_hostname").val(),
+      robodesk_imap_port: $form.find("#robodesk_imap_port").val(),
+      robodesk_imap_username: $form.find("#robodesk_imap_username").val(),
+      robodesk_imap_password: $form.find("#robodesk_imap_password").val(),
+      robodesk_imap_auth: $form.find("#robodesk_imap_auth").val(),
+    },
+    success: function (response) {
+      if (response.success) {
+        $messageDiv.addClass("text-green-600").html(response.data.message);
+      } else {
+        $messageDiv.addClass("text-red-600").html(response.data.message);
+      }
+    },
+    error: function () {
+      $messageDiv
+        .addClass("text-red-600")
+        .html("An error occurred. Please try again.");
+    },
+    complete: function () {
+      $saveButton.prop("disabled", false).text("Save Settings");
+    },
   });
+});
+
+// Handle Test Connection
+jQuery(document).ready(function ($) {
+  $(document).on("click", "#robodesk-imap-test", function () {
+    var $form = $("#robodesk-imap-form");
+    var $testButton = $(this);
+
+    $testButton.prop("disabled", true).text("Testing...");
+
+    $.ajax({
+      url: ajaxurl, // Ensure ajaxurl is defined via wp_localize_script
+      type: "POST",
+      data: {
+        action: "robodesk_imap_test_connection",
+        nonce: $form.find('input[name="robodesk_imap_settings_nonce"]').val(),
+        robodesk_imap_hostname: $form.find("#robodesk_imap_hostname").val(),
+        robodesk_imap_port: $form.find("#robodesk_imap_port").val(),
+        robodesk_imap_username: $form.find("#robodesk_imap_username").val(),
+        robodesk_imap_password: $form.find("#robodesk_imap_password").val(),
+        robodesk_imap_auth: $form.find("#robodesk_imap_auth").val(),
+      },
+      success: function (response) {
+        console.log(response); // Debug response
+        if (response.success) {
+          showToast(response.data.message, "success");
+        } else {
+          showToast(response.data.message, "error");
+        }
+      },
+      error: function (xhr, status, error) {
+        console.log("AJAX Error:", xhr, status, error);
+        showToast("AJAX request failed: " + error, "error");
+      },
+      complete: function () {
+        $testButton.prop("disabled", false).text("Test Connection");
+      },
+    });
+  });
+
+  // Define showToast if not already defined
+  function showToast(message, type) {
+    alert(message); // Replace with your toast implementation
+  }
 });
