@@ -94,7 +94,10 @@ function robodesk_dashboard_callback()
                                 <div class="ml-5 w-0 flex-1">
                                     <dl>
                                         <dt class="text-sm font-medium text-gray-500 truncate">Total Tickets</dt>
-                                        <dd class="text-lg font-medium text-gray-900" id="total-tickets">3</dd>
+                                        <dd class="text-lg font-medium text-gray-900" id="total-tickets"><?php
+                                                                                                            $total_tickets = wp_count_posts('robodesk_ticket')->publish;
+                                                                                                            echo $total_tickets;
+                                                                                                            ?></dd>
                                     </dl>
                                 </div>
                             </div>
@@ -110,7 +113,23 @@ function robodesk_dashboard_callback()
                                 <div class="ml-5 w-0 flex-1">
                                     <dl>
                                         <dt class="text-sm font-medium text-gray-500 truncate">Open Tickets</dt>
-                                        <dd class="text-lg font-medium text-gray-900" id="open-tickets">1</dd>
+                                        <dd class="text-lg font-medium text-gray-900" id="open-tickets"><?php
+                                                                                                        $args = array(
+                                                                                                            'post_type' => 'robodesk_ticket',
+                                                                                                            'post_status' => 'publish', // Adjust if you need other statuses like 'draft'
+                                                                                                            'meta_query' => array(
+                                                                                                                array(
+                                                                                                                    'key' => '_robodesk_ticket_status',
+                                                                                                                    'value' => 'open',
+                                                                                                                    'compare' => '='
+                                                                                                                )
+                                                                                                            ),
+                                                                                                            'posts_per_page' => -1, // Retrieve all matching posts
+                                                                                                        );
+                                                                                                        $query = new WP_Query($args);
+                                                                                                        $open_tickets = $query->found_posts;
+                                                                                                        echo $open_tickets;
+                                                                                                        ?></dd>
                                     </dl>
                                 </div>
                             </div>
@@ -126,7 +145,23 @@ function robodesk_dashboard_callback()
                                 <div class="ml-5 w-0 flex-1">
                                     <dl>
                                         <dt class="text-sm font-medium text-gray-500 truncate">In Progress</dt>
-                                        <dd class="text-lg font-medium text-gray-900" id="in-progress-tickets">1</dd>
+                                        <dd class="text-lg font-medium text-gray-900" id="in-progress-tickets"><?php
+                                                                                                                $args = array(
+                                                                                                                    'post_type' => 'robodesk_ticket',
+                                                                                                                    'post_status' => 'publish', // Adjust if you need other statuses like 'draft'
+                                                                                                                    'meta_query' => array(
+                                                                                                                        array(
+                                                                                                                            'key' => '_robodesk_ticket_status',
+                                                                                                                            'value' => 'in-progress',
+                                                                                                                            'compare' => '='
+                                                                                                                        )
+                                                                                                                    ),
+                                                                                                                    'posts_per_page' => -1, // Retrieve all matching posts
+                                                                                                                );
+                                                                                                                $query = new WP_Query($args);
+                                                                                                                $in_progress_tickets = $query->found_posts;
+                                                                                                                echo $in_progress_tickets;
+                                                                                                                ?></dd>
                                     </dl>
                                 </div>
                             </div>
@@ -142,7 +177,23 @@ function robodesk_dashboard_callback()
                                 <div class="ml-5 w-0 flex-1">
                                     <dl>
                                         <dt class="text-sm font-medium text-gray-500 truncate">Resolved</dt>
-                                        <dd class="text-lg font-medium text-gray-900" id="resolved-tickets">1</dd>
+                                        <dd class="text-lg font-medium text-gray-900" id="resolved-tickets"><?php
+                                                                                                            $args = array(
+                                                                                                                'post_type' => 'robodesk_ticket',
+                                                                                                                'post_status' => 'publish', // Adjust if you need other statuses like 'draft'
+                                                                                                                'meta_query' => array(
+                                                                                                                    array(
+                                                                                                                        'key' => '_robodesk_ticket_status',
+                                                                                                                        'value' => 'closed',
+                                                                                                                        'compare' => '='
+                                                                                                                    )
+                                                                                                                ),
+                                                                                                                'posts_per_page' => -1, // Retrieve all matching posts
+                                                                                                            );
+                                                                                                            $query = new WP_Query($args);
+                                                                                                            $closed_tickets = $query->found_posts;
+                                                                                                            echo $closed_tickets;
+                                                                                                            ?></dd>
                                     </dl>
                                 </div>
                             </div>

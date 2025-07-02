@@ -119,7 +119,7 @@ const sampleTickets = [
 ];
 
 // Global variables
-let tickets = [...sampleTickets];
+// let tickets = [...sampleTickets]; // Use sample data for initial tickets
 let currentPage = "dashboard";
 let currentTicket = null;
 let currentTicketTab = "replies";
@@ -259,10 +259,10 @@ function updateDashboardStats() {
     resolved: tickets.filter((t) => t.status === "resolved").length,
   };
 
-  document.getElementById("total-tickets").textContent = stats.total;
-  document.getElementById("open-tickets").textContent = stats.open;
-  document.getElementById("in-progress-tickets").textContent = stats.inProgress;
-  document.getElementById("resolved-tickets").textContent = stats.resolved;
+  document.getElementById("total-tickets").innerHTML = stats.total;
+  document.getElementById("open-tickets").innerHTML = stats.open;
+  document.getElementById("in-progress-tickets").innerHTML = stats.inProgress;
+  document.getElementById("resolved-tickets").innerHTML = stats.resolved;
 }
 
 function filterDashboardTickets(filterType) {
@@ -1033,6 +1033,7 @@ document.addEventListener("click", function (event) {
     hideCustomerTickets();
   }
 });
+// custom JavaScript for Robodesk dashboard
 
 // IMAP test connection function
 // This function tests the IMAP connection using AJAX
@@ -1247,7 +1248,7 @@ jQuery(document).ready(function ($) {
     });
   });
 
-  // Handle form submission
+  // Handle form submission for basic settings
   $(document).on("click", "#save-basic-settings", function () {
     const $form = $("#robodesk-basic-settings-form");
     const $button = $(this);
@@ -1311,7 +1312,7 @@ jQuery(document).ready(function ($) {
   });
 });
 
-// for configuring ticket assignments
+// for configuring ticket assignments (fetch interval and default agent)
 jQuery(document).ready(function ($) {
   // Handle form submission for ticket assignment settings
   $(document).on("click", "#save-ticket-assignment-settings", function () {
