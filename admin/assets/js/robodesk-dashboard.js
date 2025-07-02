@@ -1310,3 +1310,62 @@ jQuery(document).ready(function ($) {
     });
   });
 });
+
+// for configuring ticket assignments
+jQuery(document).ready(function ($) {
+  // Handle form submission for ticket assignment settings
+  $(document).on("click", "#save-ticket-assignment-settings", function () {
+    const $form = $("#robodesk-fetch-tickets-form");
+    const $button = $(this);
+    const formData = new FormData();
+
+    // Append ticket assignment settings
+    formData.append("action", "robodesk_save_ticket_assignment_settings");
+    formData.append(
+      "nonce",
+      $form.find('input[name="robodesk_ticket_assignment_nonce"]').val()
+    );
+    formData.append(
+      "fetch_interval",
+      $form.find('input[name="fetch_interval"]').val()
+    );
+    formData.append(
+      "default_agent",
+      $form.find('select[name="default_agent"]').val()
+    );
+
+    // Basic validation
+    if (!$form.find('input[name="fetch_interval"]').val()) {
+      showToast("Please enter a fetch interval.", "error");
+      return;
+    }
+    if (!$form.find('select[name="default_agent"]').val()) {
+      showToast("Please select a team for auto-assignment.", "error");
+      return;
+    }
+
+    $button.prop("disabled", true).text("Configuring Auto-Fetch Settings...");
+
+    $.ajax({
+      url: ajaxurl,
+      type: "POST",
+      data: formData,
+      processData: false,
+      contentType: false,
+      success: function (response) {
+        if (response.success) {
+          showToast(response.data.message, "success");
+        } else {
+          showToast(response.data.message, "error");
+        }
+      },
+      error: function (xhr, status, error) {
+        console.log("AJAX Error:", xhr, status, error);
+        showToast("AJAX request failed: " + error, "error");
+      },
+      complete: function () {
+        $button.prop("disabled", false).text("Configure Auto-Fetch");
+      },
+    });
+  });
+});
