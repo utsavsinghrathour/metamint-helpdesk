@@ -287,4 +287,3 @@ function robodesk_enqueue_tailwind_and_styles()
         'nonce' => wp_create_nonce('robodesk_fetch_emails_action'),
     ]);
 }
-// add_action('admin_enqueue_scripts', 'robodesk_enqueue_tailwind_and_styles');
