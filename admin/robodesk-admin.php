@@ -3,7 +3,7 @@
 // Include admin-side post types
 require_once ROBODESK_PLUGIN_PATH . 'admin/includes/post-types/robodesk-ticket-post-type.php';
 require_once ROBODESK_PLUGIN_PATH . 'admin/includes/post-types/robodesk-faq-post-type.php';
-require_once ROBODESK_PLUGIN_PATH . 'public/includes/robodesk-fetch-tickets.php';
+require_once ROBODESK_PLUGIN_PATH . 'admin/includes/robodesk-fetch-tickets.php';
 require_once ROBODESK_PLUGIN_PATH . 'admin/includes/post-types/robodesk-notice-post-type.php';
 
 
@@ -237,6 +237,10 @@ function exclude_ticket_replies($query)
 }
 
 // Enqueue Tailwind CSS and custom styles
+//if page=robodesk-dashboard then enqueue styles
+if (isset($_GET['page']) && $_GET['page'] === 'robodesk-dashboard') {
+    add_action('admin_enqueue_scripts', 'robodesk_enqueue_tailwind_and_styles');
+}
 function robodesk_enqueue_tailwind_and_styles()
 {
     // Load Tailwind CDN browser runtime (supports <style type="text/tailwindcss">)
@@ -278,5 +282,9 @@ function robodesk_enqueue_tailwind_and_styles()
         'ajax_url' => admin_url('admin-ajax.php'),
         'nonce' => wp_create_nonce('robodesk_basic_settings_action'),
     ]);
+    wp_localize_script('robodesk-script', 'robodeskAjax', [
+        'ajax_url' => admin_url('admin-ajax.php'),
+        'nonce' => wp_create_nonce('robodesk_fetch_emails_action'),
+    ]);
 }
-add_action('admin_enqueue_scripts', 'robodesk_enqueue_tailwind_and_styles');
+// add_action('admin_enqueue_scripts', 'robodesk_enqueue_tailwind_and_styles');
