@@ -44,7 +44,7 @@ function robodesk_imap_test_connection()
 }
 
 
-//function to save the credentials
+//function to save the credentials(hostname, port, username, password, and auth type) for IMAP connection
 
 add_action('wp_ajax_robodesk_imap_save_settings', 'robodesk_imap_save_settings');
 function robodesk_imap_save_settings()
@@ -99,7 +99,7 @@ function robodesk_imap_save_settings()
     }
 }
 
-// email template save function
+// email template save function (save new ticket, ticket resolved, and auto-reply templates)
 add_action('wp_ajax_robodesk_email_template_save', 'robodesk_email_template_save');
 
 function robodesk_email_template_save()
@@ -173,7 +173,7 @@ function robodesk_email_template_save()
 }
 
 
-// advance settings save function
+// advance settings save function (save auto assign, notifications, customer portal, and max file upload size)
 add_action('wp_ajax_robodesk_save_advanced_settings', 'robodesk_save_advanced_settings');
 
 function robodesk_save_advanced_settings()
@@ -237,7 +237,7 @@ function robodesk_save_advanced_settings()
 }
 
 
-//basic settings save function
+//basic settings save function (save images and other basic settings including site name, admin email, timezone, and language)
 
 add_action('wp_ajax_robodesk_save_basic_settings', 'robodesk_save_basic_settings');
 
