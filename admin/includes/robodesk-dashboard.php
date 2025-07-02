@@ -432,17 +432,33 @@ function robodesk_dashboard_callback()
                                     <div>
                                         <label class="block text-sm font-medium text-gray-700 mb-1">Status</label>
                                         <select onchange="updateTicketStatus(currentTicket.id, this.value)" class="styled-select block w-full border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 rounded-md" id="ticket-status-select">
-                                            <option value="open">Open</option>
-                                            <option value="in-progress">In Progress</option>
-                                            <option value="resolved">Resolved</option>
+                                            <?php
+                                            // get the current ticket status
+                                            $current_ticket_status = get_post_meta($currentTicket->ID, '_robodesk_ticket_status', true);
+                                            $statuses = array('open', 'in-progress', 'resolved', 'closed');
+                                            foreach ($statuses as $status) {
+                                                $selected = ($status === $current_ticket_status) ? 'selected' : '';
+                                                echo "<option value='$status' $selected>" . ucfirst($status) . "</option>";
+                                            }
+                                            ?>
                                         </select>
                                     </div>
                                     <div>
                                         <label class="block text-sm font-medium text-gray-700 mb-1">Priority</label>
                                         <select onchange="updateTicketPriority(currentTicket.id, this.value)" class="styled-select block w-full border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 rounded-md" id="ticket-priority-select">
-                                            <option value="low">Low</option>
-                                            <option value="medium">Medium</option>
-                                            <option value="high">High</option>
+                                            <?php
+                                            $priorities = get_terms([
+                                                'taxonomy'   => 'robodesk_ticket_priority',
+                                                'hide_empty' => false,
+                                            ]);
+
+                                            if (!is_wp_error($priorities)) {
+                                                foreach ($priorities as $priority) {
+                                                    echo '<option value="' . esc_attr($priority->term_id) . '">' . esc_html($priority->name) . '</option>';
+                                                }
+                                            }
+
+                                            ?>
                                         </select>
                                     </div>
                                     <div>
