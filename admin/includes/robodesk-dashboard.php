@@ -705,46 +705,48 @@ function robodesk_dashboard_callback()
                         <!-- Fetch Tickets Tab -->
                         <div id="fetch-tab" class="settings-tab-content hidden">
                             <h3 class="text-lg font-medium text-gray-900 mb-6">Fetch Tickets</h3>
-                            <div class="space-y-6">
-                                <p class="text-sm text-gray-600">Use this feature to fetch new emails from your configured IMAP account and convert them into tickets and replies.</p>
-                                <div class="bg-gray-50 p-4 rounded-lg">
-                                    <h4 class="font-medium text-gray-900 mb-2">Email Fetching Settings</h4>
-                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        <div>
-                                            <label class="block text-sm font-medium text-gray-700">Fetch Interval (minutes)</label>
-                                            <input type="number" value="15" class="styled-input mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
-                                        </div>
-                                        <div>
-                                            <label class="block text-sm font-medium text-gray-700">Auto-assign to</label>
-                                            <select class="styled-select mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
-                                                <option value="support">Support Team</option>
-                                                <option value="tech">Tech Support</option>
-                                                <option value="sales">Sales Team</option>
-                                            </select>
+                            <form id="robodesk-fetch-tickets-form" class="space-y-6">
+                                <input type="hidden" name="robodesk_ticket_assignment_nonce" value="<?php echo wp_create_nonce('robodesk_ticket_assignment_action'); ?>">
+                                <div class="space-y-6">
+                                    <p class="text-sm text-gray-600">Use this feature to fetch new emails from your configured IMAP account and convert them into tickets and replies.</p>
+                                    <div class="bg-gray-50 p-4 rounded-lg">
+                                        <h4 class="font-medium text-gray-900 mb-2">Email Fetching Settings</h4>
+                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            <div>
+                                                <label class="block text-sm font-medium text-gray-700">Fetch Interval (minutes)</label>
+                                                <input type="number" name="fetch_interval" value="15" class="styled-input mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500" min="1" max="1440" required>
+                                            </div>
+                                            <div>
+                                                <label class="block text-sm font-medium text-gray-700">Auto-assign to</label>
+                                                <select name="default_agent" class="styled-select mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500" required>
+                                                    <option value="support">Support Team</option>
+                                                    <option value="tech">Tech Support</option>
+                                                    <option value="sales">Sales Team</option>
+                                                </select>
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
-                                <div class="flex space-x-4">
-                                    <button onclick="fetchEmails()" class="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-                                        <i class="fas fa-sync-alt mr-2"></i>
-                                        Fetch Emails Now
-                                    </button>
-                                    <button class="bg-gray-600 text-white px-6 py-2 rounded-md hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500">
-                                        <i class="fas fa-cog mr-2"></i>
-                                        Configure Auto-Fetch
-                                    </button>
-                                </div>
-                                <div id="fetch-results" class="hidden bg-blue-50 border border-blue-200 rounded-lg p-4">
-                                    <div class="flex items-center">
-                                        <i class="fas fa-info-circle text-blue-500 mr-2"></i>
-                                        <span id="fetch-message" class="text-blue-800"></span>
+                                    <div class="flex space-x-4">
+                                        <button id="save-ticket-assignment-settings" class="bg-gray-600 text-white px-6 py-2 rounded-md hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500">
+                                            <i class="fas fa-cog mr-2"></i>
+                                            Configure Auto-Fetch
+                                        </button>
                                     </div>
+                                </div>
+                            </form>
+
+                            <div class="flex space-x-4 mt-6">
+                                <button onclick="fetchEmails()" class="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                                    <i class="fas fa-sync-alt mr-2"></i>
+                                    Fetch Emails Now
+                                </button>
+                            </div>
+                            <div id="fetch-results" class="hidden bg-blue-50 border border-blue-200 rounded-lg p-4 mt-4">
+                                <div class="flex items-center">
+                                    <i class="fas fa-info-circle text-blue-500 mr-2"></i>
+                                    <span id="fetch-message" class="text-blue-800"></span>
                                 </div>
                             </div>
-                            <hr class="my-6 border-gray-200">
-                            <button type="button" id="save-fetch-settings" class="mt-6 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">
-                                Save Fetch Settings
-                            </button>
                         </div>
 
                         <!-- Advanced Settings Tab -->

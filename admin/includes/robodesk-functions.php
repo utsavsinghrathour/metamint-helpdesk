@@ -375,3 +375,40 @@ function robodesk_save_basic_settings()
         wp_send_json_error(['message' => 'Some settings failed to save', 'urls' => $urls, 'details' => $results]);
     }
 }
+
+// configure automatic ticket assignment and fetch timing
+
+add_action('wp_ajax_robodesk_save_ticket_assignment_settings', 'robodesk_save_ticket_assignment_settings');
+function robodesk_save_ticket_assignment_settings()
+{
+    // Verify nonce
+    if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'robodesk_ticket_assignment_action')) {
+        wp_send_json_error(['message' => 'Security check failed']);
+        exit;
+    }
+
+    // Validate inputs
+    if (!isset($_POST['fetch_interval']) || !isset($_POST['default_agent'])) {
+        wp_send_json_error(['message' => 'Missing required fields']);
+        exit;
+    }
+
+    $fetch_interval = intval($_POST['fetch_interval']);
+    $default_agent = sanitize_text_field($_POST['default_agent']);
+
+    if ($fetch_interval < 1 || $fetch_interval > 1440) {
+        wp_send_json_error(['message' => 'Fetch interval must be between 1 and 1440 minutes']);
+        exit;
+    }
+
+    if (empty($default_agent)) {
+        wp_send_json_error(['message' => 'Please select a team for auto-assignment']);
+        exit;
+    }
+
+    // Save settings to the database
+    update_option('robodesk_fetch_interval', $fetch_interval);
+    update_option('robodesk_default_agent', $default_agent);
+
+    wp_send_json_success(['message' => 'Ticket assignment settings saved successfully']);
+}
