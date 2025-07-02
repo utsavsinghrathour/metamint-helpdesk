@@ -48,8 +48,10 @@ function robodesk_dashboard_callback()
                 <div class="flex justify-between h-16">
                     <div class="flex items-center">
                         <div class="flex-shrink-0 flex items-center">
-                            <i class="fas fa-ticket-alt text-blue-600 text-2xl"></i>
-                            <span class="ml-2 text-xl font-bold text-gray-900">Robodesk</span>
+                            <button onclick="showPage('dashboard')" class="text-blue-600 hover:text-blue-800">
+                                <i class="fas fa-ticket-alt text-blue-600 text-2xl"></i>
+                                <span class="ml-2 text-xl font-bold text-gray-900">Robodesk</span>
+                            </button>
                         </div>
                         <div class="hidden md:ml-10 md:flex md:space-x-8">
                             <button onclick="showPage('dashboard')" class="nav-link inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium" data-page="dashboard">
