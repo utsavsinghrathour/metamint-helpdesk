@@ -243,47 +243,49 @@ if (isset($_GET['page']) && $_GET['page'] === 'robodesk-dashboard') {
 }
 function robodesk_enqueue_tailwind_and_styles()
 {
-    // Load Tailwind CDN browser runtime (supports <style type="text/tailwindcss">)
+    // Load Tailwind CDN browser runtime
     wp_enqueue_script(
         'tailwind-browser-cdn',
         'https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4',
-        array(),
+        [], // No dependencies
         null,
-        false
+        false // Load in header
     );
 
-    // Load your custom CSS file
+    // Load custom CSS
     wp_enqueue_style(
         'robodesk-dashboard-styles',
-        plugin_dir_url(__FILE__) . '/assets/css/robodesk-dashboard.css',
+        plugin_dir_url(__FILE__) . 'assets/css/robodesk-dashboard.css',
         [],
         '1.0.0'
     );
-    // Enqueue custom JavaScript (path to public/includes/assets/js/script.js)
-    wp_enqueue_script('robodesk-dashboard-script', plugin_dir_url(__FILE__) . '/assets/js/robodesk-dashboard.js', ['jquery'], '1.0.0', true);
+
+    // Enqueue custom JavaScript
+    wp_enqueue_script(
+        'robodesk-dashboard-script',
+        plugin_dir_url(__FILE__) . 'assets/js/robodesk-dashboard.js',
+        ['jquery'],
+        '1.0.0',
+        true // Load in footer
+    );
 
     // Enqueue Font Awesome for icons
-    wp_enqueue_style('font-awesome', 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css', [], '6.0.0');
+    wp_enqueue_style(
+        'font-awesome',
+        'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css',
+        [],
+        '6.0.0'
+    );
 
-
-    wp_localize_script('robodesk-script', 'robodesk_ajax', array(
-        'ajaxurl' => admin_url('admin-ajax.php'),
-        'nonce' => wp_create_nonce('robodesk_imap_settings_action')
-    ));
-    wp_localize_script('robodesk-script', 'robodeskAjax', [
+    // Localize script with all necessary nonces
+    wp_localize_script('robodesk-dashboard-script', 'robodeskAjax', [
         'ajax_url' => admin_url('admin-ajax.php'),
-        'nonce' => wp_create_nonce('robodesk_email_template_action'),
-    ]);
-    wp_localize_script('robodesk-script', 'robodeskAjax', [
-        'ajax_url' => admin_url('admin-ajax.php'),
-        'nonce' => wp_create_nonce('robodesk_advanced_settings_action'),
-    ]);
-    wp_localize_script('robodesk-script', 'robodeskAjax', [
-        'ajax_url' => admin_url('admin-ajax.php'),
-        'nonce' => wp_create_nonce('robodesk_basic_settings_action'),
-    ]);
-    wp_localize_script('robodesk-script', 'robodeskAjax', [
-        'ajax_url' => admin_url('admin-ajax.php'),
-        'nonce' => wp_create_nonce('robodesk_fetch_emails_action'),
+        'nonces' => [
+            'imap_settings' => wp_create_nonce('robodesk_imap_settings_action'),
+            'email_template' => wp_create_nonce('robodesk_email_template_action'),
+            'advanced_settings' => wp_create_nonce('robodesk_advanced_settings_action'),
+            'basic_settings' => wp_create_nonce('robodesk_basic_settings_action'),
+            'fetch_emails' => wp_create_nonce('robodesk_fetch_emails_action'),
+        ]
     ]);
 }
