@@ -35,82 +35,6 @@ const Login = ({ setShowLogin }) => {
 
 
 
-//   const handleSubmit = async (e) => {
-//     e.preventDefault();
-//     setIsSubmitting(true);
-//     setErrors({ email: "", password: "" });
-
-//     if (!validateForm()) {
-//       setIsSubmitting(false);
-//       return;
-//     }
-
-//     try {
-    
-//       const loginResponse = await fetch('/wp-json/custom/v1/login', {
-//         method: 'POST',
-//         headers: { 'Content-Type': 'application/json' },
-//         body: JSON.stringify({
-//           username: formData.email,
-//           password: formData.password,
-//         }),
-//       });
-
-//       const loginData = await loginResponse.json();
-      
-//       console.log('Here we are',loginData);
-
-//       if (!loginResponse.ok) {
-//         throw new Error(loginData.message || loginData.data?.message || 'Login failed');
-//       }
-
-//       if (loginData.success && loginData.token) {
-      
-//     //   console.log('we are creating ticket now');
-//         // Store JWT token securely
-//         localStorage.setItem('jwt_token', loginData.token);
-
-//         const ticketTitle = localStorage.getItem('temp_ticket_title');
-
-//         if (ticketTitle) {
-//           try {
-//             // Update createTicket to include JWT in headers
-//             const ticketResponse = await createTicket(loginData.user_id, ticketTitle, '');
-
-//             if (ticketResponse.status === 'success') {
-//               console.log(ticketResponse.message);
-//               localStorage.removeItem("temp_ticket_title");
-//               setShowLogin(false);
-//               setActiveTab(1);
-//             } else {
-//               console.warn("Ticket may have been created but response format unexpected");
-//               setShowLogin(false);
-//               setActiveTab(1);
-//             }
-//           } catch (ticketError) {
-//             console.error("Ticket creation error:", ticketError);
-//             setShowLogin(false);
-//             setActiveTab(1);
-//             localStorage.removeItem("temp_ticket_title");
-//           }
-//         } else {
-//           setShowLogin(false);
-//         }
-//       } else {
-//         throw new Error('Invalid response format');
-//       }
-//     } catch (error) {
-//       console.error("Login error:", error);
-//       setErrors({
-//         email: error.message.includes("email") ? error.message : "",
-//         password: error.message.includes("credentials") || error.message.includes("Login failed") 
-//           ? error.message 
-//           : "Login failed. Please try again."
-//       });
-//     }
-
-//     setIsSubmitting(false);
-//   };
 const handleSubmit = async (e) => {
   e.preventDefault();
   setIsSubmitting(true);
@@ -132,32 +56,44 @@ const handleSubmit = async (e) => {
     });
 
     const loginData = await loginResponse.json();
-
+    
     if (!loginResponse.ok) {
       throw new Error(loginData.message || loginData.data?.message || 'Login failed');
     }
 
     if (loginData.success && loginData.token) {
-      localStorage.setItem('jwt_token', loginData.token);
-      sessionStorage.setItem('user_details', JSON.stringify(loginData));
+      localStorage.setItem('jwt_token', loginData.token); // Keep if needed elsewhere
+      
+      if (typeof sessionStorage !== "undefined") {
+        const userData = {
+          isLoggedIn: true, 
+          loggedInUserId: String(loginData.user_id || '') 
+        };
+        sessionStorage.setItem('wpUserData', JSON.stringify(userData));
+        console.log('User data saved to sessionStorage:', userData);
+      } else {
+        console.warn('sessionStorage is not supported in this browser');
+      }
+
+
       const ticketTitle = localStorage.getItem('temp_ticket_title'); 
+      
+ 
       if (ticketTitle) {
         try {
-          const ticketResponse = await createTicket(loginData.user_id, ticketTitle, '');
-          console.log('Ticket created:', ticketResponse);
+          const ticketResponse = await createTicket(loginData.user_id, ticketTitle, ticketTitle);
+          
+
           if (ticketResponse.status === 'success') {
             localStorage.removeItem('temp_ticket_title');
-          } else {
-            console.warn('Unexpected ticket response format');
           }
         } catch (ticketError) {
           console.error('Ticket creation error:', ticketError);
-          localStorage.removeItem('temp_ticket_title'); // Clean up even on error
+          localStorage.removeItem('temp_ticket_title');
         }
       }
       
       setShowLogin(true);
-   
     } else {
       throw new Error('Invalid response format');
     }
@@ -174,6 +110,7 @@ const handleSubmit = async (e) => {
     setIsSubmitting(false);
   }
 };
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });

@@ -66,181 +66,66 @@ const MessageTabs = ({
   isExpanded,
   setIsExpanded,
   activeTab,
-  selectedNewTicket
+  selectedNewTicket,
+  updateSelectedTicket
 }) => {
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedTicket, setSelectedTicket] = useState(selectedNewTicket ? selectedNewTicket : null);
+  const [selectedTicket, setSelectedTicket] = useState(selectedNewTicket);
   const [currentTab, setCurrentTab] = useState("all");
   const [priorityFilter, setPriorityFilter] = useState("all");
   const [tickets, setTickets] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isLoggedIn, setIsLoggedIn] = useState(false); // Fixed naming consistency
-  const [loggedInuserData , setloggedInuserData] = useState(false);
+  const [loggedInuserId, setloggedInuserId] = useState(null);
 
   const handleLogin = (loginStatus) => {
+  
     setIsLoggedIn(loginStatus);
     if (loginStatus) {
       fetchTickets();
     }
   };
   
-  useEffect(() => {
-  const usStat = userStatus();
+useEffect(() => {
 
-  if (usStat.isLoggedIn && usStat.loggedInUserId) {
-    setloggedInuserData(usStat.loggedInUserId);
-    setIsLoggedIn(true);
-    fetchTickets();
-  } else {
-    const userDetails = sessionStorage.getItem('user_details');
-    if (userDetails) {
-      try {
-        const parsedData = JSON.parse(userDetails);
-        if (parsedData && parsedData.user_id) {
-          setloggedInuserData(parsedData.user_id);
-          setIsLoggedIn(true);
-          fetchTickets(); 
-        }
-      } catch (error) {
-        console.error('Error parsing user_details from sessionStorage', error);
+console.log('From message Tabs' , selectedTicket);
+  // Check sessionStorage for user data
+  const storedData = sessionStorage.getItem('wpUserData');
+  
+  if (storedData) {
+    try {
+      const parsedData = JSON.parse(storedData);
+      
+      if (parsedData.isLoggedIn && parsedData.loggedInUserId) {
+        setloggedInuserId(parsedData.loggedInUserId);
+        setIsLoggedIn(true);
+        fetchTickets();
+      } else {
+        // Clear state if no valid session data
+        setloggedInuserId(null);
+        setIsLoggedIn(false);
       }
+    } catch (error) {
+      console.error('Error parsing wpUserData from sessionStorage', error);
+      setloggedInuserId(null);
+      setIsLoggedIn(false);
     }
+  } else {
+    // No session data available
+    setloggedInuserId(null);
+    setIsLoggedIn(false);
   }
-}, [isLoggedIn,loggedInuserData]);
-
-// useEffect(() => {
-//     if (newTicket) {
-//       setSelectedTicket(newTicket); // Set the new ticket as selected
-//       setTickets([newTicket, ...tickets]); // Add new ticket to the list
-//     }
-//   }, [newTicket]);
-                       
-//   useEffect(() => {
-  
-//     const usrStat = userStatus();
-    
-//     console.log('saved user stata', usrStat);
-    
-//     const userDetails = sessionStorage.getItem('user_details');
-//     // const savedUserDetails = 
-//     if (userDetails) {
-//       try {
-//         const parsedData = JSON.parse(userDetails);
-//         if (parsedData && parsedData.user_id) {
-//           setloggedInuserData(parsedData.user_id);
-//           setIsLoggedIn(true);
-//           fetchTickets();
-//         }
-//       } catch (error) {
-//         console.error('Error parsing user_details from sessionStorage', error);
-//       }
-//     }
-//   },[isLoggedIn]);                     
-
-//   useEffect(() => {
-  
-  
-//     if (isLoggedIn) {
-//       fetchTickets();
-//     }
-//   }, []);
-  
-//   const fetchTickets = async () => {
-//     // console.log('Logged In user:',loggedInuserData);
-//     if (!loggedInuserData) return;
-    
-//     try {
-//       setLoading(true);
-//       const response = await axios.get("/wp-json/wp/v2/robodesk_ticket", {
-//         params: {
-//           per_page: 10,
-//          author: loggedInuserData,
-//           _embed: "wp:comment", // Only embed comments, as terms are directly included
-//         },
-//       });
-
-//       const mappedTickets = response.data.map((post) => {
-//         // Get priority term (keep embedded logic if priority is not directly included)
-//         const priorityTerm =
-//           post._embedded?.["wp:term"]?.find((tax) =>
-//             tax.some((t) => t.taxonomy === "robodesk_ticket_priority")
-//           )?.[0]?.name ||
-//           post.robodesk_ticket_priority?.[0] ||
-//           "Medium";
-
-//         // Get source (origin) term directly from post
-//         const sourceTerm =
-//           post.robodesk_ticket_origin && post.robodesk_ticket_origin.length > 0
-//             ? post.robodesk_ticket_origin[0]
-//             : "Unknown";
-//         console.log(
-//           `Ticket ID ${post.id} - Origin:`,
-//           post.robodesk_ticket_origin,
-//           "Selected Source:",
-//           sourceTerm
-//         );
-
-//         // Get comments (ticket replies)
-//         const messages =
-//           post._embedded?.["wp:comment"]
-//             ?.filter((comment) => comment.type === "ticket_replies")
-//             ?.map((comment) => ({
-//               id: comment.id,
-//               text: comment.content.rendered.replace(/<[^>]+>/g, ""),
-//               sender: comment.author === 0 ? "me" : "other",
-//               image: comment.author === 0 ? Author1 : Author2,
-//             })) || [];
-
-//         // Calculate time ago
-//         const postDate = new Date(post.date);
-//         const now = new Date();
-//         const diffInSeconds = Math.floor((now - postDate) / 1000);
-//         let timeAgo = "Just now";
-//         if (diffInSeconds >= 60 * 60 * 24 * 7) {
-//           timeAgo = `${Math.floor(diffInSeconds / (60 * 60 * 24 * 7))}w ago`;
-//         } else if (diffInSeconds >= 60 * 60 * 24) {
-//           timeAgo = `${Math.floor(diffInSeconds / (60 * 60 * 24))}d ago`;
-//         } else if (diffInSeconds >= 60 * 60) {
-//           timeAgo = `${Math.floor(diffInSeconds / (60 * 60))}h ago`;
-//         } else if (diffInSeconds >= 60) {
-//           timeAgo = `${Math.floor(diffInSeconds / 60)}m ago`;
-//         }
-
-//         // Determine status
-//         const status = post.ticket_status || "new";
-
-//         return {
-//           id: post.id,
-//           ticketNumber:
-//             post.ticket_number || `TCKT-${String(post.id).padStart(3, "0")}`,
-//           title: post.title.rendered,
-//           source: sourceTerm,
-//           timeAgo,
-//           authorImage:
-//             post.author_image || (post.id % 2 === 0 ? Author1 : Author2),
-//           status,
-//           priority: priorityTerm,
-//           messages,
-//         };
-//       });
-
-//       setTickets(mappedTickets);
-     
-//     } catch (error) {
-//       console.error("Error fetching tickets:", error);
-//       setLoading(false);
-//     }
-//   };
+}, [isLoggedIn,loggedInuserId]);
 
 const fetchTickets = async () => {
-  if (!loggedInuserData) return; // Exit early if user is not logged in
+  if (!loggedInuserId) return; // Exit early if user is not logged in
     // console.log('We are here ', loggedInuserData);
   try {
     setLoading(true);
     const response = await axios.get("/wp-json/wp/v2/robodesk_ticket", {
       params: {
         per_page: 100,
-        author: loggedInuserData,  // 👈 Fetch tickets by the user ID
+        author: loggedInuserId,  // 👈 Fetch tickets by the user ID
         _embed: "wp:comment",      // Embed comments only
       },
     });
@@ -363,7 +248,7 @@ const fetchTickets = async () => {
       };
 
       setTickets([newTicket, ...tickets]);
-      setSelectedTicket(newTicket);
+      updateSelectedTicket(newTicket);
     } catch (error) {
       console.error("Error creating ticket:", error);
     }
@@ -395,9 +280,9 @@ const fetchTickets = async () => {
               }
             >
               <SingleTicket
-                ticket={selectedTicket}
+                ticket={selectedNewTicket ? selectedNewTicket : selectedTicket}
                 onBack={() => setSelectedTicket(null)}
-                loggedInUser = { loggedInuserData }
+                loggedInUserId = { loggedInuserId }
               />
             </Suspense>
           ) : (
@@ -583,9 +468,9 @@ const fetchTickets = async () => {
           )}
         </>
       ) : (
-       <Login setShowLogin={handleLogin} />
+       <Login setShowLogin={handleLogin} updateSelectedTicket={updateSelectedTicket} />
       )}
-      <Footer activeTab={activeTab} setActiveTab={setActiveTab} />
+      <Footer activeTab={activeTab} setActiveTab={setActiveTab}  updateSelectedTicket={updateSelectedTicket}  />
     </div>
   );
 };
