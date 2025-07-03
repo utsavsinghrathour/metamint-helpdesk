@@ -1,3 +1,4 @@
+//create ticket
 export const createTicket = async (userId, title, message = "") => {
   const webhookUrl = "/wp-json/chat/v1/tickets";
 
@@ -28,6 +29,7 @@ export const createTicket = async (userId, title, message = "") => {
   }
 };
 
+//get all messages
 export const getMessages = async (ticketId, userId) => {
   const webhookUrl = "/wp-json/chat/v1/tickets/";
 
@@ -71,6 +73,7 @@ export const userStatus = () => {
   };
 };
 
+//caching states
 const cache = {};
 export const useCachedFetch = (url) => {
   const [data, setData] = React.useState(null);
@@ -108,16 +111,20 @@ export const useCachedFetch = (url) => {
   return { data, error, loading };
 };
 
-export async function sendReply(ticketId, userId, message) {
+
+//send messages
+export async function sendReply(ticketId, loggedInUserId, message) {
   const payload = {
     event: "replies.receive",
     data: {
       ticket_id: ticketId,
-      user_id: userId,
+      user_id: loggedInUserId,
       message: message,
     },
   };
 
+
+console.log('From modules', payload);
   try {
     const response = await fetch("/wp-json/chat/v1/tickets", {
       method: "POST",
@@ -140,6 +147,7 @@ export async function sendReply(ticketId, userId, message) {
   }
 }
 
+//register user
 export async function registerUser({ username, email, password }) {
   try {
     const payload = {
