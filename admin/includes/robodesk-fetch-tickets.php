@@ -375,6 +375,7 @@ function robodesk_fetch_emails()
                 'post_status'  => 'publish',
                 'post_author'  => $user_id,
                 'post_type'    => 'robodesk_ticket',
+
             ]);
 
             if (is_wp_error($post_id)) {

@@ -412,3 +412,13 @@ function robodesk_save_ticket_assignment_settings()
 
     wp_send_json_success(['message' => 'Ticket assignment settings saved successfully']);
 }
+
+
+// //for fetching dashboard
+// add_action('wp_head', function () {
+//     $post_id = 7842; // Replace with your actual post ID
+//     $taxonomy = 'robodesk_ticket_origin';
+//     // Get the terms
+//     $terms = get_the_terms($post_id, $taxonomy);
+//     var_dump($terms);
+// });
