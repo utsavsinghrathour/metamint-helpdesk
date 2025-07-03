@@ -1,23 +1,35 @@
 import React, { useState , useEffect } from "react";
-import { createTicket , getMessages } from "../utils/modules";
+import { createTicket  } from "../utils/modules";
 import "../styles/SendMessageField.css";
 
-const SendMessageField = ({ setShowLogin , setActiveTab , setSelectedTicket } ) => {
+const SendMessageField = ({ setShowLogin , setActiveTab , updateSelectedTicket } ) => {
   const [message, setMessage] = useState("");
-  const [loggedIn, setLoggedIn] = useState(wpAuth.isLoggedIn);
-  const [userId, setUserId] = useState(wpAuth.loggedInUserId);
-  const [placeHolderText , setplaceHolderText] = useState('Send us a message')
+  const [loggedIn, setLoggedIn] = useState(false);
+  const [userId, setUserId] = useState(null);
+  const [placeHolderText , setplaceHolderText] = useState('Send us a message');
   
   const handleInputChange = (e) => {
     setMessage(e.target.value);
   };
   
+  useEffect(() => {
+  
+    const sessionData = JSON.parse(sessionStorage.getItem('wpUserData')) || {};
+    
+  
+    setLoggedIn(sessionData.isLoggedIn || false);
+    setUserId(sessionData.loggedInUserId || null);
+  }, []);
+  
   const handleSend = async () => {
-
+  
     if (!message.trim()) {
       console.log("No message entered");
       return;
     }
+    
+    console.log('loggedIn' , loggedIn);
+    console.log('userId' , userId);
    
     if (loggedIn == 'false') {
       localStorage.setItem('temp_ticket_title', message); 
@@ -29,8 +41,9 @@ const SendMessageField = ({ setShowLogin , setActiveTab , setSelectedTicket } ) 
 
     try {
        const result = await createTicket(userId, message, '');
+       
        const newTicket = {
-            id: result.data.ticket_id,
+            id: result.data.id,
             ticketNumber: result.data.ticket_number,
             title:result.data.ticket_title,
             source:  result.data.ticket_origin,
@@ -40,10 +53,10 @@ const SendMessageField = ({ setShowLogin , setActiveTab , setSelectedTicket } ) 
             priority:  result.data.ticket_priority,
             messages: [],
         };
-
-      setSelectedTicket(newTicket);
-      setMessage("");
+      updateSelectedTicket(newTicket);
       setActiveTab(1);
+      setMessage("");
+     
     } catch (error) {
       console.error("Failed to create ticket:", error);
     }

@@ -5,7 +5,7 @@ import NoticeTabs from './components/NoticeTabs.jsx';
 import HelpTabs from './components/HelpTabs.jsx';
 import ActiveFeatured from './components/ActiveFeatured.jsx';
 import './styles/main.css';
-import { userStatus } from './utils/modules';
+// import { userStatus } from './utils/modules';
 
 const App = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -13,23 +13,18 @@ const App = () => {
   const [isExpanded, setIsExpanded] = useState(false);
   const [selectedNotice, setSelectedNotice] = useState(null);
   const [showActiveFeatured, setShowActiveFeatured] = useState(true);
-  const [selectedTicket, setSelectedTicket] = useState(true);
+  const [selectedTicket, setSelectedTicket] = useState();
+  
+ const handleSelectedTicketUpdate = (newValue) => {
+        setSelectedTicket(newValue);
+  };
   
   useEffect(() => {
-    const updateUserStatus = async () => {
-      try {
-        const status = await userStatus();
-        sessionStorage.setItem('userStatus', JSON.stringify(status));
-      } catch (error) {
-        sessionStorage.setItem('userStatus', JSON.stringify({ 
-          isLoggedIn: false, 
-          loggedInUserId: false 
-        }));
-      }
-    };
+    if (selectedTicket) {
+      console.log('selectedTicket' , selectedTicket);
+    }
+  }, [selectedTicket]);     
   
-    updateUserStatus();
-  }, []);
   
   const handleNoticeSelect = (notice) => {
 
@@ -67,8 +62,8 @@ const App = () => {
           isExpanded={isExpanded}
           setIsExpanded={setIsExpanded}
           handleClose={handleClose}
-          selectedTicket={selectedTicket}
-          setSelectedTicket={setSelectedTicket}
+          updateSelectedTicket={handleSelectedTicketUpdate} 
+        
         />
       ),
     },
@@ -82,6 +77,7 @@ const App = () => {
           setIsExpanded={setIsExpanded}
           activeTab={activeTab}
           selectedNewTicket={selectedTicket}
+          updateSelectedTicket={handleSelectedTicketUpdate} 
         />
       ),
     },

@@ -25,7 +25,7 @@ const normalizeImagePaths = (html, baseUrl = wpHomeUrl) => {
   );
 };
 
-const SingleQuestionBox = ({ setShowHeaderFooter, showHeaderFooter, isExpanded, setIsExpanded, setShowLogin , setActiveTab , setSelectedTicket}) => {
+const SingleQuestionBox = ({ setShowHeaderFooter, showHeaderFooter, isExpanded, setIsExpanded, setShowLogin , setActiveTab , updateSelectedTicket}) => {
   const [selectedQuestion, setSelectedQuestion] = useState(null);
   const [isLiked, setIsLiked] = useState(false);
   const [isDisliked, setIsDisliked] = useState(false);
@@ -33,47 +33,7 @@ const SingleQuestionBox = ({ setShowHeaderFooter, showHeaderFooter, isExpanded, 
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   
-//     const { data, error, loading } = useCachedFetch(
-//     '/wp-json/wp/v2/robodesk_faq?featured=true&_fields=id,title.rendered,excerpt.rendered,content.rendered'
-//   );
-//   console.log('On nOtice tabs');
-//   console.log('New Way' , data , error,loading);
 
-
-  // Fetch FAQs with excerpts for QuestionItem
-//   useEffect(() => {
-  
-  
-//     const fetchFAQs = async () => {
-//       try {
-//         setIsLoading(true);
-//         const response = await fetch(
-//           `/wp-json/wp/v2/robodesk_faq?featured=true&_fields=id,title.rendered,excerpt.rendered,content.rendered`
-//         );
-//         if (!response.ok) {
-//           throw new Error('Failed to fetch FAQs');
-//         }
-//         const data = await response.json();
-//         const formattedQuestions = data.map((faq) => ({
-//           id: faq.id,
-//           title: faq.title.rendered,
-//           content: faq.content.rendered,    
-//           excerpt: DOMPurify.sanitize(faq.excerpt.rendered, {
-//             ADD_TAGS: ['p', 'strong', 'em'],
-//             ADD_ATTR: [],
-//           }), // Sanitize excerpt for plain text
-//         }));
-
-//         setQuestions(formattedQuestions);
-//         setIsLoading(false);
-//       } catch (err) {
-//         setError(err.message);
-//         setIsLoading(false);
-//       }
-//     };
-
-//     fetchFAQs();
-//   }, []);
   useEffect(() => {
     const fetchFAQs = async () => {
       // Check if data exists in cache
@@ -115,55 +75,6 @@ const SingleQuestionBox = ({ setShowHeaderFooter, showHeaderFooter, isExpanded, 
 
     fetchFAQs();
   }, []);
-//   useEffect(() => {
-//         console.log('Homepage Faqs');
-//         console.log(data, error , loading);
-//         // console.log('Homepage loading', loading);
-//   },[data]);
-
-  // Fetch full content for SingleQuestionView when a question is selected
-//   useEffect(() => {
-//     const fetchFullContent = async () => {
-//       if (!selectedQuestion) return;
-
-//       try {
-//         const response = await fetch(
-//           `/wp-json/wp/v2/robodesk_faq/${selectedQuestion.id}?_fields=content.rendered`
-//         );
-//         if (!response.ok) {
-//           throw new Error('Failed to fetch full content');
-//         }
-//         const data = await response.json();
-
-//         // Normalize image paths and sanitize content
-//         const normalizedContent = normalizeImagePaths(data.content.rendered);
-//         const sanitizedContent = DOMPurify.sanitize(normalizedContent, {
-//           ADD_TAGS: ['iframe', 'img'],
-//           ADD_ATTR: ['allow', 'allowfullscreen', 'frameborder', 'src', 'alt', 'title', 'width', 'height'],
-//           ALLOWED_URI_REGEXP: /^(?:https?:\/\/|\/|data:image\/)/,
-//         });
-
-//         // Debug: Log content stages
-//         console.log('Raw Content:', data.content.rendered);
-//         console.log('Normalized Content:', normalizedContent);
-//         console.log('Sanitized Content:', sanitizedContent);
-//         const imageSrcs = (data.content.rendered.match(/<img[^>]+src=['"]([^'"]+)['"]/gi) || []).map((img) =>
-//           img.match(/src=['"]([^'"]+)['"]/)[1]
-//         );
-//         console.log('Image src URLs:', imageSrcs);
-
-//         // Update selectedQuestion with sanitized content
-//         setSelectedQuestion((prev) => ({
-//           ...prev,
-//           content: sanitizedContent,
-//         }));
-//       } catch (err) {
-//         setError(err.message);
-//       }
-//     };
-
-//     fetchFullContent();
-//   }, [selectedQuestion?.id]);
 
   useEffect(() => {
     setShowHeaderFooter(!selectedQuestion);
@@ -333,7 +244,7 @@ const SingleQuestionBox = ({ setShowHeaderFooter, showHeaderFooter, isExpanded, 
                 <h3 className="heading-3">Have Questions?</h3>
                 <h5 className="sub-text">Have any questions or need a quote? Leave us a message.</h5>
               </div>
-              <SendMessageField setShowLogin={setShowLogin} setActiveTab={setActiveTab} setSelectedTicket={setSelectedTicket}  />
+              <SendMessageField setShowLogin={setShowLogin} setActiveTab={setActiveTab} updateSelectedTicket={updateSelectedTicket}  />
             </>
           )}
           <div className="rd-px-18 rd-mt-20 rd-mb-15 rd-overflow-h-320">
