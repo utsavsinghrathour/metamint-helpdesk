@@ -48,8 +48,10 @@ function robodesk_dashboard_callback()
                 <div class="flex justify-between h-16">
                     <div class="flex items-center">
                         <div class="flex-shrink-0 flex items-center">
-                            <i class="fas fa-ticket-alt text-blue-600 text-2xl"></i>
-                            <span class="ml-2 text-xl font-bold text-gray-900">Robodesk</span>
+                            <button onclick="showPage('dashboard')" class="text-blue-600 hover:text-blue-800">
+                                <i class="fas fa-ticket-alt text-blue-600 text-2xl"></i>
+                                <span class="ml-2 text-xl font-bold text-gray-900">Robodesk</span>
+                            </button>
                         </div>
                         <div class="hidden md:ml-10 md:flex md:space-x-8">
                             <button onclick="showPage('dashboard')" class="nav-link inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium" data-page="dashboard">
@@ -94,7 +96,10 @@ function robodesk_dashboard_callback()
                                 <div class="ml-5 w-0 flex-1">
                                     <dl>
                                         <dt class="text-sm font-medium text-gray-500 truncate">Total Tickets</dt>
-                                        <dd class="text-lg font-medium text-gray-900" id="total-tickets">3</dd>
+                                        <dd class="text-lg font-medium text-gray-900" id="total-tickets"><?php
+                                                                                                            $total_tickets = wp_count_posts('robodesk_ticket')->publish;
+                                                                                                            echo $total_tickets;
+                                                                                                            ?></dd>
                                     </dl>
                                 </div>
                             </div>
@@ -110,7 +115,23 @@ function robodesk_dashboard_callback()
                                 <div class="ml-5 w-0 flex-1">
                                     <dl>
                                         <dt class="text-sm font-medium text-gray-500 truncate">Open Tickets</dt>
-                                        <dd class="text-lg font-medium text-gray-900" id="open-tickets">1</dd>
+                                        <dd class="text-lg font-medium text-gray-900" id="open-tickets"><?php
+                                                                                                        $args = array(
+                                                                                                            'post_type' => 'robodesk_ticket',
+                                                                                                            'post_status' => 'publish', // Adjust if you need other statuses like 'draft'
+                                                                                                            'meta_query' => array(
+                                                                                                                array(
+                                                                                                                    'key' => '_robodesk_ticket_status',
+                                                                                                                    'value' => 'open',
+                                                                                                                    'compare' => '='
+                                                                                                                )
+                                                                                                            ),
+                                                                                                            'posts_per_page' => -1, // Retrieve all matching posts
+                                                                                                        );
+                                                                                                        $query = new WP_Query($args);
+                                                                                                        $open_tickets = $query->found_posts;
+                                                                                                        echo $open_tickets;
+                                                                                                        ?></dd>
                                     </dl>
                                 </div>
                             </div>
@@ -126,7 +147,23 @@ function robodesk_dashboard_callback()
                                 <div class="ml-5 w-0 flex-1">
                                     <dl>
                                         <dt class="text-sm font-medium text-gray-500 truncate">In Progress</dt>
-                                        <dd class="text-lg font-medium text-gray-900" id="in-progress-tickets">1</dd>
+                                        <dd class="text-lg font-medium text-gray-900" id="in-progress-tickets"><?php
+                                                                                                                $args = array(
+                                                                                                                    'post_type' => 'robodesk_ticket',
+                                                                                                                    'post_status' => 'publish', // Adjust if you need other statuses like 'draft'
+                                                                                                                    'meta_query' => array(
+                                                                                                                        array(
+                                                                                                                            'key' => '_robodesk_ticket_status',
+                                                                                                                            'value' => 'in-progress',
+                                                                                                                            'compare' => '='
+                                                                                                                        )
+                                                                                                                    ),
+                                                                                                                    'posts_per_page' => -1, // Retrieve all matching posts
+                                                                                                                );
+                                                                                                                $query = new WP_Query($args);
+                                                                                                                $in_progress_tickets = $query->found_posts;
+                                                                                                                echo $in_progress_tickets;
+                                                                                                                ?></dd>
                                     </dl>
                                 </div>
                             </div>
@@ -142,7 +179,23 @@ function robodesk_dashboard_callback()
                                 <div class="ml-5 w-0 flex-1">
                                     <dl>
                                         <dt class="text-sm font-medium text-gray-500 truncate">Resolved</dt>
-                                        <dd class="text-lg font-medium text-gray-900" id="resolved-tickets">1</dd>
+                                        <dd class="text-lg font-medium text-gray-900" id="resolved-tickets"><?php
+                                                                                                            $args = array(
+                                                                                                                'post_type' => 'robodesk_ticket',
+                                                                                                                'post_status' => 'publish', // Adjust if you need other statuses like 'draft'
+                                                                                                                'meta_query' => array(
+                                                                                                                    array(
+                                                                                                                        'key' => '_robodesk_ticket_status',
+                                                                                                                        'value' => 'closed',
+                                                                                                                        'compare' => '='
+                                                                                                                    )
+                                                                                                                ),
+                                                                                                                'posts_per_page' => -1, // Retrieve all matching posts
+                                                                                                            );
+                                                                                                            $query = new WP_Query($args);
+                                                                                                            $closed_tickets = $query->found_posts;
+                                                                                                            echo $closed_tickets;
+                                                                                                            ?></dd>
                                     </dl>
                                 </div>
                             </div>
@@ -379,17 +432,33 @@ function robodesk_dashboard_callback()
                                     <div>
                                         <label class="block text-sm font-medium text-gray-700 mb-1">Status</label>
                                         <select onchange="updateTicketStatus(currentTicket.id, this.value)" class="styled-select block w-full border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 rounded-md" id="ticket-status-select">
-                                            <option value="open">Open</option>
-                                            <option value="in-progress">In Progress</option>
-                                            <option value="resolved">Resolved</option>
+                                            <?php
+                                            // get the current ticket status
+                                            $current_ticket_status = get_post_meta($currentTicket->ID, '_robodesk_ticket_status', true);
+                                            $statuses = array('open', 'in-progress', 'resolved', 'closed');
+                                            foreach ($statuses as $status) {
+                                                $selected = ($status === $current_ticket_status) ? 'selected' : '';
+                                                echo "<option value='$status' $selected>" . ucfirst($status) . "</option>";
+                                            }
+                                            ?>
                                         </select>
                                     </div>
                                     <div>
                                         <label class="block text-sm font-medium text-gray-700 mb-1">Priority</label>
                                         <select onchange="updateTicketPriority(currentTicket.id, this.value)" class="styled-select block w-full border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 rounded-md" id="ticket-priority-select">
-                                            <option value="low">Low</option>
-                                            <option value="medium">Medium</option>
-                                            <option value="high">High</option>
+                                            <?php
+                                            $priorities = get_terms([
+                                                'taxonomy'   => 'robodesk_ticket_priority',
+                                                'hide_empty' => false,
+                                            ]);
+
+                                            if (!is_wp_error($priorities)) {
+                                                foreach ($priorities as $priority) {
+                                                    echo '<option value="' . esc_attr($priority->term_id) . '">' . esc_html($priority->name) . '</option>';
+                                                }
+                                            }
+
+                                            ?>
                                         </select>
                                     </div>
                                     <div>
@@ -497,45 +566,91 @@ function robodesk_dashboard_callback()
                             </button>
                         </nav>
                     </div>
-
+                    <!-- overall setting page with all the tabs -->
                     <div class="p-6">
                         <!-- Basic Settings Tab -->
                         <div id="basic-tab" class="settings-tab-content">
                             <h3 class="text-lg font-medium text-gray-900 mb-6">Basic Settings</h3>
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700">Site Name</label>
-                                    <input type="text" value="Robodesk Support" class="styled-input mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
-                                </div>
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700">Admin Email</label>
-                                    <input type="email" value="admin@example.com" class="styled-input mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
-                                </div>
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700">Timezone</label>
-                                    <select class="styled-select mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
-                                        <option value="UTC">UTC</option>
-                                        <option value="EST">Eastern Time</option>
-                                        <option value="PST">Pacific Time</option>
-                                        <option value="GMT">GMT</option>
-                                    </select>
-                                </div>
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700">Language</label>
-                                    <select class="styled-select mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
-                                        <option value="en">English</option>
-                                        <option value="es">Spanish</option>
-                                        <option value="fr">French</option>
-                                        <option value="de">German</option>
-                                    </select>
-                                </div>
-                            </div>
-                            <hr class="my-6 border-gray-200">
-                            <button type="button" id="save-basic-settings" class="mt-6 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">
-                                Save Settings
-                            </button>
-                        </div>
+                            <form id="robodesk-basic-settings-form" class="space-y-6">
+                                <input type="hidden" name="robodesk_basic_settings_nonce" value="<?php echo wp_create_nonce('robodesk_basic_settings_action'); ?>">
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div>
+                                        <label for="site_name" class="block text-sm font-medium text-gray-700">Site Name</label>
+                                        <input type="text" name="site_name" id="site_name" value="<?php echo esc_attr(get_option('robodesk_site_name', 'Robodesk Support')); ?>" class="styled-input mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                                    </div>
+                                    <div>
+                                        <label for="admin_email" class="block text-sm font-medium text-gray-700">Admin Email</label>
+                                        <input type="email" name="admin_email" id="admin_email" value="<?php echo esc_attr(get_option('robodesk_admin_email', 'admin@example.com')); ?>" class="styled-input mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                                    </div>
+                                    <div>
+                                        <label for="timezone" class="block text-sm font-medium text-gray-700">Timezone</label>
+                                        <select name="timezone" id="timezone" class="styled-select mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                                            <?php
+                                            $saved_timezone = get_option('robodesk_timezone', 'UTC');
+                                            $timezones = ['UTC', 'America/New_York', 'America/Los_Angeles', 'GMT'];
+                                            foreach ($timezones as $tz) {
+                                                echo '<option value="' . esc_attr($tz) . '"' . selected($saved_timezone, $tz, false) . '>' . esc_html($tz) . '</option>';
+                                            }
+                                            ?>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label for="language" class="block text-sm font-medium text-gray-700">Language</label>
+                                        <select name="language" id="language" class="styled-select mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                                            <?php
+                                            $saved_language = get_option('robodesk_language', 'en');
+                                            $languages = ['en' => 'English', 'es' => 'Spanish', 'fr' => 'French', 'de' => 'German'];
+                                            foreach ($languages as $code => $name) {
+                                                echo '<option value="' . esc_attr($code) . '"' . selected($saved_language, $code, false) . '>' . esc_html($name) . '</option>';
+                                            }
+                                            ?>
+                                        </select>
+                                    </div>
+                                    <!-- Image Fields -->
+                                    <div>
+                                        <label for="popover_icon" class="block text-sm font-medium text-gray-700">Pop over Icon/Image</label>
+                                        <input type="file" accept="image/*" name="popover_icon" id="popover_icon" class="styled-input mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 ">
 
+                                        <div class="mt-2">
+                                            <img id="popover-icon-preview" src="<?php echo esc_url(get_option('robodesk_popover_icon', '')); ?>" alt="Pop over Icon Preview" class="hidden max-w-[150px] h-auto rounded-md">
+                                        </div>
+                                        <input type="hidden" name="robodesk_popover_icon" id="robodesk_popover_icon" value="<?php echo esc_attr(get_option('robodesk_popover_icon', '')); ?>">
+                                    </div>
+                                    <div>
+                                        <label for="popover_top_icon" class="block text-sm font-medium text-gray-700">Pop over Top Icon/Image</label>
+                                        <input type="file" accept="image/*" name="popover_top_icon" id="popover_top_icon" class="styled-input mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+
+                                        <div class="mt-2">
+                                            <img id="popover-top-icon-preview" src="<?php echo esc_url(get_option('robodesk_popover_top_icon', '')); ?>" alt="Pop over Top Icon Preview" class="hidden max-w-[150px] h-auto rounded-md">
+                                        </div>
+                                        <input type="hidden" name="robodesk_popover_top_icon" id="robodesk_popover_top_icon" value="<?php echo esc_attr(get_option('robodesk_popover_top_icon', '')); ?>">
+                                    </div>
+                                    <div>
+                                        <label for="logo" class="block text-sm font-medium text-gray-700">Logo</label>
+                                        <input type="file" accept="image/*" name="logo" id="logo" class="styled-input mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+
+                                        <div class="mt-2">
+                                            <img id="logo-preview" src="<?php echo esc_url(get_option('robodesk_logo', '')); ?>" alt="Logo Preview" class="hidden max-w-[150px] h-auto rounded-md">
+                                        </div>
+                                        <input type="hidden" name="robodesk_logo" id="robodesk_logo" value="<?php echo esc_attr(get_option('robodesk_logo', '')); ?>">
+                                    </div>
+                                    <div>
+                                        <label for="wide_logo" class="block text-sm font-medium text-gray-700">Wide Logo</label>
+                                        <input type="file" accept="image/*" name="wide_logo" id="wide_logo" class="styled-input mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+
+                                        <div class="mt-2">
+                                            <img id="wide-logo-preview" src="<?php echo esc_url(get_option('robodesk_wide_logo', '')); ?>" alt="Wide Logo Preview" class="hidden max-w-[150px] h-auto rounded-md">
+                                        </div>
+                                        <input type="hidden" name="robodesk_wide_logo" id="robodesk_wide_logo" value="<?php echo esc_attr(get_option('robodesk_wide_logo', '')); ?>">
+                                    </div>
+                                </div>
+                                <hr class="my-6 border-gray-200">
+                                <button type="button" id="save-basic-settings" class="mt-6 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">
+                                    Save Settings
+                                </button>
+                            </form>
+                        </div>
+                        <!-- IMAP Settings load saved settings -->
                         <?php
                         // Load saved settings
                         $settings = get_option('robodesk_imap_settings', array(
@@ -613,129 +728,140 @@ function robodesk_dashboard_callback()
                         <!-- Email Templates Tab -->
                         <div id="templates-tab" class="settings-tab-content hidden">
                             <h3 class="text-lg font-medium text-gray-900 mb-6">Email Templates</h3>
-                            <div class="space-y-6">
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-2">New Ticket Notification</label>
-                                    <div class="editor-toolbar mb-2">
-                                        <button type="button" onclick="formatText('bold', 'new-ticket-template')" class="editor-btn"><i class="fas fa-bold"></i></button>
-                                        <button type="button" onclick="formatText('italic', 'new-ticket-template')" class="editor-btn"><i class="fas fa-italic"></i></button>
-                                        <button type="button" onclick="formatText('underline', 'new-ticket-template')" class="editor-btn"><i class="fas fa-underline"></i></button>
-                                        <button type="button" onclick="formatText('insertUnorderedList', 'new-ticket-template')" class="editor-btn"><i class="fas fa-list-ul"></i></button>
-                                        <button type="button" onclick="formatText('insertOrderedList', 'new-ticket-template')" class="editor-btn"><i class="fas fa-list-ol"></i></button>
+                            <form id="robodesk_email_template_save" class="space-y-6">
+                                <input type="hidden" name="robodesk_email_template_nonce" value="<?php echo wp_create_nonce('robodesk_email_template_action'); ?>">
+                                <div class="space-y-6">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">New Ticket Notification</label>
+                                        <div class="editor-toolbar mb-2">
+                                            <button type="button" onclick="formatText('bold', 'new-ticket-template')" class="editor-btn"><i class="fas fa-bold"></i></button>
+                                            <button type="button" onclick="formatText('italic', 'new-ticket-template')" class="editor-btn"><i class="fas fa-italic"></i></button>
+                                            <button type="button" onclick="formatText('underline', 'new-ticket-template')" class="editor-btn"><i class="fas fa-underline"></i></button>
+                                            <button type="button" onclick="formatText('insertUnorderedList', 'new-ticket-template')" class="editor-btn"><i class="fas fa-list-ul"></i></button>
+                                            <button type="button" onclick="formatText('insertOrderedList', 'new-ticket-template')" class="editor-btn"><i class="fas fa-list-ol"></i></button>
+                                        </div>
+                                        <div id="new-ticket-template" class="editor-content" contenteditable="true"><?php echo wp_kses_post(get_option('robodesk_email_template_new-ticket', 'Thank you for contacting us. We have received your ticket and will respond soon.')); ?></div>
                                     </div>
-                                    <div id="new-ticket-template" class="editor-content" contenteditable="true">
-                                        Thank you for contacting us. We have received your ticket and will respond soon.
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">Ticket Resolved</label>
+                                        <div class="editor-toolbar mb-2">
+                                            <button type="button" onclick="formatText('bold', 'ticket-resolved-template')" class="editor-btn"><i class="fas fa-bold"></i></button>
+                                            <button type="button" onclick="formatText('italic', 'ticket-resolved-template')" class="editor-btn"><i class="fas fa-italic"></i></button>
+                                            <button type="button" onclick="formatText('underline', 'ticket-resolved-template')" class="editor-btn"><i class="fas fa-underline"></i></button>
+                                            <button type="button" onclick="formatText('insertUnorderedList', 'ticket-resolved-template')" class="editor-btn"><i class="fas fa-list-ul"></i></button>
+                                            <button type="button" onclick="formatText('insertOrderedList', 'ticket-resolved-template')" class="editor-btn"><i class="fas fa-list-ol"></i></button>
+                                        </div>
+                                        <div id="ticket-resolved-template" class="editor-content" contenteditable="true"><?php echo wp_kses_post(get_option('robodesk_email_template_ticket-resolved', 'Your ticket has been resolved. Please let us know if you need further assistance.')); ?></div>
                                     </div>
-                                </div>
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-2">Ticket Resolved</label>
-                                    <div class="editor-toolbar mb-2">
-                                        <button type="button" onclick="formatText('bold', 'ticket-resolved-template')" class="editor-btn"><i class="fas fa-bold"></i></button>
-                                        <button type="button" onclick="formatText('italic', 'ticket-resolved-template')" class="editor-btn"><i class="fas fa-italic"></i></button>
-                                        <button type="button" onclick="formatText('underline', 'ticket-resolved-template')" class="editor-btn"><i class="fas fa-underline"></i></button>
-                                        <button type="button" onclick="formatText('insertUnorderedList', 'ticket-resolved-template')" class="editor-btn"><i class="fas fa-list-ul"></i></button>
-                                        <button type="button" onclick="formatText('insertOrderedList', 'ticket-resolved-template')" class="editor-btn"><i class="fas fa-list-ol"></i></button>
-                                    </div>
-                                    <div id="ticket-resolved-template" class="editor-content" contenteditable="true">
-                                        Your ticket has been resolved. Please let us know if you need further assistance.
-                                    </div>
-                                </div>
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-2">Auto Reply</label>
-                                    <div class="editor-toolbar mb-2">
-                                        <button type="button" onclick="formatText('bold', 'auto-reply-template')" class="editor-btn"><i class="fas fa-bold"></i></button>
-                                        <button type="button" onclick="formatText('italic', 'auto-reply-template')" class="editor-btn"><i class="fas fa-italic"></i></button>
-                                        <button type="button" onclick="formatText('underline', 'auto-reply-template')" class="editor-btn"><i class="fas fa-underline"></i></button>
-                                        <button type="button" onclick="formatText('insertUnorderedList', 'auto-reply-template')" class="editor-btn"><i class="fas fa-list-ul"></i></button>
-                                        <button type="button" onclick="formatText('insertOrderedList', 'auto-reply-template')" class="editor-btn"><i class="fas fa-list-ol"></i></button>
-                                    </div>
-                                    <div id="auto-reply-template" class="editor-content" contenteditable="true">
-                                        This is an automated response. We will get back to you within 24 hours.
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">Auto Reply</label>
+                                        <div class="editor-toolbar mb-2">
+                                            <button type="button" onclick="formatText('bold', 'auto-reply-template')" class="editor-btn"><i class="fas fa-bold"></i></button>
+                                            <button type="button" onclick="formatText('italic', 'auto-reply-template')" class="editor-btn"><i class="fas fa-italic"></i></button>
+                                            <button type="button" onclick="formatText('underline', 'auto-reply-template')" class="editor-btn"><i class="fas fa-underline"></i></button>
+                                            <button type="button" onclick="formatText('insertUnorderedList', 'auto-reply-template')" class="editor-btn"><i class="fas fa-list-ul"></i></button>
+                                            <button type="button" onclick="formatText('insertOrderedList', 'auto-reply-template')" class="editor-btn"><i class="fas fa-list-ol"></i></button>
+                                        </div>
+                                        <div id="auto-reply-template" class="editor-content" contenteditable="true"><?php echo wp_kses_post(get_option('robodesk_email_template_auto-reply', 'This is an automated response. We will get back to you within 24 hours.')); ?></div>
                                     </div>
                                 </div>
-                            </div>
-                            <hr class="my-6 border-gray-200">
-                            <button type="button" id="save-templates" class="mt-6 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">
-                                Save Templates
-                            </button>
+                                <hr class="my-6 border-gray-200">
+                                <button type="button" id="robodesk-save-templates" class="mt-6 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">
+                                    Save Templates
+                                </button>
+                            </form>
                         </div>
-
                         <!-- Fetch Tickets Tab -->
                         <div id="fetch-tab" class="settings-tab-content hidden">
                             <h3 class="text-lg font-medium text-gray-900 mb-6">Fetch Tickets</h3>
-                            <div class="space-y-6">
-                                <p class="text-sm text-gray-600">Use this feature to fetch new emails from your configured IMAP account and convert them into tickets and replies.</p>
-                                <div class="bg-gray-50 p-4 rounded-lg">
-                                    <h4 class="font-medium text-gray-900 mb-2">Email Fetching Settings</h4>
-                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        <div>
-                                            <label class="block text-sm font-medium text-gray-700">Fetch Interval (minutes)</label>
-                                            <input type="number" value="15" class="styled-input mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
-                                        </div>
-                                        <div>
-                                            <label class="block text-sm font-medium text-gray-700">Auto-assign to</label>
-                                            <select class="styled-select mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
-                                                <option value="support">Support Team</option>
-                                                <option value="tech">Tech Support</option>
-                                                <option value="sales">Sales Team</option>
-                                            </select>
+                            <form id="robodesk-fetch-tickets-form" class="space-y-6">
+                                <input type="hidden" name="robodesk_ticket_assignment_nonce" value="<?php echo wp_create_nonce('robodesk_ticket_assignment_action'); ?>">
+                                <div class="space-y-6">
+                                    <p class="text-sm text-gray-600">Use this feature to fetch new emails from your configured IMAP account and convert them into tickets and replies.</p>
+                                    <div class="bg-gray-50 p-4 rounded-lg">
+                                        <h4 class="font-medium text-gray-900 mb-2">Email Fetching Settings</h4>
+                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            <div>
+                                                <label class="block text-sm font-medium text-gray-700">Fetch Interval (minutes)</label>
+                                                <input type="number" name="fetch_interval" value="15" class="styled-input mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500" min="1" max="1440" required>
+                                            </div>
+                                            <div>
+                                                <label class="block text-sm font-medium text-gray-700">Auto-assign to</label>
+                                                <select name="default_agent" class="styled-select mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500" required>
+                                                    <option value="support">Support Team</option>
+                                                    <option value="tech">Tech Support</option>
+                                                    <option value="sales">Sales Team</option>
+                                                </select>
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
-                                <div class="flex space-x-4">
-                                    <button onclick="fetchEmails()" class="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-                                        <i class="fas fa-sync-alt mr-2"></i>
-                                        Fetch Emails Now
-                                    </button>
-                                    <button class="bg-gray-600 text-white px-6 py-2 rounded-md hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500">
-                                        <i class="fas fa-cog mr-2"></i>
-                                        Configure Auto-Fetch
-                                    </button>
-                                </div>
-                                <div id="fetch-results" class="hidden bg-blue-50 border border-blue-200 rounded-lg p-4">
-                                    <div class="flex items-center">
-                                        <i class="fas fa-info-circle text-blue-500 mr-2"></i>
-                                        <span id="fetch-message" class="text-blue-800"></span>
+                                    <div class="flex space-x-4">
+                                        <button id="save-ticket-assignment-settings" class="bg-gray-600 text-white px-6 py-2 rounded-md hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500">
+                                            <i class="fas fa-cog mr-2"></i>
+                                            Configure Auto-Fetch
+                                        </button>
                                     </div>
+                                </div>
+                            </form>
+
+                            <div class="flex space-x-4 mt-6">
+                                <button onclick="fetchEmails()" class="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                                    <i class="fas fa-sync-alt mr-2"></i>
+                                    Fetch Emails Now
+                                </button>
+                            </div>
+                            <div id="fetch-results" class="hidden bg-blue-50 border border-blue-200 rounded-lg p-4 mt-4">
+                                <div class="flex items-center">
+                                    <i class="fas fa-info-circle text-blue-500 mr-2"></i>
+                                    <span id="fetch-message" class="text-blue-800"></span>
                                 </div>
                             </div>
-                            <hr class="my-6 border-gray-200">
-                            <button type="button" id="save-fetch-settings" class="mt-6 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">
-                                Save Fetch Settings
-                            </button>
                         </div>
 
                         <!-- Advanced Settings Tab -->
+
+
+                        <?php
+                        $settings = get_option('robodesk_advanced_settings', [
+                            'enable_auto_assign' => false,
+                            'enable_notifications' => true,
+                            'enable_customer_portal' => true,
+                            'max_file_upload_size' => 10
+                        ]);
+                        ?>
                         <div id="advanced-tab" class="settings-tab-content hidden">
                             <h3 class="text-lg font-medium text-gray-900 mb-6">Advanced Settings</h3>
-                            <div class="space-y-4">
-                                <div class="flex items-center">
-                                    <input id="enable-auto-assign" type="checkbox" class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
-                                    <label for="enable-auto-assign" class="ml-2 block text-sm text-gray-900">
-                                        Enable auto-assignment of tickets
-                                    </label>
+                            <form id="advanced-settings-form" class="space-y-6">
+                                <input type="hidden" name="robodesk_advanced_settings_nonce" value="<?php echo wp_create_nonce('robodesk_advanced_settings_action'); ?>">
+                                <div class="space-y-4">
+                                    <div class="flex items-center">
+                                        <input id="enable-auto-assign" type="checkbox" <?php checked($settings['enable_auto_assign'], true); ?> class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                                        <label for="enable-auto-assign" class="ml-2 block text-sm text-gray-900">
+                                            Enable auto-assignment of tickets
+                                        </label>
+                                    </div>
+                                    <div class="flex items-center">
+                                        <input id="enable-notifications" type="checkbox" <?php checked($settings['enable_notifications'], true); ?> class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                                        <label for="enable-notifications" class="ml-2 block text-sm text-gray-900">
+                                            Enable email notifications
+                                        </label>
+                                    </div>
+                                    <div class="flex items-center">
+                                        <input id="enable-customer-portal" type="checkbox" <?php checked($settings['enable_customer_portal'], true); ?> class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                                        <label for="enable-customer-portal" class="ml-2 block text-sm text-gray-900">
+                                            Enable customer portal
+                                        </label>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700">Maximum file upload size (MB)</label>
+                                        <input type="number" name="max_file_upload_size" value="<?php echo esc_attr($settings['max_file_upload_size']); ?>" min="1" max="100" class="styled-input mt-1 block w-32 border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                                    </div>
                                 </div>
-                                <div class="flex items-center">
-                                    <input id="enable-notifications" type="checkbox" checked class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
-                                    <label for="enable-notifications" class="ml-2 block text-sm text-gray-900">
-                                        Enable email notifications
-                                    </label>
-                                </div>
-                                <div class="flex items-center">
-                                    <input id="enable-customer-portal" type="checkbox" checked class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
-                                    <label for="enable-customer-portal" class="ml-2 block text-sm text-gray-900">
-                                        Enable customer portal
-                                    </label>
-                                </div>
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700">Maximum file upload size (MB)</label>
-                                    <input type="number" value="10" class="styled-input mt-1 block w-32 border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
-                                </div>
-                            </div>
-                            <hr class="my-6 border-gray-200">
-                            <button type="button" id="save-advanced-settings" class="mt-6 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">
-                                Save Advanced Settings
-                            </button>
+                                <hr class="my-6 border-gray-200">
+                                <button type="button" id="save-advanced-settings" class="mt-6 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">
+                                    Save Advanced Settings
+                                </button>
+                            </form>
                         </div>
 
                         <!-- <div class="mt-8 pt-6 border-t border-gray-200">
