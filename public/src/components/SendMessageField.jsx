@@ -28,18 +28,16 @@ const SendMessageField = ({ setShowLogin , setActiveTab , setSelectedTicket } ) 
     }
 
     try {
-    
-      const result = await createTicket(userId, message, '');
-      
+       const result = await createTicket(userId, message, '');
        const newTicket = {
             id: result.data.ticket_id,
             ticketNumber: result.data.ticket_number,
             title:result.data.ticket_title,
-            source:  "Web",
-            timeAgo: "Just now",
+            source:  result.data.ticket_origin,
+            timeAgo: result.data.ticket_time_ago,
             authorImage: result.data.ticket_author_image,
-            status: "new",
-            priority:  "Medium",
+            status: result.data.ticket_status,
+            priority:  result.data.ticket_priority,
             messages: [],
         };
 
@@ -90,7 +88,7 @@ const SendMessageField = ({ setShowLogin , setActiveTab , setSelectedTicket } ) 
               fill="#004AFF"
             />
           </svg>
-        </button>``
+        </button>
       </div>
     </div>
   );

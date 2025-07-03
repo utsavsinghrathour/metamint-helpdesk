@@ -119,7 +119,7 @@ const sampleTickets = [
 ];
 
 // Global variables
-let tickets = [...sampleTickets];
+let tickets = [...sampleTickets]; // Use sample data for initial tickets
 let currentPage = "dashboard";
 let currentTicket = null;
 let currentTicketTab = "replies";
@@ -259,10 +259,10 @@ function updateDashboardStats() {
     resolved: tickets.filter((t) => t.status === "resolved").length,
   };
 
-  document.getElementById("total-tickets").textContent = stats.total;
-  document.getElementById("open-tickets").textContent = stats.open;
-  document.getElementById("in-progress-tickets").textContent = stats.inProgress;
-  document.getElementById("resolved-tickets").textContent = stats.resolved;
+  document.getElementById("total-tickets").innerHTML = stats.total;
+  document.getElementById("open-tickets").innerHTML = stats.open;
+  document.getElementById("in-progress-tickets").innerHTML = stats.inProgress;
+  document.getElementById("resolved-tickets").innerHTML = stats.resolved;
 }
 
 function filterDashboardTickets(filterType) {
@@ -1022,6 +1022,9 @@ function fetchEmails() {
     }, 5000);
   }, 1000);
 }
+function robodesk_email_fetcher() {
+  var phpadd = "<?php echo robodesk_fetch_emails();?>";
+}
 
 // Close modal when clicking outside
 document.addEventListener("click", function (event) {
@@ -1030,6 +1033,7 @@ document.addEventListener("click", function (event) {
     hideCustomerTickets();
   }
 });
+// custom JavaScript for Robodesk dashboard
 
 // IMAP test connection function
 // This function tests the IMAP connection using AJAX
@@ -1111,4 +1115,258 @@ jQuery(document).ready(function ($) {
   });
 });
 
+// email template settings AJAX handler
+jQuery(document).ready(function ($) {
+  $(document).on("click", "#robodesk-save-templates", function () {
+    var $form = $("#robodesk_email_template_save");
+    var $button = $(this);
+
+    $button.prop("disabled", true).text("Saving Templates...");
+
+    // Collect template data from contenteditable divs
+    var templates = {
+      "new-ticket": $("#new-ticket-template").html(),
+      "ticket-resolved": $("#ticket-resolved-template").html(),
+      "auto-reply": $("#auto-reply-template").html(),
+    };
+
+    $.ajax({
+      url: ajaxurl, // Ensure ajaxurl is defined via wp_localize_script
+      type: "POST",
+      data: {
+        action: "robodesk_email_template_save",
+        nonce: $form.find('input[name="robodesk_email_template_nonce"]').val(),
+        templates: templates,
+      },
+      success: function (response) {
+        console.log(response); // Debug response
+        if (response.success) {
+          showToast(response.data.message, "success");
+        } else {
+          showToast(response.data.message, "error");
+        }
+      },
+      error: function (xhr, status, error) {
+        console.log("AJAX Error:", xhr, status, error);
+        showToast("AJAX request failed: " + error, "error");
+      },
+      complete: function () {
+        $button.prop("disabled", false).text("Save Templates");
+      },
+    });
+  });
+});
+
+//advanced settings AJAX handler
+jQuery(document).ready(function ($) {
+  $(document).on("click", "#save-advanced-settings", function () {
+    var $form = $("#advanced-settings-form");
+    var $button = $(this);
+
+    $button.prop("disabled", true).text("Saving Advanced Settings...");
+
+    // Collect form data
+    var settings = {
+      enable_auto_assign: $("#enable-auto-assign").is(":checked"),
+      enable_notifications: $("#enable-notifications").is(":checked"),
+      enable_customer_portal: $("#enable-customer-portal").is(":checked"),
+      max_file_upload_size: $form.find('input[type="number"]').val(),
+    };
+
+    $.ajax({
+      url: ajaxurl, // Ensure ajaxurl is defined via wp_localize_script
+      type: "POST",
+      data: {
+        action: "robodesk_save_advanced_settings",
+        nonce: $form
+          .find('input[name="robodesk_advanced_settings_nonce"]')
+          .val(),
+        settings: settings,
+      },
+      success: function (response) {
+        console.log(response); // Debug response
+        if (response.success) {
+          showToast(response.data.message, "success");
+        } else {
+          showToast(response.data.message, "error");
+        }
+      },
+      error: function (xhr, status, error) {
+        console.log("AJAX Error:", xhr, status, error);
+        showToast("AJAX request failed: " + error, "error");
+      },
+      complete: function () {
+        $button.prop("disabled", false).text("Save Advanced Settings");
+      },
+    });
+  });
+});
+
 // basic settings AJAX handler
+jQuery(document).ready(function ($) {
+  // Image preview handler for all file inputs
+  const imageFields = [
+    {
+      input: "popover_icon",
+      preview: "popover-icon-preview",
+      hidden: "robodesk_popover_icon",
+    },
+    {
+      input: "popover_top_icon",
+      preview: "popover-top-icon-preview",
+      hidden: "robodesk_popover_top_icon",
+    },
+    { input: "logo", preview: "logo-preview", hidden: "robodesk_logo" },
+    {
+      input: "wide_logo",
+      preview: "wide-logo-preview",
+      hidden: "robodesk_wide_logo",
+    },
+  ];
+
+  imageFields.forEach(function (field) {
+    // Show existing image on page load
+    const hiddenInput = $(`#${field.hidden}`);
+    if (hiddenInput.val()) {
+      $(`#${field.preview}`)
+        .removeClass("hidden")
+        .attr("src", hiddenInput.val());
+    }
+
+    // Handle file input change for preview
+    $(`input[name="${field.input}"]`).on("change", function (event) {
+      const file = event.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function (e) {
+          $(`#${field.preview}`)
+            .removeClass("hidden")
+            .attr("src", e.target.result);
+        };
+        reader.readAsDataURL(file);
+      }
+    });
+  });
+
+  // Handle form submission for basic settings
+  $(document).on("click", "#save-basic-settings", function () {
+    const $form = $("#robodesk-basic-settings-form");
+    const $button = $(this);
+    const formData = new FormData();
+
+    // Append basic settings
+    formData.append("action", "robodesk_save_basic_settings");
+    formData.append(
+      "nonce",
+      $form.find('input[name="robodesk_basic_settings_nonce"]').val()
+    );
+    formData.append("settings[site_name]", $form.find("#site_name").val());
+    formData.append("settings[admin_email]", $form.find("#admin_email").val());
+    formData.append("settings[timezone]", $form.find("#timezone").val());
+    formData.append("settings[language]", $form.find("#language").val());
+
+    // Append image URLs and files
+    imageFields.forEach(function (field) {
+      formData.append(field.hidden, $(`#${field.hidden}`).val());
+      const fileInput = $(`input[name="${field.input}"]`)[0];
+      if (fileInput.files.length > 0) {
+        formData.append(field.input, fileInput.files[0]);
+      }
+    });
+
+    $button.prop("disabled", true).text("Saving Settings...");
+
+    $.ajax({
+      url: ajaxurl, // Ensure ajaxurl is defined via wp_localize_script
+      type: "POST",
+      data: formData,
+      processData: false, // Required for FormData with files
+      contentType: false, // Required for FormData with files
+      success: function (response) {
+        console.log(response); // Debug response
+        if (response.success) {
+          // Update hidden inputs with new image URLs
+          if (response.data.urls) {
+            imageFields.forEach(function (field) {
+              if (response.data.urls[field.hidden]) {
+                $(`#${field.hidden}`).val(response.data.urls[field.hidden]);
+                $(`#${field.preview}`)
+                  .removeClass("hidden")
+                  .attr("src", response.data.urls[field.hidden]);
+              }
+            });
+          }
+          showToast(response.data.message, "success");
+        } else {
+          showToast(response.data.message, "error");
+        }
+      },
+      error: function (xhr, status, error) {
+        console.log("AJAX Error:", xhr, status, error);
+        showToast("AJAX request failed: " + error, "error");
+      },
+      complete: function () {
+        $button.prop("disabled", false).text("Save Settings");
+      },
+    });
+  });
+});
+
+// for configuring ticket assignments (fetch interval and default agent)
+jQuery(document).ready(function ($) {
+  // Handle form submission for ticket assignment settings
+  $(document).on("click", "#save-ticket-assignment-settings", function () {
+    const $form = $("#robodesk-fetch-tickets-form");
+    const $button = $(this);
+    const formData = new FormData();
+
+    // Append ticket assignment settings
+    formData.append("action", "robodesk_save_ticket_assignment_settings");
+    formData.append(
+      "nonce",
+      $form.find('input[name="robodesk_ticket_assignment_nonce"]').val()
+    );
+    formData.append(
+      "fetch_interval",
+      $form.find('input[name="fetch_interval"]').val()
+    );
+    formData.append(
+      "default_agent",
+      $form.find('select[name="default_agent"]').val()
+    );
+
+    // Basic validation
+    if (!$form.find('input[name="fetch_interval"]').val()) {
+      showToast("Please enter a fetch interval.", "error");
+      return;
+    }
+    if (!$form.find('select[name="default_agent"]').val()) {
+      showToast("Please select a team for auto-assignment.", "error");
+      return;
+    }
+
+    $button.prop("disabled", true).text("Configuring Auto-Fetch Settings...");
+
+    $.ajax({
+      url: ajaxurl,
+      type: "POST",
+      data: formData,
+      processData: false,
+      contentType: false,
+      success: function (response) {
+        if (response.success) {
+          showToast(response.data.message, "success");
+        } else {
+          showToast(response.data.message, "error");
+        }
+      },
+      error: function (xhr, status, error) {
+        console.log("AJAX Error:", xhr, status, error);
+        showToast("AJAX request failed: " + error, "error");
+      },
+      complete: function () {
+        $button.prop("disabled", false).text("Configure Auto-Fetch");
+      },
+    });
+  });
+});
