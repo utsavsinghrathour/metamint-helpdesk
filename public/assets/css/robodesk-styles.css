@@ -128,15 +128,14 @@
   margin-top: 8px;
 }
 .robodesk-dashboard-content input,
-.robodesk-dashboard-content textarea
-{
+.robodesk-dashboard-content textarea {
   border: 1px solid #f2f1f1;
   padding: 12px;
   font-size: 18px;
   width: 100%;
   margin-top: 8px;
 }
-#wp-ticket_content-wrap{
+#wp-ticket_content-wrap {
   margin-top: 8px;
 }
 .robodesk-dashboard-content input[type='submit'] {
@@ -271,7 +270,7 @@
   width: 100%;
   border-collapse: collapse;
 }
-#credential_notes{
+#credential_notes {
   width: 100%;
   min-height: 100px;
 }
@@ -357,7 +356,7 @@
 .password-hidden {
   display: inline-block;
   width: 80px; /* Adjust as needed */
-  text-align: center;
+  text-align: start;
 }
 
 .robodesk-container table {
@@ -613,16 +612,33 @@
   display: none;
 }
 .tickets_table_wrapper,
-.credential-table-wrapper
-{
+.credential-table-wrapper {
   max-width: 100%;
   overflow: auto;
+}
+.credential-table-wrapper tbody tr td:nth-child(3) {
+  display: flex;
+  justify-content: space-between;
+}
+.credential-table-wrapper .show-password {
+  background-color: transparent;
+}
+.credential-table-wrapper .show-password:focus {
+  border: transparent;
+}
+.credential-table-wrapper .delete-credential {
+  background-color: #fef2f2;
+  color: #dc2626;
+  padding: 5px;
+  font-size: 12px;
+  font-weight: 600;
+  border-radius: 5px;
 }
 .tickets_table_wrapper thead tr th:first-child,
 .robodesk-ticket-table-content td:first-child {
   position: sticky;
   left: -5px;
-  z-index: 99999;
+  z-index: 9999;
   background: #fff;
 }
 .tickets_table_wrapper thead tr th:first-child {
@@ -638,15 +654,22 @@
 .robodesk-table-content td:nth-child(5) {
   min-width: 110px;
 }
-.robodesk-dashboard-content .mce-container{
+.robodesk-dashboard-content .mce-container {
   width: 100%;
   background-color: transparent !important;
 }
-.dashicons-calendar{
+.dashicons-calendar {
   margin-left: 10px;
 }
-.dashicons-calendar:before{
+.dashicons-calendar:before {
   font-family: 'dashicons';
+}
+#robodesk-create-ticket select{
+  width: 100%;
+}
+td.credential_url a{
+  text-decoration: underline;
+  text-underline-offset: 3px;
 }
 @media screen and (max-width: 768px) {
   .desktop-menu {
@@ -657,12 +680,12 @@
     width: 100%;
     padding: 10px;
   }
-  .robodesk-infographs{
+  .robodesk-infographs {
     flex-direction: column;
   }
-   .robodesk-infograph {
+  .robodesk-infograph {
     width: 100%;
-   }
+  }
   .robodesk-frontend-dashboard {
     flex-direction: column;
   }
@@ -676,7 +699,7 @@
     margin-bottom: 20px;
     background: #f9fafb;
     font-weight: 600;
-    }
+  }
   .robodesk-container {
     padding: 0;
   }
@@ -684,8 +707,13 @@
     flex-wrap: wrap;
     gap: 15px;
   }
-  #credential-form{
+  #credential-form {
     padding: 20px;
     margin: 20px 0;
+  }
+  .dashicons-calendar{
+    display: flex;
+    margin-left: 0;
+    gap: 5px;
   }
 }
