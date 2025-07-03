@@ -192,7 +192,7 @@ const Signup = ({ switchToLogin }) => {
           <label htmlFor="email" className="rd-body-text"></label>
           <input
             type="email"
-            id="email"
+            id="email-address"
             name="email"
             value={formData.email}
             onChange={handleChange}

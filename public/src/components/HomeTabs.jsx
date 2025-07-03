@@ -7,10 +7,10 @@ import SingleQuestionBox from './SingleQuestionBox';
 // import Login from './Login.jsx';
 import '../styles/HomeTabs.css';
 
-const HomeTabs = ({ setActiveTab, setIsOpen, isExpanded, setIsExpanded, handleClose , selectedTicket , setSelectedTicket }) => {
+const HomeTabs = ({ setActiveTab, setIsOpen, isExpanded, setIsExpanded, handleClose , updateSelectedTicket }) => {
   const [showLogin, setShowLogin] = useState(false);
   const [showHeaderFooter, setShowHeaderFooter] = useState(true);
-
+  
   return (
     <div className="rd-flex rd-flex-col rd-h-full featured-faq">
       <div className="rd-main-content">
@@ -24,8 +24,9 @@ const HomeTabs = ({ setActiveTab, setIsOpen, isExpanded, setIsExpanded, handleCl
               setIsExpanded={setIsExpanded}
               setShowLogin={setShowLogin}
               setActiveTab={setActiveTab}
+              updateSelectedTicket={updateSelectedTicket}
             //   selectedTicket={selectedTicket}  
-              setSelectedTicket={setSelectedTicket}
+            //   setSelectedTicket={setSelectedTicket}
             />
        
         </div>

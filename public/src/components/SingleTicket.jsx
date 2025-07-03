@@ -1,17 +1,14 @@
-import React, { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { FaChevronLeft } from 'react-icons/fa';
 import { FaRegFaceSmileBeam } from 'react-icons/fa6';
 import { PiPaperPlaneRightFill } from 'react-icons/pi';
 import { FiPaperclip } from 'react-icons/fi';
-// import { LuDot } from 'react-icons/lu';
 import { IoClose } from 'react-icons/io5';
 import EmojiPicker from 'emoji-picker-react';
-import Logo from '../images/wooescrow-logo.png';
 import '../styles/MessageTabs.css';
-import axios from 'axios';
-import {  getMessages , sendReply } from "../utils/modules";   
+import { getMessages, sendReply } from "../utils/modules";
 
-const SingleTicket = ({ ticket, onBack , loggedInUserId }) => {
+const SingleTicket = ({ ticket, onBack, loggedInUserId }) => {
   const [message, setMessage] = useState('');
   const [showPicker, setShowPicker] = useState(false);
   const [previewImage, setPreviewImage] = useState(null);
@@ -27,30 +24,24 @@ const SingleTicket = ({ ticket, onBack , loggedInUserId }) => {
     try {
       setLoading(true);
       setError(null);
-      const response = await getMessages(ticket.id);
+      const response = await getMessages(ticket.id, loggedInUserId);
 
-      if(response.code === 400){
+      if (response.code === 400) {
         setError('Nothing to show');
         setLoading(false);
         return;
       }
-      
-    //   console.log('THe response',response);
-    
-    //   console.log('The logged in user',loggedInUserId , response.data[9].);
+
       const messages = response.data.map((comment) => ({
         id: comment.id,
-        text:  comment.content.replace(/<[^>]+>/g, ''),
-        sender:  comment.author_id === loggedInUserId ? 'me' : 'other', // Compare with current user ID
+        text: comment.content.replace(/<[^>]+>/g, ''),
+        sender: comment.author_id === loggedInUserId ? 'me' : 'other',
         senderName: comment.author_name,
-        image:  comment.author_image ?? '/default-avatar.jpg', // Use WordPress avatar if available
+        image: comment.author_image ?? '/default-avatar.jpg',
         created_at: comment.created_at,
-        isAdmin: comment.author_id !== ticket.author_id // Assuming you want to mark non-author as admin
+        isAdmin: comment.author_id !== ticket.author_id,
       }));
-      
-      
-      
-      console.log('The chat messages',messages);
+
       setChatMessages(messages);
       setLoading(false);
     } catch (err) {
@@ -60,58 +51,7 @@ const SingleTicket = ({ ticket, onBack , loggedInUserId }) => {
     }
   };
 
-// const fetchMessages = async () => {
-
-//     const response = await axios.post('/wp-json/wp/v2/comments', {
-//         params: {
-//           post: ticket.id,
-//           type: 'ticket_replies',
-//           per_page: 100,
-//           order: 'asc', // To get messages in chronological order
-//           _fields: 'id,content,author,author_name,date,author_avatar_urls' // Only request needed fields
-//         }
-//       });
-      
-//       console.log('responseabcd', response);
-      
-//     //   console.log('response');
-//     try {
-//       setLoading(true);
-//       setError(null);
-
-//       const response = await axios.get('/wp-json/wp/v2/comments', {
-//         params: {
-//           post: ticket.id,
-//           type: 'ticket_replies',
-//           per_page: 100,
-//           order: 'asc', // To get messages in chronological order
-//           _fields: 'id,content,author,author_name,date,author_avatar_urls' // Only request needed fields
-//         }
-//       });
-  
-//     //   console.log('Ticket replies:', response.data);
-  
-//       const messages = response.data.map((comment) => ({
-//         id: comment.id,
-//         text: comment.content.rendered.replace(/<[^>]+>/g, '').trim(),
-//         sender: comment.author === currentUser.id ? 'me' : 'other', // Compare with current user ID
-//         senderName: comment.author_name,
-//         image: comment.author_avatar_urls?.['96'] || '/default-avatar.jpg', // Use WordPress avatar if available
-//         created_at: comment.date,
-//         isAdmin: comment.author !== ticket.author_id // Assuming you want to mark non-author as admin
-//       }));
-  
-//       setChatMessages(messages);
-//       setLoading(false);
-//     } catch (err) {
-//       console.error('Error fetching messages:', err);
-//       setError('Failed to load messages. Please try again.hellow');
-//       setLoading(false);
-//     }
-// };
-
   useEffect(() => {
-    console.log('SingleTicket ticket prop:', ticket);
     fetchMessages();
   }, [ticket.id]);
 
@@ -130,43 +70,58 @@ const SingleTicket = ({ ticket, onBack , loggedInUserId }) => {
     }
   }, [chatMessages]);
 
-  const handleSend = async (e) => {
-    if (message.trim() || previewImage) {
-      try {
-        const newMessage = {
-          id: Date.now(),
-          text: message || '',
-          sender: loggedInUserId,
-          created_at: new Date().toISOString(),
-          ...(previewImage && { imageUrl: previewImage }),
-        };
+const handleSend = async (e) => {
+  if (message.trim() || previewImage) {
+    // Create a temporary message with "sending" status
+    const tempMessage = {
+      id: `temp-${Date.now()}`,
+      text: message || '',
+      sender: 'me',
+      senderName: 'Me', // You can fetch the actual user name if needed
+      image: '/default-avatar.jpg', // Use logged-in user's avatar if available
+      created_at: new Date().toISOString(),
+      isSending: true, // Flag to show "sending" status
+      ...(previewImage && { imageUrl: previewImage }),
+    };
 
-        setChatMessages((prev) => [...prev, newMessage]);
+    // Optimistically add the temporary message
+    setChatMessages((prev) => [...prev, tempMessage]);
+    setMessage('');
+    setPreviewImage(null);
 
-        const result = await sendReply(ticket.id, loggedInUserId, message );
-        
-    // const messages = result.data.map((comment) => ({
-    //     id: comment.id,
-    //     text:  comment.content.replace(/<[^>]+>/g, ''),
-    //     sender:  comment.author_id === loggedInUserId ? 'me' : 'other', // Compare with current user ID
-    //     senderName: comment.author_name,
-    //     image:  comment.author_image ?? '/default-avatar.jpg', // Use WordPress avatar if available
-    //     created_at: comment.created_at,
-    //     isAdmin: comment.author_id !== ticket.author_id // Assuming you want to mark non-author as admin
-    //   }));
-        
-        console.log(result);
-        // Refresh messages to get server data
-        await fetchMessages();
-        setMessage('');
-        setPreviewImage(null);
-      } catch (err) {
-        console.error('Error sending message:', err);
-        setChatMessages((prev) => prev.filter((msg) => msg.id !== newMessage.id));
-        setError('Failed to send message. Please try again.');
+    try {
+      // Send the message to the server
+      const result = await sendReply(ticket.id, loggedInUserId, message);
+
+      if (!result.data || !result.data.content) {
+        throw new Error('Invalid response from server: missing content');
       }
+ 
+      const newMessage = {
+        id: result.data.id || tempMessage.id,
+        text: typeof result.data.content === 'string' ? result.data.content.replace(/<[^>]+>/g, '') : '',
+        sender: 'me',
+        senderName: result.data.author_name || 'Me',
+        image: result.data.author_image ?? '/default-avatar.jpg',
+        created_at: result.data.created_at || tempMessage.created_at,
+        isAdmin: result.data.author_id ? result.data.author_id !== ticket.author_id : false,
+        ...(previewImage && { imageUrl: previewImage }), 
+      };
+
+      // Replace the temporary message with the server response
+      setChatMessages((prev) =>
+        prev.map((msg) =>
+          msg.id === tempMessage.id ? newMessage : msg
+        )
+      );
+    } catch (err) {
+      console.error('Error sending message:', err);
+
+      setChatMessages((prev) => prev.filter((msg) => msg.id !== tempMessage.id));
+      setError('Failed to send message. Please try again.');
     }
-  };
+  }
+};
 
   const handleEmojiClick = (emojiObject) => {
     setMessage((prev) => prev + emojiObject.emoji);
@@ -208,8 +163,6 @@ const SingleTicket = ({ ticket, onBack , loggedInUserId }) => {
           >
             <FaChevronLeft />
           </button>
-          
-          <img src={Logo} alt="Plugin Logo" className="rd-h-auto rd-header-logo" />
         </div>
         <div className="rd-body-text rd-mt-30">
           <p className="rd-text-center rd-body-text">
@@ -268,14 +221,20 @@ const SingleTicket = ({ ticket, onBack , loggedInUserId }) => {
                     maxWidth: '100%',
                   }}
                 >
-                  {msg.text && <span className="rd-body-text single-message">{msg.text}</span>}
-                  {msg.imageUrl && (
-                    <img
-                      src={msg.imageUrl}
-                      alt="Uploaded"
-                      className="rd-max-w-full rd-h-auto rd-rounded"
-                      style={{ maxWidth: '200px', marginTop: msg.text ? '8px' : '0' }}
-                    />
+                  {msg.isSending ? (
+                    <span className="rd-body-text single-message">...</span>
+                  ) : (
+                    <>
+                      {msg.text && <span className="rd-body-text single-message">{msg.text}</span>}
+                      {msg.imageUrl && (
+                        <img
+                          src={msg.imageUrl}
+                          alt="Uploaded"
+                          className="rd-max-w-full rd-h-auto rd-rounded"
+                          style={{ maxWidth: '200px', marginTop: msg.text ? '8px' : '0' }}
+                        />
+                      )}
+                    </>
                   )}
                   <div
                     className="rd-text-small rd-text-gray"
@@ -285,7 +244,7 @@ const SingleTicket = ({ ticket, onBack , loggedInUserId }) => {
                       fontSize: '0.75rem',
                     }}
                   >
-                    {formatTimestamp(msg.created_at)}
+                    {msg.isSending ? '' : formatTimestamp(msg.created_at)}
                   </div>
                 </div>
               </div>
@@ -314,7 +273,7 @@ const SingleTicket = ({ ticket, onBack , loggedInUserId }) => {
         )}
         <div className="rd-flex rd-align-center rd-justify-between">
           <textarea
-            id='mesg'
+            id="mesg"
             ref={textareaRef}
             value={message}
             onChange={(e) => setMessage(e.target.value)}
@@ -355,7 +314,10 @@ const SingleTicket = ({ ticket, onBack , loggedInUserId }) => {
                 <FiPaperclip className="icon-dark" size={20} />
               </button>
             </div>
-            <button onClick={handleSend} className="rd-bg-transparent rd-border-none rd-ml-10 icon-dark rd-cursor-pointer rd-p-0">
+            <button
+              onClick={handleSend}
+              className="rd-bg-transparent rd-border-none rd-ml-10 icon-dark rd-cursor-pointer rd-p-0"
+            >
               <PiPaperPlaneRightFill className="icon-dark" size={20} />
             </button>
           </div>

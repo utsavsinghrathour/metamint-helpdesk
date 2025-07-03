@@ -88,14 +88,20 @@ import '../styles/footer.css';
 //   </svg>
 // );
 
-const Footer = ({ activeTab, setActiveTab, showCopyrightOnly = false }) => {
+const Footer = ({ activeTab, setActiveTab, showCopyrightOnly = false , updateSelectedTicket }) => {
   const tabs = [
     { id: 0, icon: GoHomeFill, label: '', tooltip: 'Home' },
     { id: 1, icon: RiMessage2Fill, label: '', tooltip: 'Tickets' },
     { id: 2, icon: RiInformation2Fill, label: '', tooltip: 'Notice Board' },
     { id: 3, icon: FaQuestionCircle, label: '', tooltip: 'Wiki' },
   ];
-
+const handlefooterClick = (tabId) => {
+    setActiveTab(tabId);
+    if(updateSelectedTicket){
+    updateSelectedTicket(null);
+    }
+    
+  };
   if (showCopyrightOnly) {
     return (
       <footer className="robodesk-footer">
@@ -121,7 +127,10 @@ const Footer = ({ activeTab, setActiveTab, showCopyrightOnly = false }) => {
             className={`custom-svg rd-p-0 rd-flex rd-align-center rd-gap-5 rd-border-none rd-bg-transparent icon-dark rd-cursor-pointer ${
               activeTab === tab.id ? 'active-tab' : ''
             }`}
-            onClick={() => setActiveTab(tab.id)}
+            onClick={() => {
+              handlefooterClick(tab.id);
+            
+            }}
           >
             <tab.icon
               width={20}

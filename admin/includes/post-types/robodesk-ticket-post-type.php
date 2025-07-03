@@ -421,17 +421,23 @@ function robodesk_handle_tickets_webhook(WP_REST_Request $request)
                 wp_set_post_terms($ticket, array($term_id), 'robodesk_ticket_origin');
             }
 
+            $user_object =  get_user_by('id', $author);
+            $user_name = $user_object->display_name;
+            $email_address = $user_object->user_email;
+
             $comment_id = wp_insert_comment(array(
                 'comment_post_ID' => $ticket,
-                'comment_author'  => $author,
+                'user_id'  => $author,
                 'comment_content' => $title,
+                'comment_author' => $user_name,
+                'comment_author_email' => $email_address,
                 'comment_approved' => 1,
                 'comment_type' => 'ticket_replies'
             ));
 
             $reply_id = !is_wp_error($comment_id) ? $comment_id : false;
 
-            $ticket_number = 'TCKT-' . str_pad($ticket, 3, '0', STR_PAD_LEFT);
+            // $ticket_number = 'TCKT-' . str_pad($ticket, 3, '0', STR_PAD_LEFT);
 
             $ticket_number = 'TCKT-' . str_pad($ticket, 3, '0', STR_PAD_LEFT);
             $ticket_origin_terms = get_the_terms($ticket, 'robodesk_ticket_origin');
@@ -449,11 +455,12 @@ function robodesk_handle_tickets_webhook(WP_REST_Request $request)
                 array(
                     'id' => $ticket,
                     'ticket_number' => $ticket_number,
-                    'ticket_title' => get_the_title(),
+                    'ticket_title' => get_the_title($ticket),
                     'ticket_status' => get_post_meta($ticket, '_robodesk_ticket_status', true),
                     'ticket_priority' => $ticket_priority,
                     'ticket_origin' => $ticket_origin,
-                    'ticket_author' => get_user_by('id', $author)->display_name,
+                    'ticket_author' => $user_name,
+                    'ticket_author_email' => $email_address,
                     'ticket_author_image' => get_avatar_url($author),
                     'ticket_time_ago' => $human_readable_time,
                     'comment_id' => $reply_id,
@@ -510,11 +517,15 @@ function robodesk_handle_tickets_webhook(WP_REST_Request $request)
         ]);
     }
 
-    // Handle ticket reply event
+    // Handle ticket reply event ...save comments
     if (isset($data['event']) && 'replies.receive' === $data['event']) {
         $ticket_id  = sanitize_text_field($data['data']['ticket_id'] ?? '');
         $user_id   = sanitize_text_field($data['data']['user_id'] ?? '');
         $reply     = sanitize_textarea_field($data['data']['message'] ?? '');
+        $user_object =  get_user_by('id', $user_id);
+        $user_name = $user_object->display_name;
+        $email_address = $user_object->user_email;
+        
 
         if (empty($ticket_id)) {
             return new WP_Error(
@@ -536,24 +547,25 @@ function robodesk_handle_tickets_webhook(WP_REST_Request $request)
         // Add reply to ticket
         $comment_id = wp_insert_comment(array(
             'comment_post_ID' => $ticket_id,
-            'comment_author'  => $user_id,
+            'comment_author' => $user_name,
+            'comment_author_email' => $email_address,
+            'user_id'  => $user_id,
             'comment_content' => $reply,
             'comment_approved' => 1,
             'comment_type' => 'ticket_replies'
         ));
 
-        $comment = get_comment($comment_id);
-
-        $data = [
-            'id' => $comment->comment_ID,
-            'author' => $comment->comment_author, // Display name
-            'author_id' => $comment->user_id,    // User ID
-            'author_image' => get_avatar_url($comment->user_id, ['size' => 96]),
-            'content' => $comment->comment_content,
-            'created_at' => $comment->comment_date,
-        ];
-
+  
         if ($comment_id) {
+            $comment = get_comment($comment_id);
+            $data = [
+                'id' => $comment->comment_ID,
+                'author' => $comment->comment_author, // Display name
+                'author_id' => $comment->user_id,    // User ID
+                'author_image' => get_avatar_url($comment->user_id, ['size' => 96]),
+                'content' => $comment->comment_content,
+                'created_at' => $comment->comment_date,
+            ];
             rbd_log(sprintf(
                 "Comment received for ticket #%s: %s\n",
                 $ticket_id,
@@ -586,11 +598,12 @@ function robodesk_handle_tickets_webhook(WP_REST_Request $request)
         }
         $formatted_comments = [];
         foreach ($comments as $comment) {
+            $author_image = get_avatar_url($comment->user_id, ['size' => 96]);
             $formatted_comments[] = [
                 'id' => $comment->comment_ID,
                 'author' => $comment->comment_author,
                 'author_id' => $comment->user_id,
-                'author_image' => get_avatar_url($comment->user_id, ['size' => 96]),
+                'author_image' => $author_image,
                 'content' => $comment->comment_content,
                 'created_at' => $comment->comment_date,
             ];
@@ -618,3 +631,53 @@ add_filter('use_block_editor_for_post_type', function ($use_block_editor, $post_
 }, 10, 2);
 
 
+
+// add_action('wp_head', function () {
+//     $comments = get_comments([
+//         'post_id' => 1535,
+//         'order' => 'ASC',
+//     ]);
+
+
+//     $formatted_comments = [];
+//     foreach ($comments as $comment) {
+//         $author_image = get_avatar_url($comment->user_id, ['size' => 96]);
+//         $formatted_comments[] = [
+//             'id' => $comment->comment_ID,
+//             'author' => $comment->comment_author,
+//             'author_id' => $comment->user_id,
+//             'author_image' => $author_image,
+//             'content' => $comment->comment_content,
+//             'created_at' => $comment->comment_date,
+//         ];
+//     }
+    
+//     echo '<pre>';
+//     var_dump($formatted_comments);
+//     echo '</pre>';
+// });
+
+
+function robodesk_user_data_to_session_storage() {
+    ?>
+    <script type="text/javascript">
+        // Check if sessionStorage is available
+        if (typeof(Storage) !== "undefined") {
+            // Prepare the data object
+            var userData = {
+                isLoggedIn: <?php echo is_user_logged_in() ? 'true' : 'false'; ?>,
+                loggedInUserId: "<?php echo is_user_logged_in() ? get_current_user_id() : ''; ?>"
+            };
+            
+            // Save to sessionStorage
+            sessionStorage.setItem('wpUserData', JSON.stringify(userData));
+            
+            // Optional: Log to console for debugging
+            console.log('User data saved to sessionStorage:', userData);
+        } else {
+            console.warn('sessionStorage is not supported in this browser');
+        }
+    </script>
+    <?php
+}
+add_action('wp_footer', 'robodesk_user_data_to_session_storage');
