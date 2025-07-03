@@ -343,6 +343,7 @@ function robodesk_fetch_emails()
             }
 
             // Ensure taxonomy terms exist
+
             $term_email = term_exists('Email', 'robodesk_ticket_origin');
             $term_priority = term_exists('Medium', 'robodesk_ticket_priority');
 

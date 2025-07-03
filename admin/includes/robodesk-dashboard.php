@@ -262,7 +262,14 @@ function robodesk_dashboard_callback()
                                 'status' => $ticket_status,
                                 'priority' => $ticket_priority,
                                 'updated' => $updated_at,
-                                'replies' => $replies_count ? $replies : []
+                                'replies' => $replies_count ? $replies : [
+                                    'id' => 0,
+                                    'author' => 'N/A',
+                                    'content' => 'No replies yet',
+                                    'date' => $updated_at
+                                ],
+                                'replies_count' => $replies_count
+
                             ];
                         }
                         wp_reset_postdata();
@@ -346,7 +353,10 @@ function robodesk_dashboard_callback()
                                     <tr class="table-row cursor-pointer" onclick="viewTicket(<?php echo esc_js($ticket['id']); ?>)">
                                         <td class="px-6 py-4 whitespace-nowrap">
                                             <div class="text-sm font-medium text-gray-900">#<?php echo esc_html($ticket['id']); ?></div>
-                                            <div class="text-sm text-gray-500 truncate max-w-xs"><?php echo esc_html($ticket['title']); ?></div>
+                                            <div class="text-sm text-gray-500 truncate max-w-xs"><?php echo esc_html($ticket['title']); ?>
+
+                                            </div>
+
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap">
                                             <div class="text-sm font-medium text-gray-900"><?php echo esc_html($ticket['customer']); ?></div>
@@ -557,6 +567,99 @@ function robodesk_dashboard_callback()
                         </thead>
                         <tbody class="bg-white divide-y divide-gray-200" id="tickets-table">
                             <!-- Tickets will be populated by JavaScript -->
+                            <?php
+                            $args = array(
+                                'post_type' => 'robodesk_ticket',
+                                'post_status' => 'publish',
+                                'posts_per_page' => -1, // Retrieve all tickets
+                                'orderby' => 'modified',
+                                'order' => 'DESC'
+                            );
+                            $query = new WP_Query($args);
+                            if ($query->have_posts()) {
+                                while ($query->have_posts()) {
+                                    $query->the_post();
+                                    $ticket_id = get_the_ID();
+                                    // Fetch customer name 
+                                    // $customer_name = get_post_meta($ticket_id, 'nickname', true) ?: 'Unknown';
+                                    // $customer_email = get_post_meta($ticket_id, '_robodesk_customer_email', true) ?: 'N/A';
+                                    $ticket_status = get_post_meta($ticket_id, '_robodesk_ticket_status', true) ?: 'N/A';
+                                    $priority_terms = get_the_terms($ticket_id, 'robodesk_ticket_priority');
+                                    $ticket_priority = ($priority_terms && !is_wp_error($priority_terms)) ? $priority_terms[0]->name : 'N/A';
+                                    $updated_at = get_the_modified_date('Y-m-d H:i:s', $ticket_id);
+
+                                    // Simulate replies field using comments
+                                    $replies = get_comments(array('post_id' => $ticket_id));
+                                    $replies_count = count($replies);
+                                    if ($replies_count > 0) {
+                                        $replies = array_map(function ($reply) {
+                                            return [
+                                                'id' => $reply->comment_ID,
+                                                'author' => $reply->comment_author,
+                                                'content' => $reply->comment_content,
+                                                'date' => $reply->comment_date
+                                            ];
+                                        }, $replies);
+                                    } else {
+                                        $replies = [];
+                                    }
+                                    $taxonomy = 'robodesk_ticket_origin';
+                                    $terms = get_the_terms($ticket_id, $taxonomy);
+                                    $tickets[] = [
+                                        'id' => $ticket_id,
+                                        'title' => get_the_title(),
+                                        'customer' => get_the_author(),
+                                        'email' => get_the_author_email(),
+                                        'source' => $terms ? esc_html($terms[0]->name) : 'N/A', // Assuming the first term is the source
+                                        'status' => $ticket_status,
+                                        'priority' => $ticket_priority,
+                                        'updated' => $updated_at,
+                                        'assignee' => get_post_meta($ticket_id, '_robodesk_ticket_assignee', true) ?: 'Unassigned',
+                                        'replies' => $replies_count ? $replies : [
+                                            'id' => 0,
+                                            'author' => 'N/A',
+                                            'content' => 'No replies yet',
+                                            'date' => $updated_at
+                                        ],
+                                        'replies_count' => $replies_count
+
+                                    ];
+                                }
+                                wp_reset_postdata();
+                            }
+                            ?>
+                            <?php foreach ($tickets as $ticket) : ?>
+                                <tr class="table-row cursor-pointer" onclick="viewTicket(<?php echo esc_js($ticket['id']); ?>)">
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="text-sm font-medium text-gray-900">#<?php echo esc_html($ticket['id']); ?></div>
+                                        <div class="text-sm text-gray-500 truncate max-w-xs"><?php echo esc_html($ticket['title']); ?></div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="text-sm font-medium text-gray-900"><?php echo esc_html($ticket['customer']); ?></div>
+                                        <div class="text-sm text-gray-500 truncate max-w-xs"><?php echo esc_html($ticket['email']); ?></div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <span class="status-badge <?php echo esc_attr(get_status_class($ticket['status'])); ?>">
+                                            <?php echo esc_html(str_replace('-', ' ', $ticket['status'])); ?>
+                                        </span>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <span class="status-badge <?php echo esc_attr(get_priority_class($ticket['priority'])); ?>">
+                                            <?php echo esc_html($ticket['priority']); ?>
+                                        </span>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <?php echo esc_html($ticket['assignee']); ?>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                        <?php echo esc_html(format_date($ticket['updated'])); ?>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                        <?php echo "bisha@example.com" ?>
+                                    </td>
+
+                                </tr>
+                            <?php endforeach; ?>
                         </tbody>
                     </table>
                 </div>
