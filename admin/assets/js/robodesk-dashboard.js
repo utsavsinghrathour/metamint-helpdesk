@@ -119,7 +119,7 @@ const sampleTickets = [
 ];
 
 // Global variables
-let tickets = [...sampleTickets]; // Use sample data for initial tickets
+// let tickets = [...sampleTickets]; // Use sample data for initial tickets
 let currentPage = "dashboard";
 let currentTicket = null;
 let currentTicketTab = "replies";

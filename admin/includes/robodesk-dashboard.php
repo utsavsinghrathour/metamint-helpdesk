@@ -204,32 +204,196 @@ function robodesk_dashboard_callback()
                 </div>
 
                 <!-- Dashboard Filter -->
+                <?php
+                function load_dashboard_tickets($filter = 'recent')
+                {
+                    // Sanitize filter input
+                    $filter = in_array($filter, ['recent', 'replies', 'waiting']) ? $filter : 'recent';
+
+                    // Initialize tickets array
+                    $tickets = [];
+
+                    // WP_Query arguments to fetch tickets
+                    $args = array(
+                        'post_type' => 'robodesk_ticket',
+                        'post_status' => 'publish',
+                        'posts_per_page' => 10, // Fetch 10 to filter in PHP
+                        'orderby' => 'modified',
+                        'order' => 'DESC'
+                    );
+
+                    $query = new WP_Query($args);
+
+                    if ($query->have_posts()) {
+                        while ($query->have_posts()) {
+                            $query->the_post();
+                            $ticket_id = get_the_ID();
+                            // Fetch customer name 
+                            // $customer_name = get_post_meta($ticket_id, 'nickname', true) ?: 'Unknown';
+                            // $customer_email = get_post_meta($ticket_id, '_robodesk_customer_email', true) ?: 'N/A';
+                            $ticket_status = get_post_meta($ticket_id, '_robodesk_ticket_status', true) ?: 'N/A';
+                            $priority_terms = get_the_terms($ticket_id, 'robodesk_ticket_priority');
+                            $ticket_priority = ($priority_terms && !is_wp_error($priority_terms)) ? $priority_terms[0]->name : 'N/A';
+                            $updated_at = get_the_modified_date('Y-m-d H:i:s', $ticket_id);
+
+                            // Simulate replies field using comments
+                            $replies = get_comments(array('post_id' => $ticket_id));
+                            $replies_count = count($replies);
+                            if ($replies_count > 0) {
+                                $replies = array_map(function ($reply) {
+                                    return [
+                                        'id' => $reply->comment_ID,
+                                        'author' => $reply->comment_author,
+                                        'content' => $reply->comment_content,
+                                        'date' => $reply->comment_date
+                                    ];
+                                }, $replies);
+                            } else {
+                                $replies = [];
+                            }
+                            $taxonomy = 'robodesk_ticket_origin';
+                            $terms = get_the_terms($ticket_id, $taxonomy);
+                            $tickets[] = [
+                                'id' => $ticket_id,
+                                'title' => get_the_title(),
+                                'customer' => get_the_author(),
+                                'email' => get_the_author_email(),
+                                'source' => $terms ? esc_html($terms[0]->name) : 'N/A', // Assuming the first term is the source
+                                'status' => $ticket_status,
+                                'priority' => $ticket_priority,
+                                'updated' => $updated_at,
+                                'replies' => $replies_count ? $replies : []
+                            ];
+                        }
+                        wp_reset_postdata();
+                    }
+
+                    // Filter tickets based on the provided filter
+                    $filtered_tickets = [];
+
+                    switch ($filter) {
+                        case 'recent':
+                            usort($tickets, function ($a, $b) {
+                                return strtotime($b['updated']) - strtotime($a['updated']);
+                            });
+                            $filtered_tickets = array_slice($tickets, 0, 10);
+                            break;
+
+                        case 'replies':
+                            $filtered_tickets = array_filter($tickets, function ($t) {
+                                return !empty($t['replies']);
+                            });
+                            usort($filtered_tickets, function ($a, $b) {
+                                return strtotime($b['updated']) - strtotime($a['updated']);
+                            });
+                            $filtered_tickets = array_slice($filtered_tickets, 0, 5);
+                            break;
+
+                        case 'waiting':
+                            $filtered_tickets = array_filter($tickets, function ($t) {
+                                return in_array($t['status'], ['open', 'in-progress']);
+                            });
+                            usort($filtered_tickets, function ($a, $b) {
+                                return strtotime($a['updated']) - strtotime($b['updated']);
+                            });
+                            $filtered_tickets = array_slice($filtered_tickets, 0, 5);
+                            break;
+                    }
+
+                    // Helper functions
+                    function get_status_class($status)
+                    {
+                        $classes = [
+                            'open' => 'status-open',
+                            'in-progress' => 'status-in-progress',
+                            'closed' => 'status-closed'
+                        ];
+                        return isset($classes[$status]) ? $classes[$status] : 'status-default';
+                    }
+
+                    function get_priority_class($priority)
+                    {
+                        $classes = [
+                            'low' => 'priority-low',
+                            'medium' => 'priority-medium',
+                            'high' => 'priority-high'
+                        ];
+                        return isset($classes[strtolower($priority)]) ? $classes[strtolower($priority)] : 'priority-default';
+                    }
+
+                    function format_date($date)
+                    {
+                        return date('M j, Y H:i', strtotime($date));
+                    }
+
+                    // Generate table HTML
+                    ob_start();
+                ?>
+                    <div class="overflow-hidden">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ticket</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Customer</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Source</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Priority</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Updated</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-gray-200" id="dashboard-tickets-table">
+                                <?php foreach ($filtered_tickets as $ticket) : ?>
+                                    <tr class="table-row cursor-pointer" onclick="viewTicket(<?php echo esc_js($ticket['id']); ?>)">
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <div class="text-sm font-medium text-gray-900">#<?php echo esc_html($ticket['id']); ?></div>
+                                            <div class="text-sm text-gray-500 truncate max-w-xs"><?php echo esc_html($ticket['title']); ?></div>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <div class="text-sm font-medium text-gray-900"><?php echo esc_html($ticket['customer']); ?></div>
+                                            <div class="text-sm text-gray-500 truncate max-w-xs"><?php echo esc_html($ticket['email']); ?></div>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <div class="text-sm font-medium text-gray-900"><?php echo esc_html($ticket['source']); ?></div>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <span class="status-badge <?php echo esc_attr(get_status_class($ticket['status'])); ?> editable-status"
+                                                onclick="event.stopPropagation(); editStatus(<?php echo esc_js($ticket['id']); ?>, this)">
+                                                <?php echo esc_html(str_replace('-', ' ', $ticket['status'])); ?>
+                                            </span>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <span class="status-badge <?php echo esc_attr(get_priority_class($ticket['priority'])); ?> editable-priority"
+                                                onclick="event.stopPropagation(); editPriority(<?php echo esc_js($ticket['id']); ?>, this)">
+                                                <?php echo esc_html($ticket['priority']); ?>
+                                            </span>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                            <?php echo esc_html(format_date($ticket['updated'])); ?>
+                                        </td>
+                                    </tr>
+                                <?php endforeach; ?>
+                            </tbody>
+                        </table>
+                    </div>
+                <?php
+                    return ob_get_clean();
+                }
+
+                // Get filter from query parameter or default to 'recent'
+                $filter = isset($_GET['filter']) ? sanitize_text_field($_GET['filter']) : 'recent';
+                ?>
+
                 <div class="bg-white shadow rounded-lg mb-6">
                     <div class="px-4 py-5 sm:p-6">
                         <div class="flex justify-between items-center mb-4">
                             <h3 class="text-lg leading-6 font-medium text-gray-900">Ticket Overview</h3>
                             <div class="flex space-x-2">
-                                <button onclick="filterDashboardTickets('recent')" class="dashboard-filter-btn px-3 py-1 text-sm rounded-md border active" data-filter="recent">Recent Tickets</button>
-                                <button onclick="filterDashboardTickets('replies')" class="dashboard-filter-btn px-3 py-1 text-sm rounded-md border" data-filter="replies">Recent Replies</button>
-                                <button onclick="filterDashboardTickets('waiting')" class="dashboard-filter-btn px-3 py-1 text-sm rounded-md border" data-filter="waiting">Waiting Reply</button>
+                                <button onclick="filterDashboardTickets('recent')" class="dashboard-filter-btn px-3 py-1 text-sm rounded-md border <?php echo $filter === 'recent' ? 'active' : ''; ?>" data-filter="recent">Recent Tickets</button>
+                                <button onclick="filterDashboardTickets('replies')" class="dashboard-filter-btn px-3 py-1 text-sm rounded-md border <?php echo $filter === 'replies' ? 'active' : ''; ?>" data-filter="replies">Recent Replies</button>
+                                <button onclick="filterDashboardTickets('waiting')" class="dashboard-filter-btn px-3 py-1 text-sm rounded-md border <?php echo $filter === 'waiting' ? 'active' : ''; ?>" data-filter="waiting">Waiting Reply</button>
                             </div>
                         </div>
-                        <div class="overflow-hidden">
-                            <table class="min-w-full divide-y divide-gray-200">
-                                <thead class="bg-gray-50">
-                                    <tr>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ticket</th>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Customer</th>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Priority</th>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Updated</th>
-                                    </tr>
-                                </thead>
-                                <tbody class="bg-white divide-y divide-gray-200" id="dashboard-tickets-table">
-                                    <!-- Dashboard tickets will be populated by JavaScript -->
-                                </tbody>
-                            </table>
-                        </div>
+                        <?php echo load_dashboard_tickets($filter); ?>
                     </div>
                 </div>
 
