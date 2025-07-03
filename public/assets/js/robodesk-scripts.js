@@ -292,14 +292,18 @@ jQuery(document).ready(function ($) {
   $(".show-password").click(function () {
     var passwordSpan = $(this).prev(".password-hidden");
     var password = $(this).data("password");
+
+    // Toggle password visibility
     if (passwordSpan.text() === "********") {
-      passwordSpan.text(password);
-      $(this).text("Hide");
+        passwordSpan.text(password);
     } else {
-      passwordSpan.text("********");
-      $(this).text("Show");
+        passwordSpan.text("********");
     }
-  });
+
+    // Toggle icon class
+    $(this).find("i").toggleClass("fa-eye fa-eye-slash");
+});
+
 
   $("body").append('<div class="spinner"></div>');
   $("#robodesk-create-ticket").submit(function (e) {

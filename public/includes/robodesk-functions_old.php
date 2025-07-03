@@ -285,7 +285,7 @@ function robodesk_credentials_page()
                                     <?php $enc =  robodesk_encrypt($credential->password, 'robodesk'); ?>
                                     <button class="show-password" data-password="
                                     <?php echo robodesk_decrypt($enc, 'robodesk');
-                                    ?>" style="color: black; background-color: #DDD;">Show</button>
+                                    ?>" style="color: black; background-color: #DDD;"><i class="fa-solid fa-eye"></i></button>
 
                                 </td>
 
