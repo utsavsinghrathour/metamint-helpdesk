@@ -568,6 +568,7 @@ function robodesk_dashboard_callback()
                         <tbody class="bg-white divide-y divide-gray-200" id="tickets-table">
                             <!-- Tickets will be populated by JavaScript -->
                             <?php
+
                             $args = array(
                                 'post_type' => 'robodesk_ticket',
                                 'post_status' => 'publish',
@@ -629,6 +630,7 @@ function robodesk_dashboard_callback()
                             }
                             ?>
                             <?php foreach ($tickets as $ticket) : ?>
+
                                 <tr class="table-row cursor-pointer" onclick="viewTicket(<?php echo esc_js($ticket['id']); ?>)">
                                     <td class="px-6 py-4 whitespace-nowrap">
                                         <div class="text-sm font-medium text-gray-900">#<?php echo esc_html($ticket['id']); ?></div>
@@ -655,10 +657,18 @@ function robodesk_dashboard_callback()
                                         <?php echo esc_html(format_date($ticket['updated'])); ?>
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                        <?php echo "bisha@example.com" ?>
+                                        <button onclick="viewTicket(<?php echo esc_js($ticket['id']); ?>)" class="text-blue-600 hover:text-blue-800">
+                                            <i class="fas fa-eye"></i> View
+                                        </button>
                                     </td>
 
                                 </tr>
+                                <!-- ADDDED -->
+                                <script>
+                                    const tickets = <?php echo wp_json_encode($tickets); ?>;
+                                </script>
+                                <!-- ADDED -->
+
                             <?php endforeach; ?>
                         </tbody>
                     </table>
