@@ -315,9 +315,17 @@ function loadDashboardTickets() {
                   ticket.title
                 }</div>
             </td>
-            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+            <div class="text-sm font-medium text-gray-900">${
               ticket.customer
-            }</td>
+            }</div>
+            <div class="text-sm font-medium text-gray-900">${ticket.email}</div>
+            </td>
+            <td>
+            <div class="text-sm font-medium text-gray-900">${
+              ticket.source
+            }</div>
+            </td>
             <td class="px-6 py-4 whitespace-nowrap">
                 <span class="status-badge ${getStatusClass(
                   ticket.status
@@ -536,6 +544,8 @@ function loadTicketsTable() {
                 <div class="text-sm text-gray-900">${ticket.customer}</div>
                 <div class="text-sm text-gray-500">${ticket.email}</div>
             </td>
+           
+           
             <td class="px-6 py-4 whitespace-nowrap">
                 <span class="status-badge ${getStatusClass(ticket.status)}">
                     ${ticket.status.replace("-", " ")}

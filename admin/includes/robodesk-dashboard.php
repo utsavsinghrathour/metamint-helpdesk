@@ -381,6 +381,11 @@ function robodesk_dashboard_callback()
                                             <?php echo esc_html(format_date($ticket['updated'])); ?>
                                         </td>
                                     </tr>
+                                    <!-- ADDDED -->
+                                    <script>
+                                        const tickets = <?php echo wp_json_encode($tickets); ?>;
+                                    </script>
+                                    <!-- ADDED -->
                                 <?php endforeach; ?>
                             </tbody>
                         </table>
@@ -661,14 +666,12 @@ function robodesk_dashboard_callback()
                                             <i class="fas fa-eye"></i> View
                                         </button>
                                     </td>
-
                                 </tr>
                                 <!-- ADDDED -->
                                 <script>
                                     const tickets = <?php echo wp_json_encode($tickets); ?>;
                                 </script>
                                 <!-- ADDED -->
-
                             <?php endforeach; ?>
                         </tbody>
                     </table>
