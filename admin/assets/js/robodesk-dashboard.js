@@ -1380,3 +1380,74 @@ jQuery(document).ready(function ($) {
     });
   });
 });
+
+//create a new ticket ajax
+jQuery(document).ready(function ($) {
+  // Handle form submission for ticket creation
+  $("#robodesk-new-ticket-form").on("submit", function (e) {
+    e.preventDefault(); // Prevent default form submission
+
+    const $form = $(this);
+    const $button = $form.find("#robodesk-create-ticket");
+    const formData = new FormData();
+
+    // Append ticket data
+    formData.append("action", "robodesk_create_ticket");
+    formData.append(
+      "nonce",
+      $form.find('input[name="robodesk_create_ticket_nonce"]').val()
+    );
+    formData.append("customer_name", $("#customer-name").val());
+    formData.append("customer_email", $("#customer-email").val());
+    formData.append("ticket_title", $("#ticket-title").val());
+    formData.append("ticket_priority", $("#ticket-priority").val());
+    formData.append("ticket_category", $("#ticket-category").val());
+    formData.append("ticket_assignee", $("#ticket-assignee").val());
+    formData.append("ticket_description", $("#ticket-description").val());
+    formData.append(
+      "ticket_source",
+      $form.find('input[name="ticket_source"]').val()
+    );
+
+    // Basic client-side validation (HTML5 validation is already in place)
+    if (!$form[0].checkValidity()) {
+      $form[0].reportValidity(); // Show browser validation messages
+      return;
+    }
+
+    // Additional client-side validation for priority
+    const validPriorities = ["Low", "Medium", "High"];
+    if (!validPriorities.includes($("#ticket-priority").val())) {
+      showToast("Please select a valid priority.", "error");
+      return;
+    }
+
+    $button.prop("disabled", true).text("Creating Ticket...");
+
+    $.ajax({
+      url: robodeskAjax.ajax_url, // Use localized AJAX URL
+      type: "POST",
+      data: formData,
+      processData: false,
+      contentType: false,
+      success: function (response) {
+        if (response.success) {
+          showToast(response.data.message, "success");
+          $form[0].reset(); // Reset form on success
+        } else {
+          showToast(
+            response.data.message || "Failed to create ticket.",
+            "error"
+          );
+        }
+      },
+      error: function (xhr, status, error) {
+        console.log("AJAX Error:", xhr, status, error);
+        showToast("Failed to create ticket: " + error, "error");
+      },
+      complete: function () {
+        $button.prop("disabled", false).text("Create Ticket");
+      },
+    });
+  });
+});

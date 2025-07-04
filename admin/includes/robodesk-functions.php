@@ -424,4 +424,99 @@ function robodesk_save_ticket_assignment_settings()
 // });
 
 
-// creating a
+// creating a ticket
+add_action('wp_ajax_robodesk_create_ticket', 'robodesk_create_ticket');
+function robodesk_create_ticket()
+{
+    // Verify nonce
+    if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'robodesk_create_ticket_action')) {
+        wp_send_json_error(['message' => 'Security check failed']);
+        wp_die();
+    }
+
+    // Validate inputs
+    $customer_name = isset($_POST['customer_name']) ? sanitize_text_field($_POST['customer_name']) : '';
+    $customer_email = isset($_POST['customer_email']) ? sanitize_email($_POST['customer_email']) : '';
+    $ticket_title = isset($_POST['ticket_title']) ? sanitize_text_field($_POST['ticket_title']) : '';
+    $ticket_priority = isset($_POST['ticket_priority']) ? sanitize_text_field($_POST['ticket_priority']) : '';
+    $ticket_category = isset($_POST['ticket_category']) ? sanitize_text_field($_POST['ticket_category']) : '';
+    $ticket_assignee = isset($_POST['ticket_assignee']) ? sanitize_text_field($_POST['ticket_assignee']) : '';
+    $ticket_description = isset($_POST['ticket_description']) ? sanitize_textarea_field($_POST['ticket_description']) : '';
+    $ticket_source = isset($_POST['ticket_source']) ? sanitize_text_field($_POST['ticket_source']) : 'Form';
+
+    // Validate required fields
+    if (
+        empty($customer_name) || empty($customer_email) || empty($ticket_title) ||
+        empty($ticket_priority) || empty($ticket_category) || empty($ticket_assignee) ||
+        empty($ticket_description)
+    ) {
+        wp_send_json_error(['message' => 'All fields are required']);
+        wp_die();
+    }
+
+    // Validate email format
+    if (!is_email($customer_email)) {
+        wp_send_json_error(['message' => 'Invalid email address']);
+        wp_die();
+    }
+
+    // Validate priority against taxonomy terms
+    $valid_priorities = ['Low', 'Medium', 'High'];
+    if (!in_array($ticket_priority, $valid_priorities)) {
+        wp_send_json_error(['message' => 'Invalid priority selected']);
+        wp_die();
+    }
+
+    // Find or create a user based on email
+    $user = get_user_by('email', $customer_email);
+    if (!$user) {
+        $user_id = wp_create_user($customer_email, wp_generate_password(), $customer_email);
+        if (is_wp_error($user_id)) {
+            wp_send_json_error(['message' => 'Failed to create user: ' . $user_id->get_error_message()]);
+            wp_die();
+        }
+        $user = get_user_by('id', $user_id);
+        update_user_meta($user_id, 'nickname', $customer_name);
+    }
+
+    // Create the ticket
+    $ticket_id = wp_insert_post([
+        'post_title'   => $ticket_title,
+        'post_content' => $ticket_description,
+        'post_type'    => 'robodesk_ticket',
+        'post_status'  => 'publish',
+        'post_author'  => 'customer', // Set the user as the post author
+        'meta_input'   => [
+            '_robodesk_customer_email' => $customer_email, // For compatibility with WP_Query
+            '_robodesk_ticket_status'  => 'Open', // Default status
+            'ticket_category'          => $ticket_category,
+            'ticket_assignee'          => $ticket_assignee,
+        ],
+    ]);
+
+    if (is_wp_error($ticket_id)) {
+        wp_send_json_error(['message' => 'Failed to create ticket: ' . $ticket_id->get_error_message()]);
+        wp_die();
+    }
+
+    // Assign priority to robodesk_ticket_priority taxonomy
+    $priority_term = term_exists($ticket_priority, 'robodesk_ticket_priority');
+    if (!$priority_term) {
+        $priority_term = wp_insert_term($ticket_priority, 'robodesk_ticket_priority');
+    }
+    if (!is_wp_error($priority_term)) {
+        wp_set_post_terms($ticket_id, [$ticket_priority], 'robodesk_ticket_priority');
+    }
+
+    // Assign source to robodesk_ticket_origin taxonomy
+    $source_term = term_exists($ticket_source, 'robodesk_ticket_origin');
+    if (!$source_term) {
+        $source_term = wp_insert_term($ticket_source, 'robodesk_ticket_origin');
+    }
+    if (!is_wp_error($source_term)) {
+        wp_set_post_terms($ticket_id, [$ticket_source], 'robodesk_ticket_origin');
+    }
+
+    wp_send_json_success(['message' => 'Ticket created successfully', 'ticket_id' => $ticket_id]);
+    wp_die();
+}
