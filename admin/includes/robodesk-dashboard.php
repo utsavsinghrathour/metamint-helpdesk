@@ -443,36 +443,38 @@ function robodesk_dashboard_callback()
                     <div class="px-4 py-5 sm:p-6">
                         <h3 class="text-lg font-bold text-gray-900 mb-6">Create New Ticket</h3>
 
-                        <form id="new-ticket-form" class="space-y-6">
+                        <form id="robodesk-new-ticket-form" class="space-y-6">
+                            <input type="hidden" name="robodesk_create_ticket_nonce" value="<?php echo wp_create_nonce('robodesk_create_ticket_action'); ?>">
+                            <input type="hidden" name="ticket_source" value="Form"> <!-- Added for robodesk_ticket_origin -->
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-2">Customer Name *</label>
-                                    <input type="text" id="customer-name" required class="styled-input block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                                    <input type="text" id="customer-name" name="customer_name" required class="styled-input block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
                                 </div>
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-2">Customer Email *</label>
-                                    <input type="email" id="customer-email" required class="styled-input block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                                    <input type="email" id="customer-email" name="customer_email" required class="styled-input block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
                                 </div>
                             </div>
 
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-2">Ticket Title *</label>
-                                <input type="text" id="ticket-title" required class="styled-input block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                                <input type="text" id="ticket-title" name="ticket_title" required class="styled-input block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
                             </div>
 
                             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-2">Priority *</label>
-                                    <select id="ticket-priority" required class="styled-select block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                                    <select id="ticket-priority" name="ticket_priority" required class="styled-select block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
                                         <option value="">Select Priority</option>
-                                        <option value="low">Low</option>
-                                        <option value="medium">Medium</option>
-                                        <option value="high">High</option>
+                                        <option value="Low">Low</option>
+                                        <option value="Medium">Medium</option>
+                                        <option value="High">High</option>
                                     </select>
                                 </div>
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-2">Category *</label>
-                                    <select id="ticket-category" required class="styled-select block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                                    <select id="ticket-category" name="ticket_category" required class="styled-select block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
                                         <option value="">Select Category</option>
                                         <option value="Technical">Technical</option>
                                         <option value="Billing">Billing</option>
@@ -482,7 +484,7 @@ function robodesk_dashboard_callback()
                                 </div>
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-2">Assign to *</label>
-                                    <select id="ticket-assignee" required class="styled-select block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                                    <select id="ticket-assignee" name="ticket_assignee" required class="styled-select block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
                                         <option value="">Select Agent</option>
                                         <option value="Support Team">Support Team</option>
                                         <option value="Tech Support">Tech Support</option>
@@ -494,14 +496,14 @@ function robodesk_dashboard_callback()
 
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-2">Ticket Description *</label>
-                                <textarea id="ticket-description" rows="6" required class="styled-input block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500" placeholder="Describe the issue or request..."></textarea>
+                                <textarea id="ticket-description" name="ticket_description" rows="6" required class="styled-input block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500" placeholder="Describe the issue or request..."></textarea>
                             </div>
 
                             <div class="flex justify-end space-x-3">
                                 <button type="button" onclick="showPage('dashboard')" class="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
                                     Cancel
                                 </button>
-                                <button type="submit" class="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                                <button type="submit" id="robodesk-create-ticket" class="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
                                     Create Ticket
                                 </button>
                             </div>
@@ -889,40 +891,53 @@ function robodesk_dashboard_callback()
                                     <!-- Image Fields -->
                                     <div>
                                         <label for="popover_icon" class="block text-sm font-medium text-gray-700">Pop over Icon/Image</label>
-                                        <input type="file" accept="image/*" name="popover_icon" id="popover_icon" class="styled-input mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 ">
-
-                                        <div class="mt-2">
+                                        <input type="file" accept="image/*" name="popover_icon" id="popover_icon" class="styled-input mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                                        <div class="mt-2 flex items-center gap-2">
                                             <img id="popover-icon-preview" src="<?php echo esc_url(get_option('robodesk_popover_icon', '')); ?>" alt="Pop over Icon Preview" class="hidden max-w-[150px] h-auto rounded-md">
+                                            <button type="button" onclick="removeImage('popover-icon-preview', 'robodesk_popover_icon')" class="text-red-600 hover:text-red-800 text-sm <?php echo esc_url(get_option('robodesk_popover_icon', '')) ? '' : 'hidden'; ?>">Remove</button>
                                         </div>
                                         <input type="hidden" name="robodesk_popover_icon" id="robodesk_popover_icon" value="<?php echo esc_attr(get_option('robodesk_popover_icon', '')); ?>">
                                     </div>
                                     <div>
                                         <label for="popover_top_icon" class="block text-sm font-medium text-gray-700">Pop over Top Icon/Image</label>
                                         <input type="file" accept="image/*" name="popover_top_icon" id="popover_top_icon" class="styled-input mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
-
-                                        <div class="mt-2">
+                                        <div class="mt-2 flex items-center gap-2">
                                             <img id="popover-top-icon-preview" src="<?php echo esc_url(get_option('robodesk_popover_top_icon', '')); ?>" alt="Pop over Top Icon Preview" class="hidden max-w-[150px] h-auto rounded-md">
+                                            <button type="button" onclick="removeImage('popover-top-icon-preview', 'robodesk_popover_top_icon')" class="text-red-600 hover:text-red-800 text-sm <?php echo esc_url(get_option('robodesk_popover_top_icon', '')) ? '' : 'hidden'; ?>">Remove</button>
                                         </div>
                                         <input type="hidden" name="robodesk_popover_top_icon" id="robodesk_popover_top_icon" value="<?php echo esc_attr(get_option('robodesk_popover_top_icon', '')); ?>">
                                     </div>
                                     <div>
                                         <label for="logo" class="block text-sm font-medium text-gray-700">Logo</label>
                                         <input type="file" accept="image/*" name="logo" id="logo" class="styled-input mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
-
-                                        <div class="mt-2">
+                                        <div class="mt-2 flex items-center gap-2">
                                             <img id="logo-preview" src="<?php echo esc_url(get_option('robodesk_logo', '')); ?>" alt="Logo Preview" class="hidden max-w-[150px] h-auto rounded-md">
+                                            <button type="button" onclick="removeImage('logo-preview', 'robodesk_logo')" class="text-red-600 hover:text-red-800 text-sm <?php echo esc_url(get_option('robodesk_logo', '')) ? '' : 'hidden'; ?>">Remove</button>
                                         </div>
                                         <input type="hidden" name="robodesk_logo" id="robodesk_logo" value="<?php echo esc_attr(get_option('robodesk_logo', '')); ?>">
                                     </div>
                                     <div>
                                         <label for="wide_logo" class="block text-sm font-medium text-gray-700">Wide Logo</label>
                                         <input type="file" accept="image/*" name="wide_logo" id="wide_logo" class="styled-input mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
-
-                                        <div class="mt-2">
+                                        <div class="mt-2 flex items-center gap-2">
                                             <img id="wide-logo-preview" src="<?php echo esc_url(get_option('robodesk_wide_logo', '')); ?>" alt="Wide Logo Preview" class="hidden max-w-[150px] h-auto rounded-md">
+                                            <button type="button" onclick="removeImage('wide-logo-preview', 'robodesk_wide_logo')" class="text-red-600 hover:text-red-800 text-sm <?php echo esc_url(get_option('robodesk_wide_logo', '')) ? '' : 'hidden'; ?>">Remove</button>
                                         </div>
                                         <input type="hidden" name="robodesk_wide_logo" id="robodesk_wide_logo" value="<?php echo esc_attr(get_option('robodesk_wide_logo', '')); ?>">
                                     </div>
+
+                                    <script>
+                                        function removeImage(previewId, inputId) {
+                                            const preview = document.getElementById(previewId);
+                                            const input = document.getElementById(inputId);
+                                            const button = preview.nextElementSibling;
+
+                                            preview.src = '';
+                                            preview.classList.add('hidden');
+                                            input.value = '';
+                                            button.classList.add('hidden');
+                                        }
+                                    </script>
                                 </div>
                                 <hr class="my-6 border-gray-200">
                                 <button type="button" id="save-basic-settings" class="mt-6 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">
