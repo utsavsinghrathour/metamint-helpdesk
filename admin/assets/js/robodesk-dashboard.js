@@ -11,7 +11,6 @@ function removeImage(previewId, inputId) {
   input.value = "";
   button.classList.add("hidden");
 }
-
 const sampleTickets = [
   {
     id: 1,
