@@ -178,8 +178,8 @@ function robodesk_dashboard_callback()
                                 </div>
                                 <div class="ml-5 w-0 flex-1">
                                     <dl>
-                                        <dt class="text-sm font-medium text-gray-500 truncate">Resolved</dt>
-                                        <dd class="text-lg font-medium text-gray-900" id="resolved-tickets"><?php
+                                        <dt class="text-sm font-medium text-gray-500 truncate">Closed</dt>
+                                        <dd class="text-lg font-medium text-gray-900" id="closed-tickets"><?php
                                                                                                             $args = array(
                                                                                                                 'post_type' => 'robodesk_ticket',
                                                                                                                 'post_status' => 'publish', // Adjust if you need other statuses like 'draft'
@@ -541,7 +541,7 @@ function robodesk_dashboard_callback()
                                     <option value="all">All Status</option>
                                     <option value="open">Open</option>
                                     <option value="in-progress">In Progress</option>
-                                    <option value="resolved">Resolved</option>
+                                    <option value="closed">Closed</option>
                                 </select>
                             </div>
                             <div class="flex space-x-2">
@@ -717,7 +717,7 @@ function robodesk_dashboard_callback()
                                             <?php
                                             // get the current ticket status
                                             $current_ticket_status = get_post_meta($currentTicket->ID, '_robodesk_ticket_status', true);
-                                            $statuses = array('open', 'in-progress', 'resolved', 'closed');
+                                            $statuses = array('open', 'in-progress', 'closed');
                                             foreach ($statuses as $status) {
                                                 $selected = ($status === $current_ticket_status) ? 'selected' : '';
                                                 echo "<option value='$status' $selected>" . ucfirst($status) . "</option>";
@@ -1026,15 +1026,15 @@ function robodesk_dashboard_callback()
                                         <div id="new-ticket-template" class="editor-content" contenteditable="true"><?php echo wp_kses_post(get_option('robodesk_email_template_new-ticket', 'Thank you for contacting us. We have received your ticket and will respond soon.')); ?></div>
                                     </div>
                                     <div>
-                                        <label class="block text-sm font-medium text-gray-700 mb-2">Ticket Resolved</label>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">Ticket Closed</label>
                                         <div class="editor-toolbar mb-2">
-                                            <button type="button" onclick="formatText('bold', 'ticket-resolved-template')" class="editor-btn"><i class="fas fa-bold"></i></button>
-                                            <button type="button" onclick="formatText('italic', 'ticket-resolved-template')" class="editor-btn"><i class="fas fa-italic"></i></button>
-                                            <button type="button" onclick="formatText('underline', 'ticket-resolved-template')" class="editor-btn"><i class="fas fa-underline"></i></button>
-                                            <button type="button" onclick="formatText('insertUnorderedList', 'ticket-resolved-template')" class="editor-btn"><i class="fas fa-list-ul"></i></button>
-                                            <button type="button" onclick="formatText('insertOrderedList', 'ticket-resolved-template')" class="editor-btn"><i class="fas fa-list-ol"></i></button>
+                                            <button type="button" onclick="formatText('bold', 'ticket-closed-template')" class="editor-btn"><i class="fas fa-bold"></i></button>
+                                            <button type="button" onclick="formatText('italic', 'ticket-closed-template')" class="editor-btn"><i class="fas fa-italic"></i></button>
+                                            <button type="button" onclick="formatText('underline', 'ticket-closed-template')" class="editor-btn"><i class="fas fa-underline"></i></button>
+                                            <button type="button" onclick="formatText('insertUnorderedList', 'ticket-closed-template')" class="editor-btn"><i class="fas fa-list-ul"></i></button>
+                                            <button type="button" onclick="formatText('insertOrderedList', 'ticket-closed-template')" class="editor-btn"><i class="fas fa-list-ol"></i></button>
                                         </div>
-                                        <div id="ticket-resolved-template" class="editor-content" contenteditable="true"><?php echo wp_kses_post(get_option('robodesk_email_template_ticket-resolved', 'Your ticket has been resolved. Please let us know if you need further assistance.')); ?></div>
+                                        <div id="ticket-closed-template" class="editor-content" contenteditable="true"><?php echo wp_kses_post(get_option('robodesk_email_template_ticket-closed', 'Your ticket has been closed. Please let us know if you need further assistance.')); ?></div>
                                     </div>
                                     <div>
                                         <label class="block text-sm font-medium text-gray-700 mb-2">Auto Reply</label>

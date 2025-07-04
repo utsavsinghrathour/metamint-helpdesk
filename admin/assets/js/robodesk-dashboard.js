@@ -78,7 +78,7 @@ const sampleTickets = [
   {
     id: 3,
     title: "Plugin compatibility issue",
-    status: "resolved",
+    status: "closed",
     priority: "low",
     customer: "Mike Wilson",
     email: "mike@example.com",
@@ -98,7 +98,7 @@ const sampleTickets = [
       {
         id: 2,
         author: "Tech Support",
-        message: "Issue resolved by updating plugin versions.",
+        message: "Issue closed by updating plugin versions.",
         timestamp: "2024-01-14T10:00:00Z",
         type: "agent",
       },
@@ -199,8 +199,8 @@ function getStatusClass(status) {
       return "status-open";
     case "in-progress":
       return "status-in-progress";
-    case "resolved":
-      return "status-resolved";
+    case "closed":
+      return "status-closed";
     default:
       return "bg-gray-100 text-gray-800";
   }
@@ -268,13 +268,13 @@ function updateDashboardStats() {
     total: tickets.length,
     open: tickets.filter((t) => t.status === "open").length,
     inProgress: tickets.filter((t) => t.status === "in-progress").length,
-    resolved: tickets.filter((t) => t.status === "resolved").length,
+    closed: tickets.filter((t) => t.status === "closed").length,
   };
 
   document.getElementById("total-tickets").innerHTML = stats.total;
   document.getElementById("open-tickets").innerHTML = stats.open;
   document.getElementById("in-progress-tickets").innerHTML = stats.inProgress;
-  document.getElementById("resolved-tickets").innerHTML = stats.resolved;
+  document.getElementById("closed-tickets").innerHTML = stats.closed;
 }
 
 function filterDashboardTickets(filterType) {
@@ -377,9 +377,9 @@ function editStatus(ticketId, element) {
         <option value="in-progress" ${
           currentStatus === "in-progress" ? "selected" : ""
         }>In Progress</option>
-        <option value="resolved" ${
-          currentStatus === "resolved" ? "selected" : ""
-        }>Resolved</option>
+        <option value="closed" ${
+          currentStatus === "closed" ? "selected" : ""
+        }>Closed</option>
     `;
 
   select.onchange = function () {
@@ -738,7 +738,7 @@ function showCustomerTickets() {
     open: customerTickets.filter((t) => t.status === "open").length,
     inProgress: customerTickets.filter((t) => t.status === "in-progress")
       .length,
-    resolved: customerTickets.filter((t) => t.status === "resolved").length,
+    closed: customerTickets.filter((t) => t.status === "closed").length,
   };
 
   // Update modal title
@@ -757,9 +757,10 @@ function showCustomerTickets() {
             <div class="customer-stat-number text-yellow-600">${stats.inProgress}</div>
             <div class="customer-stat-label">In Progress</div>
         </div>
-        <div class="customer-stat-card" onclick="filterCustomerTickets('resolved')">
-            <div class="customer-stat-number text-green-600">${stats.resolved}</div>
-            <div class="customer-stat-label">Resolved</div>
+      
+        <div class="customer-stat-card" onclick="filterCustomerTickets('closed')">
+            <div class="customer-stat-number text-green-600">${stats.closed}</div>
+            <div class="customer-stat-label">Closed</div>
         </div>
     `;
 
@@ -912,6 +913,28 @@ function updateTicketPriority(ticketId, newPriority) {
     showToast(`Ticket priority updated to ${newPriority}`);
   }
 }
+
+// const priorityMap = {
+//   5: "Low",
+//   4: "Medium",
+//   6: "High",
+// };
+
+// function updateTicketPriority(ticketId, newPriorityId) {
+//   const newPriority = priorityMap[newPriorityId] || "Unknown";
+
+//   const ticketIndex = tickets.findIndex((t) => t.id === ticketId);
+//   if (ticketIndex !== -1) {
+//     tickets[ticketIndex].priority = newPriority;
+//     tickets[ticketIndex].updated = new Date().toISOString();
+//     if (currentTicket && currentTicket.id === ticketId) {
+//       currentTicket.priority = newPriority;
+//       currentTicket.updated = new Date().toISOString();
+//     }
+
+//     showToast(`Ticket priority updated to ${newPriority}`);
+//   }
+// }
 
 function updateTicketAssignee(ticketId, newAssignee) {
   const ticketIndex = tickets.findIndex((t) => t.id === ticketId);
@@ -1148,7 +1171,7 @@ jQuery(document).ready(function ($) {
     // Collect template data from contenteditable divs
     var templates = {
       "new-ticket": $("#new-ticket-template").html(),
-      "ticket-resolved": $("#ticket-resolved-template").html(),
+      "ticket-closed": $("#ticket-closed-template").html(),
       "auto-reply": $("#auto-reply-template").html(),
     };
 
