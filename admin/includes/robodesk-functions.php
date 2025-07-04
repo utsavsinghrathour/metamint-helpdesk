@@ -470,13 +470,40 @@ function robodesk_create_ticket()
     // Find or create a user based on email
     $user = get_user_by('email', $customer_email);
     if (!$user) {
-        $user_id = wp_create_user($customer_email, wp_generate_password(), $customer_email);
+        error_log('User not found, creating new user with email: ' . $customer_email);
+
+        // Check if role exists
+        $roles = wp_roles();
+        $role = isset($roles->roles['robodesk_support_customer']) ? 'robodesk_support_customer' : 'subscriber';
+
+        // Ensure unique user_login
+        $base_login = explode('@', $customer_email)[0];
+        $user_login = $base_login;
+        $counter = 1;
+        while (username_exists($user_login)) {
+            $user_login = $base_login . '_' . $counter++;
+        }
+
+        $user_id = wp_insert_user([
+            'user_login'   => $user_login,
+            'user_email'   => $customer_email,
+            'user_pass'    => wp_generate_password(),
+            'display_name' => $customer_name,
+            'role'         => $role,
+        ]);
+
         if (is_wp_error($user_id)) {
+            error_log('Failed to create user: ' . $user_id->get_error_message());
             wp_send_json_error(['message' => 'Failed to create user: ' . $user_id->get_error_message()]);
             wp_die();
         }
-        $user = get_user_by('id', $user_id);
+
+        error_log('Created new user with ID: ' . $user_id);
         update_user_meta($user_id, 'nickname', $customer_name);
+        wp_send_new_user_notifications($user_id, 'user');
+    } else {
+        $user_id = $user->ID;
+        error_log('Using existing user with ID: ' . $user_id);
     }
 
     // Create the ticket
@@ -485,16 +512,17 @@ function robodesk_create_ticket()
         'post_content' => $ticket_description,
         'post_type'    => 'robodesk_ticket',
         'post_status'  => 'publish',
-        'post_author'  => 'customer', // Set the user as the post author
+        'post_author'  => $user_id, // Set the user ID as the post author
         'meta_input'   => [
-            '_robodesk_customer_email' => $customer_email, // For compatibility with WP_Query
-            '_robodesk_ticket_status'  => 'Open', // Default status
+            '_robodesk_customer_email' => $customer_email,
+            '_robodesk_ticket_status'  => 'open',
             'ticket_category'          => $ticket_category,
             'ticket_assignee'          => $ticket_assignee,
         ],
     ]);
 
     if (is_wp_error($ticket_id)) {
+        error_log('Failed to create ticket: ' . $ticket_id->get_error_message());
         wp_send_json_error(['message' => 'Failed to create ticket: ' . $ticket_id->get_error_message()]);
         wp_die();
     }
@@ -503,18 +531,32 @@ function robodesk_create_ticket()
     $priority_term = term_exists($ticket_priority, 'robodesk_ticket_priority');
     if (!$priority_term) {
         $priority_term = wp_insert_term($ticket_priority, 'robodesk_ticket_priority');
+        error_log('Created new priority term: ' . $ticket_priority);
     }
     if (!is_wp_error($priority_term)) {
-        wp_set_post_terms($ticket_id, [$ticket_priority], 'robodesk_ticket_priority');
+        $priority_term_id = is_array($priority_term) ? $priority_term['term_id'] : $priority_term;
+        $result = wp_set_post_terms($ticket_id, [$priority_term_id], 'robodesk_ticket_priority', false);
+        if (is_wp_error($result)) {
+            error_log('Failed to set priority term: ' . $result->get_error_message());
+        }
+    } else {
+        error_log('Failed to create priority term: ' . $priority_term->get_error_message());
     }
 
     // Assign source to robodesk_ticket_origin taxonomy
     $source_term = term_exists($ticket_source, 'robodesk_ticket_origin');
     if (!$source_term) {
         $source_term = wp_insert_term($ticket_source, 'robodesk_ticket_origin');
+        error_log('Created new source term: ' . $ticket_source);
     }
     if (!is_wp_error($source_term)) {
-        wp_set_post_terms($ticket_id, [$ticket_source], 'robodesk_ticket_origin');
+        $source_term_id = is_array($source_term) ? $source_term['term_id'] : $source_term;
+        $result = wp_set_post_terms($ticket_id, [$source_term_id], 'robodesk_ticket_origin', false);
+        if (is_wp_error($result)) {
+            error_log('Failed to set source term: ' . $result->get_error_message());
+        }
+    } else {
+        error_log('Failed to create source term: ' . $source_term->get_error_message());
     }
 
     wp_send_json_success(['message' => 'Ticket created successfully', 'ticket_id' => $ticket_id]);
