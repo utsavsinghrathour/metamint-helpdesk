@@ -99,7 +99,7 @@ function robodesk_imap_save_settings()
     }
 }
 
-// email template save function (save new ticket, ticket resolved, and auto-reply templates)
+// email template save function (save new ticket, ticket closed, and auto-reply templates)
 add_action('wp_ajax_robodesk_email_template_save', 'robodesk_email_template_save');
 
 function robodesk_email_template_save()
@@ -130,7 +130,7 @@ function robodesk_email_template_save()
 
     $results = [];
     // Define expected template keys
-    $valid_templates = ['new-ticket', 'ticket-resolved', 'auto-reply'];
+    $valid_templates = ['new-ticket', 'ticket-closed', 'auto-reply'];
 
     foreach ($_POST['templates'] as $template_name => $template_content) {
         // Validate template name
