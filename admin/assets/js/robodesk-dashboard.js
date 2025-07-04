@@ -1,4 +1,17 @@
 // Sample data
+
+//basic setting delete
+function removeImage(previewId, inputId) {
+  const preview = document.getElementById(previewId);
+  const input = document.getElementById(inputId);
+  const button = preview.nextElementSibling;
+
+  preview.src = "";
+  preview.classList.add("hidden");
+  input.value = "";
+  button.classList.add("hidden");
+}
+
 const sampleTickets = [
   {
     id: 1,

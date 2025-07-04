@@ -926,18 +926,6 @@ function robodesk_dashboard_callback()
                                         <input type="hidden" name="robodesk_wide_logo" id="robodesk_wide_logo" value="<?php echo esc_attr(get_option('robodesk_wide_logo', '')); ?>">
                                     </div>
 
-                                    <script>
-                                        function removeImage(previewId, inputId) {
-                                            const preview = document.getElementById(previewId);
-                                            const input = document.getElementById(inputId);
-                                            const button = preview.nextElementSibling;
-
-                                            preview.src = '';
-                                            preview.classList.add('hidden');
-                                            input.value = '';
-                                            button.classList.add('hidden');
-                                        }
-                                    </script>
                                 </div>
                                 <hr class="my-6 border-gray-200">
                                 <button type="button" id="save-basic-settings" class="mt-6 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">
