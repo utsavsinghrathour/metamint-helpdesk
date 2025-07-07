@@ -468,9 +468,15 @@ function robodesk_dashboard_callback()
                                     <label class="block text-sm font-medium text-gray-700 mb-2">Priority *</label>
                                     <select id="ticket-priority" name="ticket_priority" required class="styled-select block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
                                         <option value="">Select Priority</option>
-                                        <option value="Low">Low</option>
-                                        <option value="Medium">Medium</option>
-                                        <option value="High">High</option>
+                                        <?php
+                                        $priorities = get_terms([
+                                            'taxonomy' => 'robodesk_ticket_priority',
+                                            'hide_empty' => false,
+                                        ]);
+                                        foreach ($priorities as $priority) {
+                                            echo '<option value="' . esc_attr($priority->term_id) . '">' . esc_html($priority->name) . '</option>';
+                                        }
+                                        ?>
                                     </select>
                                 </div>
                                 <div>
@@ -492,11 +498,7 @@ function robodesk_dashboard_callback()
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-2">Assign to *</label>
                                     <select id="ticket-assignee" name="ticket_assignee" required class="styled-select block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
-                                        <!-- <option value="">Select Agent</option>
-                                        <option value="Support Team">Support Team</option>
-                                        <option value="Tech Support">Tech Support</option>
-                                        <option value="Design Team">Design Team</option>
-                                        <option value="Sales Team">Sales Team</option> -->
+
 
                                         <?php
                                         $default_agent = get_option('robodesk_default_agent');
