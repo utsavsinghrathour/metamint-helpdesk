@@ -332,6 +332,7 @@ const NoticeTabs = ({
   activeTab,
   selectedNotice: initialSelectedNotice,
   setShowActiveFeatured,
+  logo
 }) => {
   const [selectedNotice, setSelectedNotice] = useState(initialSelectedNotice);
   const [showHeaderFooter, setShowHeaderFooter] = useState(true);
@@ -392,7 +393,7 @@ const NoticeTabs = ({
             <div className="rd-main-content">
               {showHeaderFooter && (
                 <>
-                  <Header onClose={() => setIsOpen(false)} />
+                  <Header logo={logo} onClose={() => setIsOpen(false)} />
                   <div className="rd-text-center rd-px-20 rd-flex rd-flex-col rd-gap-5 rd-mb-20 notice-tab-title home-tab-title">
                     <h3 className="heading-3">Notices</h3>
                     <h5 className="sub-text">Stay updated with our latest announcements.</h5>

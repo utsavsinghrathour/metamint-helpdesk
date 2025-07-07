@@ -20,7 +20,7 @@ const Header = ({ logo, onClose }) => {
           }}
         />
       ) : (
-        <div className="rd-h-auto rd-header-logo">
+        <div className="rd-h-auto rd-header-logo default">
           <img
             src={defaultLogo}
             alt="Default Plugin Logo"
