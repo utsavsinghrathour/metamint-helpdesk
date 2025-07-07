@@ -172,6 +172,35 @@ function robodesk_email_template_save()
     }
 }
 
+function robodesk_replace_template_tags($template, $ticket_id)
+{
+    $ticket = get_post($ticket_id);
+
+    if (!$ticket || $ticket->post_type !== 'robodesk_ticket') {
+        return $template;
+    }
+
+    $author_id = $ticket->post_author;
+    $author = get_userdata($author_id);
+    $author_name = $author ? $author->display_name : 'Customer';
+
+    $ticket_link = get_permalink($ticket_id);
+    $ticket_title = get_the_title($ticket_id);
+    $ticket_status = get_post_status($ticket_id);
+
+    // You can add more fields as needed
+    $replacements = [
+        '{ticket_id}'     => $ticket_id,
+        '{ticket_author}' => esc_html($author_name),
+        '{ticket_link}'   => esc_url($ticket_link),
+        '{ticket_title}'  => esc_html($ticket_title),
+        '{ticket_status}' => ucfirst(esc_html($ticket_status)),
+    ];
+
+    return strtr($template, $replacements);
+}
+
+
 
 // advance settings save function (save auto assign, notifications, customer portal, and max file upload size)
 add_action('wp_ajax_robodesk_save_advanced_settings', 'robodesk_save_advanced_settings');
