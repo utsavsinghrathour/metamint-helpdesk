@@ -217,7 +217,7 @@ function robodesk_dashboard_callback()
                     $args = array(
                         'post_type' => 'robodesk_ticket',
                         'post_status' => 'publish',
-                        'posts_per_page' => 10, // Fetch 10 to filter in PHP
+                        'posts_per_page' => -1, // Fetch 10 to filter in PHP
                         'orderby' => 'modified',
                         'order' => 'DESC'
                     );
