@@ -477,20 +477,52 @@ function robodesk_dashboard_callback()
                                     <label class="block text-sm font-medium text-gray-700 mb-2">Category *</label>
                                     <select id="ticket-category" name="ticket_category" required class="styled-select block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
                                         <option value="">Select Category</option>
-                                        <option value="Technical">Technical</option>
-                                        <option value="Billing">Billing</option>
-                                        <option value="General">General</option>
-                                        <option value="Feature Request">Feature Request</option>
+                                        <?php
+                                        $categories = get_terms([
+                                            'taxonomy' => 'robodesk_ticket_category',
+                                            'hide_empty' => false,
+                                        ]);
+
+                                        foreach ($categories as $category) {
+                                            echo '<option value="' . esc_attr($category->term_id) . '">' . esc_html($category->name) . '</option>';
+                                        }
+                                        ?>
                                     </select>
                                 </div>
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-2">Assign to *</label>
                                     <select id="ticket-assignee" name="ticket_assignee" required class="styled-select block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
-                                        <option value="">Select Agent</option>
+                                        <!-- <option value="">Select Agent</option>
                                         <option value="Support Team">Support Team</option>
                                         <option value="Tech Support">Tech Support</option>
                                         <option value="Design Team">Design Team</option>
-                                        <option value="Sales Team">Sales Team</option>
+                                        <option value="Sales Team">Sales Team</option> -->
+
+                                        <?php
+                                        $default_agent = get_option('robodesk_default_agent');
+
+                                        // Get users by role with display_name only
+                                        $agents = get_users([
+                                            'role__in' => ['robodesk_support_staff', 'robodesk_support_manager', 'author', 'editor', 'administrator'],
+                                            'fields'   => ['display_name'],
+                                        ]);
+
+                                        // Convert to simple array of display names
+                                        $agent_names = wp_list_pluck($agents, 'display_name');
+                                        ?>
+
+                                        <?php foreach ($agent_names as $agent): ?>
+                                            <option value="<?php echo esc_attr($agent); ?>" <?php selected($default_agent, $agent); ?>>
+                                                <?php echo esc_html($agent); ?>
+                                            </option>
+                                        <?php endforeach; ?>
+
+                                        <?php if (!in_array($default_agent, $agent_names) && !empty($default_agent)): ?>
+                                            <option value="<?php echo esc_attr($default_agent); ?>" selected>
+                                                <?php echo esc_html($default_agent); ?>
+                                            </option>
+                                        <?php endif; ?>
+
                                     </select>
                                 </div>
                             </div>
@@ -1067,29 +1099,53 @@ function robodesk_dashboard_callback()
                                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                             <div>
                                                 <label class="block text-sm font-medium text-gray-700">Fetch Interval (minutes)</label>
-                                                <input type="number" name="fetch_interval" value="15" class="styled-input mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500" min="1" max="1440" required>
+                                                <input type="number" name="fetch_interval" value="<?php echo esc_attr(get_option('robodesk_fetch_interval', 15)); ?>" class="styled-input mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500" min="1" max="1440" required>
                                             </div>
                                             <div>
                                                 <label class="block text-sm font-medium text-gray-700">Auto-assign to</label>
                                                 <select name="default_agent" class="styled-select mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500" required>
-                                                    <option value="support">Support Team</option>
-                                                    <option value="tech">Tech Support</option>
-                                                    <option value="sales">Sales Team</option>
+                                                    <!-- default options -->
+                                                    <?php
+                                                    $default_agent = get_option('robodesk_default_agent');
+
+                                                    // Get users by role with display_name only
+                                                    $agents = get_users([
+                                                        'role__in' => ['robodesk_support_staff', 'robodesk_support_manager', 'author', 'editor', 'administrator'],
+                                                        'fields'   => ['display_name'],
+                                                    ]);
+
+                                                    // Convert to simple array of display names
+                                                    $agent_names = wp_list_pluck($agents, 'display_name');
+                                                    ?>
+
+                                                    <?php foreach ($agent_names as $agent): ?>
+                                                        <option value="<?php echo esc_attr($agent); ?>" <?php selected($default_agent, $agent); ?>>
+                                                            <?php echo esc_html($agent); ?>
+                                                        </option>
+                                                    <?php endforeach; ?>
+
+                                                    <?php if (!in_array($default_agent, $agent_names) && !empty($default_agent)): ?>
+                                                        <option value="<?php echo esc_attr($default_agent); ?>" selected>
+                                                            <?php echo esc_html($default_agent); ?>
+                                                        </option>
+                                                    <?php endif; ?>
+
+
                                                 </select>
                                             </div>
                                         </div>
                                     </div>
                                     <div class="flex space-x-4">
-                                        <button id="save-ticket-assignment-settings" class="bg-gray-600 text-white px-6 py-2 rounded-md hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500">
+                                        <button id="save-ticket-assignment-settings" class="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
                                             <i class="fas fa-cog mr-2"></i>
-                                            Configure Auto-Fetch
+                                            Save Auto-Fetch
                                         </button>
                                     </div>
                                 </div>
                             </form>
 
                             <div class="flex space-x-4 mt-6">
-                                <button onclick="fetchEmails()" class="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                                <button onclick="fetchEmails()" class="bg-gray-600 text-white px-6 py-2 rounded-md hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500">
                                     <i class="fas fa-sync-alt mr-2"></i>
                                     Fetch Emails Now
                                 </button>
