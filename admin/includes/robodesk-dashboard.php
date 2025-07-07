@@ -404,7 +404,7 @@ function robodesk_dashboard_callback()
                             <h3 class="text-lg leading-6 font-medium text-gray-900">Ticket Overview</h3>
                             <div class="flex space-x-2">
                                 <button onclick="filterDashboardTickets('recent')" class="dashboard-filter-btn px-3 py-1 text-sm rounded-md border <?php echo $filter === 'recent' ? 'active' : ''; ?>" data-filter="recent">Recent Tickets</button>
-                                <button onclick="filterDashboardTickets('replies')" class="dashboard-filter-btn px-3 py-1 text-sm rounded-md border <?php echo $filter === 'replies' ? 'active' : ''; ?>" data-filter="replies">Recent Replies</button>
+                                <!-- <button onclick="filterDashboardTickets('replies')" class="dashboard-filter-btn px-3 py-1 text-sm rounded-md border <?php echo $filter === 'replies' ? 'active' : ''; ?>" data-filter="replies">Recent Replies</button> -->
                                 <button onclick="filterDashboardTickets('waiting')" class="dashboard-filter-btn px-3 py-1 text-sm rounded-md border <?php echo $filter === 'waiting' ? 'active' : ''; ?>" data-filter="waiting">Waiting Reply</button>
                             </div>
                         </div>
@@ -422,11 +422,12 @@ function robodesk_dashboard_callback()
                                 <div class="text-sm font-medium text-blue-900">Create New Ticket</div>
                                 <div class="text-xs text-blue-700">Add a new support ticket</div>
                             </button>
-                            <button class="bg-green-50 hover:bg-green-100 p-4 rounded-lg text-left transition-colors">
+                            <button onclick="window.location.href='<?php echo admin_url('users.php?role=robodesk_support_customer'); ?>'" class="bg-green-50 hover:bg-green-100 p-4 rounded-lg text-left transition-colors">
                                 <i class="fas fa-users text-green-600 text-xl mb-2"></i>
                                 <div class="text-sm font-medium text-green-900">Manage Customers</div>
                                 <div class="text-xs text-green-700">View and edit customer information</div>
                             </button>
+
                             <button onclick="showPage('settings')" class="bg-purple-50 hover:bg-purple-100 p-4 rounded-lg text-left transition-colors">
                                 <i class="fas fa-cog text-purple-600 text-xl mb-2"></i>
                                 <div class="text-sm font-medium text-purple-900">System Settings</div>
