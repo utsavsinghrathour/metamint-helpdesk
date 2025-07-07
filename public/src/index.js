@@ -2,7 +2,9 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import App from './App.jsx';
 
+// Get the localized data
+const { imageUrls = { logo: '' } } = window.robodeskData || { imageUrls: {} };
 
 if (document.getElementById('robodesk-plugin')) {
-  ReactDOM.render(<App />, document.getElementById('robodesk-plugin'));
+  ReactDOM.render(<App imageUrls={imageUrls} />, document.getElementById('robodesk-plugin'));
 }

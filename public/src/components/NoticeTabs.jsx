@@ -5,22 +5,19 @@ import Footer from './Footer.jsx';
 import parse from 'html-react-parser';
 import DOMPurify from 'dompurify';
 import '../styles/NoticeTabs.css';
-import Logo from '../images/wooescrow-logo.png';
+import defaultLogo from '../images/robodesk-logo.png';
 
 import { useCachedFetch } from '../utils/modules';
 
 const wpHomeUrl = window.robodeskData?.home_url || '';
 
 const normalizeImagePaths = (html, baseUrl = wpHomeUrl) => {
-  return html.replace(
-    /(<img[^>]+src=['"])(\/[^'"]+)(['"][^>]*>)/gi,
-    (match, prefix, path, suffix) => {
-      if (path.startsWith('/')) {
-        return `${prefix}${baseUrl}${path}${suffix}`;
-      }
-      return match;
+  return html.replace(/(<img[^>]+src=['"])(\/[^'"]+)(['"][^>]*>)/gi, (match, prefix, path, suffix) => {
+    if (path.startsWith('/')) {
+      return `${prefix}${baseUrl}${path}${suffix}`;
     }
-  );
+    return match;
+  });
 };
 
 // Error Boundary Component
@@ -67,7 +64,6 @@ const NoticeItem = memo(({ notice, onSelect }) => {
 const SingleNoticeView = memo(({ notice, onBack, isExpanded, setIsExpanded }) => {
   const [content, setContent] = useState(null);
 
-
   useEffect(() => {
     // console.log('Our notice',notice);
     const fetchContent = () => {
@@ -85,7 +81,7 @@ const SingleNoticeView = memo(({ notice, onBack, isExpanded, setIsExpanded }) =>
         // if (!response.ok) throw new Error('Failed to fetch notice content');
         // const data = await response.json();
         // console.log('Jpt Notice',notice);
-       
+
         const normalizedContent = normalizeImagePaths(notice.content);
         const sanitizedContent = DOMPurify.sanitize(normalizedContent, {
           ADD_TAGS: ['iframe', 'img'],
@@ -145,9 +141,24 @@ const SingleNoticeView = memo(({ notice, onBack, isExpanded, setIsExpanded }) =>
         >
           <FaChevronLeft />
         </button>
-        <img src={Logo} alt="Plugin Logo" className="rd-h-auto rd-header-logo" />
+        {logo && logo.trim() !== '' ? (
+          <img
+            src={logo}
+            alt="Plugin Logo"
+            className="rd-h-auto rd-header-logo"
+            onError={(e) => {
+              e.target.style.display = 'none';
+            }}
+          />
+        ) : (
+          <div className="rd-h-auto rd-header-logo">
+            <img src={defaultLogo} alt="Default Plugin Logo" className="rd-h-auto rd-header-logo" />
+          </div>
+        )}
         <button
-          className={`expand-popup rd-bg-transparent rd-border-none rd-cursor-pointer rd-p-0 ${isExpanded ? 'expanded' : ''}`}
+          className={`expand-popup rd-bg-transparent rd-border-none rd-cursor-pointer rd-p-0 ${
+            isExpanded ? 'expanded' : ''
+          }`}
           onClick={() => setIsExpanded(!isExpanded)}
         >
           <svg
@@ -208,7 +219,7 @@ const SingleNoticeView = memo(({ notice, onBack, isExpanded, setIsExpanded }) =>
 //   const [notices, setNotices] = useState([]);
 //   const [isLoading, setIsLoading] = useState(true);
 //   const [error, setError] = useState(null);
-  
+
 //   const { data, err, loading } = useCachedFetch('/wp-json/wp/v2/notice?_fields=id,title.rendered,excerpt.rendered,content.rendered');
 
 //   useEffect(() => {
@@ -227,7 +238,7 @@ const SingleNoticeView = memo(({ notice, onBack, isExpanded, setIsExpanded }) =>
 //           setIsLoading(false);
 //           return;
 //         }
-        
+
 //         const response = await fetch(
 //           `/wp-json/wp/v2/notice?_fields=id,title.rendered,excerpt.rendered,content.rendered`
 //         );
@@ -242,7 +253,7 @@ const SingleNoticeView = memo(({ notice, onBack, isExpanded, setIsExpanded }) =>
 //             ADD_TAGS: ['p', 'strong', 'em'],
 //             ADD_ATTR: [],
 //           }),
-          
+
 //         }));
 
 //         setNotices(formattedNotices);
@@ -330,8 +341,8 @@ const NoticeTabs = ({
   const { data, error, loading } = useCachedFetch(
     '/wp-json/wp/v2/notice?_fields=id,title.rendered,excerpt.rendered,content.rendered'
   );
-//   console.log('On nOtice tabs');
-//   console.log('New Way' , data , error,loading);
+  //   console.log('On nOtice tabs');
+  //   console.log('New Way' , data , error,loading);
 
   // Process fetched data
   useEffect(() => {
@@ -395,9 +406,7 @@ const NoticeTabs = ({
                   ) : notices.length === 0 ? (
                     <p className="rd-body-text">No notices found.</p>
                   ) : (
-                    notices.map((notice) => (
-                      <NoticeItem key={notice.id} notice={notice} onSelect={setSelectedNotice} />
-                    ))
+                    notices.map((notice) => <NoticeItem key={notice.id} notice={notice} onSelect={setSelectedNotice} />)
                   )}
                 </div>
               </div>
