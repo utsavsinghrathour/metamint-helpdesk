@@ -299,19 +299,19 @@ function loadDashboardTickets() {
       filteredTickets = tickets
         .slice()
         .sort((a, b) => new Date(b.updated) - new Date(a.updated))
-        .slice(0, 5);
+        .slice(0, 10);
       break;
     case "replies":
       filteredTickets = tickets
         .filter((t) => t.replies && t.replies.length > 0)
         .sort((a, b) => new Date(b.updated) - new Date(a.updated))
-        .slice(0, 5);
+        .slice(0, 10);
       break;
     case "waiting":
       filteredTickets = tickets
         .filter((t) => t.status === "open" || t.status === "in-progress")
         .sort((a, b) => new Date(a.updated) - new Date(b.updated))
-        .slice(0, 5);
+        .slice(0, 10);
       break;
   }
 
