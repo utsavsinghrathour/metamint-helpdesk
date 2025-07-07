@@ -51,13 +51,22 @@ function robodesk_add_admin_menu()
     // );
 
     // Ticket Origins (taxonomy)
+    // add_submenu_page(
+    //     'robodesk-dashboard',
+    //     'Ticket Origins',
+    //     'Ticket Origins',
+    //     'manage_categories',
+    //     'edit-tags.php?taxonomy=robodesk_ticket_origin&post_type=robodesk_ticket'
+    // );
+
     add_submenu_page(
         'robodesk-dashboard',
-        'Ticket Origins',
-        'Ticket Origins',
+        'Ticket Categories',
+        'Ticket Categories',
         'manage_categories',
-        'edit-tags.php?taxonomy=robodesk_ticket_origin&post_type=robodesk_ticket'
+        'edit-tags.php?taxonomy=robodesk_ticket_category&post_type=robodesk_ticket'
     );
+
 
     // Ticket Priorities (taxonomy)
     add_submenu_page(

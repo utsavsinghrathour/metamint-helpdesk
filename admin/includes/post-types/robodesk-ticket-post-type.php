@@ -114,7 +114,36 @@ function robodesk_register_ticket_post_type()
         'rewrite'           => array('slug' => 'ticket-priority'),
     );
 
-    register_taxonomy('robodesk_ticket_priority', array('robodesk_ticket'), $ticket_priority_args);
+    register_taxonomy('robodesk_ticket_priority', 'robodesk_ticket', $ticket_priority_args);
+
+    // Ticket Category Taxonomy
+    $ticket_category_labels = [
+        'name'              => _x('Categories', 'taxonomy general name'),
+        'singular_name'     => _x('Category', 'taxonomy singular name'),
+        'search_items'      => __('Search Categories'),
+        'all_items'         => __('All Categories'),
+        'parent_item'       => __('Parent Category'),
+        'parent_item_colon' => __('Parent Category:'),
+        'edit_item'         => __('Edit Category'),
+        'update_item'       => __('Update Category'),
+        'add_new_item'      => __('Add New Category'),
+        'new_item_name'     => __('New Category Name'),
+        'menu_name'         => __('Category'),
+    ];
+
+
+    $ticket_category_args = array(
+        'hierarchical'      => true,
+        'labels'            => $ticket_category_labels,
+        'publicly_queryable' => true,
+        'show_ui'           => true,
+        'show_admin_column' => true,
+        'query_var'         => true,
+        'sort'              => true,
+        'rewrite'           => array('slug' => 'ticket-category'),
+    );
+
+    register_taxonomy('robodesk_ticket_category', array('robodesk_ticket'), $ticket_category_args);
 }
 
 // Meta Box for Ticket Status (Unchanged)
