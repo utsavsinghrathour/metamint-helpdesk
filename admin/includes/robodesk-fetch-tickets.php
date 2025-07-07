@@ -387,13 +387,13 @@ function robodesk_fetch_emails()
 
             error_log('Created new ticket with ID: ' . $post_id);
 
-            // Set taxonomy terms
-            if ($term_email_id) {
-                $result = wp_set_post_terms($post_id, [$term_email_id], 'robodesk_ticket_origin', false);
-                if (is_wp_error($result)) {
-                    error_log('Failed to set origin term: ' . $result->get_error_message());
-                }
-            }
+            // // Set taxonomy terms
+            // if ($term_email_id) {
+            //     $result = wp_set_post_terms($post_id, [$term_email_id], 'robodesk_ticket_origin', false);
+            //     if (is_wp_error($result)) {
+            //         error_log('Failed to set origin term: ' . $result->get_error_message());
+            //     }
+            // }
 
             if ($term_priority_id) {
                 $result = wp_set_post_terms($post_id, [$term_priority_id], 'robodesk_ticket_priority', false);
@@ -403,6 +403,7 @@ function robodesk_fetch_emails()
             }
 
             // Update post meta
+            update_post_meta($post_id, 'robodesk_ticket_origin', 'email');
             update_post_meta($post_id, '_robodesk_ticket_status', 'open');
             add_post_meta($post_id, 'email_message_id', $message_id);
             add_post_meta($post_id, 'email_from', $from);
