@@ -450,12 +450,18 @@ function robodesk_dashboard_callback()
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-2">Customer Name *</label>
-                                    <input type="text" id="customer-name" name="customer_name" required class="styled-input block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                                    <input type="text" id="customer-name" name="customer_name" required autocomplete="off"
+                                        class="styled-input block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                                    <div id="customer-name-suggestions" class="bg-white border border-gray-300 mt-1 hidden absolute z-10 w-full max-h-40 overflow-auto rounded-md shadow"></div>
                                 </div>
+
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-2">Customer Email *</label>
-                                    <input type="email" id="customer-email" name="customer_email" required class="styled-input block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                                    <input type="email" id="customer-email" name="customer_email" required autocomplete="off"
+                                        class="styled-input block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                                    <div id="customer-email-suggestions" class="bg-white border border-gray-300 mt-1 hidden absolute z-10 w-full max-h-40 overflow-auto rounded-md shadow"></div>
                                 </div>
+
                             </div>
 
                             <div>

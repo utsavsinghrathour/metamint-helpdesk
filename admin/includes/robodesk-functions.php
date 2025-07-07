@@ -562,3 +562,33 @@ function robodesk_create_ticket()
     wp_send_json_success(['message' => 'Ticket created successfully', 'ticket_id' => $ticket_id]);
     wp_die();
 }
+
+
+//for search of username and email in create ticket form
+add_action('wp_ajax_robodesk_user_lookup', 'robodesk_user_lookup');
+add_action('wp_ajax_nopriv_robodesk_user_lookup', 'robodesk_user_lookup');
+
+function robodesk_user_lookup()
+{
+    $type = sanitize_text_field($_POST['type']);
+    $value = sanitize_text_field($_POST['value']);
+
+    $args = [
+        'number' => 5,
+        'fields' => ['display_name', 'user_email'],
+        'search_columns' => [$type === 'email' ? 'user_email' : 'display_name'],
+        'search' => '*' . esc_attr($value) . '*',
+
+    ];
+
+    $users = get_users($args);
+
+    $results = array_map(function ($user) {
+        return [
+            'display_name' => $user->display_name,
+            'user_email'   => $user->user_email,
+        ];
+    }, $users);
+
+    wp_send_json($results);
+}
