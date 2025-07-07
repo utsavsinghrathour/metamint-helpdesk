@@ -1,4 +1,82 @@
 // Sample data
+//search form creating user and email
+
+document.addEventListener("DOMContentLoaded", function () {
+  const nameInput = document.getElementById("customer-name");
+  const emailInput = document.getElementById("customer-email");
+  const nameSuggestions = document.getElementById("customer-name-suggestions");
+  const emailSuggestions = document.getElementById(
+    "customer-email-suggestions"
+  );
+
+  function fetchSuggestions(type, value, callback) {
+    fetch(ajaxurl, {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({
+        action: "robodesk_user_lookup",
+        type: type,
+        value: value,
+      }),
+    })
+      .then((res) => res.json())
+      .then(callback);
+  }
+
+  function populateSuggestions(container, items, onSelect) {
+    container.innerHTML = "";
+    if (!items.length) {
+      container.classList.add("hidden");
+      return;
+    }
+    items.forEach((user) => {
+      const div = document.createElement("div");
+      div.className = "cursor-pointer px-3 py-2 hover:bg-blue-100 text-sm";
+      div.textContent = `${user.display_name} (${user.user_email})`;
+      div.addEventListener("click", () => onSelect(user));
+      container.appendChild(div);
+    });
+    container.classList.remove("hidden");
+  }
+
+  nameInput.addEventListener("keyup", () => {
+    const value = nameInput.value.trim();
+    if (value.length < 2) {
+      nameSuggestions.classList.add("hidden");
+      return;
+    }
+    fetchSuggestions("name", value, (users) => {
+      populateSuggestions(nameSuggestions, users, (user) => {
+        nameInput.value = user.display_name;
+        emailInput.value = user.user_email;
+        nameSuggestions.classList.add("hidden");
+      });
+    });
+  });
+
+  emailInput.addEventListener("keyup", () => {
+    const value = emailInput.value.trim();
+    if (value.length < 3) {
+      emailSuggestions.classList.add("hidden");
+      return;
+    }
+    fetchSuggestions("email", value, (users) => {
+      populateSuggestions(emailSuggestions, users, (user) => {
+        emailInput.value = user.user_email;
+        nameInput.value = user.display_name;
+        emailSuggestions.classList.add("hidden");
+      });
+    });
+  });
+
+  // Hide suggestion boxes on click outside
+  document.addEventListener("click", (e) => {
+    if (!nameSuggestions.contains(e.target))
+      nameSuggestions.classList.add("hidden");
+    if (!emailSuggestions.contains(e.target))
+      emailSuggestions.classList.add("hidden");
+  });
+});
 
 //basic setting delete
 function removeImage(previewId, inputId) {
