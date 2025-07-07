@@ -232,8 +232,9 @@ function robodesk_dashboard_callback()
                             // $customer_name = get_post_meta($ticket_id, 'nickname', true) ?: 'Unknown';
                             // $customer_email = get_post_meta($ticket_id, '_robodesk_customer_email', true) ?: 'N/A';
                             $ticket_status = get_post_meta($ticket_id, '_robodesk_ticket_status', true) ?: 'N/A';
+                            $ticket_origin = get_post_meta($ticket_id, 'robodesk_ticket_origin', true) ?: 'N/A';
                             $priority_terms = get_the_terms($ticket_id, 'robodesk_ticket_priority');
-                            $ticket_priority = ($priority_terms && !is_wp_error($priority_terms)) ? $priority_terms[0]->name : 'N/A';
+                            $ticket_priority = $priority_terms ? $priority_terms[0]->name : 'N/A';
                             $updated_at = get_the_modified_date('Y-m-d H:i:s', $ticket_id);
 
                             // Simulate replies field using comments
@@ -258,7 +259,7 @@ function robodesk_dashboard_callback()
                                 'title' => get_the_title(),
                                 'customer' => get_the_author(),
                                 'email' => get_the_author_email(),
-                                'source' => $terms ? esc_html($terms[0]->name) : 'N/A', // Assuming the first term is the source
+                                'source' => $ticket_origin, // Assuming the first term is the source
                                 'status' => $ticket_status,
                                 'priority' => $ticket_priority,
                                 'updated' => $updated_at,
@@ -1051,6 +1052,29 @@ function robodesk_dashboard_callback()
                         <!-- Email Templates Tab -->
                         <div id="templates-tab" class="settings-tab-content hidden">
                             <h3 class="text-lg font-medium text-gray-900 mb-6">Email Templates</h3>
+
+                            <div class="bg-[#ebedf5] rounded-lg p-6 text-gray-800 shadow-sm">
+                                <div class="flex justify-between items-center">
+                                    <h2 class="text-base font-semibold text-gray-900">Customize the email templates with Variables</h2>
+                                    <button onclick="toggleAccordion()" id="toggle-btn"
+                                        class="text-sm text-blue-600 hover:underline focus:outline-none">
+                                        Show
+                                    </button>
+                                </div>
+
+                                <div id="accordion-content" class="mt-4 text-sm text-gray-700 leading-relaxed space-y-4 hidden">
+                                    <p>You can use the following variables in your templates:</p>
+                                    <ul class="list-disc pl-5 space-y-1">
+                                        <li><code class="bg-gray-200 px-1 rounded text-sm">{ticket_id}</code> – The ID of the ticket</li>
+                                        <li><code class="bg-gray-200 px-1 rounded text-sm">{ticket_author}</code> – The name of the ticket author</li>
+                                        <li><code class="bg-gray-200 px-1 rounded text-sm">{ticket_link}</code> – The link to the ticket</li>
+                                        <li><code class="bg-gray-200 px-1 rounded text-sm">{ticket_title}</code> – The title of the ticket</li>
+                                        <li><code class="bg-gray-200 px-1 rounded text-sm">{ticket_status}</code> – The status of the ticket</li>
+                                    </ul>
+                                </div>
+                            </div>
+
+
                             <form id="robodesk_email_template_save" class="space-y-6">
                                 <input type="hidden" name="robodesk_email_template_nonce" value="<?php echo wp_create_nonce('robodesk_email_template_action'); ?>">
                                 <div class="space-y-6">

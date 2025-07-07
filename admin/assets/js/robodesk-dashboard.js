@@ -1,4 +1,18 @@
 // Sample data
+//for ticket varaibles show and hide
+function toggleAccordion() {
+  const content = document.getElementById("accordion-content");
+  const btn = document.getElementById("toggle-btn");
+
+  const isHidden = content.classList.contains("hidden");
+  if (isHidden) {
+    content.classList.remove("hidden");
+    btn.textContent = "Hide";
+  } else {
+    content.classList.add("hidden");
+    btn.textContent = "Show";
+  }
+}
 //search form creating user and email
 
 document.addEventListener("DOMContentLoaded", function () {
