@@ -464,13 +464,13 @@ const fetchTickets = async () => {
                 </div>
               </div>
               {/* <Footer activeTab={activeTab} setActiveTab={setActiveTab} /> */}
+              <Footer activeTab={activeTab} setActiveTab={setActiveTab}  updateSelectedTicket={updateSelectedTicket}  />
             </>
           )}
         </>
       ) : (
        <Login setShowLogin={handleLogin} updateSelectedTicket={updateSelectedTicket} />
       )}
-      <Footer activeTab={activeTab} setActiveTab={setActiveTab}  updateSelectedTicket={updateSelectedTicket}  />
     </div>
   );
 };

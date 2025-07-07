@@ -3,7 +3,7 @@ import { FaChevronRight, FaChevronLeft, FaSearch } from 'react-icons/fa';
 import parse from 'html-react-parser';
 import DOMPurify from 'dompurify';
 import he from 'he';
-import Logo from '../images/wooescrow-logo.png';
+import Logo from '../images/robodesk-logo.png';
 import Footer from './Footer';
 import Author1 from '../images/person1.jpeg';
 import Author2 from '../images/person2.jpeg';
@@ -31,6 +31,7 @@ const FAQDetail = memo(({ faq, onBack, isExpanded, setIsExpanded }) => {
   const [fullContent, setFullContent] = useState(null);
   const [authorNames, setAuthorNames] = useState([]);
   const wpHomeUrl = window.robodeskData?.home_url || 'http://localhost:10135/';
+    const image_urls = window.robodeskData?.imageUrls || {};
 
   useEffect(() => {
     const fetchFAQDetails = () => {
@@ -92,7 +93,29 @@ const FAQDetail = memo(({ faq, onBack, isExpanded, setIsExpanded }) => {
           >
             <FaChevronLeft />
           </button>
-          <img src={Logo} alt="Plugin Logo" className="rd-h-auto rd-header-logo" />
+          {image_urls.wide_logo && image_urls.wide_logo.trim() !== '' ? (
+              <img
+                src={image_urls.wide_logo}
+                alt="Plugin Wide Logo"
+                className="rd-h-auto rd-header-logo"
+                onError={(e) => {
+                  e.target.style.display = 'none';
+                }}
+              />
+            ) : image_urls.logo && image_urls.logo.trim() !== '' ? (
+              <img
+                src={image_urls.logo}
+                alt="Plugin Logo"
+                className="rd-h-auto rd-header-logo"
+                onError={(e) => {
+                  e.target.style.display = 'none';
+                }}
+              />
+            ) : (
+              <div className="rd-h-auto rd-header-logo default-logo">
+                <img src={defaultLogo} alt="Default Plugin Logo" className="rd-h-auto rd-header-logo" />
+              </div>
+            )}
           <button
             className={`expand-popup rd-bg-transparent rd-border-none rd-cursor-pointer rd-p-0 ${
               isExpanded ? 'expanded' : ''
