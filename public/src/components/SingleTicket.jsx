@@ -5,8 +5,9 @@ import { PiPaperPlaneRightFill } from 'react-icons/pi';
 import { FiPaperclip } from 'react-icons/fi';
 import { IoClose } from 'react-icons/io5';
 import EmojiPicker from 'emoji-picker-react';
+import Logo from '../images/robodesk-logo.png';
 import '../styles/MessageTabs.css';
-import { getMessages, sendReply } from "../utils/modules";
+import { getMessages, sendReply } from '../utils/modules';
 
 const SingleTicket = ({ ticket, onBack, loggedInUserId }) => {
   const [message, setMessage] = useState('');
@@ -18,6 +19,7 @@ const SingleTicket = ({ ticket, onBack, loggedInUserId }) => {
   const textareaRef = useRef(null);
   const fileInputRef = useRef(null);
   const chatContainerRef = useRef(null);
+  const image_urls = window.robodeskData?.imageUrls || {};
 
   // Fetch messages from WordPress
   const fetchMessages = async () => {
@@ -70,58 +72,54 @@ const SingleTicket = ({ ticket, onBack, loggedInUserId }) => {
     }
   }, [chatMessages]);
 
-const handleSend = async (e) => {
-  if (message.trim() || previewImage) {
-    // Create a temporary message with "sending" status
-    const tempMessage = {
-      id: `temp-${Date.now()}`,
-      text: message || '',
-      sender: 'me',
-      senderName: 'Me', // You can fetch the actual user name if needed
-      image: '/default-avatar.jpg', // Use logged-in user's avatar if available
-      created_at: new Date().toISOString(),
-      isSending: true, // Flag to show "sending" status
-      ...(previewImage && { imageUrl: previewImage }),
-    };
-
-    // Optimistically add the temporary message
-    setChatMessages((prev) => [...prev, tempMessage]);
-    setMessage('');
-    setPreviewImage(null);
-
-    try {
-      // Send the message to the server
-      const result = await sendReply(ticket.id, loggedInUserId, message);
-
-      if (!result.data || !result.data.content) {
-        throw new Error('Invalid response from server: missing content');
-      }
- 
-      const newMessage = {
-        id: result.data.id || tempMessage.id,
-        text: typeof result.data.content === 'string' ? result.data.content.replace(/<[^>]+>/g, '') : '',
+  const handleSend = async (e) => {
+    if (message.trim() || previewImage) {
+      // Create a temporary message with "sending" status
+      const tempMessage = {
+        id: `temp-${Date.now()}`,
+        text: message || '',
         sender: 'me',
-        senderName: result.data.author_name || 'Me',
-        image: result.data.author_image ?? '/default-avatar.jpg',
-        created_at: result.data.created_at || tempMessage.created_at,
-        isAdmin: result.data.author_id ? result.data.author_id !== ticket.author_id : false,
-        ...(previewImage && { imageUrl: previewImage }), 
+        senderName: 'Me', // You can fetch the actual user name if needed
+        image: '/default-avatar.jpg', // Use logged-in user's avatar if available
+        created_at: new Date().toISOString(),
+        isSending: true, // Flag to show "sending" status
+        ...(previewImage && { imageUrl: previewImage }),
       };
 
-      // Replace the temporary message with the server response
-      setChatMessages((prev) =>
-        prev.map((msg) =>
-          msg.id === tempMessage.id ? newMessage : msg
-        )
-      );
-    } catch (err) {
-      console.error('Error sending message:', err);
+      // Optimistically add the temporary message
+      setChatMessages((prev) => [...prev, tempMessage]);
+      setMessage('');
+      setPreviewImage(null);
 
-      setChatMessages((prev) => prev.filter((msg) => msg.id !== tempMessage.id));
-      setError('Failed to send message. Please try again.');
+      try {
+        // Send the message to the server
+        const result = await sendReply(ticket.id, loggedInUserId, message);
+
+        if (!result.data || !result.data.content) {
+          throw new Error('Invalid response from server: missing content');
+        }
+
+        const newMessage = {
+          id: result.data.id || tempMessage.id,
+          text: typeof result.data.content === 'string' ? result.data.content.replace(/<[^>]+>/g, '') : '',
+          sender: 'me',
+          senderName: result.data.author_name || 'Me',
+          image: result.data.author_image ?? '/default-avatar.jpg',
+          created_at: result.data.created_at || tempMessage.created_at,
+          isAdmin: result.data.author_id ? result.data.author_id !== ticket.author_id : false,
+          ...(previewImage && { imageUrl: previewImage }),
+        };
+
+        // Replace the temporary message with the server response
+        setChatMessages((prev) => prev.map((msg) => (msg.id === tempMessage.id ? newMessage : msg)));
+      } catch (err) {
+        console.error('Error sending message:', err);
+
+        setChatMessages((prev) => prev.filter((msg) => msg.id !== tempMessage.id));
+        setError('Failed to send message. Please try again.');
+      }
     }
-  }
-};
+  };
 
   const handleEmojiClick = (emojiObject) => {
     setMessage((prev) => prev + emojiObject.emoji);
@@ -163,6 +161,30 @@ const handleSend = async (e) => {
           >
             <FaChevronLeft />
           </button>
+
+          {image_urls.wide_logo && image_urls.wide_logo.trim() !== '' ? (
+            <img
+              src={image_urls.wide_logo}
+              alt="Plugin Wide Logo"
+              className="rd-h-auto rd-header-logo"
+              onError={(e) => {
+                e.target.style.display = 'none';
+              }}
+            />
+          ) : image_urls.logo && image_urls.logo.trim() !== '' ? (
+            <img
+              src={image_urls.logo}
+              alt="Plugin Logo"
+              className="rd-h-auto rd-header-logo"
+              onError={(e) => {
+                e.target.style.display = 'none';
+              }}
+            />
+          ) : (
+            <div className="rd-h-auto rd-header-logo default-logo">
+              <img src={defaultLogo} alt="Default Plugin Logo" className="rd-h-auto rd-header-logo" />
+            </div>
+          )}
         </div>
         <div className="rd-body-text rd-mt-30">
           <p className="rd-text-center rd-body-text">
@@ -207,9 +229,7 @@ const handleSend = async (e) => {
                     style={{ height: '30px', width: '30px', borderRadius: '50px', aspectRatio: '1' }}
                   />
                 )}
-                {msg.sender === 'other' && isSameSender && (
-                  <div style={{ width: '30px', height: '30px' }} />
-                )}
+                {msg.sender === 'other' && isSameSender && <div style={{ width: '30px', height: '30px' }} />}
                 <div
                   className="message-content"
                   style={{

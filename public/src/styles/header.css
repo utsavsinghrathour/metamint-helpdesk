@@ -6,7 +6,7 @@
   position: fixed;
   left: auto;
   right: 50px;
-  bottom: 40px;
+  bottom: 20px;
   top: auto;
 }
 @media screen and (max-width: 767px) {
