@@ -626,9 +626,6 @@ function robodesk_dashboard_callback()
                                     $ticket_priority = ($priority_terms && !is_wp_error($priority_terms)) ? $priority_terms[0]->name : 'N/A';
                                     $updated_at = get_the_modified_date('Y-m-d H:i:s', $ticket_id);
                                     $assignee = get_post_meta($ticket_id, 'robodesk_default_agent', true) ?: 'Unassigned';
-                                    var_dump($assignee);
-
-
 
                                     // Simulate replies field using comments
                                     $replies = get_comments(array('post_id' => $ticket_id));
