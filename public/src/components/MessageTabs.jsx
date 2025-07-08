@@ -9,8 +9,8 @@ import Footer from "./Footer";
 import Login from "./Login";
 import Preloader from "../images/preloader.svg";
 import axios from "axios"; // For making API requests
-import { userStatus } from "../utils/modules";
-// import { createTicket } from "../utils/modules";
+
+
 
 const SingleTicket = React.lazy(() => import("./SingleTicket"));
 
@@ -82,14 +82,16 @@ const MessageTabs = ({
   
     setIsLoggedIn(loginStatus);
     if (loginStatus) {
+   
       fetchTickets();
+      
     }
   };
   
 useEffect(() => {
 
-console.log('From message Tabs' , selectedTicket);
-  // Check sessionStorage for user data
+
+
   const storedData = sessionStorage.getItem('wpUserData');
   
   if (storedData) {
@@ -99,6 +101,9 @@ console.log('From message Tabs' , selectedTicket);
       if (parsedData.isLoggedIn && parsedData.loggedInUserId) {
         setloggedInuserId(parsedData.loggedInUserId);
         setIsLoggedIn(true);
+        if(!selectedTicket){
+    setSelectedTicket(selectedNewTicket ? selectedNewTicket : null);
+}
         fetchTickets();
       } else {
         // Clear state if no valid session data
@@ -266,9 +271,8 @@ const fetchTickets = async () => {
       ticket.ticketNumber.toLowerCase().includes(searchTerm.toLowerCase());
     return matchesTab && matchesPriority && matchesSearch;
   });
-  
 
-    
+  console.log('this is our new selected ticket',selectedNewTicket);
   return (
     <div className="rd-main-content">
       {isLoggedIn ? (
