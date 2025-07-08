@@ -139,7 +139,7 @@ const App = ({ imageUrls = { logo: '' } }) => {
       </div>
       <button
         className={`robodesk-toggle-btn rd-bg-blue rd-rounded-border rd-border-none rd-cursor-pointer ${
-          isOpen ? 'rotatedss' : ''
+          isOpen ? 'rotatedssss' : ''
         }`}
         onClick={handlePopupToggle}
       >
