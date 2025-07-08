@@ -62,36 +62,39 @@ require_once ROBODESK_PLUGIN_PATH . 'public/includes/robodesk-custom-rest.php';
 add_action('wp_enqueue_scripts', 'robodesk_enqueue_scripts');
 function robodesk_enqueue_scripts()
 {
-
+    // Enqueue jQuery
     wp_enqueue_script('jquery');
 
-    wp_enqueue_style('robodesk-styles', ROBODESK_PLUGIN_URL . 'public/assets/css/robodesk-styles.css', array(), '1.0');
+    // Enqueue styles (already existing)
+    wp_enqueue_style('robodesk-styles', ROBODESK_PLUGIN_URL . 'public/assets/css/robodesk-styles.css', array(), time());
 
-
+    // Enqueue scripts (already existing)
     wp_enqueue_script('robodesk-scripts', ROBODESK_PLUGIN_URL . 'public/assets/js/robodesk-scripts.js', array('jquery'), time(), true);
-
-
 
     if (is_admin()) {
         add_action('admin_enqueue_scripts', 'robodesk_enqueue_admin_scripts');
     } else {
-
+        // Enqueue TinyMCE for frontend
         wp_enqueue_script('tinymce');
 
+        // Re-enqueue styles (already existing, adjust if needed)
         wp_enqueue_style('robodesk-styles', ROBODESK_PLUGIN_URL . 'public/assets/css/robodesk-styles.css', array(), time());
 
+        // Re-enqueue scripts with TinyMCE dependency
         wp_enqueue_script('robodesk-scripts', ROBODESK_PLUGIN_URL . 'public/assets/js/robodesk-scripts.js', array('jquery', 'tinymce'), time(), true);
 
+        // Existing wp_localize_script for AJAX
         wp_localize_script('robodesk-scripts', 'robodesk_ajax_object', array(
             'ajax_url' => admin_url('admin-ajax.php'),
-            'nonce' => wp_create_nonce('robodesk_change_ticket_status_nonce'), // Existing nonce
-            'create_ticket_nonce' => wp_create_nonce('robodesk_create_ticket_nonce'), // Existing nonce
-            'add_ticket_note_nonce' => wp_create_nonce('robodesk_add_ticket_note_nonce'), // Existing nonce
-            'faq_nonce' => wp_create_nonce('robodesk_faq_vote_nonce'), // Existing nonce
-            'add_credential_nonce' => wp_create_nonce('robodesk_add_credential_nonce'), // New nonce
-            'delete_credential_nonce' => wp_create_nonce('robodesk_delete_credential_nonce'), // New nonce
+            'nonce' => wp_create_nonce('robodesk_change_ticket_status_nonce'),
+            'create_ticket_nonce' => wp_create_nonce('robodesk_create_ticket_nonce'),
+            'add_ticket_note_nonce' => wp_create_nonce('robodesk_add_ticket_note_nonce'),
+            'faq_nonce' => wp_create_nonce('robodesk_faq_vote_nonce'),
+            'add_credential_nonce' => wp_create_nonce('robodesk_add_credential_nonce'),
+            'delete_credential_nonce' => wp_create_nonce('robodesk_delete_credential_nonce'),
         ));
 
+        // Enqueue React script
         $asset_file = file_exists(ROBODESK_PLUGIN_PATH . 'public/build/index.asset.php')
             ? include ROBODESK_PLUGIN_PATH . 'public/build/index.asset.php'
             : array('dependencies' => array('wp-element'), 'version' => '1.0.6');
@@ -99,21 +102,33 @@ function robodesk_enqueue_scripts()
         wp_enqueue_script(
             'robodesk-react-script',
             ROBODESK_PLUGIN_URL . 'public/build/index.js',
-            array_merge(array('jquery'), $asset_file['dependencies']), // Include jQuery if needed
+            array_merge(array('jquery'), $asset_file['dependencies']),
             time(),
             true
         );
 
-        // wp_add_inline_script( 'robodesk-react-script', 'const custom = ' . json_encode( array(
-        //     'isLoggedIn' => is_user_logged_in() ? 'true' : 'false',
-        //     'loggedInUserId' => is_user_logged_in() ? get_current_user_id() : 'false',
-        // ) ), 'before' );
+        // Pass image URL (logo only for now)
+        $image_urls = [
+            'popover_icon' => esc_url(get_option('robodesk_popover_icon', '')),
+            'logo' => esc_url(get_option('robodesk_logo', '')),
+           'popover_top_icon' => esc_url(get_option('robodesk_popover_top_icon', '')),
+          'wide_logo' => esc_url(get_option('robodesk_wide_logo', '')),
+        ];
+        wp_localize_script(
+            'robodesk-react-script',
+            'robodeskData',
+            [
+                'imageUrls' => $image_urls,
+            ]
+        );
 
+        // Existing wp_localize_script for wpAuth
         wp_localize_script('robodesk-react-script', 'wpAuth', array(
             'isLoggedIn' => is_user_logged_in() ? 'true' : 'false',
             'loggedInUserId' => is_user_logged_in() ? get_current_user_id() : 'false',
         ));
 
+        // Enqueue React styles
         wp_enqueue_style(
             'robodesk-react-style',
             ROBODESK_PLUGIN_URL . 'public/build/index.css',
@@ -122,13 +137,46 @@ function robodesk_enqueue_scripts()
         );
     }
 }
+add_action('wp_enqueue_scripts', 'robodesk_enqueue_scripts');
 
-add_action('wp_footer', 'robodesk_add_plugin');
 function robodesk_add_plugin()
 {
     echo '<div id="robodesk-plugin"></div>';
 }
+add_action('wp_footer', 'robodesk_add_plugin');
+function robodesk_handle_settings_save()
+{
+    // Handle logo upload
+    if (!empty($_FILES['logo']['name'])) {
+        $upload = wp_handle_upload($_FILES['logo'], ['test_form' => false]);
+        if ($upload && !isset($upload['error'])) {
+            update_option('robodesk_logo', $upload['url']);
+        }
+    }
 
+    // Handle popover icon upload
+    if (!empty($_FILES['popover_icon']['name'])) {
+        $upload = wp_handle_upload($_FILES['popover_icon'], ['test_form' => false]);
+        if ($upload && !isset($upload['error'])) {
+            update_option('robodesk_popover_icon', $upload['url']);
+        }
+    }
+    // popup top image
+    if (!empty($_FILES['popover_top_icon']['name'])) {
+        $upload = wp_handle_upload($_FILES['popover_top_icon'], ['test_form' => false]);
+        if ($upload && !isset($upload['error'])) {
+            update_option('robodesk_popover_top_icon', $upload['url']);
+        }
+    }
+    // wide logo
+    if (!empty($_FILES['wide_logo']['name'])) {
+        $upload = wp_handle_upload($_FILES['wide_logo'], ['test_form' => false]);
+        if ($upload && !isset($upload['error'])) {
+            update_option('robodesk_wide_logo', $upload['url']);
+        }
+    }
+}
+add_action('admin_post_robodesk_save_settings', 'robodesk_handle_settings_save');
 
 
 
