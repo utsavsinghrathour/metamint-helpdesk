@@ -126,6 +126,7 @@ const App = ({ imageUrls = { logo: '' } }) => {
           'rd-popup-top-icon-container class:',
           `rd-popup-top-icon-container ${isExpanded ? 'rd-hidden' : ''}`
         )}
+        
         {imageUrls.popover_top_icon && imageUrls.popover_top_icon.trim() !== '' ? (
           <img
             src={imageUrls.popover_top_icon}
@@ -136,6 +137,9 @@ const App = ({ imageUrls = { logo: '' } }) => {
             }}
           />
         ) : null}
+        {
+          console.log('arpan', imageUrls.popover_top_icon)
+        }
       </div>
       <button
         className={`robodesk-toggle-btn rd-bg-blue rd-rounded-border rd-border-none rd-cursor-pointer ${
@@ -143,6 +147,7 @@ const App = ({ imageUrls = { logo: '' } }) => {
         }`}
         onClick={handlePopupToggle}
       >
+        
         {imageUrls.popover_icon && imageUrls.popover_icon.trim() !== '' ? (
           <img
             src={imageUrls.popover_icon}
@@ -152,6 +157,7 @@ const App = ({ imageUrls = { logo: '' } }) => {
               e.target.style.display = 'none';
             }}
           />
+          
         ) : (
          <img
             src={defaultLogo}
@@ -161,6 +167,7 @@ const App = ({ imageUrls = { logo: '' } }) => {
         )}
       </button>
     </div>
+    
   );
 };
 
