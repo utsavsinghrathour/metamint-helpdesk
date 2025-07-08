@@ -30,8 +30,9 @@ const FAQDetail = memo(({ faq, onBack, isExpanded, setIsExpanded }) => {
   const [isDisliked, setIsDisliked] = useState(false);
   const [fullContent, setFullContent] = useState(null);
   const [authorNames, setAuthorNames] = useState([]);
-  const wpHomeUrl = window.robodeskData?.home_url || 'http://localhost:10135/';
+  // const wpHomeUrl = window.robodeskData?.home_url || 'http://localhost:10135/';
     const image_urls = window.robodeskData?.imageUrls || {};
+    console.log('arpan', image_urls);
 
   useEffect(() => {
     const fetchFAQDetails = () => {
@@ -49,7 +50,7 @@ const FAQDetail = memo(({ faq, onBack, isExpanded, setIsExpanded }) => {
       }
     };
     fetchFAQDetails();
-  }, [faq.id, wpHomeUrl]);
+  }, [faq.id]);
 
   const parsedContent = useMemo(() => {
     if (!fullContent) return null;
@@ -227,7 +228,7 @@ const FAQ = ({ setActiveTab, setIsOpen, isExpanded, setIsExpanded, activeTab }) 
   const [faqs, setFaqs] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
-  const wpHomeUrl = window.robodeskData?.home_url || 'http://localhost:10135/';
+  // const wpHomeUrl = window.robodeskData?.home_url || 'http://localhost:10135/';
  const CACHE_EXPIRY = 24 * 60 * 60 * 1000;
   useEffect(() => {
     const fetchFAQs = async () => {
@@ -260,7 +261,7 @@ const FAQ = ({ setActiveTab, setIsOpen, isExpanded, setIsExpanded, activeTab }) 
           `/wp-json/wp/v2/robodesk_faq?_fields=id,title.rendered,excerpt.rendered,content.rendered&per_page=100&page=1`
         );
         
-        console.log(wpHomeUrl);
+        // console.log(wpHomeUrl);
         console.log('Response status:', response.status, response.statusText);
 
         if (!response.ok) {
@@ -312,7 +313,7 @@ const FAQ = ({ setActiveTab, setIsOpen, isExpanded, setIsExpanded, activeTab }) 
     };
 
     fetchFAQs();
-  }, [wpHomeUrl]);
+  }, []);
 
   const filteredFaqs = useMemo(() => {
     const filtered = faqs.filter((faq) =>
