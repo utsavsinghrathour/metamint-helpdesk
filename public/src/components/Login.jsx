@@ -162,10 +162,8 @@ const Login = ({ activeTab, setActiveTab, setShowLogin , updateSelectedTicket}) 
         ticketTitle
       );
 
-      if (ticketResponse.status === "success") {
-        localStorage.removeItem("temp_ticket_title");
-      }
-         const newTicket = {
+
+       const newTicket = {
             id: ticketResponse.data.id,
             ticketNumber: ticketResponse.data.ticket_number,
             title:ticketResponse.data.ticket_title,
@@ -177,12 +175,16 @@ const Login = ({ activeTab, setActiveTab, setShowLogin , updateSelectedTicket}) 
             messages: [],
         };
         handleStateUpdate(newTicket);
+       
      
       return ticketResponse;
     } catch (ticketError) {
       console.error("Ticket creation error:", ticketError);
       localStorage.removeItem("temp_ticket_title");
       throw ticketError;
+    }finally{ 
+        localStorage.removeItem("temp_ticket_title");
+      
     }
   };
 
