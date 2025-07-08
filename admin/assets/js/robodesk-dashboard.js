@@ -1356,6 +1356,21 @@ jQuery(document).ready(function ($) {
     },
   ];
 
+  // Theme color preview handler
+  const themeColorInput = $("#theme_color");
+  const themeColorPreview = $("#theme-color-preview");
+  if (themeColorInput.val()) {
+    themeColorPreview
+      .removeClass("hidden")
+      .css("background-color", themeColorInput.val());
+  }
+
+  themeColorInput.on("change", function () {
+    themeColorPreview
+      .removeClass("hidden")
+      .css("background-color", $(this).val());
+  });
+
   imageFields.forEach(function (field) {
     // Show existing image on page load
     const hiddenInput = $(`#${field.hidden}`);
@@ -1396,6 +1411,7 @@ jQuery(document).ready(function ($) {
     formData.append("settings[admin_email]", $form.find("#admin_email").val());
     formData.append("settings[timezone]", $form.find("#timezone").val());
     formData.append("settings[language]", $form.find("#language").val());
+    formData.append("settings[theme_color]", $form.find("#theme_color").val());
 
     // Append image URLs and files
     imageFields.forEach(function (field) {
@@ -1409,13 +1425,13 @@ jQuery(document).ready(function ($) {
     $button.prop("disabled", true).text("Saving Settings...");
 
     $.ajax({
-      url: ajaxurl, // Ensure ajaxurl is defined via wp_localize_script
+      url: ajaxurl,
       type: "POST",
       data: formData,
-      processData: false, // Required for FormData with files
-      contentType: false, // Required for FormData with files
+      processData: false,
+      contentType: false,
       success: function (response) {
-        console.log(response); // Debug response
+        console.log(response);
         if (response.success) {
           // Update hidden inputs with new image URLs
           if (response.data.urls) {
@@ -1427,6 +1443,12 @@ jQuery(document).ready(function ($) {
                   .attr("src", response.data.urls[field.hidden]);
               }
             });
+          }
+          // Update theme color preview
+          if (response.data.settings && response.data.settings.theme_color) {
+            themeColorPreview
+              .removeClass("hidden")
+              .css("background-color", response.data.settings.theme_color);
           }
           showToast(response.data.message, "success");
         } else {
