@@ -292,7 +292,7 @@ function robodesk_save_basic_settings()
     }
 
     $settings = $_POST['settings'];
-    $valid_settings = ['site_name', 'admin_email', 'timezone', 'language'];
+    $valid_settings = ['site_name', 'admin_email', 'timezone', 'language', 'theme_color'];
     $valid_timezones = ['UTC', 'America/New_York', 'America/Los_Angeles', 'GMT'];
     $valid_languages = ['en', 'es', 'fr', 'de'];
     $image_fields = [
@@ -337,48 +337,49 @@ function robodesk_save_basic_settings()
                 $results[$key] = ['status' => 'error', 'message' => 'Invalid language'];
                 continue;
             }
+        } elseif ($key === 'theme_color') {
+            $sanitized_settings[$key] = sanitize_hex_color($settings[$key]);
+            if (is_null($sanitized_settings[$key])) {
+                $results[$key] = ['status' => 'error', 'message' => 'Invalid color code'];
+                continue;
+            }
         }
         $results[$key] = ['status' => 'success', 'message' => ucfirst(str_replace('_', ' ', $key)) . ' saved successfully'];
     }
 
     // Process image uploads
     foreach ($image_fields as $file_key => $option_key) {
-        // Get existing URL from POST (to preserve if no new file is uploaded)
         $existing_url = isset($_POST[$option_key]) ? esc_url_raw($_POST[$option_key]) : get_option($option_key, '');
         $urls[$option_key] = $existing_url;
 
         if (!empty($_FILES[$file_key]['name'])) {
             $file = $_FILES[$file_key];
-
-            // Validate file type
             $allowed_types = ['image/jpeg', 'image/png', 'image/gif'];
             if (!in_array($file['type'], $allowed_types)) {
-                $results[$file_key] = ['status' => 'error', 'message' => 'Invalid file type for ' . $file_key . '. Only JPEG, PNG, and GIF are allowed.'];
+                $results[$file_key] = ['status' => 'error', 'message' => 'Invalid file type for ' . str_replace('_', ' ', $file_key) . '. Only JPEG, PNG, and GIF are allowed'];
                 continue;
             }
 
-            // Validate file size (optional, e.g., use max_file_upload_size from advanced settings)
-            $max_size = get_option('robodesk_advanced_settings')['max_file_upload_size'] ?? 10;
-            $max_size_bytes = $max_size * 1024 * 1024; // Convert MB to bytes
+            $advanced_settings = get_option('robodesk_advanced_settings', []);
+            $max_size = $advanced_settings['max_file_upload_size'] ?? 10;
+            $max_size_bytes = $max_size * 1024 * 1024;
             if ($file['size'] > $max_size_bytes) {
                 $results[$file_key] = ['status' => 'error', 'message' => ucfirst(str_replace('_', ' ', $file_key)) . ' exceeds maximum file size of ' . $max_size . 'MB'];
                 continue;
             }
 
-            // Upload file to media library
             $attachment_id = media_handle_upload($file_key, 0);
             if (is_wp_error($attachment_id)) {
-                $results[$file_key] = ['status' => 'error', 'message' => 'Failed to upload ' . $file_key . ': ' . $attachment_id->get_error_message()];
+                $results[$file_key] = ['status' => 'error', 'message' => 'Failed to upload ' . str_replace('_', ' ', $file_key) . ': ' . $attachment_id->get_error_message()];
                 continue;
             }
 
-            // Get the URL of the uploaded image
             $image_url = wp_get_attachment_url($attachment_id);
             if ($image_url) {
                 $urls[$option_key] = $image_url;
                 $results[$file_key] = ['status' => 'success', 'message' => ucfirst(str_replace('_', ' ', $file_key)) . ' uploaded successfully'];
             } else {
-                $results[$file_key] = ['status' => 'error', 'message' => 'Failed to retrieve URL for ' . $file_key];
+                $results[$file_key] = ['status' => 'error', 'message' => 'Failed to retrieve URL for ' . str_replace('_', ' ', $file_key)];
             }
         } else {
             $results[$file_key] = ['status' => 'success', 'message' => ucfirst(str_replace('_', ' ', $file_key)) . ' unchanged'];
@@ -399,9 +400,9 @@ function robodesk_save_basic_settings()
     }, true);
 
     if ($all_success) {
-        wp_send_json_success(['message' => 'Basic settings saved successfully', 'urls' => $urls, 'details' => $results]);
+        wp_send_json_success(['message' => 'Basic settings saved successfully', 'urls' => $urls, 'settings' => $sanitized_settings, 'details' => $results]);
     } else {
-        wp_send_json_error(['message' => 'Some settings failed to save', 'urls' => $urls, 'details' => $results]);
+        wp_send_json_error(['message' => 'Some settings failed to save', 'urls' => $urls, 'settings' => $sanitized_settings, 'details' => $results]);
     }
 }
 

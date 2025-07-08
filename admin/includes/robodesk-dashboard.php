@@ -935,6 +935,13 @@ function robodesk_dashboard_callback()
                                             }
                                             ?>
                                         </select>
+                                        <div class="mt-4">
+                                            <label for="theme_color" class="block text-sm font-medium text-gray-700">Theme Color</label>
+                                            <input type="color" name="theme_color" id="theme_color" value="<?php echo esc_attr(get_option('robodesk_theme_color', '#3B82F6')); ?>" class="styled-input mt-1 block w-10 h-10 border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                                            <div class="mt-2">
+                                                <div id="theme-color-preview" class="hidden w-16 h-8 rounded-md border border-gray-300" style="background-color: <?php echo esc_attr(get_option('robodesk_theme_color', '#3B82F6')); ?>;"></div>
+                                            </div>
+                                        </div>
                                     </div>
                                     <!-- Image Fields -->
                                     <div>
@@ -973,7 +980,6 @@ function robodesk_dashboard_callback()
                                         </div>
                                         <input type="hidden" name="robodesk_wide_logo" id="robodesk_wide_logo" value="<?php echo esc_attr(get_option('robodesk_wide_logo', '')); ?>">
                                     </div>
-
                                 </div>
                                 <hr class="my-6 border-gray-200">
                                 <button type="button" id="save-basic-settings" class="mt-6 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">
