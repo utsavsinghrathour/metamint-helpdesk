@@ -8,7 +8,7 @@ import '../styles/SingleQuestionBox.css';
 import defaultLogo from '../images/robodesk-logo.png';
 
 const faqCache = {};
-const wpHomeUrl = window.robodeskData?.home_url || '';
+// const wpHomeUrl = window.robodeskData?.home_url || '';
 
 const normalizeImagePaths = (html, baseUrl = wpHomeUrl) => {
   return html.replace(/(<img[^>]+src=['"])(\/[^'"]+)(['"][^>]*>)/gi, (match, prefix, path, suffix) => {
