@@ -263,6 +263,7 @@ function robodesk_dashboard_callback()
                                 'status' => $ticket_status,
                                 'priority' => $ticket_priority,
                                 'updated' => $updated_at,
+                                'assignee' => get_post_meta($ticket_id, 'ticket_assignee', true) ?: 'Unassigned',
                                 'replies' => $replies_count ? $replies : [
                                     'id' => 0,
                                     'author' => 'N/A',
