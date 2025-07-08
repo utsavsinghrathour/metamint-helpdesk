@@ -1,15 +1,19 @@
 import "../styles/Login.css";
 import { useState } from "react";
-import { createTicket } from "../utils/modules";
-import Signup from "./Signup";
+import { loginUser, registerUser, createTicket } from "../utils/modules";
 
-const Login = ({ setShowLogin }) => {
-  const [isSignup, setIsSignup] = useState(false);
+const Login = ({ activeTab, setActiveTab, setShowLogin , updateSelectedTicket}) => {
   const [formData, setFormData] = useState({ email: "", password: "" });
   const [errors, setErrors] = useState({ email: "", password: "" });
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [ successMessage , setSuccessMessage] = useState(false);
-  const validateForm = () => {
+  const [successMessage, setSuccessMessage] = useState("");
+  const [showPasswordField, setShowPasswordField] = useState(false);
+  
+  const handleStateUpdate =(ticket) => {
+     updateSelectedTicket(ticket);
+       setActiveTab(1);
+  }
+  const validateEmail = () => {
     const newErrors = { email: "", password: "" };
     let isValid = true;
 
@@ -21,11 +25,19 @@ const Login = ({ setShowLogin }) => {
       isValid = false;
     }
 
+    setErrors(newErrors);
+    return isValid;
+  };
+
+  const validatePassword = () => {
+    const newErrors = { email: "", password: "" };
+    let isValid = true;
+
     if (!formData.password) {
       newErrors.password = "Password is required";
       isValid = false;
     } else if (formData.password.length < 5) {
-      newErrors.password = "Password must be at least 8 characters";
+      newErrors.password = "Password must be at least 5 characters";
       isValid = false;
     }
 
@@ -33,99 +45,161 @@ const Login = ({ setShowLogin }) => {
     return isValid;
   };
 
+  const checkEmailExists = async (e) => {
+    e.preventDefault();
 
+    if (!validateEmail()) return;
 
-const handleSubmit = async (e) => {
-  e.preventDefault();
-  setIsSubmitting(true);
-  setErrors({ email: "", password: "" });
+    setIsSubmitting(true);
+    try {
+      const response = await fetch(wpAuth.wpAjax.ajaxUrl, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
+        body: new URLSearchParams({
+          action: "robodesk_check_email",
+          security: wpAuth.wpAjax.nonce,
+          email: formData.email,
+        }),
+      });
+      const result = await response.json();
 
-  if (!validateForm()) {
-    setIsSubmitting(false);
-    return;
-  }
+      console.log("The result from ajax", result);
 
-  try {
-    const loginResponse = await fetch('/wp-json/custom/v1/login', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        username: formData.email,
-        password: formData.password,
-      }),
-    });
-
-    const loginData = await loginResponse.json();
-    
-    if (!loginResponse.ok) {
-      throw new Error(loginData.message || loginData.data?.message || 'Login failed');
+      if (result.success) {
+        setShowPasswordField(result.data.exists);
+      } else {
+        await createUserAndLogin();
+      }
+    } catch (error) {
+      console.error("Email check error:", error);
+      setErrors({
+        ...errors,
+        email: "Error checking email. Please try again.",
+      });
+    } finally {
+      setIsSubmitting(false);
     }
+  };
 
-    if (loginData.success && loginData.token) {
-      localStorage.setItem('jwt_token', loginData.token); // Keep if needed elsewhere
-      
+  const createUserAndLogin = async () => {
+    try {
+      const ticketResponse = await registerUser(formData.email);
+      const user_id = ticketResponse.user_id;
+
       if (typeof sessionStorage !== "undefined") {
         const userData = {
-          isLoggedIn: true, 
-          loggedInUserId: String(loginData.user_id || '') 
+          isLoggedIn: true,
+          loggedInUserId: user_id,
         };
-        sessionStorage.setItem('wpUserData', JSON.stringify(userData));
-        console.log('User data saved to sessionStorage:', userData);
+
+        sessionStorage.setItem("wpUserData", JSON.stringify(userData));
+        console.log("User data saved to sessionStorage:", userData);
       } else {
-        console.warn('sessionStorage is not supported in this browser');
+        console.warn("sessionStorage is not supported in this browser");
       }
-
-
-      const ticketTitle = localStorage.getItem('temp_ticket_title'); 
-      
- 
-      if (ticketTitle) {
-        try {
-          const ticketResponse = await createTicket(loginData.user_id, ticketTitle, ticketTitle);
-          
-
-          if (ticketResponse.status === 'success') {
-            localStorage.removeItem('temp_ticket_title');
-          }
-        } catch (ticketError) {
-          console.error('Ticket creation error:', ticketError);
-          localStorage.removeItem('temp_ticket_title');
-        }
-      }
-      
+      await handleTempTicketCreation(user_id);
       setShowLogin(true);
-    } else {
-      throw new Error('Invalid response format');
+    } catch (err) {
+      console.error("Failed to create ticket:", err);
     }
-  } catch (error) {
-    console.error('Login error:', error);
-    setShowLogin(false);
-    setErrors({
-      email: error.message.includes('email') ? error.message : '',
-      password: error.message.includes('credentials') || error.message.includes('Login failed')
-        ? error.message
-        : 'Login failed. Please try again.',
-    });
-  } finally {
-    setIsSubmitting(false);
-  }
-};
+  };
+
+  //login in user if the email exists
+  const handleLogin = async () => {
+    if (!validatePassword()) return;
+    setIsSubmitting(true);
+    try {
+      const loginResponse = await loginUser(formData.email, formData.password);
+
+      if (typeof sessionStorage !== "undefined") {
+        const userData = {
+          isLoggedIn: true,
+          loggedInUserId: String(loginResponse.user_id || ""),
+        };
+
+        sessionStorage.setItem("wpUserData", JSON.stringify(userData));
+        console.log("User data saved to sessionStorage:", userData);
+      } else {
+        console.warn("sessionStorage is not supported in this browser");
+      }
+      setShowLogin(true);
+      try {
+        const ticketResponse = await handleTempTicketCreation(
+          loginResponse.user_id
+        );
+        console.log("Ticket Creation resp", ticketResponse);
+
+      } catch (ticketError) {
+        console.error("Failed to create ticket:", ticketError);
+      }
+      
+      
+    } catch (error) {
+      console.error("Login error:", error);
+      setErrors({
+        ...errors,
+        password: error.message.includes("credentials")
+          ? error.message
+          : "Login failed. Please try again.",
+      });
+      setShowLogin(false);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleTempTicketCreation = async (userId) => {
+    const ticketTitle = localStorage.getItem("temp_ticket_title");
+
+    if (!ticketTitle) return;
+
+    try {
+      const ticketResponse = await createTicket(
+        userId,
+        ticketTitle,
+        ticketTitle
+      );
+
+      if (ticketResponse.status === "success") {
+        localStorage.removeItem("temp_ticket_title");
+      }
+         const newTicket = {
+            id: ticketResponse.data.id,
+            ticketNumber: ticketResponse.data.ticket_number,
+            title:ticketResponse.data.ticket_title,
+            source:  ticketResponse.data.ticket_origin,
+            timeAgo: ticketResponse.data.ticket_time_ago,
+            authorImage: ticketResponse.data.ticket_author_image,
+            status: ticketResponse.data.ticket_status,
+            priority:  ticketResponse.data.ticket_priority,
+            messages: [],
+        };
+        handleStateUpdate(newTicket);
+     
+      return ticketResponse;
+    } catch (ticketError) {
+      console.error("Ticket creation error:", ticketError);
+      localStorage.removeItem("temp_ticket_title");
+      throw ticketError;
+    }
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (showPasswordField) {
+      await handleLogin();
+    } else {
+      await checkEmailExists(e);
+    }
+  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
   };
 
-  const switchToLogin = (message = "") => {
-    setIsSignup(false);
-    setErrors({
-      email: "",
-      password: "",
-      confirmPassword: ""
-    });
-    setSuccessMessage(message);
-    setFormData({ email: "", password: "", confirmPassword: "" });
-  };
 
   return (
     <>
@@ -138,7 +212,7 @@ const handleSubmit = async (e) => {
             onClick={() => setShowLogin(false)}
           >
             <svg
-              xmlns="http://www.w3.org/2000/svg"
+              xmlns="http://www.w3.org/2000/svg”"
               width="20"
               height="20"
               viewBox="0 0 24 24"
@@ -152,143 +226,77 @@ const handleSubmit = async (e) => {
             </svg>
           </button>
           <h5 className="heading-5 rd-text-white rd-text-center rd-flex-1">
-            {isSignup ? "Sign Up" : "Login"}
+            Login
           </h5>
         </div>
       </div>
       <div className="login-container rd-px-18">
         <div className="login-card">
-          <button
-            type="button"
-            className="rd-w-full rd-bg-transparent rd-border-blue rd-text-blue rd-border-radius-md rd-flex rd-justify-center rd-align-center rd-gap-15 rd-p-10"
-            aria-label="Sign in with Google"
-            onClick={() => console.log("Google Sign-In")}
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              x="0px"
-              y="0px"
-              width="20"
-              height="20"
-              viewBox="0 0 48 48"
-            >
-              <path
-                fill="#fbc02d"
-                d="M43.611,20.083H42V20H24v8h11.303c-1.649,4.657-6.08,8-11.303,8c-6.627,0-12-5.373-12-12 s5.373-12,12-12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C12.955,4,4,12.955,4,24s8.955,20,20,20 s20-8.955,20-20C44,22.659,43.862,21.35,43.611,20.083z"
-              ></path>
-              <path
-                fill="#e53935"
-                d="M6.306,14.691l6.571,4.819C14.655,15.108,18.961,12,24,12c3.059,0,5.842,1.154,7.961,3.039 l5.657-5.657C34.046,6.053,29.268,4,24,4C16.318,4,9.656,8.337,6.306,14.691z"
-              ></path>
-              <path
-                fill="#4caf50"
-                d="M24,44c5.166,0,9.86-1.977,13.409-5.192l-6.19-5.238C29.211,35.091,26.715,36,24,36 c-5.202,0-9.619-3.317-11.283-7.946l-6.522,5.025C9.505,39.556,16.227,44,24,44z"
-              ></path>
-              <path
-                fill="#1565c0"
-                d="M43.611,20.083L43.595,20L42,20H24v8h11.303c-0.792,2.237-2.231,4.166-4.087,5.571 c0.001-0.001,0.002-0.001,0.003-0.002l6.19,5.238C36.971,39.205,44,34,44,24C44,22.659,43.862,21.35,43.611,20.083z"
-              ></path>
-            </svg>
-            <span className="rd-title-text rd-text-blue">
-              Continue with Google
-            </span>
-          </button>
-
-          {isSignup ? (
-            <Signup switchToLogin={switchToLogin}  />
-          ) : (
-            <>
-              <div className="rd-text-center rd-body-text rd-my-30">
-                <span className="rd-px-10 rd-bg-white">
-                  ----- or Sign in with Email -----
-                </span>
-              </div>
-
-              <form onSubmit={handleSubmit} noValidate>
-                {successMessage && (
-                <p className="rd-text-green rd-text-sm rd-mt-5 rd-mb-10">
-                  {successMessage}
+          <form onSubmit={handleSubmit} noValidate>
+            {successMessage && (
+              <p className="rd-text-green rd-text-sm rd-mt-5 rd-mb-10">
+                {successMessage}
+              </p>
+            )}
+            <div>
+              <label htmlFor="email" className="rd-body-text">
+                Email
+              </label>
+              <input
+                type="email"
+                id="email"
+                name="email"
+                value={formData.email}
+                onChange={handleChange}
+                placeholder="Email"
+                className="rd-w-full rd-border-light rd-p-12 rd-border-radius-md"
+                required
+                aria-describedby="email-error"
+              />
+              {errors.email && (
+                <p id="email-error" className="rd-text-red rd-text-sm rd-mt-5">
+                  {errors.email}
                 </p>
               )}
-                <div>
-                  <label htmlFor="email" className="rd-body-text"></label>
-                  <input
-                    type="email"
-                    id="email"
-                    name="email"
-                    value={formData.email}
-                    onChange={handleChange}
-                    placeholder="Email"
-                    className="rd-w-full rd-border-light rd-p-12 rd-border-radius-md"
-                    required
-                    aria-describedby="email-error"
-                  />
-                  {errors.email && (
-                    <p
-                      id="email-error"
-                      className="rd-text-red rd-text-sm rd-mt-5 form-err-msg"
-                    >
-                      {errors.email}
-                    </p>
-                  )}
-                </div>
-
-                <div className="rd-mt-15">
-                  <label htmlFor="password" className="rd-body-text"></label>
-                  <input
-                    type="password"
-                    id="password"
-                    name="password"
-                    value={formData.password}
-                    onChange={handleChange}
-                    placeholder="Password"
-                    className="rd-w-full rd-border-light rd-p-12 rd-border-radius-md"
-                    required
-                    aria-describedby="password-error"
-                  />
-                  {errors.password && (
-                    <p
-                      id="password-error"
-                      className="rd-text-red rd-text-sm rd-mt-5 form-err-msg"
-                    >
-                      {errors.password}
-                    </p>
-                  )}
-                </div>
-
-                <div className="rd-mt-15 rd-flex rd-justify-between">
-                  <div className="rd-flex rd-body-text rd-gap-8">
-                    <input type="checkbox" id="remember" />
-                    <label htmlFor="remember">Remember me</label>
-                  </div>
-                  <a
-                    href="#"
-                    className="rd-body-text rd-decoration-none rd-text-blue"
+            </div>
+            {showPasswordField && (
+              <div>
+                <label htmlFor="password" className="rd-body-text">
+                  Password
+                </label>
+                <input
+                  type="password"
+                  id="password"
+                  name="password"
+                  value={formData.password}
+                  onChange={handleChange}
+                  placeholder="Password"
+                  className="rd-w-full rd-border-light rd-p-12 rd-border-radius-md"
+                  required
+                  aria-describedby="password-error"
+                />
+                {errors.password && (
+                  <p
+                    id="password-error"
+                    className="rd-text-red rd-text-sm rd-mt-5"
                   >
-                    Forgot Password?
-                  </a>
-                </div>
-
-                <button
-                  type="submit"
-                  className="rd-login-button rd-w-full rd-border-radius-md"
-                  disabled={isSubmitting}
-                >
-                  {isSubmitting ? "Logging in..." : "Login"}
-                </button>
-              </form>
-
-              <p className="rd-mt-15 rd-text-center rd-body-text rd-text-gray">
-                Don't have an account?{" "}
-                <button
-                  onClick={() => setIsSignup(true)}
-                  className="rd-text-blue rd-hover-underline rd-bg-transparent rd-border-none rd-cursor-pointer"
-                >
-                  Sign up
-                </button>
-              </p>
-            </>
-          )}
+                    {errors.password}
+                  </p>
+                )}
+              </div>
+            )}
+            <button
+              type="submit"
+              className="rd-login-button rd-w-full rd-border-radius-md"
+              disabled={isSubmitting}
+            >
+              {isSubmitting
+                ? "Processing..."
+                : showPasswordField
+                ? "Login"
+                : "Continue"}
+            </button>
+          </form>
         </div>
       </div>
     </>

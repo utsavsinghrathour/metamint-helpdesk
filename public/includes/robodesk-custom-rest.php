@@ -71,7 +71,7 @@ add_filter('rest_pre_serve_request', function ($value) {
 
 add_action('rest_api_init', callback: function () {
 
-    register_rest_route('custom/v1', '/login', array(
+    register_rest_route('robodesk/v1', '/login', array(
         'methods' => 'POST',
         'callback' => 'secure_login_endpoint',
         'permission_callback' => '__return_true', // Public access for login
@@ -95,17 +95,19 @@ add_action('rest_api_init', callback: function () {
 
 function secure_login_endpoint(WP_REST_Request $request)
 {
-    $username = sanitize_text_field($request->get_param('username'));
-    $password = $request->get_param('password');
+
+    
+    $emailAddr = sanitize_email($request->get_param('email')); 
+    $password = $request->get_param('password');         
 
     // Input validation
-    if (empty($username) || empty($password)) {
+    if (empty($emailAddr) || empty($password)) {
         return new WP_Error('missing_credentials', 'Username and password are required.', array('status' => 400));
     }
 
     // Check if username is email
-    if (is_email($username)) {
-        $user = get_user_by('email', $username);
+    if (is_email($emailAddr)) {
+        $user = get_user_by('email', $emailAddr);
         if (!$user) {
             return new WP_Error('invalid_email', 'No user found with this email.', array('status' => 404));
         }
@@ -206,57 +208,120 @@ function protected_endpoint(WP_REST_Request $request)
 }
 
 // User Signup/registration Rest Api callback function
+// function robodesk_user_signup(WP_REST_Request $request)
+// {
+//     $params = $request->get_json_params();
+//     $username = sanitize_user($params['username']);
+//     $email = sanitize_email($params['email']);
+//     $password = $params['password'];
+               
+
+//     if (empty($username) || empty($email) || empty($password) ) {
+//         return new WP_Error(
+//                 'invalid_data',
+//                 __('Missing required fields','robodesk'),
+//                 array('status' => 400));
+//     }
+
+//     if (username_exists($username) || email_exists($email)) {
+//         return new WP_Error(
+//             'user_exists',
+//             __('Username or email already exists', 'robodesk'),
+//             array('status' => 409)
+//         );
+//     }
+
+//     // Create user
+//     $user_id = wp_create_user($username, $password, $email);
+//     if (is_wp_error($user_id)) {
+//         return new WP_Error(
+//             'user_creation_failed', 
+//             $user_id->get_error_message(), 
+//             array('status' => 500)
+//         );
+//     }
+
+//     // Generate JWT token
+//     $token = robodesk_generate_token($user_id);
+    
+//     if (is_wp_error($token)) {
+//         return new WP_Error(
+//             'token_failed', 
+//             __('Failed to generate token','robodesk'), 
+//             array('status' => 500)
+//         );
+//     }
+
+//     return new WP_REST_Response(array(
+//         'message' => __('User created successfully','robodesk'),
+//         'token' => $token,
+//         'user_id' => $user_id,
+//     ), 201);
+// }
+
 function robodesk_user_signup(WP_REST_Request $request)
 {
     $params = $request->get_json_params();
-    $username = sanitize_user($params['username']);
     $email = sanitize_email($params['email']);
-    $password = $params['password'];
-    $confirm_password = $params['confirmPass'];                
 
-    if (empty($username) || empty($email) || empty($password) ) {
+    if (empty($email)) {
         return new WP_Error(
-                'invalid_data',
-                __('Missing required fields','robodesk'),
-                array('status' => 400));
+            'invalid_data',
+            __('Missing email field', 'robodesk'),
+            array('status' => 400)
+        );
     }
 
-    if (username_exists($username) || email_exists($email)) {
+    if (email_exists($email)) {
         return new WP_Error(
             'user_exists',
-            __('Username or email already exists', 'robodesk'),
+            __('Email already exists', 'robodesk'),
             array('status' => 409)
         );
     }
 
-    // Create user
-    $user_id = wp_create_user($username, $password, $email);
+    // Generate a random strong password
+    $password = wp_generate_password(12, true, true); // 12 characters, include special characters
+
+    // Prepare user data for wp_insert_user
+    $user_data = array(
+        'user_login' => $email, // Use email as username
+        'user_email' => $email,
+        'user_pass' => $password,
+        'role' => 'subscriber', // Default role, adjust as needed
+    );
+
+    // Create user with wp_insert_user
+    $user_id = wp_insert_user($user_data);
+
     if (is_wp_error($user_id)) {
         return new WP_Error(
-            'user_creation_failed', 
-            $user_id->get_error_message(), 
+            'user_creation_failed',
+            $user_id->get_error_message(),
             array('status' => 500)
         );
     }
 
+    // Send default WordPress user notification email
+    wp_new_user_notification($user_id, null, 'both'); // Sends email to user and admin
+
     // Generate JWT token
     $token = robodesk_generate_token($user_id);
-    
+
     if (is_wp_error($token)) {
         return new WP_Error(
-            'token_failed', 
-            __('Failed to generate token','robodesk'), 
+            'token_failed',
+            __('Failed to generate token', 'robodesk'),
             array('status' => 500)
         );
     }
 
     return new WP_REST_Response(array(
-        'message' => __('User created successfully','robodesk'),
+        'message' => __('User created successfully', 'robodesk'),
         'token' => $token,
         'user_id' => $user_id,
     ), 201);
 }
-
 
 
 

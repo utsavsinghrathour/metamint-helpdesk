@@ -112,6 +112,10 @@ function robodesk_enqueue_scripts()
         wp_localize_script('robodesk-react-script', 'wpAuth', array(
             'isLoggedIn' => is_user_logged_in() ? 'true' : 'false',
             'loggedInUserId' => is_user_logged_in() ? get_current_user_id() : 'false',
+            'wpAjax' => [
+                'nonce' => wp_create_nonce('robodesk-nonce'),
+                'ajaxUrl' => admin_url('admin-ajax.php'),
+            ],
         ));
 
         wp_enqueue_style(
@@ -354,3 +358,6 @@ function robodesk_check_support_page()
 add_action('plugins_loaded', 'robodesk_check_support_page');
 register_activation_hook(__FILE__, 'robodesk_create_support_page');
 register_deactivation_hook(__FILE__, 'robodesk_delete_support_page');
+
+
+

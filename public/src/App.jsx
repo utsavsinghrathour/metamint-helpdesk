@@ -17,6 +17,8 @@ const App = () => {
   
  const handleSelectedTicketUpdate = (newValue) => {
         setSelectedTicket(newValue);
+        
+        console.log('Our new val is ', newValue);
   };
   
   useEffect(() => {

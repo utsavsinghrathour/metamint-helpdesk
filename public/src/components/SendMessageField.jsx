@@ -16,9 +16,9 @@ const SendMessageField = ({ setShowLogin , setActiveTab , updateSelectedTicket }
   
     const sessionData = JSON.parse(sessionStorage.getItem('wpUserData')) || {};
     
-  
     setLoggedIn(sessionData.isLoggedIn || false);
     setUserId(sessionData.loggedInUserId || null);
+
   }, []);
   
   const handleSend = async () => {
@@ -28,10 +28,10 @@ const SendMessageField = ({ setShowLogin , setActiveTab , updateSelectedTicket }
       return;
     }
     
-    console.log('loggedIn' , loggedIn);
+    console.log('loggedIn' , typeof loggedIn);
     console.log('userId' , userId);
    
-    if (loggedIn == 'false') {
+    if (!loggedIn) {
       localStorage.setItem('temp_ticket_title', message); 
       setShowLogin(true);
       setActiveTab(1);
