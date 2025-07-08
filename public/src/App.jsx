@@ -126,9 +126,10 @@ const App = ({ imageUrls = { logo: '' } }) => {
           'rd-popup-top-icon-container class:',
           `rd-popup-top-icon-container ${isExpanded ? 'rd-hidden' : ''}`
         )}
-        {robodeskData.imageUrls.popover_top_icon && robodeskData.imageUrls.popover_top_icon.trim() !== '' ? (
+        
+        {imageUrls.popover_top_icon && imageUrls.popover_top_icon.trim() !== '' ? (
           <img
-            src={robodeskData.imageUrls.popover_top_icon}
+            src={imageUrls.popover_top_icon}
             alt="Popup Top Icon"
             className="rd-h-auto rd-rounded-md"
             onError={(e) => {
@@ -136,6 +137,9 @@ const App = ({ imageUrls = { logo: '' } }) => {
             }}
           />
         ) : null}
+        {
+          console.log('arpan', imageUrls.popover_top_icon)
+        }
       </div>
       <button
         className={`robodesk-toggle-btn rd-bg-blue rd-rounded-border rd-border-none rd-cursor-pointer ${
@@ -143,15 +147,17 @@ const App = ({ imageUrls = { logo: '' } }) => {
         }`}
         onClick={handlePopupToggle}
       >
-        {robodeskData.imageUrls.popover_icon && robodeskData.imageUrls.popover_icon.trim() !== '' ? (
+        
+        {imageUrls.popover_icon && imageUrls.popover_icon.trim() !== '' ? (
           <img
-            src={robodeskData.imageUrls.popover_icon}
+            src={imageUrls.popover_icon}
             alt="Pop over Icon"
             className="rd-h-auto"
             onError={(e) => {
               e.target.style.display = 'none';
             }}
           />
+          
         ) : (
          <img
             src={defaultLogo}
@@ -161,6 +167,7 @@ const App = ({ imageUrls = { logo: '' } }) => {
         )}
       </button>
     </div>
+    
   );
 };
 

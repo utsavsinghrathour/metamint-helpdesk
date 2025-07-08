@@ -14,7 +14,7 @@ const Header = ({ logo, onClose }) => {
         <img
           src={logo}
           alt="Plugin Logo"
-          className="rd-h-auto rd-header-logo"
+          className="rd-h-auto rd-header-logo rd-main-header-logo"
           onError={(e) => {
             e.target.style.display = 'none';
           }}
@@ -24,7 +24,7 @@ const Header = ({ logo, onClose }) => {
           <img
             src={defaultLogo}
             alt="Default Plugin Logo"
-            className="rd-h-auto rd-header-logo"
+            className="rd-h-auto rd-header-logo rd-main-header-logo"
           />
         </div>
       )}
