@@ -8,6 +8,7 @@ import Footer from './Footer';
 import Author1 from '../images/person1.jpeg';
 import Author2 from '../images/person2.jpeg';
 import '../styles/FAQ.css';
+import defaultLogo from '../images/robodesk-logo.png';
 
 
 const stripHtml = (html) => he.decode(html.replace(/<[^>]+>/g, '')).trim();
