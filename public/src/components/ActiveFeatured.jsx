@@ -4,7 +4,7 @@ import { FaTimes } from 'react-icons/fa';
 import Bell from '../images/alarm-gif.gif';
 
 // Get WordPress home URL from robodeskData
-const wpHomeUrl = window.robodeskData?.home_url || '';
+// const wpHomeUrl = window.robodeskData?.home_url || '';
 
 const ActiveFeatured = ({ onNoticeSelect }) => {
   const [notices, setNotices] = useState([]);

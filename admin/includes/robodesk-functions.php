@@ -99,7 +99,7 @@ function robodesk_imap_save_settings()
     }
 }
 
-// email template save function (save new ticket, ticket resolved, and auto-reply templates)
+// email template save function (save new ticket, ticket closed, and auto-reply templates)
 add_action('wp_ajax_robodesk_email_template_save', 'robodesk_email_template_save');
 
 function robodesk_email_template_save()
@@ -130,7 +130,7 @@ function robodesk_email_template_save()
 
     $results = [];
     // Define expected template keys
-    $valid_templates = ['new-ticket', 'ticket-resolved', 'auto-reply'];
+    $valid_templates = ['new-ticket', 'ticket-closed', 'auto-reply'];
 
     foreach ($_POST['templates'] as $template_name => $template_content) {
         // Validate template name
@@ -171,6 +171,35 @@ function robodesk_email_template_save()
         wp_send_json_error(['message' => 'Some templates failed to save or were missing', 'details' => $results]);
     }
 }
+
+function robodesk_replace_template_tags($template, $ticket_id)
+{
+    $ticket = get_post($ticket_id);
+
+    if (!$ticket || $ticket->post_type !== 'robodesk_ticket') {
+        return $template;
+    }
+
+    $author_id = $ticket->post_author;
+    $author = get_userdata($author_id);
+    $author_name = $author ? $author->display_name : 'Customer';
+
+    $ticket_link = get_permalink($ticket_id);
+    $ticket_title = get_the_title($ticket_id);
+    $ticket_status = get_post_status($ticket_id);
+
+    // You can add more fields as needed
+    $replacements = [
+        '{ticket_id}'     => $ticket_id,
+        '{ticket_author}' => esc_html($author_name),
+        '{ticket_link}'   => esc_url($ticket_link),
+        '{ticket_title}'  => esc_html($ticket_title),
+        '{ticket_status}' => ucfirst(esc_html($ticket_status)),
+    ];
+
+    return strtr($template, $replacements);
+}
+
 
 
 // advance settings save function (save auto assign, notifications, customer portal, and max file upload size)
@@ -263,7 +292,7 @@ function robodesk_save_basic_settings()
     }
 
     $settings = $_POST['settings'];
-    $valid_settings = ['site_name', 'admin_email', 'timezone', 'language'];
+    $valid_settings = ['site_name', 'admin_email', 'timezone', 'language', 'theme_color'];
     $valid_timezones = ['UTC', 'America/New_York', 'America/Los_Angeles', 'GMT'];
     $valid_languages = ['en', 'es', 'fr', 'de'];
     $image_fields = [
@@ -308,48 +337,49 @@ function robodesk_save_basic_settings()
                 $results[$key] = ['status' => 'error', 'message' => 'Invalid language'];
                 continue;
             }
+        } elseif ($key === 'theme_color') {
+            $sanitized_settings[$key] = sanitize_hex_color($settings[$key]);
+            if (is_null($sanitized_settings[$key])) {
+                $results[$key] = ['status' => 'error', 'message' => 'Invalid color code'];
+                continue;
+            }
         }
         $results[$key] = ['status' => 'success', 'message' => ucfirst(str_replace('_', ' ', $key)) . ' saved successfully'];
     }
 
     // Process image uploads
     foreach ($image_fields as $file_key => $option_key) {
-        // Get existing URL from POST (to preserve if no new file is uploaded)
         $existing_url = isset($_POST[$option_key]) ? esc_url_raw($_POST[$option_key]) : get_option($option_key, '');
         $urls[$option_key] = $existing_url;
 
         if (!empty($_FILES[$file_key]['name'])) {
             $file = $_FILES[$file_key];
-
-            // Validate file type
             $allowed_types = ['image/jpeg', 'image/png', 'image/gif'];
             if (!in_array($file['type'], $allowed_types)) {
-                $results[$file_key] = ['status' => 'error', 'message' => 'Invalid file type for ' . $file_key . '. Only JPEG, PNG, and GIF are allowed.'];
+                $results[$file_key] = ['status' => 'error', 'message' => 'Invalid file type for ' . str_replace('_', ' ', $file_key) . '. Only JPEG, PNG, and GIF are allowed'];
                 continue;
             }
 
-            // Validate file size (optional, e.g., use max_file_upload_size from advanced settings)
-            $max_size = get_option('robodesk_advanced_settings')['max_file_upload_size'] ?? 10;
-            $max_size_bytes = $max_size * 1024 * 1024; // Convert MB to bytes
+            $advanced_settings = get_option('robodesk_advanced_settings', []);
+            $max_size = $advanced_settings['max_file_upload_size'] ?? 10;
+            $max_size_bytes = $max_size * 1024 * 1024;
             if ($file['size'] > $max_size_bytes) {
                 $results[$file_key] = ['status' => 'error', 'message' => ucfirst(str_replace('_', ' ', $file_key)) . ' exceeds maximum file size of ' . $max_size . 'MB'];
                 continue;
             }
 
-            // Upload file to media library
             $attachment_id = media_handle_upload($file_key, 0);
             if (is_wp_error($attachment_id)) {
-                $results[$file_key] = ['status' => 'error', 'message' => 'Failed to upload ' . $file_key . ': ' . $attachment_id->get_error_message()];
+                $results[$file_key] = ['status' => 'error', 'message' => 'Failed to upload ' . str_replace('_', ' ', $file_key) . ': ' . $attachment_id->get_error_message()];
                 continue;
             }
 
-            // Get the URL of the uploaded image
             $image_url = wp_get_attachment_url($attachment_id);
             if ($image_url) {
                 $urls[$option_key] = $image_url;
                 $results[$file_key] = ['status' => 'success', 'message' => ucfirst(str_replace('_', ' ', $file_key)) . ' uploaded successfully'];
             } else {
-                $results[$file_key] = ['status' => 'error', 'message' => 'Failed to retrieve URL for ' . $file_key];
+                $results[$file_key] = ['status' => 'error', 'message' => 'Failed to retrieve URL for ' . str_replace('_', ' ', $file_key)];
             }
         } else {
             $results[$file_key] = ['status' => 'success', 'message' => ucfirst(str_replace('_', ' ', $file_key)) . ' unchanged'];
@@ -370,9 +400,9 @@ function robodesk_save_basic_settings()
     }, true);
 
     if ($all_success) {
-        wp_send_json_success(['message' => 'Basic settings saved successfully', 'urls' => $urls, 'details' => $results]);
+        wp_send_json_success(['message' => 'Basic settings saved successfully', 'urls' => $urls, 'settings' => $sanitized_settings, 'details' => $results]);
     } else {
-        wp_send_json_error(['message' => 'Some settings failed to save', 'urls' => $urls, 'details' => $results]);
+        wp_send_json_error(['message' => 'Some settings failed to save', 'urls' => $urls, 'settings' => $sanitized_settings, 'details' => $results]);
     }
 }
 
@@ -411,4 +441,160 @@ function robodesk_save_ticket_assignment_settings()
     update_option('robodesk_default_agent', $default_agent);
 
     wp_send_json_success(['message' => 'Ticket assignment settings saved successfully']);
+}
+
+
+// creating a ticket
+add_action('wp_ajax_robodesk_create_ticket', 'robodesk_create_ticket');
+function robodesk_create_ticket()
+{
+    // Verify nonce
+    if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'robodesk_create_ticket_action')) {
+        wp_send_json_error(['message' => 'Security check failed']);
+        wp_die();
+    }
+
+    // Validate inputs
+    $customer_name = isset($_POST['customer_name']) ? sanitize_text_field($_POST['customer_name']) : '';
+    $customer_email = isset($_POST['customer_email']) ? sanitize_email($_POST['customer_email']) : '';
+    $ticket_title = isset($_POST['ticket_title']) ? sanitize_text_field($_POST['ticket_title']) : '';
+    $ticket_priority = isset($_POST['ticket_priority']) ? sanitize_text_field($_POST['ticket_priority']) : '';
+    $ticket_category = isset($_POST['ticket_category']) ? sanitize_text_field($_POST['ticket_category']) : '';
+    $ticket_assignee = isset($_POST['ticket_assignee']) ? sanitize_text_field($_POST['ticket_assignee']) : '';
+    $ticket_description = isset($_POST['ticket_description']) ? sanitize_textarea_field($_POST['ticket_description']) : '';
+    // $ticket_source = isset($_POST['ticket_source']) ? sanitize_text_field($_POST['ticket_source']) : 'Form';
+
+    // Validate required fields
+    if (
+        empty($customer_name) || empty($customer_email) || empty($ticket_title) ||
+        empty($ticket_priority) || empty($ticket_category) || empty($ticket_assignee) ||
+        empty($ticket_description)
+    ) {
+        wp_send_json_error(['message' => 'All fields are required']);
+        wp_die();
+    }
+
+    // Validate email format
+    if (!is_email($customer_email)) {
+        wp_send_json_error(['message' => 'Invalid email address']);
+        wp_die();
+    }
+
+    // Validate priority against taxonomy terms
+    $valid_priorities = ['Low', 'Medium', 'High'];
+    if (!in_array($ticket_priority, $valid_priorities)) {
+        wp_send_json_error(['message' => 'Invalid priority selected']);
+        wp_die();
+    }
+
+    // Find or create a user based on email
+    $user = get_user_by('email', $customer_email);
+    if (!$user) {
+        error_log('User not found, creating new user with email: ' . $customer_email);
+
+        // Check if role exists
+        $roles = wp_roles();
+        $role = isset($roles->roles['robodesk_support_customer']) ? 'robodesk_support_customer' : 'subscriber';
+
+        // Ensure unique user_login
+        $base_login = explode('@', $customer_email)[0];
+        $user_login = $base_login;
+        $counter = 1;
+        while (username_exists($user_login)) {
+            $user_login = $base_login . '_' . $counter++;
+        }
+
+        $user_id = wp_insert_user([
+            'user_login'   => $user_login,
+            'user_email'   => $customer_email,
+            'user_pass'    => wp_generate_password(),
+            'display_name' => $customer_name,
+            'role'         => $role,
+        ]);
+
+        if (is_wp_error($user_id)) {
+            error_log('Failed to create user: ' . $user_id->get_error_message());
+            wp_send_json_error(['message' => 'Failed to create user: ' . $user_id->get_error_message()]);
+            wp_die();
+        }
+
+        error_log('Created new user with ID: ' . $user_id);
+        update_user_meta($user_id, 'nickname', $customer_name);
+        wp_send_new_user_notifications($user_id, 'user');
+    } else {
+        $user_id = $user->ID;
+        error_log('Using existing user with ID: ' . $user_id);
+    }
+
+    // Create the ticket
+    $ticket_id = wp_insert_post([
+        'post_title'   => $ticket_title,
+        'post_content' => $ticket_description,
+        'post_type'    => 'robodesk_ticket',
+        'post_status'  => 'publish',
+        'post_author'  => $user_id, // Set the user ID as the post author
+        'meta_input'   => [
+            '_robodesk_customer_email' => $customer_email,
+            '_robodesk_ticket_status'  => 'open',
+            'ticket_category'          => $ticket_category,
+            'robodesk_default_agent'          => $ticket_assignee,
+            'robodesk_ticket_origin'   => 'Admin-Form', // Default source
+        ],
+    ]);
+
+    if (is_wp_error($ticket_id)) {
+        error_log('Failed to create ticket: ' . $ticket_id->get_error_message());
+        wp_send_json_error(['message' => 'Failed to create ticket: ' . $ticket_id->get_error_message()]);
+        wp_die();
+    }
+
+    // Assign priority to robodesk_ticket_priority taxonomy
+    $priority_term = term_exists($ticket_priority, 'robodesk_ticket_priority');
+    if (!$priority_term) {
+        $priority_term = wp_insert_term($ticket_priority, 'robodesk_ticket_priority');
+        error_log('Created new priority term: ' . $ticket_priority);
+    }
+    if (!is_wp_error($priority_term)) {
+        $priority_term_id = is_array($priority_term) ? $priority_term['term_id'] : $priority_term;
+        $result = wp_set_post_terms($ticket_id, [$priority_term_id], 'robodesk_ticket_priority', false);
+        if (is_wp_error($result)) {
+            error_log('Failed to set priority term: ' . $result->get_error_message());
+        }
+    } else {
+        error_log('Failed to create priority term: ' . $priority_term->get_error_message());
+    }
+
+
+    wp_send_json_success(['message' => 'Ticket created successfully', 'ticket_id' => $ticket_id]);
+    wp_die();
+}
+
+
+//for search of username and email in create ticket form
+add_action('wp_ajax_robodesk_user_lookup', 'robodesk_user_lookup');
+add_action('wp_ajax_nopriv_robodesk_user_lookup', 'robodesk_user_lookup');
+
+function robodesk_user_lookup()
+{
+    $type = sanitize_text_field($_POST['type']);
+    $value = sanitize_text_field($_POST['value']);
+
+    $args = [
+        'number' => 5,
+        'fields' => ['display_name', 'user_email'],
+        'search_columns' => [$type === 'email' ? 'user_email' : 'display_name'],
+        'search' => '*' . esc_attr($value) . '*',
+
+    ];
+
+    $users = get_users($args);
+
+    $results = array_map(function ($user) {
+        return [
+            'display_name' => $user->display_name,
+            'user_email'   => $user->user_email,
+        ];
+    }, $users);
+
+    wp_send_json($results);
 }

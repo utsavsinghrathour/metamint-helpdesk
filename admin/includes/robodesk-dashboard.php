@@ -178,8 +178,8 @@ function robodesk_dashboard_callback()
                                 </div>
                                 <div class="ml-5 w-0 flex-1">
                                     <dl>
-                                        <dt class="text-sm font-medium text-gray-500 truncate">Resolved</dt>
-                                        <dd class="text-lg font-medium text-gray-900" id="resolved-tickets"><?php
+                                        <dt class="text-sm font-medium text-gray-500 truncate">Closed</dt>
+                                        <dd class="text-lg font-medium text-gray-900" id="closed-tickets"><?php
                                                                                                             $args = array(
                                                                                                                 'post_type' => 'robodesk_ticket',
                                                                                                                 'post_status' => 'publish', // Adjust if you need other statuses like 'draft'
@@ -204,32 +204,212 @@ function robodesk_dashboard_callback()
                 </div>
 
                 <!-- Dashboard Filter -->
+                <?php
+                function load_dashboard_tickets($filter = 'recent')
+                {
+                    // Sanitize filter input
+                    $filter = in_array($filter, ['recent', 'replies', 'waiting']) ? $filter : 'recent';
+
+                    // Initialize tickets array
+                    $tickets = [];
+
+                    // WP_Query arguments to fetch tickets
+                    $args = array(
+                        'post_type' => 'robodesk_ticket',
+                        'post_status' => 'publish',
+                        'posts_per_page' => -1, // Fetch 10 to filter in PHP
+                        'orderby' => 'modified',
+                        'order' => 'DESC'
+                    );
+
+                    $query = new WP_Query($args);
+
+                    if ($query->have_posts()) {
+                        while ($query->have_posts()) {
+                            $query->the_post();
+                            $ticket_id = get_the_ID();
+                            // Fetch customer name 
+                            // $customer_name = get_post_meta($ticket_id, 'nickname', true) ?: 'Unknown';
+                            // $customer_email = get_post_meta($ticket_id, '_robodesk_customer_email', true) ?: 'N/A';
+                            $ticket_status = get_post_meta($ticket_id, '_robodesk_ticket_status', true) ?: 'N/A';
+                            $ticket_origin = get_post_meta($ticket_id, 'robodesk_ticket_origin', true) ?: 'N/A';
+                            $priority_terms = get_the_terms($ticket_id, 'robodesk_ticket_priority');
+                            $ticket_priority = $priority_terms ? $priority_terms[0]->name : 'N/A';
+                            $updated_at = get_the_modified_date('Y-m-d H:i:s', $ticket_id);
+
+                            // Simulate replies field using comments
+                            $replies = get_comments(array('post_id' => $ticket_id));
+                            $replies_count = count($replies);
+                            if ($replies_count > 0) {
+                                $replies = array_map(function ($reply) {
+                                    return [
+                                        'id' => $reply->comment_ID,
+                                        'author' => $reply->comment_author,
+                                        'content' => $reply->comment_content,
+                                        'date' => $reply->comment_date
+                                    ];
+                                }, $replies);
+                            } else {
+                                $replies = [];
+                            }
+                            $taxonomy = 'robodesk_ticket_origin';
+                            $terms = get_the_terms($ticket_id, $taxonomy);
+                            $tickets[] = [
+                                'id' => $ticket_id,
+                                'title' => get_the_title(),
+                                'customer' => get_the_author(),
+                                'email' => get_the_author_email(),
+                                'source' => $ticket_origin, // Assuming the first term is the source
+                                'status' => $ticket_status,
+                                'priority' => $ticket_priority,
+                                'updated' => $updated_at,
+                                'assignee' => get_post_meta($ticket_id, 'ticket_assignee', true) ?: 'Unassigned',
+                                'replies' => $replies_count ? $replies : [
+                                    'id' => 0,
+                                    'author' => 'N/A',
+                                    'content' => 'No replies yet',
+                                    'date' => $updated_at
+                                ],
+                                'replies_count' => $replies_count
+
+                            ];
+                        }
+                        wp_reset_postdata();
+                    }
+
+                    // Filter tickets based on the provided filter
+                    $filtered_tickets = [];
+
+                    switch ($filter) {
+                        case 'recent':
+                            usort($tickets, function ($a, $b) {
+                                return strtotime($b['updated']) - strtotime($a['updated']);
+                            });
+                            $filtered_tickets = array_slice($tickets, 0, 10);
+                            break;
+
+                        case 'replies':
+                            $filtered_tickets = array_filter($tickets, function ($t) {
+                                return !empty($t['replies']);
+                            });
+                            usort($filtered_tickets, function ($a, $b) {
+                                return strtotime($b['updated']) - strtotime($a['updated']);
+                            });
+                            $filtered_tickets = array_slice($filtered_tickets, 0, 5);
+                            break;
+
+                        case 'waiting':
+                            $filtered_tickets = array_filter($tickets, function ($t) {
+                                return in_array($t['status'], ['open', 'in-progress']);
+                            });
+                            usort($filtered_tickets, function ($a, $b) {
+                                return strtotime($a['updated']) - strtotime($b['updated']);
+                            });
+                            $filtered_tickets = array_slice($filtered_tickets, 0, 5);
+                            break;
+                    }
+
+                    // Helper functions
+                    function get_status_class($status)
+                    {
+                        $classes = [
+                            'open' => 'status-open',
+                            'in-progress' => 'status-in-progress',
+                            'closed' => 'status-closed'
+                        ];
+                        return isset($classes[$status]) ? $classes[$status] : 'status-default';
+                    }
+
+                    function get_priority_class($priority)
+                    {
+                        $classes = [
+                            'low' => 'priority-low',
+                            'medium' => 'priority-medium',
+                            'high' => 'priority-high'
+                        ];
+                        return isset($classes[strtolower($priority)]) ? $classes[strtolower($priority)] : 'priority-default';
+                    }
+
+                    function format_date($date)
+                    {
+                        return date('M j, Y H:i', strtotime($date));
+                    }
+
+                    // Generate table HTML
+                    ob_start();
+                ?>
+                    <div class="overflow-hidden">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ticket</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Customer</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Source</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Priority</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Updated</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-gray-200" id="dashboard-tickets-table">
+                                <?php foreach ($filtered_tickets as $ticket) : ?>
+                                    <tr class="table-row cursor-pointer" onclick="viewTicket(<?php echo esc_js($ticket['id']); ?>)">
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <div class="text-sm font-medium text-gray-900">#<?php echo esc_html($ticket['id']); ?></div>
+                                            <div class="text-sm text-gray-500 truncate max-w-xs"><?php echo esc_html($ticket['title']); ?>
+
+                                            </div>
+
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <div class="text-sm font-medium text-gray-900"><?php echo esc_html($ticket['customer']); ?></div>
+                                            <div class="text-sm text-gray-500 truncate max-w-xs"><?php echo esc_html($ticket['email']); ?></div>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <div class="text-sm font-medium text-gray-900"><?php echo esc_html($ticket['source']); ?></div>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <span class="status-badge <?php echo esc_attr(get_status_class($ticket['status'])); ?> editable-status"
+                                                onclick="event.stopPropagation(); editStatus(<?php echo esc_js($ticket['id']); ?>, this)">
+                                                <?php echo esc_html(str_replace('-', ' ', $ticket['status'])); ?>
+                                            </span>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <span class="status-badge <?php echo esc_attr(get_priority_class($ticket['priority'])); ?> editable-priority"
+                                                onclick="event.stopPropagation(); editPriority(<?php echo esc_js($ticket['id']); ?>, this)">
+                                                <?php echo esc_html($ticket['priority']); ?>
+                                            </span>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                            <?php echo esc_html(format_date($ticket['updated'])); ?>
+                                        </td>
+                                    </tr>
+                                    <!-- ADDDED -->
+                                    <script>
+                                        const tickets = <?php echo wp_json_encode($tickets); ?>;
+                                    </script>
+                                    <!-- ADDED -->
+                                <?php endforeach; ?>
+                            </tbody>
+                        </table>
+                    </div>
+                <?php
+                    return ob_get_clean();
+                }
+
+                // Get filter from query parameter or default to 'recent'
+                $filter = isset($_GET['filter']) ? sanitize_text_field($_GET['filter']) : 'recent';
+                ?>
+
                 <div class="bg-white shadow rounded-lg mb-6">
                     <div class="px-4 py-5 sm:p-6">
                         <div class="flex justify-between items-center mb-4">
                             <h3 class="text-lg leading-6 font-medium text-gray-900">Ticket Overview</h3>
                             <div class="flex space-x-2">
-                                <button onclick="filterDashboardTickets('recent')" class="dashboard-filter-btn px-3 py-1 text-sm rounded-md border active" data-filter="recent">Recent Tickets</button>
-                                <button onclick="filterDashboardTickets('replies')" class="dashboard-filter-btn px-3 py-1 text-sm rounded-md border" data-filter="replies">Recent Replies</button>
-                                <button onclick="filterDashboardTickets('waiting')" class="dashboard-filter-btn px-3 py-1 text-sm rounded-md border" data-filter="waiting">Waiting Reply</button>
+                                <button onclick="filterDashboardTickets('recent')" class="dashboard-filter-btn px-3 py-1 text-sm rounded-md border <?php echo $filter === 'recent' ? 'active' : ''; ?>" data-filter="recent">Recent Tickets</button>
+                                <button onclick="filterDashboardTickets('waiting')" class="dashboard-filter-btn px-3 py-1 text-sm rounded-md border <?php echo $filter === 'waiting' ? 'active' : ''; ?>" data-filter="waiting">Waiting Reply</button>
                             </div>
                         </div>
-                        <div class="overflow-hidden">
-                            <table class="min-w-full divide-y divide-gray-200">
-                                <thead class="bg-gray-50">
-                                    <tr>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ticket</th>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Customer</th>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Priority</th>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Updated</th>
-                                    </tr>
-                                </thead>
-                                <tbody class="bg-white divide-y divide-gray-200" id="dashboard-tickets-table">
-                                    <!-- Dashboard tickets will be populated by JavaScript -->
-                                </tbody>
-                            </table>
-                        </div>
+                        <?php echo load_dashboard_tickets($filter); ?>
                     </div>
                 </div>
 
@@ -243,11 +423,12 @@ function robodesk_dashboard_callback()
                                 <div class="text-sm font-medium text-blue-900">Create New Ticket</div>
                                 <div class="text-xs text-blue-700">Add a new support ticket</div>
                             </button>
-                            <button class="bg-green-50 hover:bg-green-100 p-4 rounded-lg text-left transition-colors">
+                            <button onclick="window.location.href='<?php echo admin_url('users.php?role=robodesk_support_customer'); ?>'" class="bg-green-50 hover:bg-green-100 p-4 rounded-lg text-left transition-colors">
                                 <i class="fas fa-users text-green-600 text-xl mb-2"></i>
                                 <div class="text-sm font-medium text-green-900">Manage Customers</div>
                                 <div class="text-xs text-green-700">View and edit customer information</div>
                             </button>
+
                             <button onclick="showPage('settings')" class="bg-purple-50 hover:bg-purple-100 p-4 rounded-lg text-left transition-colors">
                                 <i class="fas fa-cog text-purple-600 text-xl mb-2"></i>
                                 <div class="text-sm font-medium text-purple-900">System Settings</div>
@@ -264,65 +445,95 @@ function robodesk_dashboard_callback()
                     <div class="px-4 py-5 sm:p-6">
                         <h3 class="text-lg font-bold text-gray-900 mb-6">Create New Ticket</h3>
 
-                        <form id="new-ticket-form" class="space-y-6">
+                        <form id="robodesk-new-ticket-form" class="space-y-6">
+                            <input type="hidden" name="robodesk_create_ticket_nonce" value="<?php echo wp_create_nonce('robodesk_create_ticket_action'); ?>">
+                            <input type="hidden" name="ticket_source" value="Form"> <!-- Added for robodesk_ticket_origin -->
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-2">Customer Name *</label>
-                                    <input type="text" id="customer-name" required class="styled-input block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                                    <input type="text" id="customer-name" name="customer_name" required autocomplete="off"
+                                        class="styled-input block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                                    <div id="customer-name-suggestions" class="bg-white border border-gray-300 mt-1 hidden absolute z-10 w-full max-h-40 overflow-auto rounded-md shadow"></div>
                                 </div>
+
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-2">Customer Email *</label>
-                                    <input type="email" id="customer-email" required class="styled-input block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                                    <input type="email" id="customer-email" name="customer_email" required autocomplete="off"
+                                        class="styled-input block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                                    <div id="customer-email-suggestions" class="bg-white border border-gray-300 mt-1 hidden absolute z-10 w-full max-h-40 overflow-auto rounded-md shadow"></div>
                                 </div>
+
                             </div>
 
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-2">Ticket Title *</label>
-                                <input type="text" id="ticket-title" required class="styled-input block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                                <input type="text" id="ticket-title" name="ticket_title" required class="styled-input block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
                             </div>
 
                             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-2">Priority *</label>
-                                    <select id="ticket-priority" required class="styled-select block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
-                                        <option value="">Select Priority</option>
-                                        <option value="low">Low</option>
-                                        <option value="medium">Medium</option>
-                                        <option value="high">High</option>
+                                    <select id="ticket-priority" name="ticket_priority" required class="styled-select block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                                        <!-- <option value="">Select Priority</option> -->
+                                        <?php
+                                        $ticket_priorities = get_terms([
+                                            'taxonomy' => 'robodesk_ticket_priority',
+                                            'hide_empty' => false,
+                                        ]);
+                                        foreach ($ticket_priorities as $ticket_priority) {
+                                            echo '<option value="' . esc_attr($ticket_priority->name) . '">' . esc_html($ticket_priority->name) . '</option>';
+                                        }
+                                        ?>
                                     </select>
                                 </div>
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-2">Category *</label>
-                                    <select id="ticket-category" required class="styled-select block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
-                                        <option value="">Select Category</option>
-                                        <option value="Technical">Technical</option>
-                                        <option value="Billing">Billing</option>
-                                        <option value="General">General</option>
-                                        <option value="Feature Request">Feature Request</option>
+                                    <select id="ticket-category" name="ticket_category" required class="styled-select block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                                        <!-- <option value="">Select Category</option> -->
+                                        <?php
+                                        $categories = get_terms([
+                                            'taxonomy' => 'robodesk_ticket_category',
+                                            'hide_empty' => false,
+                                        ]);
+
+                                        foreach ($categories as $category) {
+                                            echo '<option value="' . esc_attr($category->term_id) . '">' . esc_html($category->name) . '</option>';
+                                        }
+                                        ?>
                                     </select>
                                 </div>
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-2">Assign to *</label>
-                                    <select id="ticket-assignee" required class="styled-select block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
-                                        <option value="">Select Agent</option>
-                                        <option value="Support Team">Support Team</option>
-                                        <option value="Tech Support">Tech Support</option>
-                                        <option value="Design Team">Design Team</option>
-                                        <option value="Sales Team">Sales Team</option>
+                                    <select id="ticket-assignee" name="ticket_assignee" required class="styled-select block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                                        <?php
+                                        $default_agent = get_option('robodesk_default_agent');
+                                        // Get users by role with display_name only
+                                        $agents = get_users([
+                                            'role__in' => ['robodesk_support_staff', 'robodesk_support_manager', 'author', 'editor', 'administrator'],
+                                            'fields'   => ['display_name'],
+                                        ]);
+                                        // Convert to simple array of display names
+                                        $agent_names = wp_list_pluck($agents, 'display_name');
+                                        ?>
+                                        <?php foreach ($agent_names as $agent): ?>
+                                            <option value="<?php echo esc_attr($agent); ?>" <?php selected($default_agent, $agent); ?>>
+                                                <?php echo esc_html($agent); ?>
+                                            </option>
+                                        <?php endforeach; ?>
                                     </select>
                                 </div>
                             </div>
 
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-2">Ticket Description *</label>
-                                <textarea id="ticket-description" rows="6" required class="styled-input block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500" placeholder="Describe the issue or request..."></textarea>
+                                <textarea id="ticket-description" name="ticket_description" rows="6" required class="styled-input block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500" placeholder="Describe the issue or request..."></textarea>
                             </div>
 
                             <div class="flex justify-end space-x-3">
                                 <button type="button" onclick="showPage('dashboard')" class="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
                                     Cancel
                                 </button>
-                                <button type="submit" class="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                                <button type="submit" id="robodesk-create-ticket" class="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
                                     Create Ticket
                                 </button>
                             </div>
@@ -360,7 +571,7 @@ function robodesk_dashboard_callback()
                                     <option value="all">All Status</option>
                                     <option value="open">Open</option>
                                     <option value="in-progress">In Progress</option>
-                                    <option value="resolved">Resolved</option>
+                                    <option value="closed">Closed</option>
                                 </select>
                             </div>
                             <div class="flex space-x-2">
@@ -393,6 +604,108 @@ function robodesk_dashboard_callback()
                         </thead>
                         <tbody class="bg-white divide-y divide-gray-200" id="tickets-table">
                             <!-- Tickets will be populated by JavaScript -->
+                            <?php
+
+                            $args = array(
+                                'post_type' => 'robodesk_ticket',
+                                'post_status' => 'publish',
+                                'posts_per_page' => -1, // Retrieve all tickets
+                                'orderby' => 'modified',
+                                'order' => 'DESC'
+                            );
+                            $query = new WP_Query($args);
+                            if ($query->have_posts()) {
+                                while ($query->have_posts()) {
+                                    $query->the_post();
+                                    $ticket_id = get_the_ID();
+                                    // Fetch customer name 
+                                    // $customer_name = get_post_meta($ticket_id, 'nickname', true) ?: 'Unknown';
+                                    // $customer_email = get_post_meta($ticket_id, '_robodesk_customer_email', true) ?: 'N/A';
+                                    $ticket_status = get_post_meta($ticket_id, '_robodesk_ticket_status', true) ?: 'N/A';
+                                    $priority_terms = get_the_terms($ticket_id, 'robodesk_ticket_priority');
+                                    $ticket_priority = ($priority_terms && !is_wp_error($priority_terms)) ? $priority_terms[0]->name : 'N/A';
+                                    $updated_at = get_the_modified_date('Y-m-d H:i:s', $ticket_id);
+                                    $assignee = get_post_meta($ticket_id, 'robodesk_default_agent', true) ?: 'Unassigned';
+
+                                    // Simulate replies field using comments
+                                    $replies = get_comments(array('post_id' => $ticket_id));
+                                    $replies_count = count($replies);
+                                    if ($replies_count > 0) {
+                                        $replies = array_map(function ($reply) {
+                                            return [
+                                                'id' => $reply->comment_ID,
+                                                'author' => $reply->comment_author,
+                                                'content' => $reply->comment_content,
+                                                'date' => $reply->comment_date
+                                            ];
+                                        }, $replies);
+                                    } else {
+                                        $replies = [];
+                                    }
+                                    $taxonomy = 'robodesk_ticket_origin';
+                                    $terms = get_the_terms($ticket_id, $taxonomy);
+                                    $tickets[] = [
+                                        'id' => $ticket_id,
+                                        'title' => get_the_title(),
+                                        'customer' => get_the_author(),
+                                        'email' => get_the_author_email(),
+                                        'source' => $terms ? esc_html($terms[0]->name) : 'N/A', // Assuming the first term is the source
+                                        'status' => $ticket_status,
+                                        'priority' => $ticket_priority,
+                                        'updated' => $updated_at,
+                                        'assignee' => $assignee,
+                                        'replies' => $replies_count ? $replies : [
+                                            'id' => 0,
+                                            'author' => 'N/A',
+                                            'content' => 'No replies yet',
+                                            'date' => $updated_at
+                                        ],
+                                        'replies_count' => $replies_count
+
+                                    ];
+                                }
+                                wp_reset_postdata();
+                            }
+                            ?>
+                            <?php foreach ($tickets as $ticket) : ?>
+
+                                <tr class="table-row cursor-pointer" onclick="viewTicket(<?php echo esc_js($ticket['id']); ?>)">
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="text-sm font-medium text-gray-900">#<?php echo esc_html($ticket['id']); ?></div>
+                                        <div class="text-sm text-gray-500 truncate max-w-xs"><?php echo esc_html($ticket['title']); ?></div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="text-sm font-medium text-gray-900"><?php echo esc_html($ticket['customer']); ?></div>
+                                        <div class="text-sm text-gray-500 truncate max-w-xs"><?php echo esc_html($ticket['email']); ?></div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <span class="status-badge <?php echo esc_attr(get_status_class($ticket['status'])); ?>">
+                                            <?php echo esc_html(str_replace('-', ' ', $ticket['status'])); ?>
+                                        </span>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <span class="status-badge <?php echo esc_attr(get_priority_class($ticket['priority'])); ?>">
+                                            <?php echo esc_html($ticket['priority']); ?>
+                                        </span>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <?php echo esc_html($ticket['assignee']); ?>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                        <?php echo esc_html(format_date($ticket['updated'])); ?>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                        <button onclick="viewTicket(<?php echo esc_js($ticket['id']); ?>)" class="text-blue-600 hover:text-blue-800">
+                                            <i class="fas fa-eye"></i> View
+                                        </button>
+                                    </td>
+                                </tr>
+                                <!-- ADDDED -->
+                                <script>
+                                    const tickets = <?php echo wp_json_encode($tickets); ?>;
+                                </script>
+                                <!-- ADDED -->
+                            <?php endforeach; ?>
                         </tbody>
                     </table>
                 </div>
@@ -435,7 +748,7 @@ function robodesk_dashboard_callback()
                                             <?php
                                             // get the current ticket status
                                             $current_ticket_status = get_post_meta($currentTicket->ID, '_robodesk_ticket_status', true);
-                                            $statuses = array('open', 'in-progress', 'resolved', 'closed');
+                                            $statuses = array('open', 'in-progress', 'closed');
                                             foreach ($statuses as $status) {
                                                 $selected = ($status === $current_ticket_status) ? 'selected' : '';
                                                 echo "<option value='$status' $selected>" . ucfirst($status) . "</option>";
@@ -454,7 +767,7 @@ function robodesk_dashboard_callback()
 
                                             if (!is_wp_error($priorities)) {
                                                 foreach ($priorities as $priority) {
-                                                    echo '<option value="' . esc_attr($priority->term_id) . '">' . esc_html($priority->name) . '</option>';
+                                                    echo '<option value="' . esc_attr($priority->name) . '">' . esc_html($priority->name) . '</option>';
                                                 }
                                             }
 
@@ -464,10 +777,24 @@ function robodesk_dashboard_callback()
                                     <div>
                                         <label class="block text-sm font-medium text-gray-700 mb-1">Assignee</label>
                                         <select onchange="updateTicketAssignee(currentTicket.id, this.value)" class="styled-select block w-full border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 rounded-md" id="ticket-assignee-select">
-                                            <option value="Support Team">Support Team</option>
-                                            <option value="Tech Support">Tech Support</option>
-                                            <option value="Design Team">Design Team</option>
-                                            <option value="Sales Team">Sales Team</option>
+                                            <?php
+                                            $default_agent = get_option('robodesk_default_agent');
+
+                                            // Get users by role with display_name only
+                                            $agents = get_users([
+                                                'role__in' => ['robodesk_support_staff', 'robodesk_support_manager', 'author', 'editor', 'administrator'],
+                                                'fields'   => ['display_name'],
+                                            ]);
+
+                                            // Convert to simple array of display names
+                                            $agent_names = wp_list_pluck($agents, 'display_name');
+                                            ?>
+
+                                            <?php foreach ($agent_names as $agent): ?>
+                                                <option value="<?php echo esc_attr($agent); ?>" <?php selected($default_agent, $agent); ?>>
+                                                    <?php echo esc_html($agent); ?>
+                                                </option>
+                                            <?php endforeach; ?>
                                         </select>
                                     </div>
                                 </div>
@@ -573,7 +900,7 @@ function robodesk_dashboard_callback()
                             <h3 class="text-lg font-medium text-gray-900 mb-6">Basic Settings</h3>
                             <form id="robodesk-basic-settings-form" class="space-y-6">
                                 <input type="hidden" name="robodesk_basic_settings_nonce" value="<?php echo wp_create_nonce('robodesk_basic_settings_action'); ?>">
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
                                     <div>
                                         <label for="site_name" class="block text-sm font-medium text-gray-700">Site Name</label>
                                         <input type="text" name="site_name" id="site_name" value="<?php echo esc_attr(get_option('robodesk_site_name', 'Robodesk Support')); ?>" class="styled-input mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
@@ -582,6 +909,9 @@ function robodesk_dashboard_callback()
                                         <label for="admin_email" class="block text-sm font-medium text-gray-700">Admin Email</label>
                                         <input type="email" name="admin_email" id="admin_email" value="<?php echo esc_attr(get_option('robodesk_admin_email', 'admin@example.com')); ?>" class="styled-input mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
                                     </div>
+                                    
+
+                                    
                                     <div>
                                         <label for="timezone" class="block text-sm font-medium text-gray-700">Timezone</label>
                                         <select name="timezone" id="timezone" class="styled-select mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
@@ -594,6 +924,35 @@ function robodesk_dashboard_callback()
                                             ?>
                                         </select>
                                     </div>
+                                    <!-- Image Fields -->
+                                    <div>
+                                        <label for="popover_top_icon" class="block text-sm font-medium text-gray-700">Pop over Top Icon/Image</label>
+                                        <input type="file" accept="image/*" name="popover_top_icon" id="popover_top_icon" class="styled-input mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                                        <div class="mt-2 flex items-center gap-2">
+                                            <img id="popover-top-icon-preview" src="<?php echo esc_url(get_option('robodesk_popover_top_icon', '')); ?>" alt="Pop over Top Icon Preview" class="hidden max-w-[150px] h-auto rounded-md">
+                                            <button type="button" onclick="removeImage('popover-top-icon-preview', 'robodesk_popover_top_icon')" class="text-red-600 hover:text-red-800 text-sm <?php echo esc_url(get_option('robodesk_popover_top_icon', '')) ? '' : 'hidden'; ?>">Remove</button>
+                                        </div>
+                                        <input type="hidden" name="robodesk_popover_top_icon" id="robodesk_popover_top_icon" value="<?php echo esc_attr(get_option('robodesk_popover_top_icon', '')); ?>">
+                                    </div>
+                                    <div>
+                                        <div class="mt-4">
+                                            <label for="theme_color" class="block text-sm font-medium text-gray-700">Theme Color</label>
+                                            <input type="color" name="theme_color" id="theme_color" value="<?php echo esc_attr(get_option('robodesk_theme_color', '#3B82F6')); ?>" class="styled-input mt-1 block w-10 h-10 border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                                            <div class="mt-2">
+                                                <div id="theme-color-preview" class="hidden w-16 h-8 rounded-md border border-gray-300" style="background-color: <?php echo esc_attr(get_option('robodesk_theme_color', '#3B82F6')); ?>;"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div>
+                                        <label for="popover_icon" class="block text-sm font-medium text-gray-700">Pop over Icon/Image</label>
+                                        <input type="file" accept="image/*" name="popover_icon" id="popover_icon" class="styled-input mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                                        <div class="mt-2 flex items-center gap-2">
+                                            <img id="popover-icon-preview" src="<?php echo esc_url(get_option('robodesk_popover_icon', '')); ?>" alt="Pop over Icon Preview" class="hidden max-w-[150px] h-auto rounded-md">
+                                            <button type="button" onclick="removeImage('popover-icon-preview', 'robodesk_popover_icon')" class="text-red-600 hover:text-red-800 text-sm <?php echo esc_url(get_option('robodesk_popover_icon', '')) ? '' : 'hidden'; ?>">Remove</button>
+                                        </div>
+                                        <input type="hidden" name="robodesk_popover_icon" id="robodesk_popover_icon" value="<?php echo esc_attr(get_option('robodesk_popover_icon', '')); ?>">
+                                    </div>
                                     <div>
                                         <label for="language" class="block text-sm font-medium text-gray-700">Language</label>
                                         <select name="language" id="language" class="styled-select mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
@@ -605,41 +964,24 @@ function robodesk_dashboard_callback()
                                             }
                                             ?>
                                         </select>
-                                    </div>
-                                    <!-- Image Fields -->
-                                    <div>
-                                        <label for="popover_icon" class="block text-sm font-medium text-gray-700">Pop over Icon/Image</label>
-                                        <input type="file" accept="image/*" name="popover_icon" id="popover_icon" class="styled-input mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 ">
 
-                                        <div class="mt-2">
-                                            <img id="popover-icon-preview" src="<?php echo esc_url(get_option('robodesk_popover_icon', '')); ?>" alt="Pop over Icon Preview" class="hidden max-w-[150px] h-auto rounded-md">
-                                        </div>
-                                        <input type="hidden" name="robodesk_popover_icon" id="robodesk_popover_icon" value="<?php echo esc_attr(get_option('robodesk_popover_icon', '')); ?>">
                                     </div>
-                                    <div>
-                                        <label for="popover_top_icon" class="block text-sm font-medium text-gray-700">Pop over Top Icon/Image</label>
-                                        <input type="file" accept="image/*" name="popover_top_icon" id="popover_top_icon" class="styled-input mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
 
-                                        <div class="mt-2">
-                                            <img id="popover-top-icon-preview" src="<?php echo esc_url(get_option('robodesk_popover_top_icon', '')); ?>" alt="Pop over Top Icon Preview" class="hidden max-w-[150px] h-auto rounded-md">
-                                        </div>
-                                        <input type="hidden" name="robodesk_popover_top_icon" id="robodesk_popover_top_icon" value="<?php echo esc_attr(get_option('robodesk_popover_top_icon', '')); ?>">
-                                    </div>
                                     <div>
                                         <label for="logo" class="block text-sm font-medium text-gray-700">Logo</label>
                                         <input type="file" accept="image/*" name="logo" id="logo" class="styled-input mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
-
-                                        <div class="mt-2">
+                                        <div class="mt-2 flex items-center gap-2">
                                             <img id="logo-preview" src="<?php echo esc_url(get_option('robodesk_logo', '')); ?>" alt="Logo Preview" class="hidden max-w-[150px] h-auto rounded-md">
+                                            <button type="button" onclick="removeImage('logo-preview', 'robodesk_logo')" class="text-red-600 hover:text-red-800 text-sm <?php echo esc_url(get_option('robodesk_logo', '')) ? '' : 'hidden'; ?>">Remove</button>
                                         </div>
                                         <input type="hidden" name="robodesk_logo" id="robodesk_logo" value="<?php echo esc_attr(get_option('robodesk_logo', '')); ?>">
                                     </div>
                                     <div>
                                         <label for="wide_logo" class="block text-sm font-medium text-gray-700">Wide Logo</label>
                                         <input type="file" accept="image/*" name="wide_logo" id="wide_logo" class="styled-input mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
-
-                                        <div class="mt-2">
+                                        <div class="mt-2 flex items-center gap-2">
                                             <img id="wide-logo-preview" src="<?php echo esc_url(get_option('robodesk_wide_logo', '')); ?>" alt="Wide Logo Preview" class="hidden max-w-[150px] h-auto rounded-md">
+                                            <button type="button" onclick="removeImage('wide-logo-preview', 'robodesk_wide_logo')" class="text-red-600 hover:text-red-800 text-sm <?php echo esc_url(get_option('robodesk_wide_logo', '')) ? '' : 'hidden'; ?>">Remove</button>
                                         </div>
                                         <input type="hidden" name="robodesk_wide_logo" id="robodesk_wide_logo" value="<?php echo esc_attr(get_option('robodesk_wide_logo', '')); ?>">
                                     </div>
@@ -728,6 +1070,29 @@ function robodesk_dashboard_callback()
                         <!-- Email Templates Tab -->
                         <div id="templates-tab" class="settings-tab-content hidden">
                             <h3 class="text-lg font-medium text-gray-900 mb-6">Email Templates</h3>
+
+                            <div class="bg-[#ebedf5] rounded-lg p-6 text-gray-800 shadow-sm">
+                                <div class="flex justify-between items-center">
+                                    <h2 class="text-base font-semibold text-gray-900">Customize the email templates with Variables</h2>
+                                    <button onclick="toggleAccordion()" id="toggle-btn"
+                                        class="text-sm text-blue-600 hover:underline focus:outline-none">
+                                        Show
+                                    </button>
+                                </div>
+
+                                <div id="accordion-content" class="mt-4 text-sm text-gray-700 leading-relaxed space-y-4 hidden">
+                                    <p>You can use the following variables in your templates:</p>
+                                    <ul class="list-disc pl-5 space-y-1">
+                                        <li><code class="bg-gray-200 px-1 rounded text-sm">{ticket_id}</code> – The ID of the ticket</li>
+                                        <li><code class="bg-gray-200 px-1 rounded text-sm">{ticket_author}</code> – The name of the ticket author</li>
+                                        <li><code class="bg-gray-200 px-1 rounded text-sm">{ticket_link}</code> – The link to the ticket</li>
+                                        <li><code class="bg-gray-200 px-1 rounded text-sm">{ticket_title}</code> – The title of the ticket</li>
+                                        <li><code class="bg-gray-200 px-1 rounded text-sm">{ticket_status}</code> – The status of the ticket</li>
+                                    </ul>
+                                </div>
+                            </div>
+
+
                             <form id="robodesk_email_template_save" class="space-y-6">
                                 <input type="hidden" name="robodesk_email_template_nonce" value="<?php echo wp_create_nonce('robodesk_email_template_action'); ?>">
                                 <div class="space-y-6">
@@ -743,15 +1108,15 @@ function robodesk_dashboard_callback()
                                         <div id="new-ticket-template" class="editor-content" contenteditable="true"><?php echo wp_kses_post(get_option('robodesk_email_template_new-ticket', 'Thank you for contacting us. We have received your ticket and will respond soon.')); ?></div>
                                     </div>
                                     <div>
-                                        <label class="block text-sm font-medium text-gray-700 mb-2">Ticket Resolved</label>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">Ticket Closed</label>
                                         <div class="editor-toolbar mb-2">
-                                            <button type="button" onclick="formatText('bold', 'ticket-resolved-template')" class="editor-btn"><i class="fas fa-bold"></i></button>
-                                            <button type="button" onclick="formatText('italic', 'ticket-resolved-template')" class="editor-btn"><i class="fas fa-italic"></i></button>
-                                            <button type="button" onclick="formatText('underline', 'ticket-resolved-template')" class="editor-btn"><i class="fas fa-underline"></i></button>
-                                            <button type="button" onclick="formatText('insertUnorderedList', 'ticket-resolved-template')" class="editor-btn"><i class="fas fa-list-ul"></i></button>
-                                            <button type="button" onclick="formatText('insertOrderedList', 'ticket-resolved-template')" class="editor-btn"><i class="fas fa-list-ol"></i></button>
+                                            <button type="button" onclick="formatText('bold', 'ticket-closed-template')" class="editor-btn"><i class="fas fa-bold"></i></button>
+                                            <button type="button" onclick="formatText('italic', 'ticket-closed-template')" class="editor-btn"><i class="fas fa-italic"></i></button>
+                                            <button type="button" onclick="formatText('underline', 'ticket-closed-template')" class="editor-btn"><i class="fas fa-underline"></i></button>
+                                            <button type="button" onclick="formatText('insertUnorderedList', 'ticket-closed-template')" class="editor-btn"><i class="fas fa-list-ul"></i></button>
+                                            <button type="button" onclick="formatText('insertOrderedList', 'ticket-closed-template')" class="editor-btn"><i class="fas fa-list-ol"></i></button>
                                         </div>
-                                        <div id="ticket-resolved-template" class="editor-content" contenteditable="true"><?php echo wp_kses_post(get_option('robodesk_email_template_ticket-resolved', 'Your ticket has been resolved. Please let us know if you need further assistance.')); ?></div>
+                                        <div id="ticket-closed-template" class="editor-content" contenteditable="true"><?php echo wp_kses_post(get_option('robodesk_email_template_ticket-closed', 'Your ticket has been closed. Please let us know if you need further assistance.')); ?></div>
                                     </div>
                                     <div>
                                         <label class="block text-sm font-medium text-gray-700 mb-2">Auto Reply</label>
@@ -783,29 +1148,53 @@ function robodesk_dashboard_callback()
                                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                             <div>
                                                 <label class="block text-sm font-medium text-gray-700">Fetch Interval (minutes)</label>
-                                                <input type="number" name="fetch_interval" value="15" class="styled-input mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500" min="1" max="1440" required>
+                                                <input type="number" name="fetch_interval" value="<?php echo esc_attr(get_option('robodesk_fetch_interval', 15)); ?>" class="styled-input mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500" min="1" max="1440" required>
                                             </div>
                                             <div>
                                                 <label class="block text-sm font-medium text-gray-700">Auto-assign to</label>
                                                 <select name="default_agent" class="styled-select mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500" required>
-                                                    <option value="support">Support Team</option>
-                                                    <option value="tech">Tech Support</option>
-                                                    <option value="sales">Sales Team</option>
+                                                    <!-- default options -->
+                                                    <?php
+                                                    $default_agent = get_option('robodesk_default_agent');
+
+                                                    // Get users by role with display_name only
+                                                    $agents = get_users([
+                                                        'role__in' => ['robodesk_support_staff', 'robodesk_support_manager', 'author', 'editor', 'administrator'],
+                                                        'fields'   => ['display_name'],
+                                                    ]);
+
+                                                    // Convert to simple array of display names
+                                                    $agent_names = wp_list_pluck($agents, 'display_name');
+                                                    ?>
+
+                                                    <?php foreach ($agent_names as $agent): ?>
+                                                        <option value="<?php echo esc_attr($agent); ?>" <?php selected($default_agent, $agent); ?>>
+                                                            <?php echo esc_html($agent); ?>
+                                                        </option>
+                                                    <?php endforeach; ?>
+
+                                                    <?php if (!in_array($default_agent, $agent_names) && !empty($default_agent)): ?>
+                                                        <option value="<?php echo esc_attr($default_agent); ?>" selected>
+                                                            <?php echo esc_html($default_agent); ?>
+                                                        </option>
+                                                    <?php endif; ?>
+
+
                                                 </select>
                                             </div>
                                         </div>
                                     </div>
                                     <div class="flex space-x-4">
-                                        <button id="save-ticket-assignment-settings" class="bg-gray-600 text-white px-6 py-2 rounded-md hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500">
+                                        <button id="save-ticket-assignment-settings" class="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
                                             <i class="fas fa-cog mr-2"></i>
-                                            Configure Auto-Fetch
+                                            Save Auto-Fetch
                                         </button>
                                     </div>
                                 </div>
                             </form>
 
                             <div class="flex space-x-4 mt-6">
-                                <button onclick="fetchEmails()" class="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                                <button onclick="fetchEmails()" class="bg-gray-600 text-white px-6 py-2 rounded-md hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500">
                                     <i class="fas fa-sync-alt mr-2"></i>
                                     Fetch Emails Now
                                 </button>

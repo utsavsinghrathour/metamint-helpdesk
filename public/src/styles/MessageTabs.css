@@ -23,7 +23,10 @@
   overflow: auto;
   min-height: 220px;
 }
-
+.single-ticket-header img{
+  max-width: 120px;
+  object-fit: cover;
+}
 .rd-send-message a {
   width: fit-content;
   margin: auto;
@@ -97,7 +100,8 @@
     color: rgba(85, 85, 85, 1);
 }
 .rd-single-ticket .chat-container{
-  min-height: 370px;
+  /* min-height: 370px; */
+  min-height: 355px;
 }
 .rd-preloader{
   position: absolute;

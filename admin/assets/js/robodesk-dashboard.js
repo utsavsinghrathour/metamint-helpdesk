@@ -1,4 +1,108 @@
 // Sample data
+//for ticket varaibles show and hide
+function toggleAccordion() {
+  const content = document.getElementById("accordion-content");
+  const btn = document.getElementById("toggle-btn");
+
+  const isHidden = content.classList.contains("hidden");
+  if (isHidden) {
+    content.classList.remove("hidden");
+    btn.textContent = "Hide";
+  } else {
+    content.classList.add("hidden");
+    btn.textContent = "Show";
+  }
+}
+//search form creating user and email
+
+document.addEventListener("DOMContentLoaded", function () {
+  const nameInput = document.getElementById("customer-name");
+  const emailInput = document.getElementById("customer-email");
+  const nameSuggestions = document.getElementById("customer-name-suggestions");
+  const emailSuggestions = document.getElementById(
+    "customer-email-suggestions"
+  );
+
+  function fetchSuggestions(type, value, callback) {
+    fetch(ajaxurl, {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({
+        action: "robodesk_user_lookup",
+        type: type,
+        value: value,
+      }),
+    })
+      .then((res) => res.json())
+      .then(callback);
+  }
+
+  function populateSuggestions(container, items, onSelect) {
+    container.innerHTML = "";
+    if (!items.length) {
+      container.classList.add("hidden");
+      return;
+    }
+    items.forEach((user) => {
+      const div = document.createElement("div");
+      div.className = "cursor-pointer px-3 py-2 hover:bg-blue-100 text-sm";
+      div.textContent = `${user.display_name} (${user.user_email})`;
+      div.addEventListener("click", () => onSelect(user));
+      container.appendChild(div);
+    });
+    container.classList.remove("hidden");
+  }
+
+  nameInput.addEventListener("keyup", () => {
+    const value = nameInput.value.trim();
+    if (value.length < 2) {
+      nameSuggestions.classList.add("hidden");
+      return;
+    }
+    fetchSuggestions("name", value, (users) => {
+      populateSuggestions(nameSuggestions, users, (user) => {
+        nameInput.value = user.display_name;
+        emailInput.value = user.user_email;
+        nameSuggestions.classList.add("hidden");
+      });
+    });
+  });
+
+  emailInput.addEventListener("keyup", () => {
+    const value = emailInput.value.trim();
+    if (value.length < 3) {
+      emailSuggestions.classList.add("hidden");
+      return;
+    }
+    fetchSuggestions("email", value, (users) => {
+      populateSuggestions(emailSuggestions, users, (user) => {
+        emailInput.value = user.user_email;
+        nameInput.value = user.display_name;
+        emailSuggestions.classList.add("hidden");
+      });
+    });
+  });
+
+  // Hide suggestion boxes on click outside
+  document.addEventListener("click", (e) => {
+    if (!nameSuggestions.contains(e.target))
+      nameSuggestions.classList.add("hidden");
+    if (!emailSuggestions.contains(e.target))
+      emailSuggestions.classList.add("hidden");
+  });
+});
+
+//basic setting delete for the images for basic settings
+function removeImage(previewId, inputId) {
+  const preview = document.getElementById(previewId);
+  const input = document.getElementById(inputId);
+  const button = preview.nextElementSibling;
+
+  preview.src = "";
+  preview.classList.add("hidden");
+  input.value = "";
+  button.classList.add("hidden");
+}
 const sampleTickets = [
   {
     id: 1,
@@ -66,7 +170,7 @@ const sampleTickets = [
   {
     id: 3,
     title: "Plugin compatibility issue",
-    status: "resolved",
+    status: "closed",
     priority: "low",
     customer: "Mike Wilson",
     email: "mike@example.com",
@@ -86,7 +190,7 @@ const sampleTickets = [
       {
         id: 2,
         author: "Tech Support",
-        message: "Issue resolved by updating plugin versions.",
+        message: "Issue closed by updating plugin versions.",
         timestamp: "2024-01-14T10:00:00Z",
         type: "agent",
       },
@@ -119,7 +223,7 @@ const sampleTickets = [
 ];
 
 // Global variables
-let tickets = [...sampleTickets]; // Use sample data for initial tickets
+// let tickets = [...sampleTickets]; // Use sample data for initial tickets
 let currentPage = "dashboard";
 let currentTicket = null;
 let currentTicketTab = "replies";
@@ -187,8 +291,8 @@ function getStatusClass(status) {
       return "status-open";
     case "in-progress":
       return "status-in-progress";
-    case "resolved":
-      return "status-resolved";
+    case "closed":
+      return "status-closed";
     default:
       return "bg-gray-100 text-gray-800";
   }
@@ -256,13 +360,13 @@ function updateDashboardStats() {
     total: tickets.length,
     open: tickets.filter((t) => t.status === "open").length,
     inProgress: tickets.filter((t) => t.status === "in-progress").length,
-    resolved: tickets.filter((t) => t.status === "resolved").length,
+    closed: tickets.filter((t) => t.status === "closed").length,
   };
 
   document.getElementById("total-tickets").innerHTML = stats.total;
   document.getElementById("open-tickets").innerHTML = stats.open;
   document.getElementById("in-progress-tickets").innerHTML = stats.inProgress;
-  document.getElementById("resolved-tickets").innerHTML = stats.resolved;
+  document.getElementById("closed-tickets").innerHTML = stats.closed;
 }
 
 function filterDashboardTickets(filterType) {
@@ -287,19 +391,14 @@ function loadDashboardTickets() {
       filteredTickets = tickets
         .slice()
         .sort((a, b) => new Date(b.updated) - new Date(a.updated))
-        .slice(0, 5);
+        .slice(0, 10);
       break;
-    case "replies":
-      filteredTickets = tickets
-        .filter((t) => t.replies && t.replies.length > 0)
-        .sort((a, b) => new Date(b.updated) - new Date(a.updated))
-        .slice(0, 5);
-      break;
+
     case "waiting":
       filteredTickets = tickets
         .filter((t) => t.status === "open" || t.status === "in-progress")
         .sort((a, b) => new Date(a.updated) - new Date(b.updated))
-        .slice(0, 5);
+        .slice(0, 10);
       break;
   }
 
@@ -315,9 +414,17 @@ function loadDashboardTickets() {
                   ticket.title
                 }</div>
             </td>
-            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+            <div class="text-sm font-medium text-gray-900">${
               ticket.customer
-            }</td>
+            }</div>
+            <div class="text-sm font-medium text-gray-900">${ticket.email}</div>
+            </td>
+            <td>
+            <div class="text-sm font-medium text-gray-900">${
+              ticket.source
+            }</div>
+            </td>
             <td class="px-6 py-4 whitespace-nowrap">
                 <span class="status-badge ${getStatusClass(
                   ticket.status
@@ -357,9 +464,9 @@ function editStatus(ticketId, element) {
         <option value="in-progress" ${
           currentStatus === "in-progress" ? "selected" : ""
         }>In Progress</option>
-        <option value="resolved" ${
-          currentStatus === "resolved" ? "selected" : ""
-        }>Resolved</option>
+        <option value="closed" ${
+          currentStatus === "closed" ? "selected" : ""
+        }>Closed</option>
     `;
 
   select.onchange = function () {
@@ -536,6 +643,8 @@ function loadTicketsTable() {
                 <div class="text-sm text-gray-900">${ticket.customer}</div>
                 <div class="text-sm text-gray-500">${ticket.email}</div>
             </td>
+           
+           
             <td class="px-6 py-4 whitespace-nowrap">
                 <span class="status-badge ${getStatusClass(ticket.status)}">
                     ${ticket.status.replace("-", " ")}
@@ -716,7 +825,7 @@ function showCustomerTickets() {
     open: customerTickets.filter((t) => t.status === "open").length,
     inProgress: customerTickets.filter((t) => t.status === "in-progress")
       .length,
-    resolved: customerTickets.filter((t) => t.status === "resolved").length,
+    closed: customerTickets.filter((t) => t.status === "closed").length,
   };
 
   // Update modal title
@@ -735,9 +844,10 @@ function showCustomerTickets() {
             <div class="customer-stat-number text-yellow-600">${stats.inProgress}</div>
             <div class="customer-stat-label">In Progress</div>
         </div>
-        <div class="customer-stat-card" onclick="filterCustomerTickets('resolved')">
-            <div class="customer-stat-number text-green-600">${stats.resolved}</div>
-            <div class="customer-stat-label">Resolved</div>
+      
+        <div class="customer-stat-card" onclick="filterCustomerTickets('closed')">
+            <div class="customer-stat-number text-green-600">${stats.closed}</div>
+            <div class="customer-stat-label">Closed</div>
         </div>
     `;
 
@@ -890,6 +1000,28 @@ function updateTicketPriority(ticketId, newPriority) {
     showToast(`Ticket priority updated to ${newPriority}`);
   }
 }
+
+// const priorityMap = {
+//   5: "Low",
+//   4: "Medium",
+//   6: "High",
+// };
+
+// function updateTicketPriority(ticketId, newPriorityId) {
+//   const newPriority = priorityMap[newPriorityId] || "Unknown";
+
+//   const ticketIndex = tickets.findIndex((t) => t.id === ticketId);
+//   if (ticketIndex !== -1) {
+//     tickets[ticketIndex].priority = newPriority;
+//     tickets[ticketIndex].updated = new Date().toISOString();
+//     if (currentTicket && currentTicket.id === ticketId) {
+//       currentTicket.priority = newPriority;
+//       currentTicket.updated = new Date().toISOString();
+//     }
+
+//     showToast(`Ticket priority updated to ${newPriority}`);
+//   }
+// }
 
 function updateTicketAssignee(ticketId, newAssignee) {
   const ticketIndex = tickets.findIndex((t) => t.id === ticketId);
@@ -1126,7 +1258,7 @@ jQuery(document).ready(function ($) {
     // Collect template data from contenteditable divs
     var templates = {
       "new-ticket": $("#new-ticket-template").html(),
-      "ticket-resolved": $("#ticket-resolved-template").html(),
+      "ticket-closed": $("#ticket-closed-template").html(),
       "auto-reply": $("#auto-reply-template").html(),
     };
 
@@ -1224,6 +1356,21 @@ jQuery(document).ready(function ($) {
     },
   ];
 
+  // Theme color preview handler
+  const themeColorInput = $("#theme_color");
+  const themeColorPreview = $("#theme-color-preview");
+  if (themeColorInput.val()) {
+    themeColorPreview
+      .removeClass("hidden")
+      .css("background-color", themeColorInput.val());
+  }
+
+  themeColorInput.on("change", function () {
+    themeColorPreview
+      .removeClass("hidden")
+      .css("background-color", $(this).val());
+  });
+
   imageFields.forEach(function (field) {
     // Show existing image on page load
     const hiddenInput = $(`#${field.hidden}`);
@@ -1264,6 +1411,7 @@ jQuery(document).ready(function ($) {
     formData.append("settings[admin_email]", $form.find("#admin_email").val());
     formData.append("settings[timezone]", $form.find("#timezone").val());
     formData.append("settings[language]", $form.find("#language").val());
+    formData.append("settings[theme_color]", $form.find("#theme_color").val());
 
     // Append image URLs and files
     imageFields.forEach(function (field) {
@@ -1277,13 +1425,13 @@ jQuery(document).ready(function ($) {
     $button.prop("disabled", true).text("Saving Settings...");
 
     $.ajax({
-      url: ajaxurl, // Ensure ajaxurl is defined via wp_localize_script
+      url: ajaxurl,
       type: "POST",
       data: formData,
-      processData: false, // Required for FormData with files
-      contentType: false, // Required for FormData with files
+      processData: false,
+      contentType: false,
       success: function (response) {
-        console.log(response); // Debug response
+        console.log(response);
         if (response.success) {
           // Update hidden inputs with new image URLs
           if (response.data.urls) {
@@ -1295,6 +1443,12 @@ jQuery(document).ready(function ($) {
                   .attr("src", response.data.urls[field.hidden]);
               }
             });
+          }
+          // Update theme color preview
+          if (response.data.settings && response.data.settings.theme_color) {
+            themeColorPreview
+              .removeClass("hidden")
+              .css("background-color", response.data.settings.theme_color);
           }
           showToast(response.data.message, "success");
         } else {
@@ -1366,6 +1520,77 @@ jQuery(document).ready(function ($) {
       },
       complete: function () {
         $button.prop("disabled", false).text("Configure Auto-Fetch");
+      },
+    });
+  });
+});
+
+//create a new ticket ajax
+jQuery(document).ready(function ($) {
+  // Handle form submission for ticket creation
+  $("#robodesk-new-ticket-form").on("submit", function (e) {
+    e.preventDefault(); // Prevent default form submission
+
+    const $form = $(this);
+    const $button = $form.find("#robodesk-create-ticket");
+    const formData = new FormData();
+
+    // Append ticket data
+    formData.append("action", "robodesk_create_ticket");
+    formData.append(
+      "nonce",
+      $form.find('input[name="robodesk_create_ticket_nonce"]').val()
+    );
+    formData.append("customer_name", $("#customer-name").val());
+    formData.append("customer_email", $("#customer-email").val());
+    formData.append("ticket_title", $("#ticket-title").val());
+    formData.append("ticket_priority", $("#ticket-priority").val());
+    formData.append("ticket_category", $("#ticket-category").val());
+    formData.append("ticket_assignee", $("#ticket-assignee").val());
+    formData.append("ticket_description", $("#ticket-description").val());
+    formData.append(
+      "ticket_source",
+      $form.find('input[name="ticket_source"]').val()
+    );
+
+    // Basic client-side validation (HTML5 validation is already in place)
+    if (!$form[0].checkValidity()) {
+      $form[0].reportValidity(); // Show browser validation messages
+      return;
+    }
+
+    // Additional client-side validation for priority
+    const validPriorities = ["Low", "Medium", "High"];
+    if (!validPriorities.includes($("#ticket-priority").val())) {
+      showToast("Please select a valid priority.", "error");
+      return;
+    }
+
+    $button.prop("disabled", true).text("Creating Ticket...");
+
+    $.ajax({
+      url: robodeskAjax.ajax_url, // Use localized AJAX URL
+      type: "POST",
+      data: formData,
+      processData: false,
+      contentType: false,
+      success: function (response) {
+        if (response.success) {
+          showToast(response.data.message, "success");
+          $form[0].reset(); // Reset form on success
+        } else {
+          showToast(
+            response.data.message || "Failed to create ticket.",
+            "error"
+          );
+        }
+      },
+      error: function (xhr, status, error) {
+        console.log("AJAX Error:", xhr, status, error);
+        showToast("Failed to create ticket: " + error, "error");
+      },
+      complete: function () {
+        $button.prop("disabled", false).text("Create Ticket");
       },
     });
   });

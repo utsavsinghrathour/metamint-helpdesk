@@ -11,93 +11,120 @@ require_once ROBODESK_PLUGIN_PATH . 'admin/includes/post-types/robodesk-notice-p
 add_action('admin_menu', 'robodesk_add_admin_menu');
 function robodesk_add_admin_menu()
 {
+    // Top-level menu pointing to the dashboard
     add_menu_page(
         'Robodesk',
-        'Robodesk Support',
+        'Robodesk',
         'manage_options',
-        'edit.php?post_type=robodesk_ticket',
-        '', //cap//hellow
+        'robodesk-dashboard',
+        'robodesk_dashboard_callback',
         'dashicons-email-alt',
         25
     );
+
+    // Dashboard (default submenu)
     add_submenu_page(
-        'edit.php?post_type=robodesk_ticket',
+        'robodesk-dashboard',
         'Dashboard',
         'Dashboard',
         'manage_options',
         'robodesk-dashboard',
         'robodesk_dashboard_callback'
     );
-    add_submenu_page(
-        'edit.php?post_type=robodesk_ticket',
-        'All Tickets',
-        'All Tickets',
-        'edit_posts',
-        'edit.php?post_type=robodesk_ticket'
-    );
+
+    // // All Tickets (linking to CPT)
+    // add_submenu_page(
+    //     'robodesk-dashboard',
+    //     'All Tickets',
+    //     'All Tickets',
+    //     'edit_posts',
+    //     'edit.php?post_type=robodesk_ticket'
+    // );
+
+    // // Add New Ticket
+    // add_submenu_page(
+    //     'robodesk-dashboard',
+    //     'Add New Ticket',
+    //     'Add New Ticket',
+    //     'edit_posts',
+    //     'post-new.php?post_type=robodesk_ticket'
+    // );
+
+    // Ticket Origins (taxonomy)
+    // add_submenu_page(
+    //     'robodesk-dashboard',
+    //     'Ticket Origins',
+    //     'Ticket Origins',
+    //     'manage_categories',
+    //     'edit-tags.php?taxonomy=robodesk_ticket_origin&post_type=robodesk_ticket'
+    // );
 
     add_submenu_page(
-        'edit.php?post_type=robodesk_ticket',
-        'Add New Ticket',
-        'Add New Ticket',
-        'edit_posts',
-        'post-new.php?post_type=robodesk_ticket'
-    );
-    add_submenu_page(
-        'edit.php?post_type=robodesk_ticket',
-        'Ticket Origins',
-        'Ticket Origins',
+        'robodesk-dashboard',
+        'Ticket Categories',
+        'Ticket Categories',
         'manage_categories',
-        'edit-tags.php?taxonomy=robodesk_ticket_origin&post_type=robodesk_ticket'
+        'edit-tags.php?taxonomy=robodesk_ticket_category&post_type=robodesk_ticket'
     );
+
+
+    // Ticket Priorities (taxonomy)
     add_submenu_page(
-        'edit.php?post_type=robodesk_ticket',
+        'robodesk-dashboard',
         'Ticket Priorities',
         'Ticket Priorities',
         'manage_categories',
         'edit-tags.php?taxonomy=robodesk_ticket_priority&post_type=robodesk_ticket'
     );
 
+    // FAQs list
     add_submenu_page(
-        'edit.php?post_type=robodesk_ticket',
+        'robodesk-dashboard',
         'All FAQs',
         'FAQs',
         'edit_posts',
         'edit.php?post_type=robodesk_faq'
     );
+
+    // Add FAQ
     add_submenu_page(
-        'edit.php?post_type=robodesk_ticket',
+        'robodesk-dashboard',
         'Add New FAQ',
         'Add New FAQ',
         'edit_posts',
         'post-new.php?post_type=robodesk_faq'
     );
+
+    // FAQ Categories
     add_submenu_page(
-        'edit.php?post_type=robodesk_ticket',
+        'robodesk-dashboard',
         'FAQ Categories',
         'FAQ Categories',
         'manage_categories',
         'edit-tags.php?taxonomy=robodesk_faq_category&post_type=robodesk_faq'
     );
 
+    // Notices list
     add_submenu_page(
-        'edit.php?post_type=robodesk_ticket',
+        'robodesk-dashboard',
         'All Notices',
         'All Notices',
         'edit_posts',
         'edit.php?post_type=notice'
     );
 
+    // Add Notice
     add_submenu_page(
-        'edit.php?post_type=robodesk_ticket',
+        'robodesk-dashboard',
         'Add New Notice',
         'Add New Notice',
         'edit_posts',
         'post-new.php?post_type=notice'
     );
 
+    // Fetch Emails
     add_submenu_page(
-        'edit.php?post_type=robodesk_ticket',
+        'robodesk-dashboard',
         'Fetch Tickets',
         'Fetch Tickets',
         'manage_options',
@@ -105,18 +132,29 @@ function robodesk_add_admin_menu()
         'robodesk_fetch_emails_callback'
     );
 
+    // Uncomment if needed later
+    /*
     add_submenu_page(
-        'edit.php?post_type=robodesk_ticket',
+        'robodesk-dashboard',
         'Robodesk Settings for Email',
-        'Robodesk Settings for Email',
+        'Email Settings',
         'manage_options',
         'robodesk_imap_settings',
         'robodesk_imap_settings_callback'
     );
+    */
 
-    // Hidden callback page
-    add_submenu_page(null, 'Email Callback', 'Email Callback', 'manage_options', 'email-callback', 'email_fetcher_callback');
+    // // Hidden callback page
+    // add_submenu_page(
+    //     null,
+    //     'Email Callback',
+    //     'Email Callback',
+    //     'manage_options',
+    //     'email-callback',
+    //     'email_fetcher_callback'
+    // );
 }
+
 
 function update_taxonomy_order()
 {
@@ -287,6 +325,7 @@ function robodesk_enqueue_tailwind_and_styles()
             'basic_settings' => wp_create_nonce('robodesk_basic_settings_action'),
             'fetch_emails' => wp_create_nonce('robodesk_fetch_emails_action'),
             'ticket_assignment' => wp_create_nonce('robodesk_ticket_assignment_action'),
+            'create_ticket' => wp_create_nonce('robodesk_create_ticket_action'),
         ]
     ]);
 }

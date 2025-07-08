@@ -114,7 +114,36 @@ function robodesk_register_ticket_post_type()
         'rewrite'           => array('slug' => 'ticket-priority'),
     );
 
-    register_taxonomy('robodesk_ticket_priority', array('robodesk_ticket'), $ticket_priority_args);
+    register_taxonomy('robodesk_ticket_priority', 'robodesk_ticket', $ticket_priority_args);
+
+    // Ticket Category Taxonomy
+    $ticket_category_labels = [
+        'name'              => _x('Categories', 'taxonomy general name'),
+        'singular_name'     => _x('Category', 'taxonomy singular name'),
+        'search_items'      => __('Search Categories'),
+        'all_items'         => __('All Categories'),
+        'parent_item'       => __('Parent Category'),
+        'parent_item_colon' => __('Parent Category:'),
+        'edit_item'         => __('Edit Category'),
+        'update_item'       => __('Update Category'),
+        'add_new_item'      => __('Add New Category'),
+        'new_item_name'     => __('New Category Name'),
+        'menu_name'         => __('Category'),
+    ];
+
+
+    $ticket_category_args = array(
+        'hierarchical'      => true,
+        'labels'            => $ticket_category_labels,
+        'publicly_queryable' => true,
+        'show_ui'           => true,
+        'show_admin_column' => true,
+        'query_var'         => true,
+        'sort'              => true,
+        'rewrite'           => array('slug' => 'ticket-category'),
+    );
+
+    register_taxonomy('robodesk_ticket_category', array('robodesk_ticket'), $ticket_category_args);
 }
 
 // Meta Box for Ticket Status (Unchanged)
@@ -525,7 +554,7 @@ function robodesk_handle_tickets_webhook(WP_REST_Request $request)
         $user_object =  get_user_by('id', $user_id);
         $user_name = $user_object->display_name;
         $email_address = $user_object->user_email;
-        
+
 
         if (empty($ticket_id)) {
             return new WP_Error(
@@ -555,7 +584,7 @@ function robodesk_handle_tickets_webhook(WP_REST_Request $request)
             'comment_type' => 'ticket_replies'
         ));
 
-  
+
         if ($comment_id) {
             $comment = get_comment($comment_id);
             $data = [
@@ -651,15 +680,16 @@ add_filter('use_block_editor_for_post_type', function ($use_block_editor, $post_
 //             'created_at' => $comment->comment_date,
 //         ];
 //     }
-    
+
 //     echo '<pre>';
 //     var_dump($formatted_comments);
 //     echo '</pre>';
 // });
 
 
-function robodesk_user_data_to_session_storage() {
-    ?>
+function robodesk_user_data_to_session_storage()
+{
+?>
     <script type="text/javascript">
         // Check if sessionStorage is available
         if (typeof(Storage) !== "undefined") {
@@ -668,16 +698,16 @@ function robodesk_user_data_to_session_storage() {
                 isLoggedIn: <?php echo is_user_logged_in() ? 'true' : 'false'; ?>,
                 loggedInUserId: "<?php echo is_user_logged_in() ? get_current_user_id() : ''; ?>"
             };
-            
+
             // Save to sessionStorage
             sessionStorage.setItem('wpUserData', JSON.stringify(userData));
-            
+
             // Optional: Log to console for debugging
             console.log('User data saved to sessionStorage:', userData);
         } else {
             console.warn('sessionStorage is not supported in this browser');
         }
     </script>
-    <?php
+<?php
 }
 add_action('wp_footer', 'robodesk_user_data_to_session_storage');

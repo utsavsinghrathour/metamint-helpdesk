@@ -9,7 +9,13 @@
   font-weight: 400;
   text-transform: none;
 }
-
+.robodesk-footer{
+  position: sticky;
+  bottom: 0;
+  background-color: #fff;
+  z-index: 999;
+  width: 100%;
+}
 .robodesk-footer button.active-tab svg,
 .robodesk-footer button.active-tab svg path
 {
