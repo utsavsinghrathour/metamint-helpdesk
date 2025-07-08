@@ -62,6 +62,7 @@ require_once ROBODESK_PLUGIN_PATH . 'public/includes/robodesk-custom-rest.php';
 add_action('wp_enqueue_scripts', 'robodesk_enqueue_scripts');
 function robodesk_enqueue_scripts()
 {
+    
     // Enqueue jQuery
     wp_enqueue_script('jquery');
 
@@ -135,6 +136,7 @@ function robodesk_enqueue_scripts()
             array(),
             $asset_file['version']
         );
+        
     }
 }
 add_action('wp_enqueue_scripts', 'robodesk_enqueue_scripts');
@@ -402,3 +404,22 @@ function robodesk_check_support_page()
 add_action('plugins_loaded', 'robodesk_check_support_page');
 register_activation_hook(__FILE__, 'robodesk_create_support_page');
 register_deactivation_hook(__FILE__, 'robodesk_delete_support_page');
+
+// function for theme color 
+function robodesk_enqueue_custom_styles() {
+    // Enqueue your main stylesheet first
+    wp_enqueue_style('robodesk-style', get_stylesheet_uri());
+
+    // Get the theme color from the options
+    $theme_color = get_option('robodesk_theme_color', '#0073aa'); // fallback to default
+
+    // Prepare inline CSS
+    $custom_css = "
+        :root {
+            --robodesk-theme-color: {$theme_color};
+        }
+    ";
+
+    wp_add_inline_style('robodesk-style', $custom_css);
+}
+add_action('wp_enqueue_scripts', 'robodesk_enqueue_custom_styles');
