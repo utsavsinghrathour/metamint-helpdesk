@@ -5,7 +5,9 @@ import parse from 'html-react-parser';
 import DOMPurify from 'dompurify';
 import Footer from './Footer';
 import '../styles/SingleQuestionBox.css';
+
 import defaultLogo from '../images/robodesk-logo.png';
+
 
 const faqCache = {};
 // const wpHomeUrl = window.robodeskData?.home_url || '';

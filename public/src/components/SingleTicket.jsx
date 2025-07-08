@@ -6,6 +6,7 @@ import { FiPaperclip } from 'react-icons/fi';
 import { IoClose } from 'react-icons/io5';
 import EmojiPicker from 'emoji-picker-react';
 import Logo from '../images/robodesk-logo.png';
+import defaultLogo from '../images/robodesk-logo.png';
 import '../styles/MessageTabs.css';
 import { getMessages, sendReply } from '../utils/modules';
 

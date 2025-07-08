@@ -1,7 +1,7 @@
 import "../styles/Login.css";
 import { useState } from "react";
 import { loginUser, registerUser, createTicket } from "../utils/modules";
-
+import defaultLogo from '../images/robodesk-logo.png';
 const Login = ({ activeTab, setActiveTab, setShowLogin , updateSelectedTicket}) => {
   const [formData, setFormData] = useState({ email: "", password: "" });
   const [errors, setErrors] = useState({ email: "", password: "" });
