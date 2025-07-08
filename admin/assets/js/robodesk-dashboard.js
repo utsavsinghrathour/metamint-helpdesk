@@ -92,7 +92,7 @@ document.addEventListener("DOMContentLoaded", function () {
   });
 });
 
-//basic setting delete
+//basic setting delete for the images for basic settings
 function removeImage(previewId, inputId) {
   const preview = document.getElementById(previewId);
   const input = document.getElementById(inputId);
