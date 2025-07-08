@@ -388,17 +388,17 @@ input::placeholder{
   line-height: 20px;
 }
 .robodesk-toggle-btn{
-  aspect-ratio: 44 / 44;
-  padding: 12px 14px;
-  max-width: 44px;
-  max-height: 44px;
-  display: flex;
   align-items: center;
-  justify-content: center;
+    aspect-ratio: 50 / 50;
+    display: flex;
+    justify-content: center;
+    max-height: 50px;
+    max-width: 50px;
+    padding: 10px;
 }
 .robodesk-toggle-btn img{
-  height: 24px;
-  width: 24px;
+  height: 40px;
+  width: 40px;
 }
 .rd-popup-top-icon-container img{
   width: 100px;
