@@ -775,10 +775,24 @@ function robodesk_dashboard_callback()
                                     <div>
                                         <label class="block text-sm font-medium text-gray-700 mb-1">Assignee</label>
                                         <select onchange="updateTicketAssignee(currentTicket.id, this.value)" class="styled-select block w-full border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 rounded-md" id="ticket-assignee-select">
-                                            <option value="Support Team">Support Team</option>
-                                            <option value="Tech Support">Tech Support</option>
-                                            <option value="Design Team">Design Team</option>
-                                            <option value="Sales Team">Sales Team</option>
+                                            <?php
+                                            $default_agent = get_option('robodesk_default_agent');
+
+                                            // Get users by role with display_name only
+                                            $agents = get_users([
+                                                'role__in' => ['robodesk_support_staff', 'robodesk_support_manager', 'author', 'editor', 'administrator'],
+                                                'fields'   => ['display_name'],
+                                            ]);
+
+                                            // Convert to simple array of display names
+                                            $agent_names = wp_list_pluck($agents, 'display_name');
+                                            ?>
+
+                                            <?php foreach ($agent_names as $agent): ?>
+                                                <option value="<?php echo esc_attr($agent); ?>" <?php selected($default_agent, $agent); ?>>
+                                                    <?php echo esc_html($agent); ?>
+                                                </option>
+                                            <?php endforeach; ?>
                                         </select>
                                     </div>
                                 </div>
