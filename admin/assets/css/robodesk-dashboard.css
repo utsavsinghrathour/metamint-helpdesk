@@ -413,3 +413,7 @@
 .status-closed-indicator {
   background-color: #16a34a;
 }
+#popover-top-icon-preview{
+  height: 50px;
+  width: 50px;
+}
