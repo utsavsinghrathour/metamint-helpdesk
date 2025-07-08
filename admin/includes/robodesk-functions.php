@@ -443,16 +443,6 @@ function robodesk_save_ticket_assignment_settings()
 }
 
 
-// //for fetching dashboard
-// add_action('wp_head', function () {
-//     $post_id = 7842; // Replace with your actual post ID
-//     $taxonomy = 'robodesk_ticket_origin';
-//     // Get the terms
-//     $terms = get_the_terms($post_id, $taxonomy);
-//     var_dump($terms);
-// });
-
-
 // creating a ticket
 add_action('wp_ajax_robodesk_create_ticket', 'robodesk_create_ticket');
 function robodesk_create_ticket()
@@ -471,7 +461,7 @@ function robodesk_create_ticket()
     $ticket_category = isset($_POST['ticket_category']) ? sanitize_text_field($_POST['ticket_category']) : '';
     $ticket_assignee = isset($_POST['ticket_assignee']) ? sanitize_text_field($_POST['ticket_assignee']) : '';
     $ticket_description = isset($_POST['ticket_description']) ? sanitize_textarea_field($_POST['ticket_description']) : '';
-    $ticket_source = isset($_POST['ticket_source']) ? sanitize_text_field($_POST['ticket_source']) : 'Form';
+    // $ticket_source = isset($_POST['ticket_source']) ? sanitize_text_field($_POST['ticket_source']) : 'Form';
 
     // Validate required fields
     if (
@@ -547,6 +537,7 @@ function robodesk_create_ticket()
             '_robodesk_ticket_status'  => 'open',
             'ticket_category'          => $ticket_category,
             'ticket_assignee'          => $ticket_assignee,
+            'robodesk_ticket_origin'   => 'Admin-Form', // Default source
         ],
     ]);
 
@@ -572,21 +563,6 @@ function robodesk_create_ticket()
         error_log('Failed to create priority term: ' . $priority_term->get_error_message());
     }
 
-    // Assign source to robodesk_ticket_origin taxonomy
-    $source_term = term_exists($ticket_source, 'robodesk_ticket_origin');
-    if (!$source_term) {
-        $source_term = wp_insert_term($ticket_source, 'robodesk_ticket_origin');
-        error_log('Created new source term: ' . $ticket_source);
-    }
-    if (!is_wp_error($source_term)) {
-        $source_term_id = is_array($source_term) ? $source_term['term_id'] : $source_term;
-        $result = wp_set_post_terms($ticket_id, [$source_term_id], 'robodesk_ticket_origin', false);
-        if (is_wp_error($result)) {
-            error_log('Failed to set source term: ' . $result->get_error_message());
-        }
-    } else {
-        error_log('Failed to create source term: ' . $source_term->get_error_message());
-    }
 
     wp_send_json_success(['message' => 'Ticket created successfully', 'ticket_id' => $ticket_id]);
     wp_die();
