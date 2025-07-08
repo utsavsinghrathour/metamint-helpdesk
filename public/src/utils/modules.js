@@ -148,12 +148,10 @@ console.log('From modules', payload);
 }
 
 //register user
-export async function registerUser({ username, email, password }) {
+export async function registerUser(email) {
   try {
     const payload = {
-      username: username,
       email: email,
-      password: password
     };
     const response = await fetch("/wp-json/robodesk/v1/signup", {
       method: "POST",
@@ -172,3 +170,29 @@ export async function registerUser({ username, email, password }) {
     throw error;
   }
 }
+
+
+//Login user 
+export async function loginUser( email, password ) {
+  try {
+    const payload = {
+      email: email,
+      password: password
+    };
+    const response = await fetch("/wp-json/robodesk/v1/login", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(payload),
+    });
+    const result = await response.json();
+    if (!response.ok) {
+      throw new Error(result.message || "Failed login");
+    }
+    return result;
+  } catch (error) {
+    console.error("Error sending reply:", error.message);
+    throw error;
+  }
+}   

@@ -341,3 +341,109 @@ function robodesk_add_ticket_note_callback()
 }
 
 
+add_action('wp_ajax_robodesk_login_action', 'robodesk_login_action_callback');
+add_action('wp_ajax_nopriv_robodesk_login_action', 'robodesk_login_action_callback');
+function robodesk_login_action_callback() {
+
+    check_ajax_referer( 'robodesk-nonce', 'security' );
+
+    $email = sanitize_email( $_POST['email'] );
+    if ( empty( $email ) || ! is_email( $email ) ) {
+        wp_send_json_error( [
+            'message' => __( 'Invalid email format.', 'robodesk' )
+        ] );
+    }
+
+    $user_exists = email_exists( $email );
+    if ( $user_exists ) {
+        wp_send_json_success( [
+            'exists' => true,
+            'showPassword' => true
+        ] );
+    }
+
+    $password = wp_generate_password( 12, true );
+    $username = sanitize_user( strstr( $email, '@', true ), true );
+    //this is not checking if the user exists
+    $user_id = wp_create_user( $username, $password, $email );
+    
+    if ( !is_wp_error( $user_id ) ) {
+    
+        wp_send_json_success( [
+            'message' => __( 'Account created! Check your email for your password.', 'robodesk' ),
+            'showPassword' => false
+        ] );
+
+    }
+    wp_send_json_error( [
+        'message' => sprintf(
+            __( 'Failed to create account: %s', 'robodesk' ),
+            $user_id->get_error_message()
+        )
+    ] );
+
+}
+
+
+add_action('wp_ajax_robodesk_check_email', 'robodesk_check_email');
+add_action('wp_ajax_nopriv_robodesk_check_email', 'robodesk_check_email');
+function robodesk_check_email(){
+    $email = sanitize_email( $_POST['email'] );
+    if ( empty( $email ) || ! is_email( $email ) ) {
+        wp_send_json_error( [
+             'exists' => false,
+            'message' => __( 'Invalid email format.', 'robodesk' )
+        ] );
+    }                    
+    $user_exists = email_exists( $email );
+    if ( $user_exists ) {
+        wp_send_json_success( [
+            'exists' => true,
+        ] );
+    }
+    
+    wp_send_json_error( [
+        'exists' => false,
+    ] );        
+}
+
+
+//For registering user
+add_action('wp_ajax_robodesk_register_user', 'robodesk_register_user');
+add_action('wp_ajax_nopriv_robodesk_register_user', 'robodesk_register_user');  
+function robodesk_register_user(){
+    $email = sanitize_email( $_POST['email'] );
+    if ( empty( $email ) || ! is_email( $email ) ) {
+        wp_send_json_error( [
+            'message' => __( 'Invalid email .', 'robodesk' )
+        ] );
+    }
+
+    $password = wp_generate_password( 12, true );
+    $username = sanitize_user( strstr( $email, '@', true ), true );
+    $user_id = wp_create_user( $username, $password, $email );
+    
+    if ( !is_wp_error( $user_id ) ) {
+    
+        wp_send_json_success( [
+            'message' => __( 'Account created! Check your email for your password.', 'robodesk' ),
+            'userId' => $user_id,
+            'loggedIn' => true
+        ] );
+
+    }
+    wp_send_json_error( [
+        'message' => sprintf(
+            __( 'Failed to create account: %s', 'robodesk' ),
+            $user_id->get_error_message()
+        )
+    ] );
+        
+}
+
+
+// 1>>Check if email address exists
+// 2>>If email address exists, display the password field
+// 3>>If email address does not exist, create account and send password to email address    
+
+// function robodesk_

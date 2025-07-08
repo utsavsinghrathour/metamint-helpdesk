@@ -1,0 +1,76 @@
+.single-question-box-field{
+    padding: 12px 20px;
+}
+.single-question-box-field .rd-body-text{
+    margin-top: 3px;
+}
+
+/* Existing styles for list view (assumed to exist) */
+.rd-faq-item {
+    display: flex;
+    align-items: flex-start;
+  }
+  
+  .single-question-box-field {
+    padding: 15px;
+    border-radius: 8px;
+  }
+  
+  .rd-text-blue {
+    color: #004AFF;
+  }
+  
+  .rd-title-text {
+    font-size: 18px;
+    font-weight: 600;
+  }
+  
+  .rd-body-text {
+    font-size: 14px;
+    color: #333;
+  }
+  
+  /* New styles for single question view (identical to FAQDetail) */
+  .rd-single-question-view {
+    max-width: 800px;
+    margin: 0 auto;
+  }
+  
+  .rd-back-button {
+    color: #004AFF;
+  }
+  
+  .rd-expand-button {
+    display: flex;
+    align-items: center;
+  }
+  
+  .rd-expand-icon {
+    transition: opacity 0.3s ease;
+  }
+  
+  .rd-expand-icon.hidden {
+    opacity: 0;
+    position: absolute;
+  }
+  
+  .rd-expand-icon.visible {
+    opacity: 1;
+  }
+  
+  .rd-actions {
+    gap: 20px;
+  }
+  
+  .rd-like,
+  .rd-dislike {
+    cursor: pointer;
+  }
+  
+  .rd-like.liked svg path {
+    fill: #004AFF;
+  }
+    
+  .rd-border-bottom-light {
+    border-bottom: 1px solid #e0e0e0;
+  }
