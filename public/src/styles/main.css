@@ -285,7 +285,8 @@ padding-right: 18px;
   cursor: pointer;
 }
 .rd-bg-blue{
-  background-color: var(--primary-blue);
+  /* background-color: var(--primary-blue); */
+  background-color: var(--robodesk-theme-color);
 }
 .rd-border-blue{
   border: 1px solid var(--primary-blue);
