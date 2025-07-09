@@ -949,7 +949,7 @@ jQuery(document).ready(function ($) {
   });
 });
 
-// for configuring ticket assignments (fetch interval and default agent)
+// for configuring ticket assignments (fetch interval and default agent) settings> fetch tickets
 jQuery(document).ready(function ($) {
   // Handle form submission for ticket assignment settings
   $(document).on("click", "#save-ticket-assignment-settings", function () {
