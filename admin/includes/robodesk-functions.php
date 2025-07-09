@@ -536,7 +536,7 @@ function robodesk_create_ticket()
         'meta_input'   => [
             '_robodesk_customer_email' => $customer_email,
             '_robodesk_ticket_status'  => 'open',
-            'ticket_category'          => $ticket_category,
+            'robodesk_ticket_category'          => $ticket_category,
             'robodesk_default_agent'          => $ticket_assignee,
             'robodesk_ticket_origin'   => 'Admin-Form', // Default source
         ],
