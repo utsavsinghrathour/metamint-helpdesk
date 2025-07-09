@@ -252,8 +252,7 @@ function robodesk_dashboard_callback()
                             } else {
                                 $replies = [];
                             }
-                            $taxonomy = 'robodesk_ticket_origin';
-                            $terms = get_the_terms($ticket_id, $taxonomy);
+
                             $tickets[] = [
                                 'id' => $ticket_id,
                                 'title' => get_the_title(),
@@ -383,11 +382,7 @@ function robodesk_dashboard_callback()
                                             <?php echo esc_html(format_date($ticket['updated'])); ?>
                                         </td>
                                     </tr>
-                                    <!-- ADDDED -->
-                                    <script>
-                                        const tickets = <?php echo wp_json_encode($tickets); ?>;
-                                    </script>
-                                    <!-- ADDED -->
+
                                 <?php endforeach; ?>
                             </tbody>
                         </table>
@@ -909,9 +904,9 @@ function robodesk_dashboard_callback()
                                         <label for="admin_email" class="block text-sm font-medium text-gray-700">Admin Email</label>
                                         <input type="email" name="admin_email" id="admin_email" value="<?php echo esc_attr(get_option('robodesk_admin_email', 'admin@example.com')); ?>" class="styled-input mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
                                     </div>
-                                    
 
-                                    
+
+
                                     <div>
                                         <label for="timezone" class="block text-sm font-medium text-gray-700">Timezone</label>
                                         <select name="timezone" id="timezone" class="styled-select mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
@@ -943,7 +938,7 @@ function robodesk_dashboard_callback()
                                             </div>
                                         </div>
                                     </div>
-                                    
+
                                     <div>
                                         <label for="popover_icon" class="block text-sm font-medium text-gray-700">Pop over Icon/Image</label>
                                         <input type="file" accept="image/*" name="popover_icon" id="popover_icon" class="styled-input mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
