@@ -11,7 +11,7 @@ import { useCachedFetch } from '../utils/modules';
 
 // const wpHomeUrl = window.robodeskData?.home_url || '';
 
-const normalizeImagePaths = (html, baseUrl = wpHomeUrl) => {
+const normalizeImagePaths = (html) => {
   return html.replace(/(<img[^>]+src=['"])(\/[^'"]+)(['"][^>]*>)/gi, (match, prefix, path, suffix) => {
     if (path.startsWith('/')) {
       return `${prefix}${baseUrl}${path}${suffix}`;
@@ -39,6 +39,7 @@ const NoticeItem = memo(({ notice, onSelect }) => {
     return parse(notice.excerpt);
   }, [notice.excerpt]);
 
+    console.log(notice);
   return (
     <div
       className="rd-notice-item rd-flex rd-gap-15 rd-border-light single-notice-box-field rd-border-radius-md rd-faq-item"
@@ -61,11 +62,11 @@ const NoticeItem = memo(({ notice, onSelect }) => {
   );
 });
 
-const SingleNoticeView = memo(({ notice, onBack, isExpanded, setIsExpanded }) => {
+const SingleNoticeView = memo(({ notice, onBack, isExpanded, setIsExpanded , logo}) => {
   const [content, setContent] = useState(null);
 
   useEffect(() => {
-    // console.log('Our notice',notice);
+    console.log('Our notice',notice);
     const fetchContent = () => {
       try {
         // const cacheKey = `notice_content_${notice.id}`;
@@ -205,125 +206,6 @@ const SingleNoticeView = memo(({ notice, onBack, isExpanded, setIsExpanded }) =>
   );
 });
 
-// const NoticeTabs = ({
-//   setActiveTab,
-//   setIsOpen,
-//   isExpanded,
-//   setIsExpanded,
-//   activeTab,
-//   selectedNotice: initialSelectedNotice,
-//   setShowActiveFeatured,
-// }) => {
-//   const [selectedNotice, setSelectedNotice] = useState(initialSelectedNotice);
-//   const [showHeaderFooter, setShowHeaderFooter] = useState(true);
-//   const [notices, setNotices] = useState([]);
-//   const [isLoading, setIsLoading] = useState(true);
-//   const [error, setError] = useState(null);
-
-//   const { data, err, loading } = useCachedFetch('/wp-json/wp/v2/notice?_fields=id,title.rendered,excerpt.rendered,content.rendered');
-
-//   useEffect(() => {
-//     setSelectedNotice(initialSelectedNotice);
-//   }, [initialSelectedNotice]);
-
-//   useEffect(() => {
-//     const fetchNotices = async () => {
-//       try {
-//         setIsLoading(true);
-//         const cacheKey = 'notices';
-//         const cachedNotices = localStorage.getItem(cacheKey);
-//         const cacheTime = localStorage.getItem('notices_cache_time');
-//         if (cachedNotices && cacheTime && Date.now() - cacheTime < 24 * 60 * 60 * 1000) {
-//           setNotices(JSON.parse(cachedNotices));
-//           setIsLoading(false);
-//           return;
-//         }
-
-//         const response = await fetch(
-//           `/wp-json/wp/v2/notice?_fields=id,title.rendered,excerpt.rendered,content.rendered`
-//         );
-//         if (!response.ok) throw new Error('Failed to fetch notices');
-//         const data = await response.json();
-//         console.log('Notices Data', data);
-//         const formattedNotices = data.map((notice) => ({
-//           id: notice.id,
-//           title: notice.title.rendered,
-//           content: notice.content.rendered,
-//           excerpt: DOMPurify.sanitize(notice.excerpt.rendered, {
-//             ADD_TAGS: ['p', 'strong', 'em'],
-//             ADD_ATTR: [],
-//           }),
-
-//         }));
-
-//         setNotices(formattedNotices);
-//         localStorage.setItem(cacheKey, JSON.stringify(formattedNotices));
-//         localStorage.setItem('notices_cache_time', Date.now());
-//         setIsLoading(false);
-//       } catch (err) {
-//         setError(err.message);
-//         setIsLoading(false);
-//       }
-//     };
-
-//     fetchNotices();
-//   }, []);
-
-//   useEffect(() => {
-//     setShowHeaderFooter(!selectedNotice);
-//   }, [selectedNotice]);
-
-//   const handleBackClick = () => {
-//     setSelectedNotice(null);
-//     setIsExpanded(false);
-//   };
-
-//   return (
-//     <ErrorBoundary>
-//       <div className="rd-flex rd-flex-col rd-h-full">
-//         {error ? (
-//           <p className="rd-text-red rd-body-text rd-text-center">Error: {error}</p>
-//         ) : selectedNotice ? (
-//           <SingleNoticeView
-//             notice={selectedNotice}
-//             onBack={handleBackClick}
-//             isExpanded={isExpanded}
-//             setIsExpanded={setIsExpanded}
-//           />
-//         ) : (
-//           <>
-//             <div className="rd-main-content">
-//               {showHeaderFooter && (
-//                 <>
-//                   <Header onClose={() => setIsOpen(false)} />
-//                   <div className="rd-text-center rd-px-20 rd-flex rd-flex-col rd-gap-5 rd-mb-20 notice-tab-title home-tab-title">
-//                     <h3 className="heading-3">Notices</h3>
-//                     <h5 className="sub-text">Stay updated with our latest announcements.</h5>
-//                   </div>
-//                 </>
-//               )}
-//               <div className="rd-px-18 rd-mt-20 rd-mb-15 rd-overflow-h-320 notice-tab-content">
-//                 <div className="rd-flex rd-flex-col rd-gap-20 featured-faq">
-//                   {isLoading ? (
-//                     <p className="rd-body-text rd-text-center">Loading notices...</p>
-//                   ) : notices.length === 0 ? (
-//                     <p className="rd-body-text">No notices found.</p>
-//                   ) : (
-//                     notices.map((notice) => (
-//                       <NoticeItem key={notice.id} notice={notice} onSelect={setSelectedNotice} />
-//                     ))
-//                   )}
-//                 </div>
-//               </div>
-//             </div>
-//             {showHeaderFooter && <Footer activeTab={1} setActiveTab={setActiveTab} />}
-//           </>
-//         )}
-//       </div>
-//     </ErrorBoundary>
-//   );
-// };
-
 const NoticeTabs = ({
   setActiveTab,
   setIsOpen,
@@ -387,6 +269,7 @@ const NoticeTabs = ({
             onBack={handleBackClick}
             isExpanded={isExpanded}
             setIsExpanded={setIsExpanded}
+            logo={logo}
           />
         ) : (
           <>
@@ -407,7 +290,7 @@ const NoticeTabs = ({
                   ) : notices.length === 0 ? (
                     <p className="rd-body-text">No notices found.</p>
                   ) : (
-                    notices.map((notice) => <NoticeItem key={notice.id} notice={notice} onSelect={setSelectedNotice} />)
+                    notices.map((notice) => <NoticeItem key={notice.id} notice={notice} onSelect={setSelectedNotice}  />)
                   )}
                 </div>
               </div>

@@ -93,13 +93,12 @@ const SingleTicket = ({ ticket, onBack, loggedInUserId }) => {
       setPreviewImage(null);
 
       try {
-        // Send the message to the server
+ 
         const result = await sendReply(ticket.id, loggedInUserId, message);
 
         if (!result.data || !result.data.content) {
           throw new Error('Invalid response from server: missing content');
         }
-
         const newMessage = {
           id: result.data.id || tempMessage.id,
           text: typeof result.data.content === 'string' ? result.data.content.replace(/<[^>]+>/g, '') : '',
