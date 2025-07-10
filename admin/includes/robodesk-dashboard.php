@@ -800,6 +800,33 @@ function robodesk_dashboard_callback()
                                 <h4 class="font-medium text-gray-900 mb-3">Ticket Details</h4>
                                 <div id="ticket-meta-info" class="space-y-2">
                                     <!-- Ticket meta info will be populated by JavaScript -->
+                                    <!-- ticket-meta-info  ticket author (full name if not available user display_name)  , author image ,: ID , Ticket source(origin) , Ticket category -->
+                                    <?php
+                                    $currentTicket = get_post($ticket_id);
+                                    $auth_id = $currentTicket->post_author;
+                                    $first_name = get_the_author_meta('first_name', $auth_id);
+                                    $last_name = get_the_author_meta('last_name', $auth_id);
+                                    if (!empty($first_name) || !empty($last_name)) {
+                                        $ticket_author = trim($first_name . ' ' . $last_name);
+                                    } else {
+                                        $ticket_author = get_the_author_meta('display_name', $auth_id);
+                                    }
+                                    $ticket_author_image = get_avatar_url($auth_id, ['size' => 96]);
+                                    $ticket_category = get_post_meta($currentTicket->ID, 'ticket_category', true);
+                                    $ticket_origin = get_post_meta($ticket_id, 'robodesk_ticket_origin', true) ?: 'N/A';
+                                    ?>
+                                    <div>
+                                        <strong></strong> <img id="author-image" src="<?php echo esc_url($ticket_author_image); ?>" alt="Author Image" class="w-8 h-8 rounded-full">
+                                        <br>
+                                        <strong>ID:</strong> <span id="ticket-id"><?php echo esc_html($currentTicket->ID); ?></span>
+                                        <br>
+                                        <strong>Author:</strong> <span id="ticket-author"><?php echo esc_html($ticket_author); ?></span>
+                                        <br>
+
+                                        <strong>Origin:</strong> <span id="ticket-source"><?php echo esc_html($ticket_origin); ?></span>
+                                        <br>
+                                        <strong>Category:</strong> <span id="ticket-category"><?php echo esc_html($ticket_category); ?></span>
+                                    </div>
                                 </div>
                             </div>
                         </div>
