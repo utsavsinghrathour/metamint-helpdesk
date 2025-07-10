@@ -823,6 +823,7 @@ function robodesk_dashboard_callback()
                                 <h4 class="font-medium text-gray-900 mb-3">Ticket Details</h4>
                                 <div id="ticket-meta-info" class="space-y-2">
                                     <!-- Ticket meta info will be populated by JavaScript -->
+                                    <!-- have been applied from js -->
 
                                 </div>
                             </div>
