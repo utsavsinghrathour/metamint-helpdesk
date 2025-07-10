@@ -32,14 +32,14 @@ function robodesk_add_admin_menu()
         'robodesk_dashboard_callback'
     );
 
-    // // All Tickets (linking to CPT)
-    // add_submenu_page(
-    //     'robodesk-dashboard',
-    //     'All Tickets',
-    //     'All Tickets',
-    //     'edit_posts',
-    //     'edit.php?post_type=robodesk_ticket'
-    // );
+    // All Tickets (linking to CPT)
+    add_submenu_page(
+        'robodesk-dashboard',
+        'All Tickets',
+        'All Tickets',
+        'edit_posts',
+        'edit.php?post_type=robodesk_ticket'
+    );
 
     // // Add New Ticket
     // add_submenu_page(
