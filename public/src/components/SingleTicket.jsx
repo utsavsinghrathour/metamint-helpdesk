@@ -44,6 +44,8 @@ const SingleTicket = ({ ticket, onBack, loggedInUserId }) => {
         created_at: comment.created_at,
         isAdmin: comment.author_id !== ticket.author_id,
       }));
+      
+      
 
       setChatMessages(messages);
       setLoading(false);
@@ -80,10 +82,10 @@ const SingleTicket = ({ ticket, onBack, loggedInUserId }) => {
         id: `temp-${Date.now()}`,
         text: message || '',
         sender: 'me',
-        senderName: 'Me', // You can fetch the actual user name if needed
-        image: '/default-avatar.jpg', // Use logged-in user's avatar if available
+        senderName: 'Me',
+        image: '/default-avatar.jpg', 
         created_at: new Date().toISOString(),
-        isSending: true, // Flag to show "sending" status
+        isSending: true, 
         ...(previewImage && { imageUrl: previewImage }),
       };
 
@@ -205,6 +207,8 @@ const SingleTicket = ({ ticket, onBack, loggedInUserId }) => {
           <p className="rd-text-center rd-body-text">No messages yet.</p>
         ) : (
           chatMessages.map((msg, index) => {
+          
+          console.log(msg.sender, msg.senderName);
             const prevMsg = index > 0 ? chatMessages[index - 1] : null;
             const isSameSender = prevMsg && prevMsg.sender === msg.sender;
             const marginBottom = isSameSender ? '4px' : '12px';
