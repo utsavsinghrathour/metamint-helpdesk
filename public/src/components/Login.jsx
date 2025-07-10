@@ -211,7 +211,10 @@ const Login = ({ activeTab, setActiveTab, setShowLogin , updateSelectedTicket}) 
             type="button"
             className="rd-bg-transparent rd-text-white rd-p-0 rd-m-0 back-button rd-flex rd-items-center"
             aria-label="Go back to home"
-            onClick={() => setShowLogin(false)}
+           onClick={() => {
+              setShowLogin(false);
+              setActiveTab(1);
+            }}
           >
             <svg
               xmlns="http://www.w3.org/2000/svg”"
