@@ -29,7 +29,7 @@ function robodesk_dashboard_callback()
     ob_start();
 ?>
 
-    <body class="min-h-screen bg-gray-100">
+    <div class="min-h-screen bg-gray-100">
         <!-- Navigation -->
         <nav class="bg-white shadow-lg border-b border-gray-200">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -1278,9 +1278,7 @@ function robodesk_dashboard_callback()
                 <span id="toast-message"></span>
             </div>
         </div>
-
-        <!-- <script src="script.js"></script> -->
-    </body>
+    </div>
 
     </html>
 
