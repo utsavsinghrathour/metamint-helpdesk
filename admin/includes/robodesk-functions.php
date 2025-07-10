@@ -536,7 +536,7 @@ function robodesk_create_ticket()
         'meta_input'   => [
             '_robodesk_customer_email' => $customer_email,
             '_robodesk_ticket_status'  => 'open',
-            'robodesk_ticket_category'          => $ticket_category,
+            // 'robodesk_ticket_category'          => $ticket_category,
             'robodesk_default_agent'          => $ticket_assignee,
             'robodesk_ticket_origin'   => 'Admin-Form', // Default source
         ],
@@ -564,10 +564,21 @@ function robodesk_create_ticket()
         error_log('Failed to create priority term: ' . $priority_term->get_error_message());
     }
 
+    // Assign category to robodesk_ticket_category taxonomy
     $ticket_category_term = term_exists($ticket_category, 'robodesk_ticket_category');
+
     if (!$ticket_category_term) {
         $ticket_category_term = wp_insert_term($ticket_category, 'robodesk_ticket_category');
         error_log('Created new category term: ' . $ticket_category);
+    }
+    if (!is_wp_error($ticket_category_term)) {
+        $ticket_category_term_id = is_array($ticket_category_term) ? $ticket_category_term['term_id'] : $ticket_category_term;
+        $result = wp_set_post_terms($ticket_id, [$ticket_category_term_id], 'robodesk_ticket_category', false);
+        if (is_wp_error($result)) {
+            error_log('Failed to set category term: ' . $result->get_error_message());
+        }
+    } else {
+        error_log('Failed to create category term: ' . $ticket_category_term->get_error_message());
     }
 
 
