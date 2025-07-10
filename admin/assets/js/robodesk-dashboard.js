@@ -521,62 +521,62 @@ function updateTicketAssignee(ticketId, newAssignee) {
   }
 }
 
-// function addReply() {
-//   const replyText = document.getElementById("new-reply").value.trim();
-//   if (!replyText || !currentTicket) return;
+function addReply() {
+  const replyText = document.getElementById("new-reply").value.trim();
+  if (!replyText || !currentTicket) return;
 
-//   const newReply = {
-//     id: Date.now(),
-//     author: "Support Agent",
-//     message: replyText,
-//     timestamp: new Date().toISOString(),
-//     type: "agent",
-//   };
+  const newReply = {
+    id: Date.now(),
+    author: "Support Agent",
+    message: replyText,
+    timestamp: new Date().toISOString(),
+    type: "agent",
+  };
 
-//   if (!currentTicket.replies) currentTicket.replies = [];
-//   currentTicket.replies.push(newReply);
-//   currentTicket.updated = new Date().toISOString();
+  if (!currentTicket.replies) currentTicket.replies = [];
+  currentTicket.replies.push(newReply);
+  currentTicket.updated = new Date().toISOString();
 
-//   // Update the ticket in the main array
-//   const ticketIndex = tickets.findIndex((t) => t.id === currentTicket.id);
-//   if (ticketIndex !== -1) {
-//     tickets[ticketIndex] = currentTicket;
-//   }
+  // Update the ticket in the main array
+  const ticketIndex = tickets.findIndex((t) => t.id === currentTicket.id);
+  if (ticketIndex !== -1) {
+    tickets[ticketIndex] = currentTicket;
+  }
 
-//   document.getElementById("new-reply").value = "";
-//   document.getElementById("replies-count").textContent =
-//     currentTicket.replies.length;
-//   loadReplies();
-//   showToast("Reply added successfully");
-// }
+  document.getElementById("new-reply").value = "";
+  document.getElementById("replies-count").textContent =
+    currentTicket.replies.length;
+  loadReplies();
+  showToast("Reply added successfully");
+}
 
-// function addNote() {
-//   const noteText = document.getElementById("new-note").value.trim();
-//   if (!noteText || !currentTicket) return;
+function addNote() {
+  const noteText = document.getElementById("new-note").value.trim();
+  if (!noteText || !currentTicket) return;
 
-//   const newNote = {
-//     id: Date.now(),
-//     author: "Support Agent",
-//     note: noteText,
-//     timestamp: new Date().toISOString(),
-//   };
+  const newNote = {
+    id: Date.now(),
+    author: "Support Agent",
+    note: noteText,
+    timestamp: new Date().toISOString(),
+  };
 
-//   if (!currentTicket.notes) currentTicket.notes = [];
-//   currentTicket.notes.push(newNote);
-//   currentTicket.updated = new Date().toISOString();
+  if (!currentTicket.notes) currentTicket.notes = [];
+  currentTicket.notes.push(newNote);
+  currentTicket.updated = new Date().toISOString();
 
-//   // Update the ticket in the main array
-//   const ticketIndex = tickets.findIndex((t) => t.id === currentTicket.id);
-//   if (ticketIndex !== -1) {
-//     tickets[ticketIndex] = currentTicket;
-//   }
+  // Update the ticket in the main array
+  const ticketIndex = tickets.findIndex((t) => t.id === currentTicket.id);
+  if (ticketIndex !== -1) {
+    tickets[ticketIndex] = currentTicket;
+  }
 
-//   document.getElementById("new-note").value = "";
-//   document.getElementById("notes-count").textContent =
-//     currentTicket.notes.length;
-//   loadNotes();
-//   showToast("Note added successfully");
-// }
+  document.getElementById("new-note").value = "";
+  document.getElementById("notes-count").textContent =
+    currentTicket.notes.length;
+  loadNotes();
+  showToast("Note added successfully");
+}
 
 // Settings functions
 function showSettingsTab(tabName) {

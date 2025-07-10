@@ -284,7 +284,7 @@ function robodesk_enqueue_tailwind_and_styles()
     // Load Tailwind CDN browser runtime
     wp_enqueue_script(
         'tailwind-browser-cdn',
-        'https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4',
+        'https://cdn.tailwindcss.com',
         [], // No dependencies
         null,
         false // Load in header
