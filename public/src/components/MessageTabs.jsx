@@ -8,14 +8,12 @@ import { RiPencilFill } from "react-icons/ri";
 import Footer from "./Footer";
 import Login from "./Login";
 import Preloader from "../images/preloader.svg";
-import axios from "axios"; // For making API requests
-
+import { getAllTickets } from "../utils/modules";
 
 
 const SingleTicket = React.lazy(() => import("./SingleTicket"));
 
 const TicketItem = ({ ticket, onSelect }) => {
-
   return (
     <div
       className="rd-hover single-rd-ticket rd-flex rd-align-center rd-gap-8 rd-border-bottom-light rd-cursor-pointer single-rd-active-ticket"
@@ -67,7 +65,7 @@ const MessageTabs = ({
   setIsExpanded,
   activeTab,
   selectedNewTicket,
-  updateSelectedTicket
+  updateSelectedTicket,
 }) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedTicket, setSelectedTicket] = useState(selectedNewTicket);
@@ -78,124 +76,71 @@ const MessageTabs = ({
   const [isLoggedIn, setIsLoggedIn] = useState(false); // Fixed naming consistency
   const [loggedInuserId, setloggedInuserId] = useState(null);
 
-  const handleLogin = (loginStatus) => {
-  
-    setIsLoggedIn(loginStatus);
-    if (loginStatus) {
-   
-      fetchTickets();
-      
-    }
-  };
 const fetchTickets = async () => {
-  if (!loggedInuserId) return; // Exit early if user is not logged in
-    // console.log('We are here ', loggedInuserData);
+  if (!loggedInuserId) {
+    console.warn("No logged-in user ID provided");
+    return;
+  }
   try {
     setLoading(true);
-    const response = await axios.get("/wp-json/wp/v2/robodesk_ticket", {
-      params: {
-        per_page: 100,
-        author: loggedInuserId,  // 👈 Fetch tickets by the user ID
-        _embed: "wp:comment",      // Embed comments only
-      },
-    });
-    
+    const tickets = await getAllTickets(loggedInuserId);
+    const mappedTickets = tickets.map((ticket) => ({
+      id: ticket.id,
+      ticketNumber: ticket.ticket_number,
+      title: ticket.ticket_title,
+      source: ticket.ticket_origin,
+      timeAgo: ticket.ticket_time_ago,
+      authorImage: ticket.ticket_author_image ?? Author1,
+      status: ticket.ticket_status ?? 'New',
+      priority: ticket.ticket_priority ?? 'Medium',
+      author: ticket.ticket_author,
+    }));
 
-    const mappedTickets = response.data.map((post) => {
-    
-  
-      const priorityTerm =
-        post._embedded?.["wp:term"]?.find((tax) =>
-          tax.some((t) => t.taxonomy === "robodesk_ticket_priority")
-        )?.[0]?.name ||
-        post.robodesk_ticket_priority?.[0] ||
-        "Medium";
-
-      const sourceTerm =
-        post.robodesk_ticket_origin && post.robodesk_ticket_origin.length > 0
-          ? post.robodesk_ticket_origin[0]
-          : "Unknown";
-
-      const messages =
-        post._embedded?.["wp:comment"]
-          ?.filter((comment) => comment.type === "ticket_replies")
-          ?.map((comment) => ({
-            id: comment.id,
-            text: comment.content.rendered.replace(/<[^>]+>/g, ""),
-            sender: comment.author === 0 ? "me" : "other",
-            image: comment.author === 0 ? Author1 : Author2,
-          })) || [];
-
-      const postDate = new Date(post.date);
-      const now = new Date();
-      const diffInSeconds = Math.floor((now - postDate) / 1000);
-      let timeAgo = "Just now";
-      if (diffInSeconds >= 60 * 60 * 24 * 7) {
-        timeAgo = `${Math.floor(diffInSeconds / (60 * 60 * 24 * 7))}w ago`;
-      } else if (diffInSeconds >= 60 * 60 * 24) {
-        timeAgo = `${Math.floor(diffInSeconds / (60 * 60 * 24))}d ago`;
-      } else if (diffInSeconds >= 60 * 60) {
-        timeAgo = `${Math.floor(diffInSeconds / (60 * 60))}h ago`;
-      } else if (diffInSeconds >= 60) {
-        timeAgo = `${Math.floor(diffInSeconds / 60)}m ago`;
-      }
-
-      const status = post.ticket_status || "new";
-
-      return {
-        id: post.id,
-        ticketNumber:
-          post.ticket_number || `TCKT-${String(post.id).padStart(3, "0")}`,
-        title: post.title.rendered,
-        source: sourceTerm,
-        timeAgo,
-        authorImage:post.robodesk_ticket_author_image,
-        status,
-        priority: priorityTerm,
-        messages,
-      };
-    });
-    // console.log('THe final ticket data is' , mappedTickets);
     setTickets(mappedTickets);
-    setLoading(false);
   } catch (error) {
     console.error("Error fetching tickets:", error);
+  } finally {
     setLoading(false);
   }
 };
-useEffect(() => {
 
+  useEffect(() => {
+    const storedData = sessionStorage.getItem("wpUserData");
 
+    if (storedData) {
+      try {
+        const parsedData = JSON.parse(storedData);
 
-  const storedData = sessionStorage.getItem('wpUserData');
-  
-  if (storedData) {
-    try {
-      const parsedData = JSON.parse(storedData);
-      
-      if (parsedData.isLoggedIn && parsedData.loggedInUserId) {
-        setloggedInuserId(parsedData.loggedInUserId);
-        setIsLoggedIn(true);
-        if(!selectedTicket){
-    setSelectedTicket(selectedNewTicket ? selectedNewTicket : null);
-}
-        fetchTickets();
-      } else {
-        // Clear state if no valid session data
+        if (parsedData.isLoggedIn && parsedData.loggedInUserId) {
+          setloggedInuserId(parsedData.loggedInUserId);
+          setIsLoggedIn(true);
+          if (!selectedTicket) {
+            setSelectedTicket(selectedNewTicket ? selectedNewTicket : null);
+          }
+          fetchTickets();
+        } else {
+          // Clear state if no valid session data
+          setloggedInuserId(null);
+          setIsLoggedIn(false);
+        }
+      } catch (error) {
+        console.error("Error parsing wpUserData from sessionStorage", error);
         setloggedInuserId(null);
         setIsLoggedIn(false);
       }
-    } catch (error) {
-      console.error('Error parsing wpUserData from sessionStorage', error);
+    } else {
+      // No session data available
       setloggedInuserId(null);
       setIsLoggedIn(false);
     }
-  } else {
-    // No session data available
-    setloggedInuserId(null);
-    setIsLoggedIn(false);
-  }
-}, [isLoggedIn,loggedInuserId]);
+  }, [isLoggedIn, loggedInuserId]);
+
+  const handleLogin = (loginStatus) => {
+    setIsLoggedIn(loginStatus);
+    if (loginStatus) {
+      fetchTickets();
+    }
+  };
 
   const handleBackToHome = () => {
     console.log("handleBackToHome called");
@@ -206,59 +151,61 @@ useEffect(() => {
   };
 
   const handleAddTicket = async () => {
-    try {
-      const defaultOrigin = "Web"; // Use a valid term slug (e.g., 'Web', 'Email')
+    if (!loggedInuserId) return;
+    console.log('This is not the right way');
+    // try {
+    //   const defaultOrigin = "Web"; // Use a valid term slug (e.g., 'Web', 'Email')
 
-      const response = await axios.post(
-        "/wp-json/wp/v2/robodesk_ticket",
-        {
-          title: "New Ticket",
-          status: "publish",
-          ticket_status: "new",
-          ticket_number: `TCKT-${String(tickets.length + 1).padStart(3, "0")}`,
-          tax_input: {
-            robodesk_ticket_priority: "Medium",
-            robodesk_ticket_origin: defaultOrigin,
-          },
-        },
-        {
-          headers: {
-            "X-WP-Nonce": window.wpApiSettings.nonce,
-          },
-        }
-      );
+    //   const response = await axios.post(
+    //     "/wp-json/wp/v2/robodesk_ticket",
+    //     {
+    //       title: "New Ticket",
+    //       status: "publish",
+    //       ticket_status: "new",
+    //       ticket_number: `TCKT-${String(tickets.length + 1).padStart(3, "0")}`,
+    //       tax_input: {
+    //         robodesk_ticket_priority: "Medium",
+    //         robodesk_ticket_origin: defaultOrigin,
+    //       },
+    //     },
+    //     {
+    //       headers: {
+    //         "X-WP-Nonce": window.wpApiSettings.nonce,
+    //       },
+    //     }
+    //   );
 
-      // Use the origin directly from the response
-      const sourceTerm =
-        response.data.robodesk_ticket_origin &&
-        response.data.robodesk_ticket_origin.length > 0
-          ? response.data.robodesk_ticket_origin[0]
-          : defaultOrigin;
+    //   // Use the origin directly from the response
+    //   const sourceTerm =
+    //     response.data.robodesk_ticket_origin &&
+    //     response.data.robodesk_ticket_origin.length > 0
+    //       ? response.data.robodesk_ticket_origin[0]
+    //       : defaultOrigin;
 
-      const newTicket = {
-        id: response.data.id,
-        ticketNumber:
-          response.data.ticket_number ||
-          `TCKT-${String(tickets.length + 1).padStart(3, "0")}`,
-        title: response.data.title.rendered,
-        source: sourceTerm,
-        timeAgo: "Just now",
-        authorImage: Author1,
-        status: "new",
-        priority: "Medium",
-        messages: [],
-      };
+    //   const newTicket = {
+    //     id: response.data.id,
+    //     ticketNumber:
+    //       response.data.ticket_number ||
+    //       `TCKT-${String(tickets.length + 1).padStart(3, "0")}`,
+    //     title: response.data.title.rendered,
+    //     source: sourceTerm,
+    //     timeAgo: "Just now",
+    //     authorImage: Author1,
+    //     status: "new",
+    //     priority: "Medium",
+    //     messages: [],
+    //   };
 
-      setTickets([newTicket, ...tickets]);
-      updateSelectedTicket(newTicket);
-    } catch (error) {
-      console.error("Error creating ticket:", error);
-    }
+    //   setTickets([newTicket, ...tickets]);
+    //   updateSelectedTicket(newTicket);
+    // } catch (error) {
+    //   console.error("Error creating ticket:", error);
+    // }
   };
-  
-//   const handleLogindata = () => {
-  
-//   }
+
+  //   const handleLogindata = () => {
+
+  //   }
   const filteredTickets = tickets.filter((ticket) => {
     const matchesTab = currentTab === "all" || ticket.status === currentTab;
     const matchesPriority =
@@ -269,7 +216,6 @@ useEffect(() => {
     return matchesTab && matchesPriority && matchesSearch;
   });
 
-  console.log('this is our new selected ticket',selectedNewTicket);
   return (
     <div className="rd-main-content">
       {isLoggedIn ? (
@@ -283,7 +229,7 @@ useEffect(() => {
               <SingleTicket
                 ticket={selectedNewTicket ? selectedNewTicket : selectedTicket}
                 onBack={() => setSelectedTicket(null)}
-                loggedInUserId = { loggedInuserId }
+                loggedInUserId={loggedInuserId}
               />
             </Suspense>
           ) : (
@@ -465,12 +411,21 @@ useEffect(() => {
                 </div>
               </div>
               {/* <Footer activeTab={activeTab} setActiveTab={setActiveTab} /> */}
-              <Footer activeTab={activeTab} setActiveTab={setActiveTab}  updateSelectedTicket={updateSelectedTicket}  />
+              <Footer
+                activeTab={activeTab}
+                setActiveTab={setActiveTab}
+                updateSelectedTicket={updateSelectedTicket}
+              />
             </>
           )}
         </>
       ) : (
-       <Login setShowLogin={handleLogin} activeTab={activeTab} setActiveTab={setActiveTab} updateSelectedTicket={updateSelectedTicket} />
+        <Login
+          setShowLogin={handleLogin}
+          activeTab={activeTab}
+          setActiveTab={setActiveTab}
+          updateSelectedTicket={updateSelectedTicket}
+        />
       )}
     </div>
   );
