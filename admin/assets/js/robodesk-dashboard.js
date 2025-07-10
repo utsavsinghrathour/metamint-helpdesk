@@ -220,9 +220,13 @@ function showPage(pageName) {
   document.querySelectorAll(".nav-link").forEach((link) => {
     link.classList.remove("active");
   });
-  document.querySelector(`[data-page="${pageName}"]`).classList.add("active");
 
   currentPage = pageName;
+
+  if (pageName === "ticket-detail") {
+    var ticketId = currentTicket ? currentTicket.id : null;
+    loadTicketDetail();
+  }
 
   // Load page-specific content
   if (pageName === "tickets") {
@@ -255,6 +259,7 @@ function isValidEmail(email) {
 // Ticket detail functions
 function viewTicket(ticketId) {
   currentTicket = tickets.find((t) => t.id === ticketId);
+
   if (!currentTicket) return;
 
   showPage("ticket-detail");
@@ -281,25 +286,25 @@ function loadTicketDetail() {
   // Load ticket meta information
   const ticketMetaInfo = document.getElementById("ticket-meta-info");
   ticketMetaInfo.innerHTML = `
-        <div class="text-sm">
-            <div class="mb-2">
-                <span class="font-medium text-gray-500">Category:</span>
-                <span class="text-gray-900">${currentTicket.category}</span>
-            </div>
-            <div class="mb-2">
-                <span class="font-medium text-gray-500">Created:</span>
-                <span class="text-gray-900">${formatDate(
-                  currentTicket.created
-                )}</span>
-            </div>
-            <div>
-                <span class="font-medium text-gray-500">Last Updated:</span>
-                <span class="text-gray-900">${formatDate(
-                  currentTicket.updated
-                )}</span>
-            </div>
+    <div class="text-sm space-y-2">
+        <div>
+            <strong>Author Image:</strong>
+            <img id="author-image" src="${currentTicket.author_image}" alt="Author Image" class="w-8 h-8 rounded-full inline-block ml-2">
         </div>
-    `;
+        <div>
+            <strong>ID:</strong> <span id="ticket-id">${currentTicket.id}</span>
+        </div>
+        <div>
+            <strong>Author:</strong> <span id="ticket-author">${currentTicket.customer}</span>
+        </div>
+        <div>
+            <strong>Origin:</strong> <span id="ticket-source">${currentTicket.source}</span>
+        </div>
+        <div>
+            <strong>Category:</strong> <span id="ticket-category">${currentTicket.category.name}</span>
+        </div>
+    </div>
+`;
 
   // Set current values in dropdowns
   document.getElementById("ticket-status-select").value = currentTicket.status;

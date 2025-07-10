@@ -236,6 +236,9 @@ function robodesk_dashboard_callback()
                             $priority_terms = get_the_terms($ticket_id, 'robodesk_ticket_priority');
                             $ticket_priority = $priority_terms ? $priority_terms[0]->name : 'N/A';
                             $updated_at = get_the_modified_date('Y-m-d H:i:s', $ticket_id);
+                            $ticket_category = get_the_terms($ticket_id, 'robodesk_ticket_category');
+                            $ticket_category_name = $ticket_category ? $ticket_category[0]->name : 'Uncategorized';
+                            var_dump($ticket_category_name);
 
                             // Simulate replies field using comments
                             $replies = get_comments(array('post_id' => $ticket_id));
@@ -258,6 +261,8 @@ function robodesk_dashboard_callback()
                                 'title' => get_the_title(),
                                 'customer' => get_the_author(),
                                 'email' => get_the_author_email(),
+                                'author_id' => get_the_author_ID(),
+                                'category' => $ticket_category_name, // Assuming the first term is the category
                                 'source' => $ticket_origin, // Assuming the first term is the source
                                 'status' => $ticket_status,
                                 'priority' => $ticket_priority,
@@ -351,7 +356,7 @@ function robodesk_dashboard_callback()
                             </thead>
                             <tbody class="bg-white divide-y divide-gray-200" id="dashboard-tickets-table">
                                 <?php foreach ($filtered_tickets as $ticket) : ?>
-                                    <tr class="table-row cursor-pointer" onclick="viewTicket(<?php echo esc_js($ticket['id']); ?>)">
+                                    <tr class="table-row cursor-pointer" data-ticketid="<?php echo esc_attr($ticket['id']); ?>" onclick="viewTicket(<?php echo esc_js($ticket['id']); ?>)">
                                         <td class="px-6 py-4 whitespace-nowrap">
                                             <div class="text-sm font-medium text-gray-900">#<?php echo esc_html($ticket['id']); ?></div>
                                             <div class="text-sm text-gray-500 truncate max-w-xs"><?php echo esc_html($ticket['title']); ?>
@@ -617,10 +622,13 @@ function robodesk_dashboard_callback()
                                     // $customer_name = get_post_meta($ticket_id, 'nickname', true) ?: 'Unknown';
                                     // $customer_email = get_post_meta($ticket_id, '_robodesk_customer_email', true) ?: 'N/A';
                                     $ticket_status = get_post_meta($ticket_id, '_robodesk_ticket_status', true) ?: 'N/A';
+                                    $ticket_origin = get_post_meta($ticket_id, 'robodesk_ticket_origin', true) ?: 'N/A';
                                     $priority_terms = get_the_terms($ticket_id, 'robodesk_ticket_priority');
-                                    $ticket_priority = ($priority_terms && !is_wp_error($priority_terms)) ? $priority_terms[0]->name : 'N/A';
+                                    $ticket_priority = $priority_terms ? $priority_terms[0]->name : 'N/A';
                                     $updated_at = get_the_modified_date('Y-m-d H:i:s', $ticket_id);
-                                    $assignee = get_post_meta($ticket_id, 'robodesk_default_agent', true) ?: 'Unassigned';
+                                    $ticket_category = get_the_terms($ticket_id, 'robodesk_ticket_category');
+                                    $ticket_category_name = $ticket_category ? $ticket_category[0]->name : 'Uncategorized';
+
 
                                     // Simulate replies field using comments
                                     $replies = get_comments(array('post_id' => $ticket_id));
@@ -637,18 +645,19 @@ function robodesk_dashboard_callback()
                                     } else {
                                         $replies = [];
                                     }
-                                    $taxonomy = 'robodesk_ticket_origin';
-                                    $terms = get_the_terms($ticket_id, $taxonomy);
+
                                     $tickets[] = [
                                         'id' => $ticket_id,
                                         'title' => get_the_title(),
                                         'customer' => get_the_author(),
                                         'email' => get_the_author_email(),
-                                        'source' => $terms ? esc_html($terms[0]->name) : 'N/A', // Assuming the first term is the source
+                                        'author_id' => get_the_author_ID(),
+                                        'source' => $ticket_origin, // Assuming the first term is the source
                                         'status' => $ticket_status,
                                         'priority' => $ticket_priority,
                                         'updated' => $updated_at,
-                                        'assignee' => $assignee,
+                                        'category' => $ticket_category_name,
+                                        'assignee' => get_post_meta($ticket_id, 'ticket_assignee', true) ?: 'Unassigned',
                                         'replies' => $replies_count ? $replies : [
                                             'id' => 0,
                                             'author' => 'N/A',
@@ -800,33 +809,7 @@ function robodesk_dashboard_callback()
                                 <h4 class="font-medium text-gray-900 mb-3">Ticket Details</h4>
                                 <div id="ticket-meta-info" class="space-y-2">
                                     <!-- Ticket meta info will be populated by JavaScript -->
-                                    <!-- ticket-meta-info  ticket author (full name if not available user display_name)  , author image ,: ID , Ticket source(origin) , Ticket category -->
-                                    <?php
-                                    $currentTicket = get_post($ticket_id);
-                                    $auth_id = $currentTicket->post_author;
-                                    $first_name = get_the_author_meta('first_name', $auth_id);
-                                    $last_name = get_the_author_meta('last_name', $auth_id);
-                                    if (!empty($first_name) || !empty($last_name)) {
-                                        $ticket_author = trim($first_name . ' ' . $last_name);
-                                    } else {
-                                        $ticket_author = get_the_author_meta('display_name', $auth_id);
-                                    }
-                                    $ticket_author_image = get_avatar_url($auth_id, ['size' => 96]);
-                                    $ticket_category = get_post_meta($currentTicket->ID, 'ticket_category', true);
-                                    $ticket_origin = get_post_meta($ticket_id, 'robodesk_ticket_origin', true) ?: 'N/A';
-                                    ?>
-                                    <div>
-                                        <strong></strong> <img id="author-image" src="<?php echo esc_url($ticket_author_image); ?>" alt="Author Image" class="w-8 h-8 rounded-full">
-                                        <br>
-                                        <strong>ID:</strong> <span id="ticket-id"><?php echo esc_html($currentTicket->ID); ?></span>
-                                        <br>
-                                        <strong>Author:</strong> <span id="ticket-author"><?php echo esc_html($ticket_author); ?></span>
-                                        <br>
 
-                                        <strong>Origin:</strong> <span id="ticket-source"><?php echo esc_html($ticket_origin); ?></span>
-                                        <br>
-                                        <strong>Category:</strong> <span id="ticket-category"><?php echo esc_html($ticket_category); ?></span>
-                                    </div>
                                 </div>
                             </div>
                         </div>
