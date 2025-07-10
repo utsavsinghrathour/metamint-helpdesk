@@ -200,6 +200,9 @@ const Login = ({ activeTab, setActiveTab, setShowLogin , updateSelectedTicket}) 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
+    if (name === 'email') {
+    setShowPasswordField(false);
+  }
   };
 
 
@@ -211,7 +214,7 @@ const Login = ({ activeTab, setActiveTab, setShowLogin , updateSelectedTicket}) 
             type="button"
             className="rd-bg-transparent rd-text-white rd-p-0 rd-m-0 back-button rd-flex rd-items-center"
             aria-label="Go back to home"
-            onClick={() => setShowLogin(false)}
+            onClick={() => setActiveTab(0)}
           >
             <svg
               xmlns="http://www.w3.org/2000/svg”"

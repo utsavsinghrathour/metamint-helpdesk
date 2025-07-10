@@ -89,7 +89,7 @@ const fetchTickets = async () => {
       ticketNumber: ticket.ticket_number,
       title: ticket.ticket_title,
       source: ticket.ticket_origin,
-      timeAgo: ticket.ticket_time_ago,
+      timeAgo: ticket.ticket_time_ago + ' ago',
       authorImage: ticket.ticket_author_image ?? Author1,
       status: ticket.ticket_status ?? 'New',
       priority: ticket.ticket_priority ?? 'Medium',
