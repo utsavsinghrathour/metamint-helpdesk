@@ -301,6 +301,22 @@ function robodesk_user_signup(WP_REST_Request $request)
             array('status' => 500)
         );
     }
+    
+    $creds = array(
+        'user_login'    => $email,
+        'user_password' => $password,
+        'remember'      => true,
+    );
+    
+        // Sign in the user
+    $user = wp_signon($creds, false);
+
+    if (!is_wp_error($user)) {
+        
+        wp_set_current_user($user->ID);
+        wp_set_auth_cookie($user->ID);
+       
+    } 
 
     // Send default WordPress user notification email
     wp_new_user_notification($user_id, null, 'both'); // Sends email to user and admin

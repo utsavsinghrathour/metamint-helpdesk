@@ -87,41 +87,6 @@ const MessageTabs = ({
       
     }
   };
-  
-useEffect(() => {
-
-
-
-  const storedData = sessionStorage.getItem('wpUserData');
-  
-  if (storedData) {
-    try {
-      const parsedData = JSON.parse(storedData);
-      
-      if (parsedData.isLoggedIn && parsedData.loggedInUserId) {
-        setloggedInuserId(parsedData.loggedInUserId);
-        setIsLoggedIn(true);
-        if(!selectedTicket){
-    setSelectedTicket(selectedNewTicket ? selectedNewTicket : null);
-}
-        fetchTickets();
-      } else {
-        // Clear state if no valid session data
-        setloggedInuserId(null);
-        setIsLoggedIn(false);
-      }
-    } catch (error) {
-      console.error('Error parsing wpUserData from sessionStorage', error);
-      setloggedInuserId(null);
-      setIsLoggedIn(false);
-    }
-  } else {
-    // No session data available
-    setloggedInuserId(null);
-    setIsLoggedIn(false);
-  }
-}, [isLoggedIn,loggedInuserId]);
-
 const fetchTickets = async () => {
   if (!loggedInuserId) return; // Exit early if user is not logged in
     // console.log('We are here ', loggedInuserData);
@@ -198,8 +163,40 @@ const fetchTickets = async () => {
     setLoading(false);
   }
 };
+useEffect(() => {
 
+
+
+  const storedData = sessionStorage.getItem('wpUserData');
   
+  if (storedData) {
+    try {
+      const parsedData = JSON.parse(storedData);
+      
+      if (parsedData.isLoggedIn && parsedData.loggedInUserId) {
+        setloggedInuserId(parsedData.loggedInUserId);
+        setIsLoggedIn(true);
+        if(!selectedTicket){
+    setSelectedTicket(selectedNewTicket ? selectedNewTicket : null);
+}
+        fetchTickets();
+      } else {
+        // Clear state if no valid session data
+        setloggedInuserId(null);
+        setIsLoggedIn(false);
+      }
+    } catch (error) {
+      console.error('Error parsing wpUserData from sessionStorage', error);
+      setloggedInuserId(null);
+      setIsLoggedIn(false);
+    }
+  } else {
+    // No session data available
+    setloggedInuserId(null);
+    setIsLoggedIn(false);
+  }
+}, [isLoggedIn,loggedInuserId]);
+
   const handleBackToHome = () => {
     console.log("handleBackToHome called");
     if (setActiveTab) {
