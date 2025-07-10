@@ -236,9 +236,17 @@ function robodesk_dashboard_callback()
                             $priority_terms = get_the_terms($ticket_id, 'robodesk_ticket_priority');
                             $ticket_priority = $priority_terms ? $priority_terms[0]->name : 'N/A';
                             $updated_at = get_the_modified_date('Y-m-d H:i:s', $ticket_id);
-                            $ticket_category = get_the_terms($ticket_id, 'robodesk_ticket_category');
-                            $ticket_category_name = $ticket_category ? $ticket_category[0]->name : 'Uncategorized';
-                            var_dump($ticket_category_name);
+                            $ticket_terms = wp_get_post_terms($ticket_id, 'robodesk_ticket_category');
+
+                            $ticket_category = '';
+                            if (!is_wp_error($ticket_terms) && !empty($ticket_terms)) {
+                                $ticket_category = [
+                                    'name' => $ticket_terms[0]->name,
+                                    'id'   => $ticket_terms[0]->term_id,
+                                ];
+                            }
+
+
 
                             // Simulate replies field using comments
                             $replies = get_comments(array('post_id' => $ticket_id));
@@ -262,12 +270,12 @@ function robodesk_dashboard_callback()
                                 'customer' => get_the_author(),
                                 'email' => get_the_author_email(),
                                 'author_id' => get_the_author_ID(),
-                                'category' => $ticket_category_name, // Assuming the first term is the category
+                                'category' => $ticket_category, // Assuming the first term is the category
                                 'source' => $ticket_origin, // Assuming the first term is the source
                                 'status' => $ticket_status,
                                 'priority' => $ticket_priority,
                                 'updated' => $updated_at,
-                                'assignee' => get_post_meta($ticket_id, 'ticket_assignee', true) ?: 'Unassigned',
+                                'assignee' => get_post_meta($ticket_id, 'ticket_assignee', true) ?: 'N/A',
                                 'replies' => $replies_count ? $replies : [
                                     'id' => 0,
                                     'author' => 'N/A',
@@ -626,8 +634,14 @@ function robodesk_dashboard_callback()
                                     $priority_terms = get_the_terms($ticket_id, 'robodesk_ticket_priority');
                                     $ticket_priority = $priority_terms ? $priority_terms[0]->name : 'N/A';
                                     $updated_at = get_the_modified_date('Y-m-d H:i:s', $ticket_id);
-                                    $ticket_category = get_the_terms($ticket_id, 'robodesk_ticket_category');
-                                    $ticket_category_name = $ticket_category ? $ticket_category[0]->name : 'Uncategorized';
+                                    $ticket_terms = wp_get_post_terms($ticket_id, 'robodesk_ticket_category');
+                                    $ticket_category = '';
+                                    if (!is_wp_error($ticket_terms) && !empty($ticket_terms)) {
+                                        $ticket_category = [
+                                            'name' => $ticket_terms[0]->name,
+                                            'id'   => $ticket_terms[0]->term_id,
+                                        ];
+                                    }
 
 
                                     // Simulate replies field using comments
@@ -656,8 +670,8 @@ function robodesk_dashboard_callback()
                                         'status' => $ticket_status,
                                         'priority' => $ticket_priority,
                                         'updated' => $updated_at,
-                                        'category' => $ticket_category_name,
-                                        'assignee' => get_post_meta($ticket_id, 'ticket_assignee', true) ?: 'Unassigned',
+                                        'category' => $ticket_category,
+                                        'assignee' => get_post_meta($ticket_id, 'ticket_assignee', true) ?: 'N/A',
                                         'replies' => $replies_count ? $replies : [
                                             'id' => 0,
                                             'author' => 'N/A',
