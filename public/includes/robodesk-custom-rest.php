@@ -120,8 +120,18 @@ function secure_login_endpoint(WP_REST_Request $request)
         'user_password' => $password,
         'remember' => false,
     );
+    
+    
+    // Sign in the user
+    $user = wp_signon($creds, false);
 
-    $user = wp_authenticate($creds['user_login'], $creds['user_password']);
+    if (!is_wp_error($user)) {
+        
+        wp_set_current_user($user->ID);
+        wp_set_auth_cookie($user->ID);
+       
+    } 
+
 
     if (is_wp_error($user)) {
         return new WP_Error('invalid_credentials', 'Invalid username or password.', array('status' => 401));
@@ -308,7 +318,7 @@ function robodesk_user_signup(WP_REST_Request $request)
         'remember'      => true,
     );
     
-        // Sign in the user
+    // Sign in the user
     $user = wp_signon($creds, false);
 
     if (!is_wp_error($user)) {

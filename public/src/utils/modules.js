@@ -196,3 +196,39 @@ export async function loginUser( email, password ) {
     throw error;
   }
 }   
+
+//get all tickets
+export async function getAllTickets(userId) {
+  try {
+    const payload = {
+      event: 'tickets.get',
+      data: {
+        uid: userId
+      }
+    };
+    const response = await fetch('/wp-json/chat/v1/tickets', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(payload),
+    });
+    
+    const result = await response.json();
+    
+    if (!response.ok) {
+      throw new Error(result.message || 'Failed to fetch tickets');
+    }
+    
+    // Check if the response has the expected structure
+    if (result.status === 'success' && Array.isArray(result.data)) {
+      return result.data; // Return the formatted tickets array
+    } else {
+      throw new Error(result.message || 'Invalid response format');
+    }
+  } catch (error) {
+    console.error('Error fetching tickets:', error.message);
+    throw error;
+  }
+}
+
