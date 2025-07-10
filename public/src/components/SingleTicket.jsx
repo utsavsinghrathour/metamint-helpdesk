@@ -243,7 +243,7 @@ const SingleTicket = ({ ticket, onBack, loggedInUserId }) => {
                   }}
                 >
                   {msg.isSending ? (
-                    <span className="rd-body-text single-message">...</span>
+                    <span className="rd-body-text single-message">{msg.text}</span>
                   ) : (
                     <>
                       {msg.text && <span className="rd-body-text single-message">{msg.text}</span>}
