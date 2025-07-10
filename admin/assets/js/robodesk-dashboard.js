@@ -291,17 +291,13 @@ function loadTicketDetail() {
             <strong>Author Image:</strong>
             <img id="author-image" src="${currentTicket.author_image}" alt="Author Image" class="w-8 h-8 rounded-full inline-block ml-2">
         </div>
-        <div>
-            <strong>ID:</strong> <span id="ticket-id">${currentTicket.id}</span>
-        </div>
-        <div>
-            <strong>Author:</strong> <span id="ticket-author">${currentTicket.customer}</span>
-        </div>
+       
         <div>
             <strong>Origin:</strong> <span id="ticket-source">${currentTicket.source}</span>
         </div>
         <div>
-            <strong>Category:</strong> <span id="ticket-category">${currentTicket.category.name}</span>
+            <strong>Category:</strong> <span id="ticket-category">${currentTicket.category.id}</span>
+
         </div>
     </div>
 `;

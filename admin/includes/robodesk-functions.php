@@ -564,6 +564,12 @@ function robodesk_create_ticket()
         error_log('Failed to create priority term: ' . $priority_term->get_error_message());
     }
 
+    $ticket_category_term = term_exists($ticket_category, 'robodesk_ticket_category');
+    if (!$ticket_category_term) {
+        $ticket_category_term = wp_insert_term($ticket_category, 'robodesk_ticket_category');
+        error_log('Created new category term: ' . $ticket_category);
+    }
+
 
     wp_send_json_success(['message' => 'Ticket created successfully', 'ticket_id' => $ticket_id]);
     wp_die();
