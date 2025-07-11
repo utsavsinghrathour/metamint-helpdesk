@@ -296,7 +296,7 @@ function loadTicketDetail() {
             <strong>Origin:</strong> <span id="ticket-source">${currentTicket.source}</span>
         </div>
         <div>
-            <strong>Category:</strong> <span id="ticket-category">${currentTicket.category.id}</span>
+            <strong>Category:</strong> <span id="ticket-category">${currentTicket.category.name}</span>
 
         </div>
     </div>
