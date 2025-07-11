@@ -597,7 +597,6 @@ function robodesk_dashboard_callback()
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Priority</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Assignee</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Updated</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                             </tr>
                         </thead>
                         <tbody class="bg-white divide-y divide-gray-200" id="tickets-table">
@@ -704,11 +703,7 @@ function robodesk_dashboard_callback()
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                         <?php echo esc_html(format_date($ticket['updated'])); ?>
                                     </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                        <button onclick="viewTicket(<?php echo esc_js($ticket['id']); ?>)" class="text-blue-600 hover:text-blue-800">
-                                            <i class="fas fa-eye"></i> View
-                                        </button>
-                                    </td>
+
                                 </tr>
                                 <!-- ADDDED -->
                                 <script>
