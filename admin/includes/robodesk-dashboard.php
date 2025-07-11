@@ -676,6 +676,11 @@ function robodesk_dashboard_callback()
                                 wp_reset_postdata();
                             }
                             ?>
+                            <!-- ADDDED -->
+                            <script>
+                                const tickets = <?php echo wp_json_encode($tickets); ?>;
+                            </script>
+                            <!-- ADDED -->
                             <?php foreach ($tickets as $ticket) : ?>
 
                                 <tr class="table-row cursor-pointer" onclick="viewTicket(<?php echo esc_js($ticket['id']); ?>)">
@@ -705,12 +710,9 @@ function robodesk_dashboard_callback()
                                     </td>
 
                                 </tr>
-                                <!-- ADDDED -->
-                                <script>
-                                    const tickets = <?php echo wp_json_encode($tickets); ?>;
-                                </script>
-                                <!-- ADDED -->
+
                             <?php endforeach; ?>
+
                         </tbody>
                     </table>
                 </div>

@@ -114,7 +114,7 @@ let currentDashboardFilter = "recent";
 document.addEventListener("DOMContentLoaded", function () {
   showPage("dashboard");
   updateDashboardStats();
-  loadDashboardTickets();
+  // loadDashboardTickets();
   setupEventListeners();
 });
 
