@@ -1112,7 +1112,7 @@ function updateTicketStatus(ticketId, newStatus) {
         const updatedStatus = response.data.status;
         const updatedTime = response.data.updated;
 
-        // ✅ Safely update `tickets`
+      
         if (typeof tickets !== "undefined" && Array.isArray(tickets)) {
           const ticketIndex = tickets.findIndex((t) => t.id === ticketId);
           if (ticketIndex !== -1) {
@@ -1121,7 +1121,6 @@ function updateTicketStatus(ticketId, newStatus) {
           }
         }
 
-        // ✅ Safely update `currentTicket`
         if (
           typeof currentTicket !== "undefined" &&
           currentTicket.id === ticketId
@@ -1130,7 +1129,6 @@ function updateTicketStatus(ticketId, newStatus) {
           currentTicket.updated = updatedTime;
         }
 
-        // ✅ Success toast
         showToast(
           `Ticket status updated to ${updatedStatus.replace("-", " ")}`
         );
