@@ -258,7 +258,7 @@ function robodesk_dashboard_callback()
                                 'title' => get_the_title(),
                                 'customer' => get_the_author(),
                                 'email' => get_the_author_meta('email'),
-                                'author_id' => get_the_author_ID(),
+                                'author_id' => get_the_author_meta('ID'),
                                 'category' => $ticket_category, // Assuming the first term is the category
                                 'source' => $ticket_origin, // Assuming the first term is the source
                                 'status' => $ticket_status,
@@ -655,7 +655,7 @@ function robodesk_dashboard_callback()
                                         'title' => get_the_title(),
                                         'customer' => get_the_author(),
                                         'email' => get_the_author_meta('email'),
-                                        'author_id' => get_the_author_ID(),
+                                        'author_id' => get_the_author_meta('ID'),
                                         'source' => $ticket_origin, // Assuming the first term is the source
                                         'status' => $ticket_status,
                                         'priority' => $ticket_priority,
