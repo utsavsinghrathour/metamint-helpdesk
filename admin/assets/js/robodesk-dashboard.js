@@ -478,49 +478,6 @@ function loadNotes() {
     .join("");
 }
 
-// function updateTicketStatus(ticketId, newStatus) {
-//   const ticketIndex = tickets.findIndex((t) => t.id === ticketId);
-//   if (ticketIndex !== -1) {
-//     tickets[ticketIndex].status = newStatus;
-//     tickets[ticketIndex].updated = new Date().toISOString();
-//     if (currentTicket && currentTicket.id === ticketId) {
-//       currentTicket.status = newStatus;
-//       currentTicket.updated = new Date().toISOString();
-//     }
-
-//     showToast(`Ticket status updated to ${newStatus.replace("-", " ")}`);
-//     updateDashboardStats();
-//   }
-// }
-
-// function updateTicketPriority(ticketId, newPriority) {
-//   const ticketIndex = tickets.findIndex((t) => t.id === ticketId);
-//   if (ticketIndex !== -1) {
-//     tickets[ticketIndex].priority = newPriority;
-//     tickets[ticketIndex].updated = new Date().toISOString();
-//     if (currentTicket && currentTicket.id === ticketId) {
-//       currentTicket.priority = newPriority;
-//       currentTicket.updated = new Date().toISOString();
-//     }
-
-//     showToast(`Ticket priority updated to ${newPriority}`);
-//   }
-// }
-
-// function updateTicketAssignee(ticketId, newAssignee) {
-//   const ticketIndex = tickets.findIndex((t) => t.id === ticketId);
-//   if (ticketIndex !== -1) {
-//     tickets[ticketIndex].assignee = newAssignee;
-//     tickets[ticketIndex].updated = new Date().toISOString();
-//     if (currentTicket && currentTicket.id === ticketId) {
-//       currentTicket.assignee = newAssignee;
-//       currentTicket.updated = new Date().toISOString();
-//     }
-
-//     showToast(`Ticket assigned to ${newAssignee}`);
-//   }
-// }
-
 function addReply() {
   const replyText = document.getElementById("new-reply").value.trim();
   if (!replyText || !currentTicket) return;
