@@ -1099,8 +1099,8 @@ function updateTicketStatus(ticketId, newStatus) {
     .then((res) => res.json())
     .then((response) => {
       try {
-        // console.log("AJAX Response:", response);
-
+ 
+     
         if (!response.success) {
           showToast(
             response.data?.message || "Failed to update status",
@@ -1108,6 +1108,8 @@ function updateTicketStatus(ticketId, newStatus) {
           );
           return;
         }
+        
+        console.log(response);
 
         const updatedStatus = response.data.status;
         const updatedTime = response.data.updated;
@@ -1132,7 +1134,7 @@ function updateTicketStatus(ticketId, newStatus) {
         showToast(
           `Ticket status updated to ${updatedStatus.replace("-", " ")}`
         );
-        updateDashboardStats();
+        // updateDashboardStats();
       } catch (error) {
         console.error("Error inside .then:", error);
         showToast("Error updating ticket status", "error");
