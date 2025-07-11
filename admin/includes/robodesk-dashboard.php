@@ -222,7 +222,10 @@ function robodesk_dashboard_callback()
                             $ticket_status = get_post_meta($ticket_id, '_robodesk_ticket_status', true) ?: 'N/A';
                             $ticket_origin = get_post_meta($ticket_id, 'robodesk_ticket_origin', true) ?: 'N/A';
                             $priority_terms = get_the_terms($ticket_id, 'robodesk_ticket_priority');
-                            $author_image = get_avatar_url(get_the_author_meta('ID'), array('size' => 32));
+                            $author_image = get_avatar_url(get_the_author_meta('ID'), array('size' => 32)); // Fetch author image URL
+                            if (is_wp_error($author_image) || empty($author_image)) {
+                                $author_image = 'https://www.gravatar.com/avatar/?d=mp&s=32'; // Default Gravatar
+                            }
                             $ticket_priority = $priority_terms ? $priority_terms[0]->name : 'N/A';
                             $updated_at = get_the_modified_date('Y-m-d H:i:s', $ticket_id);
                             $created_at = get_the_date('Y-m-d H:i:s', $ticket_id);
@@ -623,7 +626,10 @@ function robodesk_dashboard_callback()
                                     $ticket_status = get_post_meta($ticket_id, '_robodesk_ticket_status', true) ?: 'N/A';
                                     $ticket_origin = get_post_meta($ticket_id, 'robodesk_ticket_origin', true) ?: 'N/A';
                                     $priority_terms = get_the_terms($ticket_id, 'robodesk_ticket_priority');
-                                    $author_image = get_avatar_url(get_the_author_meta('ID'), array('size' => 32));
+                                    $author_image = get_avatar_url(get_the_author_meta('ID'), array('size' => 32)); // Fetch author image URL
+                                    if (is_wp_error($author_image) || empty($author_image)) {
+                                        $author_image = 'https://www.gravatar.com/avatar/?d=mp&s=32'; // Default Gravatar
+                                    }
                                     $ticket_priority = $priority_terms ? $priority_terms[0]->name : 'N/A';
                                     $updated_at = get_the_modified_date('Y-m-d H:i:s', $ticket_id);
                                     $created_at = get_the_date('Y-m-d H:i:s', $ticket_id);
