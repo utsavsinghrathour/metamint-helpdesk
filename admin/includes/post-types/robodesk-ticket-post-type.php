@@ -355,8 +355,6 @@ function customize_robodesk_ticket_response($response, $post, $request)
 
     $ticket_status = get_post_meta($post->ID, '_robodesk_ticket_status', true);
     $response->data['robodesk_ticket_status'] = $ticket_status ? $ticket_status : '';
-
-    
     $response->data['robodesk_ticket_origin'] = get_post_meta($post->ID, 'robodesk_ticket_origin', true) ?: 'N/A';
     $author = get_user_by('id', $post->post_author);
     $response->data['robodesk_ticket_author'] = $author ? $author->display_name : '';
@@ -637,8 +635,11 @@ function robodesk_user_data_to_session_storage()
             };
 
             sessionStorage.setItem('wpUserData', JSON.stringify(userData));
+        
         } 
     </script>
 <?php
 }
 add_action('wp_footer', 'robodesk_user_data_to_session_storage');
+
+
