@@ -13,9 +13,7 @@ const SendMessageField = ({ setShowLogin , setActiveTab , updateSelectedTicket }
   };
   
   useEffect(() => {
-  
     const sessionData = JSON.parse(sessionStorage.getItem('wpUserData')) || {};
-    
     setLoggedIn(sessionData.isLoggedIn || false);
     setUserId(sessionData.loggedInUserId || null);
 
@@ -23,19 +21,11 @@ const SendMessageField = ({ setShowLogin , setActiveTab , updateSelectedTicket }
   
   const handleSend = async () => {
   
-    if (!message.trim()) {
-      console.log("No message entered");
-      return;
-    }
-    
-    console.log('loggedIn' , typeof loggedIn);
-    console.log('userId' , userId);
-   
+    if (!message.trim()) return;
     if (!loggedIn) {
       localStorage.setItem('temp_ticket_title', message); 
       setShowLogin(true);
       setActiveTab(1);
-     
       return;
     }
 
@@ -76,14 +66,12 @@ const SendMessageField = ({ setShowLogin , setActiveTab , updateSelectedTicket }
           onKeyPress={(e) => {
             if (e.key === "Enter" && !e.shiftKey) {
               e.preventDefault();
-              console.log("Enter key pressed, calling handleSend");
               handleSend();
             }
           }}
         />
         <button
           onClick={() => {
-            console.log("Send button clicked, calling handleSend");
             handleSend();
           }}
           className="rd-bg-transparent rd-border-none rd-text-blue rd-p-0"

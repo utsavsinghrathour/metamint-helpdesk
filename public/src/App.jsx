@@ -14,15 +14,37 @@ const App = ({ imageUrls = { logo: '' } }) => {
   const [selectedNotice, setSelectedNotice] = useState(null);
   const [showActiveFeatured, setShowActiveFeatured] = useState(true);
   const [selectedTicket, setSelectedTicket] = useState();
+  const [projects, setProjects] = useState([]);
   
  const handleSelectedTicketUpdate = (newValue) => {
         setSelectedTicket(newValue);
         console.log('Our new ticket val is ', newValue);
   };
+  
+  useEffect(() => {
+    const apiUrl = `/wp-json/wp/v2/robodesk_ticket?_embed`;
+    fetch(apiUrl)
+      .then((res) => res.json())
+      .then((data) => {
+        const formattedProjects = data.map((post) => ({
+          title: post.title.rendered,
+          subtitle:
+            post._embedded?.["wp:term"]
+              ?.flat()
+              .map((term) => term.name)
+              .join(", ") || "",
+          image: post._embedded?.["wp:featuredmedia"]?.[0]?.source_url || "",
+          website: post.meta?.website_url || "",
+          slug: post.slug,
+        }));
+        setProjects(formattedProjects);
+      })
+      .catch((err) => console.error("Failed to fetch API posts", err));
+  }, []);
 
   useEffect(() => {
     if (selectedTicket) {
-      console.log('selectedTicket', selectedTicket);
+      setSelectedTicket(selectedTicket);
     }
   }, [selectedTicket]);
 
@@ -114,6 +136,7 @@ const App = ({ imageUrls = { logo: '' } }) => {
   return (
     <div className="robodesk-plugin rd-flex rd-flex-col rd-align-end">
       {/* {console.log('isExpanded:', isExpanded)} */}
+      {console.log('faster projects:', projects)}
       {showActiveFeatured && <ActiveFeatured onNoticeSelect={handleNoticeSelect} />}
       <div
         className={`robodesk-popup rd-flex rd-flex-col rd-border-none rd-border-radius-md ${
