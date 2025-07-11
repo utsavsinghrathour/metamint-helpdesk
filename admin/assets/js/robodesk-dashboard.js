@@ -493,19 +493,19 @@ function loadNotes() {
 //   }
 // }
 
-function updateTicketPriority(ticketId, newPriority) {
-  const ticketIndex = tickets.findIndex((t) => t.id === ticketId);
-  if (ticketIndex !== -1) {
-    tickets[ticketIndex].priority = newPriority;
-    tickets[ticketIndex].updated = new Date().toISOString();
-    if (currentTicket && currentTicket.id === ticketId) {
-      currentTicket.priority = newPriority;
-      currentTicket.updated = new Date().toISOString();
-    }
+// function updateTicketPriority(ticketId, newPriority) {
+//   const ticketIndex = tickets.findIndex((t) => t.id === ticketId);
+//   if (ticketIndex !== -1) {
+//     tickets[ticketIndex].priority = newPriority;
+//     tickets[ticketIndex].updated = new Date().toISOString();
+//     if (currentTicket && currentTicket.id === ticketId) {
+//       currentTicket.priority = newPriority;
+//       currentTicket.updated = new Date().toISOString();
+//     }
 
-    showToast(`Ticket priority updated to ${newPriority}`);
-  }
-}
+//     showToast(`Ticket priority updated to ${newPriority}`);
+//   }
+// }
 
 function updateTicketAssignee(ticketId, newAssignee) {
   const ticketIndex = tickets.findIndex((t) => t.id === ticketId);
@@ -1099,8 +1099,6 @@ function updateTicketStatus(ticketId, newStatus) {
     .then((res) => res.json())
     .then((response) => {
       try {
- 
-     
         if (!response.success) {
           showToast(
             response.data?.message || "Failed to update status",
@@ -1108,13 +1106,12 @@ function updateTicketStatus(ticketId, newStatus) {
           );
           return;
         }
-        
+
         console.log(response);
 
         const updatedStatus = response.data.status;
         const updatedTime = response.data.updated;
 
-      
         if (typeof tickets !== "undefined" && Array.isArray(tickets)) {
           const ticketIndex = tickets.findIndex((t) => t.id === ticketId);
           if (ticketIndex !== -1) {
@@ -1143,5 +1140,49 @@ function updateTicketStatus(ticketId, newStatus) {
     .catch((err) => {
       console.error("AJAX catch error:", err);
       showToast("Error updating ticket status", "error");
+    });
+}
+
+// for ticket priority update
+function updateTicketPriority(ticketId, newPriority) {
+  if (!ticketId || !newPriority) return;
+
+  fetch(robodeskAjax.ajax_url, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
+    },
+    body: new URLSearchParams({
+      action: "update_ticket_priority",
+      security: robodeskAjax.nonces.ticket_priority, // nonce key
+      ticket_id: ticketId,
+      priority: newPriority,
+    }),
+  })
+    .then((res) => res.json())
+    .then((response) => {
+      if (response.success) {
+        const updatedPriority = response.data.priority;
+        const updatedTime = response.data.updated;
+
+        const ticketIndex = tickets.findIndex((t) => t.id === ticketId);
+        if (ticketIndex !== -1) {
+          tickets[ticketIndex].priority = updatedPriority;
+          tickets[ticketIndex].updated = updatedTime;
+        }
+
+        if (currentTicket && currentTicket.id === ticketId) {
+          currentTicket.priority = updatedPriority;
+          currentTicket.updated = updatedTime;
+        }
+
+        showToast(`Ticket priority updated to ${updatedPriority}`);
+      } else {
+        showToast("Failed to update priority", "error");
+      }
+    })
+    .catch((error) => {
+      console.error(error);
+      showToast("Error updating ticket priority", "error");
     });
 }

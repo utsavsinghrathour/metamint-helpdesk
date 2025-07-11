@@ -632,3 +632,41 @@ function robodesk_update_ticket_status()
         'updated' => $updated
     ]);
 }
+
+
+// Ajax handler to update ticket priority
+add_action('wp_ajax_update_ticket_priority', 'robodesk_update_ticket_priority');
+
+function robodesk_update_ticket_priority()
+{
+    check_ajax_referer('robodesk_ticket_priority_action', 'security');
+
+    $ticket_id = intval($_POST['ticket_id'] ?? 0);
+    $new_priority = sanitize_text_field($_POST['priority'] ?? '');
+
+    if (!$ticket_id || !$new_priority) {
+        wp_send_json_error(['message' => 'Invalid input']);
+    }
+
+    if (!current_user_can('edit_post', $ticket_id)) {
+        wp_send_json_error(['message' => 'Permission denied']);
+    }
+
+    // Assign the priority to custom taxonomy 'robodesk_ticket_priority'
+    $term = term_exists($new_priority, 'robodesk_ticket_priority');
+    if (!$term) {
+        $term = wp_insert_term($new_priority, 'robodesk_ticket_priority');
+    }
+
+    if (is_wp_error($term)) {
+        wp_send_json_error(['message' => 'Failed to assign priority']);
+    }
+
+    wp_set_post_terms($ticket_id, [(int)$term['term_id']], 'robodesk_ticket_priority');
+
+    $updated = current_time('mysql');
+    wp_send_json_success([
+        'priority' => $new_priority,
+        'updated'  => $updated,
+    ]);
+}
