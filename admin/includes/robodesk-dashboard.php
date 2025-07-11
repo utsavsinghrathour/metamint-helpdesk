@@ -224,6 +224,7 @@ function robodesk_dashboard_callback()
                             $priority_terms = get_the_terms($ticket_id, 'robodesk_ticket_priority');
                             $ticket_priority = $priority_terms ? $priority_terms[0]->name : 'N/A';
                             $updated_at = get_the_modified_date('Y-m-d H:i:s', $ticket_id);
+                            $created_at = get_the_date('Y-m-d H:i:s', $ticket_id);
                             $ticket_terms = wp_get_post_terms($ticket_id, 'robodesk_ticket_category');
 
                             $ticket_category = '';
@@ -261,6 +262,7 @@ function robodesk_dashboard_callback()
                                 'category' => $ticket_category, // Assuming the first term is the category
                                 'source' => $ticket_origin, // Assuming the first term is the source
                                 'status' => $ticket_status,
+                                'created' => $created_at,
                                 'priority' => $ticket_priority,
                                 'updated' => $updated_at,
                                 'assignee' => get_post_meta($ticket_id, 'ticket_assignee', true) ?: 'N/A',
@@ -622,6 +624,7 @@ function robodesk_dashboard_callback()
                                     $priority_terms = get_the_terms($ticket_id, 'robodesk_ticket_priority');
                                     $ticket_priority = $priority_terms ? $priority_terms[0]->name : 'N/A';
                                     $updated_at = get_the_modified_date('Y-m-d H:i:s', $ticket_id);
+                                    $created_at = get_the_date('Y-m-d H:i:s', $ticket_id);
                                     $ticket_terms = wp_get_post_terms($ticket_id, 'robodesk_ticket_category');
                                     $ticket_category = '';
                                     if (!is_wp_error($ticket_terms) && !empty($ticket_terms)) {
@@ -657,6 +660,7 @@ function robodesk_dashboard_callback()
                                         'source' => $ticket_origin, // Assuming the first term is the source
                                         'status' => $ticket_status,
                                         'priority' => $ticket_priority,
+                                        'created' => $created_at,
                                         'updated' => $updated_at,
                                         'category' => $ticket_category,
                                         'assignee' => get_post_meta($ticket_id, 'ticket_assignee', true) ?: 'N/A',
