@@ -478,20 +478,20 @@ function loadNotes() {
     .join("");
 }
 
-function updateTicketStatus(ticketId, newStatus) {
-  const ticketIndex = tickets.findIndex((t) => t.id === ticketId);
-  if (ticketIndex !== -1) {
-    tickets[ticketIndex].status = newStatus;
-    tickets[ticketIndex].updated = new Date().toISOString();
-    if (currentTicket && currentTicket.id === ticketId) {
-      currentTicket.status = newStatus;
-      currentTicket.updated = new Date().toISOString();
-    }
+// function updateTicketStatus(ticketId, newStatus) {
+//   const ticketIndex = tickets.findIndex((t) => t.id === ticketId);
+//   if (ticketIndex !== -1) {
+//     tickets[ticketIndex].status = newStatus;
+//     tickets[ticketIndex].updated = new Date().toISOString();
+//     if (currentTicket && currentTicket.id === ticketId) {
+//       currentTicket.status = newStatus;
+//       currentTicket.updated = new Date().toISOString();
+//     }
 
-    showToast(`Ticket status updated to ${newStatus.replace("-", " ")}`);
-    updateDashboardStats();
-  }
-}
+//     showToast(`Ticket status updated to ${newStatus.replace("-", " ")}`);
+//     updateDashboardStats();
+//   }
+// }
 
 function updateTicketPriority(ticketId, newPriority) {
   const ticketIndex = tickets.findIndex((t) => t.id === ticketId);
@@ -1079,3 +1079,69 @@ jQuery(document).ready(function ($) {
     });
   });
 });
+
+// Update ticket status function
+function updateTicketStatus(ticketId, newStatus) {
+  if (!ticketId || !newStatus) return;
+
+  fetch(robodeskAjax.ajax_url, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
+    },
+    body: new URLSearchParams({
+      action: "update_ticket_status",
+      security: robodeskAjax.nonces.ticket_status,
+      ticket_id: ticketId,
+      status: newStatus,
+    }),
+  })
+    .then((res) => res.json())
+    .then((response) => {
+      try {
+        // console.log("AJAX Response:", response);
+
+        if (!response.success) {
+          showToast(
+            response.data?.message || "Failed to update status",
+            "error"
+          );
+          return;
+        }
+
+        const updatedStatus = response.data.status;
+        const updatedTime = response.data.updated;
+
+        // ✅ Safely update `tickets`
+        if (typeof tickets !== "undefined" && Array.isArray(tickets)) {
+          const ticketIndex = tickets.findIndex((t) => t.id === ticketId);
+          if (ticketIndex !== -1) {
+            tickets[ticketIndex].status = updatedStatus;
+            tickets[ticketIndex].updated = updatedTime;
+          }
+        }
+
+        // ✅ Safely update `currentTicket`
+        if (
+          typeof currentTicket !== "undefined" &&
+          currentTicket.id === ticketId
+        ) {
+          currentTicket.status = updatedStatus;
+          currentTicket.updated = updatedTime;
+        }
+
+        // ✅ Success toast
+        showToast(
+          `Ticket status updated to ${updatedStatus.replace("-", " ")}`
+        );
+        updateDashboardStats();
+      } catch (error) {
+        console.error("Error inside .then:", error);
+        showToast("Error updating ticket status", "error");
+      }
+    })
+    .catch((err) => {
+      console.error("AJAX catch error:", err);
+      showToast("Error updating ticket status", "error");
+    });
+}

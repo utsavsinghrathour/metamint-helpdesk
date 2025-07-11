@@ -603,3 +603,32 @@ function robodesk_user_lookup()
 
     wp_send_json($results);
 }
+
+
+// Ajax handler to update ticket status
+// This function will be called via AJAX to update the status of a ticket
+add_action('wp_ajax_update_ticket_status', 'robodesk_update_ticket_status');
+
+function robodesk_update_ticket_status()
+{
+    check_ajax_referer('robodesk_ticket_status_action', 'security'); // ✅ must match your localized name
+
+    $ticket_id = intval($_POST['ticket_id'] ?? 0);
+    $new_status = sanitize_text_field($_POST['status'] ?? '');
+
+    if (!$ticket_id || !$new_status) {
+        wp_send_json_error(['message' => 'Invalid data']);
+    }
+
+    if (!current_user_can('edit_post', $ticket_id)) {
+        wp_send_json_error(['message' => 'Permission denied']);
+    }
+
+    update_post_meta($ticket_id, '_robodesk_ticket_status', $new_status);
+    $updated = current_time('mysql');
+
+    wp_send_json_success([
+        'status' => $new_status,
+        'updated' => $updated
+    ]);
+}
