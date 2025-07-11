@@ -507,19 +507,19 @@ function loadNotes() {
 //   }
 // }
 
-function updateTicketAssignee(ticketId, newAssignee) {
-  const ticketIndex = tickets.findIndex((t) => t.id === ticketId);
-  if (ticketIndex !== -1) {
-    tickets[ticketIndex].assignee = newAssignee;
-    tickets[ticketIndex].updated = new Date().toISOString();
-    if (currentTicket && currentTicket.id === ticketId) {
-      currentTicket.assignee = newAssignee;
-      currentTicket.updated = new Date().toISOString();
-    }
+// function updateTicketAssignee(ticketId, newAssignee) {
+//   const ticketIndex = tickets.findIndex((t) => t.id === ticketId);
+//   if (ticketIndex !== -1) {
+//     tickets[ticketIndex].assignee = newAssignee;
+//     tickets[ticketIndex].updated = new Date().toISOString();
+//     if (currentTicket && currentTicket.id === ticketId) {
+//       currentTicket.assignee = newAssignee;
+//       currentTicket.updated = new Date().toISOString();
+//     }
 
-    showToast(`Ticket assigned to ${newAssignee}`);
-  }
-}
+//     showToast(`Ticket assigned to ${newAssignee}`);
+//   }
+// }
 
 function addReply() {
   const replyText = document.getElementById("new-reply").value.trim();
@@ -1184,5 +1184,54 @@ function updateTicketPriority(ticketId, newPriority) {
     .catch((error) => {
       console.error(error);
       showToast("Error updating ticket priority", "error");
+    });
+}
+
+//// for ticket assignee update
+// This function updates the assignee of a ticket via AJAX
+// It expects ticketId and newAssignee to be provided
+function updateTicketAssignee(ticketId, newAssignee) {
+  if (!ticketId || !newAssignee) return;
+
+  fetch(robodeskAjax.ajax_url, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
+    },
+    body: new URLSearchParams({
+      action: "update_ticket_assignee",
+      security: robodeskAjax.nonces.ticket_assignment, // nonce key
+      ticket_id: ticketId,
+      assignee: newAssignee,
+    }),
+  })
+    .then((res) => res.json())
+    .then((response) => {
+      if (response.success) {
+        const updatedAssignee = response.data.assignee;
+        const updatedTime = response.data.updated;
+
+        const ticketIndex = tickets.findIndex((t) => t.id === ticketId);
+        if (ticketIndex !== -1) {
+          tickets[ticketIndex].assignee = updatedAssignee;
+          tickets[ticketIndex].updated = updatedTime;
+        }
+
+        if (currentTicket && currentTicket.id === ticketId) {
+          currentTicket.assignee = updatedAssignee;
+          currentTicket.updated = updatedTime;
+        }
+
+        showToast(`Ticket assigned to ${updatedAssignee}`);
+      } else {
+        showToast(
+          response.data?.message || "Failed to update assignee",
+          "error"
+        );
+      }
+    })
+    .catch((error) => {
+      console.error(error);
+      showToast("Error updating ticket assignee", "error");
     });
 }

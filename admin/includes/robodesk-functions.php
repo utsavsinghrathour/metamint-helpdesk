@@ -670,3 +670,32 @@ function robodesk_update_ticket_priority()
         'updated'  => $updated,
     ]);
 }
+
+
+// Ajax handler to assign a ticket to an agent
+add_action('wp_ajax_update_ticket_assignee', 'robodesk_update_ticket_assignee');
+
+function robodesk_update_ticket_assignee()
+{
+    check_ajax_referer('robodesk_ticket_assignment_action', 'security');
+
+    $ticket_id = intval($_POST['ticket_id'] ?? 0);
+    $new_assignee = sanitize_text_field($_POST['assignee'] ?? '');
+
+    if (!$ticket_id || !$new_assignee) {
+        wp_send_json_error(['message' => 'Invalid input']);
+    }
+
+    if (!current_user_can('edit_post', $ticket_id)) {
+        wp_send_json_error(['message' => 'Permission denied']);
+    }
+
+    // Update post meta
+    update_post_meta($ticket_id, 'ticket_assignee', $new_assignee);
+    $updated = current_time('mysql');
+
+    wp_send_json_success([
+        'assignee' => $new_assignee,
+        'updated'  => $updated,
+    ]);
+}

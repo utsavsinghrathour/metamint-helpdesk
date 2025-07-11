@@ -785,6 +785,7 @@ function robodesk_dashboard_callback()
                                         <select onchange="updateTicketAssignee(currentTicket.id, this.value)" class="styled-select block w-full border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 rounded-md" id="ticket-assignee-select">
                                             <?php
                                             $default_agent = get_option('robodesk_default_agent');
+                                            var_dump($default_agent);
 
                                             // Get users by role with display_name only
                                             $agents = get_users([
