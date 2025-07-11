@@ -337,7 +337,7 @@ add_action('edited_robodesk_ticket_priority', 'save_priority_color_meta');
 // }
 
 
-add_filter('rest_prepare_robodesk_ticket', 'customize_robodesk_ticket_response', 10, 3);
+// add_filter('rest_prepare_robodesk_ticket', 'customize_robodesk_ticket_response', 10, 3);
 
 function customize_robodesk_ticket_response($response, $post, $request)
 {
@@ -355,12 +355,9 @@ function customize_robodesk_ticket_response($response, $post, $request)
 
     $ticket_status = get_post_meta($post->ID, '_robodesk_ticket_status', true);
     $response->data['robodesk_ticket_status'] = $ticket_status ? $ticket_status : '';
-    $origin_terms = get_the_terms($post->ID, 'robodesk_ticket_origin');
-    if ($origin_terms && !is_wp_error($origin_terms)) {
-        $response->data['robodesk_ticket_origin'] = wp_list_pluck($origin_terms, 'name');
-    } else {
-        $response->data['robodesk_ticket_origin'] = [];
-    }
+
+    
+    $response->data['robodesk_ticket_origin'] = get_post_meta($post->ID, 'robodesk_ticket_origin', true) ?: 'N/A';
     $author = get_user_by('id', $post->post_author);
     $response->data['robodesk_ticket_author'] = $author ? $author->display_name : '';
     $response->data['robodesk_ticket_author_image'] = $author ? get_avatar_url($author->ID) : '';
@@ -406,7 +403,8 @@ function robodesk_handle_tickets_webhook(WP_REST_Request $request)
             'post_status' => 'publish',
             'post_author' => $author,
             'meta_input'   => array(
-                '_robodesk_ticket_status' => 'open'
+                '_robodesk_ticket_status' => 'open',
+                'robodesk_ticket_origin' => 'chat'
             ),
         ));
 
@@ -417,38 +415,6 @@ function robodesk_handle_tickets_webhook(WP_REST_Request $request)
                 $ticket,
                 $title
             ));
-
-            // Set taxonomy for the ticket origin
-            $term_origin = term_exists('chat', 'robodesk_ticket_origin');
-
-            if ($term_origin) {
-
-                $term_id = $term_origin['term_id'];
-            } else {
-
-                $result = wp_insert_term(
-                    'Chat',
-                    'robodesk_ticket_origin',
-                    array(
-                        'description' => 'Chat origin tickets',
-                        'slug'        => 'chat'
-                    )
-                );
-
-
-                if (!is_wp_error($result)) {
-                    $term_id = $result['term_id'];
-                } else {
-
-                    error_log('Failed to create term: ' . $result->get_error_message());
-                    $term_id = null;
-                }
-            }
-
-            // If we have a valid term ID (either from existing term or newly created one), assign it to the post
-            if ($term_id) {
-                wp_set_post_terms($ticket, array($term_id), 'robodesk_ticket_origin');
-            }
 
             $user_object =  get_user_by('id', $author);
             $user_name = $user_object->display_name;
@@ -469,8 +435,8 @@ function robodesk_handle_tickets_webhook(WP_REST_Request $request)
             // $ticket_number = 'TCKT-' . str_pad($ticket, 3, '0', STR_PAD_LEFT);
 
             $ticket_number = 'TCKT-' . str_pad($ticket, 3, '0', STR_PAD_LEFT);
-            $ticket_origin_terms = get_the_terms($ticket, 'robodesk_ticket_origin');
-            $ticket_origin =  !is_wp_error($ticket_origin_terms) ? $ticket_origin_terms[0]->name : false;
+           
+            $ticket_origin = get_post_meta($ticket, 'robodesk_ticket_origin', true) ?: 'N/A';
             $ticket_priority_terms = get_the_terms($ticket, 'robodesk_ticket_priority');
             $ticket_priority =  !is_wp_error($ticket_priority_terms) ? $ticket_priority_terms[0]->name : false;
 
@@ -517,7 +483,7 @@ function robodesk_handle_tickets_webhook(WP_REST_Request $request)
                 $ticket_id = get_the_ID();
                 $ticket_number = 'TCKT-' . str_pad($ticket_id, 3, '0', STR_PAD_LEFT);
                 $ticket_origin_terms = get_the_terms($ticket_id, 'robodesk_ticket_origin');
-                $ticket_origin =  !is_wp_error($ticket_origin_terms) ? $ticket_origin_terms[0]->name : false;
+                $ticket_origin =  $ticket_origin = get_post_meta($ticket_id, 'robodesk_ticket_origin', true) ?: 'N/A';
                 $ticket_priority_terms = get_the_terms($ticket_id, 'robodesk_ticket_priority');
                 $ticket_priority =  !is_wp_error($ticket_priority_terms) ? $ticket_priority_terms[0]->name : false;
 
@@ -659,54 +625,19 @@ add_filter('use_block_editor_for_post_type', function ($use_block_editor, $post_
     return $use_block_editor;
 }, 10, 2);
 
-
-
-// add_action('wp_head', function () {
-//     $comments = get_comments([
-//         'post_id' => 1535,
-//         'order' => 'ASC',
-//     ]);
-
-
-//     $formatted_comments = [];
-//     foreach ($comments as $comment) {
-//         $author_image = get_avatar_url($comment->user_id, ['size' => 96]);
-//         $formatted_comments[] = [
-//             'id' => $comment->comment_ID,
-//             'author' => $comment->comment_author,
-//             'author_id' => $comment->user_id,
-//             'author_image' => $author_image,
-//             'content' => $comment->comment_content,
-//             'created_at' => $comment->comment_date,
-//         ];
-//     }
-
-//     echo '<pre>';
-//     var_dump($formatted_comments);
-//     echo '</pre>';
-// });
-
-
 function robodesk_user_data_to_session_storage()
 {
 ?>
     <script type="text/javascript">
         // Check if sessionStorage is available
         if (typeof(Storage) !== "undefined") {
-            // Prepare the data object
             var userData = {
                 isLoggedIn: <?php echo is_user_logged_in() ? 'true' : 'false'; ?>,
                 loggedInUserId: "<?php echo is_user_logged_in() ? get_current_user_id() : ''; ?>"
             };
 
-            // Save to sessionStorage
             sessionStorage.setItem('wpUserData', JSON.stringify(userData));
-
-            // Optional: Log to console for debugging
-            console.log('User data saved to sessionStorage:', userData);
-        } else {
-            console.warn('sessionStorage is not supported in this browser');
-        }
+        } 
     </script>
 <?php
 }
