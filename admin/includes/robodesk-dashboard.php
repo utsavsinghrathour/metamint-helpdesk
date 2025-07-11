@@ -256,7 +256,7 @@ function robodesk_dashboard_callback()
                                 'id' => $ticket_id,
                                 'title' => get_the_title(),
                                 'customer' => get_the_author(),
-                                'email' => get_the_author_email(),
+                                'email' => get_the_author_meta('email'),
                                 'author_id' => get_the_author_ID(),
                                 'category' => $ticket_category, // Assuming the first term is the category
                                 'source' => $ticket_origin, // Assuming the first term is the source
@@ -652,7 +652,7 @@ function robodesk_dashboard_callback()
                                         'id' => $ticket_id,
                                         'title' => get_the_title(),
                                         'customer' => get_the_author(),
-                                        'email' => get_the_author_email(),
+                                        'email' => get_the_author_meta('email'),
                                         'author_id' => get_the_author_ID(),
                                         'source' => $ticket_origin, // Assuming the first term is the source
                                         'status' => $ticket_status,
@@ -804,6 +804,7 @@ function robodesk_dashboard_callback()
                                         </select>
                                     </div>
                                 </div>
+
                             </div>
 
                             <!-- Ticket Details -->
@@ -812,6 +813,7 @@ function robodesk_dashboard_callback()
                                 <div id="ticket-meta-info" class="space-y-2">
                                     <!-- Ticket meta info will be populated by JavaScript -->
                                     <!-- have been applied from js -->
+
 
                                 </div>
                             </div>
@@ -1227,6 +1229,7 @@ function robodesk_dashboard_callback()
                                     <span id="fetch-message" class="text-blue-800"></span>
                                 </div>
                             </div>
+
                         </div>
 
                         <!-- Advanced Settings Tab -->
@@ -1293,9 +1296,9 @@ function robodesk_dashboard_callback()
             </div>
         </div>
 
+
     </div>
 
-    </html>
 
 
 <?php
