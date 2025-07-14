@@ -44,8 +44,7 @@ const SingleTicket = ({ ticket, onBack, loggedInUserId }) => {
         created_at: comment.created_at,
         isAdmin: comment.author_id !== ticket.author_id,
       }));
-      
-      
+      console.log('arpannnnnnnn', messages);
 
       setChatMessages(messages);
       setLoading(false);
@@ -83,9 +82,9 @@ const SingleTicket = ({ ticket, onBack, loggedInUserId }) => {
         text: message || '',
         sender: 'me',
         senderName: 'Me',
-        image: '/default-avatar.jpg', 
+        image: '/default-avatar.jpg',
         created_at: new Date().toISOString(),
-        isSending: true, 
+        isSending: true,
         ...(previewImage && { imageUrl: previewImage }),
       };
 
@@ -95,7 +94,6 @@ const SingleTicket = ({ ticket, onBack, loggedInUserId }) => {
       setPreviewImage(null);
 
       try {
- 
         const result = await sendReply(ticket.id, loggedInUserId, message);
 
         if (!result.data || !result.data.content) {
@@ -116,7 +114,6 @@ const SingleTicket = ({ ticket, onBack, loggedInUserId }) => {
         setChatMessages((prev) => prev.map((msg) => (msg.id === tempMessage.id ? newMessage : msg)));
       } catch (err) {
         console.error('Error sending message:', err);
-
         setChatMessages((prev) => prev.filter((msg) => msg.id !== tempMessage.id));
         setError('Failed to send message. Please try again.');
       }
@@ -207,8 +204,7 @@ const SingleTicket = ({ ticket, onBack, loggedInUserId }) => {
           <p className="rd-text-center rd-body-text">No messages yet.</p>
         ) : (
           chatMessages.map((msg, index) => {
-          
-          console.log(msg.sender, msg.senderName);
+            console.log(msg.sender, msg.senderName);
             const prevMsg = index > 0 ? chatMessages[index - 1] : null;
             const isSameSender = prevMsg && prevMsg.sender === msg.sender;
             const marginBottom = isSameSender ? '4px' : '12px';
@@ -217,7 +213,7 @@ const SingleTicket = ({ ticket, onBack, loggedInUserId }) => {
               <div
                 key={msg.id}
                 className={`chat-message rd-flex rd-items-start ${
-                  msg.sender === 'me' ? 'rd-ml-auto sent' : 'rd-flex rd-gap-8 received'
+                  msg.sender === 'me' || msg.isSending ? 'rd-ml-auto sent' : 'rd-flex rd-gap-8 received'
                 }`}
                 style={{
                   maxWidth: '70%',
@@ -225,21 +221,22 @@ const SingleTicket = ({ ticket, onBack, loggedInUserId }) => {
                   marginTop: index === 0 || !isSameSender ? '12px' : '4px',
                 }}
               >
-                {msg.sender === 'other' && !isSameSender && (
+                {/* Show avatar for 'me' or 'other' when sender changes or first message */}
+                {(!isSameSender || index === 0) && (
                   <img
                     src={msg.image}
-                    alt="Sender"
+                    alt={msg.sender === 'me' ? 'You' : msg.senderName}
                     className="rd-rounded-full rd-object-cover"
                     style={{ height: '30px', width: '30px', borderRadius: '50px', aspectRatio: '1' }}
                   />
                 )}
-                {msg.sender === 'other' && isSameSender && <div style={{ width: '30px', height: '30px' }} />}
+                {(isSameSender && index !== 0) && <div style={{ width: '30px', height: '30px' }} />}
                 <div
                   className="message-content"
                   style={{
-                    backgroundColor: msg.sender === 'me' ? '#007BFF' : '#FFFFFF',
-                    color: msg.sender === 'me' ? '#FFFFFF' : '#000000',
-                    border: msg.sender === 'other' ? '1px solid #E0E0E0' : 'none',
+                    backgroundColor: msg.sender === 'me' || msg.isSending ? '#007BFF' : '#FFFFFF',
+                    color: msg.sender === 'me' || msg.isSending ? '#FFFFFF' : '#000000',
+                    border: msg.sender === 'other' && !msg.isSending ? '1px solid #E0E0E0' : 'none',
                     borderRadius: '10px',
                     padding: '8px 12px',
                     maxWidth: '100%',
@@ -264,7 +261,7 @@ const SingleTicket = ({ ticket, onBack, loggedInUserId }) => {
                     className="rd-text-small rd-text-gray"
                     style={{
                       marginTop: '4px',
-                      textAlign: msg.sender === 'me' ? 'right' : 'left',
+                      textAlign: msg.sender === 'me' || msg.isSending ? 'right' : 'left',
                       fontSize: '0.75rem',
                     }}
                   >
