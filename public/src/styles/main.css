@@ -289,7 +289,8 @@ padding-right: 18px;
   background-color: var(--robodesk-theme-color);
 }
 .rd-border-blue{
-  border: 1px solid var(--primary-blue);
+  /* border: 1px solid var(--primary-blue); */
+  border: 1px solid var(--robodesk-theme-color);
 }
 .rd-text-blue{
   color: var(--primary-blue) !important;
@@ -557,6 +558,7 @@ input::placeholder{
   overflow: hidden;
   text-overflow: ellipsis;
 }
-
-
+.bi.bi-chevron-up{
+  color: #fff;
+}
 
