@@ -700,7 +700,7 @@ function robodesk_update_ticket_assignee()
     ]);
 }
 
-// ADD NOTE TO TICKET
+// ADD REPLY TO TICKET
 add_action('wp_ajax_add_ticket_reply', 'robodesk_handle_add_ticket_reply');
 
 function robodesk_handle_add_ticket_reply()
