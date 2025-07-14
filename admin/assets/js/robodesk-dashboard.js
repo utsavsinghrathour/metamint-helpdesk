@@ -430,133 +430,6 @@ function showTicketTab(tabName) {
   currentTicketTab = tabName;
 }
 
-function addReply() {
-  const replyBox = document.getElementById("new-reply");
-  const replyText = replyBox.innerHTML.trim();
-  if (!replyText || !currentTicket) return;
-
-  const data = {
-    action: "add_ticket_reply",
-    ticket_id: currentTicket.id,
-    reply: replyText,
-    nonce: robodeskAjax.nonces.add_ticket_reply,
-  };
-
-  fetch(robodeskAjax.ajax_url, {
-    method: "POST",
-    headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    body: new URLSearchParams(data).toString(),
-  })
-    .then((res) => res.json())
-    .then((response) => {
-      if (response.success) {
-        const newReply = {
-          id: response.data.comment_id,
-          author: response.data.author,
-          message: replyText,
-          timestamp: new Date().toISOString(),
-          type: "agent",
-        };
-
-        if (!Array.isArray(currentTicket.replies)) currentTicket.replies = [];
-        currentTicket.replies.push(newReply);
-        currentTicket.updated = new Date().toISOString();
-
-        const ticketIndex = tickets.findIndex((t) => t.id === currentTicket.id);
-        if (ticketIndex !== -1) tickets[ticketIndex] = currentTicket;
-
-        replyBox.innerHTML = "";
-        document.getElementById("replies-count").textContent =
-          currentTicket.replies.length;
-        loadReplies();
-        showToast("Reply added successfully");
-      } else {
-        showToast(response.data?.message || "Failed to add reply", "error");
-      }
-    })
-    .catch(() => showToast("AJAX error occurred", "error"));
-}
-
-function loadReplies() {
-  if (!currentTicket || !Array.isArray(currentTicket.replies)) {
-    return;
-  }
-
-  const repliesList = document.getElementById("replies-list");
-  repliesList.innerHTML = currentTicket.replies
-    .map(
-      (reply) => `
-        <div class="p-4 rounded-lg ${
-          reply.type === "customer" ? "reply-customer" : "reply-agent"
-        }">
-            <div class="flex justify-between items-center mb-2">
-                <span class="font-medium text-sm text-gray-900">${
-                  reply.author
-                }</span>
-                <span class="text-xs text-gray-500">${formatDate(
-                  reply.timestamp
-                )}</span>
-            </div>
-            <p class="text-sm text-gray-700">${reply.message}</p>
-        </div>
-    `
-    )
-    .join("");
-}
-
-function addNote() {
-  const noteBox = document.getElementById("new-note");
-  if (!noteBox || !currentTicket) return;
-
-  const noteText = noteBox.innerHTML.trim();
-  if (!noteText) return;
-
-  const newNote = {
-    id: Date.now(),
-    author: "Support Agent",
-    note: noteText,
-    timestamp: new Date().toISOString(),
-  };
-
-  if (!Array.isArray(currentTicket.notes)) currentTicket.notes = [];
-  currentTicket.notes.push(newNote);
-  currentTicket.updated = new Date().toISOString();
-
-  const ticketIndex = tickets.findIndex((t) => t.id === currentTicket.id);
-  if (ticketIndex !== -1) {
-    tickets[ticketIndex] = currentTicket;
-  }
-
-  noteBox.innerHTML = ""; // clear the contenteditable div
-  document.getElementById("notes-count").textContent =
-    currentTicket.notes.length;
-  loadNotes();
-  showToast("Note added successfully");
-}
-
-function loadNotes() {
-  if (!currentTicket || !Array.isArray(currentTicket.notes)) return;
-
-  const notesList = document.getElementById("notes-list");
-  notesList.innerHTML = currentTicket.notes
-    .map(
-      (note) => `
-        <div class="p-4 rounded-lg note-internal">
-            <div class="flex justify-between items-center mb-2">
-                <span class="font-medium text-sm text-gray-900">${
-                  note.author
-                }</span>
-                <span class="text-xs text-gray-500">${formatDate(
-                  note.timestamp
-                )}</span>
-            </div>
-            <p class="text-sm text-gray-700">${note.note}</p>
-        </div>
-      `
-    )
-    .join("");
-}
-
 // Settings functions
 function showSettingsTab(tabName) {
   // Update tab buttons
@@ -1213,4 +1086,139 @@ function updateTicketAssignee(ticketId, newAssignee) {
       console.error(error);
       showToast("Error updating ticket assignee", "error");
     });
+}
+// This function adds a reply to the current ticket
+//Ajax request is made to the server to save the reply
+function addReply() {
+  const replyBox = document.getElementById("new-reply");
+  const replyText = replyBox.innerHTML.trim();
+  if (!replyText || !currentTicket) return;
+
+  const data = {
+    action: "add_ticket_reply",
+    ticket_id: currentTicket.id,
+    reply: replyText,
+    nonce: robodeskAjax.nonces.add_ticket_reply,
+  };
+
+  fetch(robodeskAjax.ajax_url, {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: new URLSearchParams(data).toString(),
+  })
+    .then((res) => res.json())
+    .then((response) => {
+      if (response.success) {
+        const newReply = {
+          id: response.data.comment_id,
+          author: response.data.author,
+          message: replyText,
+          timestamp: new Date().toISOString(),
+          type: "agent",
+        };
+
+        if (!Array.isArray(currentTicket.replies)) currentTicket.replies = [];
+        currentTicket.replies.push(newReply);
+        currentTicket.updated = new Date().toISOString();
+
+        const ticketIndex = tickets.findIndex((t) => t.id === currentTicket.id);
+        if (ticketIndex !== -1) tickets[ticketIndex] = currentTicket;
+
+        replyBox.innerHTML = "";
+        document.getElementById("replies-count").textContent =
+          currentTicket.replies.length;
+        loadReplies();
+        showToast("Reply added successfully");
+      } else {
+        showToast(response.data?.message || "Failed to add reply", "error");
+      }
+    })
+    .catch(() => showToast("AJAX error occurred", "error"));
+}
+
+// This function loads replies for the current ticket
+// It populates the replies list with the replies from the current ticket
+function loadReplies() {
+  if (!currentTicket || !Array.isArray(currentTicket.replies)) {
+    return;
+  }
+
+  const repliesList = document.getElementById("replies-list");
+  repliesList.innerHTML = currentTicket.replies
+    .map(
+      (reply) => `
+        <div class="p-4 rounded-lg ${
+          reply.type === "customer" ? "reply-customer" : "reply-agent"
+        }">
+            <div class="flex justify-between items-center mb-2">
+                <span class="font-medium text-sm text-gray-900">${
+                  reply.author
+                }</span>
+                <span class="text-xs text-gray-500">${formatDate(
+                  reply.timestamp
+                )}</span>
+            </div>
+            <p class="text-sm text-gray-700">${reply.message}</p>
+        </div>
+    `
+    )
+    .join("");
+}
+
+// This function add a note to the current ticket
+
+function addNote() {
+  const noteBox = document.getElementById("new-note");
+  if (!noteBox || !currentTicket) return;
+
+  const noteText = noteBox.innerHTML.trim();
+  if (!noteText) return;
+
+  const newNote = {
+    id: Date.now(),
+    author: "Support Agent",
+    note: noteText,
+    timestamp: new Date().toISOString(),
+  };
+
+  if (!Array.isArray(currentTicket.notes)) currentTicket.notes = [];
+  currentTicket.notes.push(newNote);
+  currentTicket.updated = new Date().toISOString();
+
+  const ticketIndex = tickets.findIndex((t) => t.id === currentTicket.id);
+  if (ticketIndex !== -1) {
+    tickets[ticketIndex] = currentTicket;
+  }
+
+  noteBox.innerHTML = ""; // clear the contenteditable div
+  document.getElementById("notes-count").textContent =
+    currentTicket.notes.length;
+  loadNotes();
+  showToast("Note added successfully");
+}
+
+//loads notes for the current ticket
+// It populates the notes list with the notes from the current ticket
+
+function loadNotes() {
+  if (!currentTicket || !Array.isArray(currentTicket.notes)) return;
+
+  const notesList = document.getElementById("notes-list");
+  notesList.innerHTML = currentTicket.notes
+    .map(
+      (note) => `
+        <div class="p-4 rounded-lg note-internal">
+            <div class="flex justify-between items-center mb-2">
+                <span class="font-medium text-sm text-gray-900">${
+                  note.author
+                }</span>
+                <span class="text-xs text-gray-500">${formatDate(
+                  note.timestamp
+                )}</span>
+            </div>
+            <p class="text-sm text-gray-700">${note.note}</p>
+        </div>
+      `
+    )
+    .join("");
 }
