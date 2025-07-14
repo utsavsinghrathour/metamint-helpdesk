@@ -38,6 +38,18 @@
   padding: 8px 16px;
   border-radius: 10px;
 }
+.chat-message.sent{
+  margin-left: auto;
+  align-items: center;
+    gap: 10px;
+}
+.chat-message .message-content{
+  display: flex;
+  flex-direction: column;
+}
+.chat-message.sent .message-content *{
+  color: #fff !important;
+}
 .chat-container {
   overflow: auto;
   max-height: 300px;
