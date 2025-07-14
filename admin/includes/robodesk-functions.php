@@ -699,3 +699,48 @@ function robodesk_update_ticket_assignee()
         'updated'  => $updated,
     ]);
 }
+
+// ADD NOTE TO TICKET
+add_action('wp_ajax_add_ticket_reply', 'robodesk_handle_add_ticket_reply');
+
+function robodesk_handle_add_ticket_reply()
+{
+    // Verify nonce for security
+    if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'robodesk_add_ticket_reply_action')) {
+        wp_send_json_error(['message' => 'Nonce verification failed']);
+    }
+
+    $ticket_id = isset($_POST['ticket_id']) ? intval($_POST['ticket_id']) : 0;
+    $reply = isset($_POST['reply']) ? wp_kses_post($_POST['reply']) : '';
+
+    if (!$ticket_id || empty($reply)) {
+        wp_send_json_error(['message' => 'Invalid data']);
+    }
+
+    $user_id = get_current_user_id();
+    $user_object = get_userdata($user_id);
+
+    if (!$user_id || !$user_object) {
+        wp_send_json_error(['message' => 'User not logged in']);
+    }
+
+    $comment_id = wp_insert_comment([
+        'comment_post_ID'      => $ticket_id,
+        'comment_author'       => $user_object->display_name,
+        'comment_author_email' => $user_object->user_email,
+        'user_id'              => $user_id,
+        'comment_content'      => $reply,
+        'comment_approved'     => 1,
+        'comment_type'         => 'ticket_replies',
+        'is_robodesk_reply'   => true, // Custom field to identify as a Robodesk reply
+    ]);
+
+    if (is_wp_error($comment_id)) {
+        wp_send_json_error(['message' => 'Failed to insert comment']);
+    }
+
+    wp_send_json_success([
+        'comment_id' => $comment_id,
+        'author'     => $user_object->display_name,
+    ]);
+}

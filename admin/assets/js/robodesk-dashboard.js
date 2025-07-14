@@ -234,7 +234,7 @@ function showPage(pageName) {
   } else if (pageName === "settings") {
     showSettingsTab("basic");
   } else if (pageName === "dashboard") {
-    loadDashboardTickets();
+    // loadDashboardTickets();
   }
 }
 
@@ -248,7 +248,7 @@ function filterDashboardTickets(filterType) {
     .classList.add("active");
 
   currentDashboardFilter = filterType;
-  loadDashboardTickets();
+  // loadDashboardTickets();
 }
 
 function isValidEmail(email) {
@@ -431,7 +431,9 @@ function showTicketTab(tabName) {
 }
 
 function loadReplies() {
-  if (!currentTicket || !currentTicket.replies) return;
+  if (!currentTicket || !Array.isArray(currentTicket.replies)) {
+    return;
+  }
 
   const repliesList = document.getElementById("replies-list");
   repliesList.innerHTML = currentTicket.replies
@@ -456,7 +458,7 @@ function loadReplies() {
 }
 
 function loadNotes() {
-  if (!currentTicket || !currentTicket.notes) return;
+  if (!currentTicket || !Array.isArray(currentTicket.notes)) return;
 
   const notesList = document.getElementById("notes-list");
   notesList.innerHTML = currentTicket.notes
@@ -473,43 +475,64 @@ function loadNotes() {
             </div>
             <p class="text-sm text-gray-700">${note.note}</p>
         </div>
-    `
+      `
     )
     .join("");
 }
 
 function addReply() {
-  const replyText = document.getElementById("new-reply").value.trim();
+  const replyBox = document.getElementById("new-reply");
+  const replyText = replyBox.innerHTML.trim();
   if (!replyText || !currentTicket) return;
 
-  const newReply = {
-    id: Date.now(),
-    author: "Support Agent",
-    message: replyText,
-    timestamp: new Date().toISOString(),
-    type: "agent",
+  const data = {
+    action: "add_ticket_reply",
+    ticket_id: currentTicket.id,
+    reply: replyText,
+    nonce: robodeskAjax.nonces.add_ticket_reply,
   };
 
-  if (!currentTicket.replies) currentTicket.replies = [];
-  currentTicket.replies.push(newReply);
-  currentTicket.updated = new Date().toISOString();
+  fetch(robodeskAjax.ajax_url, {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: new URLSearchParams(data).toString(),
+  })
+    .then((res) => res.json())
+    .then((response) => {
+      if (response.success) {
+        const newReply = {
+          id: response.data.comment_id,
+          author: response.data.author,
+          message: replyText,
+          timestamp: new Date().toISOString(),
+          type: "agent",
+        };
 
-  // Update the ticket in the main array
-  const ticketIndex = tickets.findIndex((t) => t.id === currentTicket.id);
-  if (ticketIndex !== -1) {
-    tickets[ticketIndex] = currentTicket;
-  }
+        if (!Array.isArray(currentTicket.replies)) currentTicket.replies = [];
+        currentTicket.replies.push(newReply);
+        currentTicket.updated = new Date().toISOString();
 
-  document.getElementById("new-reply").value = "";
-  document.getElementById("replies-count").textContent =
-    currentTicket.replies.length;
-  loadReplies();
-  showToast("Reply added successfully");
+        const ticketIndex = tickets.findIndex((t) => t.id === currentTicket.id);
+        if (ticketIndex !== -1) tickets[ticketIndex] = currentTicket;
+
+        replyBox.innerHTML = "";
+        document.getElementById("replies-count").textContent =
+          currentTicket.replies.length;
+        loadReplies();
+        showToast("Reply added successfully");
+      } else {
+        showToast(response.data?.message || "Failed to add reply", "error");
+      }
+    })
+    .catch(() => showToast("AJAX error occurred", "error"));
 }
 
 function addNote() {
-  const noteText = document.getElementById("new-note").value.trim();
-  if (!noteText || !currentTicket) return;
+  const noteBox = document.getElementById("new-note");
+  if (!noteBox || !currentTicket) return;
+
+  const noteText = noteBox.innerHTML.trim();
+  if (!noteText) return;
 
   const newNote = {
     id: Date.now(),
@@ -518,17 +541,16 @@ function addNote() {
     timestamp: new Date().toISOString(),
   };
 
-  if (!currentTicket.notes) currentTicket.notes = [];
+  if (!Array.isArray(currentTicket.notes)) currentTicket.notes = [];
   currentTicket.notes.push(newNote);
   currentTicket.updated = new Date().toISOString();
 
-  // Update the ticket in the main array
   const ticketIndex = tickets.findIndex((t) => t.id === currentTicket.id);
   if (ticketIndex !== -1) {
     tickets[ticketIndex] = currentTicket;
   }
 
-  document.getElementById("new-note").value = "";
+  noteBox.innerHTML = ""; // clear the contenteditable div
   document.getElementById("notes-count").textContent =
     currentTicket.notes.length;
   loadNotes();
