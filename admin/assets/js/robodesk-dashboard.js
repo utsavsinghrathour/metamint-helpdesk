@@ -430,56 +430,6 @@ function showTicketTab(tabName) {
   currentTicketTab = tabName;
 }
 
-function loadReplies() {
-  if (!currentTicket || !Array.isArray(currentTicket.replies)) {
-    return;
-  }
-
-  const repliesList = document.getElementById("replies-list");
-  repliesList.innerHTML = currentTicket.replies
-    .map(
-      (reply) => `
-        <div class="p-4 rounded-lg ${
-          reply.type === "customer" ? "reply-customer" : "reply-agent"
-        }">
-            <div class="flex justify-between items-center mb-2">
-                <span class="font-medium text-sm text-gray-900">${
-                  reply.author
-                }</span>
-                <span class="text-xs text-gray-500">${formatDate(
-                  reply.timestamp
-                )}</span>
-            </div>
-            <p class="text-sm text-gray-700">${reply.message}</p>
-        </div>
-    `
-    )
-    .join("");
-}
-
-function loadNotes() {
-  if (!currentTicket || !Array.isArray(currentTicket.notes)) return;
-
-  const notesList = document.getElementById("notes-list");
-  notesList.innerHTML = currentTicket.notes
-    .map(
-      (note) => `
-        <div class="p-4 rounded-lg note-internal">
-            <div class="flex justify-between items-center mb-2">
-                <span class="font-medium text-sm text-gray-900">${
-                  note.author
-                }</span>
-                <span class="text-xs text-gray-500">${formatDate(
-                  note.timestamp
-                )}</span>
-            </div>
-            <p class="text-sm text-gray-700">${note.note}</p>
-        </div>
-      `
-    )
-    .join("");
-}
-
 function addReply() {
   const replyBox = document.getElementById("new-reply");
   const replyText = replyBox.innerHTML.trim();
@@ -527,6 +477,33 @@ function addReply() {
     .catch(() => showToast("AJAX error occurred", "error"));
 }
 
+function loadReplies() {
+  if (!currentTicket || !Array.isArray(currentTicket.replies)) {
+    return;
+  }
+
+  const repliesList = document.getElementById("replies-list");
+  repliesList.innerHTML = currentTicket.replies
+    .map(
+      (reply) => `
+        <div class="p-4 rounded-lg ${
+          reply.type === "customer" ? "reply-customer" : "reply-agent"
+        }">
+            <div class="flex justify-between items-center mb-2">
+                <span class="font-medium text-sm text-gray-900">${
+                  reply.author
+                }</span>
+                <span class="text-xs text-gray-500">${formatDate(
+                  reply.timestamp
+                )}</span>
+            </div>
+            <p class="text-sm text-gray-700">${reply.message}</p>
+        </div>
+    `
+    )
+    .join("");
+}
+
 function addNote() {
   const noteBox = document.getElementById("new-note");
   if (!noteBox || !currentTicket) return;
@@ -555,6 +532,29 @@ function addNote() {
     currentTicket.notes.length;
   loadNotes();
   showToast("Note added successfully");
+}
+
+function loadNotes() {
+  if (!currentTicket || !Array.isArray(currentTicket.notes)) return;
+
+  const notesList = document.getElementById("notes-list");
+  notesList.innerHTML = currentTicket.notes
+    .map(
+      (note) => `
+        <div class="p-4 rounded-lg note-internal">
+            <div class="flex justify-between items-center mb-2">
+                <span class="font-medium text-sm text-gray-900">${
+                  note.author
+                }</span>
+                <span class="text-xs text-gray-500">${formatDate(
+                  note.timestamp
+                )}</span>
+            </div>
+            <p class="text-sm text-gray-700">${note.note}</p>
+        </div>
+      `
+    )
+    .join("");
 }
 
 // Settings functions
