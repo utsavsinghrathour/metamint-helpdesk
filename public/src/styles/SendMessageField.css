@@ -4,7 +4,8 @@
     resize: none;
 }
 .send-message-field textarea::placeholder{
-    color: var(--primary-blue);
+    /* color: var(--primary-blue); */
+    color: var(--robodesk-theme-color);
     font-size: 13px;
     font-weight: 400;
 }
