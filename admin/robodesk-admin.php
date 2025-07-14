@@ -330,6 +330,7 @@ function robodesk_enqueue_tailwind_and_styles()
             'ticket_priority' => wp_create_nonce('robodesk_ticket_priority_action'),
             'ticket_assignment' => wp_create_nonce('robodesk_ticket_assignment_action'),
             'add_ticket_reply' => wp_create_nonce('robodesk_add_ticket_reply_action'),
+            'get_ticket_replies' => wp_create_nonce('robodesk_get_ticket_replies_action'),
         ]
     ]);
 }

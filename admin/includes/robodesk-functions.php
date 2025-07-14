@@ -700,6 +700,10 @@ function robodesk_update_ticket_assignee()
     ]);
 }
 
+
+
+
+
 // ADD REPLY TO TICKET
 add_action('wp_ajax_add_ticket_reply', 'robodesk_handle_add_ticket_reply');
 
@@ -742,5 +746,56 @@ function robodesk_handle_add_ticket_reply()
     wp_send_json_success([
         'comment_id' => $comment_id,
         'author'     => $user_object->display_name,
+    ]);
+}
+
+// GET TICKET REPLIES
+add_action('wp_ajax_get_ticket_replies', 'robodesk_handle_get_ticket_replies');
+
+function robodesk_handle_get_ticket_replies()
+{
+    // Verify nonce
+    if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'robodesk_get_ticket_replies_action')) {
+        wp_send_json_error(['message' => 'Nonce verification failed']);
+    }
+
+    $ticket_id = isset($_POST['ticket_id']) ? intval($_POST['ticket_id']) : 0;
+
+    if (!$ticket_id) {
+        wp_send_json_error(['message' => 'Invalid ticket ID']);
+    }
+
+    // Get ticket replies (comments)
+    $comments = get_comments([
+        'post_id' => $ticket_id,
+        'order'   => 'ASC',
+        'type'    => 'ticket_replies',
+    ]);
+
+    $replies = [];
+    foreach ($comments as $comment) {
+        // Determine user type
+        $user = get_userdata($comment->user_id);
+        $type = 'customer';
+
+        if ($user) {
+            $roles = $user->roles;
+            if (in_array('administrator', $roles) || in_array('robodesk_agent', $roles)) {
+                $type = 'agent';
+            }
+        }
+
+        $replies[] = [
+            'id'        => $comment->comment_ID,
+            'author'    => $comment->comment_author,
+            'message'   => $comment->comment_content,
+            'timestamp' => $comment->comment_date,
+            'type'      => $type,
+        ];
+    }
+
+    wp_send_json_success([
+        'replies' => $replies,
+        'count'   => count($replies),
     ]);
 }

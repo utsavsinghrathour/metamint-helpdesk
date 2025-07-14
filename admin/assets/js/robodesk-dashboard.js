@@ -1087,8 +1087,11 @@ function updateTicketAssignee(ticketId, newAssignee) {
       showToast("Error updating ticket assignee", "error");
     });
 }
+//
+//
+//
 // This function adds a reply to the current ticket
-//Ajax request is made to the server to save the reply
+// Ajax request is made to the server to save the reply
 function addReply() {
   const replyBox = document.getElementById("new-reply");
   const replyText = replyBox.innerHTML.trim();
@@ -1138,31 +1141,92 @@ function addReply() {
 
 // This function loads replies for the current ticket
 // It populates the replies list with the replies from the current ticket
-function loadReplies() {
-  if (!currentTicket || !Array.isArray(currentTicket.replies)) {
-    return;
-  }
+// Function to load replies via AJAX
+async function loadReplies() {
+  if (!currentTicket) return;
 
   const repliesList = document.getElementById("replies-list");
-  repliesList.innerHTML = currentTicket.replies
+  if (!repliesList) return;
+
+  // Show loading state
+  repliesList.innerHTML =
+    '<div class="text-center py-4">Loading replies...</div>';
+
+  try {
+    const data = {
+      action: "get_ticket_replies",
+      ticket_id: currentTicket.id,
+      nonce: robodeskAjax.nonces.get_ticket_replies,
+    };
+
+    const response = await fetch(robodeskAjax.ajax_url, {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams(data).toString(),
+    });
+
+    if (!response.ok) throw new Error("Network response was not ok");
+
+    const result = await response.json();
+
+    if (result.success) {
+      renderReplies(result.data.replies);
+      document.getElementById("replies-count").textContent = result.data.count;
+    } else {
+      throw new Error(result.data?.message || "Failed to load replies");
+    }
+  } catch (error) {
+    console.error("Failed to load replies:", error);
+    repliesList.innerHTML = `<div class="text-red-500 p-4">Error: ${error.message}</div>`;
+  }
+}
+
+// Render replies to the DOM
+function renderReplies(replies) {
+  const repliesList = document.getElementById("replies-list");
+  if (!repliesList || !Array.isArray(replies)) return;
+
+  repliesList.innerHTML = replies
     .map(
       (reply) => `
-        <div class="p-4 rounded-lg ${
-          reply.type === "customer" ? "reply-customer" : "reply-agent"
-        }">
-            <div class="flex justify-between items-center mb-2">
-                <span class="font-medium text-sm text-gray-900">${
-                  reply.author
-                }</span>
-                <span class="text-xs text-gray-500">${formatDate(
-                  reply.timestamp
-                )}</span>
-            </div>
-            <p class="text-sm text-gray-700">${reply.message}</p>
-        </div>
-    `
+    <div class="p-4 rounded-lg mb-3 ${
+      reply.type === "customer" ? "bg-blue-50" : "bg-gray-50"
+    }">
+      <div class="flex justify-between items-center mb-2">
+        <span class="font-medium text-sm text-gray-900">${escapeHTML(
+          reply.author
+        )}</span>
+        <span class="text-xs text-gray-500">${formatDate(
+          reply.timestamp
+        )}</span>
+      </div>
+      <p class="text-sm text-gray-700">${escapeHTML(reply.message)}</p>
+    </div>
+  `
     )
     .join("");
+}
+
+// Helper function to escape HTML
+function escapeHTML(str) {
+  return str
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
+// Helper function to format dates
+function formatDate(dateString) {
+  const date = new Date(dateString);
+  return date.toLocaleString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+  });
 }
 
 // This function add a note to the current ticket
