@@ -770,6 +770,8 @@ function robodesk_handle_get_ticket_replies()
         'post_id' => $ticket_id,
         'order'   => 'ASC',
         'type'    => 'ticket_replies',
+        'is_robodesk_reply'   => true,
+
     ]);
 
     $replies = [];
