@@ -24,8 +24,8 @@
   min-height: 220px;
 }
 .single-ticket-header img{
-  max-width: 120px;
-  object-fit: cover;
+  max-width: 100px;
+  object-fit: contain;
 }
 .rd-send-message a {
   width: fit-content;
@@ -40,7 +40,6 @@
 }
 .chat-message.sent{
   margin-left: auto;
-  align-items: center;
     gap: 10px;
 }
 .chat-message .message-content{
