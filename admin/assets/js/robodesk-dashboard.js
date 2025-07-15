@@ -1189,16 +1189,11 @@ function renderReplies(replies) {
   repliesList.innerHTML = replies
     .map(
       (reply) => `
-    <div class="p-4 rounded-lg mb-3 ${
-      reply.type === "customer" ? "bg-blue-50" : "bg-gray-50"
-    }">
+    <div class="p-4 rounded-lg reply-${reply.type}">
       <div class="flex justify-between items-center mb-2">
-        <span class="font-medium text-sm text-gray-900">${escapeHTML(
-          reply.author
-        )}</span>
-        <span class="font-medium text-sm text-gray-900">${escapeHTML(
-          reply.type === "customer" ? "Customer" : "Agent"
-        )}</span>
+           <span class="font-medium text-sm text-gray-900">${escapeHTML(
+             reply.author
+           )} (${reply.type === "customer" ? "Customer" : "Agent"})</span>
 
         <span class="text-xs text-gray-500">${formatDate(
           reply.timestamp
@@ -1327,11 +1322,11 @@ function renderNotes(notes) {
   notesList.innerHTML = notes
     .map(
       (note) => `
-    <div class="p-4 rounded-lg mb-3 bg-gray-50">
+    <div class="p-4 rounded-lg note-internal">
       <div class="flex justify-between items-center mb-2">
         <span class="font-medium text-sm text-gray-900">${escapeHTML(
           note.author
-        )}</span>
+        )} (${note.type === "customer" ? "Customer" : "Agent"})</span>
         <span class="text-xs text-gray-500">${formatDate(note.timestamp)}</span>
       </div>
       <p class="text-sm text-gray-700">${escapeHTML(note.message)}</p>
