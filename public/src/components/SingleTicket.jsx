@@ -262,7 +262,7 @@ const SingleTicket = ({ ticket, onBack, loggedInUserId }) => {
                     style={{
                       marginTop: '4px',
                       textAlign: msg.sender === 'me' || msg.isSending ? 'right' : 'left',
-                      fontSize: '0.75rem',
+                      fontSize: '10px',
                     }}
                   >
                     {msg.isSending ? '' : formatTimestamp(msg.created_at)}
