@@ -336,30 +336,89 @@ add_action('edited_robodesk_ticket_priority', 'save_priority_color_meta');
 
 // }
 
+add_filter(
+    'rest_prepare_robodesk_ticket',
+    'customize_robodesk_ticket_response',
+    10,
+    3
+);
 
-// add_filter('rest_prepare_robodesk_ticket', 'customize_robodesk_ticket_response', 10, 3);
+// function customize_robodesk_ticket_response( $response, $post, $request ) {
 
-function customize_robodesk_ticket_response($response, $post, $request)
-{
+//     // Grab the array we’re going to work on
+//     $data = $response->get_data(); 
+    
 
-    $response->data['robodesk_ticket_title'] = $response->data['title']['rendered'];
+//     $data['robodesk_ticket_title'] = $data['title']['rendered'] ?? '';
 
-    $response->data['robodesk_ticket_updated_date'] = $response->data['modified'];
 
-    $priority_terms = get_the_terms($post->ID, 'robodesk_ticket_priority');
-    if ($priority_terms && !is_wp_error($priority_terms)) {
-        $response->data['robodesk_ticket_priority'] = wp_list_pluck($priority_terms, 'name');
-    } else {
-        $response->data['robodesk_ticket_priority'] = [];
+//     $priority_terms = get_the_terms( $post->ID, 'robodesk_ticket_priority' );
+//     $data['robodesk_ticket_priority'] = ( $priority_terms && ! is_wp_error( $priority_terms ) )
+//         ? wp_list_pluck( $priority_terms, 'name' )
+//         : [];                             
+   
+
+//     $data['robodesk_ticket_status'] = get_post_meta(
+//         $post->ID,
+//         '_robodesk_ticket_status',
+//         true
+//     );
+
+//     $data['robodesk_ticket_origin'] = get_post_meta(
+//         $post->ID,
+//         'robodesk_ticket_origin',
+//         true
+//     ) ?: 'N/A';
+
+//     if ( $author = get_userdata( $post->post_author ) ) {
+//         $data['robodesk_ticket_author']       = $author->display_name;
+//         $data['robodesk_ticket_author_image'] = get_avatar_url( $author->ID );
+//     }
+
+//     $response->set_data( $data );
+//     return $response;
+// }
+
+function customize_robodesk_ticket_response( $response, $post, $request ) {
+    // Grab the array we're going to work on
+    $data = $response->get_data(); 
+    
+    // Generate ticket number
+    $ticket_id = $post->ID;
+    $ticket_number = 'TCKT-' . str_pad($ticket_id, 3, '0', STR_PAD_LEFT);
+    
+    // Calculate last activity time
+    $last_activity = get_post_time('U', true, $post);
+    $human_readable_time = human_time_diff($last_activity, current_time('U'));
+    
+    // Get priority terms
+    $priority_terms = get_the_terms( $post->ID, 'robodesk_ticket_priority' );
+    $priority_name = ($priority_terms && ! is_wp_error( $priority_terms )) 
+        ? $priority_terms[0]->name 
+        : '';
+    
+    // Get author info
+    $author_name = '';
+    $author_image = '';
+    if ($author = get_userdata($post->post_author)) {
+        $author_name = $author->display_name;
+        $author_image = get_avatar_url($author->ID);
     }
+    
+    // Format the data
+    $data = [
+        'id' => $ticket_id,
+        'ticket_number' => $ticket_number,
+        'ticket_title' => $post->post_title,
+        'ticket_status' => get_post_meta($post->ID, '_robodesk_ticket_status', true) ?? 'open',
+        'ticket_priority' => $priority_name,
+        'ticket_origin' => get_post_meta($post->ID, 'robodesk_ticket_origin', true) ?: 'N/A',
+        'ticket_author' => $author_name,
+        'ticket_author_image' => $author_image,
+        'ticket_time_ago' => $human_readable_time,
+    ];
 
-    $ticket_status = get_post_meta($post->ID, '_robodesk_ticket_status', true);
-    $response->data['robodesk_ticket_status'] = $ticket_status ? $ticket_status : '';
-    $response->data['robodesk_ticket_origin'] = get_post_meta($post->ID, 'robodesk_ticket_origin', true) ?: 'N/A';
-    $author = get_user_by('id', $post->post_author);
-    $response->data['robodesk_ticket_author'] = $author ? $author->display_name : '';
-    $response->data['robodesk_ticket_author_image'] = $author ? get_avatar_url($author->ID) : '';
-
+    $response->set_data($data);
     return $response;
 }
 

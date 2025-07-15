@@ -88,7 +88,6 @@ export const useCachedFetch = (url) => {
           setLoading(false);
           return;
         }
-
         setLoading(true);
         const res = await fetch(url);
         if (!res.ok) {

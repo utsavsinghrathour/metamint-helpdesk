@@ -1,8 +1,9 @@
 import "../styles/Login.css";
 import { useState } from "react";
 import { loginUser, registerUser, createTicket } from "../utils/modules";
-import defaultLogo from '../images/robodesk-logo.png';
+import { useAppData } from "../utils/AppDataContext";
 const Login = ({ activeTab, setActiveTab, setShowLogin , updateSelectedTicket}) => {
+  const { updateLoginStatus , loginContext , loggedInUsrId } = useAppData();
   const [formData, setFormData] = useState({ email: "", password: "" });
   const [errors, setErrors] = useState({ email: "", password: "" });
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -11,7 +12,7 @@ const Login = ({ activeTab, setActiveTab, setShowLogin , updateSelectedTicket}) 
   
   const handleStateUpdate =(ticket) => {
      updateSelectedTicket(ticket);
-       setActiveTab(1);
+     setActiveTab(1);
   }
   const validateEmail = () => {
     const newErrors = { email: "", password: "" };
@@ -65,8 +66,6 @@ const Login = ({ activeTab, setActiveTab, setShowLogin , updateSelectedTicket}) 
       });
       const result = await response.json();
 
-      console.log("The result from ajax", result);
-
       if (result.success) {
         setShowPasswordField(result.data.exists);
       } else {
@@ -95,12 +94,14 @@ const Login = ({ activeTab, setActiveTab, setShowLogin , updateSelectedTicket}) 
         };
 
         sessionStorage.setItem("wpUserData", JSON.stringify(userData));
+        updateLoginStatus(userData.isLoggedIn , userData.loggedInUserId);
         console.log("User data saved to sessionStorage:", userData);
       } else {
         console.warn("sessionStorage is not supported in this browser");
       }
       await handleTempTicketCreation(user_id);
-      setShowLogin(true);
+        
+
     } catch (err) {
       console.error("Failed to create ticket:", err);
     }
@@ -149,7 +150,8 @@ const Login = ({ activeTab, setActiveTab, setShowLogin , updateSelectedTicket}) 
       setIsSubmitting(false);
     }
   };
-
+    
+  //create ticket
   const handleTempTicketCreation = async (userId) => {
     const ticketTitle = localStorage.getItem("temp_ticket_title");
 
