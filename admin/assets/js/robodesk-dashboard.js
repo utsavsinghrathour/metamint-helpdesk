@@ -1196,6 +1196,10 @@ function renderReplies(replies) {
         <span class="font-medium text-sm text-gray-900">${escapeHTML(
           reply.author
         )}</span>
+        <span class="font-medium text-sm text-gray-900">${escapeHTML(
+          reply.type === "customer" ? "Customer" : "Agent"
+        )}</span>
+
         <span class="text-xs text-gray-500">${formatDate(
           reply.timestamp
         )}</span>
@@ -1233,56 +1237,105 @@ function formatDate(dateString) {
 
 function addNote() {
   const noteBox = document.getElementById("new-note");
-  if (!noteBox || !currentTicket) return;
-
   const noteText = noteBox.innerHTML.trim();
-  if (!noteText) return;
+  if (!noteText || !currentTicket) return;
 
-  const newNote = {
-    id: Date.now(),
-    author: "Support Agent",
+  const data = {
+    action: "add_ticket_note",
+    ticket_id: currentTicket.id,
     note: noteText,
-    timestamp: new Date().toISOString(),
+    nonce: robodeskAjax.nonces.add_ticket_note,
   };
 
-  if (!Array.isArray(currentTicket.notes)) currentTicket.notes = [];
-  currentTicket.notes.push(newNote);
-  currentTicket.updated = new Date().toISOString();
+  fetch(robodeskAjax.ajax_url, {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: new URLSearchParams(data).toString(),
+  })
+    .then((res) => res.json())
+    .then((response) => {
+      if (response.success) {
+        const newNote = {
+          id: response.data.note_id,
+          author: response.data.author,
+          message: noteText,
+          timestamp: new Date().toISOString(),
+          type: "agent",
+        };
 
-  const ticketIndex = tickets.findIndex((t) => t.id === currentTicket.id);
-  if (ticketIndex !== -1) {
-    tickets[ticketIndex] = currentTicket;
-  }
+        if (!Array.isArray(currentTicket.notes)) currentTicket.notes = [];
+        currentTicket.notes.push(newNote);
+        currentTicket.updated = new Date().toISOString();
 
-  noteBox.innerHTML = ""; // clear the contenteditable div
-  document.getElementById("notes-count").textContent =
-    currentTicket.notes.length;
-  loadNotes();
-  showToast("Note added successfully");
+        const ticketIndex = tickets.findIndex((t) => t.id === currentTicket.id);
+        if (ticketIndex !== -1) tickets[ticketIndex] = currentTicket;
+
+        // noteBox.innerHTML = "Type your internal note here...";
+        loadNotes();
+        showToast("Note added successfully");
+      } else {
+        showToast(response.data?.message || "Failed to add note", "error");
+      }
+    })
+    .catch(() => showToast("AJAX error occurred", "error"));
 }
 
-//loads notes for the current ticket
-// It populates the notes list with the notes from the current ticket
-
-function loadNotes() {
-  if (!currentTicket || !Array.isArray(currentTicket.notes)) return;
+// Function to load notes via AJAX
+async function loadNotes() {
+  if (!currentTicket) return;
 
   const notesList = document.getElementById("notes-list");
-  notesList.innerHTML = currentTicket.notes
+  if (!notesList) return;
+
+  // Show loading state
+  notesList.innerHTML = '<div class="text-center py-4">Loading notes...</div>';
+
+  try {
+    const data = {
+      action: "get_ticket_notes",
+      ticket_id: currentTicket.id,
+      nonce: robodeskAjax.nonces.get_ticket_notes,
+    };
+
+    const response = await fetch(robodeskAjax.ajax_url, {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams(data).toString(),
+    });
+
+    if (!response.ok) throw new Error("Network response was not ok");
+
+    const result = await response.json();
+
+    if (result.success) {
+      renderNotes(result.data.notes);
+    } else {
+      throw new Error(result.data?.message || "Failed to load notes");
+    }
+  } catch (error) {
+    console.error("Failed to load notes:", error);
+    notesList.innerHTML = `<div class="text-red-500 p-4">Error: ${error.message}</div>`;
+  }
+}
+
+// Render notes to the DOM
+function renderNotes(notes) {
+  const notesList = document.getElementById("notes-list");
+  if (!notesList || !Array.isArray(notes)) return;
+
+  notesList.innerHTML = notes
     .map(
       (note) => `
-        <div class="p-4 rounded-lg note-internal">
-            <div class="flex justify-between items-center mb-2">
-                <span class="font-medium text-sm text-gray-900">${
-                  note.author
-                }</span>
-                <span class="text-xs text-gray-500">${formatDate(
-                  note.timestamp
-                )}</span>
-            </div>
-            <p class="text-sm text-gray-700">${note.note}</p>
-        </div>
-      `
+    <div class="p-4 rounded-lg mb-3 bg-gray-50">
+      <div class="flex justify-between items-center mb-2">
+        <span class="font-medium text-sm text-gray-900">${escapeHTML(
+          note.author
+        )}</span>
+        <span class="text-xs text-gray-500">${formatDate(note.timestamp)}</span>
+      </div>
+      <p class="text-sm text-gray-700">${escapeHTML(note.message)}</p>
+    </div>
+  `
     )
     .join("");
 }

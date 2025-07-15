@@ -801,3 +801,110 @@ function robodesk_handle_get_ticket_replies()
         'count'   => count($replies),
     ]);
 }
+
+
+
+
+
+
+
+
+
+
+
+// ADD TICKET NOTE
+add_action('wp_ajax_add_ticket_note', 'robodesk_handle_add_ticket_note');
+
+function robodesk_handle_add_ticket_note()
+{
+    // Verify nonce for security
+    if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'robodesk_add_ticket_note_action')) {
+        wp_send_json_error(['message' => 'Nonce verification failed']);
+    }
+
+    $ticket_id = isset($_POST['ticket_id']) ? intval($_POST['ticket_id']) : 0;
+    $note = isset($_POST['note']) ? wp_kses_post($_POST['note']) : '';
+
+    if (!$ticket_id || empty($note)) {
+        wp_send_json_error(['message' => 'Invalid data']);
+    }
+
+    $user_id = get_current_user_id();
+    $user_object = get_userdata($user_id);
+
+    if (!$user_id || !$user_object) {
+        wp_send_json_error(['message' => 'User not logged in']);
+    }
+
+    $note_id = wp_insert_comment([
+        'comment_post_ID'      => $ticket_id,
+        'comment_author'       => $user_object->display_name,
+        'comment_author_email' => $user_object->user_email,
+        'user_id'              => $user_id,
+        'comment_content'      => $note,
+        'comment_approved'     => 1,
+        'comment_type'         => 'ticket_notes',
+        'is_robodesk_note'     => true, // Custom field to identify as a Robodesk note
+    ]);
+
+    if (is_wp_error($note_id)) {
+        wp_send_json_error(['message' => 'Failed to insert note']);
+    }
+
+    wp_send_json_success([
+        'note_id' => $note_id,
+        'author'  => $user_object->display_name,
+    ]);
+}
+
+// GET TICKET NOTES
+add_action('wp_ajax_get_ticket_notes', 'robodesk_handle_get_ticket_notes');
+
+function robodesk_handle_get_ticket_notes()
+{
+    // Verify nonce
+    if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'robodesk_get_ticket_notes_action')) {
+        wp_send_json_error(['message' => 'Nonce verification failed']);
+    }
+
+    $ticket_id = isset($_POST['ticket_id']) ? intval($_POST['ticket_id']) : 0;
+
+    if (!$ticket_id) {
+        wp_send_json_error(['message' => 'Invalid ticket ID']);
+    }
+
+    // Get ticket notes (comments)
+    $comments = get_comments([
+        'post_id' => $ticket_id,
+        'order'   => 'ASC',
+        'type'    => 'ticket_notes',
+        'is_robodesk_note' => true,
+    ]);
+
+    $notes = [];
+    foreach ($comments as $comment) {
+        // Determine user type
+        $user = get_userdata($comment->user_id);
+        $type = 'agent'; // Notes are internal, so always agent
+        if ($user) {
+            $roles = $user->roles;
+            if (in_array('administrator', $roles) || in_array('robodesk_agent', $roles)) {
+                $type = 'agent';
+            } else {
+                $type = 'customer'; // If not an agent, consider it a customer note
+            }
+        }
+        $notes[] = [
+            'id'        => $comment->comment_ID,
+            'author'    => $comment->comment_author,
+            'message'   => $comment->comment_content,
+            'timestamp' => $comment->comment_date,
+            'type'      => $type,
+        ];
+    }
+
+    wp_send_json_success([
+        'notes' => $notes,
+        'count' => count($notes),
+    ]);
+}
