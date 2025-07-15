@@ -1270,7 +1270,7 @@ function addNote() {
         const ticketIndex = tickets.findIndex((t) => t.id === currentTicket.id);
         if (ticketIndex !== -1) tickets[ticketIndex] = currentTicket;
 
-        // noteBox.innerHTML = "Type your internal note here...";
+        noteBox.innerHTML = "Type your internal note here...";
         loadNotes();
         showToast("Note added successfully");
       } else {
@@ -1309,6 +1309,7 @@ async function loadNotes() {
 
     if (result.success) {
       renderNotes(result.data.notes);
+      document.getElementById("notes-count").textContent = result.data.count;
     } else {
       throw new Error(result.data?.message || "Failed to load notes");
     }
