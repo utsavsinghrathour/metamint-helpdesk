@@ -7,7 +7,7 @@ import DOMPurify from 'dompurify';
 import '../styles/NoticeTabs.css';
 import defaultLogo from '../images/robodesk-logo.png';
 
-import { useCachedFetch } from '../utils/modules';
+import { useAppData } from '../utils/AppDataContext';
 
 // const wpHomeUrl = window.robodeskData?.home_url || '';
 
@@ -69,20 +69,6 @@ const SingleNoticeView = memo(({ notice, onBack, isExpanded, setIsExpanded , log
     console.log('Our notice',notice);
     const fetchContent = () => {
       try {
-        // const cacheKey = `notice_content_${notice.id}`;
-        // const cachedContent = localStorage.getItem(cacheKey);
-        // if (cachedContent) {
-        //   setContent(cachedContent);
-        //   return;
-        // }
-
-        // const response = await fetch(
-        //   `/wp-json/wp/v2/notice/${notice.id}?_fields=content.rendered`
-        // );
-        // if (!response.ok) throw new Error('Failed to fetch notice content');
-        // const data = await response.json();
-        // console.log('Jpt Notice',notice);
-
         const normalizedContent = normalizeImagePaths(notice.content);
         const sanitizedContent = DOMPurify.sanitize(normalizedContent, {
           ADD_TAGS: ['iframe', 'img'],
@@ -219,18 +205,16 @@ const NoticeTabs = ({
   const [selectedNotice, setSelectedNotice] = useState(initialSelectedNotice);
   const [showHeaderFooter, setShowHeaderFooter] = useState(true);
   const [notices, setNotices] = useState([]);
+  const [loading , setLoading] = useState();
+  const[error , setError] = useState();
 
-  // Use the useCachedFetch hook
-  const { data, error, loading } = useCachedFetch(
-    '/wp-json/wp/v2/notice?_fields=id,title.rendered,excerpt.rendered,content.rendered'
-  );
-  //   console.log('On nOtice tabs');
-  //   console.log('New Way' , data , error,loading);
-
-  // Process fetched data
+  const { loadingContext, errorContext, noticesContext } = useAppData();
+  
   useEffect(() => {
-    if (data) {
-      const formattedNotices = data.map((notice) => ({
+  setLoading(loadingContext);
+  setError(errorContext);
+    if (!loading ) {
+      const formattedNotices = noticesContext.map((notice) => ({
         id: notice.id,
         title: notice.title.rendered,
         content: notice.content.rendered,
@@ -241,7 +225,7 @@ const NoticeTabs = ({
       }));
       setNotices(formattedNotices);
     }
-  }, [data]);
+  }, []);
 
   // Sync selectedNotice with initialSelectedNotice
   useEffect(() => {
