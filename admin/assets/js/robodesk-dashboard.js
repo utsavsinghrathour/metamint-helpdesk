@@ -1335,3 +1335,4 @@ function renderNotes(notes) {
     )
     .join("");
 }
+// the message is displaying with html tags
