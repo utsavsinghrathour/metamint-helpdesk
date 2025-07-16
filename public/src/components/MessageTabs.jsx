@@ -9,7 +9,7 @@ import Footer from "./Footer";
 import Login from "./Login";
 import Preloader from "../images/preloader.svg";
 import { getAllTickets } from "../utils/modules";
-
+import { useAppData } from "../utils/AppDataContext";
 
 const SingleTicket = React.lazy(() => import("./SingleTicket"));
 
@@ -75,65 +75,59 @@ const MessageTabs = ({
   const [loading, setLoading] = useState(true);
   const [isLoggedIn, setIsLoggedIn] = useState(false); // Fixed naming consistency
   const [loggedInuserId, setloggedInuserId] = useState(null);
+  const {
+    loadingContext,
+    errorContext,
+    ticketsContext,
+    loggedinContext,
+    loggedInUsrId,
+  } = useAppData();
 
-const fetchTickets = async () => {
-  if (!loggedInuserId) {
-    console.warn("No logged-in user ID provided");
-    return;
-  }
-  try {
-    setLoading(true);
-    const tickets = await getAllTickets(loggedInuserId);
-    const mappedTickets = tickets.map((ticket) => ({
-      id: ticket.id,
-      ticketNumber: ticket.ticket_number,
-      title: ticket.ticket_title,
-      source: ticket.ticket_origin,
-      timeAgo: ticket.ticket_time_ago + ' ago',
-      authorImage: ticket.ticket_author_image ?? Author1,
-      status: ticket.ticket_status ?? 'New',
-      priority: ticket.ticket_priority ?? 'Medium',
-      author: ticket.ticket_author,
-    }));
+  const fetchTickets = async () => {
+    if (!loggedInUsrId) {
+      console.warn("No logged-in user ID provided");
+      return;
+    }
+    try {
+      setLoading(true);
+      const tickets = ticketsContext;
+      const mappedTickets = tickets.map((ticket) => ({
+        id: ticket.id,
+        ticketNumber: ticket.ticket_number,
+        title: ticket.ticket_title,
+        source: ticket.ticket_origin,
+        timeAgo: ticket.ticket_time_ago + " ago",
+        authorImage: ticket.ticket_author_image ?? Author1,
+        status: ticket.ticket_status ?? "New",
+        priority: ticket.ticket_priority ?? "Medium",
+        author: ticket.ticket_author,
+      }));
 
-    setTickets(mappedTickets);
-  } catch (error) {
-    console.error("Error fetching tickets:", error);
-  } finally {
-    setLoading(false);
-  }
-};
+      setTickets(mappedTickets);
+    } catch (error) {
+      console.error("Error fetching tickets:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const storedData = sessionStorage.getItem("wpUserData");
-
-    if (storedData) {
-      try {
-        const parsedData = JSON.parse(storedData);
-
-        if (parsedData.isLoggedIn && parsedData.loggedInUserId) {
-          setloggedInuserId(parsedData.loggedInUserId);
-          setIsLoggedIn(true);
-          if (!selectedTicket) {
-            setSelectedTicket(selectedNewTicket ? selectedNewTicket : null);
-          }
-          fetchTickets();
-        } else {
-          // Clear state if no valid session data
-          setloggedInuserId(null);
-          setIsLoggedIn(false);
-        }
-      } catch (error) {
-        console.error("Error parsing wpUserData from sessionStorage", error);
-        setloggedInuserId(null);
-        setIsLoggedIn(false);
+ 
+    console.log('The login status is',loggedinContext , loggedInUsrId)
+    
+    if (loggedinContext && loggedInUsrId) {
+        setIsLoggedIn(true);
+        setloggedInuserId(loggedInUsrId);
+       
+       fetchTickets();
+      if (!selectedTicket) {
+        setSelectedTicket(selectedNewTicket ? selectedNewTicket : null);
       }
     } else {
-      // No session data available
-      setloggedInuserId(null);
-      setIsLoggedIn(false);
+      setTickets([]);
+      setLoading(false);
     }
-  }, [isLoggedIn, loggedInuserId]);
+  }, [isLoggedIn, loggedInUsrId]);
 
   const handleLogin = (loginStatus) => {
     setIsLoggedIn(loginStatus);
@@ -152,67 +146,24 @@ const fetchTickets = async () => {
 
   const handleAddTicket = async () => {
     if (!loggedInuserId) return;
-    console.log('This is not the right way');
-    // try {
-    //   const defaultOrigin = "Web"; // Use a valid term slug (e.g., 'Web', 'Email')
-
-    //   const response = await axios.post(
-    //     "/wp-json/wp/v2/robodesk_ticket",
-    //     {
-    //       title: "New Ticket",
-    //       status: "publish",
-    //       ticket_status: "new",
-    //       ticket_number: `TCKT-${String(tickets.length + 1).padStart(3, "0")}`,
-    //       tax_input: {
-    //         robodesk_ticket_priority: "Medium",
-    //         robodesk_ticket_origin: defaultOrigin,
-    //       },
-    //     },
-    //     {
-    //       headers: {
-    //         "X-WP-Nonce": window.wpApiSettings.nonce,
-    //       },
-    //     }
-    //   );
-
-    //   // Use the origin directly from the response
-    //   const sourceTerm =
-    //     response.data.robodesk_ticket_origin &&
-    //     response.data.robodesk_ticket_origin.length > 0
-    //       ? response.data.robodesk_ticket_origin[0]
-    //       : defaultOrigin;
-
-    //   const newTicket = {
-    //     id: response.data.id,
-    //     ticketNumber:
-    //       response.data.ticket_number ||
-    //       `TCKT-${String(tickets.length + 1).padStart(3, "0")}`,
-    //     title: response.data.title.rendered,
-    //     source: sourceTerm,
-    //     timeAgo: "Just now",
-    //     authorImage: Author1,
-    //     status: "new",
-    //     priority: "Medium",
-    //     messages: [],
-    //   };
-
-    //   setTickets([newTicket, ...tickets]);
-    //   updateSelectedTicket(newTicket);
-    // } catch (error) {
-    //   console.error("Error creating ticket:", error);
-    // }
+    console.log("This is not the right way");
+   
   };
 
-  //   const handleLogindata = () => {
-
-  //   }
   const filteredTickets = tickets.filter((ticket) => {
     const matchesTab = currentTab === "all" || ticket.status === currentTab;
     const matchesPriority =
       priorityFilter === "all" || ticket.priority === priorityFilter;
+
+    // Safely handle possible undefined values
+    const searchLower = searchTerm.toLowerCase();
+    const titleLower = ticket.title?.toLowerCase() || "";
+    const ticketNumberLower = ticket.ticketNumber?.toLowerCase() || "";
+
     const matchesSearch =
-      ticket.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      ticket.ticketNumber.toLowerCase().includes(searchTerm.toLowerCase());
+      titleLower.includes(searchLower) ||
+      ticketNumberLower.includes(searchLower);
+
     return matchesTab && matchesPriority && matchesSearch;
   });
 
