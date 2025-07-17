@@ -472,6 +472,9 @@ function formatText(command, editorId) {
 
 // Fetch emails function
 function fetchEmails() {
+  // Optional: hide previous message
+  document.getElementById("fetch-results").classList.add("hidden");
+
   fetch(robodeskAjax.ajax_url, {
     method: "POST",
     headers: {
@@ -483,20 +486,25 @@ function fetchEmails() {
     }),
   })
     .then((response) => {
-      if (!response.ok) throw new Error("Network response was not ok");
+      if (!response.ok) throw new Error("Network error");
       return response.json();
     })
     .then((data) => {
-      console.log("Server returned:", data);
       if (data.success) {
-        showToast("Emails fetched successfully!", "success");
+        const message = data.data;
+        document.getElementById("fetch-message").textContent = message;
+        document.getElementById("fetch-results").classList.remove("hidden");
       } else {
-        showToast("Failed: " + (data.data || "Unknown error"), "error");
+        document.getElementById("fetch-message").textContent =
+          data.data || "An error occurred";
+        document.getElementById("fetch-results").classList.remove("hidden");
       }
     })
     .catch((error) => {
       console.error("AJAX error:", error);
-      showToast("AJAX error occurred.", "error");
+      document.getElementById("fetch-message").textContent =
+        "AJAX error occurred.";
+      document.getElementById("fetch-results").classList.remove("hidden");
     });
 }
 
