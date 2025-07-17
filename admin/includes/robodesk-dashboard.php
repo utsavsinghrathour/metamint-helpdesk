@@ -414,7 +414,7 @@ function robodesk_dashboard_callback()
                     </div>
                 </div>
 
-                <!-- Quick Actions -->
+                <!------------------------------------ Quick Actions ------------------------------------>
                 <div class="bg-white shadow rounded-lg">
                     <div class="px-4 py-5 sm:p-6">
                         <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">Quick Actions</h3>
@@ -440,7 +440,7 @@ function robodesk_dashboard_callback()
                 </div>
             </div>
 
-            <!-- New Ticket Page -->
+            <!---------------------------------- New Ticket Page ---------------------------------->
             <div id="new-ticket-page" class="page-content hidden">
                 <div class="bg-white shadow rounded-lg">
                     <div class="px-4 py-5 sm:p-6">
@@ -543,7 +543,7 @@ function robodesk_dashboard_callback()
                 </div>
             </div>
 
-            <!-- Tickets Page -->
+            <!------------------------------------- Tickets Page ------------------------------------->
             <div id="tickets-page" class="page-content hidden">
                 <!-- Search and Filter Bar -->
                 <div class="bg-white shadow rounded-lg mb-6">
@@ -589,7 +589,7 @@ function robodesk_dashboard_callback()
                     </div>
                 </div>
 
-                <!-- Tickets Table -->
+                <!----------------------------- Tickets Table ----------------------------->
                 <div class="bg-white shadow rounded-lg overflow-hidden">
                     <table class="min-w-full divide-y divide-gray-200">
                         <thead class="bg-gray-50">
@@ -723,7 +723,7 @@ function robodesk_dashboard_callback()
                 </div>
             </div>
 
-            <!-- Ticket Detail Page -->
+            <!------------------------------- Ticket Detail Page ----------------------->
             <div id="ticket-detail-page" class="page-content hidden">
                 <div class="bg-white shadow rounded-lg">
                     <div class="px-4 py-5 sm:p-6">
@@ -831,7 +831,7 @@ function robodesk_dashboard_callback()
                             </div>
                         </div>
 
-                        <!-- Customer Tickets Modal -->
+                        <!--------------------------- Customer Tickets Modal --------------------------->
                         <div id="customer-tickets-modal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
                             <div class="relative top-20 mx-auto p-5 border w-11/12 md:w-3/4 lg:w-1/2 shadow-lg rounded-md bg-white">
                                 <div class="flex justify-between items-center mb-4">
@@ -861,7 +861,7 @@ function robodesk_dashboard_callback()
                             </nav>
                         </div>
 
-                        <!-- Tab Content -->
+                        <!--------------------------------- Tab Content ---------------------->
                         <div class="mt-6">
                             <div id="replies-tab" class="ticket-tab-content">
                                 <div id="replies-list" class="space-y-4 max-h-96 overflow-y-auto mb-4">
@@ -909,7 +909,7 @@ function robodesk_dashboard_callback()
                 </div>
             </div>
 
-            <!-- Settings Page -->
+            <!---------------------- Settings Page ---------------------->
             <div id="settings-page" class="page-content hidden">
                 <div class="bg-white shadow rounded-lg">
                     <div class="border-b border-gray-200">
@@ -931,9 +931,9 @@ function robodesk_dashboard_callback()
                             </button>
                         </nav>
                     </div>
-                    <!-- overall setting page with all the tabs -->
+                    <!------------------------------------------ overall setting page with all the tabs---------------------------------------->
                     <div class="p-6">
-                        <!-- Basic Settings Tab -->
+                        <!------------------------------Basic Settings Tab --------------------------------->
                         <div id="basic-tab" class="settings-tab-content">
                             <h3 class="text-lg font-medium text-gray-900 mb-6">Basic Settings</h3>
                             <form id="robodesk-basic-settings-form" class="space-y-6">
@@ -962,7 +962,7 @@ function robodesk_dashboard_callback()
                                             ?>
                                         </select>
                                     </div>
-                                    <!-- Image Fields -->
+                                    <!----------------------------- Image Fields ------------------------------>
                                     <div>
                                         <label for="popover_top_icon" class="block text-sm font-medium text-gray-700">Pop over Top Icon/Image</label>
                                         <input type="file" accept="image/*" name="popover_top_icon" id="popover_top_icon" class="styled-input mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
@@ -1030,7 +1030,7 @@ function robodesk_dashboard_callback()
                                 </button>
                             </form>
                         </div>
-                        <!-- IMAP Settings load saved settings -->
+                        <!----------------------- IMAP Settings load saved settings ------------------->
                         <?php
                         // Load saved settings
                         $settings = get_option('robodesk_imap_settings', array(
@@ -1050,7 +1050,7 @@ function robodesk_dashboard_callback()
 
                         ?>
 
-                        <!-- IMAP Settings Tab -->
+                        <!--------------------------- IMAP Settings Tab ---------------------------------------->
                         <div id="imap-tab" class="settings-tab-content hidden">
                             <h3 class="text-lg font-medium text-gray-900 mb-6">IMAP Settings</h3>
                             <form method="post" action="" id="robodesk-imap-form" class="space-y-6">
@@ -1105,7 +1105,8 @@ function robodesk_dashboard_callback()
                         </div>
 
 
-                        <!-- Email Templates Tab -->
+                        <!------------------------------------------ Email Templates Tab --------------------------->
+
                         <div id="templates-tab" class="settings-tab-content hidden">
                             <h3 class="text-lg font-medium text-gray-900 mb-6">Email Templates</h3>
 
@@ -1174,7 +1175,7 @@ function robodesk_dashboard_callback()
                                 </button>
                             </form>
                         </div>
-                        <!-- Fetch Tickets Tab -->
+                        <!------------------------------ Fetch Tickets Tab --------------------------------------->
                         <div id="fetch-tab" class="settings-tab-content hidden">
                             <h3 class="text-lg font-medium text-gray-900 mb-6">Fetch Tickets</h3>
                             <form id="robodesk-fetch-tickets-form" class="space-y-6">
@@ -1246,7 +1247,7 @@ function robodesk_dashboard_callback()
 
                         </div>
 
-                        <!-- Advanced Settings Tab -->
+                        <!--------------------------- Advanced Settings Tab -------------------------------->
 
 
                         <?php
@@ -1291,12 +1292,6 @@ function robodesk_dashboard_callback()
                                 </button>
                             </form>
                         </div>
-
-                        <!-- <div class="mt-8 pt-6 border-t border-gray-200">
-                            <button onclick="saveSettings()" id="save-settings-btn" class="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-                                Save Settings
-                            </button>
-                        </div> -->
                     </div>
                 </div>
             </div>
