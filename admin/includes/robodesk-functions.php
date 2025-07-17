@@ -926,14 +926,3 @@ function robodesk_fetch_emails_handler()
 
     wp_die(); // ✅ important for AJAX
 }
-
-//creating a cron job to fetch emails
-add_filter('cron_schedules', 'robodesk_custom_cron_intervals');
-function robodesk_custom_cron_intervals($schedules)
-{
-    $schedules['fifteen_minutes'] = array(
-        'interval' => 15 * 60, // 15 minutes
-        'display'  => __('Every 15 Minutes')
-    );
-    return $schedules;
-}
