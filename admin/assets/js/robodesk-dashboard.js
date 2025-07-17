@@ -168,7 +168,10 @@ function filterTickets() {
   tableBody.innerHTML = filteredTickets
     .map(
       (ticket) => `
-        <tr class="table-row">
+       <tr class="table-row customer-ticket-item cursor-pointer"
+    onclick="hideCustomerTickets(); viewTicket(${ticket.id})">
+
+
             <td class="px-6 py-4 whitespace-nowrap">
                 <div class="text-sm font-medium text-gray-900">#${
                   ticket.id
@@ -197,7 +200,6 @@ function filterTickets() {
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                 ${formatDate(ticket.updated)}
             </td>
-            
         </tr>
     `
     )
