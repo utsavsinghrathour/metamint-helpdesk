@@ -753,11 +753,16 @@ function robodesk_dashboard_callback()
                             <!-- Ticket Status & Priority -->
                             <div class="bg-gray-50 p-4 rounded-lg">
                                 <h4 class="font-medium text-gray-900 mb-3">Ticket Status</h4>
+
                                 <div class="space-y-4">
                                     <div>
                                         <label class="block text-sm font-medium text-gray-700 mb-1">Status</label>
                                         <select onchange="updateTicketStatus(currentTicket.id, this.value)" class="styled-select block w-full border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 rounded-md" id="ticket-status-select">
+
                                             <?php
+                                            $ticket_id = get_the_ID(); // Get the current ticket ID
+                                            $currentTicket = get_post($ticket_id); // Assuming $ticket_id is available
+
                                             // get the current ticket status
                                             $current_ticket_status = get_post_meta($currentTicket->ID, '_robodesk_ticket_status', true);
                                             $statuses = array('open', 'in-progress', 'closed');
