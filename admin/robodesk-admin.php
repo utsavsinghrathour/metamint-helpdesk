@@ -355,6 +355,7 @@ function robodesk_enqueue_tailwind_and_styles()
             'get_ticket_replies' => wp_create_nonce('robodesk_get_ticket_replies_action'),
             'add_ticket_note' => wp_create_nonce('robodesk_add_ticket_note_action'),
             'get_ticket_notes' => wp_create_nonce('robodesk_get_ticket_notes_action'),
+            'fetch_emails' => wp_create_nonce('robodesk_fetch_emails_action'),
 
         ]
     ]);

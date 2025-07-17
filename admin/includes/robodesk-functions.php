@@ -908,3 +908,19 @@ function robodesk_handle_get_ticket_notes()
         'count' => count($notes),
     ]);
 }
+
+include_once 'robodesk-fetch-tickets.php'; // Include the file that contains the robodesk_fetch_emails function
+// for fetching emails
+add_action('wp_ajax_robodesk_fetch_emails', 'robodesk_fetch_emails_handler');
+
+function robodesk_fetch_emails_handler()
+{
+    check_ajax_referer('robodesk_fetch_emails_action', 'nonce');
+
+    try {
+        robodesk_fetch_emails(); // Your core function
+        wp_send_json_success('Emails fetched.');
+    } catch (Exception $e) {
+        wp_send_json_error($e->getMessage());
+    }
+}

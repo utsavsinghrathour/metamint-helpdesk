@@ -124,8 +124,7 @@ function robodesk_fetch_emails()
         if (!$emails) {
             $notice = 'No new emails found since ' . $since_date;
             error_log($notice);
-            echo '<div class="notice"><p>' . esc_html($notice) . '</p></div>';
-            return;
+            return $notice; // ✅ Return this message, don't echo
         }
 
         error_log('Found ' . count($emails) . ' emails to process');
