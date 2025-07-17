@@ -912,15 +912,17 @@ function robodesk_handle_get_ticket_notes()
 include_once 'robodesk-fetch-tickets.php'; // Include the file that contains the robodesk_fetch_emails function
 // for fetching emails
 add_action('wp_ajax_robodesk_fetch_emails', 'robodesk_fetch_emails_handler');
-
+//display the email fetching result
 function robodesk_fetch_emails_handler()
 {
     check_ajax_referer('robodesk_fetch_emails_action', 'nonce');
 
     try {
-        robodesk_fetch_emails(); // Your core function
-        wp_send_json_success('Emails fetched.');
+        $summary = robodesk_fetch_emails(); // returns the string
+        wp_send_json_success($summary); // ✅ send summary as success data
     } catch (Exception $e) {
         wp_send_json_error($e->getMessage());
     }
+
+    wp_die(); // ✅ important for AJAX
 }
