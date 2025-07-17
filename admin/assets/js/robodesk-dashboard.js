@@ -472,26 +472,32 @@ function formatText(command, editorId) {
 
 // Fetch emails function
 function fetchEmails() {
-  const fetchResults = document.getElementById("fetch-results");
-  const fetchMessage = document.getElementById("fetch-message");
-
-  // Simulate fetching emails
-  setTimeout(() => {
-    const newTickets = Math.floor(Math.random() * 5) + 1;
-    const newReplies = Math.floor(Math.random() * 10) + 3;
-    const totalEmails = newTickets + newReplies;
-
-    fetchMessage.textContent = `Fetched ${totalEmails} new emails. ${newTickets} tickets and ${newReplies} replies.`;
-    fetchResults.classList.remove("hidden");
-
-    // Hide the message after 5 seconds
-    setTimeout(() => {
-      fetchResults.classList.add("hidden");
-    }, 5000);
-  }, 1000);
-}
-function robodesk_email_fetcher() {
-  var phpadd = "<?php echo robodesk_fetch_emails();?>";
+  fetch(robodeskAjax.ajax_url, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/x-www-form-urlencoded",
+    },
+    body: new URLSearchParams({
+      action: "robodesk_fetch_emails",
+      nonce: robodeskAjax.nonces.fetch_emails,
+    }),
+  })
+    .then((response) => {
+      if (!response.ok) throw new Error("Network response was not ok");
+      return response.json();
+    })
+    .then((data) => {
+      console.log("Server returned:", data);
+      if (data.success) {
+        showToast("Emails fetched successfully!", "success");
+      } else {
+        showToast("Failed: " + (data.data || "Unknown error"), "error");
+      }
+    })
+    .catch((error) => {
+      console.error("AJAX error:", error);
+      showToast("AJAX error occurred.", "error");
+    });
 }
 
 // Close modal when clicking outside
