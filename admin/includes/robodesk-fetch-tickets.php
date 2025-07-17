@@ -414,7 +414,9 @@ function robodesk_fetch_emails()
         }
 
         // Display summary
-        $summary = "Email processing complete. Processed: $processed_count, Replies: $reply_count, Skipped: $skipped_count, Errors: $error_count";
+        // $summary = "Email processing complete. Processed: $processed_count, Replies: $reply_count, Skipped: $skipped_count, Errors: $error_count";
+        $summary = "Email processing complete. Processed: $processed_count, Replies: $reply_count, Errors: $error_count";
+
         error_log($summary);
 
         return $summary; // ✅ Return it
