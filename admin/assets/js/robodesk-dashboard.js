@@ -113,11 +113,12 @@ let currentDashboardFilter = "recent";
 // Initialize the application
 document.addEventListener("DOMContentLoaded", function () {
   showPage("dashboard");
-  updateDashboardStats();
+  // updateDashboardStats();
   // loadDashboardTickets();
   setupEventListeners();
 });
 
+// added
 // Event listeners
 function setupEventListeners() {
   // Search input
@@ -135,12 +136,75 @@ function setupEventListeners() {
   document
     .getElementById("status-filter")
     .addEventListener("change", filterTickets);
-
-  // New ticket form
-  document
-    .getElementById("new-ticket-form")
-    .addEventListener("submit", handleNewTicketSubmit);
 }
+function filterTickets() {
+  const searchTerm = document
+    .getElementById("search-input")
+    .value.toLowerCase();
+  const customerFilter = document
+    .getElementById("customer-filter")
+    .value.toLowerCase();
+  const agentFilter = document
+    .getElementById("agent-filter")
+    .value.toLowerCase();
+  const statusFilter = document.getElementById("status-filter").value;
+
+  const filteredTickets = tickets.filter((ticket) => {
+    const matchesSearch =
+      ticket.title.toLowerCase().includes(searchTerm) ||
+      ticket.customer.toLowerCase().includes(searchTerm) ||
+      ticket.email.toLowerCase().includes(searchTerm);
+    const matchesCustomer =
+      !customerFilter || ticket.customer.toLowerCase().includes(customerFilter);
+    const matchesAgent =
+      !agentFilter || ticket.assignee.toLowerCase().includes(agentFilter);
+    const matchesStatus =
+      statusFilter === "all" || ticket.status === statusFilter;
+
+    return matchesSearch && matchesCustomer && matchesAgent && matchesStatus;
+  });
+
+  const tableBody = document.getElementById("tickets-table");
+  tableBody.innerHTML = filteredTickets
+    .map(
+      (ticket) => `
+        <tr class="table-row">
+            <td class="px-6 py-4 whitespace-nowrap">
+                <div class="text-sm font-medium text-gray-900">#${
+                  ticket.id
+                }</div>
+                <div class="text-sm text-gray-500 truncate max-w-xs">${
+                  ticket.title
+                }</div>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap">
+                <div class="text-sm text-gray-900">${ticket.customer}</div>
+                <div class="text-sm text-gray-500">${ticket.email}</div>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap">
+                <span class="status-badge ${getStatusClass(ticket.status)}">
+                    ${ticket.status.replace("-", " ")}
+                </span>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap">
+                <span class="status-badge ${getPriorityClass(ticket.priority)}">
+                    ${ticket.priority}
+                </span>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${
+              ticket.assignee
+            }</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                ${formatDate(ticket.updated)}
+            </td>
+            
+        </tr>
+    `
+    )
+    .join("");
+}
+
+// added ends
 
 // Utility functions
 function debounce(func, wait) {
