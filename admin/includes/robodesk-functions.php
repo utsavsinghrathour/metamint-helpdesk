@@ -441,6 +441,16 @@ function robodesk_save_ticket_assignment_settings()
     update_option('robodesk_default_agent', $default_agent);
 
     wp_send_json_success(['message' => 'Ticket assignment settings saved successfully']);
+
+    // To dynamically schedule the cron based on saved fetch_interval cron job.
+    // Clear any existing cron job
+    wp_clear_scheduled_hook('robodesk_cron_fetch_emails');
+
+    // Re-schedule based on new interval
+    if (!wp_next_scheduled('robodesk_cron_fetch_emails')) {
+        $interval = max(1, min(1440, $fetch_interval)); // ensure valid range
+        wp_schedule_event(time(), 'robodesk_custom_' . $interval . '_min', 'robodesk_cron_fetch_emails');
+    }
 }
 
 
@@ -925,4 +935,15 @@ function robodesk_fetch_emails_handler()
     }
 
     wp_die(); // ✅ important for AJAX
+}
+
+//creating a cron job to fetch emails
+add_filter('cron_schedules', 'robodesk_custom_cron_intervals');
+function robodesk_custom_cron_intervals($schedules)
+{
+    $schedules['fifteen_minutes'] = array(
+        'interval' => 15 * 60, // 15 minutes
+        'display'  => __('Every 15 Minutes')
+    );
+    return $schedules;
 }
