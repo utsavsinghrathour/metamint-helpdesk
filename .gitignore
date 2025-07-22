@@ -7,3 +7,4 @@ logs/debug.log
 *.log
 logs/debug.log
 *.zip
+/logs
