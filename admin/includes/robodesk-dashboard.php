@@ -408,6 +408,8 @@ function robodesk_dashboard_callback()
                             <div class="flex space-x-2">
                                 <button onclick="filterDashboardTickets('recent')" class="dashboard-filter-btn px-3 py-1 text-sm rounded-md border <?php echo $filter === 'recent' ? 'active' : ''; ?>" data-filter="recent">Recent Tickets</button>
                                 <button onclick="filterDashboardTickets('waiting')" class="dashboard-filter-btn px-3 py-1 text-sm rounded-md border <?php echo $filter === 'waiting' ? 'active' : ''; ?>" data-filter="waiting">Waiting Reply</button>
+                                <button onclick="filterDashboardTickets('active')" class="dashboard-filter-btn px-3 py-1 text-sm rounded-md border <?php echo $filter === 'active' ? 'active' : ''; ?>" data-filter="active">Recently Active Tickets</button>
+
                             </div>
                         </div>
                         <?php echo load_dashboard_tickets($filter); ?>
@@ -590,6 +592,107 @@ function robodesk_dashboard_callback()
                 </div>
 
                 <!----------------------------- Tickets Table ----------------------------->
+                <?php
+                // Get the current page number from URL parameter
+                $current_page = isset($_GET['paged']) ? max(1, intval($_GET['paged'])) : 1;
+                $posts_per_page = 10; // Number of tickets per page
+                $offset = ($current_page - 1) * $posts_per_page;
+
+                // Get total count first
+                $total_args = array(
+                    'post_type' => 'robodesk_ticket',
+                    'post_status' => 'publish',
+                    'posts_per_page' => -1, // Get all posts for counting
+                    'fields' => 'ids' // Only get IDs for performance
+                );
+                $total_query = new WP_Query($total_args);
+                $total_posts = $total_query->found_posts;
+                $total_pages = ceil($total_posts / $posts_per_page);
+
+                // Main query with proper pagination
+                $args = array(
+                    'post_type' => 'robodesk_ticket',
+                    'post_status' => 'publish',
+                    'posts_per_page' => $posts_per_page,
+                    'offset' => $offset,
+                    'orderby' => 'modified',
+                    'order' => 'DESC'
+                );
+                $query = new WP_Query($args);
+                $tickets = []; // Initialize tickets array
+
+                if ($query->have_posts()) {
+                    while ($query->have_posts()) {
+                        $query->the_post();
+                        $ticket_id = get_the_ID();
+                        $ticket_status = get_post_meta($ticket_id, '_robodesk_ticket_status', true) ?: 'N/A';
+                        $ticket_origin = get_post_meta($ticket_id, 'robodesk_ticket_origin', true) ?: 'N/A';
+                        $priority_terms = get_the_terms($ticket_id, 'robodesk_ticket_priority');
+                        $author_image = get_avatar_url(get_the_author_meta('ID'), array('size' => 32));
+                        $ticket_priority = $priority_terms ? $priority_terms[0]->name : 'N/A';
+                        $updated_at = get_the_modified_date('Y-m-d H:i:s', $ticket_id);
+                        $created_at = get_the_date('Y-m-d H:i:s', $ticket_id);
+                        $ticket_terms = wp_get_post_terms($ticket_id, 'robodesk_ticket_category');
+                        $ticket_category = '';
+                        if (!is_wp_error($ticket_terms) && !empty($ticket_terms)) {
+                            $ticket_category = [
+                                'name' => $ticket_terms[0]->name,
+                                'id' => $ticket_terms[0]->term_id,
+                            ];
+                        }
+
+                        // Simulate replies field using comments
+                        $replies = get_comments(array('post_id' => $ticket_id));
+                        $replies_count = count($replies);
+                        if ($replies_count > 0) {
+                            $replies = array_map(function ($reply) {
+                                return [
+                                    'id' => $reply->comment_ID,
+                                    'author' => $reply->comment_author,
+                                    'content' => $reply->comment_content,
+                                    'date' => $reply->comment_date
+                                ];
+                            }, $replies);
+                        } else {
+                            $replies = [];
+                        }
+
+                        $tickets[] = [
+                            'id' => $ticket_id,
+                            'title' => get_the_title(),
+                            'customer' => get_the_author(),
+                            'email' => get_the_author_meta('email'),
+                            'author_id' => get_the_author_meta('ID'),
+                            'source' => $ticket_origin,
+                            'status' => $ticket_status,
+                            'priority' => $ticket_priority,
+                            'created' => $created_at,
+                            'author_image' => $author_image,
+                            'updated' => $updated_at,
+                            'category' => $ticket_category,
+                            'assignee' => get_post_meta($ticket_id, 'ticket_assignee', true) ?: 'N/A',
+                            'replies' => $replies_count ? $replies : [
+                                'id' => 0,
+                                'author' => 'N/A',
+                                'content' => 'No replies yet',
+                                'date' => $updated_at
+                            ],
+                            'replies_count' => $replies_count
+                        ];
+                    }
+                }
+                wp_reset_postdata();
+
+                // Function to generate pagination URL
+                function get_pagination_url($page)
+                {
+                    $current_url = admin_url('admin.php');
+                    $params = $_GET;
+                    $params['paged'] = $page;
+                    return add_query_arg($params, $current_url);
+                }
+                ?>
+
                 <div class="bg-white shadow rounded-lg overflow-hidden">
                     <table class="min-w-full divide-y divide-gray-200">
                         <thead class="bg-gray-50">
@@ -603,124 +706,172 @@ function robodesk_dashboard_callback()
                             </tr>
                         </thead>
                         <tbody class="bg-white divide-y divide-gray-200" id="tickets-table">
-                            <!-- Tickets will be populated by JavaScript -->
-                            <?php
-
-                            $args = array(
-                                'post_type' => 'robodesk_ticket',
-                                'post_status' => 'publish',
-                                'posts_per_page' => -1, // Retrieve all tickets
-                                'orderby' => 'modified',
-                                'order' => 'DESC'
-                            );
-                            $query = new WP_Query($args);
-                            if ($query->have_posts()) {
-                                while ($query->have_posts()) {
-                                    $query->the_post();
-                                    $ticket_id = get_the_ID();
-                                    // Fetch customer name 
-                                    // $customer_name = get_post_meta($ticket_id, 'nickname', true) ?: 'Unknown';
-                                    // $customer_email = get_post_meta($ticket_id, '_robodesk_customer_email', true) ?: 'N/A';
-                                    $ticket_status = get_post_meta($ticket_id, '_robodesk_ticket_status', true) ?: 'N/A';
-                                    $ticket_origin = get_post_meta($ticket_id, 'robodesk_ticket_origin', true) ?: 'N/A';
-                                    $priority_terms = get_the_terms($ticket_id, 'robodesk_ticket_priority');
-                                    $author_image = get_avatar_url(get_the_author_meta('ID'), array('size' => 32)); // Fetch author image URL
-                                    $ticket_priority = $priority_terms ? $priority_terms[0]->name : 'N/A';
-                                    $updated_at = get_the_modified_date('Y-m-d H:i:s', $ticket_id);
-                                    $created_at = get_the_date('Y-m-d H:i:s', $ticket_id);
-                                    $ticket_terms = wp_get_post_terms($ticket_id, 'robodesk_ticket_category');
-                                    $ticket_category = '';
-                                    if (!is_wp_error($ticket_terms) && !empty($ticket_terms)) {
-                                        $ticket_category = [
-                                            'name' => $ticket_terms[0]->name,
-                                            'id'   => $ticket_terms[0]->term_id,
-                                        ];
-                                    }
-
-
-                                    // Simulate replies field using comments
-                                    $replies = get_comments(array('post_id' => $ticket_id));
-                                    $replies_count = count($replies);
-                                    if ($replies_count > 0) {
-                                        $replies = array_map(function ($reply) {
-                                            return [
-                                                'id' => $reply->comment_ID,
-                                                'author' => $reply->comment_author,
-                                                'content' => $reply->comment_content,
-                                                'date' => $reply->comment_date
-                                            ];
-                                        }, $replies);
-                                    } else {
-                                        $replies = [];
-                                    }
-
-                                    $tickets[] = [
-                                        'id' => $ticket_id,
-                                        'title' => get_the_title(),
-                                        'customer' => get_the_author(),
-                                        'email' => get_the_author_meta('email'),
-                                        'author_id' => get_the_author_meta('ID'),
-                                        'source' => $ticket_origin, // Assuming the first term is the source
-                                        'status' => $ticket_status,
-                                        'priority' => $ticket_priority,
-                                        'created' => $created_at,
-                                        'author_image' => $author_image,
-                                        'updated' => $updated_at,
-                                        'category' => $ticket_category,
-                                        'assignee' => get_post_meta($ticket_id, 'ticket_assignee', true) ?: 'N/A',
-                                        'replies' => $replies_count ? $replies : [
-                                            'id' => 0,
-                                            'author' => 'N/A',
-                                            'content' => 'No replies yet',
-                                            'date' => $updated_at
-                                        ],
-                                        'replies_count' => $replies_count
-
-                                    ];
-                                }
-                                wp_reset_postdata();
-                            }
-                            ?>
-                            <!-- ADDDED -->
+                            <!-- JavaScript for tickets -->
                             <script>
                                 const tickets = <?php echo wp_json_encode($tickets); ?>;
                             </script>
-                            <!-- ADDED -->
-                            <?php foreach ($tickets as $ticket) : ?>
-
-                                <tr class="table-row cursor-pointer" onclick="viewTicket(<?php echo esc_js($ticket['id']); ?>)">
-                                    <td class="px-6 py-4 whitespace-nowrap">
-                                        <div class="text-sm font-medium text-gray-900">#<?php echo esc_html($ticket['id']); ?></div>
-                                        <div class="text-sm text-gray-500 truncate max-w-xs"><?php echo esc_html($ticket['title']); ?></div>
+                            <?php if (!empty($tickets)) : ?>
+                                <?php foreach ($tickets as $ticket) : ?>
+                                    <tr class="table-row cursor-pointer" onclick="viewTicket(<?php echo esc_js($ticket['id']); ?>)">
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <div class="text-sm font-medium text-gray-900">#<?php echo esc_html($ticket['id']); ?></div>
+                                            <div class="text-sm text-gray-500 truncate max-w-xs"><?php echo esc_html($ticket['title']); ?></div>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <div class="text-sm font-medium text-gray-900"><?php echo esc_html($ticket['customer']); ?></div>
+                                            <div class="text-sm text-gray-500 truncate max-w-xs"><?php echo esc_html($ticket['email']); ?></div>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <span class="status-badge <?php echo esc_attr(get_status_class($ticket['status'])); ?>">
+                                                <?php echo esc_html(str_replace('-', ' ', $ticket['status'])); ?>
+                                            </span>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <span class="status-badge <?php echo esc_attr(get_priority_class($ticket['priority'])); ?>">
+                                                <?php echo esc_html($ticket['priority']); ?>
+                                            </span>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <?php echo esc_html($ticket['assignee']); ?>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                            <?php echo esc_html(format_date($ticket['updated'])); ?>
+                                        </td>
+                                    </tr>
+                                <?php endforeach; ?>
+                            <?php else : ?>
+                                <tr>
+                                    <td colspan="6" class="px-6 py-4 text-center text-gray-500">
+                                        No tickets found.
                                     </td>
-                                    <td class="px-6 py-4 whitespace-nowrap">
-                                        <div class="text-sm font-medium text-gray-900"><?php echo esc_html($ticket['customer']); ?></div>
-                                        <div class="text-sm text-gray-500 truncate max-w-xs"><?php echo esc_html($ticket['email']); ?></div>
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap">
-                                        <span class="status-badge <?php echo esc_attr(get_status_class($ticket['status'])); ?>">
-                                            <?php echo esc_html(str_replace('-', ' ', $ticket['status'])); ?>
-                                        </span>
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap">
-                                        <span class="status-badge <?php echo esc_attr(get_priority_class($ticket['priority'])); ?>">
-                                            <?php echo esc_html($ticket['priority']); ?>
-                                        </span>
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap">
-                                        <?php echo esc_html($ticket['assignee']); ?>
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                        <?php echo esc_html(format_date($ticket['updated'])); ?>
-                                    </td>
-
                                 </tr>
-
-                            <?php endforeach; ?>
-
+                            <?php endif; ?>
                         </tbody>
                     </table>
                 </div>
+
+                <!-- Custom Pagination for Plugin Dashboard -->
+                <?php if ($total_pages > 1) : ?>
+                    <div class="mt-4">
+                        <nav class="flex items-center justify-between">
+                            <div class="flex-1 flex justify-between sm:hidden">
+                                <!-- Mobile pagination -->
+                                <?php if ($current_page > 1) : ?>
+                                    <a href="<?php echo esc_url(get_pagination_url($current_page - 1)); ?>"
+                                        class="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                                        Previous
+                                    </a>
+                                <?php else : ?>
+                                    <span class="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-400 bg-gray-100 cursor-not-allowed">
+                                        Previous
+                                    </span>
+                                <?php endif; ?>
+
+                                <?php if ($current_page < $total_pages) : ?>
+                                    <a href="<?php echo esc_url(get_pagination_url($current_page + 1)); ?>"
+                                        class="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                                        Next
+                                    </a>
+                                <?php else : ?>
+                                    <span class="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-400 bg-gray-100 cursor-not-allowed">
+                                        Next
+                                    </span>
+                                <?php endif; ?>
+                            </div>
+
+                            <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+                                <div>
+                                    <p class="text-sm text-gray-700">
+                                        Showing <span class="font-medium"><?php echo (($current_page - 1) * $posts_per_page) + 1; ?></span>
+                                        to <span class="font-medium"><?php echo min($current_page * $posts_per_page, $total_posts); ?></span>
+                                        of <span class="font-medium"><?php echo $total_posts; ?></span> results
+                                    </p>
+                                </div>
+
+                                <div>
+                                    <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+                                        <!-- Previous Page Link -->
+                                        <?php if ($current_page > 1) : ?>
+                                            <a href="<?php echo esc_url(get_pagination_url($current_page - 1)); ?>"
+                                                class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                                                <span class="sr-only">Previous</span>
+                                                <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                                                    <path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd" />
+                                                </svg>
+                                            </a>
+                                        <?php else : ?>
+                                            <span class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-gray-100 text-sm font-medium text-gray-400 cursor-not-allowed">
+                                                <span class="sr-only">Previous</span>
+                                                <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                                                    <path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd" />
+                                                </svg>
+                                            </span>
+                                        <?php endif; ?>
+
+                                        <!-- Page Numbers -->
+                                        <?php
+                                        $start_page = max(1, $current_page - 2);
+                                        $end_page = min($total_pages, $current_page + 2);
+
+                                        // Show first page if we're not close to it
+                                        if ($start_page > 1) : ?>
+                                            <a href="<?php echo esc_url(get_pagination_url(1)); ?>"
+                                                class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">
+                                                1
+                                            </a>
+                                            <?php if ($start_page > 2) : ?>
+                                                <span class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700">...</span>
+                                            <?php endif; ?>
+                                        <?php endif; ?>
+
+                                        <?php for ($i = $start_page; $i <= $end_page; $i++) : ?>
+                                            <?php if ($i == $current_page) : ?>
+                                                <span class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-blue-50 text-sm font-medium text-blue-600">
+                                                    <?php echo $i; ?>
+                                                </span>
+                                            <?php else : ?>
+                                                <a href="<?php echo esc_url(get_pagination_url($i)); ?>"
+                                                    class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">
+                                                    <?php echo $i; ?>
+                                                </a>
+                                            <?php endif; ?>
+                                        <?php endfor; ?>
+
+                                        <!-- Show last page if we're not close to it -->
+                                        <?php if ($end_page < $total_pages) : ?>
+                                            <?php if ($end_page < $total_pages - 1) : ?>
+                                                <span class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700">...</span>
+                                            <?php endif; ?>
+                                            <a href="<?php echo esc_url(get_pagination_url($total_pages)); ?>"
+                                                class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">
+                                                <?php echo $total_pages; ?>
+                                            </a>
+                                        <?php endif; ?>
+
+                                        <!-- Next Page Link -->
+                                        <?php if ($current_page < $total_pages) : ?>
+                                            <a href="<?php echo esc_url(get_pagination_url($current_page + 1)); ?>"
+                                                class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                                                <span class="sr-only">Next</span>
+                                                <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                                                    <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+                                                </svg>
+                                            </a>
+                                        <?php else : ?>
+                                            <span class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-gray-100 text-sm font-medium text-gray-400 cursor-not-allowed">
+                                                <span class="sr-only">Next</span>
+                                                <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                                                    <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+                                                </svg>
+                                            </span>
+                                        <?php endif; ?>
+                                    </nav>
+                                </div>
+                            </div>
+                        </nav>
+                    </div>
+                <?php endif; ?>
+
             </div>
 
             <!------------------------------- Ticket Detail Page ----------------------->
