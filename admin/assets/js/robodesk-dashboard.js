@@ -445,6 +445,17 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 });
 
+// On page load, check for paged param and show the paged tickets
+document.addEventListener("DOMContentLoaded", function () {
+  const params = new URLSearchParams(window.location.search);
+  const paged = params.get("paged");
+  if (paged) {
+    //show page tickets and load the paged tickets
+    showPage("tickets");
+    loadPage(Number(paged));
+  }
+});
+
 function loadTicketDetail() {
   if (!currentTicket) return;
 
