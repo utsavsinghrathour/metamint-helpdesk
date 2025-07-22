@@ -1,5 +1,4 @@
 <?php
-
 /**
  * Plugin Name: Robodesk Support Ticket System
  * Description: A support ticket and FAQ system.
@@ -80,12 +79,6 @@ function robodesk_enqueue_scripts()
 
         // Re-enqueue styles (already existing, adjust if needed)
         wp_enqueue_style('robodesk-styles', ROBODESK_PLUGIN_URL . 'public/assets/css/robodesk-styles.css', array(), time());
-wp_enqueue_script( 'wp-api' );
-<<<<<<< Updated upstream
-wp_enqueue_script( 'wp-api' );
-=======
->>>>>>> Stashed changes
-
         // Re-enqueue scripts with TinyMCE dependency
         wp_enqueue_script('robodesk-scripts', ROBODESK_PLUGIN_URL . 'public/assets/js/robodesk-scripts.js', array('jquery', 'tinymce', 'wp-api','wp-data', 'wp-core-data'), time(), true);
 
@@ -433,11 +426,8 @@ function robodesk_enqueue_custom_styles() {
 }
 add_action('wp_enqueue_scripts', 'robodesk_enqueue_custom_styles');
 
-<<<<<<< Updated upstream
 
 
-=======
->>>>>>> Stashed changes
 add_filter('rest_comment_query', 'include_ticket_replies_in_rest_comments', 10, 2);
 function include_ticket_replies_in_rest_comments($args, $request) {
    
@@ -465,10 +455,6 @@ add_filter('rest_prepare_comment', function($response, $comment, $request) {
         $data['time_ago'] = $human_readable_time;
 
         $author_name = $comment->comment_author;
-<<<<<<< Updated upstream
-=======
-        
->>>>>>> Stashed changes
         $author_avatar = get_avatar_url($comment->comment_author_email);
         
         $data['ticket_id'] = $comment->comment_post_ID;
@@ -482,10 +468,4 @@ add_filter('rest_prepare_comment', function($response, $comment, $request) {
         $response->set_data($data);
     }
     return $response;
-<<<<<<< Updated upstream
 }, 10, 3);
-=======
-}, 10, 3);
-
-
->>>>>>> Stashed changes
