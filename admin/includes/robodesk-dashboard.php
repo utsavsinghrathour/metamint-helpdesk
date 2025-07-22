@@ -408,6 +408,8 @@ function robodesk_dashboard_callback()
                             <div class="flex space-x-2">
                                 <button onclick="filterDashboardTickets('recent')" class="dashboard-filter-btn px-3 py-1 text-sm rounded-md border <?php echo $filter === 'recent' ? 'active' : ''; ?>" data-filter="recent">Recent Tickets</button>
                                 <button onclick="filterDashboardTickets('waiting')" class="dashboard-filter-btn px-3 py-1 text-sm rounded-md border <?php echo $filter === 'waiting' ? 'active' : ''; ?>" data-filter="waiting">Waiting Reply</button>
+                                <button onclick="filterDashboardTickets('active')" class="dashboard-filter-btn px-3 py-1 text-sm rounded-md border <?php echo $filter === 'active' ? 'active' : ''; ?>" data-filter="active">Recently Active Tickets</button>
+
                             </div>
                         </div>
                         <?php echo load_dashboard_tickets($filter); ?>
