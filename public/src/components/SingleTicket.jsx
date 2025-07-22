@@ -8,7 +8,8 @@ import EmojiPicker from "emoji-picker-react";
 import Logo from "../images/robodesk-logo.png";
 import defaultLogo from "../images/robodesk-logo.png";
 import "../styles/MessageTabs.css";
-import { getMessages, sendReply } from "../utils/modules";
+import { sendReply } from "../utils/modules";
+// import { useSSEComments, ConnectionStatus } from "../Hooks/SseComments";
 
 const SingleTicket = ({ ticket, onBack, loggedInUserId }) => {
   const [message, setMessage] = useState("");
@@ -17,31 +18,35 @@ const SingleTicket = ({ ticket, onBack, loggedInUserId }) => {
   const [chatMessages, setChatMessages] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [perPage] = useState(6); // Number of messages per fetch
+  const [offset, setOffset] = useState(null);
+  const [totalComments, setTotalComments] = useState(0); // Total number of comments
+  const [isFetching, setIsFetching] = useState(false);
+
   const textareaRef = useRef(null);
   const fileInputRef = useRef(null);
   const chatContainerRef = useRef(null);
   const image_urls = window.robodeskData?.imageUrls || {};
+  const previousScrollHeight = useRef(0);
 
-  // Fetch messages from WordPress
-  const messageCache = new Map();
-
-  const fetchMessages = async () => {
-    if (messageCache.has(ticket.id)) {
-      setChatMessages(messageCache.get(ticket.id));
-      return;
-    }
-
+  
+  const fetchComments = async (fetchOffset = 0, prepend = false) => {
+    if (isFetching) return;
+    setIsFetching(true);
     try {
       setLoading(true);
       setError(null);
-      const response = await getMessages(ticket.id, loggedInUserId);
-      if (response.code === 400) {
-        setError("Nothing to show");
-        setLoading(false);
-        return;
+      const response = await fetch(
+        `/wp-json/wp/v2/comments?post=${ticket.id}&per_page=${perPage}&offset=${fetchOffset}&order=asc&_fields=id,content,date,author_data,time_ago,author_name,author_image`
+      );
+
+      if (!response.ok) {
+        throw new Error(`Failed to fetch comments: ${response.statusText}`);
       }
 
-      const messages = response.data.map((comment) => ({
+      const data = await response.json();
+
+      const formattedComments = data.map((comment) => ({
         id: comment.id,
         text: comment.content?.rendered.replace(/<[^>]+>/g, "") || "",
         sender: comment.author_data?.id === loggedInUserId ? "me" : "other",
@@ -52,21 +57,100 @@ const SingleTicket = ({ ticket, onBack, loggedInUserId }) => {
         isAdmin: comment.author_data?.id !== ticket.author_id,
       }));
 
-      messageCache.set(ticket.id, messages); // Cache the messages
-      setChatMessages(messages);
+      setChatMessages((prev) => {
+        const newMessages = prepend
+          ? [...formattedComments, ...prev]
+          : formattedComments;
+        const uniqueMessages = Array.from(
+          new Map(newMessages.map((msg) => [msg.id, msg])).values()
+        );
+        return uniqueMessages.sort(
+          (a, b) => new Date(a.created_at) - new Date(b.created_at)
+        );
+      });
+
       setLoading(false);
+      setIsFetching(false);
+
+      if (prepend && chatContainerRef.current) {
+        const newScrollHeight = chatContainerRef.current.scrollHeight;
+        chatContainerRef.current.scrollTop =
+          newScrollHeight - previousScrollHeight.current;
+        previousScrollHeight.current = newScrollHeight;
+      }
     } catch (err) {
-      console.error("Error fetching messages:", err);
+      console.error("Failed to fetch comments:", err);
       setError("Failed to load messages. Please try again.");
       setLoading(false);
+      setIsFetching(false);
     }
   };
 
+  const serverEvents = (ticketId, lastCommentId) => {
+  
+    if(!lastCommentId) return ;
+  
+    const eventSource = new EventSource(`/wp-json/robodesk/v1/comments-stream/${ticketId}/${lastCommentId}`
+    );
+
+    eventSource.onopen = () => {
+      console.log("SSE connection opened");
+
+    };
+
+    eventSource.addEventListener("new_comment", (event) => {
+      try {
+        const commentData = JSON.parse(event.data);
+        console.log("New comment received:", commentData);
+
+      } catch (error) {
+        console.error("Error parsing new comment:", error);
+      }
+    });
+
+    eventSource.addEventListener("disconnect", (event) => {
+      console.log("Server requested disconnect:", event.data);
+    });
+    
+     eventSource.onerror = (error) => {
+      console.error("SSE error:", error, {
+        readyState: eventSource.readyState,
+       
+      });
+
+      if (eventSource.readyState === EventSource.CLOSED) {
+        console.log("EventSource closed, scheduling reconnect...");
+      }
+    };
+  };
+
+  // Initial fetch to get total comments and latest messages
   useEffect(() => {
-    fetchMessages();
+    const fetchInitialComments = async () => {
+      try {
+        const response = await fetch(
+          `/wp-json/wp/v2/comments?post=${ticket.id}&per_page=1&order=asc&_fields=id`
+        );
+        if (!response.ok) {
+          throw new Error("Failed to fetch total comments");
+        }
+        const total = parseInt(response.headers.get("X-WP-Total"), 10) || 0;
+        setTotalComments(total);
+        const initialOffset = Math.max(total - perPage, 0);
+        setOffset(initialOffset);
+        await fetchComments(initialOffset, false);
+      } catch (err) {
+        console.error("Failed to fetch initial comments:", err);
+        setError("Failed to load messages. Please try again.");
+        setLoading(false);
+      }
+    };
+
+    fetchInitialComments();
   }, [ticket.id]);
 
   // Handle scrolling to load older messages
+<<<<<<< Updated upstream
   useEffect(() => {
     const textarea = textareaRef.current;
     if (textarea) {
@@ -75,16 +159,48 @@ const SingleTicket = ({ ticket, onBack, loggedInUserId }) => {
     }
   }, [message]);
 
+=======
+>>>>>>> Stashed changes
   useEffect(() => {
     const chatContainer = chatContainerRef.current;
-    if (chatContainer) {
+    if (!chatContainer) return;
+
+    const handleScroll = () => {
+      if (chatContainer.scrollTop <= 0 && offset > 0 && !isFetching) {
+        previousScrollHeight.current = chatContainer.scrollHeight;
+        const newOffset = Math.max(offset - perPage, 0);
+        setOffset(newOffset);
+        fetchComments(newOffset, true);
+      }
+    };
+
+    chatContainer.addEventListener("scroll", handleScroll);
+    return () => chatContainer.removeEventListener("scroll", handleScroll);
+  }, [offset, isFetching]);
+
+  // Scroll to bottom after new messages
+  useEffect(() => {
+    const chatContainer = chatContainerRef.current;
+    if (chatContainer && !isFetching) {
       chatContainer.scrollTop = chatContainer.scrollHeight;
     }
   }, [chatMessages]);
 
-  const handleSend = async (e) => {
+  const lastItem = useMemo(() => {
+    return chatMessages.length > 0 ? chatMessages[chatMessages.length - 1] : null;
+  }, [chatMessages]);
+  
+const hasConnected = useRef(false);
+
+useEffect(() => {
+  if (lastItem && !hasConnected.current) {
+    console.log("Connecting to server with last comment ID:", lastItem.id);
+    serverEvents(ticket.id, lastItem.id);
+    hasConnected.current = true; 
+  }
+}, [lastItem, ticket.id]);
+  const handleSend = async () => {
     if (message.trim() || previewImage) {
-      // Create a temporary message with "sending" status
       const tempMessage = {
         id: `temp-${Date.now()}`,
         text: message || "",
@@ -96,7 +212,6 @@ const SingleTicket = ({ ticket, onBack, loggedInUserId }) => {
         ...(previewImage && { imageUrl: previewImage }),
       };
 
-      // Optimistically add the temporary message
       setChatMessages((prev) => [...prev, tempMessage]);
       setMessage("");
       setPreviewImage(null);
@@ -156,10 +271,11 @@ const SingleTicket = ({ ticket, onBack, loggedInUserId }) => {
 
   const triggerFileInput = () => fileInputRef.current.click();
 
-  const formatTimestamp = (timestamp) => {
-    const date = new Date(timestamp);
-    return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-  };
+  const formatTimestamp = (timestamp) =>
+    new Date(timestamp).toLocaleTimeString([], {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
 
   return (
     <div className="rd-single-ticket rd-flex rd-flex-col rd-h-full">
@@ -287,9 +403,10 @@ const SingleTicket = ({ ticket, onBack, loggedInUserId }) => {
                   <div
                     className="rd-text-small rd-text-gray"
                     style={{
-                      marginTop: '4px',
-                      textAlign: msg.sender === 'me' || msg.isSending ? 'right' : 'left',
-                      fontSize: '10px',
+                      marginTop: "4px",
+                      textAlign:
+                        msg.sender === "me" || msg.isSending ? "right" : "left",
+                      fontSize: "10px",
                     }}
                   >
                     {msg.isSending ? "" : formatTimestamp(msg.created_at)}
