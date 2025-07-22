@@ -1,4 +1,100 @@
+function loadDashboardTickets() {
+  const tableBody = document.getElementById("dashboard-tickets-table");
+  let filteredTickets = [];
+
+  switch (currentDashboardFilter) {
+    case "recent":
+      filteredTickets = tickets
+        .slice()
+        .sort((a, b) => new Date(b.updated) - new Date(a.updated))
+        .slice(0, 10);
+      break;
+
+    case "waiting":
+      filteredTickets = tickets
+        .filter((t) => t.status === "open" || t.status === "in-progress")
+        .sort((a, b) => new Date(a.updated) - new Date(b.updated))
+        .slice(0, 10);
+      break;
+
+    case "active":
+      const fifteenMinutesAgo = new Date(Date.now() - 15 * 60 * 1000); // 15 minutes ago
+      filteredTickets = tickets
+        .filter((t) => {
+          // Check if ticket has user activity data and if user was online in last 15 minutes
+          const userLastSeen = t.user_last_seen
+            ? new Date(t.user_last_seen)
+            : null;
+          const isRecentlyActive =
+            userLastSeen && userLastSeen >= fifteenMinutesAgo;
+
+          // You can combine with status check if needed
+          const hasActiveStatus =
+            t.status === "open" || t.status === "in-progress";
+
+          return isRecentlyActive && hasActiveStatus;
+        })
+        .sort(
+          (a, b) =>
+            new Date(b.user_last_seen || b.updated) -
+            new Date(a.user_last_seen || a.updated)
+        )
+        .slice(0, 10);
+      break;
+  }
+
+  tableBody.innerHTML = filteredTickets
+    .map(
+      (ticket) => `
+        <tr class="table-row cursor-pointer" onclick="viewTicket(${ticket.id})">
+            <td class="px-6 py-4 whitespace-nowrap">
+                <div class="text-sm font-medium text-gray-900">#${
+                  ticket.id
+                }</div>
+                <div class="text-sm text-gray-500 truncate max-w-xs">${
+                  ticket.title
+                }</div>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+            <div class="text-sm font-medium text-gray-900">${
+              ticket.customer
+            }</div>
+            <div class="text-sm font-medium text-gray-900">${ticket.email}</div>
+            </td>
+            <td>
+            <div class="text-sm font-medium text-gray-900">${
+              ticket.source
+            }</div>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap">
+                <span class="status-badge ${getStatusClass(
+                  ticket.status
+                )} editable-status" onclick="event.stopPropagation(); editStatus(${
+        ticket.id
+      }, this)">
+                    ${ticket.status.replace("-", " ")}
+                </span>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap">
+                <span class="status-badge ${getPriorityClass(
+                  ticket.priority
+                )} editable-priority" onclick="event.stopPropagation(); editPriority(${
+        ticket.id
+      }, this)">
+                    ${ticket.priority}
+                </span>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                ${formatDate(ticket.updated)}
+            </td>
+        </tr>
+    `
+    )
+    .join("");
+}
+
 // Sample data
+
 //for ticket varaibles show and hide
 function toggleAccordion() {
   const content = document.getElementById("accordion-content");
@@ -114,7 +210,7 @@ let currentDashboardFilter = "recent";
 document.addEventListener("DOMContentLoaded", function () {
   showPage("dashboard");
   // updateDashboardStats();
-  // loadDashboardTickets();
+  loadDashboardTickets();
   setupEventListeners();
 });
 
@@ -300,7 +396,7 @@ function showPage(pageName) {
   } else if (pageName === "settings") {
     showSettingsTab("basic");
   } else if (pageName === "dashboard") {
-    // loadDashboardTickets();
+    loadDashboardTickets();
   }
 }
 
@@ -314,7 +410,7 @@ function filterDashboardTickets(filterType) {
     .classList.add("active");
 
   currentDashboardFilter = filterType;
-  // loadDashboardTickets();
+  loadDashboardTickets();
 }
 
 function isValidEmail(email) {
@@ -328,10 +424,26 @@ function viewTicket(ticketId) {
 
   if (!currentTicket) return;
 
+  // Update URL with ticket ID (without reloading)
+  if (history.pushState) {
+    const url = new URL(window.location);
+    url.searchParams.set("ticket", ticketId);
+    history.pushState({ ticketId }, "", url);
+  }
+
   showPage("ticket-detail");
   loadTicketDetail();
   showTicketTab("replies");
 }
+
+// On page load, check for ticket param and show ticket if present
+document.addEventListener("DOMContentLoaded", function () {
+  const params = new URLSearchParams(window.location.search);
+  const ticketId = params.get("ticket");
+  if (ticketId) {
+    viewTicket(Number(ticketId));
+  }
+});
 
 function loadTicketDetail() {
   if (!currentTicket) return;
@@ -1229,8 +1341,8 @@ async function loadReplies() {
   if (!repliesList) return;
 
   // Show loading state
-  repliesList.innerHTML =
-    '<div class="text-center py-4">Loading replies...</div>';
+  // repliesList.innerHTML =
+  //   '<div class="text-center py-4">Loading replies...</div>';
 
   try {
     const data = {
