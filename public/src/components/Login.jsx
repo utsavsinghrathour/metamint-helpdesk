@@ -1,19 +1,28 @@
 import "../styles/Login.css";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { loginUser, registerUser, createTicket } from "../utils/modules";
 import { useAppData } from "../utils/AppDataContext";
-const Login = ({ activeTab, setActiveTab, setShowLogin , updateSelectedTicket}) => {
-  const { updateLoginStatus , loginContext , loggedInUsrId } = useAppData();
+const Login = ({
+  activeTab,
+  setActiveTab,
+  setShowLogin,
+  updateSelectedTicket,
+}) => {
+  const { updateLoginStatus, loginContext, loggedInUsrId, refreshTickets } =
+    useAppData();
   const [formData, setFormData] = useState({ email: "", password: "" });
   const [errors, setErrors] = useState({ email: "", password: "" });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
   const [showPasswordField, setShowPasswordField] = useState(false);
-  
-  const handleStateUpdate =(ticket) => {
-     updateSelectedTicket(ticket);
-     setActiveTab(1);
-  }
+
+
+
+
+  const handleStateUpdate = (ticket) => {
+    updateSelectedTicket(ticket);
+    setActiveTab(1);
+  };
   const validateEmail = () => {
     const newErrors = { email: "", password: "" };
     let isValid = true;
@@ -46,9 +55,12 @@ const Login = ({ activeTab, setActiveTab, setShowLogin , updateSelectedTicket}) 
     return isValid;
   };
 
+  //check if email address already exists in wordpress database
+  //if email doesnot exists create the user
+  // If email exists show password field
   const checkEmailExists = async (e) => {
     e.preventDefault();
-
+    
     if (!validateEmail()) return;
 
     setIsSubmitting(true);
@@ -82,63 +94,62 @@ const Login = ({ activeTab, setActiveTab, setShowLogin , updateSelectedTicket}) 
     }
   };
 
+  //register the new user and save user data in session{if email doesnot exists}
+  //ticket is also created here
   const createUserAndLogin = async () => {
     try {
       const ticketResponse = await registerUser(formData.email);
       const user_id = ticketResponse.user_id;
 
-      if (typeof sessionStorage !== "undefined") {
-        const userData = {
-          isLoggedIn: true,
-          loggedInUserId: user_id,
-        };
+    //   if (typeof sessionStorage !== "undefined") {
+    //     const userData = {
+    //       isLoggedIn: true,
+    //       loggedInUserId: user_id,
+    //     };
 
-        sessionStorage.setItem("wpUserData", JSON.stringify(userData));
-        updateLoginStatus(userData.isLoggedIn , userData.loggedInUserId);
-        console.log("User data saved to sessionStorage:", userData);
-      } else {
-        console.warn("sessionStorage is not supported in this browser");
-      }
-      await handleTempTicketCreation(user_id);
-        
-
+    //     sessionStorage.setItem("wpUserData", JSON.stringify(userData));
+    //     updateLoginStatus(userData.isLoggedIn, userData.loggedInUserId);
+    //     console.log("User data saved to sessionStorage:", userData);
+    //     await handleTempTicketCreation(user_id);
+    //   } else {
+    //     console.warn("sessionStorage is not supported in this browser");
+    //   }
+    await handleTempTicketCreation(user_id);
+    updateLoginStatus(true,user_id)
     } catch (err) {
       console.error("Failed to create ticket:", err);
     }
   };
 
-  //login in user if the email exists
+  //login in user if the email exists ticket is also created here
   const handleLogin = async () => {
     if (!validatePassword()) return;
     setIsSubmitting(true);
     try {
       const loginResponse = await loginUser(formData.email, formData.password);
+      updateLoginStatus(true,loginResponse.user_id);
+    //   if (typeof sessionStorage !== "undefined") {
+    //     const userData = {
+    //       isLoggedIn: true,
+    //       loggedInUserId: String(loginResponse.user_id || ""),
+    //     };
 
-      if (typeof sessionStorage !== "undefined") {
-        const userData = {
-          isLoggedIn: true,
-          loggedInUserId: String(loginResponse.user_id || ""),
-        };
-
-        sessionStorage.setItem("wpUserData", JSON.stringify(userData));
-        console.log("User data saved to sessionStorage:", userData);
-      } else {
-        console.warn("sessionStorage is not supported in this browser");
-      }
+    //     sessionStorage.setItem("wpUserData", JSON.stringify(userData));
+    //     console.log("User data saved to sessionStorage:", userData);
+    //   } else {
+    //     console.warn("sessionStorage is not supported in this browser");
+    //   }
       setShowLogin(true);
       try {
         const ticketResponse = await handleTempTicketCreation(
           loginResponse.user_id
         );
-        console.log("Ticket Creation resp", ticketResponse);
-
+       
       } catch (ticketError) {
-        console.error("Failed to create ticket:", ticketError);
+        // console.error("Failed to create ticket:", ticketError);
       }
-      
-      
     } catch (error) {
-      console.error("Login error:", error);
+    //   console.error("Login error:", error);
       setErrors({
         ...errors,
         password: error.message.includes("credentials")
@@ -150,8 +161,8 @@ const Login = ({ activeTab, setActiveTab, setShowLogin , updateSelectedTicket}) 
       setIsSubmitting(false);
     }
   };
-    
-  //create ticket
+
+  //create ticket from temporary storage data
   const handleTempTicketCreation = async (userId) => {
     const ticketTitle = localStorage.getItem("temp_ticket_title");
 
@@ -164,29 +175,27 @@ const Login = ({ activeTab, setActiveTab, setShowLogin , updateSelectedTicket}) 
         ticketTitle
       );
 
-
-       const newTicket = {
-            id: ticketResponse.data.id,
-            ticketNumber: ticketResponse.data.ticket_number,
-            title:ticketResponse.data.ticket_title,
-            source:  ticketResponse.data.ticket_origin,
-            timeAgo: ticketResponse.data.ticket_time_ago,
-            authorImage: ticketResponse.data.ticket_author_image,
-            status: ticketResponse.data.ticket_status,
-            priority:  ticketResponse.data.ticket_priority,
-            messages: [],
-        };
-        handleStateUpdate(newTicket);
-       
-     
+      const newTicket = {
+        id: ticketResponse.data.id,
+        ticketNumber: ticketResponse.data.ticket_number,
+        title: ticketResponse.data.ticket_title,
+        source: ticketResponse.data.ticket_origin,
+        timeAgo: ticketResponse.data.ticket_time_ago,
+        authorImage: ticketResponse.data.ticket_author_image,
+        status: ticketResponse.data.ticket_status,
+        priority: ticketResponse.data.ticket_priority,
+        messages: [],
+      };
+      refreshTickets();
+      handleStateUpdate(newTicket);
       return ticketResponse;
     } catch (ticketError) {
       console.error("Ticket creation error:", ticketError);
       localStorage.removeItem("temp_ticket_title");
       throw ticketError;
-    }finally{ 
-        localStorage.removeItem("temp_ticket_title");
-      
+    } finally {
+      localStorage.removeItem("temp_ticket_title");
+     
     }
   };
 
@@ -202,11 +211,10 @@ const Login = ({ activeTab, setActiveTab, setShowLogin , updateSelectedTicket}) 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
-    if (name === 'email') {
-    setShowPasswordField(false);
-  }
+    if (name === "email") {
+      setShowPasswordField(false);
+    }
   };
-
 
   return (
     <>

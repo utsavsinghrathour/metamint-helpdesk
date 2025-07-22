@@ -1,28 +1,33 @@
 import React, { useState , useEffect } from "react";
 import { createTicket  } from "../utils/modules";
 import "../styles/SendMessageField.css";
+import { useAppData } from '../utils/AppDataContext';
 
 const SendMessageField = ({ setShowLogin , setActiveTab , updateSelectedTicket } ) => {
   const [message, setMessage] = useState("");
   const [loggedIn, setLoggedIn] = useState(false);
   const [userId, setUserId] = useState(null);
   const [placeHolderText , setplaceHolderText] = useState('Send us a message');
+  const { loggedinContext, loggedInUsrId , refreshTickets } = useAppData();
   
   const handleInputChange = (e) => {
     setMessage(e.target.value);
   };
   
-  useEffect(() => {
-    const sessionData = JSON.parse(sessionStorage.getItem('wpUserData')) || {};
-    setLoggedIn(sessionData.isLoggedIn || false);
-    setUserId(sessionData.loggedInUserId || null);
-
+    useEffect(() => {
+        console.log('From our context', loggedinContext , loggedInUsrId);
+    setLoggedIn(loggedinContext );
+    setUserId(loggedInUsrId );
   }, []);
+  
+  
+
   
   const handleSend = async () => {
   
+
     if (!message.trim()) return;
-    if (!loggedIn) {
+    if (!loggedinContext) {
       localStorage.setItem('temp_ticket_title', message); 
       setShowLogin(true);
       setActiveTab(1);
@@ -30,8 +35,8 @@ const SendMessageField = ({ setShowLogin , setActiveTab , updateSelectedTicket }
     }
 
     try {
-       const result = await createTicket(userId, message, '');
-       
+       const result = await createTicket(loggedInUsrId, message, '');
+    
        const newTicket = {
             id: result.data.id,
             ticketNumber: result.data.ticket_number,
@@ -43,6 +48,7 @@ const SendMessageField = ({ setShowLogin , setActiveTab , updateSelectedTicket }
             priority:  result.data.ticket_priority,
             messages: [],
         };
+      refreshTickets();
       updateSelectedTicket(newTicket);
       setActiveTab(1);
       setMessage("");
@@ -65,7 +71,7 @@ const SendMessageField = ({ setShowLogin , setActiveTab , updateSelectedTicket }
           style={{ minHeight: "42px", maxHeight: "200px" }}
           onKeyPress={(e) => {
             if (e.key === "Enter" && !e.shiftKey) {
-              e.preventDefault();
+            //   e.preventDefault();
               handleSend();
             }
           }}
