@@ -39,7 +39,7 @@ const NoticeItem = memo(({ notice, onSelect }) => {
     return parse(notice.excerpt);
   }, [notice.excerpt]);
 
-    console.log(notice);
+    // console.log(notice);
   return (
     <div
       className="rd-notice-item rd-flex rd-gap-15 rd-border-light single-notice-box-field rd-border-radius-md rd-faq-item"
@@ -66,7 +66,7 @@ const SingleNoticeView = memo(({ notice, onBack, isExpanded, setIsExpanded , log
   const [content, setContent] = useState(null);
 
   useEffect(() => {
-    console.log('Our notice',notice);
+    // console.log('Our notice',notice);
     const fetchContent = () => {
       try {
         const normalizedContent = normalizeImagePaths(notice.content);
@@ -78,7 +78,7 @@ const SingleNoticeView = memo(({ notice, onBack, isExpanded, setIsExpanded , log
         setContent(sanitizedContent);
         // localStorage.setItem(cacheKey, sanitizedContent);
       } catch (err) {
-        console.error('Failed to fetch content:', err);
+        // console.error('Failed to fetch content:', err);
         setContent('Error loading content');
       }
     };

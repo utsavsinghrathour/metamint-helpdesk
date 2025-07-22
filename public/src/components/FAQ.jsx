@@ -33,7 +33,7 @@ const FAQDetail = memo(({ faq, onBack, isExpanded, setIsExpanded }) => {
   const [authorNames, setAuthorNames] = useState([]);
   // const wpHomeUrl = window.robodeskData?.home_url || 'http://localhost:10135/';
     const image_urls = window.robodeskData?.imageUrls || {};
-    console.log('arpan', image_urls);
+    // console.log('arpan', image_urls);
 
   useEffect(() => {
     const fetchFAQDetails = () => {
@@ -46,7 +46,7 @@ const FAQDetail = memo(({ faq, onBack, isExpanded, setIsExpanded }) => {
         setFullContent(faq.content);
         setAuthorNames(data.author_name ? data.author_name.split(',').map((name) => name.trim()) : ['Unknown']);
       } catch (err) {
-        console.error('Failed to fetch FAQ details:', err);
+        // console.error('Failed to fetch FAQ details:', err);
         setAuthorNames(['Unknown']);
       }
     };
@@ -247,7 +247,7 @@ const FAQ = ({ setActiveTab, setIsOpen, isExpanded, setIsExpanded, activeTab }) 
         if (cachedFaqs && cachedTimestamp) {
           const isCacheValid = currentTime - parseInt(cachedTimestamp) < CACHE_EXPIRY;
           if (isCacheValid) {
-            console.log('Using cached FAQs:', JSON.parse(cachedFaqs));
+            // console.log('Using cached FAQs:', JSON.parse(cachedFaqs));
             setFaqs(JSON.parse(cachedFaqs));
             setIsLoading(false);
             return;
@@ -263,21 +263,21 @@ const FAQ = ({ setActiveTab, setIsOpen, isExpanded, setIsExpanded, activeTab }) 
         );
         
         // console.log(wpHomeUrl);
-        console.log('Response status:', response.status, response.statusText);
+        // console.log('Response status:', response.status, response.statusText);
 
         if (!response.ok) {
           throw new Error(`Failed to fetch FAQs: ${response.status} ${response.statusText}`);
         }
 
         const data = await response.json();
-        console.log('API Response:', data);
+        // console.log('API Response:', data);
 
         if (!Array.isArray(data)) {
           throw new Error('Invalid API response: Expected an array');
         }
 
         if (data.length === 0) {
-          console.warn('API returned an empty array. Check if robodesk_faq posts exist.');
+        //   console.warn('API returned an empty array. Check if robodesk_faq posts exist.');
         }
 
         const formattedFaqs = data.map((faq) => {
@@ -301,12 +301,12 @@ const FAQ = ({ setActiveTab, setIsOpen, isExpanded, setIsExpanded, activeTab }) 
           };
         });
 
-        console.log('Formatted FAQs:', formattedFaqs);
+        // console.log('Formatted FAQs:', formattedFaqs);
         setFaqs(formattedFaqs);
         localStorage.setItem(cacheKey, JSON.stringify(formattedFaqs));
         localStorage.setItem(cacheTimestampKey, currentTime.toString());
       } catch (err) {
-        console.error('Fetch Error:', err);
+        // console.error('Fetch Error:', err);
         setError(err.message);
       } finally {
         setIsLoading(false);

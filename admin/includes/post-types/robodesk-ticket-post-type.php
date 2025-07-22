@@ -41,6 +41,7 @@ function robodesk_register_ticket_post_type()
         'show_ui'            => true,
         'show_in_menu'       => false,
         'show_in_rest'       => true,
+        // 'rest_base' => 'robodesk_tickets',
         'query_var'          => true,
         'rewrite'            => array('slug' => 'robodesk-tickets'),
         'capability_type'    => 'post',

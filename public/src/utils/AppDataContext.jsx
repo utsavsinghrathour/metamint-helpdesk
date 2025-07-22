@@ -12,10 +12,7 @@ export const AppDataProvider = ({ children }) => {
     noticesContext: [],
   });
 
-
   const updateLoginStatus = (isLoggedIn, userId) => {
-  
-  console.log('Hellow From context');
     setData((prev) => ({
       ...prev,
       loggedinContext: isLoggedIn,
@@ -23,7 +20,41 @@ export const AppDataProvider = ({ children }) => {
     }));
   };
 
-  // Initial fetch for notices and check login status
+  // Ticket fetching logic moved outside to reuse
+  const fetchTickets = async (usrId) => {
+    if (!usrId) return;
+    try {
+      setData((prev) => ({ ...prev, loadingContext: true, errorContext: null }));
+      const response = await fetch(`/wp-json/wp/v2/robodesk_ticket?author=${usrId}&t=${Date.now()}`);
+      if (!response.ok) {
+        throw new Error(`Failed to fetch ticketsContext: ${response.status} ${response.statusText}`);
+      }
+      
+      const tickets = await response.json();
+
+      setData((prev) => ({
+        ...prev,
+        loadingContext: false,
+        ticketsContext: tickets,
+      }));
+    } catch (error) {
+    
+      setData((prev) => ({
+        ...prev,
+        loadingContext: false,
+        errorContext: error.message || 'Failed to load tickets data',
+        ticketsContext: [],
+      }));
+    }
+  };
+
+  const refreshTickets = () => {
+
+    if (data.loggedInUsrId) {
+      fetchTickets(data.loggedInUsrId);
+    }
+  };
+
   useEffect(() => {
     const checkLoginStatus = () => {
       const storedData = sessionStorage.getItem("wpUserData");
@@ -80,41 +111,14 @@ export const AppDataProvider = ({ children }) => {
     checkLoginStatus();
   }, []);
 
-  // Fetch tickets when loggedInUsrId changes (i.e., user logs in)
   useEffect(() => {
-    const fetchTickets = async (usrId) => {
-      if (!usrId) return; // Skip if no user ID
-
-      try {
-        setData((prev) => ({ ...prev, loadingContext: true, errorContext: null }));
-        const response = await fetch(`/wp-json/wp/v2/robodesk_ticket?author=${usrId}`);
-        if (!response.ok) {
-          throw new Error(`Failed to fetch ticketsContext: ${response.status} ${response.statusText}`);
-        }
-        const tickets = await response.json();
-        setData((prev) => ({
-          ...prev,
-          loadingContext: false,
-          ticketsContext: tickets,
-        }));
-      } catch (error) {
-        console.error("Error fetching ticketsContext:", error);
-        setData((prev) => ({
-          ...prev,
-          loadingContext: false,
-          errorContext: error.message || 'Failed to load tickets data',
-          ticketsContext: [],
-        }));
-      }
-    };
-
     if (data.loggedInUsrId) {
       fetchTickets(data.loggedInUsrId);
     }
   }, [data.loggedInUsrId]);
 
   return (
-    <AppDataContext.Provider value={{ ...data, updateLoginStatus }}>
+    <AppDataContext.Provider value={{ ...data, updateLoginStatus, refreshTickets }}>
       {children}
     </AppDataContext.Provider>
   );

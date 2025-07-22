@@ -30,7 +30,7 @@ export const createTicket = async (userId, title, message = "") => {
 };
 
 //get all messages
-export const getMessages = async (ticketId, userId) => {
+export const  getMessages = async (ticketId, userId) => {
   const webhookUrl = "/wp-json/chat/v1/tickets/";
 
   const messageData = {

@@ -10,6 +10,7 @@ import Login from "./Login";
 import Preloader from "../images/preloader.svg";
 import { getAllTickets } from "../utils/modules";
 import { useAppData } from "../utils/AppDataContext";
+// import CreateTicket from './CreateTicket'
 
 const SingleTicket = React.lazy(() => import("./SingleTicket"));
 
@@ -81,11 +82,11 @@ const MessageTabs = ({
     ticketsContext,
     loggedinContext,
     loggedInUsrId,
+  
   } = useAppData();
 
   const fetchTickets = async () => {
     if (!loggedInUsrId) {
-      console.warn("No logged-in user ID provided");
       return;
     }
     try {
@@ -104,22 +105,22 @@ const MessageTabs = ({
       }));
 
       setTickets(mappedTickets);
+      
     } catch (error) {
-      console.error("Error fetching tickets:", error);
+      
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
- 
-    console.log('The login status is',loggedinContext , loggedInUsrId)
     
     if (loggedinContext && loggedInUsrId) {
         setIsLoggedIn(true);
         setloggedInuserId(loggedInUsrId);
        
        fetchTickets();
+    
       if (!selectedTicket) {
         setSelectedTicket(selectedNewTicket ? selectedNewTicket : null);
       }
@@ -127,7 +128,7 @@ const MessageTabs = ({
       setTickets([]);
       setLoading(false);
     }
-  }, [isLoggedIn, loggedInUsrId]);
+  }, [isLoggedIn, loggedInUsrId,ticketsContext]);
 
   const handleLogin = (loginStatus) => {
     setIsLoggedIn(loginStatus);
@@ -137,16 +138,17 @@ const MessageTabs = ({
   };
 
   const handleBackToHome = () => {
-    console.log("handleBackToHome called");
+
     if (setActiveTab) {
       setActiveTab(0);
       setIsExpanded(false);
     }
+      updateSelectedTicket(null);
   };
 
   const handleAddTicket = async () => {
     if (!loggedInuserId) return;
-    console.log("This is not the right way");
+
    
   };
 
@@ -155,7 +157,6 @@ const MessageTabs = ({
     const matchesPriority =
       priorityFilter === "all" || ticket.priority === priorityFilter;
 
-    // Safely handle possible undefined values
     const searchLower = searchTerm.toLowerCase();
     const titleLower = ticket.title?.toLowerCase() || "";
     const ticketNumberLower = ticket.ticketNumber?.toLowerCase() || "";
@@ -169,6 +170,7 @@ const MessageTabs = ({
 
   return (
     <div className="rd-main-content">
+ 
       {isLoggedIn ? (
         <>
           {selectedTicket ? (
@@ -197,6 +199,7 @@ const MessageTabs = ({
                 </button>
               </div>
               <div className="rd-message-tab-content">
+                
                 {/* Search and Priority Filter */}
                 <div className="rd-px-18 rd-py-15 rd-flex rd-gap-10 rd-align-center rd-justify-between">
                   <input
@@ -326,6 +329,7 @@ const MessageTabs = ({
 
                 {/* Ticket List */}
                 <div className="rd-messge-wrapper">
+            
                   <div className="rd-tickets">
                     <div className="rd-active-tickets-wrap">
                       {loading ? (
