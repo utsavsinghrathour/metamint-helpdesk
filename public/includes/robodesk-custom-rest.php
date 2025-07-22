@@ -56,16 +56,36 @@ function robodesk_generate_token($user, $expiration_in_days = 7)
 
 
 /* 
-The Hook to allow  headers to the response to allow Cross-Origin Resource Sharing (CORS) for the REST API requests. CORS is a security feature implemented by webbrowsers to restrict web pages from making requests to a different domain than the one that served
+The Hook to allow  headers to the response to allow Cross-Origin Resource Sharing (CORS) for 
+the REST API requests. CORS is a security feature implemented by webbrowsers to restrict web 
+pages from making requests to a different domain than the one that served
 the original page. 
 */
-add_filter('rest_pre_serve_request', function ($value) {
-    header('Access-Control-Allow-Origin: ' . esc_url_raw(site_url()));
-    header('Access-Control-Allow-Methods: POST, GET, OPTIONS');
-    header('Access-Control-Allow-Headers: Content-Type, Authorization');
-    header('Access-Control-Max-Age: 86400');
+add_filter('rest_pre_serve_request', function ($value,$result, $request, $server) {
+
+
+        header('Access-Control-Allow-Origin: ' . esc_url_raw(site_url()));
+        header('Access-Control-Allow-Methods: POST, GET, OPTIONS');
+        header('Access-Control-Allow-Headers: Content-Type, Authorization');
+        header('Access-Control-Max-Age: 86400');
+        
+        if (strpos($request->get_route(), '/comments-stream/') !== false) {
+            
+           
+        }
+
+    
     return $value;
-});
+},10,4);
+
+// add_filter('rest_pre_serve_request', function($served, $result, $request, $server) {
+//         if (strpos($request->get_route(), '/comments-stream/') !== false) {
+//             header('Access-Control-Allow-Origin: *');
+//             header('Access-Control-Allow-Methods: GET');
+//             header('Access-Control-Allow-Headers: Content-Type, Cache-Control');
+//         }
+//         return $served;
+//     }, 10, 4);
 
 
 /* Public Rest Api registration hooks */
@@ -96,7 +116,186 @@ add_action('rest_api_init', callback: function () {
         'callback' => 'robodesk_handle_tickets',
         'permission_callback' => '__return_true',
     ));
+    
+    
+    // register_rest_route('robodesk/v1', '/comments-stream/(?P<post_id>\d+)', array(
+    //     'methods' => 'GET',
+    //     'callback' => 'robodesk_stream_comments',
+    //     'permission_callback' => 'robodesk_check_sse_permissions',
+    //     'args' => array(
+    //         'post_id' => array(
+    //             'validate_callback' => function($param, $request, $key) {
+    //                 return is_numeric($param);
+    //             }
+    //         ),
+    //         'last_comment_id' => array(
+    //             'default' => 0,
+    //             'validate_callback' => function($param, $request, $key) {
+    //                 return is_numeric($param);
+    //             }
+    //         ),
+    //     ),
+    // ));
+    
+    register_rest_route('robodesk/v1', '/comments-stream/(?P<post_id>\d+)(?:/(?P<last_comment_id>\d+))?', array(
+    'methods' => 'GET',
+    'callback' => 'robodesk_stream_comments',
+    'permission_callback' => '__return_true',
+    'args' => array(
+        'post_id' => array(
+            'validate_callback' => function($param) {
+                return true;
+            }
+        ),
+        'last_comment_id' => array(
+            'validate_callback' => function($param) {
+                return true;
+            }
+        ),
+    ),
+));
+
 });
+
+function robodesk_stream_comments($request) {
+    $post_id = $request->get_param('post_id');
+    $last_comment_id = $request->get_param('last_comment_id');
+
+    // Validate post exists
+    if (!get_post($post_id)) {
+        return new WP_Error('post_not_found', 'Post not found', array('status' => 404));
+    }
+
+    // Set headers for SSE
+    header('Content-Type: text/event-stream');
+    header('Cache-Control: no-cache');
+    header('Connection: keep-alive');
+    header('Access-Control-Allow-Origin: *');
+    header('Access-Control-Allow-Headers: Cache-Control');
+    header('X-Accel-Buffering: no'); // Disable Nginx buffering
+
+    // Disable output buffering and compression
+    if (ob_get_level()) {
+        ob_end_clean();
+    }
+    ini_set('zlib.output_compression', 0);
+    ini_set('output_buffering', 0);
+
+    // Check for new comments
+    $new_comments = robodesk_get_optimized_comments($post_id, $last_comment_id);
+
+    if (!empty($new_comments)) {
+        foreach ($new_comments as $comment) {
+            $comment_data = format_comment_for_sse($comment, $post_id);
+            echo "event: new_comment\n";
+            echo "data: " . json_encode($comment_data) . "\n\n";
+            flush();
+            $last_comment_id = max($last_comment_id, $comment->comment_ID);
+        }
+    } else {
+        // No new comments, send a heartbeat or empty response
+        echo "event: heartbeat\n";
+        echo "data: " . json_encode(array(
+            'timestamp' => time(),
+            'last_comment_id' => $last_comment_id,
+            'status' => 'no_new_comments'
+        )) . "\n\n";
+        flush();
+    }
+
+    // Send disconnect event
+    echo "event: disconnect\n";
+    echo "data: " . json_encode(array('reason' => 'completed')) . "\n\n";
+    flush();
+
+    exit();
+}
+
+// Permission check for SSE endpoint
+function robodesk_check_sse_permissions($request) {
+    $post_id = $request['post_id'];
+    return current_user_can('read_post', $post_id) || is_user_logged_in();
+}
+// Optimized function to get new comments
+function robodesk_get_optimized_comments($post_id, $last_comment_id = 0) {
+    global $wpdb;
+    
+    // Use transient cache for performance
+    $cache_key = "new_comments_{$post_id}_{$last_comment_id}";
+    $cached_result = get_transient($cache_key);
+    
+    if ($cached_result !== false) {
+        return $cached_result;
+    }
+    
+    $query = $wpdb->prepare(
+        "SELECT c.*, u.display_name, u.user_email 
+         FROM {$wpdb->comments} c 
+         LEFT JOIN {$wpdb->users} u ON c.user_id = u.ID 
+         WHERE c.comment_post_ID = %d 
+         AND c.comment_ID > %d 
+         AND c.comment_approved = '1' 
+         ORDER BY c.comment_date ASC 
+         LIMIT 10",
+        $post_id,
+        $last_comment_id
+    );
+    
+    $results = $wpdb->get_results($query);
+    
+    // Cache for 1 second to prevent excessive DB queries
+    set_transient($cache_key, $results, 1);
+    
+    return $results;
+}
+
+// Format comment data for SSE
+function format_comment_for_sse($comment, $post_id) {
+    $post = get_post($post_id);
+    
+    return array(
+        'id' => (int) $comment->comment_ID,
+        'content' => array(
+            'rendered' => wpautop($comment->comment_content)
+        ),
+        'date' => $comment->comment_date,
+        'author_data' => array(
+            'id' => (int) $comment->user_id
+        ),
+        'author_name' => $comment->display_name ?: $comment->comment_author,
+        'author_image' => get_avatar_url($comment->user_id ?: $comment->comment_author_email, array('size' => 32)),
+        'time_ago' => human_time_diff(strtotime($comment->comment_date), current_time('timestamp')) . ' ago',
+        'author_id' => (int) $comment->user_id,
+        'post_author_id' => (int) $post->post_author
+    );
+}
+
+// Enhanced hook for comment notifications
+add_action('comment_post', 'enhanced_comment_notification', 10, 3);
+
+function enhanced_comment_notification($comment_id, $comment_approved, $commentdata) {
+    if ($comment_approved === 1) {
+        $post_id = $commentdata['comment_post_ID'];
+
+        delete_transient("new_comments_{$post_id}_*");
+
+    }
+}
+
+
+// Clean up old transients periodically
+add_action('wp_scheduled_delete', 'cleanup_sse_transients');
+
+function cleanup_sse_transients() {
+    global $wpdb;
+    
+    // Delete old comment cache transients
+    $wpdb->query(
+        "DELETE FROM {$wpdb->options} 
+         WHERE option_name LIKE '_transient_new_comments_%' 
+         OR option_name LIKE '_transient_timeout_new_comments_%'"
+    );
+}
 
 function secure_login_endpoint(WP_REST_Request $request)
 {

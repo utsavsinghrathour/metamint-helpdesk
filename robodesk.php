@@ -80,9 +80,10 @@ function robodesk_enqueue_scripts()
 
         // Re-enqueue styles (already existing, adjust if needed)
         wp_enqueue_style('robodesk-styles', ROBODESK_PLUGIN_URL . 'public/assets/css/robodesk-styles.css', array(), time());
+wp_enqueue_script( 'wp-api' );
 
         // Re-enqueue scripts with TinyMCE dependency
-        wp_enqueue_script('robodesk-scripts', ROBODESK_PLUGIN_URL . 'public/assets/js/robodesk-scripts.js', array('jquery', 'tinymce'), time(), true);
+        wp_enqueue_script('robodesk-scripts', ROBODESK_PLUGIN_URL . 'public/assets/js/robodesk-scripts.js', array('jquery', 'tinymce', 'wp-api','wp-data', 'wp-core-data'), time(), true);
 
         // Existing wp_localize_script for AJAX
         wp_localize_script('robodesk-scripts', 'robodesk_ajax_object', array(
@@ -427,3 +428,48 @@ function robodesk_enqueue_custom_styles() {
     wp_add_inline_style('robodesk-style', $custom_css);
 }
 add_action('wp_enqueue_scripts', 'robodesk_enqueue_custom_styles');
+
+add_filter('rest_comment_query', 'include_ticket_replies_in_rest_comments', 10, 2);
+function include_ticket_replies_in_rest_comments($args, $request) {
+   
+        $args['type__in'] = array('ticket_replies');
+
+    return $args;
+}
+
+
+add_filter('rest_prepare_comment', function($response, $comment, $request) {
+    if (!is_wp_error($response) && $response instanceof WP_REST_Response) {
+        $data = $response->get_data();
+        //plain text
+        $data['content']['plain'] = wp_strip_all_tags($data['content']['rendered']);
+        // Get user object if registered user
+        $author_id = $comment->user_id;
+
+        // Local timestamp using WP timezone
+        $comment_time_local = strtotime(get_date_from_gmt($comment->comment_date_gmt));
+        $now_local = current_time('timestamp'); // WP timezone-aware timestamp
+
+        $diff = $now_local - $comment_time_local;
+
+        $human_readable_time = $diff < 5 ? 'just now' : human_time_diff($comment_time_local, $now_local) . ' ago';
+
+        $data['time_ago'] = $human_readable_time;
+
+        $author_name = $comment->comment_author;
+        $author_avatar = get_avatar_url($comment->comment_author_email);
+        
+        $data['ticket_id'] = $comment->comment_post_ID;
+    
+        $data['author_data'] = array(
+            'id'    => $author_id,
+            'name'  => $author_name,
+            'avatar'=> $author_avatar,
+        );
+
+        $response->set_data($data);
+    }
+    return $response;
+}, 10, 3);
+
+
