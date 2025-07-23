@@ -1,11 +1,10 @@
-import { useState, useRef, useEffect,useMemo } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import { FaChevronLeft } from "react-icons/fa";
 import { FaRegFaceSmileBeam } from "react-icons/fa6";
 import { PiPaperPlaneRightFill } from "react-icons/pi";
 import { FiPaperclip } from "react-icons/fi";
 import { IoClose } from "react-icons/io5";
 import EmojiPicker from "emoji-picker-react";
-import Logo from "../images/robodesk-logo.png";
 import defaultLogo from "../images/robodesk-logo.png";
 import "../styles/MessageTabs.css";
 import { sendReply } from "../utils/modules";
@@ -18,8 +17,9 @@ const SingleTicket = ({ ticket, onBack, loggedInUserId }) => {
   const [chatMessages, setChatMessages] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [perPage] = useState(6); // Number of messages per fetch
+  const [perPage] = useState(6); 
   const [offset, setOffset] = useState(null);
+
   const [totalComments, setTotalComments] = useState(0); // Total number of comments
   const [isFetching, setIsFetching] = useState(false);
 
@@ -28,8 +28,11 @@ const SingleTicket = ({ ticket, onBack, loggedInUserId }) => {
   const chatContainerRef = useRef(null);
   const image_urls = window.robodeskData?.imageUrls || {};
   const previousScrollHeight = useRef(0);
-
   
+  const [lastCommentId , setLastCommentId] = useState(null);
+  const hasConnected = useRef(false);
+
+  // Fetch comments from WordPress API
   const fetchComments = async (fetchOffset = 0, prepend = false) => {
     if (isFetching) return;
     setIsFetching(true);
@@ -51,7 +54,7 @@ const SingleTicket = ({ ticket, onBack, loggedInUserId }) => {
         text: comment.content?.rendered.replace(/<[^>]+>/g, "") || "",
         sender: comment.author_data?.id === loggedInUserId ? "me" : "other",
         senderName: comment.author_name,
-        image: comment.author_image || "/default-avatar.jpg",
+        image: comment.author_data.avatar || "./default-avatar.jpg",
         created_at: comment.date,
         time_ago: comment.time_ago,
         isAdmin: comment.author_data?.id !== ticket.author_id,
@@ -86,42 +89,25 @@ const SingleTicket = ({ ticket, onBack, loggedInUserId }) => {
     }
   };
 
-  const serverEvents = (ticketId, lastCommentId) => {
-  
-    if(!lastCommentId) return ;
-  
-    const eventSource = new EventSource(`/wp-json/robodesk/v1/comments-stream/${ticketId}/${lastCommentId}`
-    );
-
-    eventSource.onopen = () => {
-      console.log("SSE connection opened");
-
-    };
-
-    eventSource.addEventListener("new_comment", (event) => {
-      try {
-        const commentData = JSON.parse(event.data);
-        console.log("New comment received:", commentData);
-
-      } catch (error) {
-        console.error("Error parsing new comment:", error);
-      }
+  //handling new comments received from sse
+  const handleNewComment = (commentData) => {
+    setChatMessages((prev) => {
+      const newMessage = {
+        id: commentData.id,
+        text: commentData.content?.rendered.replace(/<[^>]+>/g, "") || "",
+        sender: commentData.author_id === loggedInUserId ? "me" : "other",
+        senderName: commentData.author_name || "Unknown",
+        image: commentData.author_image || "/default-avatar.jpg",
+        created_at: commentData.created_at || new Date().toISOString(),
+        isAdmin: commentData.author_id !== ticket.author_id,
+      };
+      const uniqueMessages = Array.from(
+        new Map([...prev, newMessage].map((msg) => [msg.id, msg])).values()
+      );
+      return uniqueMessages.sort(
+        (a, b) => new Date(a.created_at) - new Date(b.created_at)
+      );
     });
-
-    eventSource.addEventListener("disconnect", (event) => {
-      console.log("Server requested disconnect:", event.data);
-    });
-    
-     eventSource.onerror = (error) => {
-      console.error("SSE error:", error, {
-        readyState: eventSource.readyState,
-       
-      });
-
-      if (eventSource.readyState === EventSource.CLOSED) {
-        console.log("EventSource closed, scheduling reconnect...");
-      }
-    };
   };
 
   // Initial fetch to get total comments and latest messages
@@ -150,7 +136,7 @@ const SingleTicket = ({ ticket, onBack, loggedInUserId }) => {
   }, [ticket.id]);
 
   // Handle scrolling to load older messages
-<<<<<<< Updated upstream
+
   useEffect(() => {
     const textarea = textareaRef.current;
     if (textarea) {
@@ -159,8 +145,6 @@ const SingleTicket = ({ ticket, onBack, loggedInUserId }) => {
     }
   }, [message]);
 
-=======
->>>>>>> Stashed changes
   useEffect(() => {
     const chatContainer = chatContainerRef.current;
     if (!chatContainer) return;
@@ -186,19 +170,114 @@ const SingleTicket = ({ ticket, onBack, loggedInUserId }) => {
     }
   }, [chatMessages]);
 
+  //fetching messages in real time by us
+  //   const hasConnected = useRef(false);
+  // Updated serverEvents with better error handling
+  const serverEvents = (ticketId, lastCommentId, onNewComment) => {
+    if (!lastCommentId || !ticketId) {
+      console.warn("Skipping SSE: Invalid ticketId or lastCommentId", {
+        ticketId,
+        lastCommentId,
+      });
+      return;
+    }
+
+    console.log("Starting SSE with:", { ticketId, lastCommentId });
+
+    const eventSource = new EventSource(
+      `/wp-json/robodesk/v1/comments-stream/${ticketId}/${lastCommentId}`
+    );
+
+    eventSource.onopen = () => {
+      console.log("SSE connection opened");
+      hasConnected.current = true;
+    };
+
+    eventSource.addEventListener("new_comment", (event) => {
+      try {
+        const commentData = JSON.parse(event.data);
+        console.log("New comment received:", commentData);
+        if (typeof onNewComment === "function") {
+          onNewComment(commentData);
+        } else {
+          console.warn("onNewComment is not a function:", onNewComment);
+        }
+      } catch (error) {
+        console.error("Error parsing new comment:", error);
+      }
+    });
+
+    eventSource.addEventListener("heartbeat", (event) => {
+      try {
+        const data = JSON.parse(event.data);
+        console.log("Heartbeat received:", data);
+      } catch (error) {
+        console.error("Error parsing heartbeat:", error);
+      }
+    });
+
+    eventSource.addEventListener("disconnect", (event) => {
+      try {
+        const data = JSON.parse(event.data);
+        console.log("Server requested disconnect:", data);
+        eventSource.close();
+        setTimeout(() => {
+          console.log("Reconnecting...");
+          if (typeof onNewComment === "function") {
+            serverEvents(ticketId, lastCommentId, onNewComment);
+          }
+        }, 2000);
+      } catch (error) {
+        console.error("Error parsing disconnect:", error);
+      }
+    });
+
+    eventSource.onerror = (error) => {
+      console.error("SSE error:", error, {
+        readyState: eventSource.readyState,
+        url: eventSource.url,
+      });
+      if (eventSource.readyState === EventSource.CLOSED) {
+        console.log("EventSource closed, scheduling reconnect...");
+        setTimeout(() => {
+          if (typeof onNewComment === "function") {
+            serverEvents(ticketId, lastCommentId, onNewComment);
+          }
+        }, 2000);
+      }
+    };
+
+    return () => {
+    console.log("Closing SSE Connection");
+      hasConnected.current = false;
+      eventSource.close();
+    };
+  };
+
+  // SSE for real-time comments
   const lastItem = useMemo(() => {
-    return chatMessages.length > 0 ? chatMessages[chatMessages.length - 1] : null;
+
+    console.log('Chnaging.....',chatMessages[chatMessages.length - 1]);
+    return chatMessages.length > 0
+      ? chatMessages[chatMessages.length - 1]
+      : null;
+      
+      
+    
   }, [chatMessages]);
   
-const hasConnected = useRef(false);
+  
 
-useEffect(() => {
-  if (lastItem && !hasConnected.current) {
-    console.log("Connecting to server with last comment ID:", lastItem.id);
-    serverEvents(ticket.id, lastItem.id);
-    hasConnected.current = true; 
-  }
-}, [lastItem, ticket.id]);
+
+
+  useEffect(() => {
+    if (lastItem && !hasConnected.current) {
+      console.log("Connecting to SSE with last comment ID:", lastItem.id);
+      const cleanup = serverEvents(ticket.id, lastItem.id, handleNewComment);
+      return cleanup;
+    }
+  }, [chatMessages]);
+
   const handleSend = async () => {
     if (message.trim() || previewImage) {
       const tempMessage = {
@@ -244,7 +323,9 @@ useEffect(() => {
         );
       } catch (err) {
         console.error("Error sending message:", err);
-        setChatMessages((prev) => prev.filter((msg) => msg.id !== tempMessage.id));
+        setChatMessages((prev) =>
+          prev.filter((msg) => msg.id !== tempMessage.id)
+        );
         setError("Failed to send message. Please try again.");
       }
     }
@@ -328,7 +409,7 @@ useEffect(() => {
         ) : error ? (
           <p className="err_msg rd-text-center">{error}</p>
         ) : chatMessages.length === 0 ? (
-          <p className="rd-text-center rd-body-text">No messages yet.</p>
+          <p className="rd-text-center rd-body-text">Loading messages...</p>
         ) : (
           chatMessages.map((msg, index) => {
             const prevMsg = index > 0 ? chatMessages[index - 1] : null;
@@ -369,8 +450,13 @@ useEffect(() => {
                   className="message-content"
                   style={{
                     backgroundColor:
-                      msg.sender === "me" || msg.isSending ? "#007BFF" : "#FFFFFF",
-                    color: msg.sender === "me" || msg.isSending ? "#FFFFFF" : "#000000",
+                      msg.sender === "me" || msg.isSending
+                        ? "#007BFF"
+                        : "#FFFFFF",
+                    color:
+                      msg.sender === "me" || msg.isSending
+                        ? "#FFFFFF"
+                        : "#000000",
                     border:
                       msg.sender === "other" && !msg.isSending
                         ? "1px solid #E0E0E0"
@@ -381,11 +467,15 @@ useEffect(() => {
                   }}
                 >
                   {msg.isSending ? (
-                    <span className="rd-body-text single-message">{msg.text}</span>
+                    <span className="rd-body-text single-message">
+                      {msg.text}
+                    </span>
                   ) : (
                     <>
                       {msg.text && (
-                        <span className="rd-body-text single-message">{msg.text}</span>
+                        <span className="rd-body-text single-message">
+                          {msg.text}
+                        </span>
                       )}
                       {msg.imageUrl && (
                         <img
