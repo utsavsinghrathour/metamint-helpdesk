@@ -7,8 +7,6 @@ import ActiveFeatured from "./components/ActiveFeatured.jsx";
 import "./styles/main.css";
 import defaultLogo from "./images/robodesk-logo.png";
 import { AppDataProvider } from "./utils/AppDataContext";
-import { useSelect } from "@wordpress/data";
-import { store as coreStore } from "@wordpress/core-data";
 
 const App = ({ imageUrls = { logo: "" } }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -23,34 +21,6 @@ const App = ({ imageUrls = { logo: "" } }) => {
   };
 
   
-  //For debuggin sse with js 
-//  useEffect(() => {
-//         const eventSource = new EventSource('http://localhost:10135/wp-json/robodesk/v1/comments-stream/1737/1038'); 
-
-        
-//         eventSource.onmessage = (event) => {
-//           const newData = JSON.parse(event.data);
-//           console.log(newData);
-//         //   setData((prevData) => [...prevData, newData]);
-//         };
-
-//         // Listen for custom events (if defined on the server)
-//         eventSource.addEventListener('new_comment', (event) => {
-//           console.log('Custom event received:', event.data);
-//         });
-
-//         // Handle errors
-//         eventSource.onerror = (error) => {
-//         //   console.error('EventSource error:');
-//           eventSource.close(); // Close the connection on error
-//         };
-
-//         // Clean up the connection when the component unmounts
-//         return () => {
-//           eventSource.close();
-//         };
-//       }, []); 
-
   useEffect(() => {
     if (selectedTicket) {
       setSelectedTicket(selectedTicket);
