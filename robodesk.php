@@ -469,3 +469,24 @@ add_filter('rest_prepare_comment', function($response, $comment, $request) {
     }
     return $response;
 }, 10, 3);
+
+
+
+add_action('comment_post', 'robodesk_comment_creation', 10, 3);
+
+function robodesk_comment_creation($comment_ID, $comment_approved, $commentdata) {
+    if (is_admin() && isset($commentdata['comment_type']) && $commentdata['comment_type'] === 'ticket_replies') {
+
+        update_comment_meta($comment_ID, 'rbd_unseen', true);
+
+        $post_id = $commentdata['comment_post_ID'];
+        $post_author_id = get_post_field('post_author', $post_id);
+        
+        if ($post_author_id) {
+        
+            $current_count = (int) get_user_meta($post_author_id, 'rbd_unseen_count', true);
+
+            update_user_meta($post_author_id, 'rbd_unseen_count', $current_count + 1);
+        }
+    }
+}
