@@ -29,7 +29,6 @@ const SingleTicket = ({ ticket, onBack, loggedInUserId }) => {
   const image_urls = window.robodeskData?.imageUrls || {};
   const previousScrollHeight = useRef(0);
   
-  const [lastCommentId , setLastCommentId] = useState(null);
   const hasConnected = useRef(false);
 
   // Fetch comments from WordPress API
@@ -104,9 +103,11 @@ const SingleTicket = ({ ticket, onBack, loggedInUserId }) => {
       const uniqueMessages = Array.from(
         new Map([...prev, newMessage].map((msg) => [msg.id, msg])).values()
       );
-      return uniqueMessages.sort(
-        (a, b) => new Date(a.created_at) - new Date(b.created_at)
-      );
+    //   return uniqueMessages.sort(
+    //     (a, b) => new Date(a.created_at) - new Date(b.created_at)
+    //   );
+    
+    return uniqueMessages;
     });
   };
 
@@ -207,14 +208,14 @@ const SingleTicket = ({ ticket, onBack, loggedInUserId }) => {
       }
     });
 
-    eventSource.addEventListener("heartbeat", (event) => {
-      try {
-        const data = JSON.parse(event.data);
-        console.log("Heartbeat received:", data);
-      } catch (error) {
-        console.error("Error parsing heartbeat:", error);
-      }
-    });
+    // eventSource.addEventListener("heartbeat", (event) => {
+    //   try {
+    //     const data = JSON.parse(event.data);
+    //     console.log("Heartbeat received:", data);
+    //   } catch (error) {
+    //     console.error("Error parsing heartbeat:", error);
+    //   }
+    // });
 
     eventSource.addEventListener("disconnect", (event) => {
       try {
@@ -257,26 +258,22 @@ const SingleTicket = ({ ticket, onBack, loggedInUserId }) => {
   // SSE for real-time comments
   const lastItem = useMemo(() => {
 
-    console.log('Chnaging.....',chatMessages[chatMessages.length - 1]);
+    // console.log('Chnaging.....',chatMessages[chatMessages.length - 1]);
     return chatMessages.length > 0
       ? chatMessages[chatMessages.length - 1]
       : null;
       
-      
-    
   }, [chatMessages]);
   
   
-
-
-
-  useEffect(() => {
-    if (lastItem && !hasConnected.current) {
-      console.log("Connecting to SSE with last comment ID:", lastItem.id);
-      const cleanup = serverEvents(ticket.id, lastItem.id, handleNewComment);
-      return cleanup;
-    }
-  }, [chatMessages]);
+useEffect(() => {
+  if (lastItem && !hasConnected.current) {
+    console.log("Connecting to SSE with last comment ID:", lastItem.id);
+    const cleanup = serverEvents(ticket.id, lastItem.id, handleNewComment);
+    hasConnected.current = true;
+    return cleanup;
+  }
+}, [lastItem]);
 
   const handleSend = async () => {
     if (message.trim() || previewImage) {
