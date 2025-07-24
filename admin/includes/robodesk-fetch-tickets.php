@@ -280,7 +280,8 @@ function robodesk_fetch_emails()
                             'comment_content' => $message,
                             'comment_date' => $date,
                             'comment_approved' => 1,
-                            'comment_type' => 'ticket_replies', // Custom comment type for ticket replies
+                            'comment_type' => 'ticket_replies',
+                            'is_robodesk_note'     => true, // Custom comment type for ticket replies
                         ]);
 
                         if (!is_wp_error($comment_id)) {
