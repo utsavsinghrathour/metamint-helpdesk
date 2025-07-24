@@ -196,6 +196,10 @@ function robodesk_fetch_emails()
             }
 
             $from = $headerInfo->fromaddress ?? 'Unknown Sender';
+            //Vr Rv <vriasuhn@gmail.com> remove the email address
+            $from = preg_replace('/<.*?>/', '', $from);
+            $from = trim($from);
+            // only showing the name part 
             $subject = $headerInfo->subject ?? 'No Subject';
             error_log('Email from: ' . $from . ', Subject: ' . $subject);
 
