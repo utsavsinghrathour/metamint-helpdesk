@@ -1,7 +1,0 @@
-.DS_Store
-
-/logs
-*.log
-logs/debug.log
-*.zip
-/logs
