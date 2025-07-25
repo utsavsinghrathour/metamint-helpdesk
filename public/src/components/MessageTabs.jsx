@@ -102,9 +102,12 @@ const MessageTabs = ({
         status: ticket.ticket_status ?? "New",
         priority: ticket.ticket_priority ?? "Medium",
         author: ticket.ticket_author,
+        lastReply : ticket.ticket_last_reply
       }));
 
       setTickets(mappedTickets);
+      console.log('the unmapped tickets are', tickets);
+      console.log('the mapped tickets are ' , mappedTickets);
       
     } catch (error) {
       

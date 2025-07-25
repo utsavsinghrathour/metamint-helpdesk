@@ -17,7 +17,7 @@ const SingleTicket = ({ ticket, onBack, loggedInUserId }) => {
   const [chatMessages, setChatMessages] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [perPage] = useState(6); 
+  const [perPage] = useState(6);
   const [offset, setOffset] = useState(null);
 
   const [totalComments, setTotalComments] = useState(0); // Total number of comments
@@ -28,10 +28,27 @@ const SingleTicket = ({ ticket, onBack, loggedInUserId }) => {
   const chatContainerRef = useRef(null);
   const image_urls = window.robodeskData?.imageUrls || {};
   const previousScrollHeight = useRef(0);
-  
+
   const hasConnected = useRef(false);
 
-  // Fetch comments from WordPress API
+  const [lastRply, setLastRply] = useState(ticket.lastReply ?? false);
+
+  const [isSseEnabled, setSseEnabled] = useState(false);
+
+  const [isMessagingActive, setIsisMessagingActive] = useState(
+    document.visibilityState === "visible"
+  );
+
+  useEffect(() => {
+    const onVisibilityChange = () => {
+      setIsisMessagingActive(document.visibilityState === "visible");
+    };
+    document.addEventListener("visibilitychange", onVisibilityChange);
+    return () => {
+      document.removeEventListener("visibilitychange", onVisibilityChange);
+    };
+  }, []);
+
   const fetchComments = async (fetchOffset = 0, prepend = false) => {
     if (isFetching) return;
     setIsFetching(true);
@@ -103,11 +120,11 @@ const SingleTicket = ({ ticket, onBack, loggedInUserId }) => {
       const uniqueMessages = Array.from(
         new Map([...prev, newMessage].map((msg) => [msg.id, msg])).values()
       );
-    //   return uniqueMessages.sort(
-    //     (a, b) => new Date(a.created_at) - new Date(b.created_at)
-    //   );
-    
-    return uniqueMessages;
+      //   return uniqueMessages.sort(
+      //     (a, b) => new Date(a.created_at) - new Date(b.created_at)
+      //   );
+
+      return uniqueMessages;
     });
   };
 
@@ -183,6 +200,8 @@ const SingleTicket = ({ ticket, onBack, loggedInUserId }) => {
       return;
     }
 
+    if (!isSseEnabled) return;
+
     console.log("Starting SSE with:", { ticketId, lastCommentId });
 
     const eventSource = new EventSource(
@@ -249,7 +268,7 @@ const SingleTicket = ({ ticket, onBack, loggedInUserId }) => {
     };
 
     return () => {
-    console.log("Closing SSE Connection");
+      console.log("Closing SSE Connection");
       hasConnected.current = false;
       eventSource.close();
     };
@@ -257,23 +276,24 @@ const SingleTicket = ({ ticket, onBack, loggedInUserId }) => {
 
   // SSE for real-time comments
   const lastItem = useMemo(() => {
-
     // console.log('Chnaging.....',chatMessages[chatMessages.length - 1]);
     return chatMessages.length > 0
       ? chatMessages[chatMessages.length - 1]
       : null;
-      
   }, [chatMessages]);
+
+  useEffect(() => {
   
-  
-useEffect(() => {
-  if (lastItem && !hasConnected.current) {
-    console.log("Connecting to SSE with last comment ID:", lastItem.id);
-    const cleanup = serverEvents(ticket.id, lastItem.id, handleNewComment);
-    hasConnected.current = true;
-    return cleanup;
-  }
-}, [lastItem]);
+    console.log(isMessagingActive);
+    if (lastItem && !hasConnected.current) {
+      console.log("Connecting to SSE with last comment ID:", lastItem.id);
+      
+      console.log()
+      const cleanup = serverEvents(ticket.id, lastItem.id, handleNewComment);
+      hasConnected.current = true;
+      return cleanup;
+    }
+  }, [lastItem]);
 
   const handleSend = async () => {
     if (message.trim() || previewImage) {
