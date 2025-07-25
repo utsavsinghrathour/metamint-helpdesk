@@ -186,6 +186,7 @@ const SingleTicket = ({ ticket, onBack, loggedInUserId }) => {
     if (chatContainer && !isFetching) {
       chatContainer.scrollTop = chatContainer.scrollHeight;
     }
+    
   }, [chatMessages]);
 
   //fetching messages in real time by us
