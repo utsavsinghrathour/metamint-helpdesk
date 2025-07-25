@@ -7,7 +7,7 @@ const SendMessageField = ({ setShowLogin , setActiveTab , updateSelectedTicket }
   const [message, setMessage] = useState("");
   const [loggedIn, setLoggedIn] = useState(false);
   const [userId, setUserId] = useState(null);
-  const [placeHolderText , setplaceHolderText] = useState('Send us a message');
+  const [placeHolderText , setplaceHolderText] = useState('Start a conversation....');
   const { loggedinContext, loggedInUsrId , refreshTickets } = useAppData();
   
   const handleInputChange = (e) => {

@@ -91,7 +91,7 @@ import '../styles/footer.css';
 const Footer = ({ activeTab, setActiveTab, showCopyrightOnly = false , updateSelectedTicket }) => {
   const tabs = [
     { id: 0, icon: GoHomeFill, label: '', tooltip: 'Home' },
-    { id: 1, icon: RiMessage2Fill, label: '', tooltip: 'Tickets' },
+    { id: 1, icon: RiMessage2Fill, label: '', tooltip: 'Conversations' },
     { id: 2, icon: RiInformation2Fill, label: '', tooltip: 'Notice Board' },
     { id: 3, icon: FaQuestionCircle, label: '', tooltip: 'Wiki' },
   ];

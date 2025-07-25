@@ -225,7 +225,7 @@ const SingleQuestionBox = ({
                 </div>
               </div>
             </div>
-            <div className="rd-actions rd-flex rd-align-center rd-justify-center rd-mt-20 rd-faq-actions">
+            {/* <div className="rd-actions rd-flex rd-align-center rd-justify-center rd-mt-20 rd-faq-actions">
               <div
                 className={`rd-like rd-flex rd-align-center rd-gap-10 ${isLiked ? 'liked' : ''}`}
                 onClick={handleLike}
@@ -250,7 +250,7 @@ const SingleQuestionBox = ({
                 </svg>
                 <p className="rd-body-text">{isDisliked ? 1 : 0}</p>
               </div>
-            </div>
+            </div> */}
           </div>
           <Footer showCopyrightOnly={true} />
         </div>

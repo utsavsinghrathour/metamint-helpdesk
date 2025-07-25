@@ -178,7 +178,7 @@ const FAQDetail = memo(({ faq, onBack, isExpanded, setIsExpanded }) => {
               </div>
             </div>
           </div>
-          <div className="rd-faq-actions rd-flex rd-align-center rd-justify-center">
+          {/* <div className="rd-faq-actions rd-flex rd-align-center rd-justify-center">
             <div
               className={`rd-faq-like rd-flex rd-align-center rd-gap-10 rd-cursor-pointer ${isLiked ? 'liked' : ''}`}
               onClick={handleLike}
@@ -203,7 +203,7 @@ const FAQDetail = memo(({ faq, onBack, isExpanded, setIsExpanded }) => {
               </svg>
               <p className="rd-body-text">{isDisliked ? 1 : 0}</p>
             </div>
-          </div>
+          </div> */}
         </div>
       </div>
       <div className="rd-border-top-light">
