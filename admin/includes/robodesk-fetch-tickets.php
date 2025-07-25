@@ -46,6 +46,8 @@ function robodesk_clean_email_message($message)
     // dont remove line breaks
     $message = preg_replace('/\s+/', ' ', $message); // Replace multiple spaces with a single space
     $message = preg_replace('/\n+/', "\n", $message); // Replace multiple newlines with a single newline
+    //remove On Fri, 25 Jul 2025 at 12:23, Vr Rv wrote:
+    $message = preg_replace('/On\s.*wrote:\s*$/', '', $message);
 
     return trim($message);
 }
@@ -77,7 +79,8 @@ function robodesk_fetch_emails()
     }
 
     // Get last fetched date
-    $last_fetched_date = get_option('robodesk_last_fetched_date', '2021-01-01 00:00:00');
+    $last_fetched_date = ('2021-01-01 00:00:00');
+    // $last_fetched_date = get_option('robodesk_last_fetched_date', '2021-01-01 00:00:00'); // Default to a past date if not set
     error_log('Last fetched date: ' . $last_fetched_date);
 
     // Convert to IMAP-compatible date with time
@@ -382,6 +385,32 @@ function robodesk_fetch_emails()
                 'post_type'    => 'robodesk_ticket',
 
             ]);
+
+
+
+
+            //if post is created successfully add a comment with email message 
+            if ($post_id && !is_wp_error($post_id)) {
+                error_log('Successfully created ticket post with ID: ' . $post_id);
+                // Add a comment with the email message
+                $comment_id = wp_insert_comment([
+                    'comment_post_ID' => $post_id,
+                    'comment_author' => $from,
+                    'comment_content' => $message,
+                    'comment_date' => $date,
+                    'comment_approved' => 1,
+                    'comment_type' => 'ticket_replies',
+                    'is_robodesk_note'     => true, // Custom comment type for ticket replies
+                ]);
+                if (!is_wp_error($comment_id)) {
+                    add_comment_meta($comment_id, 'email_message_id', $message_id, true);
+                    error_log('Added comment ID: ' . $comment_id . ' to ticket ID: ' . $post_id);
+                } else {
+                    error_log('Failed to add comment: ' . $comment_id->get_error_message());
+                }
+            } else {
+                error_log('Failed to create ticket post: ' . (is_wp_error($post_id) ? $post_id->get_error_message() : 'Unknown error'));
+            }
 
             if (is_wp_error($post_id)) {
                 error_log('Failed to create ticket: ' . $post_id->get_error_message());
