@@ -84,7 +84,7 @@ button.no-bg, .button.no-bg{
  object-fit: contain; 
 }
 .rd-main-header-logo{
-  max-width: 80px;
+  max-width: 50px;
   max-height: 40px;
 }
 .rd-header-logo img:not(.rd-faq-header img),
