@@ -420,13 +420,7 @@ function robodesk_fetch_emails()
 
             error_log('Created new ticket with ID: ' . $post_id);
 
-            // // Set taxonomy terms
-            // if ($term_email_id) {
-            //     $result = wp_set_post_terms($post_id, [$term_email_id], 'robodesk_ticket_origin', false);
-            //     if (is_wp_error($result)) {
-            //         error_log('Failed to set origin term: ' . $result->get_error_message());
-            //     }
-            // }
+
 
             if ($term_priority_id) {
                 $result = wp_set_post_terms($post_id, [$term_priority_id], 'robodesk_ticket_priority', false);
