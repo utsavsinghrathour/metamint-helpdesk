@@ -1333,7 +1333,7 @@ function addReply() {
         replyBox.innerHTML = "";
         document.getElementById("replies-count").textContent =
           currentTicket.replies.length;
-        loadReplies();
+        loadReplies(); // This will call renderReplies, which handles scrolling
         showToast("Reply added successfully");
       } else {
         showToast(response.data?.message || "Failed to add reply", "error");
@@ -1342,18 +1342,12 @@ function addReply() {
     .catch(() => showToast("AJAX error occurred", "error"));
 }
 
-// This function loads replies for the current ticket
-// It populates the replies list with the replies from the current ticket
 // Function to load replies via AJAX
 async function loadReplies() {
   if (!currentTicket) return;
 
   const repliesList = document.getElementById("replies-list");
   if (!repliesList) return;
-
-  // Show loading state
-  // repliesList.innerHTML =
-  //   '<div class="text-center py-4">Loading replies...</div>';
 
   try {
     const data = {
@@ -1384,20 +1378,19 @@ async function loadReplies() {
   }
 }
 
-// Render replies to the DOM
+// Render replies to the DOM and scroll to the last reply
 function renderReplies(replies) {
   const repliesList = document.getElementById("replies-list");
   if (!repliesList || !Array.isArray(replies)) return;
 
   repliesList.innerHTML = replies
     .map(
-      (reply) => `
-    <div class="p-4 rounded-lg reply-${reply.type}">
+      (reply, index) => `
+    <div class="p-4 rounded-lg reply-${reply.type}" id="reply-${index}">
       <div class="flex justify-between items-center mb-2">
-           <span class="font-medium text-sm text-gray-900">${escapeHTML(
-             reply.author
-           )} (${reply.type === "customer" ? "Customer" : "Agent"})</span>
-
+        <span class="font-medium text-sm text-gray-900">${escapeHTML(
+          reply.author
+        )} (${reply.type === "customer" ? "Customer" : "Agent"})</span>
         <span class="text-xs text-gray-500">${formatDate(
           reply.timestamp
         )}</span>
@@ -1407,6 +1400,12 @@ function renderReplies(replies) {
   `
     )
     .join("");
+
+  // Scroll to the last reply
+  const lastReply = repliesList.querySelector(`#reply-${replies.length - 1}`);
+  if (lastReply) {
+    lastReply.scrollIntoView({ behavior: "smooth", block: "end" });
+  }
 }
 
 // Helper function to escape HTML
@@ -1469,7 +1468,7 @@ function addNote() {
         if (ticketIndex !== -1) tickets[ticketIndex] = currentTicket;
 
         noteBox.innerHTML = "Type your internal note here...";
-        loadNotes();
+        loadNotes(); // This will call renderNotes, which handles scrolling
         showToast("Note added successfully");
       } else {
         showToast(response.data?.message || "Failed to add note", "error");
@@ -1517,15 +1516,15 @@ async function loadNotes() {
   }
 }
 
-// Render notes to the DOM
+// Render notes to the DOM and scroll to the last note
 function renderNotes(notes) {
   const notesList = document.getElementById("notes-list");
   if (!notesList || !Array.isArray(notes)) return;
 
   notesList.innerHTML = notes
     .map(
-      (note) => `
-    <div class="p-4 rounded-lg note-internal">
+      (note, index) => `
+    <div class="p-4 rounded-lg note-internal" id="note-${index}">
       <div class="flex justify-between items-center mb-2">
         <span class="font-medium text-sm text-gray-900">${escapeHTML(
           note.author
@@ -1537,5 +1536,11 @@ function renderNotes(notes) {
   `
     )
     .join("");
+
+  // Scroll to the last note
+  const lastNote = notesList.querySelector(`#note-${notes.length - 1}`);
+  if (lastNote) {
+    lastNote.scrollIntoView({ behavior: "smooth", block: "end" });
+  }
 }
 // the message is displaying with html tags
