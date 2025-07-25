@@ -909,6 +909,11 @@ function robodesk_handle_get_ticket_notes()
     ]);
 }
 
+
+
+
+
+
 include_once 'robodesk-fetch-tickets.php'; // Include the file that contains the robodesk_fetch_emails function
 // for fetching emails
 add_action('wp_ajax_robodesk_fetch_emails', 'robodesk_fetch_emails_handler');
@@ -928,45 +933,3 @@ function robodesk_fetch_emails_handler()
 }
 
 // cron job to fetch emails
-// Register custom interval
-add_filter('cron_schedules', function ($schedules) {
-    $fetch_interval = get_option('robodesk_fetch_interval', 15); // Default to 15
-    $fetch_interval = max(1, min($fetch_interval, 1440)); // 1 to 1440 minutes
-
-    $schedules['robodesk_custom_interval'] = array(
-        'interval' => $fetch_interval * 60, // in seconds
-        'display'  => "Every {$fetch_interval} minutes"
-    );
-    return $schedules;
-});
-
-// Schedule the event on plugin activation
-register_activation_hook(__FILE__, 'robodesk_schedule_cron');
-function robodesk_schedule_cron()
-{
-    if (!wp_next_scheduled('robodesk_fetch_emails_cron')) {
-        wp_schedule_event(time(), 'robodesk_custom_interval', 'robodesk_fetch_emails_cron');
-    }
-}
-
-// Unschedule on deactivation
-register_deactivation_hook(__FILE__, 'robodesk_unschedule_cron');
-function robodesk_unschedule_cron()
-{
-    $timestamp = wp_next_scheduled('robodesk_fetch_emails_cron');
-    if ($timestamp) {
-        wp_unschedule_event($timestamp, 'robodesk_fetch_emails_cron');
-    }
-}
-
-// Add the handler for the cron job
-add_action('robodesk_fetch_emails_cron', 'robodesk_fetch_emails_cron_handler');
-function robodesk_fetch_emails_cron_handler()
-{
-    try {
-        $summary = robodesk_fetch_emails(); // returns the string
-        error_log('Robodesk Email Fetch Summary: ' . $summary);
-    } catch (Exception $e) {
-        error_log('Robodesk Email Fetch Error: ' . $e->getMessage());
-    }
-}
