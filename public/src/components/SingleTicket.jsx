@@ -289,7 +289,7 @@ const SingleTicket = ({ ticket, onBack, loggedInUserId }) => {
     if (lastItem && !hasConnected.current) {
       console.log("Connecting to SSE with last comment ID:", lastItem.id);
       
-      console.log()
+      console.log(isMessagingActive);
       const cleanup = serverEvents(ticket.id, lastItem.id, handleNewComment);
       hasConnected.current = true;
       return cleanup;
