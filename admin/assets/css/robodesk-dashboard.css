@@ -293,7 +293,7 @@
   border-color: #16a34a;
   color: #15803d;
 }
-#toast{
+#toast {
   top: 100px;
 }
 .toast-error {
@@ -413,7 +413,18 @@
 .status-closed-indicator {
   background-color: #16a34a;
 }
-#popover-top-icon-preview{
+#popover-top-icon-preview {
   height: 50px;
   width: 50px;
+}
+
+/* place holder */
+.editor-content.placeholder:empty::before {
+  content: attr(data-placeholder);
+  color: #9ca3af;
+  pointer-events: none;
+  position: absolute;
+}
+.editor-content.placeholder:focus::before {
+  content: none;
 }

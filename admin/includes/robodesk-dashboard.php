@@ -1027,7 +1027,9 @@ function robodesk_dashboard_callback()
                                         <button type="button" onclick="formatText('insertUnorderedList', 'new-reply')" class="editor-btn"><i class="fas fa-list-ul"></i></button>
                                         <button type="button" onclick="formatText('insertOrderedList', 'new-reply')" class="editor-btn"><i class="fas fa-list-ol"></i></button>
                                     </div>
-                                    <div id="new-reply" class="editor-content" contenteditable="true" style="min-height: 100px; border: 1px solid #d1d5db; border-radius: 0.375rem; padding: 0.5rem;">Type your reply here...</div>
+                                    <div id="new-reply" class="editor-content placeholder" contenteditable="true"
+                                        style="min-height: 100px; border: 1px solid #d1d5db; border-radius: 0.375rem; padding: 0.5rem;"
+                                        data-placeholder="Type your reply here..." aria-label="Reply input"></div>
                                     <button onclick="addReply()" class="mt-2 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
                                         Send Reply
                                     </button>
@@ -1048,8 +1050,8 @@ function robodesk_dashboard_callback()
                                         <button type="button" onclick="formatText('insertOrderedList', 'new-note')" class="editor-btn"><i class="fas fa-list-ol"></i></button>
                                     </div>
                                     <div id="new-note" class="editor-content placeholder" contenteditable="true"
-                                        style="min-height: 100px; border: 1px solid #d1d5db; border-radius: 0.375rem; padding: 0.5rem;">Type your internal note here...
-                                    </div>
+                                        style="min-height: 100px; border: 1px solid #d1d5db; border-radius: 0.375rem; padding: 0.5rem;"
+                                        data-placeholder="Type your internal note here..."></div>
                                     <button onclick="addNote()" class="mt-2 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-yellow-600 hover:bg-yellow-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500">
                                         Add Note
                                     </button>
