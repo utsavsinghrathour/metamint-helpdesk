@@ -31,7 +31,7 @@ export const AppDataProvider = ({ children }) => {
       }
       
       const tickets = await response.json();
-
+    console.log('From context tickets',tickets);
       setData((prev) => ({
         ...prev,
         loadingContext: false,

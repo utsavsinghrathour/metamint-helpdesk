@@ -434,12 +434,13 @@ function include_ticket_replies_in_rest_comments($args, $request) {
         $args['type__in'] = array('ticket_replies');
 
     return $args;
-}
+} 
 
 
 add_filter('rest_prepare_comment', function($response, $comment, $request) {
     if (!is_wp_error($response) && $response instanceof WP_REST_Response) {
         $data = $response->get_data();
+    
         //plain text
         $data['content']['plain'] = wp_strip_all_tags($data['content']['rendered']);
         // Get user object if registered user
@@ -473,20 +474,27 @@ add_filter('rest_prepare_comment', function($response, $comment, $request) {
 
 
 add_action('comment_post', 'robodesk_comment_creation', 10, 3);
-
+ 
 function robodesk_comment_creation($comment_ID, $comment_approved, $commentdata) {
     if (is_admin() && isset($commentdata['comment_type']) && $commentdata['comment_type'] === 'ticket_replies') {
-
+        
+        
+        
         update_comment_meta($comment_ID, 'rbd_unseen', true);
-
+        // update_comment_meta($comment_ID, 'admin_comment', true);
         $post_id = $commentdata['comment_post_ID'];
-        $post_author_id = get_post_field('post_author', $post_id);
         
-        if ($post_author_id) {
-        
-            $current_count = (int) get_user_meta($post_author_id, 'rbd_unseen_count', true);
-
-            update_user_meta($post_author_id, 'rbd_unseen_count', $current_count + 1);
+        if(get_post_type($post_id) == 'robodesk_ticket'){
+           update_post_meta($post_id, 'rbd_last_reply_id', $comment_ID);
         }
+        // $post_author_id = get_post_field('post_author', $post_id);
+        
+        // if ($post_author_id) {
+        
+        //     $current_count = (int) get_user_meta($post_author_id, 'rbd_unseen_count', true);
+
+        //     update_user_meta($post_author_id, 'rbd_unseen_count', $current_count + 1);
+        // }
+        
     }
 }

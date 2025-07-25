@@ -405,6 +405,7 @@ function customize_robodesk_ticket_response( $response, $post, $request ) {
         $author_name = $author->display_name;
         $author_image = get_avatar_url($author->ID);
     }
+    $last_reply =  get_post_meta($post->ID, 'rbd_last_reply_id', true) ;
     
     // Format the data
     $data = [
@@ -417,6 +418,7 @@ function customize_robodesk_ticket_response( $response, $post, $request ) {
         'ticket_author' => $author_name,
         'ticket_author_image' => $author_image,
         'ticket_time_ago' => $human_readable_time,
+        'ticket_last_reply' => !empty($last_reply) ? $last_reply : false,
     ];
 
     $response->set_data($data);
