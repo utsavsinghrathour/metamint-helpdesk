@@ -542,6 +542,26 @@ function robodesk_create_ticket()
         ],
     ]);
 
+    // adding the message of the ticket to comment of the ticket
+    if ($ticket_id && !is_wp_error($ticket_id)) {
+        $comment_id = wp_insert_comment([
+            'comment_post_ID'      => $ticket_id,
+            'comment_author'       => $customer_name,
+            'comment_author_email' => $customer_email,
+            'user_id'              => $user_id,
+            'comment_content'      => $ticket_description,
+            'comment_approved'     => 1,
+            'comment_type'         => 'ticket_replies',
+            'is_robodesk_reply'    => true, // Custom field to identify as a Robodesk reply
+        ]);
+
+        if ($comment_id === false || is_wp_error($comment_id)) {
+            error_log('Failed to add comment to ticket: ' . (is_wp_error($comment_id) ? $comment_id->get_error_message() : 'Unknown error'));
+            wp_send_json_error(['message' => 'Failed to add comment to ticket']);
+            wp_die();
+        }
+    }
+
     if (is_wp_error($ticket_id)) {
         error_log('Failed to create ticket: ' . $ticket_id->get_error_message());
         wp_send_json_error(['message' => 'Failed to create ticket: ' . $ticket_id->get_error_message()]);

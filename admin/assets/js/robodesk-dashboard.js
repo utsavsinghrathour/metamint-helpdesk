@@ -69,8 +69,8 @@ function loadDashboardTickets() {
             }</div>
             </td>
             <td class="px-6 py-4 whitespace-nowrap">
-                <span class="status-badge ${getStatusClass(ticket.status)}">
-                    ${ticket.status.replace("-", " ")}
+                <span class="status-badge ${ticket.status}">
+                    ${ticket.status}
                 </span>
             </td>
             <td class="px-6 py-4 whitespace-nowrap">
@@ -275,8 +275,8 @@ function filterTickets() {
                 <div class="text-sm text-gray-500">${ticket.email}</div>
             </td>
             <td class="px-6 py-4 whitespace-nowrap">
-                <span class="status-badge ${getStatusClass(ticket.status)}">
-                    ${ticket.status.replace("-", " ")}
+                <span class="status-badge ${ticket.status}">
+                    ${ticket.status}
                 </span>
             </td>
             <td class="px-6 py-4 whitespace-nowrap">
@@ -321,31 +321,31 @@ function formatDate(dateString) {
   });
 }
 
-function getStatusClass(status) {
-  switch (status) {
-    case "open":
-      return "status-open";
-    case "in-progress":
-      return "status-in-progress";
-    case "closed":
-      return "status-closed";
-    default:
-      return "bg-gray-100 text-gray-800";
-  }
-}
+// function getStatusClass(status) {
+//   switch (status) {
+//     case "open":
+//       return "status-open";
+//     case "in-progress":
+//       return "status-in-progress";
+//     case "closed":
+//       return "status-closed";
+//     default:
+//       return "bg-gray-100 text-gray-800";
+//   }
+// }
 
-function getPriorityClass(priority) {
-  switch (priority) {
-    case "high":
-      return "priority-high";
-    case "medium":
-      return "priority-medium";
-    case "low":
-      return "priority-low";
-    default:
-      return "bg-gray-100 text-gray-800";
-  }
-}
+// function getPriorityClass(priority) {
+//   switch (priority) {
+//     case "high":
+//       return "priority-high";
+//     case "medium":
+//       return "priority-medium";
+//     case "low":
+//       return "priority-low";
+//     default:
+//       return "bg-gray-100 text-gray-800";
+//   }
+// }
 
 function showToast(message, type = "success") {
   const toast = document.getElementById("toast");
@@ -596,10 +596,8 @@ function loadCustomerTicketsList(ticketList) {
                     )}</div>
                 </div>
                 <div class="flex items-center space-x-2">
-                    <span class="status-badge ${getStatusClass(
-                      ticket.status
-                    )} text-xs">
-                        ${ticket.status.replace("-", " ")}
+                    <span class="status-badge ${ticket.status} text-xs">
+                        ${ticket.status}
                     </span>
                     <span class="status-badge ${getPriorityClass(
                       ticket.priority
@@ -1194,9 +1192,7 @@ function updateTicketStatus(ticketId, newStatus) {
           currentTicket.updated = updatedTime;
         }
 
-        showToast(
-          `Ticket status updated to ${updatedStatus.replace("-", " ")}`
-        );
+        showToast(`Ticket status updated to ${updatedStatus}`);
         // updateDashboardStats();
       } catch (error) {
         console.error("Error inside .then:", error);
