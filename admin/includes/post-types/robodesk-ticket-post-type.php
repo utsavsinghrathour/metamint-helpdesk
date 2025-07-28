@@ -418,6 +418,7 @@ function customize_robodesk_ticket_response( $response, $post, $request ) {
         'ticket_author' => $author_name,
         'ticket_author_image' => $author_image,
         'ticket_time_ago' => $human_readable_time,
+        'ticket_comments' => '',
         'ticket_last_reply' => !empty($last_reply) ? $last_reply : false,
     ];
 
