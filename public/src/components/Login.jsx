@@ -2,6 +2,7 @@ import "../styles/Login.css";
 import { useEffect, useState } from "react";
 import { loginUser, registerUser, createTicket } from "../utils/modules";
 import { useAppData } from "../utils/AppDataContext";
+import defaultLogo from "../images/robodesk-logo.png";
 const Login = ({
   activeTab,
   setActiveTab,
@@ -15,6 +16,7 @@ const Login = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
   const [showPasswordField, setShowPasswordField] = useState(false);
+  const image_urls = window.robodeskData?.imageUrls || {};
 
 
 
@@ -240,12 +242,36 @@ const Login = ({
               <path d="M15 18l-6-6 6-6" />
             </svg>
           </button>
-          <h5 className="heading-5 rd-text-white rd-text-center rd-flex-1">
-            Login
-          </h5>
+          {image_urls.wide_logo && image_urls.wide_logo.trim() !== '' ? (
+              <img
+                src={image_urls.wide_logo}
+                alt="Plugin Wide Logo"
+                className="rd-h-auto rd-header-logo"
+                onError={(e) => {
+                  e.target.style.display = 'none';
+                }}
+              />
+            ) : image_urls.logo && image_urls.logo.trim() !== '' ? (
+              <img
+                src={image_urls.logo}
+                alt="Plugin Logo"
+                className="rd-h-auto rd-header-logo"
+                onError={(e) => {
+                  e.target.style.display = 'none';
+                }}
+              />
+            ) : (
+              <div className="rd-h-auto rd-header-logo default-logo">
+                <img src={defaultLogo} alt="Default Plugin Logo" className="rd-h-auto rd-header-logo" />
+              </div>
+            )}
         </div>
       </div>
       <div className="login-container rd-px-18">
+        <h4 className="heading-4 rd-text-center">Login</h4>
+            <div className="rd-body-text rd-mt-8 rd-text-center rd-mb-20">
+              <p>How do we get in touch with you?</p>
+            </div>
         <div className="login-card">
           <form onSubmit={handleSubmit} noValidate>
             {successMessage && (
@@ -306,7 +332,7 @@ const Login = ({
               disabled={isSubmitting}
             >
               {isSubmitting
-                ? "Processing..."
+                ? "Just a moment..."
                 : showPasswordField
                 ? "Login"
                 : "Continue"}

@@ -76,6 +76,9 @@ button.no-bg, .button.no-bg{
   max-height: 200px;
   overflow: auto;
 }
+.rd-m-auto{
+  margin: auto;
+}
 .rd-decoration-none{
   text-decoration: none;
 }
@@ -103,6 +106,9 @@ button.no-bg, .button.no-bg{
 }
 .flex-1{
   flex: 1;
+}
+.flex-2{
+  flex: 2;
 }
 .icon-dark svg{
   fill: var(--icon-dark);
@@ -205,6 +211,10 @@ padding-right: 18px;
 .rd-m-10 {
   margin: 10px;
 }
+.rd-my-20{
+  margin-top: 20px;
+  margin-bottom: 20px;
+}
 .rd-my-30{
   margin-top: 30px;
   margin-bottom: 30px;
@@ -300,6 +310,9 @@ padding-right: 18px;
 }
 .rd-fw-medium{
   font-weight: 500 !important;
+}
+.rd-fw-semi{
+  font-weight: 600 !important;
 }
 .rd-border-radius-md{
   border-radius: 10px;
@@ -462,7 +475,8 @@ input::placeholder{
 }
 
 .robodesk-popup.expanded .rd-faq-detail .rd-faq-title{
-  font-size: 20px;
+  /* font-size: 20px; */
+  font-size: 15px;
   line-height: 24px;
   transition: font 0.5s ease;
 }
@@ -561,4 +575,14 @@ input::placeholder{
 .bi.bi-chevron-up{
   color: #fff;
 }
-
+.single-content-other-content a{
+  font-size: 14px;
+    text-decoration: none;
+  background-color: var(--robodesk-theme-color);
+    padding: 10px 24px;
+    color: #fff;
+    font-weight: 400;
+    border-radius: 20px;
+    display: flex;
+    justify-content: center;
+}

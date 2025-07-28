@@ -10,7 +10,6 @@ import Author2 from '../images/person2.jpeg';
 import '../styles/FAQ.css';
 import defaultLogo from '../images/robodesk-logo.png';
 
-
 const stripHtml = (html) => he.decode(html.replace(/<[^>]+>/g, '')).trim();
 const wpTrimWords = (text, numWords) => {
   const words = stripHtml(text).split(/\s+/);
@@ -26,32 +25,24 @@ const normalizeImagePaths = (html, baseUrl = '/') => {
   });
 };
 
-const FAQDetail = memo(({ faq, onBack, isExpanded, setIsExpanded }) => {
+const FAQDetail = memo(({ faq, onBack, isExpanded, setIsExpanded, faqs, setSelectedFAQ }) => {
   const [isLiked, setIsLiked] = useState(false);
   const [isDisliked, setIsDisliked] = useState(false);
   const [fullContent, setFullContent] = useState(null);
   const [authorNames, setAuthorNames] = useState([]);
-  // const wpHomeUrl = window.robodeskData?.home_url || 'http://localhost:10135/';
-    const image_urls = window.robodeskData?.imageUrls || {};
-    // console.log('arpan', image_urls);
+  const image_urls = window.robodeskData?.imageUrls || {};
 
   useEffect(() => {
     const fetchFAQDetails = () => {
       try {
-        // const response = await fetch(
-        //   `/wp-json/wp/v2/robodesk_faq/${faq.id}?_fields=content.rendered,author_name`
-        // );
-        // if (!response.ok) throw new Error('Failed to fetch FAQ details');
-        // const data = await response.json();
         setFullContent(faq.content);
-        setAuthorNames(data.author_name ? data.author_name.split(',').map((name) => name.trim()) : ['Unknown']);
+        setAuthorNames(faq.author ? faq.author.split(',').map((name) => name.trim()) : ['Unknown']);
       } catch (err) {
-        // console.error('Failed to fetch FAQ details:', err);
         setAuthorNames(['Unknown']);
       }
     };
     fetchFAQDetails();
-  }, [faq.id]);
+  }, [faq.id, faq.content, faq.author]);
 
   const parsedContent = useMemo(() => {
     if (!fullContent) return null;
@@ -96,35 +87,35 @@ const FAQDetail = memo(({ faq, onBack, isExpanded, setIsExpanded }) => {
             <FaChevronLeft />
           </button>
           {image_urls.wide_logo && image_urls.wide_logo.trim() !== '' ? (
-              <img
-                src={image_urls.wide_logo}
-                alt="Plugin Wide Logo"
-                className="rd-h-auto rd-header-logo"
-                onError={(e) => {
-                  e.target.style.display = 'none';
-                }}
-              />
-            ) : image_urls.logo && image_urls.logo.trim() !== '' ? (
-              <img
-                src={image_urls.logo}
-                alt="Plugin Logo"
-                className="rd-h-auto rd-header-logo"
-                onError={(e) => {
-                  e.target.style.display = 'none';
-                }}
-              />
-            ) : (
-              <div className="rd-h-auto rd-header-logo default-logo">
-                <img src={defaultLogo} alt="Default Plugin Logo" className="rd-h-auto rd-header-logo" />
-              </div>
-            )}
+            <img
+              src={image_urls.wide_logo}
+              alt="Plugin Wide Logo"
+              className="rd-h-auto rd-header-logo"
+              onError={(e) => {
+                e.target.style.display = 'none';
+              }}
+            />
+          ) : image_urls.logo && image_urls.logo.trim() !== '' ? (
+            <img
+              src={image_urls.logo}
+              alt="Plugin Logo"
+              className="rd-h-auto rd-header-logo"
+              onError={(e) => {
+                e.target.style.display = 'none';
+              }}
+            />
+          ) : (
+            <div className="rd-h-auto rd-header-logo default-logo">
+              <img src={defaultLogo} alt="Default Plugin Logo" className="rd-h-auto rd-header-logo" />
+            </div>
+          )}
           <button
             className={`expand-popup rd-bg-transparent rd-border-none rd-cursor-pointer rd-p-0 ${
               isExpanded ? 'expanded' : ''
             }`}
             onClick={() => setIsExpanded(!isExpanded)}
           >
-             <svg
+            <svg
               className={`expand-icon ${isExpanded ? 'hidden' : 'visible'}`}
               xmlns="http://www.w3.org/2000/svg"
               width="18"
@@ -165,6 +156,23 @@ const FAQDetail = memo(({ faq, onBack, isExpanded, setIsExpanded }) => {
             <h4 className="rd-faq-title heading-4">{faq.question}</h4>
             {parsedContent ? <div className="rd-body-text rd-my-10">{parsedContent}</div> : <div>Loading...</div>}
           </div>
+          <div className="single-faq-other-faq-content rd-my-20 single-content-other-content">
+            <h4 className="heading-4">Didn't get your answer?</h4>
+            <div className="rd-body-text rd-mt-8">
+              <p>Here are some related articles.</p>
+            </div>
+            <div className="rd-flex rd-flex-col rd-gap-8 rd-mt-20">
+              {faqs.slice(0, 3).map((relatedFaq) =>
+                relatedFaq.id !== faq.id ? (
+                  <FAQItem key={relatedFaq.id} faq={relatedFaq} onSelect={setSelectedFAQ} />
+                ) : null
+              )}
+            </div>
+            <div className="rd-my-30">
+              <h4 className="heading-4 rd-fw-semi rd-mb-8">Still have questions?</h4>
+              <a href="#">Start a conversation</a>
+            </div>
+          </div>
           <div className="rd-single-faq-footer rd-py-10 rd-border-vertical-light">
             <div className="rd-flex rd-justify-between rd-align-center">
               <div>
@@ -178,32 +186,6 @@ const FAQDetail = memo(({ faq, onBack, isExpanded, setIsExpanded }) => {
               </div>
             </div>
           </div>
-          {/* <div className="rd-faq-actions rd-flex rd-align-center rd-justify-center">
-            <div
-              className={`rd-faq-like rd-flex rd-align-center rd-gap-10 rd-cursor-pointer ${isLiked ? 'liked' : ''}`}
-              onClick={handleLike}
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" width="19" height="18" viewBox="0 0 19 18" fill="none">
-                <path
-                  d="M4.15625 7.875H1.34375C0.877754 7.875 0.5 8.25276 0.5 8.71876V17.1563C0.5 17.6223 0.877754 18 1.34375 18H4.15625C4.62225 18 5 17.6223 5 17.1563V8.71876C5 8.25276 4.62225 7.875 4.15625 7.875ZM2.75 16.5938C2.28401 16.5938 1.90625 16.216 1.90625 15.75C1.90625 15.284 2.28401 14.9063 2.75 14.9063C3.216 14.9063 3.59375 15.284 3.59375 15.75C3.59375 16.216 3.216 16.5938 2.75 16.5938ZM14 2.86355C14 4.35474 13.087 5.19117 12.8301 6.1875H16.4063C17.5804 6.1875 18.4945 7.16295 18.5 8.23001C18.5029 8.86065 18.2347 9.53955 17.8166 9.9596L17.8127 9.96346C18.1585 10.7839 18.1023 11.9335 17.4855 12.7573C17.7907 13.6677 17.483 14.786 16.9095 15.3855C17.0606 16.0042 16.9884 16.5307 16.6934 16.9546C15.9759 17.9855 14.1974 18 12.6936 18L12.5935 18C10.896 17.9994 9.50661 17.3813 8.39026 16.8846C7.82927 16.6351 7.09577 16.3261 6.53925 16.3159C6.30933 16.3117 6.125 16.124 6.125 15.8941V8.37872C6.125 8.26622 6.17007 8.15826 6.25009 8.07916C7.64277 6.703 8.24162 5.24602 9.38311 4.1026C9.90356 3.58116 10.0928 2.79352 10.2758 2.03182C10.4322 1.3814 10.7592 0 11.4688 0C12.3125 0 14 0.28125 14 2.86355Z"
-                  fill="#004AFF"
-                />
-              </svg>
-              <p className="rd-body-text">{isLiked ? 1 : 0}</p>
-            </div>
-            <div
-              className={`rd-faq-dislike rd-flex rd-align-center rd-gap-10 rd-cursor-pointer ${isDisliked ? 'disliked' : ''}`}
-              onClick={handleDislike}
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" width="19" height="18" viewBox="0 0 19 18" fill="none">
-                <path
-                  d="M0.5 1.96875V10.4062C0.5 10.8722 0.877753 11.25 1.34375 11.25H4.15625C4.62224 11.25 4.99999 10.8722 4.99999 10.4062V1.96875C4.99999 1.50275 4.62224 1.125 4.15625 1.125H1.34375C0.877753 1.125 0.5 1.50275 0.5 1.96875ZM1.90625 8.99999C1.90625 8.53399 2.284 8.15624 2.75 8.15624C3.21599 8.15624 3.59375 8.53399 3.59375 8.99999C3.59375 9.46598 3.21599 9.84374 2.75 9.84374C2.284 9.84374 1.90625 9.46598 1.90625 8.99999ZM11.4687 18C10.7592 18 10.4322 16.6186 10.2759 15.9681C10.0928 15.2064 9.90358 14.4188 9.38313 13.8974C8.24164 12.7539 7.64279 11.297 6.25011 9.9208C6.21048 9.88162 6.17902 9.83498 6.15755 9.78355C6.13608 9.73213 6.12502 9.67696 6.12503 9.62123V2.10589C6.12503 1.87594 6.30935 1.68831 6.53927 1.68409C7.09583 1.67389 7.8293 1.3649 8.39028 1.11533C9.50663 0.618679 10.896 0.000597656 12.5936 0H12.6935C14.1974 0 15.9758 0.0145195 16.6934 1.04544C16.9884 1.46932 17.0606 1.99585 16.9095 2.61453C17.483 3.21405 17.7907 4.33237 17.4855 5.2427C18.1023 6.06648 18.1585 7.21609 17.8127 8.03653L17.8166 8.0404C18.2347 8.46048 18.5029 9.13935 18.5 9.76998C18.4945 10.837 17.5804 11.8125 16.4063 11.8125H12.8301C13.087 12.8088 14 13.6452 14 15.1364C14 17.7187 12.3125 18 11.4687 18Z"
-                  fill="#555555"
-                />
-              </svg>
-              <p className="rd-body-text">{isDisliked ? 1 : 0}</p>
-            </div>
-          </div> */}
         </div>
       </div>
       <div className="rd-border-top-light">
@@ -229,8 +211,8 @@ const FAQ = ({ setActiveTab, setIsOpen, isExpanded, setIsExpanded, activeTab }) 
   const [faqs, setFaqs] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
-  // const wpHomeUrl = window.robodeskData?.home_url || 'http://localhost:10135/';
- const CACHE_EXPIRY = 24 * 60 * 60 * 1000;
+  const CACHE_EXPIRY = 24 * 60 * 60 * 1000;
+
   useEffect(() => {
     const fetchFAQs = async () => {
       try {
@@ -239,7 +221,6 @@ const FAQ = ({ setActiveTab, setIsOpen, isExpanded, setIsExpanded, activeTab }) 
         const cacheKey = `faqs_page_1`;
         const cacheTimestampKey = `${cacheKey}_timestamp`;
 
-        // Check cached data and its timestamp
         const cachedFaqs = localStorage.getItem(cacheKey);
         const cachedTimestamp = localStorage.getItem(cacheTimestampKey);
         const currentTime = new Date().getTime();
@@ -247,12 +228,10 @@ const FAQ = ({ setActiveTab, setIsOpen, isExpanded, setIsExpanded, activeTab }) 
         if (cachedFaqs && cachedTimestamp) {
           const isCacheValid = currentTime - parseInt(cachedTimestamp) < CACHE_EXPIRY;
           if (isCacheValid) {
-            // console.log('Using cached FAQs:', JSON.parse(cachedFaqs));
             setFaqs(JSON.parse(cachedFaqs));
             setIsLoading(false);
             return;
           } else {
-            // Clear expired cache
             localStorage.removeItem(cacheKey);
             localStorage.removeItem(cacheTimestampKey);
           }
@@ -261,23 +240,15 @@ const FAQ = ({ setActiveTab, setIsOpen, isExpanded, setIsExpanded, activeTab }) 
         const response = await fetch(
           `/wp-json/wp/v2/robodesk_faq?_fields=id,title.rendered,excerpt.rendered,content.rendered&per_page=100&page=1`
         );
-        
-        // console.log(wpHomeUrl);
-        // console.log('Response status:', response.status, response.statusText);
 
         if (!response.ok) {
           throw new Error(`Failed to fetch FAQs: ${response.status} ${response.statusText}`);
         }
 
         const data = await response.json();
-        // console.log('API Response:', data);
 
         if (!Array.isArray(data)) {
           throw new Error('Invalid API response: Expected an array');
-        }
-
-        if (data.length === 0) {
-        //   console.warn('API returned an empty array. Check if robodesk_faq posts exist.');
         }
 
         const formattedFaqs = data.map((faq) => {
@@ -288,10 +259,8 @@ const FAQ = ({ setActiveTab, setIsOpen, isExpanded, setIsExpanded, activeTab }) 
             ? wpTrimWords(stripHtml(faq.content.rendered), 20)
             : 'No summary available';
             
-          const content = faq.content?.rendered
-            ? faq.content.rendered
-            : 'No content available';               
-            
+          const content = faq.content?.rendered ? faq.content.rendered : 'No content available';
+          
           return {
             id: faq.id,
             question,
@@ -301,12 +270,10 @@ const FAQ = ({ setActiveTab, setIsOpen, isExpanded, setIsExpanded, activeTab }) 
           };
         });
 
-        // console.log('Formatted FAQs:', formattedFaqs);
         setFaqs(formattedFaqs);
         localStorage.setItem(cacheKey, JSON.stringify(formattedFaqs));
         localStorage.setItem(cacheTimestampKey, currentTime.toString());
       } catch (err) {
-        // console.error('Fetch Error:', err);
         setError(err.message);
       } finally {
         setIsLoading(false);
@@ -320,7 +287,6 @@ const FAQ = ({ setActiveTab, setIsOpen, isExpanded, setIsExpanded, activeTab }) 
     const filtered = faqs.filter((faq) =>
       faq.question.toLowerCase().includes(searchTerm.toLowerCase())
     );
-    console.log('Search term:', searchTerm, 'Filtered FAQs:', filtered);
     return filtered;
   }, [faqs, searchTerm]);
 
@@ -328,14 +294,16 @@ const FAQ = ({ setActiveTab, setIsOpen, isExpanded, setIsExpanded, activeTab }) 
     return (
       <div className="rd-faq-container">
         <FAQDetail
-  faq={selectedFAQ}
-  onBack={() => {
-    setSelectedFAQ(null);
-    setIsExpanded(false);
-  }}
-  isExpanded={isExpanded}
-  setIsExpanded={setIsExpanded}
-/>
+          faq={selectedFAQ}
+          onBack={() => {
+            setSelectedFAQ(null);
+            setIsExpanded(false);
+          }}
+          isExpanded={isExpanded}
+          setIsExpanded={setIsExpanded}
+          faqs={filteredFaqs}
+          setSelectedFAQ={setSelectedFAQ}
+        />
       </div>
     );
   }
