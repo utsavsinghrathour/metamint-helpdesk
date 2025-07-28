@@ -385,14 +385,31 @@ function showPage(pageName) {
 
   currentPage = pageName;
 
+  // Update URL params for navigation
+  if (history.pushState) {
+    const url = new URL(window.location);
+    // Remove ticket param if not on ticket-detail
+    if (pageName !== "ticket-detail") {
+      url.searchParams.delete("ticket");
+    }
+    // Remove paged param if not on tickets
+    if (pageName !== "tickets") {
+      url.searchParams.delete("paged");
+    }
+    // Add paged param for tickets page (if needed)
+    if (pageName === "tickets" && typeof currentPaged !== "undefined") {
+      url.searchParams.set("paged", currentPaged);
+    }
+    history.replaceState({}, "", url);
+  }
+
   if (pageName === "ticket-detail") {
-    var ticketId = currentTicket ? currentTicket.id : null;
     loadTicketDetail();
   }
 
   // Load page-specific content
   if (pageName === "tickets") {
-    loadTicketsTable();
+    loadTicketsTable && loadTicketsTable();
   } else if (pageName === "settings") {
     showSettingsTab("basic");
   } else if (pageName === "dashboard") {
