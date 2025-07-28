@@ -80,7 +80,7 @@ function robodesk_fetch_emails()
 
     // Get last fetched date
     $last_fetched_date = ('2021-01-01 00:00:00');
-    // $last_fetched_date = get_option('robodesk_last_fetched_date', '2021-01-01 00:00:00'); // Default to a past date if not set
+    // $last_fetched_date = get_option('robodesk_last_fetched_date', '2021-01-01 00:00:00'); // Default to a past date if not set( as we are also using the ticket id to retrieve the last mail or reply    )
     error_log('Last fetched date: ' . $last_fetched_date);
 
     // Convert to IMAP-compatible date with time
