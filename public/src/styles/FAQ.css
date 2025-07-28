@@ -96,12 +96,14 @@
   fill: #EF2C3F;
 }
 .single-faq-content{
-  max-height: 468px;
+  /* max-height: 468px; */
   overflow: auto;
   min-height: 468px;
+  height: 60vh;
 }
 .rd-wiki-wrap{
-  max-height: 320px;
+  /* max-height: 320px; */
+  max-height: 45vh;
   overflow: auto;
 }
 .single-faq-content .wp-block-image img,

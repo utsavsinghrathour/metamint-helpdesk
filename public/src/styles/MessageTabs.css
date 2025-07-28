@@ -51,14 +51,15 @@
 }
 .chat-container {
   overflow: auto;
-  max-height: 300px;
+  /* max-height: 300px; */
 }
+
 .chat-input textarea::placeholder {
   font-size: 12px;
   font-weight: 400;
 }
 .chat-input textarea {
-  max-height: 80px;
+  max-height: 50px;
   overflow-y: auto;
 }
 .emoji-picker-wrap {
@@ -113,6 +114,7 @@
 .rd-single-ticket .chat-container{
   /* min-height: 370px; */
   min-height: 355px;
+  height: 45vh;
 }
 .rd-preloader{
   position: absolute;

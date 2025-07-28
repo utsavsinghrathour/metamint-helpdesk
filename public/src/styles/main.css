@@ -19,16 +19,16 @@
   border-radius: 10px;
 }
 .rd-main-content{
-  min-height: 468px;
+  /* min-height: 468px; */
 }
 .rd-main-content.no-footer{
-  min-height: 530px;
+  /* min-height: 530px; */
 }
 .expanded .rd-main-content.no-footer{
-  min-height: 570px;
+  /* min-height: 570px; */
 }
 .expanded .single-faq-content{
-  max-height: 500px;
+  /* max-height: 500px; */
 }
 .robodesk-plugin::-webkit-scrollbar-track {
   background: transparent;
@@ -72,8 +72,10 @@ button.no-bg, .button.no-bg{
   padding: 10px 12px;
   text-decoration: none;
 }
-.rd-overflow-h-320{
-  max-height: 200px;
+.rd-overflow-h-320
+{
+  /* max-height: 300px; */
+  height: 30vh;
   overflow: auto;
 }
 .rd-m-auto{
@@ -447,18 +449,19 @@ input::placeholder{
   opacity: 0;
   transform: translateY(20px);
   visibility: hidden;
-  max-height: 0;
+  /* max-height: 0; */
   overflow: hidden;
   margin-bottom: 10px;
+  height: calc(80vh - 100px);
 }
 
 .robodesk-popup.open {
   opacity: 1;
   transform: translateY(0);
   visibility: visible;
-  max-height: 560px;
+  /* max-height: 560px;
+  height: 560px; */
   min-height: 560px;
-  height: 560px;
 }
 
 .robodesk-popup.closed {
@@ -470,8 +473,8 @@ input::placeholder{
 
 .robodesk-popup.expanded {
   width: 600px;
-  height: 600px;
-  max-height: 600px;
+  /* height: 600px;
+  max-height: 600px; */
 }
 
 .robodesk-popup.expanded .rd-faq-detail .rd-faq-title{
