@@ -123,7 +123,7 @@ export async function sendReply(ticketId, loggedInUserId, message) {
   };
 
 
-console.log('From modules', payload);
+// console.log('From modules', payload);
   try {
     const response = await fetch("/wp-json/chat/v1/tickets", {
       method: "POST",

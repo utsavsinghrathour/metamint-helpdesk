@@ -8,7 +8,7 @@ import EmojiPicker from "emoji-picker-react";
 import defaultLogo from "../images/robodesk-logo.png";
 import "../styles/MessageTabs.css";
 import { sendReply } from "../utils/modules";
-// import { useSSEComments, ConnectionStatus } from "../Hooks/SseComments";
+import { useAppData } from "../utils/AppDataContext";
 
 const SingleTicket = ({ ticket, onBack, loggedInUserId }) => {
   const [message, setMessage] = useState("");
@@ -30,10 +30,11 @@ const SingleTicket = ({ ticket, onBack, loggedInUserId }) => {
   const previousScrollHeight = useRef(0);
 
   const hasConnected = useRef(false);
-
-  const [lastRply, setLastRply] = useState(ticket.lastReply ?? false);
-
-  const [isSseEnabled, setSseEnabled] = useState(false);
+  const {
+    loggedinContext,
+    loggedInUsrId,
+  
+  } = useAppData();
 
   const [isMessagingActive, setIsisMessagingActive] = useState(
     document.visibilityState === "visible"
@@ -73,13 +74,16 @@ const SingleTicket = ({ ticket, onBack, loggedInUserId }) => {
         image: comment.author_data.avatar || "./default-avatar.jpg",
         created_at: comment.date,
         time_ago: comment.time_ago,
-        isAdmin: comment.author_data?.id !== ticket.author_id,
+        // isAdmin: comment.author_data?.id !== ticket.author_id,
       }));
+      
+    //   console.log(formattedComments,'From there');
 
       setChatMessages((prev) => {
         const newMessages = prepend
           ? [...formattedComments, ...prev]
           : formattedComments;
+          
         const uniqueMessages = Array.from(
           new Map(newMessages.map((msg) => [msg.id, msg])).values()
         );
@@ -189,10 +193,8 @@ const SingleTicket = ({ ticket, onBack, loggedInUserId }) => {
     
   }, [chatMessages]);
 
-  //fetching messages in real time by us
-  //   const hasConnected = useRef(false);
   // Updated serverEvents with better error handling
-  const serverEvents = (ticketId, lastCommentId, onNewComment) => {
+  const serverEvents = (ticketId, lastCommentId, onNewComment , loggedInUserId) => {
     if (!lastCommentId || !ticketId) {
       console.warn("Skipping SSE: Invalid ticketId or lastCommentId", {
         ticketId,
@@ -201,32 +203,47 @@ const SingleTicket = ({ ticket, onBack, loggedInUserId }) => {
       return;
     }
 
-    if (!isSseEnabled) return;
-
-    console.log("Starting SSE with:", { ticketId, lastCommentId });
-
     const eventSource = new EventSource(
-      `/wp-json/robodesk/v1/comments-stream/${ticketId}/${lastCommentId}`
+      `/wp-json/robodesk/v1/messaging/${ticketId}/${lastCommentId}/${loggedInUserId}`
     );
-
+    
     eventSource.onopen = () => {
       console.log("SSE connection opened");
       hasConnected.current = true;
     };
-
-    eventSource.addEventListener("new_comment", (event) => {
-      try {
-        const commentData = JSON.parse(event.data);
-        console.log("New comment received:", commentData);
-        if (typeof onNewComment === "function") {
-          onNewComment(commentData);
-        } else {
-          console.warn("onNewComment is not a function:", onNewComment);
-        }
-      } catch (error) {
-        console.error("Error parsing new comment:", error);
-      }
+    
+    eventSource.addEventListener("disconnect", (event) => {
+            console.log('We need to disconnect');
     });
+    
+     eventSource.addEventListener("new_comment", (event) => {
+        console.log('hiloooo');
+        const commentData = JSON.parse(event.data);
+        if (typeof onNewComment === "function") {
+            onNewComment(commentData);
+        }
+              
+     });
+    
+    
+    // eventSource.addEventListener("handshake", (event) => {
+    //         console.log("SSE handshake received");
+    //         console.log('event');
+    // });
+
+    // eventSource.addEventListener("new_comment", (event) => {
+    //   try {
+    //     const commentData = JSON.parse(event.data);
+    //     console.log("New comment received:", commentData);
+    //     if (typeof onNewComment === "function") {
+    //       onNewComment(commentData);
+    //     } else {
+    //       console.warn("onNewComment is not a function:", onNewComment);
+    //     }
+    //   } catch (error) {
+    //     console.error("Error parsing new comment:", error);
+    //   }
+    // });
 
     // eventSource.addEventListener("heartbeat", (event) => {
     //   try {
@@ -241,32 +258,38 @@ const SingleTicket = ({ ticket, onBack, loggedInUserId }) => {
       try {
         const data = JSON.parse(event.data);
         console.log("Server requested disconnect:", data);
-        eventSource.close();
-        setTimeout(() => {
-          console.log("Reconnecting...");
-          if (typeof onNewComment === "function") {
-            serverEvents(ticketId, lastCommentId, onNewComment);
-          }
-        }, 2000);
+        // eventSource.close();
+        // setTimeout(() => {
+        //   console.log("Reconnecting...");
+        //   if (typeof onNewComment === "function") {
+        //     serverEvents(ticketId, lastCommentId, onNewComment);
+        //   }
+        // }, 2000);
       } catch (error) {
         console.error("Error parsing disconnect:", error);
       }
     });
+    
+    eventSource.addEventListener("retry", (event) => { 
+            console.log("Retrying connection...");
+    });
 
     eventSource.onerror = (error) => {
-      console.error("SSE error:", error, {
-        readyState: eventSource.readyState,
-        url: eventSource.url,
-      });
-      if (eventSource.readyState === EventSource.CLOSED) {
-        console.log("EventSource closed, scheduling reconnect...");
-        setTimeout(() => {
-          if (typeof onNewComment === "function") {
-            serverEvents(ticketId, lastCommentId, onNewComment);
-          }
-        }, 2000);
-      }
+    //   console.error("SSE error:", error, {
+    //     readyState: eventSource.readyState,
+    //     url: eventSource.url,
+    //   });
+    //   if (eventSource.readyState === EventSource.CLOSED) {
+    //     console.log("EventSource closed, scheduling reconnect...");
+    //     setTimeout(() => {
+    //       if (typeof onNewComment === "function") {
+    //         // serverEvents(ticketId, lastCommentId, onNewComment);
+    //       }
+    //     }, 2000);
+    //   }
     };
+    
+    
 
     return () => {
       console.log("Closing SSE Connection");
@@ -275,26 +298,21 @@ const SingleTicket = ({ ticket, onBack, loggedInUserId }) => {
     };
   };
 
-  // SSE for real-time comments
-  const lastItem = useMemo(() => {
-    // console.log('Chnaging.....',chatMessages[chatMessages.length - 1]);
-    return chatMessages.length > 0
-      ? chatMessages[chatMessages.length - 1]
-      : null;
-  }, [chatMessages]);
+    const lastAdminMessage = useMemo(() => {
+      const lastOther = [...chatMessages]
+        .reverse()
+        .find(msg => msg.sender === 'other');
+      return lastOther ? lastOther.id : null;
+    }, [chatMessages]);
 
   useEffect(() => {
-  
-    console.log(isMessagingActive);
-    if (lastItem && !hasConnected.current) {
-      console.log("Connecting to SSE with last comment ID:", lastItem.id);
-      
-      console.log(isMessagingActive);
-      const cleanup = serverEvents(ticket.id, lastItem.id, handleNewComment);
+    if (lastAdminMessage && !hasConnected.current && isMessagingActive && loggedinContext) {
+      console.log("Connecting to SSE with last comment ID:", lastAdminMessage);
+      const cleanup = serverEvents(ticket.id, lastAdminMessage, handleNewComment ,loggedInUsrId);
       hasConnected.current = true;
       return cleanup;
     }
-  }, [lastItem]);
+  }, [lastAdminMessage]);
 
   const handleSend = async () => {
     if (message.trim() || previewImage) {
@@ -527,7 +545,7 @@ const SingleTicket = ({ ticket, onBack, loggedInUserId }) => {
       </div>
       <div className="chat-input rd-flex rd-flex-col rd-px-18 rd-py-15 rd-border-top-light rd-bg-white">
         {previewImage && (
-          <div className="rd-mb-10 rd-flex rd-align-center rd-message-image-preview">
+          <div className="rd-mb-10 rd-flex rd-align-center">
             <div className="rd-position-relative">
               <img
                 src={previewImage}
