@@ -482,22 +482,5 @@ function robodesk_comment_creation($comment_ID, $comment_approved, $commentdata)
         if(get_post_type($ticketId) == 'robodesk_ticket'){
             update_post_meta($ticketId, 'last_admin_comment_id', $comment_ID);
         }
-        
-        // update_comment_meta($comment_ID, 'rbd_unseen', true);
-        // // update_comment_meta($comment_ID, 'admin_comment', true);
-        // $post_id = $commentdata['comment_post_ID'];
-        
-        // if(get_post_type($post_id) == 'robodesk_ticket'){
-        //    update_post_meta($post_id, 'rbd_last_reply_id', $comment_ID);
-        // }
-        // $post_author_id = get_post_field('post_author', $post_id);
-        
-        // if ($post_author_id) {
-        
-        //     $current_count = (int) get_user_meta($post_author_id, 'rbd_unseen_count', true);
-
-        //     update_user_meta($post_author_id, 'rbd_unseen_count', $current_count + 1);
-        // }
-        
     }
 }
