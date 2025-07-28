@@ -8,7 +8,6 @@ import '../styles/SingleQuestionBox.css';
 
 import defaultLogo from '../images/robodesk-logo.png';
 
-
 const faqCache = {};
 // const wpHomeUrl = window.robodeskData?.home_url || '';
 
@@ -204,6 +203,7 @@ const SingleQuestionBox = ({
               </svg>
             </button>
           </div>
+
           <div className="rd-py-15 single-faq-content rd-px-20">
             <div className="rd-flex rd-gap-15">
               <div>
@@ -223,6 +223,24 @@ const SingleQuestionBox = ({
                       })
                     : 'Loading content...'}
                 </div>
+              </div>
+            </div>
+            <div className="single-faq-other-faq-content rd-my-20 single-content-other-content">
+              <h4 className="heading-4">Didn't get your answer?</h4>
+              <div className="rd-body-text rd-mt-8">
+                <p>Here are some related articles.</p>
+              </div>
+              <div className="rd-flex rd-flex-col rd-gap-20 rd-mt-20">
+                {questions
+                  .slice(0, 3)
+                  .map(
+                    (question) =>
+                      question.id !== selectedQuestion.id && <QuestionItem key={question.id} question={question} />
+                  )}
+              </div>
+              <div className="rd-my-30">
+                <h4 className="heading-4 rd-fw-semi rd-mb-8">Still have questions?</h4>
+                <a href="#">Start a conversation</a>
               </div>
             </div>
             {/* <div className="rd-actions rd-flex rd-align-center rd-justify-center rd-mt-20 rd-faq-actions">

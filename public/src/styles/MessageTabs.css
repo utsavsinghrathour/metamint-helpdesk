@@ -123,3 +123,25 @@
 .rd-message-list-wrap{
   max-width: 95%;
 }
+.rd-message-image-preview img{
+  max-height: 35px;
+  max-width: 35px;
+}
+.rd-message-image-preview{
+  position: absolute;
+  bottom: -10px;
+  right: 135px;
+}
+.rd-message-image-preview + .rd-flex textarea{
+  max-width: 60%;
+}
+.emoji-picker-wrap .epr-category-nav{
+  padding: 10px;
+}
+.rd-message-list-header img{
+  height: 40px;
+  width: 40px;
+}
+.rd-search-header.rd-message-list-header{
+  padding: 10px;
+}

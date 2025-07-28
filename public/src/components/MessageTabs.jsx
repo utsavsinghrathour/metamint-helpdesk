@@ -1,23 +1,24 @@
-import React, { useState, useEffect, Suspense } from "react";
-import { FaChevronRight, FaChevronLeft } from "react-icons/fa";
-import "../styles/MessageTabs.css";
-import Author1 from "../images/person1.jpeg";
-import Author2 from "../images/person2.jpeg";
-import { LuDot } from "react-icons/lu";
-import { RiPencilFill } from "react-icons/ri";
-import Footer from "./Footer";
-import Login from "./Login";
-import Preloader from "../images/preloader.svg";
-import { getAllTickets } from "../utils/modules";
-import { useAppData } from "../utils/AppDataContext";
+import React, { useState, useEffect, Suspense } from 'react';
+import { FaChevronRight, FaChevronLeft } from 'react-icons/fa';
+import '../styles/MessageTabs.css';
+import Author1 from '../images/person1.jpeg';
+import Author2 from '../images/person2.jpeg';
+import { LuDot } from 'react-icons/lu';
+import { RiPencilFill } from 'react-icons/ri';
+import Footer from './Footer';
+import Login from './Login';
+import Preloader from '../images/preloader.svg';
+import { getAllTickets } from '../utils/modules';
+import { useAppData } from '../utils/AppDataContext';
+import defaultLogo from '../images/robodesk-logo.png';
 // import CreateTicket from './CreateTicket'
 
-const SingleTicket = React.lazy(() => import("./SingleTicket"));
+const SingleTicket = React.lazy(() => import('./SingleTicket'));
 
 const TicketItem = ({ ticket, onSelect }) => {
   return (
     <div
-      className="rd-hover single-rd-ticket rd-flex rd-align-center rd-gap-8 rd-border-bottom-light rd-cursor-pointer single-rd-active-ticket"
+      className="rd-hover single-rd-ticket rd-flex rd-align-start rd-gap-8 rd-border-bottom-light rd-cursor-pointer single-rd-active-ticket"
       onClick={() => onSelect(ticket)}
     >
       <div>
@@ -25,7 +26,7 @@ const TicketItem = ({ ticket, onSelect }) => {
           src={ticket.authorImage}
           alt="User Image"
           className="rd-rounded-border rd-object-cover"
-          style={{ height: "30px", width: "30px" }}
+          style={{ height: '30px', width: '30px' }}
         />
       </div>
       <div className="rd-flex rd-justify-between rd-w-full">
@@ -39,18 +40,12 @@ const TicketItem = ({ ticket, onSelect }) => {
           <div className="rd-flex rd-align-center rd-gap-10 rd-mt-10">
             <span
               className={`rd-priority rd-fw-medium ${
-                ticket.priority === "Urgent"
-                  ? "rd-urgent"
-                  : ticket.priority === "Medium"
-                  ? "rd-medium"
-                  : "rd-low"
+                ticket.priority === 'Urgent' ? 'rd-urgent' : ticket.priority === 'Medium' ? 'rd-medium' : 'rd-low'
               }`}
             >
               {ticket.priority}
             </span>
-            <span className="rd-text-small rd-fw-medium">
-              (#{ticket.ticketNumber})
-            </span>
+            <span className="rd-text-small rd-fw-medium">(#{ticket.ticketNumber})</span>
           </div>
         </div>
         <FaChevronRight />
@@ -68,22 +63,16 @@ const MessageTabs = ({
   selectedNewTicket,
   updateSelectedTicket,
 }) => {
-  const [searchTerm, setSearchTerm] = useState("");
+  const [searchTerm, setSearchTerm] = useState('');
   const [selectedTicket, setSelectedTicket] = useState(selectedNewTicket);
-  const [currentTab, setCurrentTab] = useState("all");
-  const [priorityFilter, setPriorityFilter] = useState("all");
+  const [currentTab, setCurrentTab] = useState('all');
+  const [priorityFilter, setPriorityFilter] = useState('all');
   const [tickets, setTickets] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isLoggedIn, setIsLoggedIn] = useState(false); // Fixed naming consistency
   const [loggedInuserId, setloggedInuserId] = useState(null);
-  const {
-    loadingContext,
-    errorContext,
-    ticketsContext,
-    loggedinContext,
-    loggedInUsrId,
-  
-  } = useAppData();
+  const { loadingContext, errorContext, ticketsContext, loggedinContext, loggedInUsrId } = useAppData();
+  const image_urls = window.robodeskData?.imageUrls || {};
 
   const fetchTickets = async () => {
     if (!loggedInUsrId) {
@@ -97,33 +86,28 @@ const MessageTabs = ({
         ticketNumber: ticket.ticket_number,
         title: ticket.ticket_title,
         source: ticket.ticket_origin,
-        timeAgo: ticket.ticket_time_ago + " ago",
+        timeAgo: ticket.ticket_time_ago + ' ago',
         authorImage: ticket.ticket_author_image ?? Author1,
-        status: ticket.ticket_status ?? "New",
-        priority: ticket.ticket_priority ?? "Medium",
+        status: ticket.ticket_status ?? 'New',
+        priority: ticket.ticket_priority ?? 'Medium',
         author: ticket.ticket_author,
         lastReply : ticket.ticket_last_reply
       }));
 
       setTickets(mappedTickets);
-      console.log('the unmapped tickets are', tickets);
-      console.log('the mapped tickets are ' , mappedTickets);
-      
     } catch (error) {
-      
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    
     if (loggedinContext && loggedInUsrId) {
-        setIsLoggedIn(true);
-        setloggedInuserId(loggedInUsrId);
-       
-       fetchTickets();
-    
+      setIsLoggedIn(true);
+      setloggedInuserId(loggedInUsrId);
+
+      fetchTickets();
+
       if (!selectedTicket) {
         setSelectedTicket(selectedNewTicket ? selectedNewTicket : null);
       }
@@ -131,7 +115,7 @@ const MessageTabs = ({
       setTickets([]);
       setLoading(false);
     }
-  }, [isLoggedIn, loggedInUsrId,ticketsContext]);
+  }, [isLoggedIn, loggedInUsrId, ticketsContext]);
 
   const handleLogin = (loginStatus) => {
     setIsLoggedIn(loginStatus);
@@ -141,47 +125,36 @@ const MessageTabs = ({
   };
 
   const handleBackToHome = () => {
-
     if (setActiveTab) {
       setActiveTab(0);
       setIsExpanded(false);
     }
-      updateSelectedTicket(null);
+    updateSelectedTicket(null);
   };
 
   const handleAddTicket = async () => {
     if (!loggedInuserId) return;
-
-   
   };
 
   const filteredTickets = tickets.filter((ticket) => {
-    const matchesTab = currentTab === "all" || ticket.status === currentTab;
-    const matchesPriority =
-      priorityFilter === "all" || ticket.priority === priorityFilter;
+    const matchesTab = currentTab === 'all' || ticket.status === currentTab;
+    const matchesPriority = priorityFilter === 'all' || ticket.priority === priorityFilter;
 
     const searchLower = searchTerm.toLowerCase();
-    const titleLower = ticket.title?.toLowerCase() || "";
-    const ticketNumberLower = ticket.ticketNumber?.toLowerCase() || "";
+    const titleLower = ticket.title?.toLowerCase() || '';
+    const ticketNumberLower = ticket.ticketNumber?.toLowerCase() || '';
 
-    const matchesSearch =
-      titleLower.includes(searchLower) ||
-      ticketNumberLower.includes(searchLower);
+    const matchesSearch = titleLower.includes(searchLower) || ticketNumberLower.includes(searchLower);
 
     return matchesTab && matchesPriority && matchesSearch;
   });
 
   return (
     <div className="rd-main-content">
- 
       {isLoggedIn ? (
         <>
           {selectedTicket ? (
-            <Suspense
-              fallback={
-                <img src={Preloader} alt="Loading" className="rd-preloader" />
-              }
-            >
+            <Suspense fallback={<img src={Preloader} alt="Loading" className="rd-preloader" />}>
               <SingleTicket
                 ticket={selectedNewTicket ? selectedNewTicket : selectedTicket}
                 onBack={() => setSelectedTicket(null)}
@@ -190,27 +163,54 @@ const MessageTabs = ({
             </Suspense>
           ) : (
             <>
-              <div className="rd-px-18 rd-search-header rd-bg-blue rd-flex rd-items-center rd-justify-between rd-flex-col">
-                <h5 className="heading-5 rd-text-white rd-text-center">
-                  Messages
-                </h5>
+              <div className="rd-px-18 rd-search-header rd-bg-blue rd-flex rd-items-center rd-justify-between rd-flex-col rd-message-list-header">
+                
                 <button
                   className="back-button rd-flex rd-items-center rd-gap-1 rd-border-none rd-bg-transparent rd-m-0 rd-p-0"
                   onClick={handleBackToHome}
                 >
                   <FaChevronLeft />
                 </button>
+                {image_urls.wide_logo && image_urls.wide_logo.trim() !== '' ? (
+                  <img
+                    src={image_urls.wide_logo}
+                    alt="Plugin Wide Logo"
+                    className="rd-h-auto rd-header-logo rd-m-auto"
+                    onError={(e) => {
+                      e.target.style.display = 'none';
+                    }}
+                  />
+                ) : image_urls.logo && image_urls.logo.trim() !== '' ? (
+                  <img
+                    src={image_urls.logo}
+                    alt="Plugin Logo"
+                    className="rd-h-auto rd-header-logo rd-m-auto"
+                    onError={(e) => {
+                      e.target.style.display = 'none';
+                    }}
+                  />
+                ) : (
+                  <div className="rd-h-auto rd-header-logo default-logo">
+                    <img src={defaultLogo} alt="Default Plugin Logo" className="rd-h-auto rd-header-logo rd-m-auto" />
+                  </div>
+                )}
               </div>
               <div className="rd-message-tab-content">
-                
+                <div className="rd-mt-20 rd-mb-10">
+                  <h4 className="heading-4 rd-text-center">Conversations</h4>
+                  <div className="rd-body-text rd-mt-8 rd-text-center ">
+                    <p>All your conversations are here.</p>
+                  </div>
+                </div>
+
                 {/* Search and Priority Filter */}
                 <div className="rd-px-18 rd-py-15 rd-flex rd-gap-10 rd-align-center rd-justify-between">
                   <input
                     type="text"
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    placeholder="Search for ticket"
-                    className="rd-border-light rd-border-radius-md rd-p-10 rd-color-gray rd-fw-medium flex-1"
+                    placeholder="Search for conversation"
+                    className="rd-border-light rd-border-radius-md rd-p-10 rd-color-gray rd-fw-medium flex-2"
                   />
                   <select
                     value={priorityFilter}
@@ -231,7 +231,7 @@ const MessageTabs = ({
                     onChange={(e) => setCurrentTab(e.target.value)}
                     className="rd-p-10 rd-py-5 rd-border-light rd-border-radius-md rd-body-text ticket-tab rd-color-gray rd-fw-medium"
                   >
-                    <option value="all">All Tickets</option>
+                    <option value="all">All Conversations</option>
                     <option value="new">New</option>
                     <option value="ongoing">On Going</option>
                     <option value="resolved">Resolved</option>
@@ -332,27 +332,16 @@ const MessageTabs = ({
 
                 {/* Ticket List */}
                 <div className="rd-messge-wrapper">
-            
                   <div className="rd-tickets">
                     <div className="rd-active-tickets-wrap">
                       {loading ? (
-                        <img
-                          src={Preloader}
-                          alt="Loading"
-                          className="rd-preloader"
-                        />
+                        <img src={Preloader} alt="Loading" className="rd-preloader" />
                       ) : filteredTickets.length > 0 ? (
                         filteredTickets.map((ticket) => (
-                          <TicketItem
-                            key={ticket.id}
-                            ticket={ticket}
-                            onSelect={setSelectedTicket}
-                          />
+                          <TicketItem key={ticket.id} ticket={ticket} onSelect={setSelectedTicket} />
                         ))
                       ) : (
-                        <p className="rd-text-center rd-text-gray rd-m-5 err_msg">
-                          No tickets found
-                        </p>
+                        <p className="rd-text-center rd-text-gray rd-m-5 err_msg">No tickets found</p>
                       )}
                     </div>
                   </div>
@@ -363,17 +352,13 @@ const MessageTabs = ({
                     className="button no-bg rd-flex rd-align-center rd-gap-10 rd-cursor-pointer"
                     onClick={handleAddTicket}
                   >
-                    Add Ticket
+                    Start a conversation
                     <RiPencilFill />
                   </button>
                 </div>
               </div>
               {/* <Footer activeTab={activeTab} setActiveTab={setActiveTab} /> */}
-              <Footer
-                activeTab={activeTab}
-                setActiveTab={setActiveTab}
-                updateSelectedTicket={updateSelectedTicket}
-              />
+              <Footer activeTab={activeTab} setActiveTab={setActiveTab} updateSelectedTicket={updateSelectedTicket} />
             </>
           )}
         </>

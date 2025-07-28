@@ -20,5 +20,9 @@
     cursor: pointer;
 }
 .rd-search-header.login-wrap{
-    padding: 20px;
+    padding: 10px;
+}
+.rd-search-header.login-wrap img{
+    height: 40px;
+    width: 40px;
 }

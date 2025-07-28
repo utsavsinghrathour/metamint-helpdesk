@@ -527,7 +527,7 @@ const SingleTicket = ({ ticket, onBack, loggedInUserId }) => {
       </div>
       <div className="chat-input rd-flex rd-flex-col rd-px-18 rd-py-15 rd-border-top-light rd-bg-white">
         {previewImage && (
-          <div className="rd-mb-10 rd-flex rd-align-center">
+          <div className="rd-mb-10 rd-flex rd-align-center rd-message-image-preview">
             <div className="rd-position-relative">
               <img
                 src={previewImage}
