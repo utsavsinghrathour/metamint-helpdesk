@@ -221,6 +221,7 @@ function robodesk_live_comments($request)
             'orderby' => 'comment_ID',
             'order' => 'ASC',
         );
+        
         $comments = get_comments($args);
         $new_admin_comments = array();
 

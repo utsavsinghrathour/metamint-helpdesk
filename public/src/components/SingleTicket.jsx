@@ -285,7 +285,6 @@ useEffect(() => {
 
   useEffect(() => {
   
-  console.log('Ellow Ellow boy');
     if (lastAdminMessage && !hasConnected.current && isMessagingActive && loggedinContext) {
       console.log("Connecting to SSE with last comment ID:", lastAdminMessage);
       const cleanup = serverEvents(ticket.id, lastAdminMessage, handleNewComment ,loggedInUsrId);

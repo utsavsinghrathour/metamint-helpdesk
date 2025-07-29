@@ -484,3 +484,23 @@ function robodesk_comment_creation($comment_ID, $comment_approved, $commentdata)
         }
     }
 }
+
+add_action('wp_insert_comment', 'robodesk_comment_creation_on_insert', 10, 2);
+
+function robodesk_comment_creation_on_insert($comment_ID, $comment_object) {
+    // Bail if not in admin
+    if (!is_admin()) return;
+
+    // Check if comment type matches
+    if (isset($comment_object->comment_type) && $comment_object->comment_type === 'ticket_replies') {
+        
+        $ticketId = $comment_object->comment_post_ID;
+
+        // Ensure it's a robodesk_ticket post
+        if (get_post_type($ticketId) === 'robodesk_ticket') {
+            update_post_meta($ticketId, 'last_admin_comment_id', $comment_ID);
+        }
+    }
+}
+
+
