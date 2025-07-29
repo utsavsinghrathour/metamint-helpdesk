@@ -386,6 +386,51 @@ function robodesk_save_basic_settings()
         }
     }
 
+    //saving the audio file for notification sound
+    if (!empty($_FILES['robodesk_notification_sound']['name'])) {
+        $file = $_FILES['robodesk_notification_sound'];
+        $allowed_types = ['audio/mpeg', 'audio/wav', 'audio/ogg'];
+
+        // Validate file type
+        if (!in_array($file['type'], $allowed_types)) {
+            $results['robodesk_notification_sound'] = ['status' => 'error', 'message' => 'Invalid file type for notification sound. Only MP3, WAV, and OGG are allowed'];
+        } else {
+            // Validate file size
+            $advanced_settings = get_option('robodesk_advanced_settings', []);
+            $max_size = $advanced_settings['max_file_upload_size'] ?? 10; // Default to 10MB
+            $max_size_bytes = $max_size * 1024 * 1024;
+            if ($file['size'] > $max_size_bytes) {
+                $results['robodesk_notification_sound'] = ['status' => 'error', 'message' => 'Notification sound exceeds maximum file size of ' . $max_size . 'MB'];
+            } else {
+                // Sanitize file name
+                $file['name'] = sanitize_file_name($file['name']);
+
+                // Delete existing attachment if necessary (optional)
+                $existing_attachment_id = attachment_url_to_postid(get_option('robodesk_notification_sound', ''));
+                if ($existing_attachment_id) {
+                    wp_delete_attachment($existing_attachment_id, true);
+                }
+
+                // Upload file
+                $attachment_id = media_handle_upload('robodesk_notification_sound', 0);
+                if (is_wp_error($attachment_id)) {
+                    $results['robodesk_notification_sound'] = ['status' => 'error', 'message' => 'Failed to upload notification sound: ' . $attachment_id->get_error_message()];
+                } else {
+                    $image_url = wp_get_attachment_url($attachment_id);
+                    if ($image_url) {
+                        $urls['robodesk_notification_sound'] = $image_url;
+                        $results['robodesk_notification_sound'] = ['status' => 'success', 'message' => 'Notification sound uploaded successfully'];
+                    } else {
+                        $results['robodesk_notification_sound'] = ['status' => 'error', 'message' => 'Failed to retrieve URL for notification sound'];
+                    }
+                }
+            }
+        }
+    } else {
+        $urls['robodesk_notification_sound'] = get_option('robodesk_notification_sound', '');
+        $results['robodesk_notification_sound'] = ['status' => 'success', 'message' => 'Notification sound unchanged'];
+    }
+
     // Save all settings to the options table
     foreach ($sanitized_settings as $key => $value) {
         update_option('robodesk_' . $key, $value);
