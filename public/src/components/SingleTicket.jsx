@@ -10,6 +10,9 @@ import "../styles/MessageTabs.css";
 import { sendReply } from "../utils/modules";
 import { useAppData } from "../utils/AppDataContext";
 
+// import beepSound from '../../assets/beep.mp3';
+
+
 const SingleTicket = ({ ticket, onBack, loggedInUserId }) => {
   const [message, setMessage] = useState("");
   const [showPicker, setShowPicker] = useState(false);
@@ -28,6 +31,7 @@ const SingleTicket = ({ ticket, onBack, loggedInUserId }) => {
   const chatContainerRef = useRef(null);
   const image_urls = window.robodeskData?.imageUrls || {};
   const previousScrollHeight = useRef(0);
+  const beep = useRef(new Audio('http://woo-escrow.codepixelz.tech/wp-content/uploads/2025/07/notify.mp3'));
 
   const hasConnected = useRef(false);
   const {
@@ -39,7 +43,9 @@ const SingleTicket = ({ ticket, onBack, loggedInUserId }) => {
   const [isMessagingActive, setIsisMessagingActive] = useState(
     document.visibilityState === "visible"
   );
-
+useEffect(() => {
+  beep.current.load(); // Preload the audio
+}, []);
   useEffect(() => {
     const onVisibilityChange = () => {
       setIsisMessagingActive(document.visibilityState === "visible");
@@ -208,51 +214,23 @@ const SingleTicket = ({ ticket, onBack, loggedInUserId }) => {
     );
     
     eventSource.onopen = () => {
-      console.log("SSE connection opened");
+    //   console.log("SSE connection opened");
       hasConnected.current = true;
     };
     
-    eventSource.addEventListener("disconnect", (event) => {
-            console.log('We need to disconnect');
-    });
+
     
      eventSource.addEventListener("new_comment", (event) => {
         console.log('hiloooo');
         const commentData = JSON.parse(event.data);
         if (typeof onNewComment === "function") {
+            beep.current.play();
             onNewComment(commentData);
         }
               
      });
     
     
-    // eventSource.addEventListener("handshake", (event) => {
-    //         console.log("SSE handshake received");
-    //         console.log('event');
-    // });
-
-    // eventSource.addEventListener("new_comment", (event) => {
-    //   try {
-    //     const commentData = JSON.parse(event.data);
-    //     console.log("New comment received:", commentData);
-    //     if (typeof onNewComment === "function") {
-    //       onNewComment(commentData);
-    //     } else {
-    //       console.warn("onNewComment is not a function:", onNewComment);
-    //     }
-    //   } catch (error) {
-    //     console.error("Error parsing new comment:", error);
-    //   }
-    // });
-
-    // eventSource.addEventListener("heartbeat", (event) => {
-    //   try {
-    //     const data = JSON.parse(event.data);
-    //     console.log("Heartbeat received:", data);
-    //   } catch (error) {
-    //     console.error("Error parsing heartbeat:", error);
-    //   }
-    // });
 
     eventSource.addEventListener("disconnect", (event) => {
       try {
@@ -306,6 +284,8 @@ const SingleTicket = ({ ticket, onBack, loggedInUserId }) => {
     }, [chatMessages]);
 
   useEffect(() => {
+  
+  console.log('Ellow Ellow boy');
     if (lastAdminMessage && !hasConnected.current && isMessagingActive && loggedinContext) {
       console.log("Connecting to SSE with last comment ID:", lastAdminMessage);
       const cleanup = serverEvents(ticket.id, lastAdminMessage, handleNewComment ,loggedInUsrId);

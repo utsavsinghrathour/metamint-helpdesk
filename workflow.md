@@ -1,33 +1,20 @@
-## 🧠 SERVER SENT EVENTS OPTIMIZATION
-- [ ] As soon as the admin makes a comment on backend we can save some data on user meta 
-- [ ] This data can be used on sse function 
-- [ ] If there is data lets inititae sse other wise close it
-- [ ] If there is  no data at first but data came on the middle 
-
-
-#### SSE FUNCTION
-
-- [ ] Get user id from client
-- [ ] Check if user has unseen comments from user meta 
-- [ ] If user have unseen comments lets provide the unseen comments to the client
-- [ ] As soon as these unseen comments are provide on the front update them as seen
-
 
 ## 🧠 NOTIFICATION SYSTEM FOR ROBODESK CHAT APP
 
-### Saving unseen comments  
-- [ ] When comment is posted by admin save meta data as below.
-    - [ ] The comments meta_key name must be `rbd_unseen`
-    - [ ] The value of the `rbd_unseen` meta key must be `true`
-- [ ] On robodesk ticket rest api filter count `rbd_unseen` comments .
-    - [ ] The rest api key must `unseen_comments`.
-
-### Updating seen messages 
-
-- [might be slow ] As soon as the tickets are opened update those comments whose `rbd_unseen` is  true to false.
-
-### Displaying whole unseen message count 
+- [X] Whenever support manager makes the comment from the backend 
+    - [ ] The comments meta_key `rbd_seen => false`
+    - [ ] On robodesk ticket post type update number of unseen comments
+    - [ ] Also count total number of unseen comments 
     
-- [ ] Count all unseen messages by userId and display the count 
+- [X] When user opens ticket's from the tickets tab
+    - [ ] All of the selected ticket's comments must be updated as seen using custom rest API. 
 
 
+## Other Remaining Tasks
+
+- [X] Attachment upload on messages section.
+- [X] Wikis section loading slow { loader not displaying just a blank screen }
+- [X] Load latest 6 messages while loading tickets from tickets tab.
+- [X] Load those messages on single tickets section immediately on opening.Dont forget to handle pagination accordingly
+- [X] While scrolling from the top if there are older messages the older messages loads but its automatically scrolled to buttom.
+-
