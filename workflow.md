@@ -1,20 +1,22 @@
+## 🧠 Notification System for Robodesk Chat App
 
-## 🧠 NOTIFICATION SYSTEM FOR ROBODESK CHAT APP
+- When a support manager submits a comment from the backend:
+  - Set the comment’s meta key: `rbd_seen => false`.
+  - Update the number of unseen comments for the related **Robodesk Ticket** post type.
+  - Also, update the total count of unseen comments across all tickets.
 
-- [X] Whenever support manager makes the comment from the backend 
-    - [ ] The comments meta_key `rbd_seen => false`
-    - [ ] On robodesk ticket post type update number of unseen comments
-    - [ ] Also count total number of unseen comments 
-    
-- [X] When user opens ticket's from the tickets tab
-    - [ ] All of the selected ticket's comments must be updated as seen using custom rest API. 
+- When a user opens a ticket from the **Tickets** tab:
+  - Mark all comments in the selected ticket as seen using a custom REST API.
 
+---
 
-## Other Remaining Tasks
+## 🔧 Other Remaining Issues and Tasks
 
-- [X] Attachment upload on messages section.
-- [X] Wikis section loading slow { loader not displaying just a blank screen }
-- [X] Load latest 6 messages while loading tickets from tickets tab.
-- [X] Load those messages on single tickets section immediately on opening.Dont forget to handle pagination accordingly
-- [X] While scrolling from the top if there are older messages the older messages loads but its automatically scrolled to buttom.
--
+- Enable attachment uploads in the **Messages** section.
+- Fix slow loading in the **Wikis** section (currently shows a white screen with no loader).
+- Load the latest 6 messages when tickets are fetched from the **Tickets** tab.
+- Display those messages immediately in the **Single Ticket** view upon opening.
+  - **Note:** Handle pagination properly.
+- When scrolling to the top of the message list:
+  - Older messages are loaded, but the view automatically scrolls to the bottom.
+  - **Fix:** Prevent auto-scroll to bottom when loading older messages.
