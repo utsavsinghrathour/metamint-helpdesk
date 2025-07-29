@@ -1176,6 +1176,22 @@ function robodesk_dashboard_callback()
                                         </div>
                                         <input type="hidden" name="robodesk_wide_logo" id="robodesk_wide_logo" value="<?php echo esc_attr(get_option('robodesk_wide_logo', '')); ?>">
                                     </div>
+
+                                    <!-- adding a notification sound for chat -->
+                                    <div>
+                                        <label for="notification_sound" class="block text-sm font-medium text-gray-700">Notification Sound</label>
+                                        <input type="file" accept="audio/mpeg,audio/wav,audio/ogg" name="robodesk_notification_sound" id="notification_sound" class="styled-input mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                                        <div class="mt-2 flex items-center gap-2">
+                                            <audio id="notification-sound-preview" controls class="<?php echo esc_url(get_option('robodesk_notification_sound', '')) ? '' : 'hidden'; ?>">
+                                                <source src="<?php echo esc_url(get_option('robodesk_notification_sound', '')); ?>" type="audio/mpeg">
+                                                Your browser does not support the audio element.
+                                            </audio>
+                                            <button type="button" onclick="removeAudio('notification-sound-preview', 'robodesk_notification_sound')" class="text-red-600 hover:text-red-800 text-sm <?php echo esc_url(get_option('robodesk_notification_sound', '')) ? '' : 'hidden'; ?>">Remove</button>
+                                        </div>
+                                        <input type="hidden" name="robodesk_notification_sound" id="robodesk_notification_sound" value="<?php echo esc_attr(get_option('robodesk_notification_sound', '')); ?>">
+                                    </div>
+
+                                    <!-- end of notification sound -->
                                 </div>
                                 <hr class="my-6 border-gray-200">
                                 <button type="button" id="save-basic-settings" class="mt-6 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">

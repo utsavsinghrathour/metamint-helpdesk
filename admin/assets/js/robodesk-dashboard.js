@@ -884,23 +884,37 @@ jQuery(document).ready(function ($) {
 
 // basic settings AJAX handler
 jQuery(document).ready(function ($) {
-  // Image preview handler for all file inputs
-  const imageFields = [
+  // Media preview handler for all file inputs (images and audio)
+  const mediaFields = [
     {
       input: "popover_icon",
       preview: "popover-icon-preview",
       hidden: "robodesk_popover_icon",
+      type: "image",
     },
     {
       input: "popover_top_icon",
       preview: "popover-top-icon-preview",
       hidden: "robodesk_popover_top_icon",
+      type: "image",
     },
-    { input: "logo", preview: "logo-preview", hidden: "robodesk_logo" },
+    {
+      input: "logo",
+      preview: "logo-preview",
+      hidden: "robodesk_logo",
+      type: "image",
+    },
     {
       input: "wide_logo",
       preview: "wide-logo-preview",
       hidden: "robodesk_wide_logo",
+      type: "image",
+    },
+    {
+      input: "robodesk_notification_sound", // Updated to match backend
+      preview: "notification-sound-preview",
+      hidden: "robodesk_notification_sound",
+      type: "audio",
     },
   ];
 
@@ -919,13 +933,24 @@ jQuery(document).ready(function ($) {
       .css("background-color", $(this).val());
   });
 
-  imageFields.forEach(function (field) {
-    // Show existing image on page load
+  mediaFields.forEach(function (field) {
+    // Show existing media on page load
     const hiddenInput = $(`#${field.hidden}`);
     if (hiddenInput.val()) {
-      $(`#${field.preview}`)
-        .removeClass("hidden")
-        .attr("src", hiddenInput.val());
+      if (field.type === "image") {
+        $(`#${field.preview}`)
+          .removeClass("hidden")
+          .attr("src", hiddenInput.val());
+      } else if (field.type === "audio") {
+        $(`#${field.preview}`)
+          .removeClass("hidden")
+          .find("source")
+          .attr("src", hiddenInput.val());
+        $(`#${field.preview}`).get(0).load(); // Reload audio element to reflect new source
+        $(
+          `button[onclick="removeAudio('${field.preview}', '${field.hidden}')"]`
+        ).removeClass("hidden");
+      }
     }
 
     // Handle file input change for preview
@@ -934,9 +959,20 @@ jQuery(document).ready(function ($) {
       if (file) {
         const reader = new FileReader();
         reader.onload = function (e) {
-          $(`#${field.preview}`)
-            .removeClass("hidden")
-            .attr("src", e.target.result);
+          if (field.type === "image") {
+            $(`#${field.preview}`)
+              .removeClass("hidden")
+              .attr("src", e.target.result);
+          } else if (field.type === "audio") {
+            $(`#${field.preview}`)
+              .removeClass("hidden")
+              .find("source")
+              .attr("src", e.target.result);
+            $(`#${field.preview}`).get(0).load(); // Reload audio element to reflect new source
+            $(
+              `button[onclick="removeAudio('${field.preview}', '${field.hidden}')"]`
+            ).removeClass("hidden");
+          }
         };
         reader.readAsDataURL(file);
       }
@@ -961,8 +997,8 @@ jQuery(document).ready(function ($) {
     formData.append("settings[language]", $form.find("#language").val());
     formData.append("settings[theme_color]", $form.find("#theme_color").val());
 
-    // Append image URLs and files
-    imageFields.forEach(function (field) {
+    // Append media URLs and files
+    mediaFields.forEach(function (field) {
       formData.append(field.hidden, $(`#${field.hidden}`).val());
       const fileInput = $(`input[name="${field.input}"]`)[0];
       if (fileInput.files.length > 0) {
@@ -981,14 +1017,29 @@ jQuery(document).ready(function ($) {
       success: function (response) {
         console.log(response);
         if (response.success) {
-          // Update hidden inputs with new image URLs
+          // Update hidden inputs with new media URLs
           if (response.data.urls) {
-            imageFields.forEach(function (field) {
+            mediaFields.forEach(function (field) {
               if (response.data.urls[field.hidden]) {
                 $(`#${field.hidden}`).val(response.data.urls[field.hidden]);
-                $(`#${field.preview}`)
-                  .removeClass("hidden")
-                  .attr("src", response.data.urls[field.hidden]);
+                if (field.type === "image") {
+                  $(`#${field.preview}`)
+                    .removeClass("hidden")
+                    .attr("src", response.data.urls[field.hidden]);
+                } else if (field.type === "audio") {
+                  const audioPreview = $(`#${field.preview}`);
+                  const audioSource = audioPreview.find("source");
+                  audioSource.attr("src", response.data.urls[field.hidden]);
+                  audioPreview.removeClass("hidden").get(0).load();
+                  $(
+                    `button[onclick="removeAudio('${field.preview}', '${field.hidden}')"]`
+                  ).removeClass("hidden");
+                  // Highlight the audio preview to draw attention
+                  audioPreview.addClass("border-2 border-blue-500");
+                  setTimeout(() => {
+                    audioPreview.removeClass("border-2 border-blue-500");
+                  }, 2000); // Remove highlight after 2 seconds
+                }
               }
             });
           }
@@ -1001,6 +1052,10 @@ jQuery(document).ready(function ($) {
           showToast(response.data.message, "success");
         } else {
           showToast(response.data.message, "error");
+          // Log detailed errors for debugging
+          if (response.data.details) {
+            console.log("Detailed errors:", response.data.details);
+          }
         }
       },
       error: function (xhr, status, error) {
@@ -1013,6 +1068,20 @@ jQuery(document).ready(function ($) {
     });
   });
 });
+
+// Remove audio preview and reset hidden input
+function removeAudio(previewId, hiddenId) {
+  const preview = document.getElementById(previewId);
+  const hiddenInput = document.getElementById(hiddenId);
+  preview.classList.add("hidden");
+  preview.querySelector("source").src = "";
+  hiddenInput.value = "";
+  document
+    .querySelector(
+      `button[onclick="removeAudio('${previewId}', '${hiddenId}')"]`
+    )
+    .classList.add("hidden");
+}
 
 // for configuring ticket assignments (fetch interval and default agent) settings> fetch tickets
 jQuery(document).ready(function ($) {
