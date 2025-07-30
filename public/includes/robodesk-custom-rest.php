@@ -113,43 +113,6 @@ add_action('rest_api_init', callback: function () {
     ));
 
 
-    // register_rest_route('robodesk/v1', '/comments-stream/(?P<post_id>\d+)', array(
-    //     'methods' => 'GET',
-    //     'callback' => 'robodesk_stream_comments',
-    //     'permission_callback' => 'robodesk_check_sse_permissions',
-    //     'args' => array(
-    //         'post_id' => array(
-    //             'validate_callback' => function($param, $request, $key) {
-    //                 return is_numeric($param);
-    //             }
-    //         ),
-    //         'last_comment_id' => array(
-    //             'default' => 0,
-    //             'validate_callback' => function($param, $request, $key) {
-    //                 return is_numeric($param);
-    //             }
-    //         ),
-    //     ),
-    // ));
-
-    // register_rest_route('robodesk/v1', '/comments-stream/(?P<post_id>\d+)(?:/(?P<last_comment_id>\d+))?', array(
-    // 'methods' => 'GET',
-    // 'callback' => 'robodesk_stream_comments_a',
-    // 'permission_callback' => '__return_true',
-    // 'args' => array(
-    //     'post_id' => array(
-    //         'validate_callback' => function($param) {
-    //             return true;
-    //         }
-    //     ),
-    //     'last_comment_id' => array(
-    //         'validate_callback' => function($param) {
-    //             return true;
-    //         }
-    //     ),
-    // ),
-    // ));
-
     register_rest_route('robodesk/v1', '/messaging/(?P<post_id>\d+)(?:/(?P<last_comment_id>\d+))?(?:/(?P<user_id>\d+))?', array(
         'methods' => 'GET',
         'callback' => 'robodesk_live_comments',
@@ -162,7 +125,7 @@ add_action('rest_api_init', callback: function () {
             ),
             'last_comment_id' => array(
                 'validate_callback' => function ($param) {
-                    return empty($param) || is_numeric($param);
+                    return is_numeric($param);
                 }
             ),
             'user_id' => array(
@@ -178,14 +141,15 @@ add_action('rest_api_init', callback: function () {
 function robodesk_live_comments($request)
 {
     $ticket_id = $request->get_param('post_id');
-    $last_comment_id = $request->get_param('last_comment_id');
+    $last_comment_client = $request->get_param('last_comment_id'); //from frontend 
     $loggedin_user_id = $request->get_param('user_id');
     if (get_post_type($ticket_id) !== 'robodesk_ticket') return;
 
-    $last_admin_reply_id =  get_post_meta($ticket_id, 'last_admin_comment_id', true);
+    
+
 
     header('Content-Type: text/event-stream');
-    // header('Cache-Control: no-cache');
+    header('Cache-Control: no-cache');
     header('Connection: keep-alive');
     header('Access-Control-Allow-Origin: *');
     header('Access-Control-Allow-Headers: Cache-Control');
@@ -201,27 +165,55 @@ function robodesk_live_comments($request)
     // Set execution limits
     set_time_limit(0);
     ignore_user_abort(false);
+    
+    
+    $last_comment_server = get_comments([
+        'post_id'      => $ticket_id,
+        'number'       => 1,
+        'orderby'      => 'comment_date',
+        'order'        => 'DESC',
+        'status'       => 'approve',
+        'fields'       => 'ids',
+        'comment_type' => 'ticket_replies',
+        'meta_query'   => [
+            [
+                'key'     => 'admin_comment',
+                'value'   => 'yes',
+                'compare' => '='
+            ]
+        ]
+    ]);
+
+    $last_comment_server = !empty($last_comment_server) ? (int) $last_comment_server[0] : false;
 
     //Handshake
     echo "event: handshake\n";
     echo "data: " . json_encode(array(
         'status' => 'connected',
         'timestamp' => time(),
-        'post_id' => $ticket_id,
-        'last_comment_id' => $loggedin_user_id
+        'server_comment' => $last_comment_server,
     )) . "\n\n";
     flush();
 
     //checking the admin id 
-    if ($last_admin_reply_id > $last_comment_id) {
+    if ($last_comment_server && $last_comment_server > $last_comment_client ) {
         $args = array(
             'post_id' => $ticket_id,
             'status' => 'approve',
-            'comment__in' => range($last_comment_id + 1, $last_admin_reply_id),
+            'comment__in' => range($last_comment_client + 1, $last_comment_server),
             'orderby' => 'comment_ID',
             'order' => 'ASC',
+            'comment_type' => 'ticket_replies',
+            'meta_query'   => [
+                [
+                    'key'     => 'admin_comment',
+                    'value'   => 'yes',
+                    'compare' => '='
+                ]
+            ]
         );
-        
+
+
         $comments = get_comments($args);
         $new_admin_comments = array();
 
@@ -241,9 +233,8 @@ function robodesk_live_comments($request)
                     'author_image' => get_avatar_url($comment->user_id ?: $comment->comment_author_email, array('size' => 32)),
                     'time_ago' => human_time_diff(strtotime($comment->comment_date), current_time('timestamp')) . ' ago',
                     'author_id' => (int) $comment->user_id,
-                    'post_author_id' => (int) $ticket_id ? get_post_field('post_author', $ticket_id) : 0,   
+                    'post_author_id' => (int) $ticket_id ? get_post_field('post_author', $ticket_id) : 0,
                 );
-                 
             }
         }
 
@@ -261,150 +252,12 @@ function robodesk_live_comments($request)
     }
 
 
-    echo "retry: 5000\n"; // Retry after 5 seconds
+    echo "retry: 5000\n";
     flush();
     exit;
 }
 
-// function robodesk_stream_
 
-
-// function robodesk_stream_comments_a($request)
-// {
-//     $ticket_id = $request->get_param('post_id');
-//     $last_comment_id = $request->get_param('last_comment_id');
-//     $loggedin_user_id = $request->get_param('user_id');
-
-//     if (get_post_type($ticket_id) !== 'robodesk_ticket') return;
-//     // Set headers for SSE
-//     header('Content-Type: text/event-stream');
-//     header('Cache-Control: no-cache');
-//     header('Connection: keep-alive');
-//     header('Access-Control-Allow-Origin: *');
-//     header('Access-Control-Allow-Headers: Cache-Control');
-//     header('X-Accel-Buffering: no');
-
-//     // Disable output buffering and compression
-//     if (ob_get_level()) ob_end_clean();
-
-//     // Disable WordPress output compression
-//     ini_set('zlib.output_compression', 0);
-//     ini_set('output_buffering', 0);
-
-//     // Set execution limits
-//     set_time_limit(0);
-//     ignore_user_abort(false);
-
-//     //handshake
-//     echo "event: connected\n";
-//     echo "data: " . json_encode(array(
-//         'status' => 'connected',
-//         'timestamp' => time(),
-//         'post_id' => $ticket_id,
-//         'last_comment_id' => $loggedin_user_id
-//     )) . "\n\n";
-//     flush();
-
-
-
-//     echo "event: disconnect\n";
-//     echo "data: " . json_encode(array('reason' => 'timeout')) . "\n\n";
-//     flush();
-// }
-
-// function robodesk_stream_comments($request)
-// {
-//     $post_id = $request->get_param('post_id');
-//     $last_comment_id = $request->get_param('last_comment_id');
-
-//     // Validate post exists
-//     if (!get_post($post_id)) {
-//         return new WP_Error('post_not_found', 'Post not found', array('status' => 404));
-//     }
-
-//     // Set headers for SSE
-//     header('Content-Type: text/event-stream');
-//     header('Cache-Control: no-cache');
-//     header('Connection: keep-alive');
-//     header('Access-Control-Allow-Origin: *');
-//     header('Access-Control-Allow-Headers: Cache-Control');
-//     header('X-Accel-Buffering: no'); // Disable Nginx buffering
-
-//     // Disable output buffering and compression
-//     if (ob_get_level()) {
-//         ob_end_clean();
-//     }
-
-//     // Disable WordPress output compression
-//     ini_set('zlib.output_compression', 0);
-//     ini_set('output_buffering', 0);
-
-//     // Set execution limits
-//     set_time_limit(0);
-//     ignore_user_abort(false);
-
-//     // Connection parameters
-//     $start_time = time();
-//     $max_execution_time = 30; // 30 seconds
-//     $check_interval = 2; // Check every 2 seconds
-//     $heartbeat_interval = 10; // Send heartbeat every 10 seconds
-//     $last_heartbeat = time();
-
-//     // Send initial connection confirmation
-//     echo "event: connected\n";
-//     echo "data: " . json_encode(array(
-//         'status' => 'connected',
-//         'timestamp' => time(),
-//         'post_id' => $post_id,
-//         'last_comment_id' => $last_comment_id
-//     )) . "\n\n";
-//     flush();
-
-//     while (time() - $start_time < $max_execution_time) {
-//         // Check if client disconnected
-//         if (connection_aborted()) {
-//             break;
-//         }
-
-//         // Check for new comments
-//         $new_comments = robodesk_get_optimized_comments($post_id, $last_comment_id);
-
-//         if (!empty($new_comments)) {
-//             foreach ($new_comments as $comment) {
-//                 $comment_data = format_comment_for_sse($comment, $post_id);
-
-//                 // Send the comment
-//                 echo "event: new_comment\n";
-//                 echo "data: " . json_encode($comment_data) . "\n\n";
-//                 flush();
-
-//                 // Update last comment ID
-//                 $last_comment_id = max($last_comment_id, $comment->comment_ID);
-//             }
-//         }
-
-//         // Send heartbeat to keep connection alive
-//         if (time() - $last_heartbeat >= $heartbeat_interval) {
-//             echo "event: heartbeat\n";
-//             echo "data: " . json_encode(array(
-//                 'timestamp' => time(),
-//                 'last_comment_id' => $last_comment_id
-//             )) . "\n\n";
-//             flush();
-//             $last_heartbeat = time();
-//         }
-
-//         // Wait before next check
-//         sleep($check_interval);
-//     }
-
-//     // Send disconnect event
-//     echo "event: disconnect\n";
-//     echo "data: " . json_encode(array('reason' => 'timeout')) . "\n\n";
-//     flush();
-
-//     exit();
-// }
 
 // Permission check for SSE endpoint
 function robodesk_check_sse_permissions($request)
@@ -1037,3 +890,13 @@ function get_cached_user_data($user_id)
 
     return $user_cache[$user_id];
 }
+
+
+
+// add_action('wp_head', function(){
+// $a=0;
+// var_dump(is_numeric($a));
+
+// var_dump(empty($a));
+
+// });
