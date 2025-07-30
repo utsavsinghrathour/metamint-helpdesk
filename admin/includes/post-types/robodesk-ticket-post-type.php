@@ -323,19 +323,57 @@ function save_priority_color_meta($term_id)
 add_action('created_robodesk_ticket_priority', 'save_priority_color_meta');
 add_action('edited_robodesk_ticket_priority', 'save_priority_color_meta');
 
-// rest api functions to get tickets 
-// add_filter('rest_robodesk_ticket_query', 'robodesk_ticket_query', 10, 2);
-// function robodesk_ticket_query($args, $request) {
 
-//     //ticket_id==> id 
-//     //ticket title ==> title
-//     //ticket_update_date ===> ticket last updated date
-//     //ticket_priority ==> taxonomy=robodesk_ticket_priority
-//     //ticket_status ==>
-//     //ticket_origin ==> taxonomy=robodesk_ticket_origin
-//     //author ==> author display_name
+function robodesk_get_formatted_comments($post_id) {
+    $comments = get_comments([
+        'post_id' => $post_id,
+        'number' => 7,
+        'order' => 'DESC',
+        'orderby' => 'comment_date',
+        'status' => 'approve',
+        'comment_type' => 'ticket_replies',
+    ]);
 
-// }
+    $formatted_comments = array_map(function($comment) {
+        $author_id = (int) $comment->user_id;
+        $author_name = $comment->comment_author;
+        $author_avatar = get_avatar_url($comment->comment_author_email, ['size' => 32]);
+        
+        $rendered_content = wpautop($comment->comment_content);
+        $plain_content = wp_strip_all_tags($rendered_content);
+
+        $comment_time_local = strtotime(get_date_from_gmt($comment->comment_date_gmt));
+        $now_local = current_time('timestamp');
+
+        $diff = $now_local - $comment_time_local;
+        $time_ago = $diff < 5 ? 'just now' : human_time_diff($comment_time_local, $now_local) . ' ago';
+
+        return [
+            'id' => (int) $comment->comment_ID,
+            'post' => (int) $comment->comment_post_ID,
+            'author' => $author_id,
+            'author_name' => $author_name,
+            'author_image' => $author_avatar,
+            'date' => $comment->comment_date,
+            'date_gmt' => $comment->comment_date_gmt,
+            'content' => [
+                'rendered' => $rendered_content,
+                'plain' => $plain_content,
+            ],
+            'time_ago' => $time_ago,
+            'ticket_id' => (int) $comment->comment_post_ID,
+            'author_data' => [
+                'id' => $author_id,
+                'name' => $author_name,
+                'avatar' => $author_avatar,
+            ]
+        ];
+    }, $comments);
+
+    return $formatted_comments;
+}
+
+
 
 add_filter(
     'rest_prepare_robodesk_ticket',
@@ -343,42 +381,6 @@ add_filter(
     10,
     3
 );
-
-// function customize_robodesk_ticket_response( $response, $post, $request ) {
-
-//     // Grab the array we’re going to work on
-//     $data = $response->get_data(); 
-    
-
-//     $data['robodesk_ticket_title'] = $data['title']['rendered'] ?? '';
-
-
-//     $priority_terms = get_the_terms( $post->ID, 'robodesk_ticket_priority' );
-//     $data['robodesk_ticket_priority'] = ( $priority_terms && ! is_wp_error( $priority_terms ) )
-//         ? wp_list_pluck( $priority_terms, 'name' )
-//         : [];                             
-   
-
-//     $data['robodesk_ticket_status'] = get_post_meta(
-//         $post->ID,
-//         '_robodesk_ticket_status',
-//         true
-//     );
-
-//     $data['robodesk_ticket_origin'] = get_post_meta(
-//         $post->ID,
-//         'robodesk_ticket_origin',
-//         true
-//     ) ?: 'N/A';
-
-//     if ( $author = get_userdata( $post->post_author ) ) {
-//         $data['robodesk_ticket_author']       = $author->display_name;
-//         $data['robodesk_ticket_author_image'] = get_avatar_url( $author->ID );
-//     }
-
-//     $response->set_data( $data );
-//     return $response;
-// }
 
 function customize_robodesk_ticket_response( $response, $post, $request ) {
     // Grab the array we're going to work on
@@ -407,6 +409,15 @@ function customize_robodesk_ticket_response( $response, $post, $request ) {
     }
     $last_reply =  get_post_meta($post->ID, 'rbd_last_reply_id', true) ;
     
+    $formatted_comments = robodesk_get_formatted_comments($post->ID);
+    
+    $total_comments = get_comments([
+        'post_id'      => $post->ID,
+        'status'       => 'approve',
+        'comment_type' => 'ticket_replies',
+        'count'        => true, // Important!
+    ]);
+    
     // Format the data
     $data = [
         'id' => $ticket_id,
@@ -418,7 +429,8 @@ function customize_robodesk_ticket_response( $response, $post, $request ) {
         'ticket_author' => $author_name,
         'ticket_author_image' => $author_image,
         'ticket_time_ago' => $human_readable_time,
-        'ticket_comments' => '',
+        'ticket_total_comments' => $total_comments,
+        'ticket_comments' => $formatted_comments,
         'ticket_last_reply' => !empty($last_reply) ? $last_reply : false,
     ];
 

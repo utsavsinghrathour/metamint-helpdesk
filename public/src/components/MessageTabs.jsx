@@ -31,7 +31,7 @@ const TicketItem = ({ ticket, onSelect }) => {
       </div>
       <div className="rd-flex rd-justify-between rd-w-full">
         <div className="rd-message-list-wrap">
-          <h5 className="sub-text rd-title-color">{ticket.title} 1</h5>
+          <h5 className="sub-text rd-title-color">{ticket.title} </h5>
           <div className="rd-text-small rd-mt-5 rd-flex rd-gap-5">
             <span className="rd-flex">
               {ticket.source} <LuDot /> {ticket.timeAgo}
@@ -91,7 +91,9 @@ const MessageTabs = ({
         status: ticket.ticket_status ?? 'New',
         priority: ticket.ticket_priority ?? 'Medium',
         author: ticket.ticket_author,
-        lastReply : ticket.ticket_last_reply
+        lastReply : ticket.ticket_last_reply,
+        totalComments: ticket.ticket_total_comments,
+        comments : ticket.ticket_comments,
       }));
 
       setTickets(mappedTickets);
