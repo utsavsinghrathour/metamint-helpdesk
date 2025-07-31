@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Plugin Name: Robodesk Support Ticket System
  * Description: A support ticket and FAQ system.
@@ -61,7 +62,7 @@ require_once ROBODESK_PLUGIN_PATH . 'public/includes/robodesk-custom-rest.php';
 add_action('wp_enqueue_scripts', 'robodesk_enqueue_scripts');
 function robodesk_enqueue_scripts()
 {
-    
+
     // Enqueue jQuery
     wp_enqueue_script('jquery');
 
@@ -80,7 +81,7 @@ function robodesk_enqueue_scripts()
         // Re-enqueue styles (already existing, adjust if needed)
         wp_enqueue_style('robodesk-styles', ROBODESK_PLUGIN_URL . 'public/assets/css/robodesk-styles.css', array(), time());
         // Re-enqueue scripts with TinyMCE dependency
-        wp_enqueue_script('robodesk-scripts', ROBODESK_PLUGIN_URL . 'public/assets/js/robodesk-scripts.js', array('jquery', 'tinymce', 'wp-api','wp-data', 'wp-core-data'), time(), true);
+        wp_enqueue_script('robodesk-scripts', ROBODESK_PLUGIN_URL . 'public/assets/js/robodesk-scripts.js', array('jquery', 'tinymce', 'wp-api', 'wp-data', 'wp-core-data'), time(), true);
 
         // Existing wp_localize_script for AJAX
         wp_localize_script('robodesk-scripts', 'robodesk_ajax_object', array(
@@ -91,6 +92,9 @@ function robodesk_enqueue_scripts()
             'faq_nonce' => wp_create_nonce('robodesk_faq_vote_nonce'),
             'add_credential_nonce' => wp_create_nonce('robodesk_add_credential_nonce'),
             'delete_credential_nonce' => wp_create_nonce('robodesk_delete_credential_nonce'),
+
+            // get option robodesk_notification_sound for notification sound
+            'notification_sound' => esc_url(get_option('robodesk_notification_sound', '')),
         ));
 
         // Enqueue React script
@@ -110,8 +114,8 @@ function robodesk_enqueue_scripts()
         $image_urls = [
             'popover_icon' => esc_url(get_option('robodesk_popover_icon', '')),
             'logo' => esc_url(get_option('robodesk_logo', '')),
-           'popover_top_icon' => esc_url(get_option('robodesk_popover_top_icon', '')),
-          'wide_logo' => esc_url(get_option('robodesk_wide_logo', '')),
+            'popover_top_icon' => esc_url(get_option('robodesk_popover_top_icon', '')),
+            'wide_logo' => esc_url(get_option('robodesk_wide_logo', '')),
         ];
         wp_localize_script(
             'robodesk-react-script',
@@ -138,7 +142,6 @@ function robodesk_enqueue_scripts()
             array(),
             $asset_file['version']
         );
-        
     }
 }
 add_action('wp_enqueue_scripts', 'robodesk_enqueue_scripts');
@@ -408,7 +411,8 @@ register_activation_hook(__FILE__, 'robodesk_create_support_page');
 register_deactivation_hook(__FILE__, 'robodesk_delete_support_page');
 
 // function for theme color 
-function robodesk_enqueue_custom_styles() {
+function robodesk_enqueue_custom_styles()
+{
     // Enqueue your main stylesheet first
     wp_enqueue_style('robodesk-style', get_stylesheet_uri());
 
@@ -429,18 +433,19 @@ add_action('wp_enqueue_scripts', 'robodesk_enqueue_custom_styles');
 
 
 add_filter('rest_comment_query', 'include_ticket_replies_in_rest_comments', 10, 2);
-function include_ticket_replies_in_rest_comments($args, $request) {
-   
-        $args['type__in'] = array('ticket_replies');
+function include_ticket_replies_in_rest_comments($args, $request)
+{
+
+    $args['type__in'] = array('ticket_replies');
 
     return $args;
-} 
+}
 
 
-add_filter('rest_prepare_comment', function($response, $comment, $request) {
+add_filter('rest_prepare_comment', function ($response, $comment, $request) {
     if (!is_wp_error($response) && $response instanceof WP_REST_Response) {
         $data = $response->get_data();
-    
+
         //plain text
         $data['content']['plain'] = wp_strip_all_tags($data['content']['rendered']);
         // Get user object if registered user
@@ -457,13 +462,13 @@ add_filter('rest_prepare_comment', function($response, $comment, $request) {
 
         $author_name = $comment->comment_author;
         $author_avatar = get_avatar_url($comment->comment_author_email);
-        
+
         $data['ticket_id'] = $comment->comment_post_ID;
-    
+
         $data['author_data'] = array(
             'id'    => $author_id,
             'name'  => $author_name,
-            'avatar'=> $author_avatar,
+            'avatar' => $author_avatar,
         );
 
         $response->set_data($data);
@@ -474,12 +479,13 @@ add_filter('rest_prepare_comment', function($response, $comment, $request) {
 
 
 add_action('comment_post', 'robodesk_comment_creation', 10, 3);
- 
-function robodesk_comment_creation($comment_ID, $comment_approved, $commentdata) {
+
+function robodesk_comment_creation($comment_ID, $comment_approved, $commentdata)
+{
     if (is_admin() && isset($commentdata['comment_type']) && $commentdata['comment_type'] === 'ticket_replies') {
-        
+
         $ticketId = $commentdata['comment_post_ID'];
-        if(get_post_type($ticketId) == 'robodesk_ticket'){
+        if (get_post_type($ticketId) == 'robodesk_ticket') {
             update_post_meta($ticketId, 'last_admin_comment_id', $comment_ID);
         }
     }
@@ -489,19 +495,16 @@ function robodesk_comment_creation($comment_ID, $comment_approved, $commentdata)
 
 add_action('wp_insert_comment', 'robodesk_comment_creation_on_insert', 10, 2);
 
-function robodesk_comment_creation_on_insert($comment_ID, $comment_object) {
+function robodesk_comment_creation_on_insert($comment_ID, $comment_object)
+{
 
-    if(!isset($comment_object->comment_type) && $comment_object->comment_type !== 'ticket_replies') return;
- 
+    if (!isset($comment_object->comment_type) && $comment_object->comment_type !== 'ticket_replies') return;
+
     $ticketId = $comment_object->comment_post_ID;
-        
-    if(get_post_type($ticketId) !== 'robodesk_ticket') return;
-      
+
+    if (get_post_type($ticketId) !== 'robodesk_ticket') return;
+
     $meta_value = is_admin() ? 'yes' : 'no';
-    
-    update_comment_meta( $comment_ID, 'admin_comment', $meta_value );
-    
+
+    update_comment_meta($comment_ID, 'admin_comment', $meta_value);
 }
-
-
-
