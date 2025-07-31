@@ -20,7 +20,25 @@ const SendMessageField = ({ setShowLogin , setActiveTab , updateSelectedTicket }
     setUserId(loggedInUsrId );
   }, []);
   
-  
+      const formatTicketComments = (comments) => {
+
+        const formattedComments = comments.map((comment) => {
+            const authorId = comment.author_data?.id; // Use author_data.id
+            const sender = String(authorId) === String(loggedInUsrId) ? "me" : "other"; // Ensure type consistency
+
+            return {
+                id: comment.id,
+                text: comment.content?.rendered?.replace(/<[^>]+>/g, "") || comment.content?.plain || "",
+                sender,
+                senderName: comment.author_name || "Unknown",
+                image: comment.author_data?.avatar || comment.author_image || "./default-avatar.jpg",
+                created_at: comment.date,
+                time_ago: comment.time_ago,
+            };
+        });
+
+        return formattedComments.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+    };
 
   
   const handleSend = async () => {
@@ -36,6 +54,8 @@ const SendMessageField = ({ setShowLogin , setActiveTab , updateSelectedTicket }
 
     try {
        const result = await createTicket(loggedInUsrId, message, '');
+       
+       console.log('Ticket created from sendmessage field:', result);
     
        const newTicket = {
             id: result.data.id,

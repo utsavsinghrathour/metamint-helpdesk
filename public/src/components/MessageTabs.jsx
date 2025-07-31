@@ -94,6 +94,7 @@ const MessageTabs = ({
         lastReply : ticket.ticket_last_reply,
         totalComments: ticket.ticket_total_comments,
         comments : ticket.ticket_comments,
+        chukul : 'sukul',
       }));
 
       setTickets(mappedTickets);

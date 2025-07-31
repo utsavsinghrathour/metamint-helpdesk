@@ -12,7 +12,6 @@ import { useAppData } from "../utils/AppDataContext";
 
 // import beepSound from '../../assets/beep.mp3';
 
-
 const SingleTicket = ({ ticket, onBack, loggedInUserId }) => {
     const [message, setMessage] = useState("");
     const [showPicker, setShowPicker] = useState(false);
@@ -23,7 +22,6 @@ const SingleTicket = ({ ticket, onBack, loggedInUserId }) => {
     const [perPage] = useState(7);
     const [offset, setOffset] = useState(null);
 
-    console.log("SingleTicket component rendered with ticket:", ticket);
 
     const [totalComments, setTotalComments] = useState(0);
     const [isFetching, setIsFetching] = useState(false);
@@ -34,15 +32,25 @@ const SingleTicket = ({ ticket, onBack, loggedInUserId }) => {
     const image_urls = window.robodeskData?.imageUrls || {};
     const previousScrollHeight = useRef(0);
     const beep = useRef(new Audio('http://woo-escrow.codepixelz.tech/wp-content/uploads/2025/07/notify.mp3'));
-
+     const isAtTop = useRef(false);
     const hasConnected = useRef(false);
     const { loggedinContext, loggedInUsrId } = useAppData();
 
     const [isMessagingActive, setIsisMessagingActive] = useState(
         document.visibilityState === "visible"
     );
+    
+    useEffect(() => {   
+    
+    chatMessages.length > 0 &&  console.log("Chat messages updated:", chatMessages);
+   
+    
+    }, [chatMessages]);
+
 
     useEffect(() => {
+    
+
         beep.current.load();
         const onVisibilityChange = () => {
             setIsisMessagingActive(document.visibilityState === "visible");
@@ -68,18 +76,25 @@ const SingleTicket = ({ ticket, onBack, loggedInUserId }) => {
             }
 
             const data = await response.json();
-
-            const formattedComments = data.map((comment) => ({
-                id: comment.id,
-                text: comment.content?.rendered.replace(/<[^>]+>/g, "") || "",
-                sender: comment.author_data?.id === loggedInUserId ? "me" : "other",
-                senderName: comment.author_name,
-                image: comment.author_data.avatar || "./default-avatar.jpg",
-                created_at: comment.date,
-                time_ago: comment.time_ago,
-                isAdmin: comment.author_data?.id !== ticket.author_id,
-            }));
-
+            
+            // console.log('We came here first', data);
+            // console.log('THe logged in user id is', loggedInUserId);
+            // const formattedComments = data.map((comment) => ({
+            //     id: comment.id,
+            //     text: comment.content?.rendered.replace(/<[^>]+>/g, "") || "",
+            //     sender: comment.author_data?.id === loggedInUserId ? "me" : "other",
+            //     senderName: comment.author_name,
+            //     image: comment.author_data.avatar || "./default-avatar.jpg",
+            //     created_at: comment.date,
+            //     time_ago: comment.time_ago,
+            //     isAdmin: comment.author_data?.id !== ticket.author_id,
+            // }));
+            
+            const formattedComments = formatTicketComments(data);
+            
+            // console.log('The the comment was formatted like' , formattedComments);
+            
+            // console.log('The new formatted ticket comments are', newFormattedTicketComments);
 
             setChatMessages((prev) => {
                 const newMessages = prepend
@@ -99,7 +114,7 @@ const SingleTicket = ({ ticket, onBack, loggedInUserId }) => {
             setLoading(false);
             setIsFetching(false);
 
-            if (prepend && chatContainerRef.current) {
+            if (prepend && chatContainerRef.current && isAtTop.current) {
                 const newScrollHeight = chatContainerRef.current.scrollHeight;
                 chatContainerRef.current.scrollTop =
                     newScrollHeight - previousScrollHeight.current;
@@ -139,11 +154,9 @@ const SingleTicket = ({ ticket, onBack, loggedInUserId }) => {
     
     const formatTicketComments = (comments) => {
 
-        const formattedComments = comments.slice(0, 7).map((comment) => {
+        const formattedComments = comments.map((comment) => {
             const authorId = comment.author_data?.id; // Use author_data.id
             const sender = String(authorId) === String(loggedInUserId) ? "me" : "other"; // Ensure type consistency
-
-            console.log(`Comment ID: ${comment.id}, Author ID: ${authorId}, Sender: ${sender}`); // Debug: Log each comment's sender
 
             return {
                 id: comment.id,
@@ -161,39 +174,37 @@ const SingleTicket = ({ ticket, onBack, loggedInUserId }) => {
 
     // Initial fetch to get total comments and latest messages
     useEffect(() => {
-        // console.log(ticket.comments, "ticket comments from top");
+        console.log(ticket.comments, "ticket comments from top");
         if (ticket.comments && ticket.comments.length > 0) {
-            const formattedComments = formatTicketComments(ticket.comments);
-            
-
-            setChatMessages(formattedComments);
-            setTotalComments(ticket.totalComments);
-            setOffset(Math.max(ticket.totalComments - perPage, 0));
-            setLoading(false);
+            // const formattedComments = formatTicketComments(ticket.comments);
+            // setChatMessages(formattedComments);
+            // setTotalComments(ticket.totalComments);
+            // setOffset(Math.max(ticket.totalComments - perPage, 0));
+            // setLoading(false);
         }
-        // const fetchInitialComments = async () => {
-        //     try {
-        //         const response = await fetch(
-        //             `/wp-json/wp/v2/comments?post=${ticket.id}&per_page=1&order=asc&_fields=id`
-        //         );
-        //         if (!response.ok) {
-        //             throw new Error("Failed to fetch total comments");
-        //         }
-        //         const total = parseInt(response.headers.get("X-WP-Total"), 10) || 0;
+        const fetchInitialComments = async () => {
+            try {
+                // const response = await fetch(
+                //     `/wp-json/wp/v2/comments?post=${ticket.id}&per_page=1&order=asc&_fields=id`
+                // );
+                // if (!response.ok) {
+                //     throw new Error("Failed to fetch total comments");
+                // }
+                const total = parseInt(ticket.totalComments, 10) || 0;
 
-        //         // console.log("Total comments:", total);
-        //         setTotalComments(total);
-        //         const initialOffset = Math.max(total - perPage, 0);
-        //         setOffset(initialOffset);
-        //         await fetchComments(initialOffset, false);
-        //     } catch (err) {
-        //         console.error("Failed to fetch initial comments:", err);
-        //         setError("Failed to load messages. Please try again.");
-        //         setLoading(false);
-        //     }
-        // };
+                // console.log("Total comments:", total);
+                setTotalComments(total);
+                const initialOffset = Math.max(total - perPage, 0);
+                setOffset(initialOffset);
+                await fetchComments(initialOffset, false);
+            } catch (err) {
+                console.error("Failed to fetch initial comments:", err);
+                setError("Failed to load messages. Please try again.");
+                setLoading(false);
+            }
+        };
 
-        // fetchInitialComments();
+         fetchInitialComments();
     }, [ticket.id]);
 
     // Handle scrolling to load older messages
@@ -206,16 +217,20 @@ const SingleTicket = ({ ticket, onBack, loggedInUserId }) => {
         }
     }, [message]);
 
+    // Scroll handling for loading older messages
     useEffect(() => {
         const chatContainer = chatContainerRef.current;
         if (!chatContainer) return;
 
         const handleScroll = () => {
             if (chatContainer.scrollTop <= 0 && offset > 0 && !isFetching) {
+                isAtTop.current = true; // User is at the top
                 previousScrollHeight.current = chatContainer.scrollHeight;
                 const newOffset = Math.max(offset - perPage, 0);
                 setOffset(newOffset);
                 fetchComments(newOffset, true);
+            } else {
+                isAtTop.current = false; // User is not at the top
             }
         };
 
@@ -430,7 +445,8 @@ const SingleTicket = ({ ticket, onBack, loggedInUserId }) => {
                         const prevMsg = index > 0 ? chatMessages[index - 1] : null;
                         const isSameSender = prevMsg && prevMsg.sender === msg.sender;
                         const marginBottom = isSameSender ? "4px" : "12px";
-
+                        console.log('All tickets',msg.sender);
+                        console.log('IS same sender',isSameSender);
                         return (
                             <div
                                 key={msg.id}
