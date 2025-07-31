@@ -70,6 +70,7 @@ const SendMessageField = ({ setShowLogin , setActiveTab , updateSelectedTicket }
         };
       refreshTickets();
       updateSelectedTicket(newTicket);
+      console.log('From lagger test',newTicket);
       setActiveTab(1);
       setMessage("");
      

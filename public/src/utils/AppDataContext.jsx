@@ -31,7 +31,7 @@ export const AppDataProvider = ({ children }) => {
       }
       
       const tickets = await response.json();
-      
+      console.log('ticketsContext fetched:', tickets);
     //   console.log('ticketsContext fetched:', tickets);
       setData((prev) => ({
         ...prev,

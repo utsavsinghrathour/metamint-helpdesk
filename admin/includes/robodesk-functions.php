@@ -764,7 +764,7 @@ function robodesk_handle_add_ticket_reply()
         'user_id'              => $user_id,
         'comment_content'      => $reply,
         'comment_approved'     => 1,
-        'comment_type'         => 'ticket_replies',
+        'comment_type'         => 'ticket_notes',
         'is_robodesk_reply'   => true, // Custom field to identify as a Robodesk reply
     ]);
 
