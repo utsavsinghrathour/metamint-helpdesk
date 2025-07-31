@@ -1180,15 +1180,36 @@ function robodesk_dashboard_callback()
                                     <!-- adding a notification sound for chat -->
                                     <div>
                                         <label for="notification_sound" class="block text-sm font-medium text-gray-700">Notification Sound</label>
-                                        <input type="file" accept="audio/mpeg,audio/wav,audio/ogg" name="robodesk_notification_sound" id="notification_sound" class="styled-input mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                                        <select name="robodesk_notification_sound" id="notification_sound" class="styled-select mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                                            <?php
+                                            // List of predefined audio files (update URLs as needed)
+                                            $audio_files = [
+                                                'ding' => plugin_dir_url(__FILE__) . 'audio/ding.mp3',
+                                                'chime' => plugin_dir_url(__FILE__) . 'audio/chime.mp3',
+                                                'notify' => plugin_dir_url(__FILE__) . 'audio/notify.mp3',
+                                                'alert' => plugin_dir_url(__FILE__) . 'audio/alert.mp3',
+                                                'ping' => plugin_dir_url(__FILE__) . 'audio/ping.mp3',
+                                                'pop' => plugin_dir_url(__FILE__) . 'audio/pop.mp3',
+                                                'bell' => plugin_dir_url(__FILE__) . 'audio/bell.mp3',
+                                                'beep' => plugin_dir_url(__FILE__) . 'audio/beep.mp3',
+                                                'success' => plugin_dir_url(__FILE__) . 'audio/success.mp3',
+                                                'soft' => plugin_dir_url(__FILE__) . 'audio/soft.mp3',
+                                            ];
+                                            $selected_sound = get_option('robodesk_notification_sound', '');
+                                            foreach ($audio_files as $label => $url) {
+                                                echo '<option value="' . esc_url($url) . '" ' . selected($selected_sound, $url, false) . '>' . ucfirst($label) . '</option>';
+                                            }
+                                            ?>
+                                        </select>
                                         <div class="mt-2 flex items-center gap-2">
-                                            <audio id="notification-sound-preview" controls class="<?php echo esc_url(get_option('robodesk_notification_sound', '')) ? '' : 'hidden'; ?>">
-                                                <source src="<?php echo esc_url(get_option('robodesk_notification_sound', '')); ?>" type="audio/mpeg">
+                                            <audio id="notification-sound-preview" controls class="<?php echo $selected_sound ? '' : 'hidden'; ?>">
+                                                <source src="<?php echo esc_url($selected_sound); ?>" type="audio/mpeg">
                                                 Your browser does not support the audio element.
                                             </audio>
-                                            <button type="button" onclick="removeAudio('notification-sound-preview', 'robodesk_notification_sound')" class="text-red-600 hover:text-red-800 text-sm <?php echo esc_url(get_option('robodesk_notification_sound', '')) ? '' : 'hidden'; ?>">Remove</button>
+                                            <button type="button" onclick="removeAudio('notification-sound-preview', 'robodesk_notification_sound')" class="text-red-600 hover:text-red-800 text-sm <?php echo $selected_sound ? '' : 'hidden'; ?>">Remove</button>
                                         </div>
-                                        <input type="hidden" name="robodesk_notification_sound" id="robodesk_notification_sound" value="<?php echo esc_attr(get_option('robodesk_notification_sound', '')); ?>">
+                                        <input type="hidden" name="robodesk_notification_sound" id="robodesk_notification_sound" value="<?php echo esc_attr($selected_sound); ?>">
+
                                     </div>
 
                                     <!-- end of notification sound -->
