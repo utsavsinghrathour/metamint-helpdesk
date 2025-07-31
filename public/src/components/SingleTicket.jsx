@@ -10,8 +10,6 @@ import "../styles/MessageTabs.css";
 import { sendReply } from "../utils/modules";
 import { useAppData } from "../utils/AppDataContext";
 
-// import beepSound from '../../assets/beep.mp3';
-
 const SingleTicket = ({ ticket, onBack, loggedInUserId }) => {
     const [message, setMessage] = useState("");
     const [showPicker, setShowPicker] = useState(false);
@@ -31,7 +29,7 @@ const SingleTicket = ({ ticket, onBack, loggedInUserId }) => {
     const chatContainerRef = useRef(null);
     const image_urls = window.robodeskData?.imageUrls || {};
     const previousScrollHeight = useRef(0);
-    const beep = useRef(new Audio('http://woo-escrow.codepixelz.tech/wp-content/uploads/2025/07/notify.mp3'));
+    const beep = useRef(new Audio(wpAuth.notificationSound));
      const isAtTop = useRef(false);
     const hasConnected = useRef(false);
     const { loggedinContext, loggedInUsrId } = useAppData();
@@ -40,17 +38,9 @@ const SingleTicket = ({ ticket, onBack, loggedInUserId }) => {
         document.visibilityState === "visible"
     );
     
-    useEffect(() => {   
-    
-    chatMessages.length > 0 &&  console.log("Chat messages updated:", chatMessages);
-   
-    
-    }, [chatMessages]);
-
 
     useEffect(() => {
-    
-
+// console.log(wpAuth.notificationSound, "Notification sound path");
         beep.current.load();
         const onVisibilityChange = () => {
             setIsisMessagingActive(document.visibilityState === "visible");
@@ -65,6 +55,7 @@ const SingleTicket = ({ ticket, onBack, loggedInUserId }) => {
         if (isFetching) return;
         setIsFetching(true);
         try {
+        
             setLoading(true);
             setError(null);
             const response = await fetch(
@@ -445,8 +436,7 @@ const SingleTicket = ({ ticket, onBack, loggedInUserId }) => {
                         const prevMsg = index > 0 ? chatMessages[index - 1] : null;
                         const isSameSender = prevMsg && prevMsg.sender === msg.sender;
                         const marginBottom = isSameSender ? "4px" : "12px";
-                        console.log('All tickets',msg.sender);
-                        console.log('IS same sender',isSameSender);
+
                         return (
                             <div
                                 key={msg.id}

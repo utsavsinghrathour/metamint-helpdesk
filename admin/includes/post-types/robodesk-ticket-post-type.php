@@ -390,15 +390,23 @@ function customize_robodesk_ticket_response( $response, $post, $request ) {
     $ticket_id = $post->ID;
     $ticket_number = 'TCKT-' . str_pad($ticket_id, 3, '0', STR_PAD_LEFT);
     
-    // Calculate last activity time
-    $last_activity = get_post_time('U', true, $post);
-    $human_readable_time = human_time_diff($last_activity, current_time('U'));
     
+    $local_time = get_date_from_gmt($post->post_date_gmt);
+    
+    // Get the UNIX timestamp of the local time
+    $post_timestamp = strtotime($local_time);
+    
+    // Get the current time in site's timezone
+    $current_timestamp = current_time('timestamp');
+    
+    // Get the human-readable time difference
+    $time_diff = human_time_diff($post_timestamp, $current_timestamp);
+
     // Get priority terms
     $priority_terms = get_the_terms( $post->ID, 'robodesk_ticket_priority' );
     $priority_name = ($priority_terms && ! is_wp_error( $priority_terms )) 
         ? $priority_terms[0]->name 
-        : '';
+        : 'N/A';
     
     // Get author info
     $author_name = '';
@@ -415,7 +423,7 @@ function customize_robodesk_ticket_response( $response, $post, $request ) {
         'post_id'      => $post->ID,
         'status'       => 'approve',
         'comment_type' => 'ticket_replies',
-        'count'        => true, // Important!
+        'count'        => true, 
     ]);
     
     // Format the data
@@ -428,7 +436,7 @@ function customize_robodesk_ticket_response( $response, $post, $request ) {
         'ticket_origin' => get_post_meta($post->ID, 'robodesk_ticket_origin', true) ?: 'N/A',
         'ticket_author' => $author_name,
         'ticket_author_image' => $author_image,
-        'ticket_time_ago' => $human_readable_time,
+        'ticket_time_ago' => $time_diff,
         'ticket_total_comments' => $total_comments,
         'ticket_comments' => $formatted_comments,
         'ticket_last_reply' => !empty($last_reply) ? $last_reply : false,

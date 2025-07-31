@@ -162,8 +162,8 @@ function robodesk_live_comments($request)
     // Set execution limits
     set_time_limit(0);
     ignore_user_abort(false);
-    
-    
+
+
     $last_comment_server = get_comments([
         'post_id'      => $ticket_id,
         'number'       => 1,
@@ -193,7 +193,7 @@ function robodesk_live_comments($request)
     flush();
 
     //checking the admin id 
-    if ($last_comment_server && $last_comment_server > $last_comment_client ) {
+    if ($last_comment_server && $last_comment_server > $last_comment_client) {
         $args = array(
             'post_id' => $ticket_id,
             'status' => 'approve',
@@ -468,7 +468,7 @@ function build_ticket_response_data($ticket_id, $user_object, $reply_id = false)
     $ticket_priority = (!is_wp_error($ticket_priority_terms) && !empty($ticket_priority_terms)) ? $ticket_priority_terms[0]->name : false;
 
     $last_activity = get_post_time('U', true, $ticket_id);
-    $human_readable_time = human_time_diff($last_activity, current_time('U'));  
+    $human_readable_time = human_time_diff($last_activity, current_time('U'));
 
     return [
         'id' => $ticket_id,
@@ -553,6 +553,35 @@ function robodesk_handle_ticket_creation($data)
     if (is_wp_error($ticket)) {
         return $ticket;
     }
+
+    // Check and create the priority term 'high' if it does not exist
+    $term_name = 'High';
+    $taxonomy  = 'robodesk_ticket_priority';
+
+    // Check if the term exists, and get or create it
+    $term = term_exists($term_name, $taxonomy);
+    
+    rbd_log(sprintf(
+        "Checking for term '%s' in taxonomy '%s': %s\n",
+        $term_name,
+        $taxonomy,
+        $term ? 'exists' : 'does not exist'
+    ));
+    if (!$term) {
+        $term = wp_insert_term($term_name, $taxonomy);
+        rbd_log(sprintf(
+            "Created new term '%s' in taxonomy '%s' with ID %d\n",
+            $term_name,
+            $taxonomy,
+            $term['term_id']
+        ));
+    }
+
+    // Get the term ID safely
+    $term_id = is_array($term) ? $term['term_id'] : $term;
+
+    // Now assign the term to the post using its ID
+    wp_set_object_terms($ticket, (int) $term_id, $taxonomy);
 
     // Get user data once and cache it
     $user_object = get_cached_user_data($author);

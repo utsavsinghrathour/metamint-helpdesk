@@ -93,8 +93,7 @@ function robodesk_enqueue_scripts()
             'add_credential_nonce' => wp_create_nonce('robodesk_add_credential_nonce'),
             'delete_credential_nonce' => wp_create_nonce('robodesk_delete_credential_nonce'),
 
-            // get option robodesk_notification_sound for notification sound
-            'notification_sound' => esc_url(get_option('robodesk_notification_sound', '')),
+  
         ));
 
         // Enqueue React script
@@ -129,9 +128,12 @@ function robodesk_enqueue_scripts()
         wp_localize_script('robodesk-react-script', 'wpAuth', array(
             'isLoggedIn' => is_user_logged_in() ? 'true' : 'false',
             'loggedInUserId' => is_user_logged_in() ? get_current_user_id() : 'false',
+            // get option robodesk_notification_sound for notification sound
+            'notificationSound' => esc_url(get_option('robodesk_notification_sound', '')),
             'wpAjax' => [
                 'nonce' => wp_create_nonce('robodesk-nonce'),
                 'ajaxUrl' => admin_url('admin-ajax.php'),
+                
             ],
         ));
 

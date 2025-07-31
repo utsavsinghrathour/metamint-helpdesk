@@ -16,6 +16,8 @@ import defaultLogo from '../images/robodesk-logo.png';
 const SingleTicket = React.lazy(() => import('./SingleTicket'));
 
 const TicketItem = ({ ticket, onSelect }) => {
+
+
   return (
     <div
       className="rd-hover single-rd-ticket rd-flex rd-align-start rd-gap-8 rd-border-bottom-light rd-cursor-pointer single-rd-active-ticket"
@@ -98,6 +100,7 @@ const MessageTabs = ({
       }));
 
       setTickets(mappedTickets);
+
     } catch (error) {
     } finally {
       setLoading(false);
