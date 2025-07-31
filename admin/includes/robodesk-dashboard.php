@@ -1033,6 +1033,8 @@ function robodesk_dashboard_callback()
                                     <button onclick="addReply()" class="mt-2 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
                                         Send Reply
                                     </button>
+
+                                    <button onclick="closeTicket()" class="mt-2 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 float-right">Close Ticket</button>
                                 </div>
                             </div>
 
@@ -1055,6 +1057,8 @@ function robodesk_dashboard_callback()
                                     <button onclick="addNote()" class="mt-2 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-yellow-600 hover:bg-yellow-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500">
                                         Add Note
                                     </button>
+
+
                                 </div>
                             </div>
                         </div>
