@@ -485,6 +485,8 @@ function robodesk_comment_creation($comment_ID, $comment_approved, $commentdata)
     }
 }
 
+
+
 add_action('wp_insert_comment', 'robodesk_comment_creation_on_insert', 10, 2);
 
 function robodesk_comment_creation_on_insert($comment_ID, $comment_object) {
@@ -498,7 +500,7 @@ function robodesk_comment_creation_on_insert($comment_ID, $comment_object) {
     $meta_value = is_admin() ? 'yes' : 'no';
     
     update_comment_meta( $comment_ID, 'admin_comment', $meta_value );
-
+    
 }
 
 

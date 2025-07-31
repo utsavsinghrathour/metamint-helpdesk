@@ -145,9 +145,6 @@ function robodesk_live_comments($request)
     $loggedin_user_id = $request->get_param('user_id');
     if (get_post_type($ticket_id) !== 'robodesk_ticket') return;
 
-    
-
-
     header('Content-Type: text/event-stream');
     header('Cache-Control: no-cache');
     header('Connection: keep-alive');
@@ -255,98 +252,6 @@ function robodesk_live_comments($request)
     echo "retry: 5000\n";
     flush();
     exit;
-}
-
-
-
-// Permission check for SSE endpoint
-function robodesk_check_sse_permissions($request)
-{
-    $post_id = $request['post_id'];
-    return current_user_can('read_post', $post_id) || is_user_logged_in();
-}
-// Optimized function to get new comments
-function robodesk_get_optimized_comments($post_id, $last_comment_id = 0)
-{
-    global $wpdb;
-
-    // Use transient cache for performance
-    $cache_key = "new_comments_{$post_id}_{$last_comment_id}";
-    $cached_result = get_transient($cache_key);
-
-    if ($cached_result !== false) {
-        return $cached_result;
-    }
-
-    $query = $wpdb->prepare(
-        "SELECT c.*, u.display_name, u.user_email 
-         FROM {$wpdb->comments} c 
-         LEFT JOIN {$wpdb->users} u ON c.user_id = u.ID 
-         WHERE c.comment_post_ID = %d 
-         AND c.comment_ID > %d 
-         AND c.comment_approved = '1' 
-         ORDER BY c.comment_date ASC 
-         LIMIT 10",
-        $post_id,
-        $last_comment_id
-    );
-
-    $results = $wpdb->get_results($query);
-
-    // Cache for 1 second to prevent excessive DB queries
-    set_transient($cache_key, $results, 1);
-
-    return $results;
-}
-
-// Format comment data for SSE
-function format_comment_for_sse($comment, $post_id)
-{
-    $post = get_post($post_id);
-
-    return array(
-        'id' => (int) $comment->comment_ID,
-        'content' => array(
-            'rendered' => wpautop($comment->comment_content)
-        ),
-        'date' => $comment->comment_date,
-        'author_data' => array(
-            'id' => (int) $comment->user_id
-        ),
-        'author_name' => $comment->display_name ?: $comment->comment_author,
-        'author_image' => get_avatar_url($comment->user_id ?: $comment->comment_author_email, array('size' => 32)),
-        'time_ago' => human_time_diff(strtotime($comment->comment_date), current_time('timestamp')) . ' ago',
-        'author_id' => (int) $comment->user_id,
-        'post_author_id' => (int) $post->post_author
-    );
-}
-
-// Enhanced hook for comment notifications
-add_action('comment_post', 'enhanced_comment_notification', 10, 3);
-
-function enhanced_comment_notification($comment_id, $comment_approved, $commentdata)
-{
-    if ($comment_approved === 1) {
-        $post_id = $commentdata['comment_post_ID'];
-
-        delete_transient("new_comments_{$post_id}_*");
-    }
-}
-
-
-// Clean up old transients periodically
-add_action('wp_scheduled_delete', 'cleanup_sse_transients');
-
-function cleanup_sse_transients()
-{
-    global $wpdb;
-
-    // Delete old comment cache transients
-    $wpdb->query(
-        "DELETE FROM {$wpdb->options} 
-         WHERE option_name LIKE '_transient_new_comments_%' 
-         OR option_name LIKE '_transient_timeout_new_comments_%'"
-    );
 }
 
 function secure_login_endpoint(WP_REST_Request $request)
@@ -563,7 +468,7 @@ function build_ticket_response_data($ticket_id, $user_object, $reply_id = false)
     $ticket_priority = (!is_wp_error($ticket_priority_terms) && !empty($ticket_priority_terms)) ? $ticket_priority_terms[0]->name : false;
 
     $last_activity = get_post_time('U', true, $ticket_id);
-    $human_readable_time = human_time_diff($last_activity, current_time('U'));
+    $human_readable_time = human_time_diff($last_activity, current_time('U'));  
 
     return [
         'id' => $ticket_id,
@@ -626,7 +531,7 @@ function robodesk_handle_tickets(WP_REST_Request $request)
     }
 }
 
-//Creating Tikcets
+// Handles ticket creation event need to remove this later
 function robodesk_handle_ticket_creation($data)
 {
     $title    = sanitize_text_field($data['data']['title'] ?? '');
