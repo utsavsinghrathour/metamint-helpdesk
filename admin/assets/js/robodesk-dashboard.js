@@ -884,7 +884,7 @@ jQuery(document).ready(function ($) {
 
 // basic settings AJAX handler
 jQuery(document).ready(function ($) {
-  // Media preview handler for all file inputs (images and audio)
+  // Media preview handler for image file inputs
   const mediaFields = [
     {
       input: "popover_icon",
@@ -909,12 +909,6 @@ jQuery(document).ready(function ($) {
       preview: "wide-logo-preview",
       hidden: "robodesk_wide_logo",
       type: "image",
-    },
-    {
-      input: "robodesk_notification_sound", // Updated to match backend
-      preview: "notification-sound-preview",
-      hidden: "robodesk_notification_sound",
-      type: "audio",
     },
   ];
 
@@ -941,15 +935,6 @@ jQuery(document).ready(function ($) {
         $(`#${field.preview}`)
           .removeClass("hidden")
           .attr("src", hiddenInput.val());
-      } else if (field.type === "audio") {
-        $(`#${field.preview}`)
-          .removeClass("hidden")
-          .find("source")
-          .attr("src", hiddenInput.val());
-        $(`#${field.preview}`).get(0).load(); // Reload audio element to reflect new source
-        $(
-          `button[onclick="removeAudio('${field.preview}', '${field.hidden}')"]`
-        ).removeClass("hidden");
       }
     }
 
@@ -963,15 +948,6 @@ jQuery(document).ready(function ($) {
             $(`#${field.preview}`)
               .removeClass("hidden")
               .attr("src", e.target.result);
-          } else if (field.type === "audio") {
-            $(`#${field.preview}`)
-              .removeClass("hidden")
-              .find("source")
-              .attr("src", e.target.result);
-            $(`#${field.preview}`).get(0).load(); // Reload audio element to reflect new source
-            $(
-              `button[onclick="removeAudio('${field.preview}', '${field.hidden}')"]`
-            ).removeClass("hidden");
           }
         };
         reader.readAsDataURL(file);
@@ -1001,10 +977,16 @@ jQuery(document).ready(function ($) {
     mediaFields.forEach(function (field) {
       formData.append(field.hidden, $(`#${field.hidden}`).val());
       const fileInput = $(`input[name="${field.input}"]`)[0];
-      if (fileInput.files.length > 0) {
+      if (fileInput && fileInput.files.length > 0) {
         formData.append(field.input, fileInput.files[0]);
       }
     });
+
+    // Append notification sound URL
+    formData.append(
+      "robodesk_notification_sound",
+      $("#robodesk_notification_sound").val()
+    );
 
     $button.prop("disabled", true).text("Saving Settings...");
 
@@ -1026,22 +1008,27 @@ jQuery(document).ready(function ($) {
                   $(`#${field.preview}`)
                     .removeClass("hidden")
                     .attr("src", response.data.urls[field.hidden]);
-                } else if (field.type === "audio") {
-                  const audioPreview = $(`#${field.preview}`);
-                  const audioSource = audioPreview.find("source");
-                  audioSource.attr("src", response.data.urls[field.hidden]);
-                  audioPreview.removeClass("hidden").get(0).load();
-                  $(
-                    `button[onclick="removeAudio('${field.preview}', '${field.hidden}')"]`
-                  ).removeClass("hidden");
-                  // Highlight the audio preview to draw attention
-                  audioPreview.addClass("border-2 border-blue-500");
-                  setTimeout(() => {
-                    audioPreview.removeClass("border-2 border-blue-500");
-                  }, 2000); // Remove highlight after 2 seconds
                 }
               }
             });
+            // Update notification sound preview
+            if (response.data.urls.robodesk_notification_sound) {
+              const audioPreview = $("#notification-sound-preview");
+              const audioSource = audioPreview.find("source");
+              audioSource.attr(
+                "src",
+                response.data.urls.robodesk_notification_sound
+              );
+              audioPreview.removeClass("hidden").get(0).load();
+              $(
+                `button[onclick="removeAudio('notification-sound-preview', 'robodesk_notification_sound')"]`
+              ).removeClass("hidden");
+              // Highlight the audio preview to draw attention
+              audioPreview.addClass("border-2 border-blue-500");
+              setTimeout(() => {
+                audioPreview.removeClass("border-2 border-blue-500");
+              }, 2000); // Remove highlight after 2 seconds
+            }
           }
           // Update theme color preview
           if (response.data.settings && response.data.settings.theme_color) {
@@ -1068,6 +1055,22 @@ jQuery(document).ready(function ($) {
     });
   });
 });
+
+// Update audio preview on dropdown change
+document
+  .getElementById("notification_sound")
+  .addEventListener("change", function () {
+    var audio = document.getElementById("notification-sound-preview");
+    var src = this.value;
+    if (src) {
+      audio.classList.remove("hidden");
+      audio.querySelector("source").src = src;
+      audio.load();
+    } else {
+      audio.classList.add("hidden");
+    }
+    document.getElementById("robodesk_notification_sound").value = src;
+  });
 
 // Remove audio preview and reset hidden input
 function removeAudio(previewId, hiddenId) {
