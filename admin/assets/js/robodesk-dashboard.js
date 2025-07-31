@@ -1487,6 +1487,15 @@ function renderReplies(replies) {
   }
 }
 
+function closeTicket() {
+  if (!currentTicket || !currentTicket.id) return;
+  const data = {
+    action: "close_ticket",
+    ticket_id: currentTicket.id,
+    nonce: robodeskAjax.nonces.close_ticket,
+  };
+}
+
 // Helper function to escape HTML
 function escapeHTML(str) {
   return str
