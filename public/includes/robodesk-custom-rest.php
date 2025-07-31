@@ -171,13 +171,19 @@ function robodesk_live_comments($request)
         'order'        => 'DESC',
         'status'       => 'approve',
         'fields'       => 'ids',
-        'comment_type' => 'ticket_replies',
+        'type' => 'ticket_replies',
         'meta_query'   => [
             [
                 'key'     => 'admin_comment',
                 'value'   => 'yes',
                 'compare' => '='
-            ]
+            ],
+            // [
+            
+            //     'key'     => 'is_robodesk_note',
+            //     'value'   => 'no',
+            //     'compare' => '='
+            // ]
         ]
     ]);
 
@@ -198,9 +204,9 @@ function robodesk_live_comments($request)
             'post_id' => $ticket_id,
             'status' => 'approve',
             'comment__in' => range($last_comment_client + 1, $last_comment_server),
-            'orderby' => 'comment_ID',
+            'orderby' => 'comment_date',
             'order' => 'ASC',
-            'comment_type' => 'ticket_replies',
+            'type' => 'ticket_replies',
             'meta_query'   => [
                 [
                     'key'     => 'admin_comment',
