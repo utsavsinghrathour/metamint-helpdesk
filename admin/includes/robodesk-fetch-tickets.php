@@ -533,7 +533,7 @@ function robodesk_reply_email($comment_id, $comment_approved)
     }
 }
 // Hook to send email when a comment is posted
-add_action('comment_post', 'robodesk_reply_email', 10, 2);
+add_action('wp_insert_comment', 'robodesk_reply_email', 10, 2);
 
 
 // Disable default WordPress notifications for new users and password changes
