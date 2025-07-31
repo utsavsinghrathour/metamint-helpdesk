@@ -59,7 +59,7 @@ const SingleTicket = ({ ticket, onBack, loggedInUserId }) => {
             setLoading(true);
             setError(null);
             const response = await fetch(
-                `/wp-json/wp/v2/comments?post=${ticket.id}&per_page=${perPage}&offset=${fetchOffset}&order=asc&_fields=id,content,date,author_data,time_ago,author_name,author_image`
+                `/wp-json/wp/v2/comments?post=${ticket.id}&per_page=${perPage}&offset=${fetchOffset}&order=asc&comment_type=ticket_replies&_fields=id,content,date,author_data,time_ago,author_name,author_image`
             );
 
             if (!response.ok) {
