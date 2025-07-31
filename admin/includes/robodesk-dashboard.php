@@ -1184,16 +1184,22 @@ function robodesk_dashboard_callback()
                                             <?php
                                             // List of predefined audio files (update URLs as needed)
                                             $audio_files = [
-                                                'ding' => plugin_dir_url(__FILE__) . 'audio/ding.mp3',
-                                                'chime' => plugin_dir_url(__FILE__) . 'audio/chime.mp3',
-                                                'notify' => plugin_dir_url(__FILE__) . 'audio/notify.mp3',
-                                                'alert' => plugin_dir_url(__FILE__) . 'audio/alert.mp3',
-                                                'ping' => plugin_dir_url(__FILE__) . 'audio/ping.mp3',
-                                                'pop' => plugin_dir_url(__FILE__) . 'audio/pop.mp3',
-                                                'bell' => plugin_dir_url(__FILE__) . 'audio/bell.mp3',
-                                                'beep' => plugin_dir_url(__FILE__) . 'audio/beep.mp3',
-                                                'success' => plugin_dir_url(__FILE__) . 'audio/success.mp3',
-                                                'soft' => plugin_dir_url(__FILE__) . 'audio/soft.mp3',
+
+                                                'Sample 1' => plugin_dir_url(__FILE__) . 'audio/1.mp3',
+                                                'Sample 2' => plugin_dir_url(__FILE__) . 'audio/2.mp3',
+                                                'Sample 3' => plugin_dir_url(__FILE__) . 'audio/3.mp3',
+                                                'Sample 4' => plugin_dir_url(__FILE__) . 'audio/4.mp3',
+                                                'Sample 5' => plugin_dir_url(__FILE__) . 'audio/5.mp3',
+                                                'Sample 6' => plugin_dir_url(__FILE__) . 'audio/6.mp3',
+                                                'Sample 7' => plugin_dir_url(__FILE__) . 'audio/7.mp3',
+                                                'Sample 8' => plugin_dir_url(__FILE__) . 'audio/8.mp3',
+                                                'Sample 9' => plugin_dir_url(__FILE__) . 'audio/9.mp3',
+                                                'Sample 10' => plugin_dir_url(__FILE__) . 'audio/10.mp3',
+                                                'Sample 11' => plugin_dir_url(__FILE__) . 'audio/ding.mp3',
+                                                'Sample 12' => plugin_dir_url(__FILE__) . 'audio/chime.mp3',
+                                                'Sample 13' => plugin_dir_url(__FILE__) . 'audio/notify.mp3',
+                                                'Sample 14' => plugin_dir_url(__FILE__) . 'audio/alert.mp3',
+
                                             ];
                                             $selected_sound = get_option('robodesk_notification_sound', '');
                                             foreach ($audio_files as $label => $url) {
