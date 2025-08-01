@@ -1,44 +1,45 @@
 function loadDashboardTickets() {
   const tableBody = document.getElementById("dashboard-tickets-table");
   let filteredTickets = [];
+  console.log(tickets);
+  const current_user_id = robodeskCurrentUser?.id || 0;
+  const current_user_name = robodeskCurrentUser?.name || "";
+  // console.log("Current User ID:", current_user_id);
+  // console.log("Current User Name:", current_user_name);
 
   switch (currentDashboardFilter) {
-    case "recent":
+    case "my_conversation":
       filteredTickets = tickets
-        .slice()
+        .filter((t) => t.assignee == current_user_name)
         .sort((a, b) => new Date(b.updated) - new Date(a.updated))
         .slice(0, 10);
       break;
 
-    case "waiting":
+    case "unassigned_conversation":
       filteredTickets = tickets
-        .filter((t) => t.status === "open" || t.status === "in-progress")
-        .sort((a, b) => new Date(a.updated) - new Date(b.updated))
+        .filter((t) => t.assignee === "N/A")
+        .sort((a, b) => new Date(b.updated) - new Date(a.updated))
         .slice(0, 10);
       break;
 
-    case "active":
-      const fifteenMinutesAgo = new Date(Date.now() - 15 * 60 * 1000); // 15 minutes ago
+    case "open_conversation":
       filteredTickets = tickets
-        .filter((t) => {
-          // Check if ticket has user activity data and if user was online in last 15 minutes
-          const userLastSeen = t.user_last_seen
-            ? new Date(t.user_last_seen)
-            : null;
-          const isRecentlyActive =
-            userLastSeen && userLastSeen >= fifteenMinutesAgo;
+        .filter((t) => t.status === "open" || t.status === "in-progress")
+        .sort((a, b) => new Date(b.updated) - new Date(a.updated))
+        .slice(0, 10);
+      break;
 
-          // You can combine with status check if needed
-          const hasActiveStatus =
-            t.status === "open" || t.status === "in-progress";
+    case "chat_conversation":
+      filteredTickets = tickets
+        .filter((t) => t.source === "chat")
+        .sort((a, b) => new Date(b.updated) - new Date(a.updated))
+        .slice(0, 10);
+      break;
 
-          return isRecentlyActive && hasActiveStatus;
-        })
-        .sort(
-          (a, b) =>
-            new Date(b.user_last_seen || b.updated) -
-            new Date(a.user_last_seen || a.updated)
-        )
+    default:
+      filteredTickets = tickets
+        .slice()
+        .sort((a, b) => new Date(b.updated) - new Date(a.updated))
         .slice(0, 10);
       break;
   }
@@ -56,17 +57,17 @@ function loadDashboardTickets() {
                 }</div>
             </td>
             <td class="px-6 py-4 whitespace-nowrap">
-            <div class="text-sm font-medium text-gray-900">${
-              ticket.customer
-            }</div>
-            <div class="text-sm text-gray-500 truncate max-w-xs">${
-              ticket.email
-            }</div>
+                <div class="text-sm font-medium text-gray-900">${
+                  ticket.customer
+                }</div>
+                <div class="text-sm text-gray-500 truncate max-w-xs">${
+                  ticket.email
+                }</div>
             </td>
             <td class="px-6 py-4 whitespace-nowrap">
-            <div class="text-sm font-medium text-gray-900">${
-              ticket.source
-            }</div>
+                <div class="text-sm font-medium text-gray-900">${
+                  ticket.source
+                }</div>
             </td>
             <td class="px-6 py-4 whitespace-nowrap">
                 <span class="status-badge ${ticket.status}">
@@ -74,12 +75,15 @@ function loadDashboardTickets() {
                 </span>
             </td>
             <td class="px-6 py-4 whitespace-nowrap">
-                <span class="status-badge ${getPriorityClass(ticket.priority)}">
+                <span class="status-badge ${ticket.priority}">
                     ${ticket.priority}
                 </span>
             </td>
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                 ${formatDate(ticket.updated)}
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 hidden">
+                ${ticket.assignee || "Unassigned"}
             </td>
         </tr>
     `
@@ -198,7 +202,7 @@ let currentPage = "dashboard";
 let currentTicket = null;
 let currentTicketTab = "replies";
 let currentSettingsTab = "basic";
-let currentDashboardFilter = "recent";
+let currentDashboardFilter = "my_conversation"; // Default filter for dashboard
 
 // Initialize the application
 document.addEventListener("DOMContentLoaded", function () {

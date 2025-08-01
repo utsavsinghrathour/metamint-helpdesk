@@ -25,6 +25,24 @@ function robodesk_dashboard_callback()
         wp_die(__('You do not have sufficient permissions to access this page.', 'robodesk'));
     }
 
+    // get the current user ID and name
+    // This is useful for debugging or displaying user-specific information
+    $current_user_id = get_current_user_id();
+    $current_user = wp_get_current_user();
+    $current_user_name = $current_user->display_name ?: $current_user->user_login;
+
+    // Pass current user info to JS
+    echo '<script>
+        const robodeskCurrentUser = {
+            id: ' . intval($current_user_id) . ',
+            name: ' . json_encode($current_user_name) . '
+        };
+    </script>';
+
+    // Debugging line to check current user ID and name
+    var_dump($current_user_id); // Debugging line to check current user ID and name
+    var_dump($current_user_name); // Debugging line to check current user name
+
     // Start output buffering to capture the HTML
     ob_start();
 ?>
@@ -193,10 +211,10 @@ function robodesk_dashboard_callback()
 
                 <!-- Dashboard Filter -->
                 <?php
-                function load_dashboard_tickets($filter = 'recent')
+                function load_dashboard_tickets($filter = 'my_conversation')
                 {
                     // Sanitize filter input
-                    $filter = in_array($filter, ['recent', 'replies', 'waiting']) ? $filter : 'recent';
+                    $filter = in_array($filter, ['my_conversation', 'replies', 'waiting']) ? $filter : 'my_conversation';
 
                     // Initialize tickets array
                     $tickets = [];
@@ -285,15 +303,15 @@ function robodesk_dashboard_callback()
                     // Filter tickets based on the provided filter
                     $filtered_tickets = [];
 
-                    switch ($filter) {
-                        case 'recent':
+                    switch ($filtered_tickets) {
+                        case 'my_conversation':
                             usort($tickets, function ($a, $b) {
                                 return strtotime($b['updated']) - strtotime($a['updated']);
                             });
                             $filtered_tickets = array_slice($tickets, 0, 10);
                             break;
 
-                        case 'replies':
+                        case 'unassigned_conversation':
                             $filtered_tickets = array_filter($tickets, function ($t) {
                                 return !empty($t['replies']);
                             });
@@ -303,7 +321,7 @@ function robodesk_dashboard_callback()
                             $filtered_tickets = array_slice($filtered_tickets, 0, 5);
                             break;
 
-                        case 'waiting':
+                        case 'open_conversation':
                             $filtered_tickets = array_filter($tickets, function ($t) {
                                 return in_array($t['status'], ['open', 'in-progress']);
                             });
@@ -312,6 +330,7 @@ function robodesk_dashboard_callback()
                             });
                             $filtered_tickets = array_slice($filtered_tickets, 0, 5);
                             break;
+                        case 'chat_conversation':
                     }
 
                     // Helper functions
@@ -397,8 +416,8 @@ function robodesk_dashboard_callback()
                     return ob_get_clean();
                 }
 
-                // Get filter from query parameter or default to 'recent'
-                $filter = isset($_GET['filter']) ? sanitize_text_field($_GET['filter']) : 'recent';
+                // Get filter from query parameter or default to 'my_conversation'
+                $filter = isset($_GET['filter']) ? sanitize_text_field($_GET['filter']) : 'my_conversation';
                 ?>
 
                 <div class="bg-white shadow rounded-lg mb-6">
@@ -406,9 +425,13 @@ function robodesk_dashboard_callback()
                         <div class="flex justify-between items-center mb-4">
                             <h3 class="text-lg leading-6 font-medium text-gray-900">Ticket Overview</h3>
                             <div class="flex space-x-2">
-                                <button onclick="filterDashboardTickets('recent')" class="dashboard-filter-btn px-3 py-1 text-sm rounded-md border <?php echo $filter === 'recent' ? 'active' : ''; ?>" data-filter="recent">Recent Tickets</button>
-                                <button onclick="filterDashboardTickets('waiting')" class="dashboard-filter-btn px-3 py-1 text-sm rounded-md border <?php echo $filter === 'waiting' ? 'active' : ''; ?>" data-filter="waiting">Waiting Reply</button>
-                                <button onclick="filterDashboardTickets('active')" class="dashboard-filter-btn px-3 py-1 text-sm rounded-md border <?php echo $filter === 'active' ? 'active' : ''; ?>" data-filter="active">Recently Active Tickets</button>
+                                <button onclick="filterDashboardTickets('my_conversation')" class="dashboard-filter-btn px-3 py-1 text-sm rounded-md border <?php echo $filter === 'my_conversation' ? 'active' : ''; ?>" data-filter="my_conversation">MY Conversations</button>
+
+                                <button onclick="filterDashboardTickets('unassigned_conversation')" class="dashboard-filter-btn px-3 py-1 text-sm rounded-md border <?php echo $filter === 'unassigned_conversation' ? 'active' : ''; ?>" data-filter="unassigned_conversation">Unassigned Conversations</button>
+
+                                <button onclick="filterDashboardTickets('open_conversation')" class="dashboard-filter-btn px-3 py-1 text-sm rounded-md border <?php echo $filter === 'open_conversation' ? 'active' : ''; ?>" data-filter="open_conversation">Open Conversations</button>
+
+                                <button onclick="filterDashboardTickets('chat_conversation')" class="dashboard-filter-btn px-3 py-1 text-sm rounded-md border <?php echo $filter === 'chat_conversation' ? 'active' : ''; ?>" data-filter="chat_conversation">Chat Conversations</button>
 
                             </div>
                         </div>
