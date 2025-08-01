@@ -240,7 +240,7 @@ const SingleQuestionBox = ({
               </div>
               <div className="rd-my-30">
                 <h4 className="heading-4 rd-fw-semi rd-mb-8">Still have questions?</h4>
-                <a href="#">Start a conversation</a>
+                <a href='#' onClick={ handleBackClick}>Start a conversation</a>
               </div>
             </div>
             {/* <div className="rd-actions rd-flex rd-align-center rd-justify-center rd-mt-20 rd-faq-actions">

@@ -140,6 +140,8 @@ const MessageTabs = ({
 
   const handleAddTicket = async () => {
     if (!loggedInuserId) return;
+    sessionStorage.setItem('activate_text', 'true');
+    setActiveTab(0);
   };
 
   const filteredTickets = tickets.filter((ticket) => {
