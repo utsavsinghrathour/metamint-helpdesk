@@ -334,18 +334,18 @@ function formatDate(dateString) {
 //   }
 // }
 
-// function getPriorityClass(priority) {
-//   switch (priority) {
-//     case "high":
-//       return "priority-high";
-//     case "medium":
-//       return "priority-medium";
-//     case "low":
-//       return "priority-low";
-//     default:
-//       return "bg-gray-100 text-gray-800";
-//   }
-// }
+function getPriorityClass(priority) {
+  switch (priority) {
+    case "high":
+      return "priority-high";
+    case "medium":
+      return "priority-medium";
+    case "low":
+      return "priority-low";
+    default:
+      return "bg-gray-100 text-gray-800";
+  }
+}
 
 function showToast(message, type = "success") {
   const toast = document.getElementById("toast");
@@ -1489,11 +1489,31 @@ function renderReplies(replies) {
 
 function closeTicket() {
   if (!currentTicket || !currentTicket.id) return;
-  const data = {
-    action: "close_ticket",
-    ticket_id: currentTicket.id,
-    nonce: robodeskAjax.nonces.close_ticket,
-  };
+  const ticketId = currentTicket.id;
+  if (!confirm("Are you sure you want to close this ticket?")) return;
+  // Make AJAX request to close the ticket
+
+  jQuery.ajax({
+    url: robodeskAjax.ajax_url,
+    type: "POST",
+    data: {
+      action: "close_ticket",
+      nonce: robodeskAjax.nonces.close_ticket,
+      ticket_id: ticketId,
+    },
+    success: function (response) {
+      if (response.success) {
+        alert(response.data.message);
+        // Optionally reload the page or update UI
+        location.reload();
+      } else {
+        alert(response.data.message || "Error closing ticket");
+      }
+    },
+    error: function () {
+      alert("An error occurred while closing the ticket");
+    },
+  });
 }
 
 // Helper function to escape HTML
