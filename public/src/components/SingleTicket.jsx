@@ -10,6 +10,17 @@ import "../styles/MessageTabs.css";
 import { sendReply } from "../utils/modules";
 import { useAppData } from "../utils/AppDataContext";
 
+
+const TicketClosed = () => {
+    return (
+        <div className="rd-my-30">
+           
+            <h4 className="heading-4 rd-fw-semi rd-mb-8">Still have questions?</h4><a href="#">Start a conversation</a>
+        </div>
+
+    )
+};
+
 const SingleTicket = ({ ticket, onBack, loggedInUserId }) => {
     const [message, setMessage] = useState("");
     const [showPicker, setShowPicker] = useState(false);
@@ -30,17 +41,20 @@ const SingleTicket = ({ ticket, onBack, loggedInUserId }) => {
     const image_urls = window.robodeskData?.imageUrls || {};
     const previousScrollHeight = useRef(0);
     const beep = useRef(new Audio(wpAuth.notificationSound));
-     const isAtTop = useRef(false);
+    const isAtTop = useRef(false);
     const hasConnected = useRef(false);
     const { loggedinContext, loggedInUsrId } = useAppData();
+
+    const [ticketClosed, setTicketClosed] = useState(false);
+
 
     const [isMessagingActive, setIsisMessagingActive] = useState(
         document.visibilityState === "visible"
     );
-    
+
 
     useEffect(() => {
-// console.log(wpAuth.notificationSound, "Notification sound path");
+        console.log("SingleTicket component mounted with ticket:", ticket);
         beep.current.load();
         const onVisibilityChange = () => {
             setIsisMessagingActive(document.visibilityState === "visible");
@@ -55,7 +69,7 @@ const SingleTicket = ({ ticket, onBack, loggedInUserId }) => {
         if (isFetching) return;
         setIsFetching(true);
         try {
-        
+
             setLoading(true);
             setError(null);
             const response = await fetch(
@@ -67,7 +81,7 @@ const SingleTicket = ({ ticket, onBack, loggedInUserId }) => {
             }
 
             const data = await response.json();
-            
+
             // console.log('We came here first', data);
             // console.log('THe logged in user id is', loggedInUserId);
             // const formattedComments = data.map((comment) => ({
@@ -80,11 +94,11 @@ const SingleTicket = ({ ticket, onBack, loggedInUserId }) => {
             //     time_ago: comment.time_ago,
             //     isAdmin: comment.author_data?.id !== ticket.author_id,
             // }));
-            
+
             const formattedComments = formatTicketComments(data);
-            
+
             // console.log('The the comment was formatted like' , formattedComments);
-            
+
             // console.log('The new formatted ticket comments are', newFormattedTicketComments);
 
             setChatMessages((prev) => {
@@ -95,7 +109,7 @@ const SingleTicket = ({ ticket, onBack, loggedInUserId }) => {
                 const uniqueMessages = Array.from(
                     new Map(newMessages.map((msg) => [msg.id, msg])).values()
                 );
-                
+
                 return uniqueMessages;
                 // return uniqueMessages.sort(
                 //     (a, b) => new Date(a.created_at) - new Date(b.created_at)
@@ -124,7 +138,7 @@ const SingleTicket = ({ ticket, onBack, loggedInUserId }) => {
         setChatMessages((prev) => {
             const newMessage = {
                 id: commentData.id,
-                text: commentData.content?.rendered.replace(/<[^>]+>/g, "") || "",
+                text: commentData.content?.rendered || "",
                 sender: commentData.author_id === loggedInUserId ? "me" : "other",
                 senderName: commentData.author_name || "Unknown",
                 image: commentData.author_image || "/default-avatar.jpg",
@@ -134,15 +148,15 @@ const SingleTicket = ({ ticket, onBack, loggedInUserId }) => {
             const uniqueMessages = Array.from(
                 new Map([...prev, newMessage].map((msg) => [msg.id, msg])).values()
             );
-              return uniqueMessages.sort(
+            return uniqueMessages.sort(
                 (a, b) => new Date(a.created_at) - new Date(b.created_at)
-              );
+            );
 
             // return uniqueMessages;
         });
     };
-    
-    
+
+
     const formatTicketComments = (comments) => {
 
         const formattedComments = comments.map((comment) => {
@@ -151,7 +165,7 @@ const SingleTicket = ({ ticket, onBack, loggedInUserId }) => {
 
             return {
                 id: comment.id,
-                text: comment.content?.rendered?.replace(/<[^>]+>/g, "") || comment.content?.plain || "",
+                text: comment.content?.rendered || comment.content?.plain || "",
                 sender,
                 senderName: comment.author_name || "Unknown",
                 image: comment.author_data?.avatar || comment.author_image || "./default-avatar.jpg",
@@ -165,7 +179,7 @@ const SingleTicket = ({ ticket, onBack, loggedInUserId }) => {
 
     // Initial fetch to get total comments and latest messages
     useEffect(() => {
-        console.log(ticket.comments, "ticket comments from top");
+        // console.log(ticket.comments, "ticket comments from top");
         if (ticket.comments && ticket.comments.length > 0) {
             // const formattedComments = formatTicketComments(ticket.comments);
             // setChatMessages(formattedComments);
@@ -195,7 +209,7 @@ const SingleTicket = ({ ticket, onBack, loggedInUserId }) => {
             }
         };
 
-         fetchInitialComments();
+        fetchInitialComments();
     }, [ticket.id]);
 
     // Handle scrolling to load older messages
@@ -250,6 +264,16 @@ const SingleTicket = ({ ticket, onBack, loggedInUserId }) => {
             hasConnected.current = true;
         };
 
+        eventSource.addEventListener("handshake", (event) => {
+            // const handshake = JSON.parse(event.data);
+
+            // console.log("New handshake data received:", handshake);
+
+
+        });
+
+
+
         eventSource.addEventListener("new_comment", (event) => {
             const commentData = JSON.parse(event.data);
 
@@ -261,6 +285,7 @@ const SingleTicket = ({ ticket, onBack, loggedInUserId }) => {
 
         });
 
+
         eventSource.addEventListener("disconnect", (event) => {
             try {
                 const data = JSON.parse(event.data);
@@ -270,10 +295,17 @@ const SingleTicket = ({ ticket, onBack, loggedInUserId }) => {
             }
         });
 
+
+
         eventSource.addEventListener("retry", (event) => {
             console.log("Retrying connection...");
         });
 
+        eventSource.addEventListener("ticket_closed", (event) => {
+
+            setTicketClosed(true);
+            eventSource.close();
+        });
         eventSource.onerror = (error) => {
 
         };
@@ -493,8 +525,8 @@ const SingleTicket = ({ ticket, onBack, loggedInUserId }) => {
                                     ) : (
                                         <>
                                             {msg.text && (
-                                                <span className="rd-body-text single-message">
-                                                    {msg.text}
+                                                <span className="rd-body-text single-message" dangerouslySetInnerHTML={{ __html: msg.text }}>
+                                                    {/* {msg.text} */}
                                                 </span>
                                             )}
                                             {msg.imageUrl && (
@@ -547,55 +579,61 @@ const SingleTicket = ({ ticket, onBack, loggedInUserId }) => {
                     </div>
                 )}
                 <div className="rd-flex rd-align-center rd-justify-between">
-                    <textarea
-                        id="mesg"
-                        ref={textareaRef}
-                        value={message}
-                        onChange={(e) => setMessage(e.target.value)}
-                        onKeyDown={(e) => {
-                            if (e.key === "Enter" && !e.shiftKey) {
-                                e.preventDefault();
-                                handleSend();
-                            }
-                        }}
-                        placeholder="Write a message..."
-                        className="rd-flex-grow rd-border-none rd-outline-none rd-py-5 rd-w-full rd-resize-none rd-min-h-[40px]"
-                        rows="1"
-                    />
-                    <div className="rd-flex rd-gap-20 rd-relative">
-                        <button
-                            onClick={toggleEmojiPicker}
-                            className="rd-bg-transparent rd-border-none rd-mr-10 icon-dark rd-cursor-pointer rd-p-0"
-                        >
-                            <FaRegFaceSmileBeam className="icon-dark" size={20} />
-                        </button>
-                        {showPicker && (
-                            <div className="rd-position-absolute rd-bottom-0 rd-right-0 rd-top-0 emoji-picker-wrap">
-                                <EmojiPicker onEmojiClick={handleEmojiClick} />
-                            </div>
-                        )}
-                        <div className="rd-flex">
-                            <input
-                                type="file"
-                                ref={fileInputRef}
-                                onChange={handleFileUpload}
-                                accept="image/*"
-                                className="rd-hidden"
+
+                    {!ticketClosed ? (
+                        <>
+                            <textarea
+                                id="mesg"
+                                ref={textareaRef}
+                                value={message}
+                                onChange={(e) => setMessage(e.target.value)}
+                                onKeyDown={(e) => {
+                                    if (e.key === "Enter" && !e.shiftKey) {
+                                        e.preventDefault();
+                                        handleSend();
+                                    }
+                                }}
+                                placeholder="Write a message..."
+                                className="rd-flex-grow rd-border-none rd-outline-none rd-py-5 rd-w-full rd-resize-none rd-min-h-[40px]"
+                                rows="1"
                             />
-                            <button
-                                onClick={triggerFileInput}
-                                className="rd-bg-transparent rd-border-none rd-mr-10 rd-cursor-pointer rd-p-0 icon-dark"
-                            >
-                                <FiPaperclip className="icon-dark" size={20} />
-                            </button>
-                        </div>
-                        <button
-                            onClick={handleSend}
-                            className="rd-bg-transparent rd-border-none rd-ml-10 icon-dark rd-cursor-pointer rd-p-0"
-                        >
-                            <PiPaperPlaneRightFill className="icon-dark" size={20} />
-                        </button>
-                    </div>
+                            <div className="rd-flex rd-gap-20 rd-relative">
+                                <button
+                                    onClick={toggleEmojiPicker}
+                                    className="rd-bg-transparent rd-border-none rd-mr-10 icon-dark rd-cursor-pointer rd-p-0"
+                                >
+                                    <FaRegFaceSmileBeam className="icon-dark" size={20} />
+                                </button>
+                                {showPicker && (
+                                    <div className="rd-position-absolute rd-bottom-0 rd-right-0 rd-top-0 emoji-picker-wrap">
+                                        <EmojiPicker onEmojiClick={handleEmojiClick} />
+                                    </div>
+                                )}
+                                <div className="rd-flex">
+                                    <input
+                                        type="file"
+                                        ref={fileInputRef}
+                                        onChange={handleFileUpload}
+                                        accept="image/*"
+                                        className="rd-hidden"
+                                    />
+                                    <button
+                                        onClick={triggerFileInput}
+                                        className="rd-bg-transparent rd-border-none rd-mr-10 rd-cursor-pointer rd-p-0 icon-dark"
+                                    >
+                                        <FiPaperclip className="icon-dark" size={20} />
+                                    </button>
+                                </div>
+                                <button
+                                    onClick={handleSend}
+                                    className="rd-bg-transparent rd-border-none rd-ml-10 icon-dark rd-cursor-pointer rd-p-0"
+                                >
+                                    <PiPaperPlaneRightFill className="icon-dark" size={20} />
+                                </button>
+                            </div>
+                        </>
+                    ) : <TicketClosed/>}
+
                 </div>
             </div>
         </div>
