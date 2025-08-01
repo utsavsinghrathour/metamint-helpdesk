@@ -1474,7 +1474,7 @@ function renderReplies(replies) {
           reply.timestamp
         )}</span>
       </div>
-      <p class="text-sm text-gray-700">${escapeHTML(reply.message)}</p>
+      <p class="text-sm text-gray-700">${reply.message}</p>
     </div>
   `
     )

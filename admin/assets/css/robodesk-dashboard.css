@@ -428,3 +428,7 @@
 .editor-content.placeholder:focus::before {
   content: none;
 }
+
+.comment-meta-is_action-true {
+  background-color: #00265e; /* blue background */
+}
