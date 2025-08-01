@@ -147,3 +147,7 @@
 .rd-search-header.rd-message-list-header{
   padding: 10px;
 }
+
+.rd-is-action{
+    color: red;
+}
