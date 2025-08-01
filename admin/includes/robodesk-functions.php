@@ -656,6 +656,26 @@ function robodesk_update_ticket_status()
     update_post_meta($ticket_id, '_robodesk_ticket_status', $new_status);
     $updated = current_time('mysql');
 
+    // Add a comment to indicate the status change
+    $user_id = get_current_user_id();
+    $user_object = get_userdata($user_id);
+    if ($user_object) {
+        wp_insert_comment([
+            'comment_post_ID'      => $ticket_id,
+            'comment_author'       => $user_object->display_name,
+            'comment_author_email' => $user_object->user_email,
+            'user_id'              => $user_id,
+            'comment_content'      => 'Ticket status changed to ' . $new_status . ' by ' . $user_object->display_name,
+            'comment_approved'     => 1,
+            'comment_type'         => 'ticket_replies',
+            'is_robodesk_reply'    => true, // Custom field to identify as a Robodesk reply
+            //add comment meta to indicate the status change
+            'comment_meta'         => [
+                'is_action' => true,
+            ],
+        ]);
+    }
+
     wp_send_json_success([
         'status' => $new_status,
         'updated' => $updated
@@ -694,6 +714,26 @@ function robodesk_update_ticket_priority()
     wp_set_post_terms($ticket_id, [(int)$term['term_id']], 'robodesk_ticket_priority');
 
     $updated = current_time('mysql');
+
+    //add a comment to indicate the priority change
+    $user_id = get_current_user_id();
+    $user_object = get_userdata($user_id);
+    if ($user_object) {
+        wp_insert_comment([
+            'comment_post_ID'      => $ticket_id,
+            'comment_author'       => $user_object->display_name,
+            'comment_author_email' => $user_object->user_email,
+            'user_id'              => $user_id,
+            'comment_content'      => 'Ticket priority changed to ' . $new_priority . ' by ' . $user_object->display_name,
+            'comment_approved'     => 1,
+            'comment_type'         => 'ticket_replies',
+            'is_robodesk_reply'    => true, // Custom field to identify as a Robodesk reply
+            //add comment meta to indicate the priority change
+            'comment_meta'         => [
+                'is_action' => true,
+            ],
+        ]);
+    }
     wp_send_json_success([
         'priority' => $new_priority,
         'updated'  => $updated,
@@ -723,6 +763,26 @@ function robodesk_update_ticket_assignee()
     update_post_meta($ticket_id, 'ticket_assignee', $new_assignee);
     $updated = current_time('mysql');
 
+
+    // create a new comment to indicate the assignee change
+    $user_id = get_current_user_id();
+    $user_object = get_userdata($user_id);
+    if ($user_object) {
+        wp_insert_comment([
+            'comment_post_ID'      => $ticket_id,
+            'comment_author'       => $user_object->display_name,
+            'comment_author_email' => $user_object->user_email,
+            'user_id'              => $user_id,
+            'comment_content'      => 'Ticket assigned to ' . $new_assignee . ' by ' . $user_object->display_name,
+            'comment_approved'     => 1,
+            'comment_type'         => 'ticket_replies',
+            'is_robodesk_reply'    => true, // Custom field to identify as a Robodesk reply
+            //add comment meta to indicate the assignee change
+            'comment_meta'         => [
+                'is_action' => true,
+            ],
+        ]);
+    }
     wp_send_json_success([
         'assignee' => $new_assignee,
         'updated'  => $updated,
@@ -815,6 +875,10 @@ function robodesk_handle_close_ticket()
             'comment_approved'     => 1,
             'comment_type'         => 'ticket_replies',
             'is_robodesk_reply'   => true,
+            //add comment meta to indicate the ticket was closed
+            'comment_meta'         => [
+                'is_action' => true,
+            ],
         ]);
     }
 
