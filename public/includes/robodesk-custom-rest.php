@@ -263,8 +263,13 @@ function robodesk_live_comments($request)
     }
     
     
-    
+    if($ticket_status == 'open') {
 
+        echo "event: ticket_open\n";
+        echo "data: " . json_encode(array('reason' => 'ticket_open')) . "\n\n";
+        flush();
+    }
+    
     echo "retry: 5000\n";
     flush();
     exit;
