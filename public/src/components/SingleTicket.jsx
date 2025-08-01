@@ -73,7 +73,7 @@ const SingleTicket = ({ ticket, onBack, loggedInUserId }) => {
             setLoading(true);
             setError(null);
             const response = await fetch(
-                `/wp-json/wp/v2/comments?post=${ticket.id}&per_page=${perPage}&offset=${fetchOffset}&order=asc&comment_type=ticket_replies&_fields=id,content,date,author_data,time_ago,author_name,author_image`
+                `/wp-json/wp/v2/comments?post=${ticket.id}&per_page=${perPage}&offset=${fetchOffset}&order=asc&comment_type=ticket_replies&_fields=id,content,date,author_data,time_ago,author_name,author_image,comment_action`
             );
 
             if (!response.ok) {
@@ -81,6 +81,8 @@ const SingleTicket = ({ ticket, onBack, loggedInUserId }) => {
             }
 
             const data = await response.json();
+            
+            // console.log('The data fetched is check for action', data);
 
             // console.log('We came here first', data);
             // console.log('THe logged in user id is', loggedInUserId);
@@ -170,7 +172,9 @@ const SingleTicket = ({ ticket, onBack, loggedInUserId }) => {
                 senderName: comment.author_name || "Unknown",
                 image: comment.author_data?.avatar || comment.author_image || "./default-avatar.jpg",
                 created_at: comment.date,
+                action : comment.comment_action ,
                 time_ago: comment.time_ago,
+                
             };
         });
 
@@ -526,11 +530,20 @@ const SingleTicket = ({ ticket, onBack, loggedInUserId }) => {
                                         </span>
                                     ) : (
                                         <>
-                                            {msg.text && (
-                                                <span className="rd-body-text single-message" dangerouslySetInnerHTML={{ __html: msg.text }}>
-                                                    {/* {msg.text} */}
-                                                </span>
-                                            )}
+                                        
+                                        {msg.text && (
+                                            <span
+                                                className={[
+                                                    "rd-body-text",
+                                                    "single-message",
+                                                    msg.action ? "rd-is-action" : null,
+                                                ]
+                                                    .filter(Boolean)
+                                                    .join(" ")}
+                                                dangerouslySetInnerHTML={{ __html: msg.text }}
+                                            />
+                                        )}
+               
                                             {msg.imageUrl && (
                                                 <img
                                                     src={msg.imageUrl}

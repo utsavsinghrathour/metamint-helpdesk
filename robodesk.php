@@ -457,9 +457,13 @@ add_filter('rest_prepare_comment', function ($response, $comment, $request) {
         $author_id = $comment->user_id;
         // Local timestamp using WP timezone
         $comment_time_local = strtotime(get_date_from_gmt($comment->comment_date_gmt));
-        $now_local = current_time('timestamp'); // WP timezone-aware timestamp
+        $now_local = current_time('timestamp');
 
         $diff = $now_local - $comment_time_local;
+        
+        $comment_action_meta = get_comment_meta($comment->comment_ID, 'is_action', true);
+        
+        $data['comment_action'] = $comment_action_meta == '1' ? true : false;
 
         $human_readable_time = $diff < 5 ? 'just now' : human_time_diff($comment_time_local, $now_local) . ' ago';
 
