@@ -141,7 +141,7 @@ add_action('rest_api_init', callback: function () {
 function robodesk_live_comments($request)
 {
     $ticket_id = $request->get_param('post_id');
-    $last_comment_client = $request->get_param('last_comment_id'); //from frontend 
+    $last_comment_client = (int) $request->get_param('last_comment_id'); //from frontend 
     $loggedin_user_id = $request->get_param('user_id');
     if (get_post_type($ticket_id) !== 'robodesk_ticket') return;
 
@@ -163,6 +163,7 @@ function robodesk_live_comments($request)
     set_time_limit(0);
     ignore_user_abort(false);
 
+    $ticket_status = get_post_meta($ticket_id, '_robodesk_ticket_status', true);
 
     $last_comment_server = get_comments([
         'post_id'      => $ticket_id,
@@ -177,13 +178,7 @@ function robodesk_live_comments($request)
                 'key'     => 'admin_comment',
                 'value'   => 'yes',
                 'compare' => '='
-            ],
-            // [
-            
-            //     'key'     => 'is_robodesk_note',
-            //     'value'   => 'no',
-            //     'compare' => '='
-            // ]
+            ]
         ]
     ]);
 
@@ -195,15 +190,19 @@ function robodesk_live_comments($request)
         'status' => 'connected',
         'timestamp' => time(),
         'server_comment' => $last_comment_server,
+        'client_comment' => $last_comment_client,
+        'ranges' =>  range($last_comment_client , $last_comment_server)
     )) . "\n\n";
     flush();
+    
+    
 
     //checking the admin id 
     if ($last_comment_server && $last_comment_server > $last_comment_client) {
         $args = array(
             'post_id' => $ticket_id,
             'status' => 'approve',
-            'comment__in' => range($last_comment_client + 1, $last_comment_server),
+            'comment__in' => range($last_comment_client , $last_comment_server),
             'orderby' => 'comment_date',
             'order' => 'ASC',
             'type' => 'ticket_replies',
@@ -253,12 +252,31 @@ function robodesk_live_comments($request)
             flush();
         }
     }
-
+    
+    
+    if($ticket_status == 'closed') {
+        // If the ticket is closed, send a disconnect event
+        echo "event: ticket_closed\n";
+        echo "data: " . json_encode(array('reason' => 'ticket_closed')) . "\n\n";
+        flush();
+        exit;
+    }
+    
+    
+    
 
     echo "retry: 5000\n";
     flush();
     exit;
 }
+
+
+// add_action('wp_head', function(){
+
+// $ticket_status = get_post_meta(1797, '_robodesk_ticket_status', true);
+
+// var_dump($ticket_status);
+// });
 
 function secure_login_endpoint(WP_REST_Request $request)
 {
