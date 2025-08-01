@@ -25,7 +25,7 @@ const normalizeImagePaths = (html, baseUrl = '/') => {
   });
 };
 
-const FAQDetail = memo(({ faq, onBack, isExpanded, setIsExpanded, faqs, setSelectedFAQ }) => {
+const FAQDetail = memo(({ faq, onBack, isExpanded, setIsExpanded, faqs, setSelectedFAQ , setActiveTab}) => {
   const [isLiked, setIsLiked] = useState(false);
   const [isDisliked, setIsDisliked] = useState(false);
   const [fullContent, setFullContent] = useState(null);
@@ -170,7 +170,7 @@ const FAQDetail = memo(({ faq, onBack, isExpanded, setIsExpanded, faqs, setSelec
             </div>
             <div className="rd-my-30">
               <h4 className="heading-4 rd-fw-semi rd-mb-8">Still have questions?</h4>
-              <a href="#">Start a conversation</a>
+              <a href="#" onClick={() => setActiveTab(0)} >Start a conversation</a>
             </div>
           </div>
           <div className="rd-single-faq-footer rd-py-10 rd-border-vertical-light">
@@ -299,10 +299,12 @@ const FAQ = ({ setActiveTab, setIsOpen, isExpanded, setIsExpanded, activeTab }) 
             setSelectedFAQ(null);
             setIsExpanded(false);
           }}
+
           isExpanded={isExpanded}
           setIsExpanded={setIsExpanded}
           faqs={filteredFaqs}
           setSelectedFAQ={setSelectedFAQ}
+          setActiveTab={setActiveTab}
         />
       </div>
     );
