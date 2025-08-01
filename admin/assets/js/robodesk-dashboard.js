@@ -1490,30 +1490,66 @@ function renderReplies(replies) {
 function closeTicket() {
   if (!currentTicket || !currentTicket.id) return;
   const ticketId = currentTicket.id;
-  if (!confirm("Are you sure you want to close this ticket?")) return;
-  // Make AJAX request to close the ticket
+  // Show a custom modal confirmation instead of native confirm
+  showCustomConfirm(
+    "Are you sure you want to close this ticket?",
+    function onConfirm() {
+      // Proceed with closing the ticket
+      closeTicketAjax(ticketId);
+    }
+  );
+  return;
 
-  jQuery.ajax({
-    url: robodeskAjax.ajax_url,
-    type: "POST",
-    data: {
-      action: "close_ticket",
-      nonce: robodeskAjax.nonces.close_ticket,
-      ticket_id: ticketId,
-    },
-    success: function (response) {
-      if (response.success) {
-        alert(response.data.message);
-        // Optionally reload the page or update UI
-        location.reload();
-      } else {
-        alert(response.data.message || "Error closing ticket");
-      }
-    },
-    error: function () {
-      alert("An error occurred while closing the ticket");
-    },
-  });
+  // Helper for custom confirmation modal
+  function showCustomConfirm(message, onConfirm) {
+    // Create modal elements
+    let modal = document.createElement("div");
+    modal.className =
+      "fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40";
+    modal.innerHTML = `
+      <div class="bg-white rounded-lg shadow-lg p-6 max-w-sm w-full text-center">
+        <div class="mb-4 text-lg font-medium text-gray-800">${message}</div>
+        <div class="flex justify-center gap-4">
+          <button id="custom-confirm-yes" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Yes</button>
+          <button id="custom-confirm-no" class="px-4 py-2 bg-gray-300 text-gray-800 rounded hover:bg-gray-400">Cancel</button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(modal);
+
+    // Event listeners
+    modal.querySelector("#custom-confirm-yes").onclick = function () {
+      document.body.removeChild(modal);
+      if (typeof onConfirm === "function") onConfirm();
+    };
+    modal.querySelector("#custom-confirm-no").onclick = function () {
+      document.body.removeChild(modal);
+    };
+  }
+
+  // Move AJAX logic to a separate function for clarity
+  function closeTicketAjax(ticketId) {
+    jQuery.ajax({
+      url: robodeskAjax.ajax_url,
+      type: "POST",
+      data: {
+        action: "close_ticket",
+        nonce: robodeskAjax.nonces.close_ticket,
+        ticket_id: ticketId,
+      },
+      success: function (response) {
+        if (response.success) {
+          showToast(response.data.message);
+          location.reload();
+        } else {
+          showToast(response.data.message || "Error closing ticket", "error");
+        }
+      },
+      error: function () {
+        showToast("An error occurred while closing the ticket", "error");
+      },
+    });
+  }
 }
 
 // Helper function to escape HTML
