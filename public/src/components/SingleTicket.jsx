@@ -13,13 +13,12 @@ import { useAppData } from "../utils/AppDataContext";
 
 const TicketClosed = () => {
     return (
-        <div className="rd-my-30">
-           
-            <h4 className="heading-4 rd-fw-semi rd-mb-8">Still have questions?</h4><a href="#">Start a conversation</a>
+        <div className="">
+            <h4 className="heading-4 rd-fw-semi rd-mb-8">Still have questions?</h4><a href="#">Start a new conversation</a>
         </div>
-
     )
 };
+
 
 const SingleTicket = ({ ticket, onBack, loggedInUserId }) => {
     const [message, setMessage] = useState("");
@@ -54,7 +53,8 @@ const SingleTicket = ({ ticket, onBack, loggedInUserId }) => {
 
 
     useEffect(() => {
-        console.log("SingleTicket component mounted with ticket:", ticket);
+
+        setTicketClosed(ticket.status == "closed" );
         beep.current.load();
         const onVisibilityChange = () => {
             setIsisMessagingActive(document.visibilityState === "visible");
@@ -300,11 +300,13 @@ const SingleTicket = ({ ticket, onBack, loggedInUserId }) => {
         eventSource.addEventListener("retry", (event) => {
             console.log("Retrying connection...");
         });
-
+        eventSource.addEventListener("ticket_open", (event) => {
+            setTicketClosed(false);
+        });
         eventSource.addEventListener("ticket_closed", (event) => {
 
             setTicketClosed(true);
-            eventSource.close();
+            // eventSource.close();
         });
         eventSource.onerror = (error) => {
 
