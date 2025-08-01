@@ -429,6 +429,6 @@
   content: none;
 }
 
-.comment-meta-is_action-true {
+.reply-action {
   background-color: #00265e; /* blue background */
 }

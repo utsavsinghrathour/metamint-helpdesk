@@ -1400,6 +1400,7 @@ function addReply() {
           message: replyText,
           timestamp: new Date().toISOString(),
           type: "agent",
+          comment_meta: response.data.comment_meta || { is_action: false }, // Fallback to false
         };
 
         if (!Array.isArray(currentTicket.replies)) currentTicket.replies = [];
@@ -1463,21 +1464,29 @@ function renderReplies(replies) {
   if (!repliesList || !Array.isArray(replies)) return;
 
   repliesList.innerHTML = replies
-    .map(
-      (reply, index) => `
-    <div class="p-4 rounded-lg reply-${reply.type}" id="reply-${index}">
-      <div class="flex justify-between items-center mb-2">
-        <span class="font-medium text-sm text-gray-900">${escapeHTML(
-          reply.author
-        )} (${reply.type === "customer" ? "Customer" : "Agent"})</span>
-        <span class="text-xs text-gray-500">${formatDate(
-          reply.timestamp
-        )}</span>
-      </div>
-      <p class="text-sm text-gray-700">${reply.message}</p>
-    </div>
-  `
-    )
+    .map((reply, index) => {
+      // Add special style if reply.comment_meta?.is_action is true
+      const isAction = reply.comment_meta?.is_action === true; // Use optional chaining for safety
+      const actionClass = isAction ? "reply-action bg-blue-200" : "";
+
+      return `
+        <div class="p-4 rounded-lg reply-${
+          reply.type
+        } ${actionClass}" id="reply-${index}">
+          <div class="flex justify-between items-center mb-2">
+            <span class="font-medium text-sm text-gray-900">${escapeHTML(
+              reply.author
+            )} (${reply.type === "customer" ? "Customer" : "Agent"})</span>
+            <span class="text-xs text-gray-500">${formatDate(
+              reply.timestamp
+            )}</span>
+          </div>
+          <p class="text-sm text-gray-700">${
+            isAction ? escapeHTML(reply.message) : reply.message
+          }</p>
+        </div>
+      `;
+    })
     .join("");
 
   // Scroll to the last reply
