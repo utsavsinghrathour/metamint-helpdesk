@@ -909,8 +909,7 @@ function robodesk_handle_get_ticket_replies()
         'post_id' => $ticket_id,
         'order'   => 'ASC',
         'type'    => 'ticket_replies',
-        'is_robodesk_reply'   => true,
-
+        'is_robodesk_reply' => true,
     ]);
 
     $replies = [];
@@ -926,12 +925,19 @@ function robodesk_handle_get_ticket_replies()
             }
         }
 
+        // Get comment meta
+        $is_action = get_comment_meta($comment->comment_ID, 'is_action', true);
+        $comment_meta = [
+            'is_action' => $is_action ? true : false, // Ensure boolean value
+        ];
+
         $replies[] = [
             'id'        => $comment->comment_ID,
             'author'    => $comment->comment_author,
             'message'   => $comment->comment_content,
             'timestamp' => $comment->comment_date,
             'type'      => $type,
+            'comment_meta' => $comment_meta, // Include comment_meta object
         ];
     }
 
