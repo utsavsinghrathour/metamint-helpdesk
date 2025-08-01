@@ -778,6 +778,52 @@ function robodesk_handle_add_ticket_reply()
     ]);
 }
 
+
+// add a ticket reply if onclick="closeTicket()" is clicked also change the status of the ticket to closed
+add_action('wp_ajax_close_ticket', 'robodesk_handle_close_ticket');
+function robodesk_handle_close_ticket()
+{
+    // Verify nonce for security
+    if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'robodesk_close_ticket_action')) {
+        wp_send_json_error(['message' => 'Nonce verification failed']);
+    }
+
+    $ticket_id = isset($_POST['ticket_id']) ? intval($_POST['ticket_id']) : 0;
+
+    if (!$ticket_id) {
+        wp_send_json_error(['message' => 'Invalid ticket ID']);
+    }
+
+    // Update ticket status to closed
+    $status_updated = update_post_meta($ticket_id, '_robodesk_ticket_status', 'closed');
+
+    if (!$status_updated) {
+        wp_send_json_error(['message' => 'Failed to close the ticket']);
+    }
+
+    // Optionally, you can add a comment indicating the ticket was closed
+    $user_id = get_current_user_id();
+    $user_object = get_userdata($user_id);
+
+    if ($user_object) {
+        wp_insert_comment([
+            'comment_post_ID'      => $ticket_id,
+            'comment_author'       => $user_object->display_name,
+            'comment_author_email' => $user_object->user_email,
+            'user_id'              => $user_id,
+            'comment_content'      => 'Ticket closed by ' . $user_object->display_name,
+            'comment_approved'     => 1,
+            'comment_type'         => 'ticket_replies',
+            'is_robodesk_reply'   => true,
+        ]);
+    }
+
+    wp_send_json_success(['message' => 'Ticket closed successfully']);
+}
+
+
+
+
 // GET TICKET REPLIES
 add_action('wp_ajax_get_ticket_replies', 'robodesk_handle_get_ticket_replies');
 
@@ -937,6 +983,8 @@ function robodesk_handle_get_ticket_notes()
         'count' => count($notes),
     ]);
 }
+
+// added a ticket 
 
 
 
