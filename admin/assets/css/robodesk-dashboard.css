@@ -433,7 +433,7 @@
   background-color: #00265e; /* blue background */
 }
 
-.blink-red {
+.blinking-red {
   display: inline-block;
   width: 10px;
   height: 10px;
@@ -442,7 +442,7 @@
   animation: blink 1s infinite;
 }
 
-.blink-green {
+.blinking-green {
   display: inline-block;
   width: 10px;
   height: 10px;
@@ -451,7 +451,7 @@
   animation: blink 1s infinite;
 }
 
-.blink-yellow {
+.blinking-yellow {
   display: inline-block;
   width: 10px;
   height: 10px;

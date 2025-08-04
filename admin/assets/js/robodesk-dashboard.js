@@ -44,15 +44,15 @@ function loadDashboardTickets() {
       break;
   }
 
-  // Helper function to get status class
-  function getStatusClass(status) {
-    const classes = {
-      open: "status-open",
-      "in-progress": "status-in-progress",
-      closed: "status-closed",
-    };
-    return classes[status] || "status-default";
-  }
+  // // Helper function to get status class
+  // function getStatusClass(status) {
+  //   const classes = {
+  //     open: "status-open",
+  //     "in-progress": "status-in-progress",
+  //     closed: "status-closed",
+  //   };
+  //   return classes[status] || "status-default";
+  // }
 
   // Helper function to get priority class
   function getPriorityClass(priority) {
@@ -62,6 +62,44 @@ function loadDashboardTickets() {
       high: "priority-high",
     };
     return classes[priority?.toLowerCase()] || "priority-default";
+  }
+
+  function getBlinkingClass(ticket) {
+    if (
+      ticket.source !== "chat" ||
+      !["open", "in-progress"].includes(ticket.status)
+    ) {
+      return "";
+    }
+
+    const replies = Array.isArray(ticket.replies) ? ticket.replies : [];
+    const lastReply = replies.length > 0 ? replies[replies.length - 1] : null;
+
+    if (!lastReply) {
+      return "blinking-green";
+    }
+
+    const isCustomer =
+      lastReply.type === "customer" || lastReply.author_type === "customer";
+    if (!isCustomer) {
+      return "blinking-green";
+    }
+
+    const lastReplyTime = new Date(
+      lastReply.timestamp || lastReply.date || ticket.updated
+    );
+    const now = new Date();
+    const diffMinutes = (now - lastReplyTime) / (1000 * 60); // Convert milliseconds to minutes
+
+    if (diffMinutes <= 5) {
+      // Example: 5 minutes for red
+      return "blinking-red";
+    } else if (diffMinutes <= 10) {
+      // Example: 10 minutes for yellow
+      return "blinking-yellow";
+    } else {
+      return "blinking-green";
+    }
   }
 
   // Build the table HTML
@@ -74,7 +112,7 @@ function loadDashboardTickets() {
             <td class="px-6 py-4 whitespace-nowrap">
                 <div class="text-sm font-medium text-gray-900">#${
                   ticket.id
-                }</div>
+                } <span class="${getBlinkingClass(ticket)}"></span></div>
                 <div class="text-sm text-gray-500 truncate max-w-xs">${escapeHTML(
                   ticket.title
                 )}</div>
@@ -446,18 +484,18 @@ function formatDate(dateString) {
   });
 }
 
-// function getStatusClass(status) {
-//   switch (status) {
-//     case "open":
-//       return "status-open";
-//     case "in-progress":
-//       return "status-in-progress";
-//     case "closed":
-//       return "status-closed";
-//     default:
-//       return "bg-gray-100 text-gray-800";
-//   }
-// }
+function getStatusClass(status) {
+  switch (status) {
+    case "open":
+      return "status-open";
+    case "in-progress":
+      return "status-in-progress";
+    case "closed":
+      return "status-closed";
+    default:
+      return "bg-gray-100 text-gray-800";
+  }
+}
 
 function getPriorityClass(priority) {
   switch (priority) {
