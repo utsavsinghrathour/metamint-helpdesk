@@ -310,7 +310,9 @@ function robodesk_dashboard_callback()
                             case 'chat_conversation':
                                 return $t['source'] === 'chat';
                             default:
-                                return true; // Return all tickets if filter is invalid
+                                'my_conversation';
+                                // Default case to handle unexpected filters
+                                return $t['assignee'] === $current_user_name;
                         }
                     });
 
@@ -351,6 +353,69 @@ function robodesk_dashboard_callback()
                         }
                     }
 
+                    /**
+                     * Returns a blinking class for chat tickets based on last reply time and author.
+                     * Only applies to chat tickets with open/in-progress status.
+                     *
+                     * @param array $ticket
+                     * @return string
+                     */
+                    function get_blinking_class($ticket)
+                    {
+                        // Only for chat tickets with open/in-progress status
+                        if (
+                            empty($ticket['source']) || strtolower($ticket['source']) !== 'chat' ||
+                            empty($ticket['status']) || !in_array($ticket['status'], ['open', 'in-progress'])
+                        ) {
+                            return '';
+                        }
+
+                        $replies = isset($ticket['replies']) && is_array($ticket['replies']) ? $ticket['replies'] : [];
+                        $last_reply = !empty($replies) ? end($replies) : null;
+
+                        // If no replies, just green
+                        if (!$last_reply) {
+                            return 'blinking-green';
+                        }
+
+                        // Only consider if last reply is from customer
+                        $is_customer = false;
+                        if (isset($last_reply['type']) && $last_reply['type'] === 'customer') {
+                            $is_customer = true;
+                        } elseif (isset($last_reply['author_type']) && $last_reply['author_type'] === 'customer') {
+                            $is_customer = true;
+                        }
+                        if (!$is_customer) {
+                            return 'blinking-green';
+                        }
+
+                        // Calculate minutes since last reply
+                        $last_reply_time = null;
+                        if (!empty($last_reply['timestamp'])) {
+                            $last_reply_time = strtotime($last_reply['timestamp']);
+                        } elseif (!empty($last_reply['date'])) {
+                            $last_reply_time = strtotime($last_reply['date']);
+                        } elseif (!empty($ticket['updated'])) {
+                            $last_reply_time = strtotime($ticket['updated']);
+                        }
+                        if (!$last_reply_time) {
+                            return 'blinking-green';
+                        }
+
+                        $now = time();
+                        $diff_minutes = ($now - $last_reply_time) / 60;
+
+                        if ($diff_minutes <= 30) {
+                            return 'blinking-red';
+                        } elseif ($diff_minutes > 3 && $diff_minutes <= 10) {
+                            return 'blinking-yellow';
+                        } else {
+                            return 'blinking-green';
+                        }
+                    }
+
+
+
                     // Generate table HTML
                     ob_start();
                 ?>
@@ -378,7 +443,13 @@ function robodesk_dashboard_callback()
                                     <?php foreach ($filtered_tickets as $ticket) : ?>
                                         <tr class="table-row cursor-pointer" data-ticketid="<?php echo esc_attr($ticket['id']); ?>" onclick="viewTicket(<?php echo esc_js($ticket['id']); ?>)">
                                             <td class="px-6 py-4 whitespace-nowrap">
-                                                <div class="text-sm font-medium text-gray-900">#<?php echo esc_html($ticket['id']); ?></div>
+                                                <?php $blinking_class = get_blinking_class($ticket); ?>
+                                                <div class="text-sm font-medium text-gray-900<?php echo $blinking_class ? ' ' . esc_attr($blinking_class) : ''; ?>">
+                                                    #<?php echo esc_html($ticket['id']); ?>
+                                                    <?php if ($blinking_class): ?>
+                                                        <span>&bull;</span>
+                                                    <?php endif; ?>
+                                                </div>
                                                 <div class="text-sm text-gray-500 truncate max-w-xs"><?php echo esc_html($ticket['title']); ?></div>
                                             </td>
                                             <td class="px-6 py-4 whitespace-nowrap">
