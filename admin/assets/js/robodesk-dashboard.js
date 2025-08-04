@@ -2,93 +2,214 @@ function loadDashboardTickets() {
   const tableBody = document.getElementById("dashboard-tickets-table");
   let filteredTickets = [];
   console.log(tickets);
+
+  // Get current user info - ensure these variables are available globally
   const current_user_id = robodeskCurrentUser?.id || 0;
-  const current_user_name = robodeskCurrentUser?.name || "";
+  const current_user_name =
+    robodeskCurrentUser?.name || robodeskCurrentUser?.display_name || "";
+
   // console.log("Current User ID:", current_user_id);
   // console.log("Current User Name:", current_user_name);
 
+  // Filter tickets based on currentDashboardFilter
   switch (currentDashboardFilter) {
     case "my_conversation":
       filteredTickets = tickets
-        .filter((t) => t.assignee == current_user_name)
-        .sort((a, b) => new Date(b.updated) - new Date(a.updated))
-        .slice(0, 10);
+        .filter((t) => t.assignee === current_user_name)
+        .sort((a, b) => new Date(b.updated) - new Date(a.updated));
       break;
 
     case "unassigned_conversation":
       filteredTickets = tickets
-        .filter((t) => t.assignee === "N/A")
-        .sort((a, b) => new Date(b.updated) - new Date(a.updated))
-        .slice(0, 10);
+        .filter((t) => t.assignee === "N/A" || !t.assignee)
+        .sort((a, b) => new Date(b.updated) - new Date(a.updated));
       break;
 
     case "open_conversation":
       filteredTickets = tickets
         .filter((t) => t.status === "open" || t.status === "in-progress")
-        .sort((a, b) => new Date(b.updated) - new Date(a.updated))
-        .slice(0, 10);
+        .sort((a, b) => new Date(b.updated) - new Date(a.updated));
       break;
 
     case "chat_conversation":
       filteredTickets = tickets
         .filter((t) => t.source === "chat")
-        .sort((a, b) => new Date(b.updated) - new Date(a.updated))
-        .slice(0, 10);
+        .sort((a, b) => new Date(b.updated) - new Date(a.updated));
       break;
 
     default:
       filteredTickets = tickets
         .slice()
-        .sort((a, b) => new Date(b.updated) - new Date(a.updated))
-        .slice(0, 10);
+        .sort((a, b) => new Date(b.updated) - new Date(a.updated));
       break;
   }
 
+  // Helper function to get status class
+  function getStatusClass(status) {
+    const classes = {
+      open: "status-open",
+      "in-progress": "status-in-progress",
+      closed: "status-closed",
+    };
+    return classes[status] || "status-default";
+  }
+
+  // Helper function to get priority class
+  function getPriorityClass(priority) {
+    const classes = {
+      low: "priority-low",
+      medium: "priority-medium",
+      high: "priority-high",
+    };
+    return classes[priority?.toLowerCase()] || "priority-default";
+  }
+
+  // Build the table HTML
   tableBody.innerHTML = filteredTickets
     .map(
       (ticket) => `
-        <tr class="table-row cursor-pointer" onclick="viewTicket(${ticket.id})">
+        <tr class="table-row cursor-pointer" data-ticketid="${
+          ticket.id
+        }" onclick="viewTicket(${ticket.id})">
             <td class="px-6 py-4 whitespace-nowrap">
                 <div class="text-sm font-medium text-gray-900">#${
                   ticket.id
                 }</div>
-                <div class="text-sm text-gray-500 truncate max-w-xs">${
+                <div class="text-sm text-gray-500 truncate max-w-xs">${escapeHTML(
                   ticket.title
-                }</div>
+                )}</div>
             </td>
             <td class="px-6 py-4 whitespace-nowrap">
-                <div class="text-sm font-medium text-gray-900">${
+              ${
+                Array.isArray(ticket.replies) && ticket.replies.length > 0
+                  ? (() => {
+                      const lastReply =
+                        ticket.replies[ticket.replies.length - 1];
+                      const lastReplyAuthor = lastReply.author || "N/A";
+                      const lastReplyDate =
+                        lastReply.timestamp || lastReply.date || ticket.updated;
+                      const timeAgo = timeSince(new Date(lastReplyDate));
+                      return `
+                        <div class="text-sm font-medium text-gray-900">${escapeHTML(
+                          lastReplyAuthor
+                        )}</div>
+                        <div class="text-sm text-gray-500">${timeAgo}</div>
+                      `;
+                    })()
+                  : `<div class="text-sm text-gray-500">No replies yet</div>`
+              }
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap">
+                <div class="text-sm font-medium text-gray-900">${escapeHTML(
                   ticket.customer
-                }</div>
-                <div class="text-sm text-gray-500 truncate max-w-xs">${
+                )}</div>
+                <div class="text-sm text-gray-500 truncate max-w-xs">${escapeHTML(
                   ticket.email
-                }</div>
+                )}</div>
             </td>
             <td class="px-6 py-4 whitespace-nowrap">
-                <div class="text-sm font-medium text-gray-900">${
+                <div class="text-sm font-medium text-gray-900">${escapeHTML(
                   ticket.source
-                }</div>
+                )}</div>
             </td>
             <td class="px-6 py-4 whitespace-nowrap">
-                <span class="status-badge ${ticket.status}">
-                    ${ticket.status}
+                <span class="status-badge ${getStatusClass(
+                  ticket.status
+                )} editable-status"
+                    onclick="event.stopPropagation(); editStatus(${
+                      ticket.id
+                    }, this)">
+                    ${escapeHTML(ticket.status.replace("-", " "))}
                 </span>
             </td>
             <td class="px-6 py-4 whitespace-nowrap">
-                <span class="status-badge ${ticket.priority}">
-                    ${ticket.priority}
+                <span class="status-badge ${getPriorityClass(
+                  ticket.priority
+                )} editable-priority"
+                    onclick="event.stopPropagation(); editPriority(${
+                      ticket.id
+                    }, this)">
+                    ${escapeHTML(ticket.priority)}
                 </span>
             </td>
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                 ${formatDate(ticket.updated)}
             </td>
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 hidden">
-                ${ticket.assignee || "Unassigned"}
+                ${escapeHTML(ticket.assignee || "Unassigned")}
             </td>
         </tr>
     `
     )
     .join("");
+}
+
+// Helper function to escape HTML (if not already defined)
+function escapeHTML(str) {
+  if (!str) return "";
+  const div = document.createElement("div");
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+// Helper function to calculate time since (if not already defined)
+function timeSince(date) {
+  const now = new Date();
+  const secondsPast = (now.getTime() - date.getTime()) / 1000;
+
+  if (secondsPast < 60) {
+    return `${Math.floor(secondsPast)} seconds ago`;
+  }
+  if (secondsPast < 3600) {
+    return `${Math.floor(secondsPast / 60)} minutes ago`;
+  }
+  if (secondsPast <= 86400) {
+    return `${Math.floor(secondsPast / 3600)} hours ago`;
+  }
+  if (secondsPast > 86400) {
+    const day = Math.floor(secondsPast / 86400);
+    return `${day} day${day > 1 ? "s" : ""} ago`;
+  }
+}
+
+// Helper function to format date (if not already defined)
+function formatDate(dateString) {
+  const date = new Date(dateString);
+  const options = {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  };
+  return date.toLocaleDateString("en-US", options);
+}
+
+// Function to handle filter changes
+function setDashboardFilter(filter) {
+  currentDashboardFilter = filter;
+  loadDashboardTickets();
+
+  // Update active filter button styling
+  document.querySelectorAll(".filter-button").forEach((btn) => {
+    btn.classList.remove("active");
+  });
+  document.querySelector(`[data-filter="${filter}"]`)?.classList.add("active");
+}
+
+// Function to refresh tickets data
+function refreshDashboardTickets() {
+  // If you're loading tickets via AJAX, call that function here
+  // For example:
+  if (typeof loadTicketsFromServer === "function") {
+    loadTicketsFromServer().then(() => {
+      loadDashboardTickets();
+    });
+  } else {
+    // Otherwise just re-render with current data
+    loadDashboardTickets();
+  }
 }
 
 // Sample data
