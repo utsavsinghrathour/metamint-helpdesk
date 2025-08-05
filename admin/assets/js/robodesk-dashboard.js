@@ -1134,6 +1134,10 @@ jQuery(document).ready(function ($) {
     formData.append("settings[timezone]", $form.find("#timezone").val());
     formData.append("settings[language]", $form.find("#language").val());
     formData.append("settings[theme_color]", $form.find("#theme_color").val());
+    formData.append(
+      "settings[default_ticket_category]",
+      $form.find("#robodesk_default_ticket_category").val()
+    );
 
     // Append media URLs and files
     mediaFields.forEach(function (field) {

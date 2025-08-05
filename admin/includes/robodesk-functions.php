@@ -292,7 +292,7 @@ function robodesk_save_basic_settings()
     }
 
     $settings = $_POST['settings'];
-    $valid_settings = ['site_name', 'admin_email', 'timezone', 'language', 'theme_color'];
+    $valid_settings = ['site_name', 'admin_email', 'timezone', 'language', 'theme_color', 'default_ticket_category'];
     $valid_timezones = ['UTC', 'America/New_York', 'America/Los_Angeles', 'GMT'];
     $valid_languages = ['en', 'es', 'fr', 'de'];
     $image_fields = [
@@ -341,6 +341,12 @@ function robodesk_save_basic_settings()
             $sanitized_settings[$key] = sanitize_hex_color($settings[$key]);
             if (is_null($sanitized_settings[$key])) {
                 $results[$key] = ['status' => 'error', 'message' => 'Invalid color code'];
+                continue;
+            }
+        } elseif ($key === 'default_ticket_category') {
+            $sanitized_settings[$key] = absint($settings[$key]);
+            if (!empty($sanitized_settings[$key]) && !term_exists($sanitized_settings[$key], 'robodesk_ticket_category')) {
+                $results[$key] = ['status' => 'error', 'message' => 'Invalid ticket category'];
                 continue;
             }
         }
@@ -414,6 +420,7 @@ function robodesk_save_basic_settings()
         wp_send_json_error(['message' => 'Some settings failed to save', 'urls' => $urls, 'settings' => $sanitized_settings, 'details' => $results]);
     }
 }
+
 
 // configure automatic ticket assignment and fetch timing
 
