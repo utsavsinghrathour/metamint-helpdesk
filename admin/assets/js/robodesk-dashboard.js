@@ -44,16 +44,6 @@ function loadDashboardTickets() {
       break;
   }
 
-  // // Helper function to get status class
-  // function getStatusClass(status) {
-  //   const classes = {
-  //     open: "status-open",
-  //     "in-progress": "status-in-progress",
-  //     closed: "status-closed",
-  //   };
-  //   return classes[status] || "status-default";
-  // }
-
   // Helper function to get priority class
   function getPriorityClass(priority) {
     const classes = {
