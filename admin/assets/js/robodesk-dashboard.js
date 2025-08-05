@@ -1,7 +1,7 @@
 function loadDashboardTickets() {
   const tableBody = document.getElementById("dashboard-tickets-table");
   let filteredTickets = [];
-  console.log(tickets);
+  // console.log(tickets);
 
   // Get current user info - ensure these variables are available globally
   const current_user_id = robodeskCurrentUser?.id || 0;
@@ -566,7 +566,6 @@ function showPage(pageName) {
 
   // Load page-specific content
   if (pageName === "tickets") {
-    loadTicketsTable && loadTicketsTable();
   } else if (pageName === "settings") {
     showSettingsTab("basic");
   } else if (pageName === "dashboard") {

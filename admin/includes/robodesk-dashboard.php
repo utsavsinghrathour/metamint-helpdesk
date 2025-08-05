@@ -989,6 +989,7 @@ function robodesk_dashboard_callback()
                                 <i class="fas fa-arrow-left mr-2"></i>
                                 Back to Tickets
                             </button>
+
                         </div>
 
                         <!-- Comprehensive Ticket Info -->
