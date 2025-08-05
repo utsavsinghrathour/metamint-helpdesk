@@ -1,6 +1,4 @@
 <?php
-// File: robodesk_dashboard_callback.php (e.g., inside a WordPress plugin or theme file)
-
 // Prevent direct access to the file and ensure WordPress functions are available
 if (!defined('ABSPATH')) {
     exit; // Exit if accessed directly
@@ -353,13 +351,7 @@ function robodesk_dashboard_callback()
                         }
                     }
 
-                    /**
-                     * Returns a blinking class for chat tickets based on last reply time and author.
-                     * Only applies to chat tickets with open/in-progress status.
-                     *
-                     * @param array $ticket
-                     * @return string
-                     */
+
                     function get_blinking_class($ticket)
                     {
                         // Only for chat tickets with open/in-progress status
@@ -413,8 +405,6 @@ function robodesk_dashboard_callback()
                             return 'blinking-green';
                         }
                     }
-
-
 
                     // Generate table HTML
                     ob_start();
@@ -1164,7 +1154,6 @@ function robodesk_dashboard_callback()
                                         Add Note
                                     </button>
 
-
                                 </div>
                             </div>
                         </div>
@@ -1620,8 +1609,6 @@ function robodesk_dashboard_callback()
 
 
     </div>
-
-
 
 <?php
     // Output the buffered content
