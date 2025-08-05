@@ -40,8 +40,8 @@ function robodesk_dashboard_callback()
     </script>';
 
     // Debugging line to check current user ID and name
-    var_dump($current_user_id); // Debugging line to check current user ID and name
-    var_dump($current_user_name); // Debugging line to check current user name
+    // var_dump($current_user_id); // Debugging line to check current user ID and name
+    // var_dump($current_user_name); // Debugging line to check current user name
 
     // Start output buffering to capture the HTML
     ob_start();
@@ -1197,6 +1197,7 @@ function robodesk_dashboard_callback()
                     <!------------------------------------------ overall setting page with all the tabs---------------------------------------->
                     <div class="p-6">
                         <!------------------------------Basic Settings Tab --------------------------------->
+
                         <div id="basic-tab" class="settings-tab-content">
                             <h3 class="text-lg font-medium text-gray-900 mb-6">Basic Settings</h3>
                             <form id="robodesk-basic-settings-form" class="space-y-6">
@@ -1210,9 +1211,6 @@ function robodesk_dashboard_callback()
                                         <label for="admin_email" class="block text-sm font-medium text-gray-700">Admin Email</label>
                                         <input type="email" name="admin_email" id="admin_email" value="<?php echo esc_attr(get_option('robodesk_admin_email', 'admin@example.com')); ?>" class="styled-input mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
                                     </div>
-
-
-
                                     <div>
                                         <label for="timezone" class="block text-sm font-medium text-gray-700">Timezone</label>
                                         <select name="timezone" id="timezone" class="styled-select mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
@@ -1244,7 +1242,6 @@ function robodesk_dashboard_callback()
                                             </div>
                                         </div>
                                     </div>
-
                                     <div>
                                         <label for="popover_icon" class="block text-sm font-medium text-gray-700">Pop over Icon/Image</label>
                                         <input type="file" accept="image/*" name="popover_icon" id="popover_icon" class="styled-input mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
@@ -1265,9 +1262,7 @@ function robodesk_dashboard_callback()
                                             }
                                             ?>
                                         </select>
-
                                     </div>
-
                                     <div>
                                         <label for="logo" class="block text-sm font-medium text-gray-700">Logo</label>
                                         <input type="file" accept="image/*" name="logo" id="logo" class="styled-input mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
@@ -1286,15 +1281,12 @@ function robodesk_dashboard_callback()
                                         </div>
                                         <input type="hidden" name="robodesk_wide_logo" id="robodesk_wide_logo" value="<?php echo esc_attr(get_option('robodesk_wide_logo', '')); ?>">
                                     </div>
-
                                     <!-- adding a notification sound for chat -->
                                     <div>
                                         <label for="notification_sound" class="block text-sm font-medium text-gray-700">Notification Sound</label>
                                         <select name="robodesk_notification_sound" id="notification_sound" class="styled-select mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
                                             <?php
-                                            // List of predefined audio files (update URLs as needed)
                                             $audio_files = [
-
                                                 'Sample 1' => plugin_dir_url(__FILE__) . 'audio/1.mp3',
                                                 'Sample 2' => plugin_dir_url(__FILE__) . 'audio/2.mp3',
                                                 'Sample 3' => plugin_dir_url(__FILE__) . 'audio/3.mp3',
@@ -1309,7 +1301,6 @@ function robodesk_dashboard_callback()
                                                 'Sample 12' => plugin_dir_url(__FILE__) . 'audio/chime.mp3',
                                                 'Sample 13' => plugin_dir_url(__FILE__) . 'audio/notify.mp3',
                                                 'Sample 14' => plugin_dir_url(__FILE__) . 'audio/alert.mp3',
-
                                             ];
                                             $selected_sound = get_option('robodesk_notification_sound', '');
                                             foreach ($audio_files as $label => $url) {
@@ -1325,10 +1316,25 @@ function robodesk_dashboard_callback()
                                             <button type="button" onclick="removeAudio('notification-sound-preview', 'robodesk_notification_sound')" class="text-red-600 hover:text-red-800 text-sm <?php echo $selected_sound ? '' : 'hidden'; ?>">Remove</button>
                                         </div>
                                         <input type="hidden" name="robodesk_notification_sound" id="robodesk_notification_sound" value="<?php echo esc_attr($selected_sound); ?>">
-
                                     </div>
-
                                     <!-- end of notification sound -->
+                                    <!-- adding a default category of ticket -->
+                                    <div class="mt-4">
+                                        <label for="robodesk_default_ticket_category" class="block text-sm font-medium text-gray-700">Default Ticket Category</label>
+                                        <select name="robodesk_default_ticket_category" id="robodesk_default_ticket_category" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                                            <option value="">Select a category</option>
+                                            <?php
+                                            $selected_category = get_option('robodesk_default_ticket_category', '');
+                                            $categories = get_terms(array(
+                                                'taxonomy'   => 'robodesk_ticket_category',
+                                                'hide_empty' => false,
+                                            ));
+                                            foreach ($categories as $category) {
+                                                echo '<option value="' . esc_attr($category->term_id) . '" ' . selected($selected_category, $category->term_id, false) . '>' . esc_html($category->name) . '</option>';
+                                            }
+                                            ?>
+                                        </select>
+                                    </div>
                                 </div>
                                 <hr class="my-6 border-gray-200">
                                 <button type="button" id="save-basic-settings" class="mt-6 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">
@@ -1336,6 +1342,7 @@ function robodesk_dashboard_callback()
                                 </button>
                             </form>
                         </div>
+
                         <!----------------------- IMAP Settings load saved settings ------------------->
                         <?php
                         // Load saved settings
