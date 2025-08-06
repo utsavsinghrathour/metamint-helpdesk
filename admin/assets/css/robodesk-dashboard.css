@@ -455,7 +455,7 @@
   display: inline-block;
   width: 10px;
   height: 10px;
-  background-color: rgb(255, 255, 0);
+  background-color: #d97706;
   border-radius: 50%;
   animation: blink 1s infinite;
 }
