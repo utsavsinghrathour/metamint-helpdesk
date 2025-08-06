@@ -46,22 +46,20 @@ const SingleTicket = ({ ticket, onBack, loggedInUserId }) => {
     const [ticketClosed, setTicketClosed] = useState(false);
 
 
-    const [isMessagingActive, setIsisMessagingActive] = useState(
-        document.visibilityState === "visible"
-    );
+    const [isMessagingActive, setIsisMessagingActive] = useState(true);
 
 
     useEffect(() => {
 
-        setTicketClosed(ticket.status == "closed");
-        beep.current.load();
-        const onVisibilityChange = () => {
-            setIsisMessagingActive(document.visibilityState === "visible");
-        };
-        document.addEventListener("visibilitychange", onVisibilityChange);
-        return () => {
-            document.removeEventListener("visibilitychange", onVisibilityChange);
-        };
+        // setTicketClosed(ticket.status == "closed");
+        // beep.current.load();
+        // const onVisibilityChange = () => {
+        //     setIsisMessagingActive(document.visibilityState === "visible");
+        // };
+        // document.addEventListener("visibilitychange", onVisibilityChange);
+        // return () => {
+        //     document.removeEventListener("visibilitychange", onVisibilityChange);
+        // };
     }, []);
 
     const fetchComments = async (fetchOffset = 0, prepend = false) => {
@@ -173,18 +171,21 @@ const SingleTicket = ({ ticket, onBack, loggedInUserId }) => {
         }
         const fetchInitialComments = async () => {
             try {
-                // const response = await fetch(
-                //     `/wp-json/wp/v2/comments?post=${ticket.id}&per_page=1&order=asc&_fields=id`
-                // );
-                // if (!response.ok) {
-                //     throw new Error("Failed to fetch total comments");
-                // }
-                const total = parseInt(ticket.totalComments, 10) || 0;
-
-                // console.log("Total comments:", total);
+                const response = await fetch(
+                    `/wp-json/wp/v2/comments?post=${ticket.id}&per_page=1&order=asc&_fields=id`
+                );
+                if (!response.ok) {
+                    throw new Error("Failed to fetch total comments");
+                }
+                const total = parseInt(response.headers.get("X-WP-Total"), 10) || 0;
                 setTotalComments(total);
                 const initialOffset = Math.max(total - perPage, 0);
                 setOffset(initialOffset);
+
+                // console.log("Total comments:", total);
+                setTotalComments(total);
+                // const initialOffset = Math.max(total - perPage, 0);
+                // setOffset(initialOffset);
                 await fetchComments(initialOffset, false);
             } catch (err) {
                 console.error("Failed to fetch initial comments:", err);
@@ -321,10 +322,10 @@ const SingleTicket = ({ ticket, onBack, loggedInUserId }) => {
         console.log('From handle send', message)
         if (message.trim() || previewImage) {
             const imageHTML = previewImage
-                ? `<img src="${previewImage}" alt="Preview" class="rd-comment-img"  />`: false;
+                ? `<a href="${previewImage}" target="_blank"><img src="${previewImage}" alt="Preview" class="rd-comment-img"  /></a>` : false;
             const tempMessage = {
                 id: `temp-${Date.now()}`,
-                text:  message + (imageHTML ? "<br>" + imageHTML : ""),
+                text: message + (imageHTML ? "<br>" + imageHTML : ""),
                 sender: "me",
                 senderName: "Me",
                 image: "/default-avatar.jpg",
@@ -335,7 +336,6 @@ const SingleTicket = ({ ticket, onBack, loggedInUserId }) => {
 
 
             setChatMessages((prev) => [...prev, tempMessage]);
-
             console.log('THe temp message is', tempMessage);
             setMessage("");
             setPreviewImage(null);
@@ -391,13 +391,33 @@ const SingleTicket = ({ ticket, onBack, loggedInUserId }) => {
 
     const handleFileUpload = (e) => {
         const file = e.target.files[0];
-        if (file && file.type.startsWith("image/")) {
-            const reader = new FileReader();
-            reader.onload = () => setPreviewImage(reader.result);
-            reader.readAsDataURL(file);
+
+        if (!file) return;
+
+        // Check if file is an image
+        if (!file.type.startsWith("image/")) {
+            alert("Only image files are allowed.");
+            e.target.value = null;
+            return;
         }
+
+        // Check file size (5MB = 5 * 1024 * 1024 bytes)
+        const maxSize = 5 * 1024 * 1024;
+        if (file.size > maxSize) {
+            alert("Image size must be less than 5MB.");
+            e.target.value = null;
+            return;
+        }
+
+        // Read image
+        const reader = new FileReader();
+        reader.onload = () => setPreviewImage(reader.result);
+        reader.readAsDataURL(file);
+
+        // Reset input
         e.target.value = null;
     };
+
 
     const triggerFileInput = () => fileInputRef.current.click();
 
@@ -452,10 +472,10 @@ const SingleTicket = ({ ticket, onBack, loggedInUserId }) => {
             <div
                 ref={chatContainerRef}
                 className="chat-container rd-flex rd-flex-col rd-flex-grow rd-px-18 rd-py-15 rd-overflow-auto"
-                style={{ minHeight: "268px" }}
+
             >
                 {loading && offset === Math.max(totalComments - perPage, 0) ? (
-                    <p className="rd-text-center rd-body-text">Loading messages...</p>
+                    <p className="rd-text-center rd-body-text">Loading conversations...</p>
                 ) : error ? (
                     <p className="err_msg rd-text-center">{error}</p>
                 ) : chatMessages.length === 0 ? (
@@ -516,7 +536,7 @@ const SingleTicket = ({ ticket, onBack, loggedInUserId }) => {
                                     }}
                                 >
                                     {msg.isSending ? (
-                                       <span
+                                        <span
                                             className="rd-body-text single-message"
                                             dangerouslySetInnerHTML={{ __html: msg.text }}
                                         />

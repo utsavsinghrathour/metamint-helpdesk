@@ -625,7 +625,7 @@ function robodesk_handle_tickets_webhook(WP_REST_Request $request)
         if (!empty($base64_image)) {
             $attachment_id = robodesk_base64_image_upload($base64_image);
             $attachment_url = wp_get_attachment_url($attachment_id);
-            $content = $reply . '<br/><img alt="'.get_the_title($ticket_id).'" class="rd-comment-img"  src="'.$attachment_url.'">';
+            $content = $reply . '<br/><a href="'.$attachment_url.'" target="_blank"><img alt="'.get_the_title($ticket_id).'" class="rd-comment-img"  src="'.$attachment_url.'"></a>';
             
         }
         
@@ -747,6 +747,15 @@ function robodesk_allow_image_in_comments( $allowed_tags ) {
         'class' => array(),
         'width' => array(),
         'height' => array()
+    );
+    
+    // Allow <a> tag with common safe attributes
+    $allowed_tags['a'] = array(
+        'href'   => array(),
+        'title'  => array(),
+        'target' => array(),
+        'rel'    => array(),
+        'class'  => array(),
     );
     return $allowed_tags;
 }
