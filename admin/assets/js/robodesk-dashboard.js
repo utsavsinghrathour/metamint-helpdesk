@@ -44,38 +44,54 @@ function loadDashboardTickets() {
   }
 
   function getBlinkingClass(ticket) {
-    if (
-      ticket.source !== "chat" ||
-      !["open", "in-progress"].includes(ticket.status)
-    ) {
+    // Ensure ticket is from chat and status is open/in-progress
+    const isChat = ticket.source === "chat";
+    const isActiveStatus = ["open", "in-progress"].includes(ticket.status);
+
+    if (!isChat || !isActiveStatus) {
       return "";
     }
+
     const replies = Array.isArray(ticket.replies) ? ticket.replies : [];
     const lastReply = replies.length > 0 ? replies[replies.length - 1] : null;
 
-    if (!lastReply) {
-      return "blinking-green";
-    }
-
-    const isCustomer =
-      lastReply.type === "customer" || lastReply.author_type === "customer";
-    if (!isCustomer) {
-      return "blinking-green";
-    }
-
-    const lastReplyTime = new Date(
-      lastReply.timestamp || lastReply.date || ticket.updated
-    );
     const now = new Date();
-    const diffMinutes = (now - lastReplyTime) / (1000 * 60);
+    const lastReplyTime = new Date(
+      lastReply?.timestamp || lastReply?.date || ticket.updated
+    );
+    const isValidDate =
+      lastReplyTime instanceof Date &&
+      !isNaN(lastReplyTime) &&
+      lastReplyTime <= now;
 
-    if (diffMinutes <= 5) {
+    const diffMinutes = isValidDate
+      ? (now - lastReplyTime) / (1000 * 60)
+      : null;
+
+    const isCustomerReply =
+      lastReply &&
+      (lastReply.author === ticket.customer ||
+        lastReply.author === ticket.email ||
+        lastReply.type === "customer" ||
+        lastReply.author_type === "customer");
+
+    // Case: RED
+    if (isCustomerReply && diffMinutes !== null && diffMinutes >= 10) {
       return "blinking-red";
-    } else if (diffMinutes <= 10) {
-      return "blinking-yellow";
-    } else {
-      return "blinking-green";
     }
+
+    // Case: YELLOW
+    if (
+      isCustomerReply &&
+      diffMinutes !== null &&
+      diffMinutes > 3 &&
+      diffMinutes < 10
+    ) {
+      return "blinking-yellow";
+    }
+
+    // Case: GREEN (only if chat + status matches)
+    return "blinking-green";
   }
 
   // Build the table HTML
