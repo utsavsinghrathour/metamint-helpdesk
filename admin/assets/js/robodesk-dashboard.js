@@ -97,7 +97,7 @@ function loadDashboardTickets() {
   // Build the table HTML
   tableBody.innerHTML =
     filteredTickets.length === 0
-      ? `<tr><td colspan="6" class="px-6 py-4 text-center text-gray-500">No tickets found for this filter.</td></tr>`
+      ? `<tr><td colspan="7" class="px-6 py-4 text-center text-gray-500">No tickets found for this filter.</td></tr>`
       : filteredTickets
           .map(
             (ticket) => `
