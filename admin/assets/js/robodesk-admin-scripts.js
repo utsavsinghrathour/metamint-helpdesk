@@ -2,14 +2,14 @@ jQuery(document).ready(function($) {
     // Any admin-specific JavaScript code goes here
 
     // Example: Show/Hide meta boxes based on a select field
-    $('#robodesk_ticket_status').change(function() {
-        var selectedStatus = $(this).val();
-        if (selectedStatus === 'closed') {
-            $('#your-other-meta-box').hide(); // Example: Hide another meta box if status is closed
-        } else {
-            $('#your-other-meta-box').show();
-        }
-    });
+    // $('#robodesk_ticket_status').change(function() {
+    //     var selectedStatus = $(this).val();
+    //     if (selectedStatus === 'closed') {
+    //         $('#your-other-meta-box').hide(); // Example: Hide another meta box if status is closed
+    //     } else {
+    //         $('#your-other-meta-box').show();
+    //     }
+    // });
 
     // Example: AJAX call for admin-specific actions
     $('#robodesk-save-credential').click(function() {
