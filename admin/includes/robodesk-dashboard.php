@@ -219,7 +219,7 @@ function robodesk_dashboard_callback()
                         : 'my_conversation';
 
                     // Initialize tickets array
-                    $tickets = [];
+                    $dashboard_tickets = [];
 
                     // WP_Query arguments to fetch ALL tickets
                     $args = [
@@ -271,7 +271,7 @@ function robodesk_dashboard_callback()
                                 ];
                             }, $replies);
 
-                            $tickets[] = [
+                            $dashboard_tickets[] = [
                                 'id' => $ticket_id,
                                 'title' => get_the_title(),
                                 'customer' => get_the_author(),
@@ -297,7 +297,7 @@ function robodesk_dashboard_callback()
                     $current_user_name = $current_user->display_name ?: $current_user->user_login;
 
                     // Filter tickets based on the provided filter
-                    $filtered_tickets = array_filter($tickets, function ($t) use ($current_user_name, $filter) {
+                    $filtered_tickets = array_filter($dashboard_tickets, function ($t) use ($current_user_name, $filter) {
                         switch ($filter) {
                             case 'my_conversation':
                                 return $t['assignee'] === $current_user_name;
@@ -356,13 +356,13 @@ function robodesk_dashboard_callback()
                     {
                         // Only for chat tickets with open/in-progress status
                         if (
-                            empty($ticket['source']) || strtolower($ticket['source']) !== 'chat' ||
-                            empty($ticket['status']) || !in_array($ticket['status'], ['open', 'in-progress'])
+                            empty($dashboard_tickets['source']) || strtolower($dashboard_tickets['source']) !== 'chat' ||
+                            empty($dashboard_tickets['status']) || !in_array($dashboard_tickets['status'], ['open', 'in-progress'])
                         ) {
                             return '';
                         }
 
-                        $replies = isset($ticket['replies']) && is_array($ticket['replies']) ? $ticket['replies'] : [];
+                        $replies = isset($dashboard_tickets['replies']) && is_array($dashboard_tickets['replies']) ? $dashboard_tickets['replies'] : [];
                         $last_reply = !empty($replies) ? end($replies) : null;
 
                         // If no replies, just green
@@ -387,8 +387,8 @@ function robodesk_dashboard_callback()
                             $last_reply_time = strtotime($last_reply['timestamp']);
                         } elseif (!empty($last_reply['date'])) {
                             $last_reply_time = strtotime($last_reply['date']);
-                        } elseif (!empty($ticket['updated'])) {
-                            $last_reply_time = strtotime($ticket['updated']);
+                        } elseif (!empty($dashboard_tickets['updated'])) {
+                            $last_reply_time = strtotime($dashboard_tickets['updated']);
                         }
                         if (!$last_reply_time) {
                             return 'blinking-green';
@@ -409,7 +409,7 @@ function robodesk_dashboard_callback()
                     // Generate table HTML
                     ob_start();
                 ?>
-                    <div class="overflow-hidden">
+                    <div class="overflow-auto">
                         <table class="min-w-full divide-y divide-gray-200">
                             <thead class="bg-gray-50">
                                 <tr>
@@ -423,6 +423,10 @@ function robodesk_dashboard_callback()
                                 </tr>
                             </thead>
                             <tbody class="bg-white divide-y divide-gray-200" id="dashboard-tickets-table">
+                                <script>
+                                    // Ensure ticket ID is an integer
+                                    const dashboard_tickets = <?php echo wp_json_encode($dashboard_tickets); ?>;
+                                </script>
                                 <?php if (empty($filtered_tickets)) : ?>
                                     <tr>
                                         <td colspan="7" class="px-6 py-4 text-center text-gray-500">
@@ -430,24 +434,25 @@ function robodesk_dashboard_callback()
                                         </td>
                                     </tr>
                                 <?php else : ?>
-                                    <?php foreach ($filtered_tickets as $ticket) : ?>
-                                        <tr class="table-row cursor-pointer" data-ticketid="<?php echo esc_attr($ticket['id']); ?>" onclick="viewTicket(<?php echo esc_js($ticket['id']); ?>)">
+                                    <?php foreach ($filtered_tickets as $dashboard_tickets) : ?>
+
+                                        <tr class="table-row cursor-pointer" data-ticketid="<?php echo esc_attr($dashboard_tickets['id']); ?>" onclick="viewTicket(<?php echo esc_js($dashboard_tickets['id']); ?>)">
                                             <td class="px-6 py-4 whitespace-nowrap">
-                                                <?php $blinking_class = get_blinking_class($ticket); ?>
+                                                <?php $blinking_class = get_blinking_class($dashboard_tickets); ?>
                                                 <div class="text-sm font-medium text-gray-900<?php echo $blinking_class ? ' ' . esc_attr($blinking_class) : ''; ?>">
-                                                    #<?php echo esc_html($ticket['id']); ?>
+                                                    #<?php echo esc_html($dashboard_tickets['id']); ?>
                                                     <?php if ($blinking_class): ?>
                                                         <span>&bull;</span>
                                                     <?php endif; ?>
                                                 </div>
-                                                <div class="text-sm text-gray-500 truncate max-w-xs"><?php echo esc_html($ticket['title']); ?></div>
+                                                <div class="text-sm text-gray-500 truncate max-w-xs"><?php echo esc_html($dashboard_tickets['title']); ?></div>
                                             </td>
                                             <td class="px-6 py-4 whitespace-nowrap">
-                                                <?php if (!empty($ticket['replies'])) : ?>
+                                                <?php if (!empty($dashboard_tickets['replies'])) : ?>
                                                     <?php
-                                                    $last_reply = end($ticket['replies']);
+                                                    $last_reply = end($dashboard_tickets['replies']);
                                                     $last_reply_author = $last_reply['author'] ?? 'N/A';
-                                                    $last_reply_date = $last_reply['date'] ?? $ticket['updated'];
+                                                    $last_reply_date = $last_reply['date'] ?? $dashboard_tickets['updated'];
                                                     $time_diff = human_time_diff(strtotime($last_reply_date), current_time('timestamp')) . ' ago';
                                                     ?>
                                                     <div class="text-sm font-medium text-gray-900"><?php echo esc_html($last_reply_author); ?></div>
@@ -457,28 +462,29 @@ function robodesk_dashboard_callback()
                                                 <?php endif; ?>
                                             </td>
                                             <td class="px-6 py-4 whitespace-nowrap">
-                                                <div class="text-sm font-medium text-gray-900"><?php echo esc_html($ticket['customer']); ?></div>
-                                                <div class="text-sm text-gray-500 truncate max-w-xs"><?php echo esc_html($ticket['email']); ?></div>
+                                                <div class="text-sm font-medium text-gray-900"><?php echo esc_html($dashboard_tickets['customer']); ?></div>
+                                                <div class="text-sm text-gray-500 truncate max-w-xs"><?php echo esc_html($dashboard_tickets['email']); ?></div>
                                             </td>
                                             <td class="px-6 py-4 whitespace-nowrap">
-                                                <div class="text-sm font-medium text-gray-900"><?php echo esc_html($ticket['source']); ?></div>
+                                                <div class="text-sm font-medium text-gray-900"><?php echo esc_html($dashboard_tickets['source']); ?></div>
                                             </td>
                                             <td class="px-6 py-4 whitespace-nowrap">
-                                                <span class="status-badge <?php echo esc_attr(get_status_class($ticket['status'])); ?> editable-status"
-                                                    onclick="event.stopPropagation(); editStatus(<?php echo esc_js($ticket['id']); ?>, this)">
-                                                    <?php echo esc_html(str_replace('-', ' ', $ticket['status'])); ?>
+                                                <span class="status-badge <?php echo esc_attr(get_status_class($dashboard_tickets['status'])); ?> editable-status"
+                                                    onclick="event.stopPropagation(); editStatus(<?php echo esc_js($dashboard_tickets['id']); ?>, this)">
+                                                    <?php echo esc_html(str_replace('-', ' ', $dashboard_tickets['status'])); ?>
                                                 </span>
                                             </td>
                                             <td class="px-6 py-4 whitespace-nowrap">
-                                                <span class="status-badge <?php echo esc_attr(get_priority_class($ticket['priority'])); ?> editable-priority"
-                                                    onclick="event.stopPropagation(); editPriority(<?php echo esc_js($ticket['id']); ?>, this)">
-                                                    <?php echo esc_html($ticket['priority']); ?>
+                                                <span class="status-badge <?php echo esc_attr(get_priority_class($dashboard_tickets['priority'])); ?> editable-priority"
+                                                    onclick="event.stopPropagation(); editPriority(<?php echo esc_js($dashboard_tickets['id']); ?>, this)">
+                                                    <?php echo esc_html($dashboard_tickets['priority']); ?>
                                                 </span>
                                             </td>
                                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                                <?php echo esc_html(format_date($ticket['updated'])); ?>
+                                                <?php echo esc_html(format_date($dashboard_tickets['updated'])); ?>
                                             </td>
                                         </tr>
+
                                     <?php endforeach; ?>
                                 <?php endif; ?>
                             </tbody>
