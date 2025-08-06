@@ -423,73 +423,13 @@ function robodesk_dashboard_callback()
                                 </tr>
                             </thead>
                             <tbody class="bg-white divide-y divide-gray-200" id="dashboard-tickets-table">
-                                <script>
-                                    // Ensure ticket ID is an integer
-                                    const dashboard_tickets = <?php echo wp_json_encode($dashboard_tickets); ?>;
-                                </script>
-                                <?php if (empty($filtered_tickets)) : ?>
-                                    <tr>
-                                        <td colspan="7" class="px-6 py-4 text-center text-gray-500">
-                                            No tickets found for this filter.
-                                        </td>
-                                    </tr>
-                                <?php else : ?>
-                                    <?php foreach ($filtered_tickets as $dashboard_tickets) : ?>
-
-                                        <tr class="table-row cursor-pointer" data-ticketid="<?php echo esc_attr($dashboard_tickets['id']); ?>" onclick="viewTicket(<?php echo esc_js($dashboard_tickets['id']); ?>)">
-                                            <td class="px-6 py-4 whitespace-nowrap">
-                                                <?php $blinking_class = get_blinking_class($dashboard_tickets); ?>
-                                                <div class="text-sm font-medium text-gray-900<?php echo $blinking_class ? ' ' . esc_attr($blinking_class) : ''; ?>">
-                                                    #<?php echo esc_html($dashboard_tickets['id']); ?>
-                                                    <?php if ($blinking_class): ?>
-                                                        <span>&bull;</span>
-                                                    <?php endif; ?>
-                                                </div>
-                                                <div class="text-sm text-gray-500 truncate max-w-xs"><?php echo esc_html($dashboard_tickets['title']); ?></div>
-                                            </td>
-                                            <td class="px-6 py-4 whitespace-nowrap">
-                                                <?php if (!empty($dashboard_tickets['replies'])) : ?>
-                                                    <?php
-                                                    $last_reply = end($dashboard_tickets['replies']);
-                                                    $last_reply_author = $last_reply['author'] ?? 'N/A';
-                                                    $last_reply_date = $last_reply['date'] ?? $dashboard_tickets['updated'];
-                                                    $time_diff = human_time_diff(strtotime($last_reply_date), current_time('timestamp')) . ' ago';
-                                                    ?>
-                                                    <div class="text-sm font-medium text-gray-900"><?php echo esc_html($last_reply_author); ?></div>
-                                                    <div class="text-sm text-gray-500"><?php echo esc_html($time_diff); ?></div>
-                                                <?php else : ?>
-                                                    <div class="text-sm text-gray-500">No replies yet</div>
-                                                <?php endif; ?>
-                                            </td>
-                                            <td class="px-6 py-4 whitespace-nowrap">
-                                                <div class="text-sm font-medium text-gray-900"><?php echo esc_html($dashboard_tickets['customer']); ?></div>
-                                                <div class="text-sm text-gray-500 truncate max-w-xs"><?php echo esc_html($dashboard_tickets['email']); ?></div>
-                                            </td>
-                                            <td class="px-6 py-4 whitespace-nowrap">
-                                                <div class="text-sm font-medium text-gray-900"><?php echo esc_html($dashboard_tickets['source']); ?></div>
-                                            </td>
-                                            <td class="px-6 py-4 whitespace-nowrap">
-                                                <span class="status-badge <?php echo esc_attr(get_status_class($dashboard_tickets['status'])); ?> editable-status"
-                                                    onclick="event.stopPropagation(); editStatus(<?php echo esc_js($dashboard_tickets['id']); ?>, this)">
-                                                    <?php echo esc_html(str_replace('-', ' ', $dashboard_tickets['status'])); ?>
-                                                </span>
-                                            </td>
-                                            <td class="px-6 py-4 whitespace-nowrap">
-                                                <span class="status-badge <?php echo esc_attr(get_priority_class($dashboard_tickets['priority'])); ?> editable-priority"
-                                                    onclick="event.stopPropagation(); editPriority(<?php echo esc_js($dashboard_tickets['id']); ?>, this)">
-                                                    <?php echo esc_html($dashboard_tickets['priority']); ?>
-                                                </span>
-                                            </td>
-                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                                <?php echo esc_html(format_date($dashboard_tickets['updated'])); ?>
-                                            </td>
-                                        </tr>
-
-                                    <?php endforeach; ?>
-                                <?php endif; ?>
+                                <!-- Rows populated by JavaScript -->
                             </tbody>
                         </table>
                     </div>
+                    <script>
+                        const dashboard_tickets = <?php echo wp_json_encode($dashboard_tickets); ?>;
+                    </script>
                 <?php
                     return ob_get_clean();
                 }
