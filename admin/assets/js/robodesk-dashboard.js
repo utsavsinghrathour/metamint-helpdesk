@@ -76,17 +76,17 @@ function loadDashboardTickets() {
         lastReply.author_type === "customer");
 
     // Case: RED
-    if (isCustomerReply && diffMinutes !== null && diffMinutes >= 10) {
-      return "blinking-red";
-    }
-
-    // Case: YELLOW
     if (
       isCustomerReply &&
       diffMinutes !== null &&
       diffMinutes > 3 &&
-      diffMinutes < 10
+      diffMinutes < 60
     ) {
+      return "blinking-red";
+    }
+
+    // Case: YELLOW
+    if (isCustomerReply && diffMinutes !== null && diffMinutes < 3) {
       return "blinking-yellow";
     }
 
@@ -97,7 +97,7 @@ function loadDashboardTickets() {
   // Build the table HTML
   tableBody.innerHTML =
     filteredTickets.length === 0
-      ? `<tr><td colspan="7" class="px-6 py-4 text-center text-gray-500">No tickets found for this filter.</td></tr>`
+      ? `<tr><td colspan="6" class="px-6 py-4 text-center text-gray-500">No tickets found for this filter.</td></tr>`
       : filteredTickets
           .map(
             (ticket) => `
@@ -164,12 +164,6 @@ function loadDashboardTickets() {
                   }, this)">
                   ${escapeHTML(ticket.priority)}
                 </span>
-              </td>
-              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                ${formatDate(ticket.updated)}
-              </td>
-              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 hidden">
-                ${escapeHTML(ticket.assignee || "Unassigned")}
               </td>
             </tr>
           `
