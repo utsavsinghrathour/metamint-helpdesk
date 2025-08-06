@@ -1,44 +1,44 @@
 function loadDashboardTickets() {
   const tableBody = document.getElementById("dashboard-tickets-table");
   let filteredTickets = [];
-  // console.log(tickets);
+  console.log(dashboard_tickets);
 
   // Get current user info - ensure these variables are available globally
-  const current_user_id = robodeskCurrentUser?.id || 0;
+  // const current_user_id = robodeskCurrentUser?.id || 0; // Unused variable removed
   const current_user_name =
     robodeskCurrentUser?.name || robodeskCurrentUser?.display_name || "";
 
   // console.log("Current User ID:", current_user_id);
   // console.log("Current User Name:", current_user_name);
 
-  // Filter tickets based on currentDashboardFilter
+  // Filter dashboard_tickets based on currentDashboardFilter
   switch (currentDashboardFilter) {
     case "my_conversation":
-      filteredTickets = tickets
+      filteredTickets = dashboard_tickets
         .filter((t) => t.assignee === current_user_name)
         .sort((a, b) => new Date(b.updated) - new Date(a.updated));
       break;
 
     case "unassigned_conversation":
-      filteredTickets = tickets
+      filteredTickets = dashboard_tickets
         .filter((t) => t.assignee === "N/A" || !t.assignee)
         .sort((a, b) => new Date(b.updated) - new Date(a.updated));
       break;
 
     case "open_conversation":
-      filteredTickets = tickets
+      filteredTickets = dashboard_tickets
         .filter((t) => t.status === "open" || t.status === "in-progress")
         .sort((a, b) => new Date(b.updated) - new Date(a.updated));
       break;
 
     case "chat_conversation":
-      filteredTickets = tickets
+      filteredTickets = dashboard_tickets
         .filter((t) => t.source === "chat")
         .sort((a, b) => new Date(b.updated) - new Date(a.updated));
       break;
 
     default:
-      filteredTickets = tickets
+      filteredTickets = dashboard_tickets
         .slice()
         .sort((a, b) => new Date(b.updated) - new Date(a.updated));
       break;
@@ -54,15 +54,17 @@ function loadDashboardTickets() {
     return classes[priority?.toLowerCase()] || "priority-default";
   }
 
-  function getBlinkingClass(ticket) {
+  function getBlinkingClass(dashboard_tickets) {
     if (
-      ticket.source !== "chat" ||
-      !["open", "in-progress"].includes(ticket.status)
+      dashboard_tickets.source !== "chat" ||
+      !["open", "in-progress"].includes(dashboard_tickets.status)
     ) {
       return "";
     }
 
-    const replies = Array.isArray(ticket.replies) ? ticket.replies : [];
+    const replies = Array.isArray(dashboard_tickets.replies)
+      ? dashboard_tickets.replies
+      : [];
     const lastReply = replies.length > 0 ? replies[replies.length - 1] : null;
 
     if (!lastReply) {
@@ -76,7 +78,7 @@ function loadDashboardTickets() {
     }
 
     const lastReplyTime = new Date(
-      lastReply.timestamp || lastReply.date || ticket.updated
+      lastReply.timestamp || lastReply.date || dashboard_tickets.updated
     );
     const now = new Date();
     const diffMinutes = (now - lastReplyTime) / (1000 * 60); // Convert milliseconds to minutes
