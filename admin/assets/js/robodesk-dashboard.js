@@ -720,27 +720,25 @@ function loadTicketDetail() {
   const ticketMetaInfo = document.getElementById("ticket-meta-info");
 
   ticketMetaInfo.innerHTML = `
-        <div class="text-sm space-y-2">
-            <div>
-                <strong>Author Image:</strong>
-                <img id="author-image" src="${
-                  currentTicket.author_image
-                }" alt="Author Image" class="w-8 h-8 rounded-full inline-block ml-2">
-            </div>
-            <div>
-                <strong>Origin:</strong> <span id="ticket-source">${
-                  currentTicket.source
-                }</span>
-            </div>
-            <div>
-                <strong>Category:</strong> 
-                <select id="ticket-category-select" class="ml-2 px-2 py-1 border border-gray-300 rounded text-sm">
-                    ${createCategoryOptions()}
-                </select>
-                
-            </div>
-        </div>
-    `;
+    <div class="text-sm space-y-4 bg-gray-50 p-2 rounded-lg shadow-sm">
+      <div class="flex items-center space-x-2">
+        <strong class="text-gray-700">Author Image:</strong>
+        <img id="author-image" src="${
+          currentTicket.author_image
+        }" alt="Author Image" class="w-10 h-10 rounded-full border border-gray-300 shadow-sm">
+      </div>
+      <div>
+        <strong class="text-gray-700">Origin:</strong>
+        <span id="ticket-source" class="inline-block px-2 py-1 bg-blue-100 text-blue-700 rounded"><strong>${currentTicket.source.toUpperCase()}</strong></span>
+      </div>
+      <div>
+        <strong class="text-gray-700">Category:</strong>
+        <select id="ticket-category-select" class="ml-2 px-2 py-1 border border-gray-300 rounded text-sm bg-white focus:ring focus:ring-blue-200">
+          ${createCategoryOptions()}
+        </select>
+      </div>
+    </div>
+  `;
 
   // Set the current category if ticket has one
   if (currentTicket.category && currentTicket.category.term_id) {
