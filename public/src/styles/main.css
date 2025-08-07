@@ -167,6 +167,9 @@ button.no-bg, .button.no-bg{
 .rd-gap-20{
   gap: 20px;
 }
+.rd-pt-0{
+  padding-top: 0 !important;
+}
 .rd-p-0{
   padding: 0 !important;
 }

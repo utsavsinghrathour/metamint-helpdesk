@@ -172,7 +172,6 @@ const MessageTabs = ({
           ) : (
             <>
               <div className="rd-px-18 rd-search-header rd-bg-blue rd-flex rd-items-center rd-justify-between rd-flex-col rd-message-list-header">
-                
                 <button
                   className="back-button rd-flex rd-items-center rd-gap-1 rd-border-none rd-bg-transparent rd-m-0 rd-p-0"
                   onClick={handleBackToHome}
@@ -204,7 +203,7 @@ const MessageTabs = ({
                 )}
               </div>
               <div className="rd-message-tab-content">
-                <div className="rd-mt-20 rd-mb-10">
+                <div className="rd-mt-10 rd-mb-10">
                   <h4 className="heading-4 rd-text-center">Conversations</h4>
                   <div className="rd-body-text rd-mt-8 rd-text-center ">
                     <p>All your conversations are here.</p>
@@ -212,7 +211,7 @@ const MessageTabs = ({
                 </div>
 
                 {/* Search and Priority Filter */}
-                <div className="rd-px-18 rd-py-15 rd-flex rd-gap-10 rd-align-center rd-justify-between">
+                <div className="rd-px-18 rd-py-10 rd-flex rd-gap-10 rd-align-center rd-justify-between">
                   <input
                     type="text"
                     value={searchTerm}
@@ -233,7 +232,7 @@ const MessageTabs = ({
                 </div>
 
                 {/* Tabs */}
-                <div className="rd-flex rd-justify-between rd-py-10 rd-px-20 rd-gap-10 rd-border-bottom-light">
+                <div className="rd-flex rd-justify-between rd-py-10 rd-px-20 rd-gap-10 rd-border-bottom-light rd-pt-0">
                   <select
                     value={currentTab}
                     onChange={(e) => setCurrentTab(e.target.value)}
@@ -244,7 +243,7 @@ const MessageTabs = ({
                     <option value="ongoing">On Going</option>
                     <option value="resolved">Resolved</option>
                   </select>
-                  <button
+                  {/* <button
                     className={`rd-hover-underline rd-p-0 rd-cursor-pointer rd-flex rd-gap-8 rd-align-center rd-color-gray rd-title-text ticket-tab rd-px-10 rd-py-5 rd-bg-transparent rd-border-none ${
                       currentTab === "new"
                         ? "rd-text-blue rd-font-bold active-ticket-tab"
@@ -335,7 +334,7 @@ const MessageTabs = ({
                       />
                     </svg>
                     On Going
-                  </button>
+                  </button> */}
                 </div>
 
                 {/* Ticket List */}
@@ -353,16 +352,15 @@ const MessageTabs = ({
                       )}
                     </div>
                   </div>
-                </div>
-
-                <div className="rd-send-message rd-text-center rd-px-18 rd-py-15 rd-flex rd-justify-center">
-                  <button
-                    className="button no-bg rd-flex rd-align-center rd-gap-10 rd-cursor-pointer"
-                    onClick={handleAddTicket}
-                  >
-                    Start a conversation
-                    <RiPencilFill />
-                  </button>
+                  <div className="rd-send-message rd-text-center rd-px-18 rd-py-15 rd-flex rd-justify-center">
+                    <button
+                      className="button no-bg rd-flex rd-align-center rd-gap-10 rd-cursor-pointer"
+                      onClick={handleAddTicket}
+                    >
+                      Start a conversation
+                      <RiPencilFill />
+                    </button>
+                  </div>
                 </div>
               </div>
               {/* <Footer activeTab={activeTab} setActiveTab={setActiveTab} /> */}
