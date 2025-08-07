@@ -1,58 +1,37 @@
 function loadDashboardTickets() {
   const tableBody = document.getElementById("dashboard-tickets-table");
   let filteredTickets = [];
-  console.log(tickets);
-
-  // Get current user info - ensure these variables are available globally
-  const current_user_id = robodeskCurrentUser?.id || 0;
   const current_user_name =
     robodeskCurrentUser?.name || robodeskCurrentUser?.display_name || "";
 
-  // console.log("Current User ID:", current_user_id);
-  // console.log("Current User Name:", current_user_name);
-
-  // Filter tickets based on currentDashboardFilter
+  // Filter dashboard_tickets based on currentDashboardFilter
   switch (currentDashboardFilter) {
     case "my_conversation":
-      filteredTickets = tickets
+      filteredTickets = dashboard_tickets
         .filter((t) => t.assignee === current_user_name)
         .sort((a, b) => new Date(b.updated) - new Date(a.updated));
       break;
-
     case "unassigned_conversation":
-      filteredTickets = tickets
+      filteredTickets = dashboard_tickets
         .filter((t) => t.assignee === "N/A" || !t.assignee)
         .sort((a, b) => new Date(b.updated) - new Date(a.updated));
       break;
-
     case "open_conversation":
-      filteredTickets = tickets
+      filteredTickets = dashboard_tickets
         .filter((t) => t.status === "open" || t.status === "in-progress")
         .sort((a, b) => new Date(b.updated) - new Date(a.updated));
       break;
-
     case "chat_conversation":
-      filteredTickets = tickets
+      filteredTickets = dashboard_tickets
         .filter((t) => t.source === "chat")
         .sort((a, b) => new Date(b.updated) - new Date(a.updated));
       break;
-
     default:
-      filteredTickets = tickets
+      filteredTickets = dashboard_tickets
         .slice()
         .sort((a, b) => new Date(b.updated) - new Date(a.updated));
       break;
   }
-
-  // // Helper function to get status class
-  // function getStatusClass(status) {
-  //   const classes = {
-  //     open: "status-open",
-  //     "in-progress": "status-in-progress",
-  //     closed: "status-closed",
-  //   };
-  //   return classes[status] || "status-default";
-  // }
 
   // Helper function to get priority class
   function getPriorityClass(priority) {
@@ -65,122 +44,148 @@ function loadDashboardTickets() {
   }
 
   function getBlinkingClass(ticket) {
-    if (
-      ticket.source !== "chat" ||
-      !["open", "in-progress"].includes(ticket.status)
-    ) {
+    // Ensure ticket is from chat and status is open/in-progress
+    const isChat = ticket.source === "chat";
+    const isActiveStatus = ["open", "in-progress"].includes(ticket.status);
+
+    if (!isChat || !isActiveStatus) {
       return "";
     }
 
     const replies = Array.isArray(ticket.replies) ? ticket.replies : [];
     const lastReply = replies.length > 0 ? replies[replies.length - 1] : null;
 
-    if (!lastReply) {
-      return "blinking-green";
-    }
-
-    const isCustomer =
-      lastReply.type === "customer" || lastReply.author_type === "customer";
-    if (!isCustomer) {
-      return "blinking-green";
-    }
-
-    const lastReplyTime = new Date(
-      lastReply.timestamp || lastReply.date || ticket.updated
-    );
     const now = new Date();
-    const diffMinutes = (now - lastReplyTime) / (1000 * 60); // Convert milliseconds to minutes
+    const lastReplyTime = new Date(
+      lastReply?.timestamp || lastReply?.date || ticket.updated
+    );
+    const isValidDate =
+      lastReplyTime instanceof Date &&
+      !isNaN(lastReplyTime) &&
+      lastReplyTime <= now;
 
-    if (diffMinutes <= 5) {
-      // Example: 5 minutes for red
+    const diffMinutes = isValidDate
+      ? (now - lastReplyTime) / (1000 * 60)
+      : null;
+
+    const isCustomerReply =
+      lastReply &&
+      (lastReply.author === ticket.customer ||
+        lastReply.author === ticket.email ||
+        lastReply.type === "customer" ||
+        lastReply.author_type === "customer");
+
+    // Case: RED
+    if (
+      isCustomerReply &&
+      diffMinutes !== null &&
+      diffMinutes > 3 &&
+      diffMinutes < 60
+    ) {
       return "blinking-red";
-    } else if (diffMinutes <= 10) {
-      // Example: 10 minutes for yellow
-      return "blinking-yellow";
-    } else {
-      return "blinking-green";
     }
+
+    // Case: YELLOW
+    if (isCustomerReply && diffMinutes !== null && diffMinutes < 3) {
+      return "blinking-yellow";
+    }
+
+    // Case: GREEN (only if chat + status matches)
+    return "blinking-green";
   }
 
   // Build the table HTML
-  tableBody.innerHTML = filteredTickets
-    .map(
-      (ticket) => `
-        <tr class="table-row cursor-pointer" data-ticketid="${
-          ticket.id
-        }" onclick="viewTicket(${ticket.id})">
-            <td class="px-6 py-4 whitespace-nowrap">
+  tableBody.innerHTML =
+    filteredTickets.length === 0
+      ? `<tr><td colspan="7" class="px-6 py-4 text-center text-gray-500">No tickets found for this filter.</td></tr>`
+      : filteredTickets
+          .map(
+            (ticket) => `
+            <tr class="table-row cursor-pointer" data-ticketid="${ticket.id}">
+              <td class="px-6 py-4 whitespace-nowrap">
                 <div class="text-sm font-medium text-gray-900">#${
                   ticket.id
                 } <span class="${getBlinkingClass(ticket)}"></span></div>
                 <div class="text-sm text-gray-500 truncate max-w-xs">${escapeHTML(
                   ticket.title
                 )}</div>
-            </td>
-            <td class="px-6 py-4 whitespace-nowrap">
-              ${
-                Array.isArray(ticket.replies) && ticket.replies.length > 0
-                  ? (() => {
-                      const lastReply =
-                        ticket.replies[ticket.replies.length - 1];
-                      const lastReplyAuthor = lastReply.author || "N/A";
-                      const lastReplyDate =
-                        lastReply.timestamp || lastReply.date || ticket.updated;
-                      const timeAgo = timeSince(new Date(lastReplyDate));
-                      return `
-                        <div class="text-sm font-medium text-gray-900">${escapeHTML(
-                          lastReplyAuthor
-                        )}</div>
-                        <div class="text-sm text-gray-500">${timeAgo}</div>
-                      `;
-                    })()
-                  : `<div class="text-sm text-gray-500">No replies yet</div>`
-              }
-            </td>
-            <td class="px-6 py-4 whitespace-nowrap">
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap">
+                ${
+                  Array.isArray(ticket.replies) && ticket.replies.length > 0
+                    ? (() => {
+                        const lastReply =
+                          ticket.replies[ticket.replies.length - 1];
+                        const lastReplyAuthor = lastReply.author || "N/A";
+                        const lastReplyDate =
+                          lastReply.timestamp ||
+                          lastReply.date ||
+                          ticket.updated;
+                        const timeAgo = timeSince(new Date(lastReplyDate));
+                        return `
+                          <div class="text-sm font-medium text-gray-900">${escapeHTML(
+                            lastReplyAuthor
+                          )}</div>
+                          <div class="text-sm text-gray-500">${timeAgo}</div>
+                        `;
+                      })()
+                    : `<div class="text-sm text-gray-500">No replies yet</div>`
+                }
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap">
                 <div class="text-sm font-medium text-gray-900">${escapeHTML(
                   ticket.customer
                 )}</div>
                 <div class="text-sm text-gray-500 truncate max-w-xs">${escapeHTML(
                   ticket.email
                 )}</div>
-            </td>
-            <td class="px-6 py-4 whitespace-nowrap">
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap">
                 <div class="text-sm font-medium text-gray-900">${escapeHTML(
                   ticket.source
                 )}</div>
-            </td>
-            <td class="px-6 py-4 whitespace-nowrap">
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap">
                 <span class="status-badge ${getStatusClass(
                   ticket.status
                 )} editable-status"
-                    onclick="event.stopPropagation(); editStatus(${
-                      ticket.id
-                    }, this)">
-                    ${escapeHTML(ticket.status.replace("-", " "))}
+                  onclick="event.stopPropagation(); editStatus(${
+                    ticket.id
+                  }, this)">
+                  ${escapeHTML(ticket.status.replace("-", " "))}
                 </span>
-            </td>
-            <td class="px-6 py-4 whitespace-nowrap">
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap">
                 <span class="status-badge ${getPriorityClass(
                   ticket.priority
                 )} editable-priority"
-                    onclick="event.stopPropagation(); editPriority(${
-                      ticket.id
-                    }, this)">
-                    ${escapeHTML(ticket.priority)}
+                  onclick="event.stopPropagation(); editPriority(${
+                    ticket.id
+                  }, this)">
+                  ${escapeHTML(ticket.priority)}
                 </span>
-            </td>
-            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                ${formatDate(ticket.updated)}
-            </td>
-            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 hidden">
-                ${escapeHTML(ticket.assignee || "Unassigned")}
-            </td>
-        </tr>
-    `
-    )
-    .join("");
+              </td>
+            </tr>
+          `
+          )
+          .join("");
+
+  // Add event delegation for row clicks
+  tableBody.addEventListener("click", function (event) {
+    const row = event.target.closest("tr.table-row");
+    if (row) {
+      const ticketId = parseInt(row.dataset.ticketid, 10);
+      if (ticketId) {
+        viewTicket(ticketId);
+      } else {
+        console.error("No ticket ID found for row:", row);
+      }
+    }
+  });
 }
+
+// Call when DOM is ready
+document.addEventListener("DOMContentLoaded", loadDashboardTickets);
 
 // Helper function to escape HTML (if not already defined)
 function escapeHTML(str) {
@@ -566,7 +571,6 @@ function showPage(pageName) {
 
   // Load page-specific content
   if (pageName === "tickets") {
-    loadTicketsTable && loadTicketsTable();
   } else if (pageName === "settings") {
     showSettingsTab("basic");
   } else if (pageName === "dashboard") {
@@ -594,9 +598,14 @@ function isValidEmail(email) {
 
 // Ticket detail functions
 function viewTicket(ticketId) {
-  currentTicket = tickets.find((t) => t.id === ticketId);
+  // Convert ticketId to number to ensure type consistency
+  ticketId = parseInt(ticketId, 10);
+  currentTicket = dashboard_tickets.find((t) => t.id === ticketId);
 
-  if (!currentTicket) return;
+  if (!currentTicket) {
+    console.error(`Ticket with ID ${ticketId} not found in dashboard_tickets`);
+    return;
+  }
 
   // Update URL with ticket ID (without reloading)
   if (history.pushState) {
@@ -1135,6 +1144,10 @@ jQuery(document).ready(function ($) {
     formData.append("settings[timezone]", $form.find("#timezone").val());
     formData.append("settings[language]", $form.find("#language").val());
     formData.append("settings[theme_color]", $form.find("#theme_color").val());
+    formData.append(
+      "settings[default_ticket_category]",
+      $form.find("#robodesk_default_ticket_category").val()
+    );
 
     // Append media URLs and files
     mediaFields.forEach(function (field) {

@@ -1,6 +1,4 @@
 <?php
-// File: robodesk_dashboard_callback.php (e.g., inside a WordPress plugin or theme file)
-
 // Prevent direct access to the file and ensure WordPress functions are available
 if (!defined('ABSPATH')) {
     exit; // Exit if accessed directly
@@ -40,8 +38,8 @@ function robodesk_dashboard_callback()
     </script>';
 
     // Debugging line to check current user ID and name
-    var_dump($current_user_id); // Debugging line to check current user ID and name
-    var_dump($current_user_name); // Debugging line to check current user name
+    // var_dump($current_user_id); // Debugging line to check current user ID and name
+    // var_dump($current_user_name); // Debugging line to check current user name
 
     // Start output buffering to capture the HTML
     ob_start();
@@ -221,7 +219,7 @@ function robodesk_dashboard_callback()
                         : 'my_conversation';
 
                     // Initialize tickets array
-                    $tickets = [];
+                    $dashboard_tickets = [];
 
                     // WP_Query arguments to fetch ALL tickets
                     $args = [
@@ -273,7 +271,7 @@ function robodesk_dashboard_callback()
                                 ];
                             }, $replies);
 
-                            $tickets[] = [
+                            $dashboard_tickets[] = [
                                 'id' => $ticket_id,
                                 'title' => get_the_title(),
                                 'customer' => get_the_author(),
@@ -299,7 +297,7 @@ function robodesk_dashboard_callback()
                     $current_user_name = $current_user->display_name ?: $current_user->user_login;
 
                     // Filter tickets based on the provided filter
-                    $filtered_tickets = array_filter($tickets, function ($t) use ($current_user_name, $filter) {
+                    $filtered_tickets = array_filter($dashboard_tickets, function ($t) use ($current_user_name, $filter) {
                         switch ($filter) {
                             case 'my_conversation':
                                 return $t['assignee'] === $current_user_name;
@@ -353,24 +351,18 @@ function robodesk_dashboard_callback()
                         }
                     }
 
-                    /**
-                     * Returns a blinking class for chat tickets based on last reply time and author.
-                     * Only applies to chat tickets with open/in-progress status.
-                     *
-                     * @param array $ticket
-                     * @return string
-                     */
+
                     function get_blinking_class($ticket)
                     {
                         // Only for chat tickets with open/in-progress status
                         if (
-                            empty($ticket['source']) || strtolower($ticket['source']) !== 'chat' ||
-                            empty($ticket['status']) || !in_array($ticket['status'], ['open', 'in-progress'])
+                            empty($dashboard_tickets['source']) || strtolower($dashboard_tickets['source']) !== 'chat' ||
+                            empty($dashboard_tickets['status']) || !in_array($dashboard_tickets['status'], ['open', 'in-progress'])
                         ) {
                             return '';
                         }
 
-                        $replies = isset($ticket['replies']) && is_array($ticket['replies']) ? $ticket['replies'] : [];
+                        $replies = isset($dashboard_tickets['replies']) && is_array($dashboard_tickets['replies']) ? $dashboard_tickets['replies'] : [];
                         $last_reply = !empty($replies) ? end($replies) : null;
 
                         // If no replies, just green
@@ -395,8 +387,8 @@ function robodesk_dashboard_callback()
                             $last_reply_time = strtotime($last_reply['timestamp']);
                         } elseif (!empty($last_reply['date'])) {
                             $last_reply_time = strtotime($last_reply['date']);
-                        } elseif (!empty($ticket['updated'])) {
-                            $last_reply_time = strtotime($ticket['updated']);
+                        } elseif (!empty($dashboard_tickets['updated'])) {
+                            $last_reply_time = strtotime($dashboard_tickets['updated']);
                         }
                         if (!$last_reply_time) {
                             return 'blinking-green';
@@ -414,12 +406,10 @@ function robodesk_dashboard_callback()
                         }
                     }
 
-
-
                     // Generate table HTML
                     ob_start();
                 ?>
-                    <div class="overflow-hidden">
+                    <div class="overflow-auto">
                         <table class="min-w-full divide-y divide-gray-200">
                             <thead class="bg-gray-50">
                                 <tr>
@@ -429,71 +419,17 @@ function robodesk_dashboard_callback()
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Source</th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Priority</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Updated</th>
+                                    <!-- <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Updated</th> -->
                                 </tr>
                             </thead>
                             <tbody class="bg-white divide-y divide-gray-200" id="dashboard-tickets-table">
-                                <?php if (empty($filtered_tickets)) : ?>
-                                    <tr>
-                                        <td colspan="7" class="px-6 py-4 text-center text-gray-500">
-                                            No tickets found for this filter.
-                                        </td>
-                                    </tr>
-                                <?php else : ?>
-                                    <?php foreach ($filtered_tickets as $ticket) : ?>
-                                        <tr class="table-row cursor-pointer" data-ticketid="<?php echo esc_attr($ticket['id']); ?>" onclick="viewTicket(<?php echo esc_js($ticket['id']); ?>)">
-                                            <td class="px-6 py-4 whitespace-nowrap">
-                                                <?php $blinking_class = get_blinking_class($ticket); ?>
-                                                <div class="text-sm font-medium text-gray-900<?php echo $blinking_class ? ' ' . esc_attr($blinking_class) : ''; ?>">
-                                                    #<?php echo esc_html($ticket['id']); ?>
-                                                    <?php if ($blinking_class): ?>
-                                                        <span>&bull;</span>
-                                                    <?php endif; ?>
-                                                </div>
-                                                <div class="text-sm text-gray-500 truncate max-w-xs"><?php echo esc_html($ticket['title']); ?></div>
-                                            </td>
-                                            <td class="px-6 py-4 whitespace-nowrap">
-                                                <?php if (!empty($ticket['replies'])) : ?>
-                                                    <?php
-                                                    $last_reply = end($ticket['replies']);
-                                                    $last_reply_author = $last_reply['author'] ?? 'N/A';
-                                                    $last_reply_date = $last_reply['date'] ?? $ticket['updated'];
-                                                    $time_diff = human_time_diff(strtotime($last_reply_date), current_time('timestamp')) . ' ago';
-                                                    ?>
-                                                    <div class="text-sm font-medium text-gray-900"><?php echo esc_html($last_reply_author); ?></div>
-                                                    <div class="text-sm text-gray-500"><?php echo esc_html($time_diff); ?></div>
-                                                <?php else : ?>
-                                                    <div class="text-sm text-gray-500">No replies yet</div>
-                                                <?php endif; ?>
-                                            </td>
-                                            <td class="px-6 py-4 whitespace-nowrap">
-                                                <div class="text-sm font-medium text-gray-900"><?php echo esc_html($ticket['customer']); ?></div>
-                                                <div class="text-sm text-gray-500 truncate max-w-xs"><?php echo esc_html($ticket['email']); ?></div>
-                                            </td>
-                                            <td class="px-6 py-4 whitespace-nowrap">
-                                                <div class="text-sm font-medium text-gray-900"><?php echo esc_html($ticket['source']); ?></div>
-                                            </td>
-                                            <td class="px-6 py-4 whitespace-nowrap">
-                                                <span class="status-badge <?php echo esc_attr(get_status_class($ticket['status'])); ?> editable-status"
-                                                    onclick="event.stopPropagation(); editStatus(<?php echo esc_js($ticket['id']); ?>, this)">
-                                                    <?php echo esc_html(str_replace('-', ' ', $ticket['status'])); ?>
-                                                </span>
-                                            </td>
-                                            <td class="px-6 py-4 whitespace-nowrap">
-                                                <span class="status-badge <?php echo esc_attr(get_priority_class($ticket['priority'])); ?> editable-priority"
-                                                    onclick="event.stopPropagation(); editPriority(<?php echo esc_js($ticket['id']); ?>, this)">
-                                                    <?php echo esc_html($ticket['priority']); ?>
-                                                </span>
-                                            </td>
-                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                                <?php echo esc_html(format_date($ticket['updated'])); ?>
-                                            </td>
-                                        </tr>
-                                    <?php endforeach; ?>
-                                <?php endif; ?>
+                                <!-- Rows populated by JavaScript -->
                             </tbody>
                         </table>
                     </div>
+                    <script>
+                        const dashboard_tickets = <?php echo wp_json_encode($dashboard_tickets); ?>;
+                    </script>
                 <?php
                     return ob_get_clean();
                 }
@@ -989,6 +925,7 @@ function robodesk_dashboard_callback()
                                 <i class="fas fa-arrow-left mr-2"></i>
                                 Back to Tickets
                             </button>
+
                         </div>
 
                         <!-- Comprehensive Ticket Info -->
@@ -1163,7 +1100,6 @@ function robodesk_dashboard_callback()
                                         Add Note
                                     </button>
 
-
                                 </div>
                             </div>
                         </div>
@@ -1196,6 +1132,7 @@ function robodesk_dashboard_callback()
                     <!------------------------------------------ overall setting page with all the tabs---------------------------------------->
                     <div class="p-6">
                         <!------------------------------Basic Settings Tab --------------------------------->
+
                         <div id="basic-tab" class="settings-tab-content">
                             <h3 class="text-lg font-medium text-gray-900 mb-6">Basic Settings</h3>
                             <form id="robodesk-basic-settings-form" class="space-y-6">
@@ -1209,9 +1146,6 @@ function robodesk_dashboard_callback()
                                         <label for="admin_email" class="block text-sm font-medium text-gray-700">Admin Email</label>
                                         <input type="email" name="admin_email" id="admin_email" value="<?php echo esc_attr(get_option('robodesk_admin_email', 'admin@example.com')); ?>" class="styled-input mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
                                     </div>
-
-
-
                                     <div>
                                         <label for="timezone" class="block text-sm font-medium text-gray-700">Timezone</label>
                                         <select name="timezone" id="timezone" class="styled-select mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
@@ -1243,7 +1177,6 @@ function robodesk_dashboard_callback()
                                             </div>
                                         </div>
                                     </div>
-
                                     <div>
                                         <label for="popover_icon" class="block text-sm font-medium text-gray-700">Pop over Icon/Image</label>
                                         <input type="file" accept="image/*" name="popover_icon" id="popover_icon" class="styled-input mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
@@ -1264,9 +1197,7 @@ function robodesk_dashboard_callback()
                                             }
                                             ?>
                                         </select>
-
                                     </div>
-
                                     <div>
                                         <label for="logo" class="block text-sm font-medium text-gray-700">Logo</label>
                                         <input type="file" accept="image/*" name="logo" id="logo" class="styled-input mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
@@ -1285,15 +1216,12 @@ function robodesk_dashboard_callback()
                                         </div>
                                         <input type="hidden" name="robodesk_wide_logo" id="robodesk_wide_logo" value="<?php echo esc_attr(get_option('robodesk_wide_logo', '')); ?>">
                                     </div>
-
                                     <!-- adding a notification sound for chat -->
                                     <div>
                                         <label for="notification_sound" class="block text-sm font-medium text-gray-700">Notification Sound</label>
                                         <select name="robodesk_notification_sound" id="notification_sound" class="styled-select mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
                                             <?php
-                                            // List of predefined audio files (update URLs as needed)
                                             $audio_files = [
-
                                                 'Sample 1' => plugin_dir_url(__FILE__) . 'audio/1.mp3',
                                                 'Sample 2' => plugin_dir_url(__FILE__) . 'audio/2.mp3',
                                                 'Sample 3' => plugin_dir_url(__FILE__) . 'audio/3.mp3',
@@ -1308,7 +1236,6 @@ function robodesk_dashboard_callback()
                                                 'Sample 12' => plugin_dir_url(__FILE__) . 'audio/chime.mp3',
                                                 'Sample 13' => plugin_dir_url(__FILE__) . 'audio/notify.mp3',
                                                 'Sample 14' => plugin_dir_url(__FILE__) . 'audio/alert.mp3',
-
                                             ];
                                             $selected_sound = get_option('robodesk_notification_sound', '');
                                             foreach ($audio_files as $label => $url) {
@@ -1324,10 +1251,25 @@ function robodesk_dashboard_callback()
                                             <button type="button" onclick="removeAudio('notification-sound-preview', 'robodesk_notification_sound')" class="text-red-600 hover:text-red-800 text-sm <?php echo $selected_sound ? '' : 'hidden'; ?>">Remove</button>
                                         </div>
                                         <input type="hidden" name="robodesk_notification_sound" id="robodesk_notification_sound" value="<?php echo esc_attr($selected_sound); ?>">
-
                                     </div>
-
                                     <!-- end of notification sound -->
+                                    <!-- adding a default category of ticket -->
+                                    <div class="mt-4">
+                                        <label for="robodesk_default_ticket_category" class="block text-sm font-medium text-gray-700">Default Ticket Category</label>
+                                        <select name="robodesk_default_ticket_category" id="robodesk_default_ticket_category" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                                            <option value="">Select a category</option>
+                                            <?php
+                                            $selected_category = get_option('robodesk_default_ticket_category', '');
+                                            $categories = get_terms(array(
+                                                'taxonomy'   => 'robodesk_ticket_category',
+                                                'hide_empty' => false,
+                                            ));
+                                            foreach ($categories as $category) {
+                                                echo '<option value="' . esc_attr($category->term_id) . '" ' . selected($selected_category, $category->term_id, false) . '>' . esc_html($category->name) . '</option>';
+                                            }
+                                            ?>
+                                        </select>
+                                    </div>
                                 </div>
                                 <hr class="my-6 border-gray-200">
                                 <button type="button" id="save-basic-settings" class="mt-6 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">
@@ -1335,6 +1277,7 @@ function robodesk_dashboard_callback()
                                 </button>
                             </form>
                         </div>
+
                         <!----------------------- IMAP Settings load saved settings ------------------->
                         <?php
                         // Load saved settings
@@ -1612,8 +1555,6 @@ function robodesk_dashboard_callback()
 
 
     </div>
-
-
 
 <?php
     // Output the buffered content
