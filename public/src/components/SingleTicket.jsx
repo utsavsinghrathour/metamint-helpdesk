@@ -13,7 +13,7 @@ import DefaultAvatar from '../images/default-avatar.jpg';
 
 const TicketClosed = ( { handleFocusedTextArea , setActiveTab}) => {
   return (
-    <div className="">
+    <div className="rd-my-30">
       <h4 className="heading-4 rd-fw-semi rd-mb-8">Still have questions?</h4>
       <a href="#" onClick={(e) => (e.preventDefault() ,setActiveTab(0), handleFocusedTextArea(true))}>Start a new conversation</a>
     </div>

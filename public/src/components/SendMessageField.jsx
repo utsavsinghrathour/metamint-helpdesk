@@ -57,8 +57,9 @@ const SendMessageField = ({ setShowLogin, setActiveTab, updateSelectedTicket, ha
         if (!message.trim()) return;
         if (!loggedinContext) {
             localStorage.setItem('temp_ticket_title', message);
+                setActiveTab(1);
             setShowLogin(true);
-            handleActiveTabFocus(1, false);
+      
             return;
         }
 
@@ -80,8 +81,8 @@ const SendMessageField = ({ setShowLogin, setActiveTab, updateSelectedTicket, ha
             };
             refreshTickets();
             updateSelectedTicket(newTicket);
-            console.log('From lagger test', newTicket);
-            handleActiveTabFocus(1, false);
+           
+            setActiveTab(1);
             setMessage("");
 
         } catch (error) {
