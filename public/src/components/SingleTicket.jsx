@@ -9,6 +9,7 @@ import defaultLogo from '../images/robodesk-logo.png';
 import '../styles/MessageTabs.css';
 import { sendReply } from '../utils/modules';
 import { useAppData } from '../utils/AppDataContext';
+import DefaultAvatar from '../images/default-avatar.jpg';
 
 const TicketClosed = () => {
   return (
@@ -120,7 +121,7 @@ const SingleTicket = ({ ticket, onBack, loggedInUserId }) => {
         text: commentData.content?.rendered || '',
         sender: commentData.author_id === loggedInUserId ? 'me' : 'other',
         senderName: commentData.author_name || 'Unknown',
-        image: commentData.author_image || '/default-avatar.jpg',
+        image: commentData.author_image || DefaultAvatar,
         created_at: commentData.created_at || new Date().toISOString(),
         isAdmin: commentData.author_id !== ticket.author_id,
       };
@@ -141,7 +142,7 @@ const SingleTicket = ({ ticket, onBack, loggedInUserId }) => {
         text: comment.content?.rendered || comment.content?.plain || '',
         sender,
         senderName: comment.author_name || 'Unknown',
-        image: comment.author_data?.avatar || comment.author_image || './default-avatar.jpg',
+        image: comment.author_data?.avatar || comment.author_image || DefaultAvatar,
         created_at: comment.date,
         action: comment.comment_action,
         time_ago: comment.time_ago,
@@ -153,14 +154,7 @@ const SingleTicket = ({ ticket, onBack, loggedInUserId }) => {
 
   // Initial fetch to get total comments and latest messages
   useEffect(() => {
-    // console.log(ticket.comments, "ticket comments from top");
-    if (ticket.comments && ticket.comments.length > 0) {
-      // const formattedComments = formatTicketComments(ticket.comments);
-      // setChatMessages(formattedComments);
-      // setTotalComments(ticket.totalComments);
-      // setOffset(Math.max(ticket.totalComments - perPage, 0));
-      // setLoading(false);
-    }
+
     const fetchInitialComments = async () => {
       try {
         const response = await fetch(`/wp-json/wp/v2/comments?post=${ticket.id}&per_page=1&order=asc&_fields=id`);
@@ -172,11 +166,10 @@ const SingleTicket = ({ ticket, onBack, loggedInUserId }) => {
         const initialOffset = Math.max(total - perPage, 0);
         setOffset(initialOffset);
 
-        // console.log("Total comments:", total);
         setTotalComments(total);
-        // const initialOffset = Math.max(total - perPage, 0);
-        // setOffset(initialOffset);
+
         await fetchComments(initialOffset, false);
+        
       } catch (err) {
         console.error('Failed to fetch initial comments:', err);
         setError('Failed to load messages. Please try again.');
@@ -304,7 +297,7 @@ const SingleTicket = ({ ticket, onBack, loggedInUserId }) => {
         text: message + (imageHTML ? '<br>' + imageHTML : ''),
         sender: 'me',
         senderName: 'Me',
-        image: '/default-avatar.jpg',
+        image: DefaultAvatar,
         created_at: new Date().toISOString(),
         isSending: true,
         ...(previewImage && { imageUrl: previewImage }),
@@ -476,7 +469,7 @@ const handleFileUpload = (e) => {
         ) : error ? (
           <p className="err_msg rd-text-center">{error}</p>
         ) : chatMessages.length === 0 ? (
-          <p className="rd-text-center rd-body-text">Loading messages...</p>
+          <p className="rd-text-center rd-body-text">Loading conversations...</p>
         ) : (
           chatMessages.map((msg, index) => {
             const prevMsg = index > 0 ? chatMessages[index - 1] : null;
