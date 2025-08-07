@@ -407,7 +407,7 @@ function filterTickets() {
     .value.toLowerCase();
   const statusFilter = document.getElementById("status-filter").value;
 
-  const filteredTickets = tickets.filter((ticket) => {
+  const filteredTickets = dashboard_tickets.filter((ticket) => {
     const matchesSearch =
       ticket.title.toLowerCase().includes(searchTerm) ||
       ticket.customer.toLowerCase().includes(searchTerm) ||
@@ -443,7 +443,7 @@ function filterTickets() {
                 <div class="text-sm text-gray-500">${ticket.email}</div>
             </td>
             <td class="px-6 py-4 whitespace-nowrap">
-                <span class="status-badge ${ticket.status}">
+                <span class="status-badge ${getStatusClass(ticket.status)}">
                     ${ticket.status}
                 </span>
             </td>
