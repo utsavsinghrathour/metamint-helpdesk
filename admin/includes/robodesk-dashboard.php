@@ -592,11 +592,12 @@ function robodesk_dashboard_callback()
                 <div class="bg-white shadow rounded-lg mb-6">
                     <div class="px-4 py-5 sm:p-6">
                         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 items-end">
+                            <!-- <form id="ticket-filter-form"> -->
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-2">Search Tickets</label>
                                 <div class="relative">
                                     <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                        <i class="fas fa-search text-gray-400"></i>
+                                        <i class="fas fa-search text-gray-400 mx-40"></i>
                                     </div>
                                     <input type="text" id="search-input" placeholder="Search tickets..." class="styled-input block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500">
                                 </div>
@@ -623,6 +624,8 @@ function robodesk_dashboard_callback()
                                     <i class="fas fa-filter mr-2"></i>
                                     Filter
                                 </button>
+
+                                <!-- </form> -->
                                 <button onclick="showPage('new-ticket')" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
                                     <i class="fas fa-plus mr-2"></i>
                                     New Ticket
