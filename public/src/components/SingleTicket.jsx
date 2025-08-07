@@ -42,9 +42,18 @@ const SingleTicket = ({ ticket, onBack, loggedInUserId }) => {
   const hasConnected = useRef(false);
   const { loggedinContext, loggedInUsrId } = useAppData();
 
-  const [ticketClosed, setTicketClosed] = useState(false);
+    const [ticketClosed, setTicketClosed] = useState(false);
+
+    const [imageUpload, setImageUpload] = useState({
+        imageUploading: false,
+        imageUploadError: null,
+        imageUploadMessage: null,
+    });
+
 
   const [isMessagingActive, setIsisMessagingActive] = useState(true);
+  
+
 
   useEffect(() => {
     // setTicketClosed(ticket.status == "closed");
@@ -351,35 +360,68 @@ const SingleTicket = ({ ticket, onBack, loggedInUserId }) => {
     setShowPicker((prev) => !prev);
   };
 
-  const handleFileUpload = (e) => {
-    const file = e.target.files[0];
+const handleFileUpload = (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
 
-    if (!file) return;
-
-    // Check if file is an image
-    if (!file.type.startsWith('image/')) {
-      alert('Only image files are allowed.');
-      e.target.value = null;
-      return;
-    }
-
-    // Check file size (5MB = 5 * 1024 * 1024 bytes)
-    const maxSize = 5 * 1024 * 1024;
-    if (file.size > maxSize) {
-      alert('Image size must be less than 5MB.');
-      e.target.value = null;
-      return;
-    }
-
-    // Read image
-    const reader = new FileReader();
-    reader.onload = () => setPreviewImage(reader.result);
-    reader.readAsDataURL(file);
-
-    // Reset input
-    e.target.value = null;
+  const MAX_FILE_SIZE = 3145728; 
+  const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/gif'];
+  const ERROR_MESSAGES = {
+    INVALID_TYPE: 'Only JPEG, PNG, or GIF images are allowed.',
+    SIZE_EXCEEDED: 'Image size must be less than 3MB.',
   };
 
+  // Helper function to update state
+  const updateUploadState = (state) => setImageUpload({
+    imageUploading: false,
+    imageUploadMessage: null,
+    imageUploadError: null,
+    ...state,
+  });
+
+  // Reset input
+  e.target.value = null;
+
+  // Validate file type
+  if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
+    updateUploadState({
+      imageUploadError: true,
+      imageUploadMessage: ERROR_MESSAGES.INVALID_TYPE,
+    });
+    alert(ERROR_MESSAGES.INVALID_TYPE);
+    return;
+  }
+
+  // Validate file size
+  if (file.size > MAX_FILE_SIZE) {
+    updateUploadState({
+      imageUploadError: true,
+      imageUploadMessage: ERROR_MESSAGES.SIZE_EXCEEDED,
+    });
+    alert(ERROR_MESSAGES.SIZE_EXCEEDED);
+    return;
+  }
+
+  // Start upload process
+  updateUploadState({ imageUploading: true });
+
+  const reader = new FileReader();
+  
+  reader.onload = () => {
+    setPreviewImage(reader.result);
+    updateUploadState({});
+  };
+
+  reader.onerror = () => {
+    updateUploadState({
+      imageUploadError: true,
+      imageUploadMessage: 'Error reading the file.',
+    });
+    alert('Error reading the file.');
+  };
+
+  reader.readAsDataURL(file);
+};
   const triggerFileInput = () => fileInputRef.current.click();
 
   const formatTimestamp = (timestamp) =>
