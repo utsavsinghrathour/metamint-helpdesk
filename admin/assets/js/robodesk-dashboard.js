@@ -639,6 +639,60 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 });
 
+// Function to create category dropdown options
+function createCategoryOptions() {
+  let options = "";
+
+  // If we have a default category object, show it first
+  if (robodeskDefaultCategoryObj) {
+    options += `<option value="${robodeskDefaultCategoryObj.term_id}" selected>${robodeskDefaultCategoryObj.name}</option>`;
+  }
+
+  // Add all other categories
+  robodeskTicketCategories.forEach((category) => {
+    // Skip if this is already added as default
+    if (
+      robodeskDefaultCategoryObj &&
+      category.term_id === robodeskDefaultCategoryObj.term_id
+    ) {
+      return;
+    }
+    options += `<option value="${category.term_id}">${category.name}</option>`;
+  });
+
+  return options;
+}
+
+// Function to update ticket category via AJAX (CORRECTED VERSION)
+function updateTicketCategory(ticketId, categoryId) {
+  // WordPress AJAX call
+  jQuery.ajax({
+    url: robodeskAjax.ajax_url, // Use your existing AJAX URL structure
+    type: "POST",
+    data: {
+      action: "update_ticket_category",
+      ticket_id: ticketId,
+      category_id: categoryId,
+      nonce: robodeskAjax.nonces.update_ticket_category, // Use your existing nonce structure
+    },
+    success: function (response) {
+      if (response.success) {
+        console.log("Category updated successfully");
+        // Use your existing showToast function
+        showToast("Category updated successfully", "success");
+      } else {
+        console.error("Failed to update category:", response.data);
+        showToast("Failed to update category", "error");
+      }
+    },
+    error: function (xhr, status, error) {
+      console.error("AJAX error:", error);
+      showToast("Error updating category", "error");
+    },
+  });
+}
+
+// Updated loadTicketDetail function
 function loadTicketDetail() {
   if (!currentTicket) return;
 
@@ -655,29 +709,54 @@ function loadTicketDetail() {
         </div>
     `;
 
-  // Load ticket meta information
+  // Load ticket meta information with category dropdown
   const ticketMetaInfo = document.getElementById("ticket-meta-info");
-  
-//   console.log()
+
   ticketMetaInfo.innerHTML = `
-    <div class="text-sm space-y-2">
-        <div>
-            <strong>Author Image:</strong>
-            <img id="author-image" src="${currentTicket.author_image}" alt="Author Image" class="w-8 h-8 rounded-full inline-block ml-2">
+        <div class="text-sm space-y-2">
+            <div>
+                <strong>Author Image:</strong>
+                <img id="author-image" src="${
+                  currentTicket.author_image
+                }" alt="Author Image" class="w-8 h-8 rounded-full inline-block ml-2">
+            </div>
+            <div>
+                <strong>Origin:</strong> <span id="ticket-source">${
+                  currentTicket.source
+                }</span>
+            </div>
+            <div>
+                <strong>Category:</strong> 
+                <select id="ticket-category-select" class="ml-2 px-2 py-1 border border-gray-300 rounded text-sm">
+                    ${createCategoryOptions()}
+                </select>
+            </div>
         </div>
-       
-        <div>
-            <strong>Origin:</strong> <span id="ticket-source">${currentTicket.source}</span>
-        </div>
-        <div>
-            
-            <strong>Category:</strong> <span id="ticket-category">${currentTicket.category.name}</span>
+    `;
 
-        </div>
-    </div>
-`;
+  // Set the current category if ticket has one
+  if (currentTicket.category && currentTicket.category.term_id) {
+    document.getElementById("ticket-category-select").value =
+      currentTicket.category.term_id;
+  }
 
-  // Set current values in dropdowns
+  // Add event listener for category change
+  document
+    .getElementById("ticket-category-select")
+    .addEventListener("change", function (e) {
+      const newCategoryId = e.target.value;
+      updateTicketCategory(currentTicket.id, newCategoryId);
+
+      // Update the current ticket object
+      const selectedCategory = robodeskTicketCategories.find(
+        (cat) => cat.term_id == newCategoryId
+      );
+      if (selectedCategory) {
+        currentTicket.category = selectedCategory;
+      }
+    });
+
+  // Set current values in other dropdowns
   document.getElementById("ticket-status-select").value = currentTicket.status;
   document.getElementById("ticket-priority-select").value =
     currentTicket.priority;
