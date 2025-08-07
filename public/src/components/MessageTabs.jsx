@@ -2,13 +2,13 @@ import React, { useState, useEffect, Suspense } from 'react';
 import { FaChevronRight, FaChevronLeft } from 'react-icons/fa';
 import '../styles/MessageTabs.css';
 import Author1 from '../images/person1.jpeg';
-import Author2 from '../images/person2.jpeg';
+
 import { LuDot } from 'react-icons/lu';
 import { RiPencilFill } from 'react-icons/ri';
 import Footer from './Footer';
 import Login from './Login';
 import Preloader from '../images/preloader.svg';
-import { getAllTickets } from '../utils/modules';
+
 import { useAppData } from '../utils/AppDataContext';
 import defaultLogo from '../images/robodesk-logo.png';
 // import CreateTicket from './CreateTicket'
@@ -74,6 +74,12 @@ const MessageTabs = ({
   const [loggedInuserId, setloggedInuserId] = useState(null);
   const { loadingContext, errorContext, ticketsContext, loggedinContext, loggedInUsrId } = useAppData();
   const image_urls = window.robodeskData?.imageUrls || {};
+
+    useEffect(() => {
+            
+            console.log('Loading context', loadingContext);
+    
+    },[loadingContext]);
 
   const fetchTickets = async () => {
     if (!loggedInUsrId) {
@@ -350,6 +356,8 @@ const MessageTabs = ({
                           <TicketItem key={ticket.id} ticket={ticket} onSelect={setSelectedTicket} setActiveTab={setActiveTab} />
                         ))
                       ) : (
+                      
+                      
                         <p className="rd-text-center rd-text-gray rd-m-5 err_msg">No tickets found</p>
                       )}
                     </div>
