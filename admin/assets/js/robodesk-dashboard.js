@@ -641,7 +641,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
 // Function to create category dropdown options
 function createCategoryOptions() {
-  let options = `<option value="${currentTicket.category.term_id}" selected>${currentTicket.category.name}</option>`;
+  let options = `<option value="${currentTicket.category.id}" selected>${currentTicket.category.name}</option>`;
 
   // If we have a default category object, show it first
   if (robodeskDefaultCategoryObj) {
@@ -653,11 +653,18 @@ function createCategoryOptions() {
     // Skip if this is already added as default
     if (
       robodeskDefaultCategoryObj &&
-      category.term_id === robodeskDefaultCategoryObj.term_id
+      currentTicket.category.id === robodeskDefaultCategoryObj.term_id
     ) {
       return;
     }
     options += `<option value="${category.term_id}">${category.name}</option>`;
+    //remove the 1st option
+    if (category.term_id === currentTicket.category.id) {
+      options = options.replace(
+        `<option value="${category.term_id}">${category.name}</option>`,
+        ""
+      );
+    }
   });
 
   return options;
