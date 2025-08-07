@@ -28,6 +28,10 @@ const SingleQuestionBox = ({
   setShowLogin,
   setActiveTab,
   updateSelectedTicket,
+  handleFocusedTextArea,
+  focused ,
+
+
 }) => {
   const [selectedQuestion, setSelectedQuestion] = useState(null);
   const [isLiked, setIsLiked] = useState(false);
@@ -36,6 +40,7 @@ const SingleQuestionBox = ({
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const image_urls = window.robodeskData?.imageUrls || {};
+
 
   useEffect(() => {
     const fetchFAQs = async () => {
@@ -96,10 +101,12 @@ const SingleQuestionBox = ({
   };
 
   const handleBackClick = () => {
+   
     setSelectedQuestion(null);
     setIsLiked(false);
     setIsDisliked(false);
     setIsExpanded(false);
+    
   };
 
   const handleImageError = (e) => {
@@ -240,7 +247,7 @@ const SingleQuestionBox = ({
               </div>
               <div className="rd-my-30">
                 <h4 className="heading-4 rd-fw-semi rd-mb-8">Still have questions?</h4>
-                <a href='#' onClick={ handleBackClick}>Start a conversation</a>
+                <a href='#' onClick={(e)=> {  e.preventDefault(); handleBackClick(); handleFocusedTextArea(true) } }>Start a conversation</a>
               </div>
             </div>
             {/* <div className="rd-actions rd-flex rd-align-center rd-justify-center rd-mt-20 rd-faq-actions">
@@ -284,6 +291,9 @@ const SingleQuestionBox = ({
                 setShowLogin={setShowLogin}
                 setActiveTab={setActiveTab}
                 updateSelectedTicket={updateSelectedTicket}
+                focused = {focused}
+                handleFocusedTextArea={handleFocusedTextArea}
+                
               />
             </>
           )}

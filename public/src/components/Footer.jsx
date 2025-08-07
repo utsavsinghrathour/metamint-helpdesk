@@ -99,6 +99,7 @@ const handlefooterClick = (tabId) => {
     setActiveTab(tabId);
     if(updateSelectedTicket){
     updateSelectedTicket(null);
+    
     }
     
   };

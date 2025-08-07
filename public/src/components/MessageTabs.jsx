@@ -63,6 +63,7 @@ const MessageTabs = ({
   activeTab,
   selectedNewTicket,
   updateSelectedTicket,
+  handleFocusedTextArea
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedTicket, setSelectedTicket] = useState(selectedNewTicket);
@@ -75,11 +76,6 @@ const MessageTabs = ({
   const { loadingContext, errorContext, ticketsContext, loggedinContext, loggedInUsrId } = useAppData();
   const image_urls = window.robodeskData?.imageUrls || {};
 
-    useEffect(() => {
-            
-            console.log('Loading context', loadingContext);
-    
-    },[loadingContext]);
 
   const fetchTickets = async () => {
     if (!loggedInUsrId) {
@@ -175,6 +171,7 @@ const MessageTabs = ({
                 onBack={() => setSelectedTicket(null)}
                 loggedInUserId={loggedInuserId}
                 setActiveTab={setActiveTab}
+                 handleFocusedTextArea= { handleFocusedTextArea }
               />
             </Suspense>
           ) : (
@@ -365,7 +362,7 @@ const MessageTabs = ({
                   <div className="rd-send-message rd-text-center rd-px-18 rd-py-15 rd-flex rd-justify-center">
                     <button
                       className="button no-bg rd-flex rd-align-center rd-gap-10 rd-cursor-pointer"
-                      onClick={handleAddTicket}
+                      onClick={(e) => {handleAddTicket();handleFocusedTextArea(true) }}
                     >
                       Start a conversation
                       <RiPencilFill />
