@@ -1,4 +1,4 @@
-import React, { createContext, useState, useEffect  } from "react";
+import { useState, useEffect  } from "react";
 import HomeTabs from "./components/HomeTabs.jsx";
 import MessageTabs from "./components/MessageTabs.jsx";
 import NoticeTabs from "./components/NoticeTabs.jsx";
@@ -15,16 +15,24 @@ const App = ({ imageUrls = { logo: "" } }) => {
   const [selectedNotice, setSelectedNotice] = useState(null);
   const [showActiveFeatured, setShowActiveFeatured] = useState(true);
   const [selectedTicket, setSelectedTicket] = useState();
+  const [focusedTextArea, setFocusedTextArea] = useState(false);
+  
+
+const handleFocusedTextArea = (focus) => {
+
+console.log('Check State Update' ,focus);
+  setFocusedTextArea(focus);
+};
+
 
   const handleSelectedTicketUpdate = (newValue) => {
     setSelectedTicket(newValue);
   };
-
-  const updateActiveTab = (newTab , textareaState=false) => {
   
-//   if()
-  
-  };
+  const changeActivetab = (tab,focus) => {  
+    setFocusedTextArea(focus);
+    setActiveTab(tab);
+  }
   
   useEffect(() => {
     if (selectedTicket) {
@@ -69,6 +77,8 @@ const App = ({ imageUrls = { logo: "" } }) => {
           handleClose={handleClose}
           updateSelectedTicket={handleSelectedTicketUpdate}
           logo={imageUrls.logo}
+          handleFocusedTextArea={handleFocusedTextArea}
+          focused={focusedTextArea}       
         />
       ),
     },
@@ -83,6 +93,7 @@ const App = ({ imageUrls = { logo: "" } }) => {
           activeTab={activeTab}
           selectedNewTicket={selectedTicket}
           updateSelectedTicket={handleSelectedTicketUpdate}
+          handleFocusedTextArea={handleFocusedTextArea}
           logo={imageUrls.logo}
         />
       ),
@@ -112,6 +123,7 @@ const App = ({ imageUrls = { logo: "" } }) => {
           setIsExpanded={setIsExpanded}
           activeTab={activeTab}
           logo={imageUrls.logo}
+           handleFocusedTextArea={handleFocusedTextArea}
         />
       ),
     },
@@ -152,7 +164,7 @@ const App = ({ imageUrls = { logo: "" } }) => {
               }}
             />
           ) : null}
-          {console.log("arpan", imageUrls.popover_top_icon)}
+         
         </div>
         <button
           className={`robodesk-toggle-btn rd-bg-blue rd-rounded-border rd-border-none rd-cursor-pointer ${

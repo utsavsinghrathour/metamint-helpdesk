@@ -4,7 +4,7 @@ import Footer from './Footer.jsx';
 import SingleQuestionBox from './SingleQuestionBox';
 import '../styles/HomeTabs.css';
 
-const HomeTabs = ({ setActiveTab, setIsOpen, isExpanded, setIsExpanded, handleClose, updateSelectedTicket, logo }) => {
+const HomeTabs = ({ setActiveTab, setIsOpen, isExpanded, setIsExpanded, handleClose, updateSelectedTicket, logo ,focused ,handleFocusedTextArea }) => {
   const [showLogin, setShowLogin] = useState(false);
   const [showHeaderFooter, setShowHeaderFooter] = useState(true);
 
@@ -21,6 +21,9 @@ const HomeTabs = ({ setActiveTab, setIsOpen, isExpanded, setIsExpanded, handleCl
             setShowLogin={setShowLogin}
             setActiveTab={setActiveTab}
             updateSelectedTicket={updateSelectedTicket}
+            handleFocusedTextArea = {handleFocusedTextArea}
+            focused={focused}
+            
           />
         </div>
       </div>

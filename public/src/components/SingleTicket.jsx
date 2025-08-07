@@ -11,16 +11,16 @@ import { sendReply } from '../utils/modules';
 import { useAppData } from '../utils/AppDataContext';
 import DefaultAvatar from '../images/default-avatar.jpg';
 
-const TicketClosed = () => {
+const TicketClosed = ( { handleFocusedTextArea }) => {
   return (
     <div className="">
       <h4 className="heading-4 rd-fw-semi rd-mb-8">Still have questions?</h4>
-      <a href="#">Start a new conversation</a>
+      <a href="#" onClick={(e) => (e.preventDefault() ,setActiveTab(0), handleFocusedTextArea(true))}>Start a new conversation</a>
     </div>
   );
 };
 
-const SingleTicket = ({ ticket, onBack, loggedInUserId }) => {
+const SingleTicket = ({ ticket, onBack, loggedInUserId ,  handleFocusedTextArea }) => {
   const [message, setMessage] = useState('');
   const [showPicker, setShowPicker] = useState(false);
   const [previewImage, setPreviewImage] = useState(null);
@@ -579,7 +579,7 @@ const handleFileUpload = (e) => {
                     e.preventDefault();
                     handleSend();
                   }
-                  dir;
+                
                 }}
                 placeholder="Write a message..."
                 className="rd-flex-grow rd-border-none rd-outline-none rd-py-5 rd-w-full rd-resize-none rd-min-h-[40px]"
@@ -621,7 +621,7 @@ const handleFileUpload = (e) => {
               </div>
             </>
           ) : (
-            <TicketClosed />
+            <TicketClosed  handleFocusedTextArea = { handleFocusedTextArea}/>
           )}
         </div>
       </div>

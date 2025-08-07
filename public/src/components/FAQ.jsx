@@ -25,7 +25,7 @@ const normalizeImagePaths = (html, baseUrl = '/') => {
   });
 };
 
-const FAQDetail = memo(({ faq, onBack, isExpanded, setIsExpanded, faqs, setSelectedFAQ , setActiveTab}) => {
+const FAQDetail = memo(({ faq, onBack, isExpanded, setIsExpanded, faqs, setSelectedFAQ , setActiveTab, handleFocusedTextArea}) => {
   const [isLiked, setIsLiked] = useState(false);
   const [isDisliked, setIsDisliked] = useState(false);
   const [fullContent, setFullContent] = useState(null);
@@ -170,7 +170,7 @@ const FAQDetail = memo(({ faq, onBack, isExpanded, setIsExpanded, faqs, setSelec
             </div>
             <div className="rd-my-30">
               <h4 className="heading-4 rd-fw-semi rd-mb-8">Still have questions?</h4>
-              <a href="#" onClick={() => setActiveTab(0)} >Start a conversation</a>
+              <a href="#" onClick={() => (setActiveTab(0), handleFocusedTextArea(true))} >Start a conversation</a>
             </div>
           </div>
           <div className="rd-single-faq-footer rd-py-10 rd-border-vertical-light">
@@ -205,7 +205,7 @@ const FAQItem = memo(({ faq, onSelect }) => (
   </div>
 ));
 
-const FAQ = ({ setActiveTab, setIsOpen, isExpanded, setIsExpanded, activeTab }) => {
+const FAQ = ({ setActiveTab, setIsOpen, isExpanded, setIsExpanded, activeTab ,handleFocusedTextArea}) => {
   const [selectedFAQ, setSelectedFAQ] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [faqs, setFaqs] = useState([]);
@@ -305,6 +305,8 @@ const FAQ = ({ setActiveTab, setIsOpen, isExpanded, setIsExpanded, activeTab }) 
           faqs={filteredFaqs}
           setSelectedFAQ={setSelectedFAQ}
           setActiveTab={setActiveTab}
+            handleFocusedTextArea={handleFocusedTextArea}
+          
         />
       </div>
     );
