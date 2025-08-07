@@ -20,6 +20,11 @@ const App = ({ imageUrls = { logo: "" } }) => {
     setSelectedTicket(newValue);
   };
 
+  const updateActiveTab = (newTab , textareaState=false) => {
+  
+//   if()
+  
+  };
   
   useEffect(() => {
     if (selectedTicket) {

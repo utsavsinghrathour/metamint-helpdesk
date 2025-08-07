@@ -15,7 +15,7 @@ const SendMessageField = ({ setShowLogin , setActiveTab , updateSelectedTicket }
   };
   
     useEffect(() => {
-        console.log('From our context', loggedinContext , loggedInUsrId);
+      
     setLoggedIn(loggedinContext );
     setUserId(loggedInUsrId );
   }, []);
