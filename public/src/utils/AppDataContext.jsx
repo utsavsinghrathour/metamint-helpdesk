@@ -31,7 +31,7 @@ export const AppDataProvider = ({ children }) => {
       }
       
       const tickets = await response.json();
-      console.log('ticketsContext fetched:', tickets);
+
     //   console.log('ticketsContext fetched:', tickets);
       setData((prev) => ({
         ...prev,
@@ -46,6 +46,9 @@ export const AppDataProvider = ({ children }) => {
         errorContext: error.message || 'Failed to load tickets data',
         ticketsContext: [],
       }));
+    }finally{
+        // Ensure loading is set to false even if an error occurs
+        setData((prev) => ({ ...prev, loadingContext: false }));
     }
   };
 

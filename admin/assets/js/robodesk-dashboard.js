@@ -657,6 +657,8 @@ function loadTicketDetail() {
 
   // Load ticket meta information
   const ticketMetaInfo = document.getElementById("ticket-meta-info");
+  
+//   console.log()
   ticketMetaInfo.innerHTML = `
     <div class="text-sm space-y-2">
         <div>
@@ -668,6 +670,7 @@ function loadTicketDetail() {
             <strong>Origin:</strong> <span id="ticket-source">${currentTicket.source}</span>
         </div>
         <div>
+            
             <strong>Category:</strong> <span id="ticket-category">${currentTicket.category.name}</span>
 
         </div>
