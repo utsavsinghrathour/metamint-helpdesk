@@ -682,6 +682,7 @@ function robodesk_dashboard_callback()
                             ];
                         }
 
+
                         // Simulate replies field using comments
                         $replies = get_comments(array('post_id' => $ticket_id));
                         $replies_count = count($replies);

@@ -641,7 +641,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
 // Function to create category dropdown options
 function createCategoryOptions() {
-  let options = "";
+  let options = `<option value="${currentTicket.category.term_id}" selected>${currentTicket.category.name}</option>`;
 
   // If we have a default category object, show it first
   if (robodeskDefaultCategoryObj) {
@@ -730,6 +730,7 @@ function loadTicketDetail() {
                 <select id="ticket-category-select" class="ml-2 px-2 py-1 border border-gray-300 rounded text-sm">
                     ${createCategoryOptions()}
                 </select>
+                
             </div>
         </div>
     `;
