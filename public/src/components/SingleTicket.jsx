@@ -1,52 +1,38 @@
-import { useState, useRef, useEffect, useMemo } from 'react';
-import { FaChevronLeft } from 'react-icons/fa';
-import { FaRegFaceSmileBeam } from 'react-icons/fa6';
-import { PiPaperPlaneRightFill } from 'react-icons/pi';
-import { FiPaperclip } from 'react-icons/fi';
-import { IoClose } from 'react-icons/io5';
-import EmojiPicker from 'emoji-picker-react';
-import defaultLogo from '../images/robodesk-logo.png';
-import '../styles/MessageTabs.css';
-import { sendReply } from '../utils/modules';
-import { useAppData } from '../utils/AppDataContext';
+import { useState, useRef, useEffect, useMemo } from "react";
+import { FaChevronLeft } from "react-icons/fa";
+import { FaRegFaceSmileBeam } from "react-icons/fa6";
+import { PiPaperPlaneRightFill } from "react-icons/pi";
+import { FiPaperclip } from "react-icons/fi";
+import { IoClose } from "react-icons/io5";
+import EmojiPicker from "emoji-picker-react";
+import defaultLogo from "../images/robodesk-logo.png";
+import "../styles/MessageTabs.css";
+import { sendReply } from "../utils/modules";
+import { useAppData } from "../utils/AppDataContext";
+
 
 const TicketClosed = () => {
-  return (
-    <div className="">
-      <h4 className="heading-4 rd-fw-semi rd-mb-8">Still have questions?</h4>
-      <a href="#">Start a new conversation</a>
-    </div>
-  );
+    return (
+        <div className="">
+            <h4 className="heading-4 rd-fw-semi rd-mb-8">Still have questions?</h4><a href="#">Start a new conversation</a>
+        </div>
+    )
 };
 
 const SingleTicket = ({ ticket, onBack, loggedInUserId }) => {
-  const [message, setMessage] = useState('');
-  const [showPicker, setShowPicker] = useState(false);
-  const [previewImage, setPreviewImage] = useState(null);
-  const [chatMessages, setChatMessages] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [perPage] = useState(7);
-  const [offset, setOffset] = useState(null);
+    const [message, setMessage] = useState("");
+    const [showPicker, setShowPicker] = useState(false);
+    const [previewImage, setPreviewImage] = useState(null);
+    const [chatMessages, setChatMessages] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+    const [perPage] = useState(7);
+    const [offset, setOffset] = useState(null);
 
-<<<<<<< Updated upstream
-  const [totalComments, setTotalComments] = useState(0);
-  const [isFetching, setIsFetching] = useState(false);
 
-  const textareaRef = useRef(null);
-  const fileInputRef = useRef(null);
-  const chatContainerRef = useRef(null);
-  const image_urls = window.robodeskData?.imageUrls || {};
-  const previousScrollHeight = useRef(0);
-  const beep = useRef(new Audio(wpAuth.notificationSound));
-  const isAtTop = useRef(false);
-  const hasConnected = useRef(false);
-  const { loggedinContext, loggedInUsrId } = useAppData();
-
-  const [ticketClosed, setTicketClosed] = useState(false);
-=======
     const [totalComments, setTotalComments] = useState(0);
     const [isFetching, setIsFetching] = useState(false);
+
     const textareaRef = useRef(null);
     const fileInputRef = useRef(null);
     const chatContainerRef = useRef(null);
@@ -56,196 +42,103 @@ const SingleTicket = ({ ticket, onBack, loggedInUserId }) => {
     const isAtTop = useRef(false);
     const hasConnected = useRef(false);
     const { loggedinContext, loggedInUsrId } = useAppData();
->>>>>>> Stashed changes
 
-  const [isMessagingActive, setIsisMessagingActive] = useState(true);
+    const [ticketClosed, setTicketClosed] = useState(false);
 
-<<<<<<< Updated upstream
-  useEffect(() => {
-    // setTicketClosed(ticket.status == "closed");
-    // beep.current.load();
-    // const onVisibilityChange = () => {
-    //     setIsisMessagingActive(document.visibilityState === "visible");
-    // };
-    // document.addEventListener("visibilitychange", onVisibilityChange);
-    // return () => {
-    //     document.removeEventListener("visibilitychange", onVisibilityChange);
-    // };
-  }, []);
-=======
-    const [imageUpload, setImageUpload] = useState({
-        imageUploading: false,
-        imageUploadError: null,
-        imageUploadMessage: null,
-    });
 
->>>>>>> Stashed changes
+    const [isMessagingActive, setIsisMessagingActive] = useState(true);
 
-  const fetchComments = async (fetchOffset = 0, prepend = false) => {
-    if (isFetching) return;
-    setIsFetching(true);
-    try {
-      setLoading(true);
-      setError(null);
-      const response = await fetch(
-        `/wp-json/wp/v2/comments?post=${ticket.id}&per_page=${perPage}&offset=${fetchOffset}&order=asc&comment_type=ticket_replies&_fields=id,content,date,author_data,time_ago,author_name,author_image,comment_action`
-      );
 
-      if (!response.ok) {
-        throw new Error(`Failed to fetch comments: ${response.statusText}`);
-      }
+    useEffect(() => {
 
-      const data = await response.json();
+        // setTicketClosed(ticket.status == "closed");
+        // beep.current.load();
+        // const onVisibilityChange = () => {
+        //     setIsisMessagingActive(document.visibilityState === "visible");
+        // };
+        // document.addEventListener("visibilitychange", onVisibilityChange);
+        // return () => {
+        //     document.removeEventListener("visibilitychange", onVisibilityChange);
+        // };
+    }, []);
 
-      const formattedComments = formatTicketComments(data);
+    const fetchComments = async (fetchOffset = 0, prepend = false) => {
+        if (isFetching) return;
+        setIsFetching(true);
+        try {
 
-      setChatMessages((prev) => {
-        const newMessages = prepend ? [...formattedComments, ...prev] : formattedComments;
+            setLoading(true);
+            setError(null);
+            const response = await fetch(
+                `/wp-json/wp/v2/comments?post=${ticket.id}&per_page=${perPage}&offset=${fetchOffset}&order=asc&comment_type=ticket_replies&_fields=id,content,date,author_data,time_ago,author_name,author_image,comment_action`
+            );
 
-        const uniqueMessages = Array.from(new Map(newMessages.map((msg) => [msg.id, msg])).values());
+            if (!response.ok) {
+                throw new Error(`Failed to fetch comments: ${response.statusText}`);
+            }
 
-        return uniqueMessages;
-        // return uniqueMessages.sort(
-        //     (a, b) => new Date(a.created_at) - new Date(b.created_at)
-        // );
-      });
+            const data = await response.json();
 
-      setLoading(false);
-      setIsFetching(false);
+            const formattedComments = formatTicketComments(data);
 
-      if (prepend && chatContainerRef.current && isAtTop.current) {
-        const newScrollHeight = chatContainerRef.current.scrollHeight;
-        chatContainerRef.current.scrollTop = newScrollHeight - previousScrollHeight.current;
-        previousScrollHeight.current = newScrollHeight;
-      }
-    } catch (err) {
-      console.error('Failed to fetch comments:', err);
-      setError('Failed to load messages. Please try again.');
-      setLoading(false);
-      setIsFetching(false);
-    }
-  };
+            setChatMessages((prev) => {
+                const newMessages = prepend
+                    ? [...formattedComments, ...prev]
+                    : formattedComments;
 
-  //handling new comments received from sse
-  const handleNewComment = (commentData) => {
-    setChatMessages((prev) => {
-      const newMessage = {
-        id: commentData.id,
-        text: commentData.content?.rendered || '',
-        sender: commentData.author_id === loggedInUserId ? 'me' : 'other',
-        senderName: commentData.author_name || 'Unknown',
-        image: commentData.author_image || '/default-avatar.jpg',
-        created_at: commentData.created_at || new Date().toISOString(),
-        isAdmin: commentData.author_id !== ticket.author_id,
-      };
-      const uniqueMessages = Array.from(new Map([...prev, newMessage].map((msg) => [msg.id, msg])).values());
-      return uniqueMessages.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+                const uniqueMessages = Array.from(
+                    new Map(newMessages.map((msg) => [msg.id, msg])).values()
+                );
 
-      // return uniqueMessages;
-    });
-  };
+                return uniqueMessages;
+                // return uniqueMessages.sort(
+                //     (a, b) => new Date(a.created_at) - new Date(b.created_at)
+                // );
+            });
 
-  const formatTicketComments = (comments) => {
-    const formattedComments = comments.map((comment) => {
-      const authorId = comment.author_data?.id; // Use author_data.id
-      const sender = String(authorId) === String(loggedInUserId) ? 'me' : 'other'; // Ensure type consistency
+            setLoading(false);
+            setIsFetching(false);
 
-      return {
-        id: comment.id,
-        text: comment.content?.rendered || comment.content?.plain || '',
-        sender,
-        senderName: comment.author_name || 'Unknown',
-        image: comment.author_data?.avatar || comment.author_image || './default-avatar.jpg',
-        created_at: comment.date,
-        action: comment.comment_action,
-        time_ago: comment.time_ago,
-      };
-    });
-
-    return formattedComments.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
-  };
-
-  // Initial fetch to get total comments and latest messages
-  useEffect(() => {
-    // console.log(ticket.comments, "ticket comments from top");
-    if (ticket.comments && ticket.comments.length > 0) {
-      // const formattedComments = formatTicketComments(ticket.comments);
-      // setChatMessages(formattedComments);
-      // setTotalComments(ticket.totalComments);
-      // setOffset(Math.max(ticket.totalComments - perPage, 0));
-      // setLoading(false);
-    }
-    const fetchInitialComments = async () => {
-      try {
-        const response = await fetch(`/wp-json/wp/v2/comments?post=${ticket.id}&per_page=1&order=asc&_fields=id`);
-        if (!response.ok) {
-          throw new Error('Failed to fetch total comments');
+            if (prepend && chatContainerRef.current && isAtTop.current) {
+                const newScrollHeight = chatContainerRef.current.scrollHeight;
+                chatContainerRef.current.scrollTop =
+                    newScrollHeight - previousScrollHeight.current;
+                previousScrollHeight.current = newScrollHeight;
+            }
+        } catch (err) {
+            console.error("Failed to fetch comments:", err);
+            setError("Failed to load messages. Please try again.");
+            setLoading(false);
+            setIsFetching(false);
         }
-        const total = parseInt(response.headers.get('X-WP-Total'), 10) || 0;
-        setTotalComments(total);
-        const initialOffset = Math.max(total - perPage, 0);
-        setOffset(initialOffset);
-
-        // console.log("Total comments:", total);
-        setTotalComments(total);
-        // const initialOffset = Math.max(total - perPage, 0);
-        // setOffset(initialOffset);
-        await fetchComments(initialOffset, false);
-      } catch (err) {
-        console.error('Failed to fetch initial comments:', err);
-        setError('Failed to load messages. Please try again.');
-        setLoading(false);
-      }
     };
 
-    fetchInitialComments();
-  }, [ticket.id]);
+    //handling new comments received from sse
+    const handleNewComment = (commentData) => {
+        setChatMessages((prev) => {
+            const newMessage = {
+                id: commentData.id,
+                text: commentData.content?.rendered || "",
+                sender: commentData.author_id === loggedInUserId ? "me" : "other",
+                senderName: commentData.author_name || "Unknown",
+                image: commentData.author_image || "/default-avatar.jpg",
+                created_at: commentData.created_at || new Date().toISOString(),
+                isAdmin: commentData.author_id !== ticket.author_id,
+            };
+            const uniqueMessages = Array.from(
+                new Map([...prev, newMessage].map((msg) => [msg.id, msg])).values()
+            );
+            return uniqueMessages.sort(
+                (a, b) => new Date(a.created_at) - new Date(b.created_at)
+            );
 
-  // Handle scrolling to load older messages
-
-  useEffect(() => {
-    const textarea = textareaRef.current;
-    if (textarea) {
-      textarea.style.height = 'auto';
-      textarea.style.height = `${textarea.scrollHeight}px`;
-    }
-  }, [message]);
-
-  // Scroll handling for loading older messages
-  useEffect(() => {
-    const chatContainer = chatContainerRef.current;
-    if (!chatContainer) return;
-
-    const handleScroll = () => {
-      if (chatContainer.scrollTop <= 0 && offset > 0 && !isFetching) {
-        isAtTop.current = true; // User is at the top
-        previousScrollHeight.current = chatContainer.scrollHeight;
-        const newOffset = Math.max(offset - perPage, 0);
-        setOffset(newOffset);
-        fetchComments(newOffset, true);
-      } else {
-        isAtTop.current = false; // User is not at the top
-      }
+            // return uniqueMessages;
+        });
     };
 
-    chatContainer.addEventListener('scroll', handleScroll);
-    return () => chatContainer.removeEventListener('scroll', handleScroll);
-  }, [offset, isFetching]);
 
-  // Scroll to bottom after new messages
-  useEffect(() => {
-    const chatContainer = chatContainerRef.current;
-    if (chatContainer && !isFetching) {
-      chatContainer.scrollTop = chatContainer.scrollHeight;
-    }
-  }, [chatMessages]);
+    const formatTicketComments = (comments) => {
 
-<<<<<<< Updated upstream
-  // Updated serverEvents with better error handling
-  const serverEvents = (ticketId, lastCommentId, onNewComment, loggedInUserId) => {
-    const eventSource = new EventSource(
-      `/wp-json/robodesk/v1/messaging/${ticketId}/${lastCommentId}/${loggedInUserId}`
-=======
         const formattedComments = comments.map((comment) => {
             const authorId = comment.author_data?.id; // Use author_data.id
             const sender = String(authorId) === String(loggedInUserId) ? "me" : "other"; // Ensure type consistency
@@ -498,69 +391,31 @@ const SingleTicket = ({ ticket, onBack, loggedInUserId }) => {
 
     const handleFileUpload = (e) => {
         const file = e.target.files[0];
+
         if (!file) return;
 
-        const MAX_FILE_SIZE = 3 * 1024 * 1024; // 3MB
-        const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/gif'];
-        const ERROR_MESSAGES = {
-            INVALID_TYPE: 'Only JPEG, PNG, or GIF images are allowed.',
-            SIZE_EXCEEDED: 'Image size must be less than 3MB.',
-        };
+        // Check if file is an image
+        if (!file.type.startsWith("image/")) {
+            alert("Only image files are allowed.");
+            e.target.value = null;
+            return;
+        }
 
-        // Helper function to update state
-        const updateUploadState = (state) => setImageUpload({
-            imageUploading: false,
-            imageUploadMessage: null,
-            imageUploadError: null,
-            ...state,
-        });
+        // Check file size (5MB = 5 * 1024 * 1024 bytes)
+        const maxSize = 5 * 1024 * 1024;
+        if (file.size > maxSize) {
+            alert("Image size must be less than 5MB.");
+            e.target.value = null;
+            return;
+        }
+
+        // Read image
+        const reader = new FileReader();
+        reader.onload = () => setPreviewImage(reader.result);
+        reader.readAsDataURL(file);
 
         // Reset input
         e.target.value = null;
-
-        // Validate file type
-        if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
-            updateUploadState({
-                imageUploadError: true,
-                imageUploadMessage: ERROR_MESSAGES.INVALID_TYPE,
-            });
-            
-            console.log('Upload state check 1',imageUpload);
-            // alert(ERROR_MESSAGES.INVALID_TYPE);
-            return;
-        }
-
-        // Validate file size
-        if (file.size > MAX_FILE_SIZE) {
-            updateUploadState({
-                imageUploadError: true,
-                imageUploadMessage: ERROR_MESSAGES.SIZE_EXCEEDED,
-            });
-            console.log('Upload state check 2',imageUpload);
-            // alert(ERROR_MESSAGES.SIZE_EXCEEDED);
-            return;
-        }
-
-        // Start upload process
-        updateUploadState({ imageUploading: true });
-
-        const reader = new FileReader();
-
-        reader.onload = () => {
-            setPreviewImage(reader.result);
-            updateUploadState({});
-        };
-
-        reader.onerror = () => {
-            updateUploadState({
-                imageUploadError: true,
-                imageUploadMessage: 'Error reading the file.',
-            });
-            console.log('Upload state check 3',imageUpload);
-            // alert('Error reading the file.');
-        };
-
-        reader.readAsDataURL(file);
     };
 
 
@@ -624,7 +479,7 @@ const SingleTicket = ({ ticket, onBack, loggedInUserId }) => {
                 ) : error ? (
                     <p className="err_msg rd-text-center">{error}</p>
                 ) : chatMessages.length === 0 ? (
-                    <p className="rd-text-center rd-body-text">Loading conversations...</p>
+                    <p className="rd-text-center rd-body-text">Loading messages...</p>
                 ) : (
                     chatMessages.map((msg, index) => {
                         const prevMsg = index > 0 ? chatMessages[index - 1] : null;
@@ -799,378 +654,7 @@ const SingleTicket = ({ ticket, onBack, loggedInUserId }) => {
                 </div>
             </div>
         </div>
->>>>>>> Stashed changes
     );
-
-    eventSource.onopen = () => {
-      console.log('SSE connection opened');
-      hasConnected.current = true;
-    };
-
-    eventSource.addEventListener('handshake', (event) => {
-      // const handshake = JSON.parse(event.data);
-      // console.log("New handshake data received:", handshake);
-    });
-
-    eventSource.addEventListener('new_comment', (event) => {
-      const commentData = JSON.parse(event.data);
-
-      console.log('New comment received:', commentData);
-      if (typeof onNewComment === 'function') {
-        beep.current.play();
-        onNewComment(commentData);
-      }
-    });
-
-    eventSource.addEventListener('disconnect', (event) => {
-      try {
-        const data = JSON.parse(event.data);
-        console.log('Server requested disconnect:', data);
-      } catch (error) {
-        console.error('Error parsing disconnect:', error);
-      }
-    });
-
-    eventSource.addEventListener('retry', (event) => {
-      console.log('Retrying connection...');
-    });
-    eventSource.addEventListener('ticket_open', (event) => {
-      setTicketClosed(false);
-    });
-    eventSource.addEventListener('ticket_closed', (event) => {
-      setTicketClosed(true);
-      // eventSource.close();
-    });
-    eventSource.onerror = (error) => {};
-
-    return () => {
-      console.log('Closing SSE Connection');
-      hasConnected.current = false;
-      eventSource.close();
-    };
-  };
-
-  const lastMessageId = useMemo(() => {
-    if (!chatMessages || chatMessages.length === 0) return false;
-    return chatMessages[chatMessages.length - 1].id;
-  }, [chatMessages]);
-
-  useEffect(() => {
-    if (!hasConnected.current && isMessagingActive && loggedinContext && lastMessageId) {
-      const cleanup = serverEvents(ticket.id, lastMessageId, handleNewComment, loggedInUsrId);
-      hasConnected.current = true;
-      return cleanup;
-    }
-  }, [lastMessageId]);
-
-  const handleSend = async () => {
-    console.log('From handle send', message);
-    if (message.trim() || previewImage) {
-      const imageHTML = previewImage
-        ? `<a href="${previewImage}" target="_blank"><img src="${previewImage}" alt="Preview" class="rd-comment-img"  /></a>`
-        : false;
-      const tempMessage = {
-        id: `temp-${Date.now()}`,
-        text: message + (imageHTML ? '<br>' + imageHTML : ''),
-        sender: 'me',
-        senderName: 'Me',
-        image: '/default-avatar.jpg',
-        created_at: new Date().toISOString(),
-        isSending: true,
-        ...(previewImage && { imageUrl: previewImage }),
-      };
-
-      setChatMessages((prev) => [...prev, tempMessage]);
-      console.log('THe temp message is', tempMessage);
-      setMessage('');
-      setPreviewImage(null);
-
-      try {
-        const result = await sendReply(ticket.id, loggedInUserId, message, previewImage);
-        if (!result.data || !result.data.content) {
-          throw new Error('Invalid response from server: missing content');
-        }
-
-        // console.log('Antiuuu bantuuu' , result);
-        const newMessage = {
-          id: result.data.id || tempMessage.id,
-          text: result.data.content,
-          // typeof result.data.content === "string"
-          //     ? result.data.content.replace(/<[^>]+>/g, "")
-          //     : "",
-          sender: 'me',
-          senderName: result.data.author_name || 'Me',
-          image: result.data.author_image ?? '/default-avatar.jpg',
-          created_at: result.data.created_at || tempMessage.created_at,
-          isAdmin: result.data.author_id ? result.data.author_id !== ticket.author_id : false,
-          ...(previewImage && { imageUrl: previewImage }),
-        };
-
-        console.log('New message', newMessage);
-
-        setChatMessages((prev) =>
-          [...prev.filter((msg) => msg.id !== tempMessage.id), newMessage].sort(
-            (a, b) => new Date(a.created_at) - new Date(b.created_at)
-          )
-        );
-      } catch (err) {
-        console.error('Error sending message:', err);
-        setChatMessages((prev) => prev.filter((msg) => msg.id !== tempMessage.id));
-        setError('Failed to send message. Please try again.');
-      }
-    }
-  };
-
-  const handleEmojiClick = (emojiObject) => {
-    setMessage((prev) => prev + emojiObject.emoji);
-    setShowPicker(false);
-  };
-
-  const toggleEmojiPicker = () => {
-    setShowPicker((prev) => !prev);
-  };
-
-  const handleFileUpload = (e) => {
-    const file = e.target.files[0];
-
-    if (!file) return;
-
-    // Check if file is an image
-    if (!file.type.startsWith('image/')) {
-      alert('Only image files are allowed.');
-      e.target.value = null;
-      return;
-    }
-
-    // Check file size (5MB = 5 * 1024 * 1024 bytes)
-    const maxSize = 5 * 1024 * 1024;
-    if (file.size > maxSize) {
-      alert('Image size must be less than 5MB.');
-      e.target.value = null;
-      return;
-    }
-
-    // Read image
-    const reader = new FileReader();
-    reader.onload = () => setPreviewImage(reader.result);
-    reader.readAsDataURL(file);
-
-    // Reset input
-    e.target.value = null;
-  };
-
-  const triggerFileInput = () => fileInputRef.current.click();
-
-  const formatTimestamp = (timestamp) =>
-    new Date(timestamp).toLocaleTimeString([], {
-      hour: '2-digit',
-      minute: '2-digit',
-    });
-
-  return (
-    <div className="rd-single-ticket rd-flex rd-flex-col rd-h-full">
-      <div className="single-ticket-header rd-flex-col rd-flex rd-align-center rd-justify-between rd-border-bottom-light rd-px-18 rd-py-15">
-        <div className="rd-flex rd-align-center">
-          <button
-            className="icon-dark back-button rd-flex rd-items-center rd-bg-transparent rd-border-none rd-p-0 rd-m-0 rd-back-arrow-position"
-            onClick={onBack}
-          >
-            <FaChevronLeft />
-          </button>
-          {image_urls.wide_logo && image_urls.wide_logo.trim() !== '' ? (
-            <img
-              src={image_urls.wide_logo}
-              alt="Plugin Wide Logo"
-              className="rd-h-auto rd-header-logo"
-              onError={(e) => (e.target.style.display = 'none')}
-            />
-          ) : image_urls.logo && image_urls.logo.trim() !== '' ? (
-            <img
-              src={image_urls.logo}
-              alt="Plugin Logo"
-              className="rd-h-auto rd-header-logo"
-              onError={(e) => (e.target.style.display = 'none')}
-            />
-          ) : (
-            <div className="rd-h-auto rd-header-logo default-logo">
-              <img src={defaultLogo} alt="Default Plugin Logo" className="rd-h-auto rd-header-logo" />
-            </div>
-          )}
-        </div>
-        <div className="rd-body-text rd-mt-30">
-          <p className="rd-text-center rd-body-text">
-            If you are interested in working with us, take a step towards discovering exciting opportunities by reaching
-            out to us. We look forward to talking with you soon!
-          </p>
-        </div>
-      </div>
-      <div
-        ref={chatContainerRef}
-        className="chat-container rd-flex rd-flex-col rd-flex-grow rd-px-18 rd-py-15 rd-overflow-auto"
-      >
-        {loading && offset === Math.max(totalComments - perPage, 0) ? (
-          <p className="rd-text-center rd-body-text">Loading conversations...</p>
-        ) : error ? (
-          <p className="err_msg rd-text-center">{error}</p>
-        ) : chatMessages.length === 0 ? (
-          <p className="rd-text-center rd-body-text">Loading messages...</p>
-        ) : (
-          chatMessages.map((msg, index) => {
-            const prevMsg = index > 0 ? chatMessages[index - 1] : null;
-            const isSameSender = prevMsg && prevMsg.sender === msg.sender;
-            const marginBottom = isSameSender ? '4px' : '12px';
-
-            return (
-              <div
-                key={msg.id}
-                className={`chat-message rd-flex rd-items-start ${
-                  msg.sender === 'me' || msg.isSending ? 'rd-ml-auto sent' : 'rd-flex rd-gap-8 received'
-                }`}
-                style={{
-                  maxWidth: '70%',
-                  marginBottom,
-                  marginTop: index === 0 || !isSameSender ? '12px' : '4px',
-                }}
-              >
-                {(!isSameSender || index === 0) && (
-                  <img
-                    src={msg.image}
-                    alt={msg.sender === 'me' ? 'You' : msg.senderName}
-                    className="rd-rounded-full rd-object-cover"
-                    style={{
-                      height: '30px',
-                      width: '30px',
-                      borderRadius: '50px',
-                      aspectRatio: '1',
-                    }}
-                  />
-                )}
-                {isSameSender && index !== 0 && <div style={{ width: '30px', height: '30px' }} />}
-                <div
-                  className="message-content"
-                  style={{
-                    backgroundColor: msg.sender === 'me' || msg.isSending ? '#007BFF' : '#FFFFFF',
-                    color: msg.sender === 'me' || msg.isSending ? '#FFFFFF' : '#000000',
-                    border: msg.sender === 'other' && !msg.isSending ? '1px solid #E0E0E0' : 'none',
-                    borderRadius: '10px',
-                    padding: '8px 12px',
-                    maxWidth: '100%',
-                  }}
-                >
-                  {msg.isSending ? (
-                    <span className="rd-body-text single-message" dangerouslySetInnerHTML={{ __html: msg.text }} />
-                  ) : (
-                    <>
-                      {msg.text && (
-                        <span
-                          className={['rd-body-text', 'single-message', msg.action ? 'rd-is-action' : null]
-                            .filter(Boolean)
-                            .join(' ')}
-                          dangerouslySetInnerHTML={{ __html: msg.text }}
-                        />
-                      )}
-                    </>
-                  )}
-                  <div
-                    className="rd-text-small rd-text-gray"
-                    style={{
-                      marginTop: '4px',
-                      textAlign: msg.sender === 'me' || msg.isSending ? 'right' : 'left',
-                      fontSize: '10px',
-                    }}
-                  >
-                    {msg.isSending ? '' : formatTimestamp(msg.created_at)}
-                  </div>
-                </div>
-              </div>
-            );
-          })
-        )}
-      </div>
-      <div
-        className={`chat-input rd-flex rd-flex-col rd-px-18 rd-py-15 rd-border-top-light rd-bg-white rd-position-relative ${
-          previewImage ? 'has-preview' : ''
-        }`}
-      >
-        {previewImage && (
-          <div className="rd-mb-10 rd-flex rd-align-center">
-            <div>
-              <img
-                src={previewImage}
-                alt="Preview"
-                className="rd-max-w-full rd-h-auto rd-border-radius-md rd-preview-image"
-                style={{ maxWidth: '80px' }}
-              />
-              <button
-                onClick={() => setPreviewImage(null)}
-                className="rd-ml-10 rd-text-red-500 rd-border-none rd-cursor-pointer remove-preview rd-position-absolute rd-p-0"
-              >
-                <IoClose />
-              </button>
-            </div>
-          </div>
-        )}
-        <div className="rd-flex rd-align-center rd-justify-between">
-          {!ticketClosed ? (
-            <>
-              <textarea
-                id="mesg"
-                ref={textareaRef}
-                value={message}
-                onChange={(e) => setMessage(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' && !e.shiftKey) {
-                    e.preventDefault();
-                    handleSend();
-                  }
-                  dir;
-                }}
-                placeholder="Write a message..."
-                className="rd-flex-grow rd-border-none rd-outline-none rd-py-5 rd-w-full rd-resize-none rd-min-h-[40px]"
-                rows="1"
-              />
-              <div className="rd-flex rd-gap-20 rd-relative">
-                <button
-                  onClick={toggleEmojiPicker}
-                  className="rd-bg-transparent rd-border-none rd-mr-10 icon-dark rd-cursor-pointer rd-p-0"
-                >
-                  <FaRegFaceSmileBeam className="icon-dark" size={20} />
-                </button>
-                {showPicker && (
-                  <div className="rd-position-absolute rd-bottom-0 rd-right-0 rd-top-0 emoji-picker-wrap">
-                    <EmojiPicker onEmojiClick={handleEmojiClick} />
-                  </div>
-                )}
-                <div className="rd-flex">
-                  <input
-                    type="file"
-                    ref={fileInputRef}
-                    onChange={handleFileUpload}
-                    accept="image/*"
-                    className="rd-hidden"
-                  />
-                  <button
-                    onClick={triggerFileInput}
-                    className="rd-bg-transparent rd-border-none rd-mr-10 rd-cursor-pointer rd-p-0 icon-dark"
-                  >
-                    <FiPaperclip className="icon-dark" size={20} />
-                  </button>
-                </div>
-                <button
-                  onClick={handleSend}
-                  className="rd-bg-transparent rd-border-none rd-ml-10 icon-dark rd-cursor-pointer rd-p-0"
-                >
-                  <PiPaperPlaneRightFill className="icon-dark" size={20} />
-                </button>
-              </div>
-            </>
-          ) : (
-            <TicketClosed />
-          )}
-        </div>
-      </div>
-    </div>
-  );
 };
 
 export default SingleTicket;
