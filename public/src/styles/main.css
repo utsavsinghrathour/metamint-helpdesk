@@ -9,6 +9,9 @@
   --border-none: 0;
   --icon-dark: rgba(51, 51, 51, 1);
 }
+html{
+  font-size: 16px;
+}
 .robodesk-plugin::-webkit-scrollbar {
   width: 3px; 
   height: 3px;
@@ -324,12 +327,12 @@ padding-right: 18px;
 }
 .rd-title-text{
   color: var(--title-color);
-  font-size: 15px;
+font-size: 0.9375rem;
   line-height: 18px;
   font-weight: 500;
 }
 .rd-text-small{
-  font-size: 10px;
+  font-size: 0.625rem;
   line-height: 12px;
   font-weight: 400;
   color: var(--body-text);
@@ -341,25 +344,25 @@ padding-right: 18px;
   color: var(--title-color) !important;
 }
 h3.heading-3{
-  font-size: 20px;
+  font-size: 1.25rem;
   line-height: 24px;
   font-weight: 600;
   color: var(--title-color);
 }
 h4.heading-4{
-  font-size: 18px;
+  font-size: 1.125rem;
   line-height: 22px;
   font-weight: 500;
   transition: font-size 0.5s ease;
 }
 h5.heading-5{
-  font-size: 16px;
+  font-size: 1rem;
   line-height: 20px;
   font-weight: 400;
 }
 h5.sub-text{
   color: var(--body-text);
-  font-size: 14px;
+font-size: 0.875rem;
   line-height: 18px;
   font-weight: 400;
 }
@@ -380,7 +383,7 @@ h5.sub-text{
 .rd-body-text p
 {
   color: var(--body-text) !important;
-  font-size: 13px !important;
+  font-size: 0.8125rem !important;
   line-height: 18px !important;
   font-weight: 400 !important;
   transition: font-size 0.5s ease;

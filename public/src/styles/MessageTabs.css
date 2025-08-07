@@ -23,6 +23,13 @@
   overflow: auto;
   min-height: 220px;
 }
+.rd-messge-wrapper .rd-send-message{
+      position: absolute;
+    bottom: 100px;
+    left: 50%;
+    transform: translate(-50%, 00%);
+    width: 100%;
+}
 .single-ticket-header img{
   max-width: 100px;
   object-fit: contain;
