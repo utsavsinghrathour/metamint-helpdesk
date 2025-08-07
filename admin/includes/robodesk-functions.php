@@ -1132,3 +1132,31 @@ function handle_update_ticket_category()
         )
     ));
 }
+
+// Set default taxonomy term for robodesk_ticket_category when a ticket is created
+add_action('save_post', 'set_default_taxonomy_term', 10, 3);
+function set_default_taxonomy_term($post_id, $post, $update)
+{
+    // Check if this is the correct post type
+    if ($post->post_type !== 'robodesk_ticket') {
+        return;
+    }
+
+    // Prevent infinite loops by removing the action temporarily
+    remove_action('save_post', 'set_default_taxonomy_term');
+
+    // Check if the post already has terms for the taxonomy
+    $taxonomy = 'robodesk_ticket_category';
+    $terms = get_the_terms($post_id, $taxonomy);
+
+    // If no terms are set, assign the default term from the option
+    if (empty($terms) || is_wp_error($terms)) {
+        $default_term_id = get_option('robodesk_default_ticket_category', false);
+        if ($default_term_id) {
+            wp_set_post_terms($post_id, array((int)$default_term_id), $taxonomy, false);
+        }
+    }
+
+    // Re-add the action
+    add_action('save_post', 'set_default_taxonomy_term', 10, 3);
+}
