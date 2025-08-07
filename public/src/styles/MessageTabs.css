@@ -64,7 +64,8 @@
   width: 50px;
   position: absolute;
   right: 130px;
-  top: 10px;
+  top: auto;
+  bottom: 12px;
   height: 50px;
   object-fit: contain;
 }
@@ -88,7 +89,8 @@
 }
 .remove-preview {
   right: 125px;
-  top: 5px;
+  top: auto;
+  bottom: 50px;
   background-color: #000;
   display: flex;
   border-radius: 50%;

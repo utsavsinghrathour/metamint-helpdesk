@@ -509,7 +509,7 @@ const SingleTicket = ({ ticket, onBack, loggedInUserId }) => {
         )}
       </div>
       <div
-        className={`chat-input rd-flex rd-flex-col rd-px-18 rd-py-15 rd-border-top-light rd-bg-white rd-position-relative ${
+        className={`chat-input rd-flex rd-flex-col rd-px-18 rd-py-15 rd-border-top-light rd-bg-white  ${
           previewImage ? 'has-preview' : ''
         }`}
       >
