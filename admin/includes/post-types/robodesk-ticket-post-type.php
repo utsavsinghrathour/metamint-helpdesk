@@ -737,9 +737,6 @@ function robodesk_user_data_to_session_storage()
 add_action('wp_footer', 'robodesk_user_data_to_session_storage');
 
 
-
-
-
 function robodesk_allow_image_in_comments( $allowed_tags ) {
     $allowed_tags['img'] = array(
         'src' => array(),

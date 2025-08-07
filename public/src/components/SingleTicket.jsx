@@ -11,7 +11,7 @@ import { sendReply } from '../utils/modules';
 import { useAppData } from '../utils/AppDataContext';
 import DefaultAvatar from '../images/default-avatar.jpg';
 
-const TicketClosed = ( { handleFocusedTextArea }) => {
+const TicketClosed = ( { handleFocusedTextArea , setActiveTab}) => {
   return (
     <div className="">
       <h4 className="heading-4 rd-fw-semi rd-mb-8">Still have questions?</h4>
@@ -20,7 +20,7 @@ const TicketClosed = ( { handleFocusedTextArea }) => {
   );
 };
 
-const SingleTicket = ({ ticket, onBack, loggedInUserId ,  handleFocusedTextArea }) => {
+const SingleTicket = ({ ticket, onBack, loggedInUserId ,  handleFocusedTextArea , setActiveTab}) => {
   const [message, setMessage] = useState('');
   const [showPicker, setShowPicker] = useState(false);
   const [previewImage, setPreviewImage] = useState(null);
@@ -43,7 +43,7 @@ const SingleTicket = ({ ticket, onBack, loggedInUserId ,  handleFocusedTextArea 
   const hasConnected = useRef(false);
   const { loggedinContext, loggedInUsrId } = useAppData();
 
-    const [ticketClosed, setTicketClosed] = useState(false);
+  const [ticketClosed, setTicketClosed] = useState(false);
 
     const [imageUpload, setImageUpload] = useState({
         imageUploading: false,
@@ -621,7 +621,7 @@ const handleFileUpload = (e) => {
               </div>
             </>
           ) : (
-            <TicketClosed  handleFocusedTextArea = { handleFocusedTextArea}/>
+            <TicketClosed  handleFocusedTextArea = { handleFocusedTextArea} setActiveTab={setActiveTab}/>
           )}
         </div>
       </div>
