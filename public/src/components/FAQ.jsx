@@ -339,6 +339,7 @@ const FAQ = ({ setActiveTab, setIsOpen, isExpanded, setIsExpanded, activeTab ,ha
             <p className="rd-body-text rd-text-red rd-text-center">Error: {error}</p>
           ) : isLoading ? (
             <div className="rd-skeleton">
+                  <p className="rd-body-text rd-text rd-text-center">Loading...</p>
               {[...Array(10)].map((_, i) => (
                 <div key={i} className="rd-skeleton-item rd-mb-10 rd-p-20 rd-bg-gray-200 rd-rounded"></div>
               ))}
