@@ -9,6 +9,7 @@ import defaultLogo from '../images/robodesk-logo.png';
 import '../styles/MessageTabs.css';
 import { sendReply } from '../utils/modules';
 import { useAppData } from '../utils/AppDataContext';
+import DefaultAvatar from '../images/default-avatar.jpg';
 
 const TicketClosed = () => {
   return (
@@ -42,9 +43,18 @@ const SingleTicket = ({ ticket, onBack, loggedInUserId }) => {
   const hasConnected = useRef(false);
   const { loggedinContext, loggedInUsrId } = useAppData();
 
-  const [ticketClosed, setTicketClosed] = useState(false);
+    const [ticketClosed, setTicketClosed] = useState(false);
+
+    const [imageUpload, setImageUpload] = useState({
+        imageUploading: false,
+        imageUploadError: null,
+        imageUploadMessage: null,
+    });
+
 
   const [isMessagingActive, setIsisMessagingActive] = useState(true);
+  
+
 
   useEffect(() => {
     // setTicketClosed(ticket.status == "closed");
@@ -111,7 +121,7 @@ const SingleTicket = ({ ticket, onBack, loggedInUserId }) => {
         text: commentData.content?.rendered || '',
         sender: commentData.author_id === loggedInUserId ? 'me' : 'other',
         senderName: commentData.author_name || 'Unknown',
-        image: commentData.author_image || '/default-avatar.jpg',
+        image: commentData.author_image || DefaultAvatar,
         created_at: commentData.created_at || new Date().toISOString(),
         isAdmin: commentData.author_id !== ticket.author_id,
       };
@@ -132,7 +142,7 @@ const SingleTicket = ({ ticket, onBack, loggedInUserId }) => {
         text: comment.content?.rendered || comment.content?.plain || '',
         sender,
         senderName: comment.author_name || 'Unknown',
-        image: comment.author_data?.avatar || comment.author_image || './default-avatar.jpg',
+        image: comment.author_data?.avatar || comment.author_image || DefaultAvatar,
         created_at: comment.date,
         action: comment.comment_action,
         time_ago: comment.time_ago,
@@ -144,14 +154,7 @@ const SingleTicket = ({ ticket, onBack, loggedInUserId }) => {
 
   // Initial fetch to get total comments and latest messages
   useEffect(() => {
-    // console.log(ticket.comments, "ticket comments from top");
-    if (ticket.comments && ticket.comments.length > 0) {
-      // const formattedComments = formatTicketComments(ticket.comments);
-      // setChatMessages(formattedComments);
-      // setTotalComments(ticket.totalComments);
-      // setOffset(Math.max(ticket.totalComments - perPage, 0));
-      // setLoading(false);
-    }
+
     const fetchInitialComments = async () => {
       try {
         const response = await fetch(`/wp-json/wp/v2/comments?post=${ticket.id}&per_page=1&order=asc&_fields=id`);
@@ -163,11 +166,10 @@ const SingleTicket = ({ ticket, onBack, loggedInUserId }) => {
         const initialOffset = Math.max(total - perPage, 0);
         setOffset(initialOffset);
 
-        // console.log("Total comments:", total);
         setTotalComments(total);
-        // const initialOffset = Math.max(total - perPage, 0);
-        // setOffset(initialOffset);
+
         await fetchComments(initialOffset, false);
+        
       } catch (err) {
         console.error('Failed to fetch initial comments:', err);
         setError('Failed to load messages. Please try again.');
@@ -295,7 +297,7 @@ const SingleTicket = ({ ticket, onBack, loggedInUserId }) => {
         text: message + (imageHTML ? '<br>' + imageHTML : ''),
         sender: 'me',
         senderName: 'Me',
-        image: '/default-avatar.jpg',
+        image: DefaultAvatar,
         created_at: new Date().toISOString(),
         isSending: true,
         ...(previewImage && { imageUrl: previewImage }),
@@ -351,35 +353,68 @@ const SingleTicket = ({ ticket, onBack, loggedInUserId }) => {
     setShowPicker((prev) => !prev);
   };
 
-  const handleFileUpload = (e) => {
-    const file = e.target.files[0];
+const handleFileUpload = (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
 
-    if (!file) return;
-
-    // Check if file is an image
-    if (!file.type.startsWith('image/')) {
-      alert('Only image files are allowed.');
-      e.target.value = null;
-      return;
-    }
-
-    // Check file size (5MB = 5 * 1024 * 1024 bytes)
-    const maxSize = 5 * 1024 * 1024;
-    if (file.size > maxSize) {
-      alert('Image size must be less than 5MB.');
-      e.target.value = null;
-      return;
-    }
-
-    // Read image
-    const reader = new FileReader();
-    reader.onload = () => setPreviewImage(reader.result);
-    reader.readAsDataURL(file);
-
-    // Reset input
-    e.target.value = null;
+  const MAX_FILE_SIZE = 3145728; 
+  const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/gif'];
+  const ERROR_MESSAGES = {
+    INVALID_TYPE: 'Only JPEG, PNG, or GIF images are allowed.',
+    SIZE_EXCEEDED: 'Image size must be less than 3MB.',
   };
 
+  // Helper function to update state
+  const updateUploadState = (state) => setImageUpload({
+    imageUploading: false,
+    imageUploadMessage: null,
+    imageUploadError: null,
+    ...state,
+  });
+
+  // Reset input
+  e.target.value = null;
+
+  // Validate file type
+  if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
+    updateUploadState({
+      imageUploadError: true,
+      imageUploadMessage: ERROR_MESSAGES.INVALID_TYPE,
+    });
+    alert(ERROR_MESSAGES.INVALID_TYPE);
+    return;
+  }
+
+  // Validate file size
+  if (file.size > MAX_FILE_SIZE) {
+    updateUploadState({
+      imageUploadError: true,
+      imageUploadMessage: ERROR_MESSAGES.SIZE_EXCEEDED,
+    });
+    alert(ERROR_MESSAGES.SIZE_EXCEEDED);
+    return;
+  }
+
+  // Start upload process
+  updateUploadState({ imageUploading: true });
+
+  const reader = new FileReader();
+  
+  reader.onload = () => {
+    setPreviewImage(reader.result);
+    updateUploadState({});
+  };
+
+  reader.onerror = () => {
+    updateUploadState({
+      imageUploadError: true,
+      imageUploadMessage: 'Error reading the file.',
+    });
+    alert('Error reading the file.');
+  };
+
+  reader.readAsDataURL(file);
+};
   const triggerFileInput = () => fileInputRef.current.click();
 
   const formatTimestamp = (timestamp) =>
@@ -434,7 +469,7 @@ const SingleTicket = ({ ticket, onBack, loggedInUserId }) => {
         ) : error ? (
           <p className="err_msg rd-text-center">{error}</p>
         ) : chatMessages.length === 0 ? (
-          <p className="rd-text-center rd-body-text">Loading messages...</p>
+          <p className="rd-text-center rd-body-text">Loading conversations...</p>
         ) : (
           chatMessages.map((msg, index) => {
             const prevMsg = index > 0 ? chatMessages[index - 1] : null;
