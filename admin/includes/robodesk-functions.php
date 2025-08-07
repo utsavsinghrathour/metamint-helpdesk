@@ -1087,3 +1087,48 @@ function robodesk_fetch_emails_handler()
 }
 
 // cron job to fetch emails
+
+
+add_action('wp_ajax_update_ticket_category', 'handle_update_ticket_category');
+
+function handle_update_ticket_category()
+{
+    // Verify nonce
+    if (!wp_verify_nonce($_POST['nonce'], 'robodesk_update_ticket_category_action')) {
+        wp_die('Security check failed');
+    }
+
+    // Check user permissions
+    if (!current_user_can('edit_posts')) {
+        wp_send_json_error('Insufficient permissions');
+        return;
+    }
+
+    $ticket_id = intval($_POST['ticket_id']);
+    $category_id = intval($_POST['category_id']);
+
+    // Validate inputs
+    if (!$ticket_id || !$category_id) {
+        wp_send_json_error('Invalid ticket ID or category ID');
+        return;
+    }
+
+    // Update the ticket category
+    $result = wp_set_post_terms($ticket_id, array($category_id), 'robodesk_ticket_category');
+
+    if (is_wp_error($result)) {
+        wp_send_json_error('Failed to update category: ' . $result->get_error_message());
+        return;
+    }
+
+    $category = get_term($category_id, 'robodesk_ticket_category');
+
+    wp_send_json_success(array(
+        'message' => 'Category updated successfully',
+        'category' => array(
+            'term_id' => $category->term_id,
+            'name' => $category->name,
+            'slug' => $category->slug
+        )
+    ));
+}

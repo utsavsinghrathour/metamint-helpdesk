@@ -1013,15 +1013,41 @@ function robodesk_dashboard_callback()
                             </div>
 
                             <!-- Ticket Details -->
+                            <?php
+                            // In your PHP file (where you're already outputting the script)
+
+                            // Get ticket categories
+                            $terms = get_terms(array(
+                                'taxonomy'   => 'robodesk_ticket_category',
+                                'hide_empty' => false,
+                            ));
+
+                            // Get default category
+                            $default_category = get_option('robodesk_default_ticket_category', 'General');
+
+                            // Find the default category object from terms
+                            $default_category_obj = null;
+                            foreach ($terms as $term) {
+                                if ($term->name === $default_category || $term->slug === $default_category) {
+                                    $default_category_obj = $term;
+                                    break;
+                                }
+                            }
+                            ?>
+
                             <div class="bg-gray-50 p-4 rounded-lg">
                                 <h4 class="font-medium text-gray-900 mb-3">Ticket Details</h4>
                                 <div id="ticket-meta-info" class="space-y-2">
                                     <!-- Ticket meta info will be populated by JavaScript -->
-                                    <!-- have been applied from js -->
-
-
                                 </div>
                             </div>
+
+                            <script>
+                                // Send ticket categories to JS
+                                const robodeskTicketCategories = <?php echo wp_json_encode($terms); ?>;
+                                const robodeskDefaultCategory = <?php echo wp_json_encode($default_category); ?>;
+                                const robodeskDefaultCategoryObj = <?php echo wp_json_encode($default_category_obj); ?>;
+                            </script>
                         </div>
 
                         <!--------------------------- Customer Tickets Modal --------------------------->
