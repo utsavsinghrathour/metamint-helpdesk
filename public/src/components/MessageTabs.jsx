@@ -17,7 +17,6 @@ const SingleTicket = React.lazy(() => import('./SingleTicket'));
 
 const TicketItem = ({ ticket, onSelect }) => {
 
-
   return (
     <div
       className="rd-hover single-rd-ticket rd-flex rd-align-start rd-gap-8 rd-border-bottom-light rd-cursor-pointer single-rd-active-ticket"
@@ -140,9 +139,11 @@ const MessageTabs = ({
 
   const handleAddTicket = async () => {
     if (!loggedInuserId) return;
-    sessionStorage.setItem('activate_text', 'true');
+    // sessionStorage.setItem('activate_text', 'true');
     setActiveTab(0);
   };
+  
+  
 
   const filteredTickets = tickets.filter((ticket) => {
     const matchesTab = currentTab === 'all' || ticket.status === currentTab;
@@ -167,6 +168,7 @@ const MessageTabs = ({
                 ticket={selectedNewTicket ? selectedNewTicket : selectedTicket}
                 onBack={() => setSelectedTicket(null)}
                 loggedInUserId={loggedInuserId}
+                setActiveTab={setActiveTab}
               />
             </Suspense>
           ) : (
@@ -345,7 +347,7 @@ const MessageTabs = ({
                         <img src={Preloader} alt="Loading" className="rd-preloader" />
                       ) : filteredTickets.length > 0 ? (
                         filteredTickets.map((ticket) => (
-                          <TicketItem key={ticket.id} ticket={ticket} onSelect={setSelectedTicket} />
+                          <TicketItem key={ticket.id} ticket={ticket} onSelect={setSelectedTicket} setActiveTab={setActiveTab} />
                         ))
                       ) : (
                         <p className="rd-text-center rd-text-gray rd-m-5 err_msg">No tickets found</p>

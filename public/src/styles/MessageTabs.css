@@ -151,3 +151,11 @@
 .rd-is-action{
     color: red;
 }
+
+.rd-comment-img{
+
+    max-width: 150px;
+    max-height: 150px;
+    object-fit: contain;
+    /* border-radius: ; */
+}

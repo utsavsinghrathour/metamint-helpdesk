@@ -19,7 +19,6 @@ const TicketClosed = () => {
     )
 };
 
-
 const SingleTicket = ({ ticket, onBack, loggedInUserId }) => {
     const [message, setMessage] = useState("");
     const [showPicker, setShowPicker] = useState(false);
@@ -47,22 +46,20 @@ const SingleTicket = ({ ticket, onBack, loggedInUserId }) => {
     const [ticketClosed, setTicketClosed] = useState(false);
 
 
-    const [isMessagingActive, setIsisMessagingActive] = useState(
-        document.visibilityState === "visible"
-    );
+    const [isMessagingActive, setIsisMessagingActive] = useState(true);
 
 
     useEffect(() => {
 
-        setTicketClosed(ticket.status == "closed" );
-        beep.current.load();
-        const onVisibilityChange = () => {
-            setIsisMessagingActive(document.visibilityState === "visible");
-        };
-        document.addEventListener("visibilitychange", onVisibilityChange);
-        return () => {
-            document.removeEventListener("visibilitychange", onVisibilityChange);
-        };
+        // setTicketClosed(ticket.status == "closed");
+        // beep.current.load();
+        // const onVisibilityChange = () => {
+        //     setIsisMessagingActive(document.visibilityState === "visible");
+        // };
+        // document.addEventListener("visibilitychange", onVisibilityChange);
+        // return () => {
+        //     document.removeEventListener("visibilitychange", onVisibilityChange);
+        // };
     }, []);
 
     const fetchComments = async (fetchOffset = 0, prepend = false) => {
@@ -81,27 +78,8 @@ const SingleTicket = ({ ticket, onBack, loggedInUserId }) => {
             }
 
             const data = await response.json();
-            
-            // console.log('The data fetched is check for action', data);
-
-            // console.log('We came here first', data);
-            // console.log('THe logged in user id is', loggedInUserId);
-            // const formattedComments = data.map((comment) => ({
-            //     id: comment.id,
-            //     text: comment.content?.rendered.replace(/<[^>]+>/g, "") || "",
-            //     sender: comment.author_data?.id === loggedInUserId ? "me" : "other",
-            //     senderName: comment.author_name,
-            //     image: comment.author_data.avatar || "./default-avatar.jpg",
-            //     created_at: comment.date,
-            //     time_ago: comment.time_ago,
-            //     isAdmin: comment.author_data?.id !== ticket.author_id,
-            // }));
 
             const formattedComments = formatTicketComments(data);
-
-            // console.log('The the comment was formatted like' , formattedComments);
-
-            // console.log('The new formatted ticket comments are', newFormattedTicketComments);
 
             setChatMessages((prev) => {
                 const newMessages = prepend
@@ -172,9 +150,9 @@ const SingleTicket = ({ ticket, onBack, loggedInUserId }) => {
                 senderName: comment.author_name || "Unknown",
                 image: comment.author_data?.avatar || comment.author_image || "./default-avatar.jpg",
                 created_at: comment.date,
-                action : comment.comment_action ,
+                action: comment.comment_action,
                 time_ago: comment.time_ago,
-                
+
             };
         });
 
@@ -193,18 +171,21 @@ const SingleTicket = ({ ticket, onBack, loggedInUserId }) => {
         }
         const fetchInitialComments = async () => {
             try {
-                // const response = await fetch(
-                //     `/wp-json/wp/v2/comments?post=${ticket.id}&per_page=1&order=asc&_fields=id`
-                // );
-                // if (!response.ok) {
-                //     throw new Error("Failed to fetch total comments");
-                // }
-                const total = parseInt(ticket.totalComments, 10) || 0;
-
-                // console.log("Total comments:", total);
+                const response = await fetch(
+                    `/wp-json/wp/v2/comments?post=${ticket.id}&per_page=1&order=asc&_fields=id`
+                );
+                if (!response.ok) {
+                    throw new Error("Failed to fetch total comments");
+                }
+                const total = parseInt(response.headers.get("X-WP-Total"), 10) || 0;
                 setTotalComments(total);
                 const initialOffset = Math.max(total - perPage, 0);
                 setOffset(initialOffset);
+
+                // console.log("Total comments:", total);
+                setTotalComments(total);
+                // const initialOffset = Math.max(total - perPage, 0);
+                // setOffset(initialOffset);
                 await fetchComments(initialOffset, false);
             } catch (err) {
                 console.error("Failed to fetch initial comments:", err);
@@ -338,10 +319,13 @@ const SingleTicket = ({ ticket, onBack, loggedInUserId }) => {
     }, [lastMessageId]);
 
     const handleSend = async () => {
+        console.log('From handle send', message)
         if (message.trim() || previewImage) {
+            const imageHTML = previewImage
+                ? `<a href="${previewImage}" target="_blank"><img src="${previewImage}" alt="Preview" class="rd-comment-img"  /></a>` : false;
             const tempMessage = {
                 id: `temp-${Date.now()}`,
-                text: message || "",
+                text: message + (imageHTML ? "<br>" + imageHTML : ""),
                 sender: "me",
                 senderName: "Me",
                 image: "/default-avatar.jpg",
@@ -350,21 +334,25 @@ const SingleTicket = ({ ticket, onBack, loggedInUserId }) => {
                 ...(previewImage && { imageUrl: previewImage }),
             };
 
+
             setChatMessages((prev) => [...prev, tempMessage]);
+            console.log('THe temp message is', tempMessage);
             setMessage("");
             setPreviewImage(null);
 
             try {
-                const result = await sendReply(ticket.id, loggedInUserId, message);
+                const result = await sendReply(ticket.id, loggedInUserId, message, previewImage);
                 if (!result.data || !result.data.content) {
                     throw new Error("Invalid response from server: missing content");
                 }
+
+                // console.log('Antiuuu bantuuu' , result);
                 const newMessage = {
                     id: result.data.id || tempMessage.id,
-                    text:
-                        typeof result.data.content === "string"
-                            ? result.data.content.replace(/<[^>]+>/g, "")
-                            : "",
+                    text: result.data.content,
+                    // typeof result.data.content === "string"
+                    //     ? result.data.content.replace(/<[^>]+>/g, "")
+                    //     : "",
                     sender: "me",
                     senderName: result.data.author_name || "Me",
                     image: result.data.author_image ?? "/default-avatar.jpg",
@@ -374,6 +362,8 @@ const SingleTicket = ({ ticket, onBack, loggedInUserId }) => {
                         : false,
                     ...(previewImage && { imageUrl: previewImage }),
                 };
+
+                console.log('New message', newMessage);
 
                 setChatMessages((prev) =>
                     [...prev.filter((msg) => msg.id !== tempMessage.id), newMessage].sort(
@@ -401,13 +391,33 @@ const SingleTicket = ({ ticket, onBack, loggedInUserId }) => {
 
     const handleFileUpload = (e) => {
         const file = e.target.files[0];
-        if (file && file.type.startsWith("image/")) {
-            const reader = new FileReader();
-            reader.onload = () => setPreviewImage(reader.result);
-            reader.readAsDataURL(file);
+
+        if (!file) return;
+
+        // Check if file is an image
+        if (!file.type.startsWith("image/")) {
+            alert("Only image files are allowed.");
+            e.target.value = null;
+            return;
         }
+
+        // Check file size (5MB = 5 * 1024 * 1024 bytes)
+        const maxSize = 5 * 1024 * 1024;
+        if (file.size > maxSize) {
+            alert("Image size must be less than 5MB.");
+            e.target.value = null;
+            return;
+        }
+
+        // Read image
+        const reader = new FileReader();
+        reader.onload = () => setPreviewImage(reader.result);
+        reader.readAsDataURL(file);
+
+        // Reset input
         e.target.value = null;
     };
+
 
     const triggerFileInput = () => fileInputRef.current.click();
 
@@ -462,9 +472,10 @@ const SingleTicket = ({ ticket, onBack, loggedInUserId }) => {
             <div
                 ref={chatContainerRef}
                 className="chat-container rd-flex rd-flex-col rd-flex-grow rd-px-18 rd-py-15 rd-overflow-auto"
+
             >
                 {loading && offset === Math.max(totalComments - perPage, 0) ? (
-                    <p className="rd-text-center rd-body-text">Loading messages...</p>
+                    <p className="rd-text-center rd-body-text">Loading conversations...</p>
                 ) : error ? (
                     <p className="err_msg rd-text-center">{error}</p>
                 ) : chatMessages.length === 0 ? (
@@ -525,36 +536,27 @@ const SingleTicket = ({ ticket, onBack, loggedInUserId }) => {
                                     }}
                                 >
                                     {msg.isSending ? (
-                                        <span className="rd-body-text single-message">
-                                            {msg.text}
-                                        </span>
+                                        <span
+                                            className="rd-body-text single-message"
+                                            dangerouslySetInnerHTML={{ __html: msg.text }}
+                                        />
                                     ) : (
                                         <>
-                                        
-                                        {msg.text && (
-                                            <span
-                                                className={[
-                                                    "rd-body-text",
-                                                    "single-message",
-                                                    msg.action ? "rd-is-action" : null,
-                                                ]
-                                                    .filter(Boolean)
-                                                    .join(" ")}
-                                                dangerouslySetInnerHTML={{ __html: msg.text }}
-                                            />
-                                        )}
-               
-                                            {msg.imageUrl && (
-                                                <img
-                                                    src={msg.imageUrl}
-                                                    alt="Uploaded"
-                                                    className="rd-max-w-full rd-h-auto rd-rounded"
-                                                    style={{
-                                                        maxWidth: "200px",
-                                                        marginTop: msg.text ? "8px" : "0",
-                                                    }}
+
+                                            {msg.text && (
+                                                <span
+                                                    className={[
+                                                        "rd-body-text",
+                                                        "single-message",
+                                                        msg.action ? "rd-is-action" : null,
+                                                    ]
+                                                        .filter(Boolean)
+                                                        .join(" ")}
+                                                    dangerouslySetInnerHTML={{ __html: msg.text }}
                                                 />
                                             )}
+
+
                                         </>
                                     )}
                                     <div
@@ -647,7 +649,7 @@ const SingleTicket = ({ ticket, onBack, loggedInUserId }) => {
                                 </button>
                             </div>
                         </>
-                    ) : <TicketClosed/>}
+                    ) : <TicketClosed />}
 
                 </div>
             </div>

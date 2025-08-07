@@ -270,7 +270,6 @@ function add_color_picker_to_edit_term($term)
     $color = get_term_meta($term->term_id, 'priority_color', true);
     $color = !empty($color) ? $color : '#ffffff'; // Default to white if no color is set
 
-    // var_dump($color);
     ?>
     <tr class="form-field term-colorpicker-wrap">
         <th scope="row"><label for="priority_color">Priority Color</label></th>
@@ -598,10 +597,10 @@ function robodesk_handle_tickets_webhook(WP_REST_Request $request)
         $ticket_id  = sanitize_text_field($data['data']['ticket_id'] ?? '');
         $user_id   = sanitize_text_field($data['data']['user_id'] ?? '');
         $reply     = sanitize_textarea_field($data['data']['message'] ?? '');
+        $base64_image = $data['data']['image'] ?? '';
         $user_object =  get_user_by('id', $user_id);
         $user_name = $user_object->display_name;
         $email_address = $user_object->user_email;
-
 
         if (empty($ticket_id)) {
             return new WP_Error(
@@ -619,28 +618,40 @@ function robodesk_handle_tickets_webhook(WP_REST_Request $request)
                 array('status' => 404)
             );
         }
-
+        
+        $attachment_id = 0;
+        $attachment_url = '';
+        $content = $reply;
+        if (!empty($base64_image)) {
+            $attachment_id = robodesk_base64_image_upload($base64_image);
+            $attachment_url = wp_get_attachment_url($attachment_id);
+            $content = $reply . '<br/><a href="'.$attachment_url.'" target="_blank"><img alt="'.get_the_title($ticket_id).'" class="rd-comment-img"  src="'.$attachment_url.'"></a>';
+            
+        }
+        
         // Add reply to ticket
         $comment_id = wp_insert_comment(array(
             'comment_post_ID' => $ticket_id,
             'comment_author' => $user_name,
             'comment_author_email' => $email_address,
             'user_id'  => $user_id,
-            'comment_content' => $reply,
+            'comment_content' => $content,
             'comment_approved' => 1,
             'comment_type' => 'ticket_replies'
         ));
 
 
         if ($comment_id) {
+                
             $comment = get_comment($comment_id);
             $data = [
                 'id' => $comment->comment_ID,
                 'author' => $comment->comment_author, // Display name
                 'author_id' => $comment->user_id,    // User ID
                 'author_image' => get_avatar_url($comment->user_id, ['size' => 96]),
-                'content' => $comment->comment_content,
+                'content' => $comment->comment_content ,
                 'created_at' => $comment->comment_date,
+               
             ];
             rbd_log(sprintf(
                 "Comment received for ticket #%s: %s\n",
@@ -726,3 +737,72 @@ function robodesk_user_data_to_session_storage()
 add_action('wp_footer', 'robodesk_user_data_to_session_storage');
 
 
+
+
+
+function robodesk_allow_image_in_comments( $allowed_tags ) {
+    $allowed_tags['img'] = array(
+        'src' => array(),
+        'alt' => array(),
+        'class' => array(),
+        'width' => array(),
+        'height' => array()
+    );
+    
+    // Allow <a> tag with common safe attributes
+    $allowed_tags['a'] = array(
+        'href'   => array(),
+        'title'  => array(),
+        'target' => array(),
+        'rel'    => array(),
+        'class'  => array(),
+    );
+    return $allowed_tags;
+}
+add_filter( 'wp_kses_allowed_html', 'robodesk_allow_image_in_comments', 10, 1 );
+
+
+function robodesk_base64_image_upload($base64_data) {
+    // Extract the image data
+
+    
+    if (preg_match('/^data:image\/(\w+);base64,/', $base64_data, $matches)) {
+    
+        $image_type = $matches[1]; // png, jpg, etc.
+        $image_data = substr($base64_data, strpos($base64_data, ',') + 1);
+        $image_data = base64_decode($image_data);
+        
+        if (!$image_data) {
+            return new WP_Error('invalid_image', 'Invalid base64 image data');
+        }
+   
+        $upload_dir = wp_upload_dir();
+        $filename = 'ticket-' . time() . '.' . $image_type;
+        $file_path = $upload_dir['path'] . '/' . $filename;
+        
+        if (file_put_contents($file_path, $image_data) === false) {
+            return new WP_Error('file_error', 'Could not save image file');
+        }
+        
+        // Prepare file data for WordPress
+        $filetype = wp_check_filetype($filename, null);
+        $attachment = array(
+            'post_mime_type' => $filetype['type'],
+            'post_title' => sanitize_file_name($filename),
+            'post_content' => '',
+            'post_status' => 'inherit'
+        );
+        
+        // Insert attachment
+        $attach_id = wp_insert_attachment($attachment, $file_path);
+        
+        // Generate metadata and thumbnails
+        require_once(ABSPATH . 'wp-admin/includes/image.php');
+        $attach_data = wp_generate_attachment_metadata($attach_id, $file_path);
+        wp_update_attachment_metadata($attach_id, $attach_data);
+        
+        return $attach_id;
+    }
+    
+    return false;
+}

@@ -8,6 +8,66 @@ if (!defined('JWT_AUTH_SECRET_KEY')) {
     define('JWT_AUTH_SECRET_KEY', 'robodesk-secret');
 }
 
+
+// function robodesk_allow_image_in_comments( $allowed_tags ) {
+//     $allowed_tags['img'] = array(
+//         'src' => array(),
+//         'alt' => array(),
+//         'class' => array(),
+//         'width' => array(),
+//         'height' => array()
+//     );
+//     return $allowed_tags;
+// }
+// add_filter( 'wp_kses_allowed_html', 'robodesk_allow_image_in_comments', 10, 1 );
+
+
+// function handle_base64_image_upload($base64_data) {
+//     // Extract the image data
+
+    
+//     if (preg_match('/^data:image\/(\w+);base64,/', $base64_data, $matches)) {
+    
+
+//         $image_type = $matches[1]; // png, jpg, etc.
+//         $image_data = substr($base64_data, strpos($base64_data, ',') + 1);
+//         $image_data = base64_decode($image_data);
+        
+//         if (!$image_data) {
+//             return new WP_Error('invalid_image', 'Invalid base64 image data');
+//         }
+   
+//         $upload_dir = wp_upload_dir();
+//         $filename = 'ticket-' . time() . '.' . $image_type;
+//         $file_path = $upload_dir['path'] . '/' . $filename;
+        
+//         if (file_put_contents($file_path, $image_data) === false) {
+//             return new WP_Error('file_error', 'Could not save image file');
+//         }
+        
+//         // Prepare file data for WordPress
+//         $filetype = wp_check_filetype($filename, null);
+//         $attachment = array(
+//             'post_mime_type' => $filetype['type'],
+//             'post_title' => sanitize_file_name($filename),
+//             'post_content' => '',
+//             'post_status' => 'inherit'
+//         );
+        
+//         // Insert attachment
+//         $attach_id = wp_insert_attachment($attachment, $file_path);
+        
+//         // Generate metadata and thumbnails
+//         require_once(ABSPATH . 'wp-admin/includes/image.php');
+//         $attach_data = wp_generate_attachment_metadata($attach_id, $file_path);
+//         wp_update_attachment_metadata($attach_id, $attach_data);
+        
+//         return $attach_id;
+//     }
+    
+//     return false;
+// }
+
 /**
  * Generate JWT token for a given WordPress user.
  *
@@ -776,6 +836,8 @@ function robodesk_handle_reply_receive($data)
     if (!$comment_id) {
         return new WP_Error('comment_failed', 'Failed to add reply', array('status' => 500));
     }
+    
+
 
     $comment = get_comment($comment_id);
     $response_data = [
@@ -785,6 +847,8 @@ function robodesk_handle_reply_receive($data)
         'author_image' => get_avatar_url($comment->user_id, ['size' => 96]),
         'content' => $comment->comment_content,
         'created_at' => $comment->comment_date,
+        // 'attachment_id' => $attachment_id,
+        // 'attachment_url' => $attachment_url
     ];
 
     rbd_log(sprintf(
@@ -792,6 +856,8 @@ function robodesk_handle_reply_receive($data)
         $ticket_id,
         $reply
     ));
+    
+        rbd_log('hi hello');
 
     return rest_ensure_response(array(
         'status'  => 'success',

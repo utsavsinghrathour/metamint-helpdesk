@@ -114,13 +114,16 @@ export const useCachedFetch = (url) => {
 
 
 //send messages
-export async function sendReply(ticketId, loggedInUserId, message) {
+export async function sendReply(ticketId, loggedInUserId, message ,img=false) {
+
+
   const payload = {
     event: "replies.receive",
     data: {
       ticket_id: ticketId,
       user_id: loggedInUserId,
       message: message,
+      image:img 
     },
   };
 
