@@ -409,6 +409,7 @@ function filterTickets() {
 
   const filteredTickets = dashboard_tickets.filter((ticket) => {
     const matchesSearch =
+      ticket.id.toString().includes(searchTerm) ||
       ticket.title.toLowerCase().includes(searchTerm) ||
       ticket.customer.toLowerCase().includes(searchTerm) ||
       ticket.email.toLowerCase().includes(searchTerm);
@@ -448,7 +449,7 @@ function filterTickets() {
                 </span>
             </td>
             <td class="px-6 py-4 whitespace-nowrap">
-                <span class="status-badge ${getPriorityClass(ticket.priority)}">
+                <span class="status-badge ${ticket.priority}">
                     ${ticket.priority}
                 </span>
             </td>
@@ -463,6 +464,17 @@ function filterTickets() {
     )
     .join("");
 }
+
+// if the input of search is not empty hide the pagination navigation
+const paginationNav = document.getElementById("cpm-nav");
+const searchInput = document.getElementById("search-input");
+searchInput.addEventListener("input", function () {
+  if (searchInput.value) {
+    paginationNav.classList.add("hidden");
+  } else {
+    paginationNav.classList.remove("hidden");
+  }
+});
 
 // added ends
 
