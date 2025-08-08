@@ -66,7 +66,7 @@ const SendMessageField = ({ setShowLogin, setActiveTab, updateSelectedTicket, ha
         try {
             const result = await createTicket(loggedInUsrId, message, '');
 
-            console.log('Ticket created from sendmessage field:', result);
+         
 
             const newTicket = {
                 id: result.data.id,

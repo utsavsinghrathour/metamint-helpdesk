@@ -24,7 +24,7 @@ export const useSSEComments = (postId, loggedInUserId, initialLastCommentId = 0)
     const eventSource = new EventSource(url);
     
     eventSource.onopen = () => {
-      console.log('SSE connection opened');
+    //   console.log('SSE connection opened');
       setIsConnected(true);
       setConnectionError(null);
       setReconnectAttempts(0);

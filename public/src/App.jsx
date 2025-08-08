@@ -20,7 +20,7 @@ const App = ({ imageUrls = { logo: "" } }) => {
 
 const handleFocusedTextArea = (focus) => {
 
-console.log('Check State Update' ,focus);
+// console.log('Check State Update' ,focus);
   setFocusedTextArea(focus);
 };
 
@@ -148,10 +148,10 @@ console.log('Check State Update' ,focus);
         <div
           className={`rd-popup-top-icon-container ${isOpen ? "rd-hidden" : ""}`}
         >
-          {console.log(
+          {/* {console.log(
             "rd-popup-top-icon-container class:",
             `rd-popup-top-icon-container ${isExpanded ? "rd-hidden" : ""}`
-          )}
+          )} */}
 
           {imageUrls.popover_top_icon &&
           imageUrls.popover_top_icon.trim() !== "" ? (

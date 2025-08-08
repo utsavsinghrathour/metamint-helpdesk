@@ -130,6 +130,11 @@ function robodesk_enqueue_scripts()
             'loggedInUserId' => is_user_logged_in() ? get_current_user_id() : 'false',
             // get option robodesk_notification_sound for notification sound
             'notificationSound' => esc_url(get_option('robodesk_notification_sound', '')),
+            'priorityTerms' => get_terms(array(
+                'taxonomy' => 'robodesk_ticket_priority',
+                'hide_empty' => false,
+            )),
+            
             'wpAjax' => [
                 'nonce' => wp_create_nonce('robodesk-nonce'),
                 'ajaxUrl' => admin_url('admin-ajax.php'),
