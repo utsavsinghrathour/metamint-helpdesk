@@ -798,7 +798,7 @@ function robodesk_dashboard_callback()
                 <!-- Custom Pagination for Plugin Dashboard -->
                 <?php if ($total_pages > 1) : ?>
                     <div class="mt-4">
-                        <nav class="flex items-center justify-between">
+                        <nav id="cpm-nav" class="flex items-center justify-between">
                             <div class="flex-1 flex justify-between sm:hidden">
                                 <!-- Mobile pagination -->
                                 <?php if ($current_page > 1) : ?>

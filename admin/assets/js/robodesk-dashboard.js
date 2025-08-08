@@ -407,7 +407,7 @@ function filterTickets() {
     .value.toLowerCase();
   const statusFilter = document.getElementById("status-filter").value;
 
-  const filteredTickets = tickets.filter((ticket) => {
+  const filteredTickets = dashboard_tickets.filter((ticket) => {
     const matchesSearch =
       ticket.id.toString().includes(searchTerm) ||
       ticket.title.toLowerCase().includes(searchTerm) ||
@@ -464,6 +464,17 @@ function filterTickets() {
     )
     .join("");
 }
+
+// if the input of search is not empty hide the pagination navigation
+const paginationNav = document.getElementById("cpm-nav");
+const searchInput = document.getElementById("search-input");
+searchInput.addEventListener("input", function () {
+  if (searchInput.value) {
+    paginationNav.classList.add("hidden");
+  } else {
+    paginationNav.classList.remove("hidden");
+  }
+});
 
 // added ends
 
