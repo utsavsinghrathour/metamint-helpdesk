@@ -19,7 +19,7 @@
   width: 15px;
 }
 .rd-messge-wrapper {
-  max-height: 220px;
+  max-height: 320px;
   overflow: auto;
   min-height: 220px;
 }
