@@ -64,11 +64,11 @@ function robodesk_dashboard_callback()
                             </button>
                             <button onclick="showPage('tickets')" class="nav-link inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium" data-page="tickets">
                                 <i class="fas fa-ticket-alt mr-2"></i>
-                                Tickets
+                                Conversations
                             </button>
                             <button onclick="showPage('new-ticket')" class="nav-link inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium" data-page="new-ticket">
                                 <i class="fas fa-plus mr-2"></i>
-                                New Ticket
+                                New Conversation
                             </button>
                             <button onclick="showPage('settings')" class="nav-link inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium" data-page="settings">
                                 <i class="fas fa-cog mr-2"></i>
@@ -99,7 +99,7 @@ function robodesk_dashboard_callback()
                                 </div>
                                 <div class="ml-5 w-0 flex-1">
                                     <dl>
-                                        <dt class="text-sm font-medium text-gray-500 truncate">Total Tickets</dt>
+                                        <dt class="text-sm font-medium text-gray-500 truncate">Total Conversations</dt>
                                         <dd class="text-lg font-medium text-gray-900" id="total-tickets"><?php
                                                                                                             $total_tickets = wp_count_posts('robodesk_ticket')->publish;
                                                                                                             echo $total_tickets;
@@ -118,7 +118,7 @@ function robodesk_dashboard_callback()
                                 </div>
                                 <div class="ml-5 w-0 flex-1">
                                     <dl>
-                                        <dt class="text-sm font-medium text-gray-500 truncate">Open Tickets</dt>
+                                        <dt class="text-sm font-medium text-gray-500 truncate">Open Conversations</dt>
                                         <dd class="text-lg font-medium text-gray-900" id="open-tickets"><?php
                                                                                                         $args = array(
                                                                                                             'post_type' => 'robodesk_ticket',
@@ -413,7 +413,7 @@ function robodesk_dashboard_callback()
                         <table class="min-w-full divide-y divide-gray-200">
                             <thead class="bg-gray-50">
                                 <tr>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ticket</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Conversation</th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Last Reply</th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Customer</th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Source</th>
@@ -441,7 +441,7 @@ function robodesk_dashboard_callback()
                 <div class="bg-white shadow rounded-lg mb-6">
                     <div class="px-4 py-5 sm:p-6">
                         <div class="flex justify-between items-center mb-4">
-                            <h3 class="text-lg leading-6 font-medium text-gray-900">Ticket Overview</h3>
+                            <h3 class="text-lg leading-6 font-medium text-gray-900">Conversation Overview</h3>
                             <div class="flex space-x-2">
                                 <button onclick="filterDashboardTickets('my_conversation')" class="dashboard-filter-btn px-3 py-1 text-sm rounded-md border <?php echo $filter === 'my_conversation' ? 'active' : ''; ?>" data-filter="my_conversation">MY Conversations</button>
 
@@ -464,8 +464,8 @@ function robodesk_dashboard_callback()
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                             <button onclick="showPage('new-ticket')" class="bg-blue-50 hover:bg-blue-100 p-4 rounded-lg text-left transition-colors">
                                 <i class="fas fa-plus text-blue-600 text-xl mb-2"></i>
-                                <div class="text-sm font-medium text-blue-900">Create New Ticket</div>
-                                <div class="text-xs text-blue-700">Add a new support ticket</div>
+                                <div class="text-sm font-medium text-blue-900">Create New Conversation</div>
+                                <div class="text-xs text-blue-700">Add a new support conversation</div>
                             </button>
                             <button onclick="window.location.href='<?php echo admin_url('users.php?role=robodesk_support_customer'); ?>'" class="bg-green-50 hover:bg-green-100 p-4 rounded-lg text-left transition-colors">
                                 <i class="fas fa-users text-green-600 text-xl mb-2"></i>
@@ -487,7 +487,7 @@ function robodesk_dashboard_callback()
             <div id="new-ticket-page" class="page-content hidden">
                 <div class="bg-white shadow rounded-lg">
                     <div class="px-4 py-5 sm:p-6">
-                        <h3 class="text-lg font-bold text-gray-900 mb-6">Create New Ticket</h3>
+                        <h3 class="text-lg font-bold text-gray-900 mb-6">Create New Conversation</h3>
 
                         <form id="robodesk-new-ticket-form" class="space-y-6">
                             <input type="hidden" name="robodesk_create_ticket_nonce" value="<?php echo wp_create_nonce('robodesk_create_ticket_action'); ?>">
@@ -510,7 +510,7 @@ function robodesk_dashboard_callback()
                             </div>
 
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Ticket Title *</label>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Conversation Title *</label>
                                 <input type="text" id="ticket-title" name="ticket_title" required class="styled-input block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
                             </div>
 
@@ -569,7 +569,7 @@ function robodesk_dashboard_callback()
                             </div>
 
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Ticket Description *</label>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Conversation Description *</label>
                                 <textarea id="ticket-description" name="ticket_description" rows="6" required class="styled-input block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500" placeholder="Describe the issue or request..."></textarea>
                             </div>
 
@@ -578,7 +578,7 @@ function robodesk_dashboard_callback()
                                     Cancel
                                 </button>
                                 <button type="submit" id="robodesk-create-ticket" class="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-                                    Create Ticket
+                                    Create Conversation
                                 </button>
                             </div>
                         </form>
@@ -594,7 +594,7 @@ function robodesk_dashboard_callback()
                         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 items-end">
                             <!-- <form id="ticket-filter-form"> -->
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Search Tickets</label>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Search Conversations</label>
                                 <div class="relative">
                                     <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                         <i class="fas fa-search text-gray-400 mx-40"></i>
@@ -628,7 +628,7 @@ function robodesk_dashboard_callback()
                                 <!-- </form> -->
                                 <button onclick="showPage('new-ticket')" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
                                     <i class="fas fa-plus mr-2"></i>
-                                    New Ticket
+                                    New Conversation
                                 </button>
                             </div>
                         </div>
@@ -742,7 +742,7 @@ function robodesk_dashboard_callback()
                     <table class="min-w-full divide-y divide-gray-200">
                         <thead class="bg-gray-50">
                             <tr>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ticket</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Conversation</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Customer</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Priority</th>
@@ -787,7 +787,7 @@ function robodesk_dashboard_callback()
                             <?php else : ?>
                                 <tr>
                                     <td colspan="6" class="px-6 py-4 text-center text-gray-500">
-                                        No tickets found.
+                                        No Conversations found.
                                     </td>
                                 </tr>
                             <?php endif; ?>
@@ -798,7 +798,7 @@ function robodesk_dashboard_callback()
                 <!-- Custom Pagination for Plugin Dashboard -->
                 <?php if ($total_pages > 1) : ?>
                     <div class="mt-4">
-                        <nav class="flex items-center justify-between">
+                        <nav id="cpm-nav" class="flex items-center justify-between">
                             <div class="flex-1 flex justify-between sm:hidden">
                                 <!-- Mobile pagination -->
                                 <?php if ($current_page > 1) : ?>
@@ -924,10 +924,10 @@ function robodesk_dashboard_callback()
                 <div class="bg-white shadow rounded-lg">
                     <div class="px-4 py-5 sm:p-6">
                         <div class="flex justify-between items-center mb-6">
-                            <h3 class="text-lg font-bold text-gray-900" id="ticket-detail-title">Ticket Details</h3>
+                            <h3 class="text-lg font-bold text-gray-900" id="ticket-detail-title">Conversation Details</h3>
                             <button onclick="showPage('tickets')" class="text-gray-400 hover:text-gray-600">
                                 <i class="fas fa-arrow-left mr-2"></i>
-                                Back to Tickets
+                                Back to Conversations
                             </button>
 
                         </div>
@@ -942,14 +942,14 @@ function robodesk_dashboard_callback()
                                 </div>
                                 <div class="mt-4">
                                     <button onclick="showCustomerTickets()" class="text-blue-600 hover:text-blue-800 text-sm font-medium">
-                                        View All Customer Tickets
+                                        View All Customer Conversations
                                     </button>
                                 </div>
                             </div>
 
                             <!-- Ticket Status & Priority -->
                             <div class="bg-gray-50 p-4 rounded-lg">
-                                <h4 class="font-medium text-gray-900 mb-3">Ticket Status</h4>
+                                <h4 class="font-medium text-gray-900 mb-3">Conversation Status</h4>
 
                                 <div class="space-y-4">
                                     <div>
@@ -1040,7 +1040,7 @@ function robodesk_dashboard_callback()
                             ?>
 
                             <div class="bg-gray-50 p-4 rounded-lg">
-                                <h4 class="font-medium text-gray-900 mb-3">Ticket Details</h4>
+                                <h4 class="font-medium text-gray-900 mb-3">Conversation Details</h4>
                                 <div id="ticket-meta-info" class="space-y-2">
                                     <!-- Ticket meta info will be populated by JavaScript -->
                                 </div>
@@ -1058,7 +1058,7 @@ function robodesk_dashboard_callback()
                         <div id="customer-tickets-modal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
                             <div class="relative top-20 mx-auto p-5 border w-11/12 md:w-3/4 lg:w-1/2 shadow-lg rounded-md bg-white">
                                 <div class="flex justify-between items-center mb-4">
-                                    <h3 class="text-lg font-bold text-gray-900" id="customer-tickets-title">Customer Tickets</h3>
+                                    <h3 class="text-lg font-bold text-gray-900" id="customer-tickets-title">Customer Conversations</h3>
                                     <button onclick="hideCustomerTickets()" class="text-gray-400 hover:text-gray-600">
                                         <i class="fas fa-times"></i>
                                     </button>
@@ -1106,7 +1106,7 @@ function robodesk_dashboard_callback()
                                         Send Reply
                                     </button>
 
-                                    <button onclick="closeTicket()" class="mt-2 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 float-right">Close Ticket</button>
+                                    <button onclick="closeTicket()" class="mt-2 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 float-right">Close Conversation</button>
                                 </div>
                             </div>
 
@@ -1414,7 +1414,7 @@ function robodesk_dashboard_callback()
                                 <input type="hidden" name="robodesk_email_template_nonce" value="<?php echo wp_create_nonce('robodesk_email_template_action'); ?>">
                                 <div class="space-y-6">
                                     <div>
-                                        <label class="block text-sm font-medium text-gray-700 mb-2">New Ticket Notification</label>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">New Conversation Notification</label>
                                         <div class="editor-toolbar mb-2">
                                             <button type="button" onclick="formatText('bold', 'new-ticket-template')" class="editor-btn"><i class="fas fa-bold"></i></button>
                                             <button type="button" onclick="formatText('italic', 'new-ticket-template')" class="editor-btn"><i class="fas fa-italic"></i></button>
@@ -1425,7 +1425,7 @@ function robodesk_dashboard_callback()
                                         <div id="new-ticket-template" class="editor-content" contenteditable="true"><?php echo wp_kses_post(get_option('robodesk_email_template_new-ticket', 'Thank you for contacting us. We have received your ticket and will respond soon.')); ?></div>
                                     </div>
                                     <div>
-                                        <label class="block text-sm font-medium text-gray-700 mb-2">Ticket Closed</label>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">Conversation Closed</label>
                                         <div class="editor-toolbar mb-2">
                                             <button type="button" onclick="formatText('bold', 'ticket-closed-template')" class="editor-btn"><i class="fas fa-bold"></i></button>
                                             <button type="button" onclick="formatText('italic', 'ticket-closed-template')" class="editor-btn"><i class="fas fa-italic"></i></button>
@@ -1455,11 +1455,11 @@ function robodesk_dashboard_callback()
                         </div>
                         <!------------------------------ Fetch Tickets Tab --------------------------------------->
                         <div id="fetch-tab" class="settings-tab-content hidden">
-                            <h3 class="text-lg font-medium text-gray-900 mb-6">Fetch Tickets</h3>
+                            <h3 class="text-lg font-medium text-gray-900 mb-6">Fetch Conversations</h3>
                             <form id="robodesk-fetch-tickets-form" class="space-y-6">
                                 <input type="hidden" name="robodesk_ticket_assignment_nonce" value="<?php echo wp_create_nonce('robodesk_ticket_assignment_action'); ?>">
                                 <div class="space-y-6">
-                                    <p class="text-sm text-gray-600">Use this feature to fetch new emails from your configured IMAP account and convert them into tickets and replies.</p>
+                                    <p class="text-sm text-gray-600">Use this feature to fetch new emails from your configured IMAP account and convert them into conversations and replies.</p>
                                     <div class="bg-gray-50 p-4 rounded-lg">
                                         <h4 class="font-medium text-gray-900 mb-2">Email Fetching Settings</h4>
                                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -1544,7 +1544,7 @@ function robodesk_dashboard_callback()
                                     <div class="flex items-center">
                                         <input id="enable-auto-assign" type="checkbox" <?php checked($settings['enable_auto_assign'], true); ?> class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
                                         <label for="enable-auto-assign" class="ml-2 block text-sm text-gray-900">
-                                            Enable auto-assignment of tickets
+                                            Enable auto-assignment of Conversations
                                         </label>
                                     </div>
                                     <div class="flex items-center">
