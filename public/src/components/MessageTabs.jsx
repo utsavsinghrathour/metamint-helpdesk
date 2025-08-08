@@ -246,7 +246,7 @@ const filteredTickets = Array.isArray(tickets) && tickets.length > 0
                     onChange={(e) => setCurrentTab(e.target.value)}
                     className="rd-p-10 rd-py-5 rd-border-light rd-border-radius-md rd-body-text ticket-tab rd-color-gray rd-fw-medium"
                   >
-                    <option value="all">All Conversations</option>
+                    <option value="all">Active Conversations</option>
                     <option value="new">New</option>
                     <option value="ongoing">On Going</option>
                     <option value="resolved">Resolved</option>

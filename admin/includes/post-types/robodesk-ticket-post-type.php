@@ -484,14 +484,18 @@ function robodesk_handle_tickets_webhook(WP_REST_Request $request)
             'post_author' => $author,
             'meta_input'   => array(
                 '_robodesk_ticket_status' => 'open',
-                'robodesk_ticket_origin' => 'chat'
+                'robodesk_ticket_origin' => 'chat',
+                
             ),
+            'tax_input' => array(
+                'robodesk_ticket_priority' => array('medium'), // Default priority
+            )
         ));
 
         if (!is_wp_error($ticket)) {
-
+            wp_set_object_terms($ticket, 'medium', 'robodesk_ticket_priority', false);
             rbd_log(sprintf(
-                "Ticket #%s created with title: %s\n",
+                "Ticket #%s created with titlesssyyyy: %s\n",
                 $ticket,
                 $title
             ));
