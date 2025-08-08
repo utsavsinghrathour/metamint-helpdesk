@@ -23,7 +23,7 @@ export const createTicket = async (userId, title, message = "") => {
 
     const responseData = await response.json();
     
-    console.log('This is the response from createTicket', responseData);
+    // console.log('This is the response from createTicket', responseData);
     return responseData;
   } catch (error) {
     console.error("Error in createTicket:", error);

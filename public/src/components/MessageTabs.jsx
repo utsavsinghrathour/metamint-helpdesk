@@ -15,6 +15,8 @@ import defaultLogo from '../images/robodesk-logo.png';
 
 const SingleTicket = React.lazy(() => import('./SingleTicket'));
 
+console.log(wpAuth);
+
 const TicketItem = ({ ticket, onSelect }) => {
 
   return (
@@ -233,7 +235,7 @@ const filteredTickets = Array.isArray(tickets) && tickets.length > 0
                     className="rd-border-light rd-p-10 rd-body-text rd-border-radius-md rd-color-gray rd-fw-medium flex-1"
                   >
                     <option value="all">All Priorities</option>
-                    <option value="Urgent">Urgent</option>
+                    <option value="Urgent">High</option>
                     <option value="Medium">Medium</option>
                     <option value="Low">Low</option>
                   </select>

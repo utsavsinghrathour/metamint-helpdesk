@@ -226,7 +226,7 @@ const SingleTicket = ({ ticket, onBack, loggedInUserId ,  handleFocusedTextArea 
     );
 
     eventSource.onopen = () => {
-      console.log('SSE connection opened');
+    //   console.log('SSE connection opened');
       hasConnected.current = true;
     };
 
@@ -238,7 +238,7 @@ const SingleTicket = ({ ticket, onBack, loggedInUserId ,  handleFocusedTextArea 
     eventSource.addEventListener('new_comment', (event) => {
       const commentData = JSON.parse(event.data);
 
-      console.log('New comment received:', commentData);
+    //   console.log('New comment received:', commentData);
       if (typeof onNewComment === 'function') {
         beep.current.play();
         onNewComment(commentData);
@@ -248,7 +248,7 @@ const SingleTicket = ({ ticket, onBack, loggedInUserId ,  handleFocusedTextArea 
     eventSource.addEventListener('disconnect', (event) => {
       try {
         const data = JSON.parse(event.data);
-        console.log('Server requested disconnect:', data);
+        // console.log('Server requested disconnect:', data);
       } catch (error) {
         console.error('Error parsing disconnect:', error);
       }
@@ -304,7 +304,7 @@ const SingleTicket = ({ ticket, onBack, loggedInUserId ,  handleFocusedTextArea 
       };
 
       setChatMessages((prev) => [...prev, tempMessage]);
-      console.log('THe temp message is', tempMessage);
+    //   console.log('THe temp message is', tempMessage);
       setMessage('');
       setPreviewImage(null);
 
@@ -329,7 +329,7 @@ const SingleTicket = ({ ticket, onBack, loggedInUserId ,  handleFocusedTextArea 
           ...(previewImage && { imageUrl: previewImage }),
         };
 
-        console.log('New message', newMessage);
+        // console.log('New message', newMessage);
 
         setChatMessages((prev) =>
           [...prev.filter((msg) => msg.id !== tempMessage.id), newMessage].sort(

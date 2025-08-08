@@ -124,8 +124,8 @@ const Signup = ({ switchToLogin }) => {
       });
 
       // Log response for debugging
-      console.log("Signup Response Status:", signupResponse.status);
-      console.log("Signup Response Data:", signupResponse);
+    //   console.log("Signup Response Status:", signupResponse.status);
+    //   console.log("Signup Response Data:", signupResponse);
 
       // Check if response indicates success
       if (signupResponse.success || signupResponse.message?.toLowerCase().includes("success")) {
