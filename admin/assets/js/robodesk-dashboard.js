@@ -1654,10 +1654,21 @@ function updateTicketAssignee(ticketId, newAssignee) {
 //
 // This function adds a reply to the current ticket
 // Ajax request is made to the server to save the reply
+let isReplySending = false;
+
 function addReply() {
+  if (isReplySending) return; // Prevent double send
+
   const replyBox = document.getElementById("new-reply");
   const replyText = replyBox.innerHTML.trim();
+  const sendBtn = document.getElementById("send-reply-btn");
   if (!replyText || !currentTicket) return;
+
+  isReplySending = true;
+  if (sendBtn) {
+    sendBtn.disabled = true;
+    sendBtn.textContent = "Sending...";
+  }
 
   const data = {
     action: "add_ticket_reply",
@@ -1680,7 +1691,7 @@ function addReply() {
           message: replyText,
           timestamp: new Date().toISOString(),
           type: "agent",
-          comment_meta: response.data.comment_meta || { is_action: false }, // Fallback to false
+          comment_meta: response.data.comment_meta || { is_action: false },
         };
 
         if (!Array.isArray(currentTicket.replies)) currentTicket.replies = [];
@@ -1693,13 +1704,20 @@ function addReply() {
         replyBox.innerHTML = "";
         document.getElementById("replies-count").textContent =
           currentTicket.replies.length;
-        loadReplies(); // This will call renderReplies, which handles scrolling
+        loadReplies();
         showToast("Reply added successfully");
       } else {
         showToast(response.data?.message || "Failed to add reply", "error");
       }
     })
-    .catch(() => showToast("AJAX error occurred", "error"));
+    .catch(() => showToast("AJAX error occurred", "error"))
+    .finally(() => {
+      isReplySending = false;
+      if (sendBtn) {
+        sendBtn.disabled = false;
+        sendBtn.textContent = "Send Reply";
+      }
+    });
 }
 
 // Function to load replies via AJAX

@@ -1102,7 +1102,7 @@ function robodesk_dashboard_callback()
                                     <div id="new-reply" class="editor-content placeholder" contenteditable="true"
                                         style="min-height: 100px; border: 1px solid #d1d5db; border-radius: 0.375rem; padding: 0.5rem;"
                                         data-placeholder="Type your reply here..." aria-label="Reply input"></div>
-                                    <button onclick="addReply()" class="mt-2 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                                    <button id="send-reply-btn" onclick="addReply()" class="mt-2 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
                                         Send Reply
                                     </button>
 
