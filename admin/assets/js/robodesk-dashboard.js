@@ -413,10 +413,7 @@ function filterTickets() {
     .value.toLowerCase();
   const statusFilter = document.getElementById("status-filter").value;
 
-  // Filter tickets
-  const filteredTickets = (
-    typeof dashboard_tickets !== "undefined" ? dashboard_tickets : []
-  ).filter((ticket) => {
+  const filteredTickets = dashboard_tickets.filter((ticket) => {
     const matchesSearch =
       ticket.id.toString().includes(searchTerm) ||
       ticket.title.toLowerCase().includes(searchTerm) ||
@@ -432,26 +429,8 @@ function filterTickets() {
     return matchesSearch && matchesCustomer && matchesAgent && matchesStatus;
   });
 
-  // Pagination logic
-  const searchInput = document.getElementById("search-input");
-  if (searchInput.value && filteredTickets.length > 10) {
-    showCustomPagination(filteredTickets);
-  } else {
-    document.getElementById("cpm-nav").classList.add("hidden");
-    currentPaged = 1;
-  }
-
-  renderFilteredTickets(filteredTickets);
-}
-
-// Render filtered tickets with pagination
-function renderFilteredTickets(filteredTickets) {
-  filteredTickets = filteredTickets || [];
   const tableBody = document.getElementById("tickets-table");
-  const startIdx = (currentPaged - 1) * 10;
-  const pagedTickets = filteredTickets.slice(startIdx, startIdx + 10);
-
-  tableBody.innerHTML = pagedTickets
+  tableBody.innerHTML = filteredTickets
     .map(
       (ticket) => `
        <tr class="table-row customer-ticket-item cursor-pointer"
@@ -492,77 +471,18 @@ function renderFilteredTickets(filteredTickets) {
     .join("");
 }
 
-function showCustomPagination(filteredTickets) {
-  const paginationNav = document.getElementById("cpm-nav");
-  paginationNav.classList.remove("hidden");
-
-  // Clear existing pagination
-  paginationNav.innerHTML = "";
-
-  // Create pagination buttons with WP-style classes
-  const totalPages = Math.ceil(filteredTickets.length / 10);
-
-  // Add previous button
-  const prevBtn = document.createElement("button");
-  prevBtn.textContent = "«";
-  prevBtn.className =
-    "pagination-button wp-pagenavi prev" +
-    (currentPaged === 1 ? " disabled opacity-50 cursor-not-allowed" : "");
-  prevBtn.disabled = currentPaged === 1;
-  prevBtn.addEventListener("click", () => {
-    if (currentPaged > 1) {
-      currentPaged--;
-      renderFilteredTickets(filteredTickets);
-    }
-  });
-  paginationNav.appendChild(prevBtn);
-
-  // Add page number buttons
-  for (let i = 1; i <= totalPages; i++) {
-    const button = document.createElement("button");
-    button.textContent = i;
-    button.className =
-      "pagination-button wp-pagenavi page-numbers" +
-      (currentPaged === i
-        ? " active bg-blue-600 text-white border-blue-600"
-        : " bg-white text-blue-600 border-gray-300 hover:bg-blue-50");
-    button.style.margin = "0 2px";
-    button.style.border = "1px solid #d1d5db";
-    button.style.borderRadius = "4px";
-    button.style.padding = "4px 10px";
-    button.style.fontSize = "14px";
-    button.style.cursor = "pointer";
-    button.addEventListener("click", () => {
-      currentPaged = i;
-      renderFilteredTickets(filteredTickets);
-    });
-    paginationNav.appendChild(button);
+// if the input of search is not empty hide the pagination navigation
+const paginationNav = document.getElementById("cpm-nav");
+const searchInput = document.getElementById("search-input");
+searchInput.addEventListener("input", function () {
+  if (searchInput.value) {
+    paginationNav.classList.add("hidden");
+  } else {
+    paginationNav.classList.remove("hidden");
   }
+});
 
-  // Add next button
-  const nextBtn = document.createElement("button");
-  nextBtn.textContent = "»";
-  nextBtn.className =
-    "pagination-button wp-pagenavi next" +
-    (currentPaged === totalPages
-      ? " disabled opacity-50 cursor-not-allowed"
-      : "");
-  nextBtn.disabled = currentPaged === totalPages;
-  nextBtn.addEventListener("click", () => {
-    if (currentPaged < totalPages) {
-      currentPaged++;
-      renderFilteredTickets(filteredTickets);
-    }
-  });
-  paginationNav.appendChild(nextBtn);
-
-  // Optional: Add some container styling for better appearance
-  paginationNav.style.display = "flex";
-  paginationNav.style.justifyContent = "center";
-  paginationNav.style.alignItems = "center";
-  paginationNav.style.gap = "4px";
-  paginationNav.style.margin = "16px 0";
-}
+// added ends
 
 // added ends
 
