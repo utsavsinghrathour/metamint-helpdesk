@@ -59,6 +59,24 @@
   background-color: #f0fdf4;
   color: #16a34a;
 }
+.status-Medium {
+  background-color: #fffbeb;
+  color: #d97706;
+}
+
+.status-badge.Medium {
+  background-color: #fffbeb;
+  color: #d97706;
+}
+.status-badge.High {
+  background-color: #fef2f2;
+  color: #dc2626;
+}
+
+.status-badge.Low {
+  background-color: #f0fdf4;
+  color: #16a34a;
+}
 
 .priority-high {
   background-color: #fef2f2;
