@@ -28,12 +28,15 @@ function robodesk_dashboard_callback()
     $current_user_id = get_current_user_id();
     $current_user = wp_get_current_user();
     $current_user_name = $current_user->display_name ?: $current_user->user_login;
+    $current_user_role = $current_user->roles ? $current_user->roles[0] : 'Support Staff';
+    // var_dump($current_user_role); // Debugging line to check current user role
 
     // Pass current user info to JS
     echo '<script>
         const robodeskCurrentUser = {
             id: ' . intval($current_user_id) . ',
-            name: ' . json_encode($current_user_name) . '
+            name: ' . json_encode($current_user_name) . ',
+            role: ' . json_encode($current_user_role) . '
         };
     </script>';
 

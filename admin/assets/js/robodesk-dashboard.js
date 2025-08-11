@@ -36,9 +36,9 @@ function loadDashboardTickets() {
   // Helper function to get priority class
   function getPriorityClass(priority) {
     const classes = {
-      low: "priority-low",
-      medium: "priority-medium",
-      high: "priority-high",
+      Low: "priority-low",
+      Medium: "priority-medium",
+      High: "priority-high",
     };
     return classes[priority?.toLowerCase()] || "priority-default";
   }
@@ -524,11 +524,11 @@ function getStatusClass(status) {
 
 function getPriorityClass(priority) {
   switch (priority) {
-    case "high":
+    case "High":
       return "priority-high";
-    case "medium":
+    case "Medium":
       return "priority-medium";
-    case "low":
+    case "Low":
       return "priority-low";
     default:
       return "bg-gray-100 text-gray-800";
@@ -880,7 +880,9 @@ function loadCustomerTicketsList(ticketList) {
                     )}</div>
                 </div>
                 <div class="flex items-center space-x-2">
-                    <span class="status-badge ${ticket.status} text-xs">
+                    <span class="status-badge ${getStatusClass(
+                      ticket.status
+                    )} text-xs">
                         ${ticket.status}
                     </span>
                     <span class="status-badge ${getPriorityClass(
@@ -1666,7 +1668,7 @@ let isReplySending = false;
 
 function addReply() {
   if (isReplySending) return; // Prevent double send
-
+  const userRole = robodeskCurrentUser?.role;
   const replyBox = document.getElementById("new-reply");
   const replyText = replyBox.innerHTML.trim();
   const sendBtn = document.getElementById("send-reply-btn");
@@ -1698,7 +1700,7 @@ function addReply() {
           author: response.data.author,
           message: replyText,
           timestamp: new Date().toISOString(),
-          type: "agent",
+          type: "userRole" in response.data ? response.data.userRole : userRole,
           comment_meta: response.data.comment_meta || { is_action: false },
         };
 
@@ -1768,6 +1770,8 @@ async function loadReplies() {
 function renderReplies(replies) {
   const repliesList = document.getElementById("replies-list");
   if (!repliesList || !Array.isArray(replies)) return;
+  // user = robodeskCurrentUser?.role || "Support Staff"; // Fallback to guest if user is not defined
+  userRole = robodeskCurrentUser?.role || "Support Staff"; // Ensure userRole is defined\
 
   repliesList.innerHTML = replies
     .map((reply, index) => {
@@ -1782,13 +1786,15 @@ function renderReplies(replies) {
           <div class="flex justify-between items-center mb-2">
             <span class="font-medium text-sm text-gray-900">${escapeHTML(
               reply.author
-            )} (${reply.type === "customer" ? "Customer" : "Agent"})</span>
+            )} (${
+        reply.type === "customer" ? "Customer" : `${userRole.toUpperCase()}`
+      })</span>
             <span class="text-xs text-gray-500">${formatDate(
               reply.timestamp
             )}</span>
           </div>
           <p class="text-sm text-gray-700">${
-            isAction ? escapeHTML(reply.message) : reply.message
+            isAction ? reply.message : reply.message
           }</p>
         </div>
       `;
@@ -1895,6 +1901,7 @@ function addNote() {
   const noteBox = document.getElementById("new-note");
   const noteText = noteBox.innerHTML.trim();
   if (!noteText || !currentTicket) return;
+  userRole = robodeskCurrentUser?.role || "Support Staff";
 
   const data = {
     action: "add_ticket_note",
@@ -1979,6 +1986,7 @@ async function loadNotes() {
 function renderNotes(notes) {
   const notesList = document.getElementById("notes-list");
   if (!notesList || !Array.isArray(notes)) return;
+  userRole = robodeskCurrentUser?.role || "Support Staff"; // Fallback to guest if user is not defined
 
   notesList.innerHTML = notes
     .map(
@@ -1987,10 +1995,13 @@ function renderNotes(notes) {
       <div class="flex justify-between items-center mb-2">
         <span class="font-medium text-sm text-gray-900">${escapeHTML(
           note.author
-        )} (${note.type === "customer" ? "Customer" : "Agent"})</span>
+        )} (${
+        note.type === "customer" ? "Customer" : `${userRole.toUpperCase()}`
+      })</span>
+    
         <span class="text-xs text-gray-500">${formatDate(note.timestamp)}</span>
       </div>
-      <p class="text-sm text-gray-700">${escapeHTML(note.message)}</p>
+      <p class="text-sm text-gray-700">${note.message}</p>
     </div>
   `
     )
