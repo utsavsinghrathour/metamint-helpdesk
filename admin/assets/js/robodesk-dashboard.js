@@ -34,14 +34,14 @@ function loadDashboardTickets() {
   }
 
   // Helper function to get priority class
-  function getPriorityClass(priority) {
-    const classes = {
-      Low: "priority-low",
-      Medium: "priority-medium",
-      High: "priority-high",
-    };
-    return classes[priority?.toLowerCase()] || "priority-default";
-  }
+  // function getPriorityClass(priority) {
+  //   const classes = {
+  //     low: "priority-low",
+  //     medium: "priority-medium",
+  //     high: "priority-high",
+  //   };
+  //   return classes[priority?.toLowerCase()] || "priority-default";
+  // }
 
   function getBlinkingClass(ticket) {
     // Ensure ticket is from chat and status is open/in-progress
