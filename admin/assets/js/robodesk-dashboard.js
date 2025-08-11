@@ -556,7 +556,10 @@ function showPage(pageName) {
   document.querySelectorAll(".nav-link").forEach((link) => {
     link.classList.remove("active");
   });
-  document.querySelector(`[data-page="${pageName}"]`).classList.add("active");
+  const navLink = document.querySelector(`[data-page="${pageName}"]`);
+  if (navLink) {
+    navLink.classList.add("active");
+  }
 
   currentPage = pageName;
 
