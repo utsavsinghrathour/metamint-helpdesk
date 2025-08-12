@@ -226,14 +226,18 @@ function robodesk_dashboard_callback()
 
                     // WP_Query arguments to fetch ALL tickets
                     $args = [
-                        'post_type' => 'robodesk_ticket',
-                        'post_status' => 'publish',
-                        'posts_per_page' => -1, // Fetch all tickets
-                        'orderby' => 'modified',
-                        'order' => 'DESC',
-                        'no_found_rows' => true, // Skip pagination calculations
-                        'update_post_meta_cache' => false, // Optimize performance
-                        'update_post_term_cache' => false, // Optimize performance
+                        'post_type'      => 'robodesk_ticket',
+                        'post_status'    => 'publish',
+                        'posts_per_page' => -1,
+                        'orderby'        => 'modified',
+                        'order'          => 'DESC',
+                        'meta_query'     => [
+                            [
+                                'key'     => '_robodesk_ticket_status',
+                                'value'   => 'closed',
+                                'compare' => '!=',
+                            ],
+                        ],
                     ];
 
                     $query = new WP_Query($args);
