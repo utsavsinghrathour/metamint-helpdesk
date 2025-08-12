@@ -20,7 +20,6 @@ const App = ({ imageUrls = { logo: "" } }) => {
 
 const handleFocusedTextArea = (focus) => {
 
-// console.log('Check State Update' ,focus);
   setFocusedTextArea(focus);
 };
 
@@ -29,10 +28,7 @@ const handleFocusedTextArea = (focus) => {
     setSelectedTicket(newValue);
   };
   
-  const changeActivetab = (tab,focus) => {  
-    setFocusedTextArea(focus);
-    setActiveTab(tab);
-  }
+
   
   useEffect(() => {
     if (selectedTicket) {
