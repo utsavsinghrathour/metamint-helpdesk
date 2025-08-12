@@ -54,6 +54,8 @@ const SingleTicket = ({ ticket, onBack, loggedInUserId ,  handleFocusedTextArea 
 
   const [isMessagingActive, setIsisMessagingActive] = useState(true);
   
+
+
   useEffect(() => {
     // setTicketClosed(ticket.status == "closed");
     // beep.current.load();
@@ -67,7 +69,6 @@ const SingleTicket = ({ ticket, onBack, loggedInUserId ,  handleFocusedTextArea 
   }, []);
 
   const fetchComments = async (fetchOffset = 0, prepend = false) => {
-    console.log('The fetch offset is',fetchOffset);
     if (isFetching) return;
     setIsFetching(true);
     try {
@@ -76,8 +77,6 @@ const SingleTicket = ({ ticket, onBack, loggedInUserId ,  handleFocusedTextArea 
       const response = await fetch(
         `/wp-json/wp/v2/comments?post=${ticket.id}&per_page=${perPage}&offset=${fetchOffset}&order=asc&comment_type=ticket_replies&_fields=id,content,date,author_data,time_ago,author_name,author_image,comment_action`
       );
-      
-      console.log('The response is', response);
 
       if (!response.ok) {
         throw new Error(`Failed to fetch comments: ${response.statusText}`);
@@ -111,6 +110,8 @@ const SingleTicket = ({ ticket, onBack, loggedInUserId ,  handleFocusedTextArea 
       setError('Failed to load messages. Please try again.');
       setLoading(false);
       setIsFetching(false);
+    }finally{
+    setLoading(false);
     }
   };
 
@@ -157,24 +158,16 @@ const SingleTicket = ({ ticket, onBack, loggedInUserId ,  handleFocusedTextArea 
   useEffect(() => {
 
     const fetchInitialComments = async () => {
-    
-
       try {
         const response = await fetch(`/wp-json/wp/v2/comments?post=${ticket.id}&per_page=1&order=asc&_fields=id`);
-       
-        
         if (!response.ok) {
           throw new Error('Failed to fetch total comments');
         }
-        
-        const data = await response.json();
-        
-        if(!data.length > 0) return; 
-        
         const total = parseInt(response.headers.get('X-WP-Total'), 10) || 0;
         setTotalComments(total);
         const initialOffset = Math.max(total - perPage, 0);
         setOffset(initialOffset);
+
         setTotalComments(total);
 
         await fetchComments(initialOffset, false);
@@ -296,7 +289,7 @@ const SingleTicket = ({ ticket, onBack, loggedInUserId ,  handleFocusedTextArea 
   }, [lastMessageId]);
 
   const handleSend = async () => {
-
+    console.log('From handle send', message);
     if (message.trim() || previewImage) {
       const imageHTML = previewImage
         ? `<a href="${previewImage}" target="_blank"><img src="${previewImage}" alt="Preview" class="rd-comment-img"  /></a>`
@@ -477,8 +470,8 @@ const handleFileUpload = (e) => {
           <p className="rd-text-center rd-body-text">Loading conversations...</p>
         ) : error ? (
           <p className="err_msg rd-text-center">{error}</p>
-        ) : chatMessages.length === 0 ? (
-          <p className="rd-text-center rd-text-gray rd-m-5 err_msg">No conversation found</p>
+        ) :!loading && chatMessages.length === 0 ? (
+          <p className="rd-text-center rd-body-text">Conversations not found</p>
         ) : (
           chatMessages.map((msg, index) => {
             const prevMsg = index > 0 ? chatMessages[index - 1] : null;
