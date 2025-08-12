@@ -34,14 +34,14 @@ function loadDashboardTickets() {
   }
 
   // Helper function to get priority class
-  function getPriorityClass(priority) {
-    const classes = {
-      low: "priority-low",
-      medium: "priority-medium",
-      high: "priority-high",
-    };
-    return classes[priority?.toLowerCase()] || "priority-default";
-  }
+  // function getPriorityClass(priority) {
+  //   const classes = {
+  //     low: "priority-low",
+  //     medium: "priority-medium",
+  //     high: "priority-high",
+  //   };
+  //   return classes[priority?.toLowerCase()] || "priority-default";
+  // }
 
   function getBlinkingClass(ticket) {
     // Ensure ticket is from chat and status is open/in-progress
@@ -413,10 +413,7 @@ function filterTickets() {
     .value.toLowerCase();
   const statusFilter = document.getElementById("status-filter").value;
 
-  // Filter tickets
-  const filteredTickets = (
-    typeof dashboard_tickets !== "undefined" ? dashboard_tickets : []
-  ).filter((ticket) => {
+  const filteredTickets = dashboard_tickets.filter((ticket) => {
     const matchesSearch =
       ticket.id.toString().includes(searchTerm) ||
       ticket.title.toLowerCase().includes(searchTerm) ||
@@ -432,26 +429,8 @@ function filterTickets() {
     return matchesSearch && matchesCustomer && matchesAgent && matchesStatus;
   });
 
-  // Pagination logic
-  const searchInput = document.getElementById("search-input");
-  if (searchInput.value && filteredTickets.length > 10) {
-    showCustomPagination(filteredTickets);
-  } else {
-    document.getElementById("cpm-nav").classList.add("hidden");
-    currentPaged = 1;
-  }
-
-  renderFilteredTickets(filteredTickets);
-}
-
-// Render filtered tickets with pagination
-function renderFilteredTickets(filteredTickets) {
-  filteredTickets = filteredTickets || [];
   const tableBody = document.getElementById("tickets-table");
-  const startIdx = (currentPaged - 1) * 10;
-  const pagedTickets = filteredTickets.slice(startIdx, startIdx + 10);
-
-  tableBody.innerHTML = pagedTickets
+  tableBody.innerHTML = filteredTickets
     .map(
       (ticket) => `
        <tr class="table-row customer-ticket-item cursor-pointer"
@@ -492,77 +471,18 @@ function renderFilteredTickets(filteredTickets) {
     .join("");
 }
 
-function showCustomPagination(filteredTickets) {
-  const paginationNav = document.getElementById("cpm-nav");
-  paginationNav.classList.remove("hidden");
-
-  // Clear existing pagination
-  paginationNav.innerHTML = "";
-
-  // Create pagination buttons with WP-style classes
-  const totalPages = Math.ceil(filteredTickets.length / 10);
-
-  // Add previous button
-  const prevBtn = document.createElement("button");
-  prevBtn.textContent = "«";
-  prevBtn.className =
-    "pagination-button wp-pagenavi prev" +
-    (currentPaged === 1 ? " disabled opacity-50 cursor-not-allowed" : "");
-  prevBtn.disabled = currentPaged === 1;
-  prevBtn.addEventListener("click", () => {
-    if (currentPaged > 1) {
-      currentPaged--;
-      renderFilteredTickets(filteredTickets);
-    }
-  });
-  paginationNav.appendChild(prevBtn);
-
-  // Add page number buttons
-  for (let i = 1; i <= totalPages; i++) {
-    const button = document.createElement("button");
-    button.textContent = i;
-    button.className =
-      "pagination-button wp-pagenavi page-numbers" +
-      (currentPaged === i
-        ? " active bg-blue-600 text-white border-blue-600"
-        : " bg-white text-blue-600 border-gray-300 hover:bg-blue-50");
-    button.style.margin = "0 2px";
-    button.style.border = "1px solid #d1d5db";
-    button.style.borderRadius = "4px";
-    button.style.padding = "4px 10px";
-    button.style.fontSize = "14px";
-    button.style.cursor = "pointer";
-    button.addEventListener("click", () => {
-      currentPaged = i;
-      renderFilteredTickets(filteredTickets);
-    });
-    paginationNav.appendChild(button);
+// if the input of search is not empty hide the pagination navigation
+const paginationNav = document.getElementById("cpm-nav");
+const searchInput = document.getElementById("search-input");
+searchInput.addEventListener("input", function () {
+  if (searchInput.value) {
+    paginationNav.classList.add("hidden");
+  } else {
+    paginationNav.classList.remove("hidden");
   }
+});
 
-  // Add next button
-  const nextBtn = document.createElement("button");
-  nextBtn.textContent = "»";
-  nextBtn.className =
-    "pagination-button wp-pagenavi next" +
-    (currentPaged === totalPages
-      ? " disabled opacity-50 cursor-not-allowed"
-      : "");
-  nextBtn.disabled = currentPaged === totalPages;
-  nextBtn.addEventListener("click", () => {
-    if (currentPaged < totalPages) {
-      currentPaged++;
-      renderFilteredTickets(filteredTickets);
-    }
-  });
-  paginationNav.appendChild(nextBtn);
-
-  // Optional: Add some container styling for better appearance
-  paginationNav.style.display = "flex";
-  paginationNav.style.justifyContent = "center";
-  paginationNav.style.alignItems = "center";
-  paginationNav.style.gap = "4px";
-  paginationNav.style.margin = "16px 0";
-}
+// added ends
 
 // added ends
 
@@ -604,11 +524,11 @@ function getStatusClass(status) {
 
 function getPriorityClass(priority) {
   switch (priority) {
-    case "high":
+    case "High":
       return "priority-high";
-    case "medium":
+    case "Medium":
       return "priority-medium";
-    case "low":
+    case "Low":
       return "priority-low";
     default:
       return "bg-gray-100 text-gray-800";
@@ -960,7 +880,9 @@ function loadCustomerTicketsList(ticketList) {
                     )}</div>
                 </div>
                 <div class="flex items-center space-x-2">
-                    <span class="status-badge ${ticket.status} text-xs">
+                    <span class="status-badge ${getStatusClass(
+                      ticket.status
+                    )} text-xs">
                         ${ticket.status}
                     </span>
                     <span class="status-badge ${getPriorityClass(
@@ -1746,7 +1668,7 @@ let isReplySending = false;
 
 function addReply() {
   if (isReplySending) return; // Prevent double send
-
+  const userRole = robodeskCurrentUser?.role;
   const replyBox = document.getElementById("new-reply");
   const replyText = replyBox.innerHTML.trim();
   const sendBtn = document.getElementById("send-reply-btn");
@@ -1778,7 +1700,7 @@ function addReply() {
           author: response.data.author,
           message: replyText,
           timestamp: new Date().toISOString(),
-          type: "agent",
+          type: "userRole" in response.data ? response.data.userRole : userRole,
           comment_meta: response.data.comment_meta || { is_action: false },
         };
 
@@ -1848,6 +1770,8 @@ async function loadReplies() {
 function renderReplies(replies) {
   const repliesList = document.getElementById("replies-list");
   if (!repliesList || !Array.isArray(replies)) return;
+  // user = robodeskCurrentUser?.role || "Support Staff"; // Fallback to guest if user is not defined
+  userRole = robodeskCurrentUser?.role || "Support Staff"; // Ensure userRole is defined\
 
   repliesList.innerHTML = replies
     .map((reply, index) => {
@@ -1862,13 +1786,15 @@ function renderReplies(replies) {
           <div class="flex justify-between items-center mb-2">
             <span class="font-medium text-sm text-gray-900">${escapeHTML(
               reply.author
-            )} (${reply.type === "customer" ? "Customer" : "Agent"})</span>
+            )} (${
+        reply.type === "customer" ? "Customer" : `${userRole.toUpperCase()}`
+      })</span>
             <span class="text-xs text-gray-500">${formatDate(
               reply.timestamp
             )}</span>
           </div>
           <p class="text-sm text-gray-700">${
-            isAction ? escapeHTML(reply.message) : reply.message
+            isAction ? reply.message : reply.message
           }</p>
         </div>
       `;
@@ -1975,6 +1901,7 @@ function addNote() {
   const noteBox = document.getElementById("new-note");
   const noteText = noteBox.innerHTML.trim();
   if (!noteText || !currentTicket) return;
+  userRole = robodeskCurrentUser?.role || "Support Staff";
 
   const data = {
     action: "add_ticket_note",
@@ -2059,6 +1986,7 @@ async function loadNotes() {
 function renderNotes(notes) {
   const notesList = document.getElementById("notes-list");
   if (!notesList || !Array.isArray(notes)) return;
+  userRole = robodeskCurrentUser?.role || "Support Staff"; // Fallback to guest if user is not defined
 
   notesList.innerHTML = notes
     .map(
@@ -2067,10 +1995,13 @@ function renderNotes(notes) {
       <div class="flex justify-between items-center mb-2">
         <span class="font-medium text-sm text-gray-900">${escapeHTML(
           note.author
-        )} (${note.type === "customer" ? "Customer" : "Agent"})</span>
+        )} (${
+        note.type === "customer" ? "Customer" : `${userRole.toUpperCase()}`
+      })</span>
+    
         <span class="text-xs text-gray-500">${formatDate(note.timestamp)}</span>
       </div>
-      <p class="text-sm text-gray-700">${escapeHTML(note.message)}</p>
+      <p class="text-sm text-gray-700">${note.message}</p>
     </div>
   `
     )
