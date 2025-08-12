@@ -398,9 +398,6 @@ function setupEventListeners() {
 // Add this at the top level if not already present
 let currentPaged = 1;
 
-// Ensure dashboard_tickets is defined globally, e.g.:
-// let dashboard_tickets = window.dashboard_tickets || [];
-
 function filterTickets() {
   const searchTerm = document
     .getElementById("search-input")
