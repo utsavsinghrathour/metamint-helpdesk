@@ -21,18 +21,19 @@ export const AppDataProvider = ({ children }) => {
   };
 
   // Ticket fetching logic moved outside to reuse
-  const fetchTickets = async (usrId) => {
+  const fetchTickets = async (usrId , page=1 ,perPage=4) => {
     if (!usrId) return;
     try {
       setData((prev) => ({ ...prev, loadingContext: true, errorContext: null }));
-      const response = await fetch(`/wp-json/wp/v2/robodesk_ticket?author=${usrId}&t=${Date.now()}`);
+      const response = await fetch(`/wp-json/wp/v2/robodesk_ticket?author=${usrId}&page=${page}&per_page=${perPage}&orderby=date&order=desc`);
       if (!response.ok) {
         throw new Error(`Failed to fetch ticketsContext: ${response.status} ${response.statusText}`);
       }
       
       const tickets = await response.json();
+      
+    //   const totalPages = parseInt(response.headers.get("X-WP-TotalPages")) || 1;
 
-    //   console.log('ticketsContext fetched:', tickets);
       setData((prev) => ({
         ...prev,
         loadingContext: false,
@@ -53,7 +54,7 @@ export const AppDataProvider = ({ children }) => {
   };
 
   const refreshTickets = () => {
-
+    console.log("Refreshing tickets for user ID:", data.loggedInUsrId);
     if (data.loggedInUsrId) {
       fetchTickets(data.loggedInUsrId);
     }

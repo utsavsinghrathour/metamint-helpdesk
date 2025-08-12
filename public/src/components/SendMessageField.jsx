@@ -14,6 +14,9 @@ const SendMessageField = ({ setShowLogin, setActiveTab, updateSelectedTicket, ha
     const handleInputChange = (e) => {
         setMessage(e.target.value);
     };
+    
+    
+    
     const textareaRef = useRef(null);
     const prevFocusedRef = useRef(false);
 
@@ -65,8 +68,6 @@ const SendMessageField = ({ setShowLogin, setActiveTab, updateSelectedTicket, ha
 
         try {
             const result = await createTicket(loggedInUsrId, message, '');
-
-         
 
             const newTicket = {
                 id: result.data.id,
