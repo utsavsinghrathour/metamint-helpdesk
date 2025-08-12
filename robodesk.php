@@ -522,3 +522,20 @@ function robodesk_comment_creation_on_insert($comment_ID, $comment_object)
 
     update_comment_meta($comment_ID, 'admin_comment', $meta_value);
 }
+
+
+// function dequeue_jquery_migrate( $scripts ) {
+//     if ( ! is_admin() && isset( $scripts->registered['jquery'] ) ) {
+//         $scripts->registered['jquery']->deps = array_diff(
+//             $scripts->registered['jquery']->deps,
+//             array( 'jquery-migrate' )
+//         );
+//     }
+// }
+// add_action( 'wp_default_scripts', 'dequeue_jquery_migrate' );
+function disable_jquery_migrate_logging( $scripts ) {
+    if ( ! is_admin() && isset( $scripts->registered['jquery-migrate'] ) ) {
+        $scripts->registered['jquery-migrate']->src = '';
+    }
+}
+add_action( 'wp_default_scripts', 'disable_jquery_migrate_logging' );
