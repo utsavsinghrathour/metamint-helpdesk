@@ -1160,3 +1160,50 @@ function set_default_taxonomy_term($post_id, $post, $update)
     // Re-add the action
     add_action('save_post', 'set_default_taxonomy_term', 10, 3);
 }
+
+
+// adding a custom meta field in the user profile
+add_action('show_user_profile', 'add_robodesk_user_meta_fields');
+add_action('edit_user_profile', 'add_robodesk_user_meta_fields');
+add_action('personal_options_update', 'save_robodesk_user_meta_fields');
+add_action('edit_user_profile_update', 'save_robodesk_user_meta_fields');
+
+function add_robodesk_user_meta_fields($user)
+{
+?>
+    <h3><?php _e('Robodesk Support Department', 'robodesk'); ?></h3>
+    <table class="form-table">
+        <tr>
+            <th><label for="robodesk_user_department"><?php _e('Department', 'robodesk'); ?></label></th>
+            <td>
+                <select name="robodesk_user_department" id="robodesk_user_department">
+                    <option value=""><?php _e('Select Department', 'robodesk'); ?></option>
+                    <?php
+                    $departments = get_terms(array(
+                        'taxonomy' => 'robodesk_ticket_category',
+                        'hide_empty' => false,
+                    ));
+                    $user_department = get_user_meta($user->ID, 'robodesk_user_department', true);
+                    foreach ($departments as $department) {
+                        $selected = ($user_department == $department->term_id) ? 'selected' : '';
+                        echo '<option value="' . esc_attr($department->term_id) . '" ' . $selected . '>' . esc_html($department->name) . '</option>';
+                    }
+                    ?>
+                </select>
+                <p class="description"><?php _e('Select the department this user belongs to.', 'robodesk'); ?></p>
+            </td>
+        </tr>
+    </table>
+<?php
+}
+
+function save_robodesk_user_meta_fields($user_id)
+{
+    if (!current_user_can('edit_user', $user_id)) {
+        return false;
+    }
+
+    if (isset($_POST['robodesk_user_department'])) {
+        update_user_meta($user_id, 'robodesk_user_department', sanitize_text_field($_POST['robodesk_user_department']));
+    }
+}
