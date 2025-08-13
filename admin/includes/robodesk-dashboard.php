@@ -594,157 +594,291 @@ function robodesk_dashboard_callback()
             </div>
 
             <!------------------------------------- Tickets Page ------------------------------------->
+            <?php
+            // Get filter parameters from URL
+            $search_term = isset($_GET['search']) ? sanitize_text_field($_GET['search']) : '';
+            $customer_filter = isset($_GET['customer']) ? sanitize_text_field($_GET['customer']) : '';
+            $agent_filter = isset($_GET['agent']) ? sanitize_text_field($_GET['agent']) : '';
+            $status_filter = isset($_GET['status']) ? sanitize_text_field($_GET['status']) : 'all';
+
+            // Get the current page number from URL parameter
+            $current_page = isset($_GET['paged']) ? max(1, intval($_GET['paged'])) : 1;
+            $posts_per_page = 10; // Number of tickets per page
+            $offset = ($current_page - 1) * $posts_per_page;
+
+            // Build the base query arguments
+            $args = array(
+                'post_type' => 'robodesk_ticket',
+                'post_status' => 'publish',
+                'posts_per_page' => $posts_per_page,
+                'offset' => $offset,
+                'orderby' => 'modified',
+                'order' => 'DESC'
+            );
+
+            // Add meta query for status filter
+            if ($status_filter !== 'all') {
+                $args['meta_query'][] = array(
+                    'key' => '_robodesk_ticket_status',
+                    'value' => $status_filter,
+                    'compare' => '='
+                );
+            }
+
+            // Add meta query for agent filter
+            if (!empty($agent_filter)) {
+                $args['meta_query'][] = array(
+                    'key' => 'ticket_assignee',
+                    'value' => $agent_filter,
+                    'compare' => 'LIKE'
+                );
+            }
+
+            // Add search functionality
+            if (!empty($search_term)) {
+                $args['s'] = $search_term;
+            }
+
+            // Add author filter for customer search
+            if (!empty($customer_filter)) {
+                // Search for users by display name or email
+                $user_query = new WP_User_Query(array(
+                    'search' => '*' . $customer_filter . '*',
+                    'search_columns' => array('display_name', 'user_email', 'user_login'),
+                    'fields' => 'ID'
+                ));
+
+                $user_ids = $user_query->get_results();
+
+                if (!empty($user_ids)) {
+                    $args['author__in'] = $user_ids;
+                } else {
+                    // If no users found, set impossible condition to return no results
+                    $args['author__in'] = array(0);
+                }
+            }
+
+            // Set meta_query relation if multiple meta queries exist
+            if (isset($args['meta_query']) && count($args['meta_query']) > 1) {
+                $args['meta_query']['relation'] = 'AND';
+            }
+
+            // Get total count with same filters for pagination
+            $total_args = $args;
+            $total_args['posts_per_page'] = -1;
+            $total_args['fields'] = 'ids';
+            unset($total_args['offset']);
+            $total_query = new WP_Query($total_args);
+            $total_posts = $total_query->found_posts;
+            $total_pages = ceil($total_posts / $posts_per_page);
+
+            // Main query with filters
+            $query = new WP_Query($args);
+            $tickets = []; // Initialize tickets array
+
+            if ($query->have_posts()) {
+                while ($query->have_posts()) {
+                    $query->the_post();
+                    $ticket_id = get_the_ID();
+                    $ticket_status = get_post_meta($ticket_id, '_robodesk_ticket_status', true) ?: 'N/A';
+                    $ticket_origin = get_post_meta($ticket_id, 'robodesk_ticket_origin', true) ?: 'N/A';
+                    $priority_terms = get_the_terms($ticket_id, 'robodesk_ticket_priority');
+                    $author_image = get_avatar_url(get_the_author_meta('ID'), array('size' => 32));
+                    $ticket_priority = $priority_terms ? $priority_terms[0]->name : 'N/A';
+                    $updated_at = get_the_modified_date('Y-m-d H:i:s', $ticket_id);
+                    $created_at = get_the_date('Y-m-d H:i:s', $ticket_id);
+                    $ticket_terms = wp_get_post_terms($ticket_id, 'robodesk_ticket_category');
+                    $ticket_category = '';
+                    if (!is_wp_error($ticket_terms) && !empty($ticket_terms)) {
+                        $ticket_category = [
+                            'name' => $ticket_terms[0]->name,
+                            'id' => $ticket_terms[0]->term_id,
+                        ];
+                    }
+
+                    // Simulate replies field using comments
+                    $replies = get_comments(array('post_id' => $ticket_id));
+                    $replies_count = count($replies);
+                    if ($replies_count > 0) {
+                        $replies = array_map(function ($reply) {
+                            return [
+                                'id' => $reply->comment_ID,
+                                'author' => $reply->comment_author,
+                                'content' => $reply->comment_content,
+                                'date' => $reply->comment_date
+                            ];
+                        }, $replies);
+                    } else {
+                        $replies = [];
+                    }
+
+                    $tickets[] = [
+                        'id' => $ticket_id,
+                        'title' => get_the_title(),
+                        'customer' => get_the_author(),
+                        'email' => get_the_author_meta('email'),
+                        'author_id' => get_the_author_meta('ID'),
+                        'source' => $ticket_origin,
+                        'status' => $ticket_status,
+                        'priority' => $ticket_priority,
+                        'created' => $created_at,
+                        'author_image' => $author_image,
+                        'updated' => $updated_at,
+                        'category' => $ticket_category,
+                        'assignee' => get_post_meta($ticket_id, 'ticket_assignee', true) ?: 'N/A',
+                        'replies' => $replies_count ? $replies : [
+                            'id' => 0,
+                            'author' => 'N/A',
+                            'content' => 'No replies yet',
+                            'date' => $updated_at
+                        ],
+                        'replies_count' => $replies_count
+                    ];
+                }
+            }
+            wp_reset_postdata();
+
+            // Function to generate pagination URL with current filters
+            function get_pagination_url($page)
+            {
+                $current_url = admin_url('admin.php');
+                $params = $_GET;
+                $params['paged'] = $page;
+                return add_query_arg($params, $current_url);
+            }
+
+            // Function to build filter URL
+            function get_filter_url($new_params = array())
+            {
+                $current_url = admin_url('admin.php');
+                $params = $_GET;
+
+                // Remove paged parameter when filtering to start from page 1
+                unset($params['paged']);
+
+                // Merge new parameters
+                $params = array_merge($params, $new_params);
+
+                return add_query_arg($params, $current_url);
+            }
+            ?>
+
             <div id="tickets-page" class="page-content hidden">
                 <!-- Search and Filter Bar -->
                 <div class="bg-white shadow rounded-lg mb-6">
                     <div class="px-4 py-5 sm:p-6">
-                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 items-end">
-                            <!-- <form id="ticket-filter-form"> -->
+                        <form method="GET" action="" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 items-end">
+                            <!-- Preserve other GET parameters -->
+                            <?php foreach ($_GET as $key => $value) : ?>
+                                <?php if (!in_array($key, ['search', 'customer', 'agent', 'status', 'paged'])) : ?>
+                                    <input type="hidden" name="<?php echo esc_attr($key); ?>" value="<?php echo esc_attr($value); ?>">
+                                <?php endif; ?>
+                            <?php endforeach; ?>
+
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-2">Search Conversations</label>
                                 <div class="relative">
                                     <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                        <i class="fas fa-search text-gray-400 mx-40"></i>
+                                        <i class="fas fa-search text-gray-400"></i>
                                     </div>
-                                    <input type="text" id="search-input" placeholder="Search tickets..." class="styled-input block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500">
+                                    <input type="text"
+                                        name="search"
+                                        value="<?php echo esc_attr($search_term); ?>"
+                                        placeholder="Search tickets..."
+                                        class="styled-input block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500">
                                 </div>
                             </div>
+
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-2">Search by Customer</label>
-                                <input type="text" id="customer-filter" placeholder="Customer name..." class="styled-input block w-full px-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500">
+                                <input type="text"
+                                    name="customer"
+                                    value="<?php echo esc_attr($customer_filter); ?>"
+                                    placeholder="Customer name..."
+                                    class="styled-input block w-full px-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500">
                             </div>
+
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-2">Search by Agent</label>
-                                <input type="text" id="agent-filter" placeholder="Agent name..." class="styled-input block w-full px-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500">
+                                <input type="text"
+                                    name="agent"
+                                    value="<?php echo esc_attr($agent_filter); ?>"
+                                    placeholder="Agent name..."
+                                    class="styled-input block w-full px-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500">
                             </div>
+
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-2">Status Filter</label>
-                                <select id="status-filter" class="styled-select block w-full px-3 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 rounded-md">
-                                    <option value="all">All Status</option>
-                                    <option value="open">Open</option>
-                                    <option value="in-progress">In Progress</option>
-                                    <option value="closed">Closed</option>
+                                <select name="status" class="styled-select block w-full px-3 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 rounded-md">
+                                    <option value="all" <?php selected($status_filter, 'all'); ?>>All Status</option>
+                                    <option value="open" <?php selected($status_filter, 'open'); ?>>Open</option>
+                                    <option value="in-progress" <?php selected($status_filter, 'in-progress'); ?>>In Progress</option>
+                                    <option value="closed" <?php selected($status_filter, 'closed'); ?>>Closed</option>
                                 </select>
                             </div>
+
                             <div class="flex space-x-2">
-                                <button onclick="filterTickets()" class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md shadow-sm text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                                <button type="submit" class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md shadow-sm text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
                                     <i class="fas fa-filter mr-2"></i>
                                     Filter
                                 </button>
 
-                                <!-- </form> -->
-                                <button onclick="showPage('new-ticket')" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                                <!-- Clear filters button -->
+                                <?php if (!empty($search_term) || !empty($customer_filter) || !empty($agent_filter) || $status_filter !== 'all') : ?>
+                                    <a href="<?php echo esc_url(admin_url('admin.php?' . http_build_query(array_filter($_GET, function ($key) {
+                                                    return !in_array($key, ['search', 'customer', 'agent', 'status', 'paged']);
+                                                }, ARRAY_FILTER_USE_KEY)))); ?>"
+                                        class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md shadow-sm text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                                        <i class="fas fa-times mr-2"></i>
+                                        Clear
+                                    </a>
+                                <?php endif; ?>
+
+                                <button onclick="showPage('new-ticket')" type="button" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
                                     <i class="fas fa-plus mr-2"></i>
                                     New Conversation
                                 </button>
                             </div>
-                        </div>
+                        </form>
                     </div>
                 </div>
 
+                <!-- Filter Results Summary -->
+                <?php if (!empty($search_term) || !empty($customer_filter) || !empty($agent_filter) || $status_filter !== 'all') : ?>
+                    <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center">
+                                <i class="fas fa-filter text-blue-600 mr-2"></i>
+                                <span class="text-sm font-medium text-blue-800">Active Filters:</span>
+                                <div class="ml-2 flex flex-wrap gap-2">
+                                    <?php if (!empty($search_term)) : ?>
+                                        <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                            Search: "<?php echo esc_html($search_term); ?>"
+                                        </span>
+                                    <?php endif; ?>
+                                    <?php if (!empty($customer_filter)) : ?>
+                                        <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                            Customer: "<?php echo esc_html($customer_filter); ?>"
+                                        </span>
+                                    <?php endif; ?>
+                                    <?php if (!empty($agent_filter)) : ?>
+                                        <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                            Agent: "<?php echo esc_html($agent_filter); ?>"
+                                        </span>
+                                    <?php endif; ?>
+                                    <?php if ($status_filter !== 'all') : ?>
+                                        <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                            Status: <?php echo esc_html(ucfirst(str_replace('-', ' ', $status_filter))); ?>
+                                        </span>
+                                    <?php endif; ?>
+                                </div>
+                            </div>
+                            <span class="text-sm text-blue-600"><?php echo $total_posts; ?> result<?php echo $total_posts !== 1 ? 's' : ''; ?> found</span>
+                        </div>
+                    </div>
+                <?php endif; ?>
+
                 <!----------------------------- Tickets Table ----------------------------->
-                <?php
-                // Get the current page number from URL parameter
-                $current_page = isset($_GET['paged']) ? max(1, intval($_GET['paged'])) : 1;
-                $posts_per_page = 10; // Number of tickets per page
-                $offset = ($current_page - 1) * $posts_per_page;
-
-                // Get total count first
-                $total_args = array(
-                    'post_type' => 'robodesk_ticket',
-                    'post_status' => 'publish',
-                    'posts_per_page' => -1, // Get all posts for counting
-                    'fields' => 'ids' // Only get IDs for performance
-                );
-                $total_query = new WP_Query($total_args);
-                $total_posts = $total_query->found_posts;
-                $total_pages = ceil($total_posts / $posts_per_page);
-
-                // Main query with proper pagination
-                $args = array(
-                    'post_type' => 'robodesk_ticket',
-                    'post_status' => 'publish',
-                    'posts_per_page' => $posts_per_page,
-                    'offset' => $offset,
-                    'orderby' => 'modified',
-                    'order' => 'DESC'
-                );
-                $query = new WP_Query($args);
-                $tickets = []; // Initialize tickets array
-
-                if ($query->have_posts()) {
-                    while ($query->have_posts()) {
-                        $query->the_post();
-                        $ticket_id = get_the_ID();
-                        $ticket_status = get_post_meta($ticket_id, '_robodesk_ticket_status', true) ?: 'N/A';
-                        $ticket_origin = get_post_meta($ticket_id, 'robodesk_ticket_origin', true) ?: 'N/A';
-                        $priority_terms = get_the_terms($ticket_id, 'robodesk_ticket_priority');
-                        $author_image = get_avatar_url(get_the_author_meta('ID'), array('size' => 32));
-                        $ticket_priority = $priority_terms ? $priority_terms[0]->name : 'N/A';
-                        $updated_at = get_the_modified_date('Y-m-d H:i:s', $ticket_id);
-                        $created_at = get_the_date('Y-m-d H:i:s', $ticket_id);
-                        $ticket_terms = wp_get_post_terms($ticket_id, 'robodesk_ticket_category');
-                        $ticket_category = '';
-                        if (!is_wp_error($ticket_terms) && !empty($ticket_terms)) {
-                            $ticket_category = [
-                                'name' => $ticket_terms[0]->name,
-                                'id' => $ticket_terms[0]->term_id,
-                            ];
-                        }
-
-
-                        // Simulate replies field using comments
-                        $replies = get_comments(array('post_id' => $ticket_id));
-                        $replies_count = count($replies);
-                        if ($replies_count > 0) {
-                            $replies = array_map(function ($reply) {
-                                return [
-                                    'id' => $reply->comment_ID,
-                                    'author' => $reply->comment_author,
-                                    'content' => $reply->comment_content,
-                                    'date' => $reply->comment_date
-                                ];
-                            }, $replies);
-                        } else {
-                            $replies = [];
-                        }
-
-                        $tickets[] = [
-                            'id' => $ticket_id,
-                            'title' => get_the_title(),
-                            'customer' => get_the_author(),
-                            'email' => get_the_author_meta('email'),
-                            'author_id' => get_the_author_meta('ID'),
-                            'source' => $ticket_origin,
-                            'status' => $ticket_status,
-                            'priority' => $ticket_priority,
-                            'created' => $created_at,
-                            'author_image' => $author_image,
-                            'updated' => $updated_at,
-                            'category' => $ticket_category,
-                            'assignee' => get_post_meta($ticket_id, 'ticket_assignee', true) ?: 'N/A',
-                            'replies' => $replies_count ? $replies : [
-                                'id' => 0,
-                                'author' => 'N/A',
-                                'content' => 'No replies yet',
-                                'date' => $updated_at
-                            ],
-                            'replies_count' => $replies_count
-                        ];
-                    }
-                }
-                wp_reset_postdata();
-
-                // Function to generate pagination URL
-                function get_pagination_url($page)
-                {
-                    $current_url = admin_url('admin.php');
-                    $params = $_GET;
-                    $params['paged'] = $page;
-                    return add_query_arg($params, $current_url);
-                }
-                ?>
-
                 <div class="bg-white shadow rounded-lg overflow-hidden">
                     <table class="min-w-full divide-y divide-gray-200">
                         <thead class="bg-gray-50">
@@ -758,7 +892,7 @@ function robodesk_dashboard_callback()
                             </tr>
                         </thead>
                         <tbody class="bg-white divide-y divide-gray-200" id="tickets-table">
-                            <!-- JavaScript for tickets -->
+                            <!-- JavaScript for tickets (now only for viewing, not filtering) -->
                             <script>
                                 const tickets = <?php echo wp_json_encode($tickets); ?>;
                             </script>
@@ -794,7 +928,13 @@ function robodesk_dashboard_callback()
                             <?php else : ?>
                                 <tr>
                                     <td colspan="6" class="px-6 py-4 text-center text-gray-500">
-                                        No Conversations found.
+                                        <?php if (!empty($search_term) || !empty($customer_filter) || !empty($agent_filter) || $status_filter !== 'all') : ?>
+                                            No conversations found matching your filters. <a href="<?php echo esc_url(admin_url('admin.php?' . http_build_query(array_filter($_GET, function ($key) {
+                                                                                                        return !in_array($key, ['search', 'customer', 'agent', 'status', 'paged']);
+                                                                                                    }, ARRAY_FILTER_USE_KEY)))); ?>" class="text-blue-600 hover:text-blue-800">Clear filters</a> to see all conversations.
+                                        <?php else : ?>
+                                            No Conversations found.
+                                        <?php endif; ?>
                                     </td>
                                 </tr>
                             <?php endif; ?>
@@ -923,7 +1063,6 @@ function robodesk_dashboard_callback()
                         </nav>
                     </div>
                 <?php endif; ?>
-
             </div>
 
             <!------------------------------- Ticket Detail Page ----------------------->
