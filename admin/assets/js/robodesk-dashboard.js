@@ -33,15 +33,10 @@ function loadDashboardTickets() {
       break;
   }
 
-  // Helper function to get priority class
-  // function getPriorityClass(priority) {
-  //   const classes = {
-  //     low: "priority-low",
-  //     medium: "priority-medium",
-  //     high: "priority-high",
-  //   };
-  //   return classes[priority?.toLowerCase()] || "priority-default";
-  // }
+  // Check if we need to show assignee column
+  const showAssigneeColumn =
+    currentDashboardFilter === "open_conversation" ||
+    currentDashboardFilter === "chat_conversation";
 
   function getBlinkingClass(ticket) {
     // Ensure ticket is from chat and status is open/in-progress
@@ -94,10 +89,15 @@ function loadDashboardTickets() {
     return "blinking-green";
   }
 
+  // Update table header based on filter
+  updateTableHeader(showAssigneeColumn);
+
   // Build the table HTML
   tableBody.innerHTML =
     filteredTickets.length === 0
-      ? `<tr><td colspan="7" class="px-6 py-4 text-center text-gray-500">No tickets found for this filter.</td></tr>`
+      ? `<tr><td colspan="${
+          showAssigneeColumn ? 8 : 7
+        }" class="px-6 py-4 text-center text-gray-500">No tickets found for this filter.</td></tr>`
       : filteredTickets
           .map(
             (ticket) => `
@@ -165,6 +165,20 @@ function loadDashboardTickets() {
                   ${escapeHTML(ticket.priority)}
                 </span>
               </td>
+              ${
+                showAssigneeColumn
+                  ? `
+              <td class="px-6 py-4 whitespace-nowrap">
+                <span class="text-sm font-medium text-gray-900 editable-assignee"
+                  onclick="event.stopPropagation(); editAssignee(${
+                    ticket.id
+                  }, this)">
+                  ${escapeHTML(ticket.assignee || "Unassigned")}
+                </span>
+              </td>
+              `
+                  : ""
+              }
             </tr>
           `
           )
@@ -182,6 +196,107 @@ function loadDashboardTickets() {
       }
     }
   });
+}
+
+// Helper function to update table header based on whether assignee column should be shown
+function updateTableHeader(showAssigneeColumn) {
+  const tableHeader = document
+    .querySelector("#dashboard-tickets-table")
+    .closest("table")
+    .querySelector("thead tr");
+
+  if (!tableHeader) return;
+
+  // Define the standard headers
+  const standardHeaders = [
+    "Conversation",
+    "Last Reply",
+    "Customer",
+    "Source",
+    "Status",
+    "Priority",
+  ];
+
+  // Add assignee header if needed
+  const headers = showAssigneeColumn
+    ? [...standardHeaders, "Assignee"]
+    : standardHeaders;
+
+  // Update the header HTML
+  tableHeader.innerHTML = headers
+    .map(
+      (header) =>
+        `<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">${header}</th>`
+    )
+    .join("");
+}
+
+// Optional: Add function to handle assignee editing if it doesn't exist
+function editAssignee(ticketId, element) {
+  const currentAssignee = element.textContent.trim();
+
+  // Create a simple input for editing
+  const input = document.createElement("input");
+  input.type = "text";
+  input.value = currentAssignee === "Unassigned" ? "" : currentAssignee;
+  input.className =
+    "w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500";
+
+  // Replace the span with input
+  element.replaceWith(input);
+  input.focus();
+  input.select();
+
+  // Handle save on Enter or blur
+  const saveAssignee = () => {
+    const newAssignee = input.value.trim() || "Unassigned";
+
+    // Create new span element
+    const newSpan = document.createElement("span");
+    newSpan.className = "text-sm font-medium text-gray-900 editable-assignee";
+    newSpan.textContent = newAssignee;
+    newSpan.onclick = (e) => {
+      e.stopPropagation();
+      editAssignee(ticketId, newSpan);
+    };
+
+    // Replace input with span
+    input.replaceWith(newSpan);
+
+    // Update the ticket data
+    const ticket = dashboard_tickets.find((t) => t.id === ticketId);
+    if (ticket) {
+      ticket.assignee = newAssignee;
+    }
+
+    // Here you would typically send an AJAX request to update the assignee on the server
+    console.log(`Updated ticket ${ticketId} assignee to: ${newAssignee}`);
+
+    // You can add your server update logic here
+    // updateTicketAssignee(ticketId, newAssignee);
+  };
+
+  // Save on Enter
+  input.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      saveAssignee();
+    } else if (e.key === "Escape") {
+      // Cancel editing
+      const cancelSpan = document.createElement("span");
+      cancelSpan.className =
+        "text-sm font-medium text-gray-900 editable-assignee";
+      cancelSpan.textContent = currentAssignee;
+      cancelSpan.onclick = (e) => {
+        e.stopPropagation();
+        editAssignee(ticketId, cancelSpan);
+      };
+      input.replaceWith(cancelSpan);
+    }
+  });
+
+  // Save on blur
+  input.addEventListener("blur", saveAssignee);
 }
 
 // Call when DOM is ready
