@@ -834,10 +834,7 @@ function robodesk_dashboard_callback()
                                     </a>
                                 <?php endif; ?>
 
-                                <button onclick="showPage('new-ticket')" type="button" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-                                    <i class="fas fa-plus mr-2"></i>
-                                    New Conversation
-                                </button>
+
                             </div>
                         </form>
                     </div>
@@ -1424,7 +1421,7 @@ function robodesk_dashboard_callback()
                                                 <source src="<?php echo esc_url($selected_sound); ?>" type="audio/mpeg">
                                                 Your browser does not support the audio element.
                                             </audio>
-                                            <button type="button" onclick="removeAudio('notification-sound-preview', 'robodesk_notification_sound')" class="text-red-600 hover:text-red-800 text-sm <?php echo $selected_sound ? '' : 'hidden'; ?>">Remove</button>
+
                                         </div>
                                         <input type="hidden" name="robodesk_notification_sound" id="robodesk_notification_sound" value="<?php echo esc_attr($selected_sound); ?>">
                                     </div>

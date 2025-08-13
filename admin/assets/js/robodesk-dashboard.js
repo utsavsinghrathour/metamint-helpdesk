@@ -488,113 +488,8 @@ document.addEventListener("DOMContentLoaded", function () {
   showPage("dashboard");
   // updateDashboardStats();
   loadDashboardTickets();
-  setupEventListeners();
+  // setupEventListeners();
 });
-
-// added
-// Event listeners
-function setupEventListeners() {
-  // Search input
-  document
-    .getElementById("search-input")
-    .addEventListener("input", debounce(filterTickets, 300));
-
-  // Filter inputs
-  document
-    .getElementById("customer-filter")
-    .addEventListener("input", debounce(filterTickets, 300));
-  document
-    .getElementById("agent-filter")
-    .addEventListener("input", debounce(filterTickets, 300));
-  document
-    .getElementById("status-filter")
-    .addEventListener("change", filterTickets);
-}
-// Add this at the top level if not already present
-let currentPaged = 1;
-
-function filterTickets() {
-  const searchTerm = document
-    .getElementById("search-input")
-    .value.toLowerCase();
-  const customerFilter = document
-    .getElementById("customer-filter")
-    .value.toLowerCase();
-  const agentFilter = document
-    .getElementById("agent-filter")
-    .value.toLowerCase();
-  const statusFilter = document.getElementById("status-filter").value;
-
-  const filteredTickets = dashboard_tickets.filter((ticket) => {
-    const matchesSearch =
-      ticket.id.toString().includes(searchTerm) ||
-      ticket.title.toLowerCase().includes(searchTerm) ||
-      ticket.customer.toLowerCase().includes(searchTerm) ||
-      ticket.email.toLowerCase().includes(searchTerm);
-    const matchesCustomer =
-      !customerFilter || ticket.customer.toLowerCase().includes(customerFilter);
-    const matchesAgent =
-      !agentFilter || ticket.assignee.toLowerCase().includes(agentFilter);
-    const matchesStatus =
-      statusFilter === "all" || ticket.status === statusFilter;
-
-    return matchesSearch && matchesCustomer && matchesAgent && matchesStatus;
-  });
-
-  const tableBody = document.getElementById("tickets-table");
-  tableBody.innerHTML = filteredTickets
-    .map(
-      (ticket) => `
-       <tr class="table-row customer-ticket-item cursor-pointer"
-    onclick="hideCustomerTickets(); viewTicket(${ticket.id})">
-
-
-            <td class="px-6 py-4 whitespace-nowrap">
-                <div class="text-sm font-medium text-gray-900">#${
-                  ticket.id
-                }</div>
-                <div class="text-sm text-gray-500 truncate max-w-xs">${
-                  ticket.title
-                }</div>
-            </td>
-            <td class="px-6 py-4 whitespace-nowrap">
-                <div class="text-sm text-gray-900">${ticket.customer}</div>
-                <div class="text-sm text-gray-500">${ticket.email}</div>
-            </td>
-            <td class="px-6 py-4 whitespace-nowrap">
-                <span class="status-badge ${getStatusClass(ticket.status)}">
-                    ${ticket.status}
-                </span>
-            </td>
-            <td class="px-6 py-4 whitespace-nowrap">
-                <span class="status-badge ${ticket.priority}">
-                    ${ticket.priority}
-                </span>
-            </td>
-            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${
-              ticket.assignee
-            }</td>
-            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                ${formatDate(ticket.updated)}
-            </td>
-        </tr>
-    `
-    )
-    .join("");
-}
-
-// if the input of search is not empty hide the pagination navigation
-const paginationNav = document.getElementById("cpm-nav");
-const searchInput = document.getElementById("search-input");
-searchInput.addEventListener("input", function () {
-  if (searchInput.value) {
-    paginationNav.classList.add("hidden");
-  } else {
-    paginationNav.classList.remove("hidden");
-  }
-});
-
-// added ends
 
 // added ends
 
@@ -680,33 +575,8 @@ function showPage(pageName) {
   if (navLink) {
     navLink.classList.add("active");
   }
-
-  currentPage = pageName;
-
-  // Update URL params for navigation
-  // if (history.pushState) {
-  //   const url = new URL(window.location);
-  //   // Remove ticket param if not on ticket-detail
-  //   if (pageName !== "ticket-detail") {
-  //     url.searchParams.delete("ticket");
-  //   }
-  //   // Remove paged param if not on tickets
-  //   if (pageName !== "tickets") {
-  //     url.searchParams.delete("paged");
-  //   }
-  //   // Add paged param for tickets page (if needed)
-  //   if (pageName === "tickets" && typeof currentPaged !== "undefined") {
-  //     url.searchParams.set("paged", currentPaged);
-  //   }
-  //   history.replaceState({}, "", url);
-  // }
-
   if (pageName === "ticket-detail") {
     loadTicketDetail();
-  }
-
-  // Load page-specific content
-  if (pageName === "tickets") {
   } else if (pageName === "settings") {
     showSettingsTab("basic");
   } else if (pageName === "dashboard") {
@@ -765,15 +635,15 @@ document.addEventListener("DOMContentLoaded", function () {
 });
 
 // On page load, check for paged param and show the paged tickets
-document.addEventListener("DOMContentLoaded", function () {
-  const params = new URLSearchParams(window.location.search);
-  const paged = params.get("paged");
-  if (paged) {
-    //show page tickets and load the paged tickets
-    showPage("tickets");
-    loadPage(Number(paged));
-  }
-});
+// document.addEventListener("DOMContentLoaded", function () {
+//   const params = new URLSearchParams(window.location.search);
+//   const paged = params.get("paged");
+//   if (paged) {
+//     //show page tickets and load the paged tickets
+//     showPage("tickets");
+//     loadPage(Number(paged));
+//   }
+// });
 
 // Function to create category dropdown options
 function createCategoryOptions() {
