@@ -61,8 +61,8 @@ function robodesk_add_admin_menu()
 
     add_submenu_page(
         'robodesk-dashboard',
-        'Categories',
-        'Categories',
+        'Departments',
+        'Departments',
         'manage_categories',
         'edit-tags.php?taxonomy=robodesk_ticket_category&post_type=robodesk_ticket'
     );
