@@ -870,9 +870,12 @@ function loadCustomerTicketsList(ticketList) {
                     )} text-xs">
                         ${ticket.status}
                     </span>
-                    <span class="status-badge" style="${getPriorityClass(
-                      ticket.priority
-                    )} text-xs">
+                    <span class="status-badge" style="background-color: ${
+                      typeof robodeskPriorityColors !== "undefined" &&
+                      robodeskPriorityColors[ticket.priority]
+                        ? robodeskPriorityColors[ticket.priority]
+                        : ""
+                    }" ">
                         ${ticket.priority}
                     </span>
                 </div>
