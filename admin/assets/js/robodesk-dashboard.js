@@ -159,6 +159,12 @@ function loadDashboardTickets() {
                 <span class="status-badge ${getPriorityClass(
                   ticket.priority
                 )} editable-priority"
+                  style="background-color: ${
+                    typeof robodeskPriorityColors !== "undefined" &&
+                    robodeskPriorityColors[ticket.priority]
+                      ? robodeskPriorityColors[ticket.priority]
+                      : ""
+                  }"
                   onclick="event.stopPropagation(); editPriority(${
                     ticket.id
                   }, this)">
@@ -530,15 +536,12 @@ function getStatusClass(status) {
 }
 
 function getPriorityClass(priority) {
-  switch (priority) {
-    case "High":
-      return "priority-high";
-    case "Medium":
-      return "priority-medium";
-    case "Low":
-      return "priority-low";
-    default:
-      return "bg-gray-100 text-gray-800";
+  // Use the priority colors from PHP if available
+  if (
+    typeof robodeskPriorityColors !== "undefined" &&
+    robodeskPriorityColors[priority]
+  ) {
+    return `priority-${priority.toLowerCase()}`;
   }
 }
 
@@ -867,7 +870,7 @@ function loadCustomerTicketsList(ticketList) {
                     )} text-xs">
                         ${ticket.status}
                     </span>
-                    <span class="status-badge ${getPriorityClass(
+                    <span class="status-badge" style="${getPriorityClass(
                       ticket.priority
                     )} text-xs">
                         ${ticket.priority}

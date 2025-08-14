@@ -362,6 +362,27 @@ function robodesk_dashboard_callback()
                         }
                     }
 
+                    // Create priority colors object for JavaScript
+                    $priority_colors = [];
+                    $priorities = get_terms([
+                        'taxonomy' => 'robodesk_ticket_priority',
+                        'hide_empty' => false,
+                    ]);
+
+                    if (!is_wp_error($priorities)) {
+                        foreach ($priorities as $priority) {
+                            $color = get_term_meta($priority->term_id, 'priority_color', true);
+                            if (!empty($color)) {
+                                $priority_colors[$priority->name] = $color;
+                            }
+                        }
+                    }
+
+                    // Pass priority colors to JavaScript
+                    echo '<script>
+                        const robodeskPriorityColors = ' . json_encode($priority_colors) . ';
+                    </script>';
+
                     if (!function_exists('format_date')) {
                         function format_date($date)
                         {
