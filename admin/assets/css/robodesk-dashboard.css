@@ -43,6 +43,7 @@
   font-size: 0.75rem;
   font-weight: 600;
   border-radius: 9999px;
+  background-color: white;
 }
 
 .status-open {
