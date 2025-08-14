@@ -61,8 +61,8 @@ function robodesk_add_admin_menu()
 
     add_submenu_page(
         'robodesk-dashboard',
-        'Ticket Categories',
-        'Ticket Categories',
+        'Departments',
+        'Departments',
         'manage_categories',
         'edit-tags.php?taxonomy=robodesk_ticket_category&post_type=robodesk_ticket'
     );
@@ -71,8 +71,8 @@ function robodesk_add_admin_menu()
     // Ticket Priorities (taxonomy)
     add_submenu_page(
         'robodesk-dashboard',
-        'Ticket Priorities',
-        'Ticket Priorities',
+        'Priorities',
+        'Priorities',
         'manage_categories',
         'edit-tags.php?taxonomy=robodesk_ticket_priority&post_type=robodesk_ticket'
     );

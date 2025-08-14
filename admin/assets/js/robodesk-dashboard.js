@@ -159,6 +159,12 @@ function loadDashboardTickets() {
                 <span class="status-badge ${getPriorityClass(
                   ticket.priority
                 )} editable-priority"
+                  style="background-color: ${
+                    typeof robodeskPriorityColors !== "undefined" &&
+                    robodeskPriorityColors[ticket.priority]
+                      ? robodeskPriorityColors[ticket.priority]
+                      : ""
+                  }"
                   onclick="event.stopPropagation(); editPriority(${
                     ticket.id
                   }, this)">
@@ -530,15 +536,12 @@ function getStatusClass(status) {
 }
 
 function getPriorityClass(priority) {
-  switch (priority) {
-    case "High":
-      return "priority-high";
-    case "Medium":
-      return "priority-medium";
-    case "Low":
-      return "priority-low";
-    default:
-      return "bg-gray-100 text-gray-800";
+  // Use the priority colors from PHP if available
+  if (
+    typeof robodeskPriorityColors !== "undefined" &&
+    robodeskPriorityColors[priority]
+  ) {
+    return `priority-${priority.toLowerCase()}`;
   }
 }
 
@@ -867,7 +870,7 @@ function loadCustomerTicketsList(ticketList) {
                     )} text-xs">
                         ${ticket.status}
                     </span>
-                    <span class="status-badge ${getPriorityClass(
+                    <span class="status-badge" style="${getPriorityClass(
                       ticket.priority
                     )} text-xs">
                         ${ticket.priority}
@@ -1439,7 +1442,7 @@ jQuery(document).ready(function ($) {
     formData.append("ticket_priority", $("#ticket-priority").val());
     formData.append("ticket_category", $("#ticket-category").val());
     formData.append("ticket_assignee", $("#ticket-assignee").val());
-    formData.append("ticket_description", $("#ticket-description").val());
+    formData.append("ticket_description", $("#ticket-description").html());
     formData.append(
       "ticket_source",
       $form.find('input[name="ticket_source"]').val()
@@ -1452,11 +1455,11 @@ jQuery(document).ready(function ($) {
     }
 
     // Additional client-side validation for priority
-    const validPriorities = ["Low", "Medium", "High"];
-    if (!validPriorities.includes($("#ticket-priority").val())) {
-      showToast("Please select a valid priority.", "error");
-      return;
-    }
+    // const validPriorities = ["Low", "Medium", "High"];
+    // if (!validPriorities.includes($("#ticket-priority").val())) {
+    //   showToast("Please select a valid priority.", "error");
+    //   return;
+    // }
 
     $button.prop("disabled", true).text("Creating Ticket...");
 
