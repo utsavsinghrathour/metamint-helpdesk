@@ -1,6 +1,4 @@
 <?php
-
-
 // Ajax handler for testing credential for IMAP connection
 // This function will be called via AJAX to test the IMAP connection
 add_action('wp_ajax_robodesk_imap_test_connection', 'robodesk_imap_test_connection');
@@ -504,12 +502,16 @@ function robodesk_create_ticket()
         'taxonomy' => 'robodesk_ticket_priority',
         'hide_empty' => false,
     ]);
+
+    if (is_wp_error($ticket_priorities)) {
+        wp_send_json_error(['message' => 'Failed to retrieve ticket priorities']);
+        wp_die();
+    }
+
     $valid_priorities = array_map(function ($priority) {
         return $priority->name;
     }, $ticket_priorities);
 
-    var_dump($valid_priorities);
-    die('sadbuh');
     if (!in_array($ticket_priority, $valid_priorities)) {
         wp_send_json_error(['message' => 'Invalid priority selected']);
         wp_die();

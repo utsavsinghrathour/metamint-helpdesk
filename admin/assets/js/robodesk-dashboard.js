@@ -1439,7 +1439,7 @@ jQuery(document).ready(function ($) {
     formData.append("ticket_priority", $("#ticket-priority").val());
     formData.append("ticket_category", $("#ticket-category").val());
     formData.append("ticket_assignee", $("#ticket-assignee").val());
-    formData.append("ticket_description", $("#ticket-description").val());
+    formData.append("ticket_description", $("#ticket-description").html());
     formData.append(
       "ticket_source",
       $form.find('input[name="ticket_source"]').val()
@@ -1452,11 +1452,11 @@ jQuery(document).ready(function ($) {
     }
 
     // Additional client-side validation for priority
-    const validPriorities = ["Low", "Medium", "High"];
-    if (!validPriorities.includes($("#ticket-priority").val())) {
-      showToast("Please select a valid priority.", "error");
-      return;
-    }
+    // const validPriorities = ["Low", "Medium", "High"];
+    // if (!validPriorities.includes($("#ticket-priority").val())) {
+    //   showToast("Please select a valid priority.", "error");
+    //   return;
+    // }
 
     $button.prop("disabled", true).text("Creating Ticket...");
 
