@@ -158,7 +158,7 @@ function robodesk_save_featured_metabox($post_id) {
 
 add_filter('rest_robodesk_faq_query', 'robodesk_filter_faqs_by_featured', 10, 2);
 function robodesk_filter_faqs_by_featured($args, $request) {
-
+    
     if (isset($request['featured']) && $request['featured'] === 'true') {
         $args['meta_query'] = array(
             array(
@@ -181,6 +181,23 @@ register_rest_field( 'robodesk_faq', 'author_name', array(
         return $author ? $author->display_name : false;
     },
 ) );
+
+
+add_filter( 'rest_prepare_robodesk_faq', function( $response, $post, $request ) {
+    $author_id = $post->post_author;
+
+    $author_info = array(
+        'display_name' => get_the_author_meta( 'display_name', $author_id ),
+        'gravatar_url' => get_avatar_url( $author_id, array( 'size' => 96 ) ),
+        'total_posts'  => count_user_posts( $author_id, 'robodesk_ticket' )
+    );
+    
+    $response->data['author_info'] = $author_info;
+
+    return $response;
+
+}, 10, 3 );
+
 
 
 // Filter FAQs by featured with transient caching //removed cached
