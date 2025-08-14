@@ -342,14 +342,46 @@ function robodesk_dashboard_callback()
                     if (!function_exists('get_priority_class')) {
                         function get_priority_class($priority)
                         {
-                            $classes = [
-                                'low' => 'priority-low',
-                                'medium' => 'priority-medium',
-                                'high' => 'priority-high',
-                            ];
-                            return $classes[strtolower($priority)] ?? 'priority-default';
+
+                            //  $classes = [
+                            //     'low' => 'priority-low',
+                            //     'medium' => 'priority-medium',
+                            //     'high' => 'priority-high',
+                            // ];
+                            // return $classes[strtolower($priority)] ?? 'priority-default';
+                            // Get the term by name from robodesk_ticket_priority taxonomy
+                            $term = get_term_by('name', $priority, 'robodesk_ticket_priority');
+
+                            if ($term) {
+                                // Get the custom class from term meta
+                                $custom_class = get_term_meta($term->term_id, 'priority_color', true);
+                                if (!empty($custom_class)) {
+                                    return $custom_class;
+                                }
+                            }
                         }
                     }
+
+                    // Create priority colors object for JavaScript
+                    $priority_colors = [];
+                    $priorities = get_terms([
+                        'taxonomy' => 'robodesk_ticket_priority',
+                        'hide_empty' => false,
+                    ]);
+
+                    if (!is_wp_error($priorities)) {
+                        foreach ($priorities as $priority) {
+                            $color = get_term_meta($priority->term_id, 'priority_color', true);
+                            if (!empty($color)) {
+                                $priority_colors[$priority->name] = $color;
+                            }
+                        }
+                    }
+
+                    // Pass priority colors to JavaScript
+                    echo '<script>
+                        const robodeskPriorityColors = ' . json_encode($priority_colors) . ';
+                    </script>';
 
                     if (!function_exists('format_date')) {
                         function format_date($date)
@@ -525,7 +557,7 @@ function robodesk_dashboard_callback()
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-2">Priority *</label>
                                     <select id="ticket-priority" name="ticket_priority" required class="styled-select block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
-                                        <!-- <option value="">Select Priority</option> -->
+                                        <option value="">Select Priority</option>
                                         <?php
                                         $ticket_priorities = get_terms([
                                             'taxonomy' => 'robodesk_ticket_priority',
@@ -540,7 +572,7 @@ function robodesk_dashboard_callback()
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-2">Category *</label>
                                     <select id="ticket-category" name="ticket_category" required class="styled-select block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
-                                        <!-- <option value="">Select Category</option> -->
+                                        <option value="">Select Category</option>
                                         <?php
                                         $categories = get_terms([
                                             'taxonomy' => 'robodesk_ticket_category',
@@ -556,8 +588,8 @@ function robodesk_dashboard_callback()
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-2">Assign to *</label>
                                     <select id="ticket-assignee" name="ticket_assignee" required class="styled-select block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                                        <option value="">Select Agent</option>
                                         <?php
-                                        $default_agent = get_option('robodesk_default_agent');
                                         // Get users by role with display_name only
                                         $agents = get_users([
                                             'role__in' => ['robodesk_support_staff', 'robodesk_support_manager', 'author', 'editor', 'administrator'],
@@ -567,7 +599,7 @@ function robodesk_dashboard_callback()
                                         $agent_names = wp_list_pluck($agents, 'display_name');
                                         ?>
                                         <?php foreach ($agent_names as $agent): ?>
-                                            <option value="<?php echo esc_attr($agent); ?>" <?php selected($default_agent, $agent); ?>>
+                                            <option value="<?php echo esc_attr($agent); ?>">
                                                 <?php echo esc_html($agent); ?>
                                             </option>
                                         <?php endforeach; ?>
@@ -577,7 +609,16 @@ function robodesk_dashboard_callback()
 
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-2">Conversation Description *</label>
-                                <textarea id="ticket-description" name="ticket_description" rows="6" required class="styled-input block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500" placeholder="Describe the issue or request..."></textarea>
+                                <div class="editor-toolbar mb-2">
+                                    <button type="button" onclick="formatText('bold', 'ticket-description')" class="editor-btn"><i class="fas fa-bold"></i></button>
+                                    <button type="button" onclick="formatText('italic', 'ticket-description')" class="editor-btn"><i class="fas fa-italic"></i></button>
+                                    <button type="button" onclick="formatText('underline', 'ticket-description')" class="editor-btn"><i class="fas fa-underline"></i></button>
+                                    <button type="button" onclick="formatText('insertUnorderedList', 'ticket-description')" class="editor-btn"><i class="fas fa-list-ul"></i></button>
+                                    <button type="button" onclick="formatText('insertOrderedList', 'ticket-description')" class="editor-btn"><i class="fas fa-list-ol"></i></button>
+                                </div>
+                                <div id="ticket-description" class="editor-content placeholder" contenteditable="true"
+                                    style="min-height: 150px; border: 1px solid #d1d5db; border-radius: 0.375rem; padding: 0.5rem;"
+                                    data-placeholder="Describe the issue or request..." aria-label="Ticket description input"></div>
                             </div>
 
                             <div class="flex justify-end space-x-3">
@@ -910,7 +951,7 @@ function robodesk_dashboard_callback()
                                             </span>
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap">
-                                            <span class="status-badge <?php echo esc_attr(get_priority_class($ticket['priority'])); ?>">
+                                            <span class="status-badge" style="background-color:<?php echo esc_attr(get_priority_class($ticket['priority'])); ?>">
                                                 <?php echo esc_html($ticket['priority']); ?>
                                             </span>
                                         </td>
@@ -1136,7 +1177,8 @@ function robodesk_dashboard_callback()
                                         <select onchange="updateTicketAssignee(currentTicket.id, this.value)" class="styled-select block w-full border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 rounded-md" id="ticket-assignee-select">
                                             <?php
                                             $default_agent = get_option('robodesk_default_agent');
-                                            var_dump($default_agent);
+
+
 
                                             // Get users by role with display_name only
                                             $agents = get_users([
