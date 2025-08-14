@@ -930,7 +930,7 @@ function robodesk_dashboard_callback()
                                             </span>
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap">
-                                            <span class="status-badge" style="color:<?php echo esc_attr(get_priority_class($ticket['priority'])); ?>">
+                                            <span class="status-badge" style="background-color:<?php echo esc_attr(get_priority_class($ticket['priority'])); ?>">
                                                 <?php echo esc_html($ticket['priority']); ?>
                                             </span>
                                         </td>
