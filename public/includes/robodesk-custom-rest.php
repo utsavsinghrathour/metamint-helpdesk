@@ -921,6 +921,32 @@ function get_cached_user_data($user_id)
 }
 
 
+add_action('rest_api_init', function () {
+    register_rest_route('custom/v1', '/lost-password', array(
+        'methods' => 'POST',
+        'callback' => 'custom_lost_password',
+        'permission_callback' => '__return_true', // Allow public access
+    ));
+});
+
+function custom_lost_password(WP_REST_Request $request) {
+    $user_login = $request->get_param('user_login');
+    if (empty($user_login)) {
+        return new WP_Error('invalid_input', 'Username or email is required.', array('status' => 400));
+    }
+
+    // Use WordPress's default password reset function
+    $result = retrieve_password($user_login);
+
+    if (is_wp_error($result)) {
+        return new WP_Error('reset_failed', $result->get_error_message(), array('status' => 400));
+    }
+
+    return new WP_REST_Response(array(
+        'message' => 'A password reset email has been sent to your email address.'
+    ), 200);
+}
+
 
 // add_action('wp_head', function(){
 // $a=0;

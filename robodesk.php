@@ -539,3 +539,5 @@ function disable_jquery_migrate_logging( $scripts ) {
     }
 }
 add_action( 'wp_default_scripts', 'disable_jquery_migrate_logging' );
+
+
