@@ -60,21 +60,23 @@
   background-color: #f0fdf4;
   color: #16a34a;
 }
+
+/* // for priority */
 .status-Medium {
-  background-color: #fffbeb;
+  /* background-color: #fffbeb; */
   color: #d97706;
 }
 
 .status-badge.Medium {
-  background-color: #fffbeb;
+  /* background-color: #fffbeb; */
   color: #d97706;
 }
 .status-badge.High {
-  background-color: #fef2f2;
+  /* background-color: #fef2f2; */
   color: #dc2626;
 }
 
-.status-badge.Low {
+/* .status-badge.Low {
   background-color: #f0fdf4;
   color: #16a34a;
 }
@@ -92,7 +94,7 @@
 .priority-low {
   background-color: #f0fdf4;
   color: #16a34a;
-}
+} */
 
 /* Tab styles */
 .ticket-tab.active,
@@ -391,7 +393,7 @@
   margin-bottom: 1rem;
 }
 
-/* Priority indicators */
+/* Priority indicators
 .priority-indicator {
   width: 8px;
   height: 8px;
@@ -410,9 +412,9 @@
 
 .priority-low-indicator {
   background-color: #16a34a;
-}
+} */
 
-/* Status indicators */
+/* Status indicators
 .status-indicator {
   width: 8px;
   height: 8px;
@@ -431,7 +433,7 @@
 
 .status-closed-indicator {
   background-color: #16a34a;
-}
+} */
 #popover-top-icon-preview {
   height: 50px;
   width: 50px;
