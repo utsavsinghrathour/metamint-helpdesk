@@ -1,4 +1,4 @@
-import React from 'react';
+
 import { Tooltip } from 'react-tooltip';
 import { FaQuestionCircle } from "react-icons/fa";
 import { RiInformation2Fill } from "react-icons/ri";

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, Suspense , useRef } from 'react';
+import React, { useState, useEffect, Suspense, useRef, useMemo } from 'react';
 import { FaChevronRight, FaChevronLeft } from 'react-icons/fa';
 import '../styles/MessageTabs.css';
 import Author1 from '../images/person1.jpeg';
@@ -12,10 +12,9 @@ import Preloader from '../images/preloader.svg';
 import { useAppData } from '../utils/AppDataContext';
 import defaultLogo from '../images/robodesk-logo.png';
 
+import useExclusiveServerEvents from '../Hooks/useExclusiveServerEvents';
 
 const SingleTicket = React.lazy(() => import('./SingleTicket'));
-
-
 
 const TicketItem = ({ ticket, onSelect }) => {
 
@@ -74,10 +73,11 @@ const MessageTabs = ({
     const [loading, setLoading] = useState(true);
     const [isLoggedIn, setIsLoggedIn] = useState(false);
     const [loggedInuserId, setloggedInuserId] = useState(null);
-    const { loadingContext, errorContext, ticketsContext, loggedinContext, loggedInUsrId } = useAppData();
+    const { loadingContext, errorContext, ticketsContext, loggedinContext, loggedInUsrId, refreshTickets } = useAppData();
     const image_urls = window.robodeskData?.imageUrls || {};
     const messageWrapperRef = useRef(null);
-
+    const { connectExclusive, disconnect } = useExclusiveServerEvents();
+    const [refresh, setRefresh] = useState(false);
     const fetchTickets = async () => {
         if (!loggedInUsrId) {
             return;
@@ -85,6 +85,7 @@ const MessageTabs = ({
         try {
             setLoading(true);
             const tickets = ticketsContext;
+
             const mappedTickets = tickets.map((ticket) => ({
                 id: ticket.id,
                 ticketNumber: ticket.ticket_number,
@@ -108,6 +109,70 @@ const MessageTabs = ({
             setLoading(false);
         }
     };
+    const firstMessageId = useMemo(() => {
+
+        if (!tickets || tickets.length === 0) return false;
+
+        return tickets[0].id;
+    }, [tickets]);
+
+
+
+    useEffect(() => {
+        // console.log('The first message id', firstMessageId);
+
+        if (loggedinContext && loggedInUsrId && firstMessageId) {
+            connectExclusive('tickets', {
+                postId: 0,
+                lastId: firstMessageId,
+                userId: loggedInUsrId
+            }, {
+                new_ticket: (data) => {
+                    const ticketsArray = Array.isArray(data) ? data : [data];
+                    const mappedTickets = ticketsArray.map((ticket) => ({
+                        id: ticket.id,
+                        ticketNumber: ticket.ticket_number,
+                        title: ticket.ticket_title,
+                        source: ticket.ticket_origin,
+                        timeAgo: ticket.ticket_time_ago + ' ago',
+                        authorImage: ticket.ticket_author_image ?? Author1,
+                        status: ticket.ticket_status ?? 'New',
+                        priority: ticket.ticket_priority ?? 'Medium',
+                        author: ticket.ticket_author,
+                        lastReply: ticket.ticket_last_reply,
+                        totalComments: ticket.ticket_total_comments,
+                        comments: ticket.ticket_comments,
+
+                    }));
+                    
+                    // if(mappedTickets.length>0){
+                    
+                    //  setRefresh(true);
+                    // }
+                   
+                    setTickets(prevTickets => {
+                        const newTickets = mappedTickets.filter(
+                            mappedTicket => !prevTickets.some(prevTicket => prevTicket.id === mappedTicket.id)
+                        );
+                        
+                        return [...newTickets, ...prevTickets];
+                        
+                    });
+                    
+                    
+                },
+            });
+
+            return () => { };
+        }
+    }, [loading]);
+
+// useEffect(() => {
+//     if(refresh){
+//         refreshTickets();
+//     }
+
+// },[refresh])
 
     useEffect(() => {
         if (loggedinContext && loggedInUsrId) {
@@ -148,14 +213,14 @@ const MessageTabs = ({
 
 
     const handleScroll = (e) => {
-    e.preventDefault();
+        e.preventDefault();
         const wrapper = messageWrapperRef.current;
-        if (!wrapper ) return;
+        if (!wrapper) return;
 
         const { scrollTop, scrollHeight, clientHeight } = wrapper;
         // console.log('Scroll Top:', scrollTop, 'Client Height:', clientHeight, 'Scroll Height:', scrollHeight);
         if (scrollTop + clientHeight >= scrollHeight) {
-   
+
             console.log('now');
         }
     };
