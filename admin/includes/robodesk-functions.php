@@ -567,7 +567,7 @@ function robodesk_create_ticket()
             '_robodesk_customer_email' => $customer_email,
             '_robodesk_ticket_status'  => 'open',
 
-            'robodesk_default_agent'          => $ticket_assignee,
+            'ticket_assignee'          => $ticket_assignee,
             'robodesk_ticket_origin'   => 'Admin-Form', // Default source
         ],
     ]);
