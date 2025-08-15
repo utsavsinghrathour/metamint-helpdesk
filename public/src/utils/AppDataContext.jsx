@@ -3,6 +3,7 @@ import { createContext, useEffect, useState, useContext } from 'react';
 const AppDataContext = createContext();
 
 export const AppDataProvider = ({ children }) => {
+  const [ticketsContextData , setTicketsContextData] = useState([]);
   const [data, setData] = useState({
     loadingContext: true,
     errorContext: null,
@@ -10,7 +11,11 @@ export const AppDataProvider = ({ children }) => {
     loggedInUsrId: null,
     ticketsContext: [],
     noticesContext: [],
+    
+    
   });
+  
+
 
   const updateLoginStatus = (isLoggedIn, userId) => {
     setData((prev) => ({
@@ -39,6 +44,8 @@ export const AppDataProvider = ({ children }) => {
         loadingContext: false,
         ticketsContext: tickets,
       }));
+      
+      setTicketsContextData(tickets);
     } catch (error) {
     
       setData((prev) => ({
@@ -123,7 +130,7 @@ export const AppDataProvider = ({ children }) => {
   }, [data.loggedInUsrId]);
 
   return (
-    <AppDataContext.Provider value={{ ...data, updateLoginStatus, refreshTickets }}>
+    <AppDataContext.Provider value={{ ...data, updateLoginStatus, refreshTickets , ticketsContextData, setTicketsContextData }}>
       {children}
     </AppDataContext.Provider>
   );
