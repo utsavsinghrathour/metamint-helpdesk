@@ -675,9 +675,14 @@ function robodesk_dashboard_callback()
                 );
             }
 
-            // Add search functionality
+            // Add search functionality - check if it's a ticket ID or general search
             if (!empty($search_term)) {
-                $args['s'] = $search_term;
+                // Check if search term is numeric (potential ticket ID)
+                if (is_numeric($search_term)) {
+                    $args['post__in'] = array(intval($search_term));
+                } else {
+                    $args['s'] = $search_term;
+                }
             }
 
             // Add author filter for customer search
