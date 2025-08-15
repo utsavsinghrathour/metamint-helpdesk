@@ -578,7 +578,9 @@ function showPage(pageName) {
   if (navLink) {
     navLink.classList.add("active");
   }
-  if (pageName === "ticket-detail") {
+  if (pageName === "conversation") {
+    // Load conversation view
+  } else if (pageName === "ticket-detail") {
     loadTicketDetail();
   } else if (pageName === "settings") {
     showSettingsTab("basic");
@@ -638,15 +640,17 @@ document.addEventListener("DOMContentLoaded", function () {
 });
 
 // On page load, check for paged param and show the paged tickets
-// document.addEventListener("DOMContentLoaded", function () {
-//   const params = new URLSearchParams(window.location.search);
-//   const paged = params.get("paged");
-//   if (paged) {
-//     //show page tickets and load the paged tickets
-//     showPage("tickets");
-//     loadPage(Number(paged));
-//   }
-// });
+document.addEventListener("DOMContentLoaded", function () {
+  const params = new URLSearchParams(window.location.search);
+  const paged = params.get("paged");
+  if (paged) {
+    //show page tickets and load the paged tickets
+    showPage("tickets");
+    loadPage(Number(paged));
+  }
+  // If no ticket is selected, show the dashboard
+  showPage("dashboard");
+});
 
 // Function to create category dropdown options
 function createCategoryOptions() {
