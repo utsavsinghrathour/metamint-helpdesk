@@ -580,22 +580,22 @@ if (!function_exists('rbd_log')) {
  */
 function robodesk_reply_email($comment_id, $comment)
 {
-    rbd_log("Triggered for comment ID $comment_id");
+    // rbd_log("Triggered for comment ID $comment_id");
 
     // Check if comment is approved (wp_insert_comment provides the full comment object)
     if (!$comment || !in_array($comment->comment_approved, [1, '1', 'approved'])) {
-        rbd_log("Skipped - comment ID $comment_id not found or not approved");
+        // rbd_log("Skipped - comment ID $comment_id not found or not approved");
         return;
     }
 
     if ($comment->comment_type !== 'ticket_replies') {
-        rbd_log("Skipped - comment type = " . $comment->comment_type);
+        // rbd_log("Skipped - comment type = " . $comment->comment_type);
         return;
     }
 
     $post = get_post($comment->comment_post_ID);
     if (!$post) {
-        rbd_log("No post found for comment ID $comment_id");
+        // rbd_log("No post found for comment ID $comment_id");
         return;
     }
 
@@ -604,7 +604,7 @@ function robodesk_reply_email($comment_id, $comment)
     $comment_author_email = $comment->comment_author_email;
 
     if (empty($ticket_creator_email)) {
-        rbd_log("No _robodesk_customer_email meta for post ID $post->ID");
+        // rbd_log("No _robodesk_customer_email meta for post ID $post->ID");
         return;
     }
 
@@ -613,13 +613,13 @@ function robodesk_reply_email($comment_id, $comment)
     $pure_commenter_email = filter_var($comment_author_email, FILTER_VALIDATE_EMAIL) ?: (preg_match('/<(.*?)>/', $comment_author_email, $matches) ? $matches[1] : $comment_author_email);
 
     if (!filter_var($pure_creator_email, FILTER_VALIDATE_EMAIL) || !filter_var($pure_commenter_email, FILTER_VALIDATE_EMAIL)) {
-        rbd_log("Invalid emails → Creator: $pure_creator_email | Commenter: $pure_commenter_email");
+        // rbd_log("Invalid emails → Creator: $pure_creator_email | Commenter: $pure_commenter_email");
         return;
     }
 
     // Skip if creator replies to their own ticket
     if (strtolower(trim($pure_creator_email)) === strtolower(trim($pure_commenter_email))) {
-        rbd_log("No email sent (creator replied to own ticket)");
+        // rbd_log("No email sent (creator replied to own ticket)");
         return;
     }
 
@@ -652,10 +652,10 @@ function robodesk_reply_email($comment_id, $comment)
     }
 
     // Send mail
-    rbd_log("Sending email to $to, Reply-To: $reply_to");
+    // rbd_log("Sending email to $to, Reply-To: $reply_to");
     $mail_sent = wp_mail($to, $subject, $reply_message, $headers);
 
-    rbd_log($mail_sent ? "SUCCESS - Email sent to $to" : "FAILED to send email to $to");
+    // rbd_log($mail_sent ? "SUCCESS - Email sent to $to" : "FAILED to send email to $to");
 }
 
 // Use wp_insert_comment hook instead of comment_post
