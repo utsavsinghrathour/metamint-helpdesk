@@ -383,13 +383,27 @@ function robodesk_fetch_emails()
                 'post_status'  => 'publish',
                 'post_author'  => $user_id,
                 'post_type'    => 'robodesk_ticket',
+                // add post meta of assignee
 
             ]);
 
+            if (!is_wp_error($post_id)) {
+                // Assign the ticket to a support staff member
+                $assignee = auto_assign_ticket_to_support_staff();
 
+                // If an assignee was found, add it as post meta
+                if ($assignee) {
+                    add_post_meta($post_id, 'ticket_assignee', $assignee);
+                } else {
+                    // Optional: Handle case where no assignee was found (e.g., log or set default)
+                    rbd_log('Robodesk: Failed to assign ticket ID ' . $post_id . ' - no support staff available.');
+                }
+            } else {
+                // Handle error if ticket creation failed
+                rbd_log('Robodesk: Failed to create ticket: ' . $post_id->get_error_message());
+            }
 
-
-            //if post is created successfully add a comment with email message 
+            //if post is created successfully add a comment with email message
             if ($post_id && !is_wp_error($post_id)) {
                 error_log('Successfully created ticket post with ID: ' . $post_id);
                 // Add a comment with the email message
