@@ -574,6 +574,15 @@ function robodesk_dashboard_callback()
                                     <select id="ticket-category" name="ticket_category" required class="styled-select block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
                                         <option value="">Select Category</option>
                                         <?php
+                                        $default_category_id = get_option('robodesk_default_ticket_category', '');
+                                        if (!empty($default_category_id)) {
+                                            $default_category = get_term($default_category_id, 'robodesk_ticket_category');
+                                            if ($default_category && !is_wp_error($default_category)) {
+                                                echo '<option value="' . esc_attr($default_category->term_id) . '" selected>' . esc_html($default_category->name) . '</option>';
+                                            }
+                                        }
+                                        ?>
+                                        <?php
                                         $categories = get_terms([
                                             'taxonomy' => 'robodesk_ticket_category',
                                             'hide_empty' => false,
@@ -588,7 +597,18 @@ function robodesk_dashboard_callback()
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-2">Assign to *</label>
                                     <select id="ticket-assignee" name="ticket_assignee" required class="styled-select block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
-                                        <option value="">Select Agent</option>
+                                        <?php
+                                        $default_agent = get_option('robodesk_default_agent');
+                                        ?>
+                                        <?php
+                                        $default_agent = get_option('robodesk_default_agent');
+                                        ?>
+                                        <option value="" <?php echo empty($default_agent) ? 'selected' : ''; ?>>Select Agent</option>
+                                        <?php if (!empty($default_agent)): ?>
+                                            <option value="<?php echo esc_attr($default_agent); ?>" selected>
+                                                <?php echo esc_html($default_agent); ?>
+                                            </option>
+                                        <?php endif; ?>
                                         <?php
                                         // Get users by role with display_name only
                                         $agents = get_users([
