@@ -560,64 +560,83 @@ function robodesk_imap_settings_callback()
 }
 
 
-// not working
+// Disable default WordPress notifications
+add_filter('notify_post_author', '__return_false');
+add_filter('comment_notification_recipients', '__return_empty_array');
+add_filter('comment_moderation_recipients', '__return_empty_array');
+add_filter('send_password_change_email', '__return_false');
+remove_action('after_password_reset', 'wp_password_change_notification');
 
+// Define fallback logging function
+if (!function_exists('rbd_log')) {
+    function rbd_log($message)
+    {
+        error_log("[Robodesk] $message");
+    }
+}
 
-
-// Function to handle reply emails for ticket comments
-// This function is triggered when a comment is posted
-function robodesk_reply_email($comment_id, $comment_approved)
+/**
+ * Send custom reply emails for ticket comments
+ */
+function robodesk_reply_email($comment_id, $comment)
 {
-    if (!$comment_approved) return;
+    rbd_log("Triggered for comment ID $comment_id");
 
-    $comment = get_comment($comment_id);
+    // Check if comment is approved (wp_insert_comment provides the full comment object)
+    if (!$comment || !in_array($comment->comment_approved, [1, '1', 'approved'])) {
+        rbd_log("Skipped - comment ID $comment_id not found or not approved");
+        return;
+    }
 
-    // Only process ticket replies
-    if ($comment->comment_type !== 'ticket_replies') return;
+    if ($comment->comment_type !== 'ticket_replies') {
+        rbd_log("Skipped - comment type = " . $comment->comment_type);
+        return;
+    }
 
     $post = get_post($comment->comment_post_ID);
+    if (!$post) {
+        rbd_log("No post found for comment ID $comment_id");
+        return;
+    }
 
-    // Get ticket creator email (from post meta)
-    $ticket_creator_email = get_post_meta($post->ID, 'email_from', true);
+    $ticket_creator_email = get_post_meta($post->ID, '_robodesk_customer_email', true);
     $email_message_id = get_post_meta($post->ID, 'email_message_id', true);
     $comment_author_email = $comment->comment_author_email;
 
-    // Clean the emails (remove <> if present)
-    preg_match('/<(.*?)>/', $ticket_creator_email, $matches);
-    $pure_creator_email = $matches[1] ?? $ticket_creator_email;
+    if (empty($ticket_creator_email)) {
+        rbd_log("No _robodesk_customer_email meta for post ID $post->ID");
+        return;
+    }
 
-    preg_match('/<(.*?)>/', $comment_author_email, $matches);
-    $pure_commenter_email = $matches[1] ?? $comment_author_email;
+    // Clean and validate emails
+    $pure_creator_email = filter_var($ticket_creator_email, FILTER_VALIDATE_EMAIL) ?: (preg_match('/<(.*?)>/', $ticket_creator_email, $matches) ? $matches[1] : $ticket_creator_email);
+    $pure_commenter_email = filter_var($comment_author_email, FILTER_VALIDATE_EMAIL) ?: (preg_match('/<(.*?)>/', $comment_author_email, $matches) ? $matches[1] : $comment_author_email);
 
-    // Validate emails
     if (!filter_var($pure_creator_email, FILTER_VALIDATE_EMAIL) || !filter_var($pure_commenter_email, FILTER_VALIDATE_EMAIL)) {
-        error_log("Invalid emails: Creator - $pure_creator_email | Commenter - $pure_commenter_email");
+        rbd_log("Invalid emails → Creator: $pure_creator_email | Commenter: $pure_commenter_email");
         return;
     }
 
-    //  If the ticket creator is commenting on their own ticket, skip
-    if (strtolower($pure_creator_email) === strtolower($pure_commenter_email)) {
-        error_log("No email sent: Ticket creator commented on their own ticket.");
+    // Skip if creator replies to their own ticket
+    if (strtolower(trim($pure_creator_email)) === strtolower(trim($pure_commenter_email))) {
+        rbd_log("No email sent (creator replied to own ticket)");
         return;
     }
 
-    //  Someone else commented → send email to ticket creator
+    // Prepare email
     $to = $pure_creator_email;
     $reply_to = $pure_commenter_email;
     $subject = 'Re: ' . $post->post_title;
-    $comment_content = $comment->comment_content;
-
-
+    $content = $comment->comment_content;
     $user = get_user_by('email', $pure_creator_email);
     $user_name = $user ? $user->display_name : $pure_creator_email;
-
     $ticket_url = esc_url(admin_url("post.php?post=$post->ID&action=edit"));
 
     $reply_message = '<html><body>';
-    $reply_message .= '<p>Hi ' . esc_html($user_name) . '</p>';
+    $reply_message .= '<p>Hi ' . esc_html($user_name) . ',</p>';
     $reply_message .= '<p>A new reply has been added to your ticket <a href="' . $ticket_url . '">#' . esc_html($post->ID) . '</a>.</p>';
-    $reply_message .= '<p>"' . nl2br(esc_html($comment_content)) . '"</p>';
-    $reply_message .= '<p><a href="' . $ticket_url . '" style="display: inline-block; padding: 10px 20px; background-color: #0073aa; color: #ffffff; text-decoration: none; border-radius: 5px;">Reply</a></p>';
+    $reply_message .= '<blockquote style="border-left:3px solid #ccc;padding-left:10px;">' . nl2br(esc_html($content)) . '</blockquote>';
+    $reply_message .= '<p><a href="' . $ticket_url . '" style="display:inline-block;padding:10px 20px;background-color:#0073aa;color:#ffffff;text-decoration:none;border-radius:5px;">Reply</a></p>';
     $reply_message .= '</body></html>';
 
     $headers = [
@@ -626,36 +645,18 @@ function robodesk_reply_email($comment_id, $comment_approved)
         'MIME-Version: 1.0',
         'Content-Type: text/html; charset=UTF-8'
     ];
+
     if ($email_message_id) {
         $headers[] = 'References: ' . $email_message_id;
         $headers[] = 'In-Reply-To: ' . $email_message_id;
     }
 
-    error_log("Email sending to ticket creator: $to");
-
+    // Send mail
+    rbd_log("Sending email to $to, Reply-To: $reply_to");
     $mail_sent = wp_mail($to, $subject, $reply_message, $headers);
 
-    if (!$mail_sent) {
-        error_log("Failed to send email to $to");
-    } else {
-        error_log("Email sent to $to");
-    }
+    rbd_log($mail_sent ? "SUCCESS - Email sent to $to" : "FAILED to send email to $to");
 }
-// Hook to send email when a comment is posted
+
+// Use wp_insert_comment hook instead of comment_post
 add_action('wp_insert_comment', 'robodesk_reply_email', 10, 2);
-
-
-
-
-
-
-
-
-
-
-
-
-
-// Disable default WordPress notifications for new users and password changes
-add_filter('send_password_change_email', '__return_false');
-remove_action('after_password_reset', 'wp_password_change_notification');
