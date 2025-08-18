@@ -646,7 +646,6 @@ document.addEventListener("DOMContentLoaded", function () {
   if (paged) {
     //show page tickets and load the paged tickets
     showPage("tickets");
-    loadPage(Number(paged));
   }
   // If no ticket is selected, show the dashboard
   showPage("dashboard");
