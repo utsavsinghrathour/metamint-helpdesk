@@ -1249,6 +1249,11 @@ function auto_assign_ticket_to_support_staff()
                     'key' => 'ticket_assignee',
                     'value' => $staff->display_name,
                     'compare' => '='
+                ),
+                array(
+                    'key' => '_robodesk_ticket_status',
+                    'value' => array('open', 'in-progress'),
+                    'compare' => 'IN'
                 )
             ),
             'numberposts' => -1,
