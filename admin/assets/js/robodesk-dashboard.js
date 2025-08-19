@@ -276,7 +276,7 @@ function editAssignee(ticketId, element) {
     }
 
     // Here you would typically send an AJAX request to update the assignee on the server
-    console.log(`Updated ticket ${ticketId} assignee to: ${newAssignee}`);
+    showToast(`Updated ticket ${ticketId} assignee to: ${newAssignee}`);
 
     // You can add your server update logic here
     // updateTicketAssignee(ticketId, newAssignee);
@@ -696,7 +696,7 @@ function updateTicketCategory(ticketId, categoryId) {
     },
     success: function (response) {
       if (response.success) {
-        console.log("Category updated successfully");
+        // console.log("Category updated successfully");
         // Use your existing showToast function
         showToast("Category updated successfully", "success");
       } else {
@@ -1054,7 +1054,7 @@ jQuery(document).ready(function ($) {
         robodesk_imap_auth: $form.find("#robodesk_imap_auth").val(),
       },
       success: function (response) {
-        console.log(response); // Debug response
+        // console.log(response); // Debug response
         if (response.success) {
           showToast(response.data.message, "success");
         } else {
@@ -1062,7 +1062,7 @@ jQuery(document).ready(function ($) {
         }
       },
       error: function (xhr, status, error) {
-        console.log("AJAX Error:", xhr, status, error);
+        // console.log("AJAX Error:", xhr, status, error);
         showToast("AJAX request failed: " + error, "error");
       },
       complete: function () {
@@ -1096,7 +1096,7 @@ jQuery(document).ready(function ($) {
         templates: templates,
       },
       success: function (response) {
-        console.log(response); // Debug response
+        // console.log(response); // Debug response
         if (response.success) {
           showToast(response.data.message, "success");
         } else {
@@ -1104,7 +1104,7 @@ jQuery(document).ready(function ($) {
         }
       },
       error: function (xhr, status, error) {
-        console.log("AJAX Error:", xhr, status, error);
+        // console.log("AJAX Error:", xhr, status, error);
         showToast("AJAX request failed: " + error, "error");
       },
       complete: function () {
@@ -1141,7 +1141,7 @@ jQuery(document).ready(function ($) {
         settings: settings,
       },
       success: function (response) {
-        console.log(response); // Debug response
+        // console.log(response); // Debug response
         if (response.success) {
           showToast(response.data.message, "success");
         } else {
@@ -1149,7 +1149,7 @@ jQuery(document).ready(function ($) {
         }
       },
       error: function (xhr, status, error) {
-        console.log("AJAX Error:", xhr, status, error);
+        // console.log("AJAX Error:", xhr, status, error);
         showToast("AJAX request failed: " + error, "error");
       },
       complete: function () {
@@ -1278,7 +1278,7 @@ jQuery(document).ready(function ($) {
       processData: false,
       contentType: false,
       success: function (response) {
-        console.log(response);
+        // console.log(response);
         if (response.success) {
           // Update hidden inputs with new media URLs
           if (response.data.urls) {
@@ -1322,12 +1322,12 @@ jQuery(document).ready(function ($) {
           showToast(response.data.message, "error");
           // Log detailed errors for debugging
           if (response.data.details) {
-            console.log("Detailed errors:", response.data.details);
+            // console.log("Detailed errors:", response.data.details);
           }
         }
       },
       error: function (xhr, status, error) {
-        console.log("AJAX Error:", xhr, status, error);
+        // console.log("AJAX Error:", xhr, status, error);
         showToast("AJAX request failed: " + error, "error");
       },
       complete: function () {
@@ -1416,7 +1416,7 @@ jQuery(document).ready(function ($) {
         }
       },
       error: function (xhr, status, error) {
-        console.log("AJAX Error:", xhr, status, error);
+        // console.log("AJAX Error:", xhr, status, error);
         showToast("AJAX request failed: " + error, "error");
       },
       complete: function () {
@@ -1487,7 +1487,7 @@ jQuery(document).ready(function ($) {
         }
       },
       error: function (xhr, status, error) {
-        console.log("AJAX Error:", xhr, status, error);
+        // console.log("AJAX Error:", xhr, status, error);
         showToast("Failed to create ticket: " + error, "error");
       },
       complete: function () {
@@ -1524,7 +1524,7 @@ function updateTicketStatus(ticketId, newStatus) {
           return;
         }
 
-        console.log(response);
+        // console.log(response);
 
         const updatedStatus = response.data.status;
         const updatedTime = response.data.updated;
