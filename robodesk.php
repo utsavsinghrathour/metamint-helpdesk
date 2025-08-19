@@ -93,7 +93,7 @@ function robodesk_enqueue_scripts()
             'add_credential_nonce' => wp_create_nonce('robodesk_add_credential_nonce'),
             'delete_credential_nonce' => wp_create_nonce('robodesk_delete_credential_nonce'),
 
-  
+
         ));
 
         // Enqueue React script
@@ -134,11 +134,11 @@ function robodesk_enqueue_scripts()
                 'taxonomy' => 'robodesk_ticket_priority',
                 'hide_empty' => false,
             )),
-            
+
             'wpAjax' => [
                 'nonce' => wp_create_nonce('robodesk-nonce'),
                 'ajaxUrl' => admin_url('admin-ajax.php'),
-                
+
             ],
         ));
 
@@ -453,7 +453,7 @@ add_filter('rest_prepare_comment', function ($response, $comment, $request) {
 
     if (!is_wp_error($response) && $response instanceof WP_REST_Response) {
         $data = $response->get_data();
-        
+
         // var_dump($request->get_params());
 
         //plain text
@@ -465,9 +465,9 @@ add_filter('rest_prepare_comment', function ($response, $comment, $request) {
         $now_local = current_time('timestamp');
 
         $diff = $now_local - $comment_time_local;
-        
+
         $comment_action_meta = get_comment_meta($comment->comment_ID, 'is_action', true);
-        
+
         $data['comment_action'] = $comment_action_meta == '1' ? true : false;
 
         $human_readable_time = $diff < 5 ? 'just now' : human_time_diff($comment_time_local, $now_local) . ' ago';
@@ -486,6 +486,19 @@ add_filter('rest_prepare_comment', function ($response, $comment, $request) {
         );
 
         $response->set_data($data);
+
+        // ✅ Check if the request is from your site
+        $site_url   = site_url();
+        $referer    = $request->get_header('referer');
+        $origin     = $request->get_header('origin');
+
+        if (
+            (!empty($referer) && strpos($referer, $site_url) === 0) ||
+            (!empty($origin) && strpos($origin, $site_url) === 0)
+        ) {
+
+            update_post_meta($comment->comment_post_ID, 'rbd_all_seen', 'yes');
+        }
     }
     return $response;
 }, 10, 3);
@@ -521,23 +534,29 @@ function robodesk_comment_creation_on_insert($comment_ID, $comment_object)
     $meta_value = is_admin() ? 'yes' : 'no';
 
     update_comment_meta($comment_ID, 'admin_comment', $meta_value);
+
+    if ($meta_value == 'yes' && $ticketId) {
+        update_post_meta($ticketId, 'rbd_all_seen', 'no');
+    }
 }
 
+//####SEEN######/
+//When user make comment from frontend 
+//When admin makes comment from backend and user receives messages from sse(Server Sent Events)
+//As soon as user opens a single tikcet need to make api request mark all messages as seen
+// ==> Update to robodesk_tikcet representing all messages are seen
 
-// function dequeue_jquery_migrate( $scripts ) {
-//     if ( ! is_admin() && isset( $scripts->registered['jquery'] ) ) {
-//         $scripts->registered['jquery']->deps = array_diff(
-//             $scripts->registered['jquery']->deps,
-//             array( 'jquery-migrate' )
-//         );
-//     }
-// }
-// add_action( 'wp_default_scripts', 'dequeue_jquery_migrate' );
-function disable_jquery_migrate_logging( $scripts ) {
-    if ( ! is_admin() && isset( $scripts->registered['jquery-migrate'] ) ) {
+//##UNSEEN##//
+//When admin makes comment from backend but the user did not receive from sse
+//When user opens the conversation
+
+
+
+
+function disable_jquery_migrate_logging($scripts)
+{
+    if (! is_admin() && isset($scripts->registered['jquery-migrate'])) {
         $scripts->registered['jquery-migrate']->src = '';
     }
 }
-add_action( 'wp_default_scripts', 'disable_jquery_migrate_logging' );
-
-
+add_action('wp_default_scripts', 'disable_jquery_migrate_logging');

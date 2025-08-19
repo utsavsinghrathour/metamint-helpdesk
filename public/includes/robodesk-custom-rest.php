@@ -263,14 +263,7 @@ function robodesk_stream($request)
     set_time_limit(0);
     ignore_user_abort(false);
 
-    // //Handshake
-    // echo "event: handshake\n";
-    // echo "data: " . json_encode(array(
-    //     'status' => 'connected',
-    //     'timestamp' => time(),
-    //     'stream' => $type,
-    // )) . "\n\n";
-    // flush();
+
 
     switch ($type) {
         case ('comments'):
@@ -294,24 +287,22 @@ function robodesk_stream($request)
                     flush();
                 }
             }
+            if (!empty(robodesk_get_new_notifications($user_id))) {
+                echo "event: new_notification\n";
+                echo "data: " . json_encode(robodesk_get_new_notifications($user_id)) . "\n\n";
+                flush();
+            }
 
-            // echo "event: new_ticket\n";
-            // echo "data: " . json_encode(array(
-            //     'status' => 'connected',
-            //     'timestamp' => time(),
-            //     'data' => 'We have a new ticket',
-            // )) . "\n\n";
-            // flush();
+
             break;
 
         case ('notifications'):
-            echo "event: new_notification\n";
-            echo "data: " . json_encode(array(
-                'status' => 'connected',
-                'timestamp' => time(),
-                'data' => 'We have a new notification',
-            )) . "\n\n";
-            flush();
+
+            // if (!empty(robodesk_get_new_notifications($user_id))) {
+            //     echo "event: new_notification\n";
+            //     echo "data: " . json_encode(robodesk_get_new_notifications($user_id)) . "\n\n";
+            //     flush();
+            // }
             break;
         default:
             echo "event: error\n";
@@ -326,6 +317,28 @@ function robodesk_stream($request)
 }
 
 
+function robodesk_get_new_notifications($user_id)
+{
+    // Get all tickets newer than last_id_client
+    $notifications_data = get_posts(array(
+        'post_type'      => 'robodesk_ticket',
+        'post_status'    => 'publish',
+        'author'         => $user_id,
+        'orderby'        => 'date',
+        'order'          => 'DESC',
+        'fields'         => 'ids',
+        'posts_per_page' => 4,
+        'meta_query'     => array(
+            array(
+                'key'     => 'rbd_all_seen',
+                'value'   => 'no',
+                'compare' => '='
+            )
+        )
+    ));
+
+    return $notifications_data;
+}
 
 function robodesk_get_new_tickets($last_id_client, $user_id)
 {
@@ -400,6 +413,7 @@ function robodesk_get_new_tickets($last_id_client, $user_id)
             'ticket_author_image'   => $author_image,
             'ticket_time_ago'       => $time_diff,
             'ticket_total_comments' => $total_comments,
+            'ticket_notifications' => 'yes',
             'ticket_comments'       => $formatted_comments,
             'ticket_last_reply'     => $last_reply
         ];
@@ -518,10 +532,12 @@ function robodesk_live_comments($request)
 
         if (!empty($new_admin_comments)) {
             foreach ($new_admin_comments as $comment) {
+
                 echo "event: new_comment\n";
                 echo "data: " . json_encode($comment) . "\n\n";
                 flush();
             }
+            update_post_meta($ticket_id, 'rbd_all_seen', 'yes');
         } else {
             echo "event: disconnect\n";
             echo "data: " . json_encode(array('reason' => 'timeout')) . "\n\n";

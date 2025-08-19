@@ -12,10 +12,8 @@ const ActiveFeatured = ({ onNoticeSelect }) => {
   const [error, setError] = useState(null);
   const [isVisible, setIsVisible] = useState(false);
 
-
   // Fetch active and featured notices
   useEffect(() => {
-//   console.log('Hoem:',wpHomeUrl);
     const fetchNotices = async () => {
       try {
         setIsLoading(true);
@@ -62,30 +60,32 @@ const ActiveFeatured = ({ onNoticeSelect }) => {
   return (
     <div
       className={`rd-active-featured rd-position-relative ${
-        !isVisible || isLoading || error || notices.length === 0 ? 'rd-hidden' : ''
+        !isVisible || isLoading || error || notices.length === 0
+          ? 'rd-hidden'
+          : ''
       } ${isVisible ? 'rd-fade-in' : ''}`}
     >
       {error ? (
-        <p className="rd-text-red rd-body-text">Error: {error}</p>
+        <p className='rd-text-red rd-body-text'>Error: {error}</p>
       ) : (
         notices.length > 0 && (
           <>
             <button
-              className="rd-close-all-button rd-bg-transparent rd-border-none rd-cursor-pointer rd-text-gray-600 hover:rd-text-gray-800 rd-p-0"
+              className='rd-close-all-button rd-bg-transparent rd-border-none rd-cursor-pointer rd-text-gray-600 hover:rd-text-gray-800 rd-p-0'
               onClick={handleCloseAllNotices}
-              title="Close all notices"
+              title='Close all notices'
             >
               <FaTimes />
             </button>
-            <div className="rd-flex rd-flex-col">
+            <div className='rd-flex rd-flex-col'>
               {notices.map((notice) => (
                 <h5
                   key={notice.id}
-                  className="rd-notice-title sub-text rd-cursor-pointer rd-p-20 rd-flex rd-align-center rd-gap-10"
+                  className='rd-notice-title sub-text rd-cursor-pointer rd-p-20 rd-flex rd-align-center rd-gap-10'
                   onClick={() => handleNoticeClick(notice)}
                 >
-                  <div className="featured-notice-icon">
-                    <img src={Bell} alt="Bell icon" className="rd-bell-gif" />
+                  <div className='featured-notice-icon'>
+                    <img src={Bell} alt='Bell icon' className='rd-bell-gif' />
                   </div>
                   {notice.title.rendered}
                 </h5>

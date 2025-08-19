@@ -1,184 +1,318 @@
 .rd-message-tab .rd-search-header {
-  padding: 20px;
+    padding: 20px;
 }
+
 .single-rd-ticket {
-  padding: 16px 20px;
+    padding: 16px 20px;
 }
+
 .rd-tickets .single-ticket-title {
-  padding: 0 20px;
-  margin-bottom: 5px;
+    padding: 0 20px;
+    margin-bottom: 5px;
 }
+
 /* .rd-tickets {
   margin: 24px 0;
 } */
 .rd-closed-tickets {
-  margin-bottom: 0;
+    margin-bottom: 0;
 }
+
 .single-rd-active-ticket svg {
-  height: 15px;
-  width: 15px;
+    height: 15px;
+    width: 15px;
 }
+
 .rd-messge-wrapper {
-  max-height: 320px;
-  overflow: auto;
-  min-height: 220px;
+    max-height: 320px;
+    overflow: auto;
+    min-height: 220px;
 }
-.rd-messge-wrapper .rd-send-message{
-      position: absolute;
+
+.rd-messge-wrapper .rd-send-message {
+    position: absolute;
     bottom: 100px;
     left: 50%;
     transform: translate(-50%, 00%);
     width: 100%;
 }
-.single-ticket-header img{
-  max-width: 100px;
-  object-fit: contain;
+
+.single-ticket-header img {
+    max-width: 100px;
+    object-fit: contain;
 }
+
 .rd-send-message a {
-  width: fit-content;
-  margin: auto;
+    width: fit-content;
+    margin: auto;
 }
+
 .chat-message.recieved .single-message {
-  border: 1px solid #eee;
-  display: flex;
-  align-items: center;
-  padding: 8px 16px;
-  border-radius: 10px;
+    border: 1px solid #eee;
+    display: flex;
+    align-items: center;
+    padding: 8px 16px;
+    border-radius: 10px;
 }
-.chat-message.sent{
-  margin-left: auto;
+
+.chat-message.sent {
+    margin-left: auto;
     gap: 10px;
 }
-.chat-message .message-content{
-  display: flex;
-  flex-direction: column;
+
+.chat-message .message-content {
+    display: flex;
+    flex-direction: column;
 }
-.chat-message.sent .message-content *{
-  color: #fff !important;
+
+.chat-message.sent .message-content * {
+    color: #fff !important;
 }
+
 .chat-container {
-  overflow: auto;
-  /* max-height: 300px; */
+    overflow: auto;
+    /* max-height: 300px; */
 }
-.chat-input .rd-preview-image{
-  width: 50px;
-  position: absolute;
-  right: 130px;
-  top: auto;
-  bottom: 12px;
-  height: 50px;
-  object-fit: contain;
+
+.chat-input .rd-preview-image {
+    width: 50px;
+    position: absolute;
+    right: 130px;
+    top: auto;
+    bottom: 12px;
+    height: 50px;
+    object-fit: contain;
 }
+
 .chat-input textarea::placeholder {
-  font-size: 12px;
-  font-weight: 400;
+    font-size: 12px;
+    font-weight: 400;
 }
-.chat-message .rd-comment-img{
-  margin: 10px auto;
-  display: flex;
+
+.chat-message .rd-comment-img {
+    margin: 10px auto;
+    display: flex;
 }
-.chat-input.has-preview textarea{
-  max-width: 55%;
+
+.chat-input.has-preview textarea {
+    max-width: 55%;
 }
+
 .chat-input textarea {
-  max-height: 50px;
-  overflow-y: auto;
+    max-height: 50px;
+    overflow-y: auto;
 }
+
 .emoji-picker-wrap {
-  height: fit-content;
+    height: fit-content;
 }
+
 .remove-preview {
-  right: 125px;
-  top: auto;
-  bottom: 50px;
-  background-color: #000;
-  display: flex;
-  border-radius: 50%;
-  color: #fff;
-  height: 18px;
-  width: 18px;
-  align-items: center;
-  justify-content: center;
+    right: 125px;
+    top: auto;
+    bottom: 50px;
+    background-color: #000;
+    display: flex;
+    border-radius: 50%;
+    color: #fff;
+    height: 18px;
+    width: 18px;
+    align-items: center;
+    justify-content: center;
 }
+
 .active-ticket-tab {
-  border-bottom: 2px solid var(--primary-blue) !important;
-  color: var(--primary-blue) !important;
+    border-bottom: 2px solid var(--primary-blue) !important;
+    color: var(--primary-blue) !important;
 }
-.rd-urgent{
-  color: rgba(234, 0, 72, 1) !important;
-  background-color: rgba(255, 216, 228, 1);
+
+.rd-urgent {
+    color: rgba(234, 0, 72, 1) !important;
+    background-color: rgba(255, 216, 228, 1);
 }
+
 .rd-medium {
-  color: rgba(0, 74, 255, 1) !important;
-  background-color: rgba(182, 203, 255, 1);
+    color: rgba(0, 74, 255, 1) !important;
+    background-color: rgba(182, 203, 255, 1);
 }
+
 .rd-low {
-  color: rgba(0, 99, 34, 1) !important;
-  background-color: rgba(216, 255, 227, 1);
+    color: rgba(0, 99, 34, 1) !important;
+    background-color: rgba(216, 255, 227, 1);
 }
-.rd-priority{
+
+.rd-priority {
     padding: 2px 6px;
     border-radius: 20px;
     font-size: 10px !important;
 }
+
 .rd-message-tab-content input,
 .rd-message-tab-content select {
-  min-width: 150px;
-  font-weight: 500 !important;
+    min-width: 150px;
+    font-weight: 500 !important;
 }
-.rd-message-tab-content input::placeholder{
-  color: #84818a !important;
+
+.rd-message-tab-content input::placeholder {
+    color: #84818a !important;
 }
+
 .rd-message-tab-content select,
-.rd-message-tab-content input::placeholder{
+.rd-message-tab-content input::placeholder {
     font-size: 14px;
     color: rgba(85, 85, 85, 1);
 }
-.rd-single-ticket .chat-container{
-  /* min-height: 370px; */
-  min-height: 355px;
-  height: 45vh;
-}
-.rd-preloader{
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-}
-.rd-message-list-wrap{
-  max-width: 95%;
-}
-.rd-message-image-preview img{
-  max-height: 35px;
-  max-width: 35px;
-}
-.rd-message-image-preview{
-  position: absolute;
-  bottom: -10px;
-  right: 135px;
-}
-.rd-message-image-preview + .rd-flex textarea{
-  max-width: 60%;
-}
-.emoji-picker-wrap .epr-category-nav{
-  padding: 10px;
-}
-.rd-message-list-header img{
-  height: 40px;
-  width: 40px;
-}
-.rd-search-header.rd-message-list-header{
-  padding: 10px;
+
+.rd-single-ticket .chat-container {
+    /* min-height: 370px; */
+    min-height: 355px;
+    height: 45vh;
 }
 
-.rd-is-action{
+.rd-preloader {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+.rd-message-list-wrap {
+    max-width: 95%;
+}
+
+.rd-message-image-preview img {
+    max-height: 35px;
+    max-width: 35px;
+}
+
+.rd-message-image-preview {
+    position: absolute;
+    bottom: -10px;
+    right: 135px;
+}
+
+.rd-message-image-preview+.rd-flex textarea {
+    max-width: 60%;
+}
+
+.emoji-picker-wrap .epr-category-nav {
+    padding: 10px;
+}
+
+.rd-message-list-header img {
+    height: 40px;
+    width: 40px;
+}
+
+.rd-search-header.rd-message-list-header {
+    padding: 10px;
+}
+
+.rd-is-action {
     color: red;
 }
 
-.rd-comment-img{
+.rd-comment-img {
 
     max-width: 150px;
     max-height: 150px;
     object-fit: contain;
     /* border-radius: ; */
+}
+
+/* For notification red dot */
+/* Must remove this later  */
+.rd-title-with-dot {
+    position: relative;
+    display: inline-block;
+}
+
+.rd-title-with-dot::after {
+    content: "";
+    position: absolute;
+    top: -2px;
+    /* adjust vertically */
+    right: -8px;
+    /* adjust horizontally for spacing */
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background-color: red;
+}
+
+/* Skeleton Loader Styles */
+.rd-skeleton-container {
+    width: 100%;
+}
+
+.rd-skeleton-message {
+    animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+    0% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.6;
+    }
+
+    100% {
+        opacity: 1;
+    }
+}
+
+.rd-skeleton-avatar {
+    animation: pulse 1.5s ease-in-out infinite;
+}
+
+.rd-skeleton-content {
+    position: relative;
+    overflow: hidden;
+}
+
+.rd-skeleton-content::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    transform: translateX(-100%);
+    background: linear-gradient(90deg,
+            rgba(255, 255, 255, 0) 0,
+            rgba(255, 255, 255, 0.2) 20%,
+            rgba(255, 255, 255, 0.5) 60%,
+            rgba(255, 255, 255, 0));
+    animation: shimmer 2s infinite;
+}
+
+@keyframes shimmer {
+    100% {
+        transform: translateX(100%);
+    }
+}
+
+.rd-skeleton-text,
+.rd-skeleton-time {
+    position: relative;
+    overflow: hidden;
+}
+
+.rd-skeleton-text::after,
+.rd-skeleton-time::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    transform: translateX(-100%);
+    background: linear-gradient(90deg,
+            rgba(255, 255, 255, 0) 0,
+            rgba(255, 255, 255, 0.1) 20%,
+            rgba(255, 255, 255, 0.3) 60%,
+            rgba(255, 255, 255, 0));
+    animation: shimmer 2s infinite;
 }

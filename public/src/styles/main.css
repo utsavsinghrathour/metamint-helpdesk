@@ -1,417 +1,508 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap');
+
 :root {
-  /* Global CSS variables */
-  --primary-blue: #004aff;
-  --title-color: rgba(51, 51, 51, 1);
-  --body-text: rgba(85, 85, 85, 1);
-  --border-light-gray: rgba(238, 238, 238, 1);
-  --border-rounded: 50px;
-  --border-none: 0;
-  --icon-dark: rgba(51, 51, 51, 1);
+    /* Global CSS variables */
+    --primary-blue: #004aff;
+    --title-color: rgba(51, 51, 51, 1);
+    --body-text: rgba(85, 85, 85, 1);
+    --border-light-gray: rgba(238, 238, 238, 1);
+    --border-rounded: 50px;
+    --border-none: 0;
+    --icon-dark: rgba(51, 51, 51, 1);
 }
-html{
-  font-size: 16px;
+
+html {
+    font-size: 16px;
 }
+
 .robodesk-plugin::-webkit-scrollbar {
-  width: 3px; 
-  height: 3px;
+    width: 3px;
+    height: 3px;
 }
 
 .robodesk-plugin::-webkit-scrollbar-thumb {
-  background-color: #004aff;
-  border-radius: 10px;
+    background-color: #004aff;
+    border-radius: 10px;
 }
-.rd-main-content{
-  /* min-height: 468px; */
+
+.rd-main-content {
+    /* min-height: 468px; */
 }
-.rd-main-content.no-footer{
-  /* min-height: 530px; */
+
+.rd-main-content.no-footer {
+    /* min-height: 530px; */
 }
-.expanded .rd-main-content.no-footer{
-  /* min-height: 570px; */
+
+.expanded .rd-main-content.no-footer {
+    /* min-height: 570px; */
 }
-.expanded .single-faq-content{
-  /* max-height: 500px; */
+
+.expanded .single-faq-content {
+    /* max-height: 500px; */
 }
+
 .robodesk-plugin::-webkit-scrollbar-track {
-  background: transparent;
+    background: transparent;
 }
-*{
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-  font-optical-sizing: auto;
-  font-style: normal;
-  letter-spacing: 0 !important;
-  border: 0;
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-optical-sizing: auto;
+    font-style: normal;
+    letter-spacing: 0 !important;
+    border: 0;
 }
-*:focus-visible{
-  outline: none;
+
+*:focus-visible {
+    outline: none;
 }
-.robodesk-plugin *:not(i){
-  font-family: "Inter", sans-serif !important;
-  scrollbar-width: thin;
-  scrollbar-color: #004aff transparent;
+
+.robodesk-plugin *:not(i) {
+    font-family: "Inter", sans-serif !important;
+    scrollbar-width: thin;
+    scrollbar-color: #004aff transparent;
 }
-.err_msg{
-  color: red;
-  font-weight: 500;
-  font-size: 14px;
+
+.err_msg {
+    color: red;
+    font-weight: 500;
+    font-size: 14px;
 }
+
 /* h1, h2, h3, h4, h5, h6, p, span, a, input, input::placeholder, textarea, textarea::placeholder, select{
 
 } */
-.robodesk-plugin{
-  z-index: 9999999 !important;
+.robodesk-plugin {
+    z-index: 9999999 !important;
 }
-button.no-bg, .button.no-bg{
-  background-color: transparent;
-  border-radius: 10px;
-  color: var(--primary-blue);
-  font-size: 14px;
-  line-height: 18px;
-  border: 1px solid var(--primary-blue);
-  font-weight: 400;
-  padding: 10px 12px;
-  text-decoration: none;
+
+button.no-bg,
+.button.no-bg {
+    background-color: transparent;
+    border-radius: 10px;
+    color: var(--primary-blue);
+    font-size: 14px;
+    line-height: 18px;
+    border: 1px solid var(--primary-blue);
+    font-weight: 400;
+    padding: 10px 12px;
+    text-decoration: none;
 }
-.rd-overflow-h-320
-{
-  /* max-height: 300px; */
-  height: 30vh;
-  overflow: auto;
+
+.rd-overflow-h-320 {
+    /* max-height: 300px; */
+    height: 30vh;
+    overflow: auto;
 }
-.rd-m-auto{
-  margin: auto;
+
+.rd-m-auto {
+    margin: auto;
 }
-.rd-decoration-none{
-  text-decoration: none;
+
+.rd-decoration-none {
+    text-decoration: none;
 }
-.rd-header-logo{
-  max-width: 100px;
- object-fit: contain; 
+
+.rd-header-logo {
+    max-width: 100px;
+    object-fit: contain;
 }
-.rd-main-header-logo{
-  max-width: 50px;
-  max-height: 40px;
+
+.rd-main-header-logo {
+    max-width: 50px;
+    max-height: 40px;
 }
+
 .rd-header-logo img:not(.rd-faq-header img),
-.default-logo img
-{
-  height: 30px;
+.default-logo img {
+    height: 30px;
 }
+
 .rd-faq-header img,
 .single-faq-header img,
-.single-ticket-header img
-{
-  height: 40px;
+.single-ticket-header img {
+    height: 40px;
 }
+
 .rd-flex {
-  display: flex;
+    display: flex;
 }
-.flex-1{
-  flex: 1;
+
+.flex-1 {
+    flex: 1;
 }
-.flex-2{
-  flex: 2;
+
+.flex-2 {
+    flex: 2;
 }
-.icon-dark svg{
-  fill: var(--icon-dark);
+
+.icon-dark svg {
+    fill: var(--icon-dark);
 }
+
 .rd-justify-between {
-  justify-content: space-between;
+    justify-content: space-between;
 }
 
 .rd-justify-center {
-  justify-content: center;
+    justify-content: center;
 }
 
 .rd-justify-start {
-  justify-content: flex-start;
+    justify-content: flex-start;
 }
 
 .rd-justify-end {
-  justify-content: flex-end;
+    justify-content: flex-end;
 }
 
 .rd-align-center {
-  align-items: center;
+    align-items: center;
 }
 
 .rd-align-start {
-  align-items: flex-start;
+    align-items: flex-start;
 }
 
 .rd-align-end {
-  align-items: flex-end;
+    align-items: flex-end;
 }
 
 .rd-flex-col {
-  flex-direction: column;
+    flex-direction: column;
 }
 
 .rd-flex-row {
-  flex-direction: row;
+    flex-direction: row;
 }
 
 .rd-gap-5 {
-  gap: 5px;
+    gap: 5px;
 }
-.rd-gap-8{
-  gap: 8px;
+
+.rd-gap-8 {
+    gap: 8px;
 }
+
 .rd-gap-10 {
-  gap: 10px;
+    gap: 10px;
 }
 
 .rd-gap-15 {
-  gap: 15px;
+    gap: 15px;
 }
-.rd-gap-20{
-  gap: 20px;
+
+.rd-gap-20 {
+    gap: 20px;
 }
-.rd-pt-0{
-  padding-top: 0 !important;
+
+.rd-pt-0 {
+    padding-top: 0 !important;
 }
-.rd-p-0{
-  padding: 0 !important;
+
+.rd-p-0 {
+    padding: 0 !important;
 }
+
 .rd-p-5 {
-  padding: 5px;
+    padding: 5px;
 }
-.rd-py-15{
-  padding-top: 15px;
-  padding-bottom: 15px;
+
+.rd-py-15 {
+    padding-top: 15px;
+    padding-bottom: 15px;
 }
+
 .rd-p-10 {
-  padding: 10px;
+    padding: 10px;
 }
-.rd-p-20{
-  padding: 20px;
+
+.rd-p-20 {
+    padding: 20px;
 }
-.rd-p-12{
-  padding: 12px;
+
+.rd-p-12 {
+    padding: 12px;
 }
-.rd-px-20{
-  padding-left: 20px;
-  padding-right: 20px;
+
+.rd-px-20 {
+    padding-left: 20px;
+    padding-right: 20px;
 }
-.rd-px-18{
-padding-left: 18px;
-padding-right: 18px;
+
+.rd-px-18 {
+    padding-left: 18px;
+    padding-right: 18px;
 }
-.rd-py-10{
-  padding-top: 10px;
-  padding-bottom: 10px;
+
+.rd-py-10 {
+    padding-top: 10px;
+    padding-bottom: 10px;
 }
-.rd-m-0{
-  margin: 0;
+
+.rd-m-0 {
+    margin: 0;
 }
+
 .rd-m-5 {
-  margin: 5px;
+    margin: 5px;
 }
-.rd-mt-5{
-  margin-top: 5px;
+
+.rd-mt-5 {
+    margin-top: 5px;
 }
-.rd-mt-8{
-  margin-top: 8px;
+
+.rd-mt-8 {
+    margin-top: 8px;
 }
+
 .rd-m-10 {
-  margin: 10px;
+    margin: 10px;
 }
-.rd-my-20{
-  margin-top: 20px;
-  margin-bottom: 20px;
+
+.rd-my-20 {
+    margin-top: 20px;
+    margin-bottom: 20px;
 }
-.rd-my-30{
-  margin-top: 30px;
-  margin-bottom: 30px;
+
+.rd-my-30 {
+    margin-top: 30px;
+    margin-bottom: 30px;
 }
-.rd-mt-20{
-  margin-top: 20px;
+
+.rd-mt-20 {
+    margin-top: 20px;
 }
-.rd-mt-30{
-  margin-top: 30px;
+
+.rd-mt-30 {
+    margin-top: 30px;
 }
-.rd-mb-8{
-  margin-bottom: 8px;
+
+.rd-mb-8 {
+    margin-bottom: 8px;
 }
-.rd-mt-10{
-  margin-top: 10px;
+
+.rd-mt-10 {
+    margin-top: 10px;
 }
-.rd-mt-15{
-  margin-top: 15px;
+
+.rd-mt-15 {
+    margin-top: 15px;
 }
-.rd-mb-10{
-  margin-bottom: 10px;
+
+.rd-mb-10 {
+    margin-bottom: 10px;
 }
-.rd-my-10{
-  margin-top: 10px;
-  margin-bottom: 10px;
+
+.rd-my-10 {
+    margin-top: 10px;
+    margin-bottom: 10px;
 }
-.rd-mb-15{
-  margin-bottom: 15px;
+
+.rd-mb-15 {
+    margin-bottom: 15px;
 }
-.rd-mb-20{
-  margin-bottom: 20px;
+
+.rd-mb-20 {
+    margin-bottom: 20px;
 }
-.rd-mb-30{
-  margin-bottom: 30px;
+
+.rd-mb-30 {
+    margin-bottom: 30px;
 }
+
 .rd-w-full {
-  width: 100%;
+    width: 100%;
 }
-.rd-position-relative{
-  position: relative;
+
+.rd-position-relative {
+    position: relative;
 }
-.rd-back-arrow-position{
-  position: absolute;
-  left: 20px;
-  top: 20px;
+
+.rd-back-arrow-position {
+    position: absolute;
+    left: 20px;
+    top: 20px;
 }
-.rd-position-absolute{
-  position: absolute;
+
+.rd-position-absolute {
+    position: absolute;
 }
-.rd-hover:hover{
-  background-color: #f5f5f5;
+
+.rd-hover:hover {
+    background-color: #f5f5f5;
 }
-.rd-top-100{
-  top: 100%;
+
+.rd-top-100 {
+    top: 100%;
 }
-.rd-top-0{
-  top: 0;
+
+.rd-top-0 {
+    top: 0;
 }
-.rd-bottom-0{
-  bottom: 0;
+
+.rd-bottom-0 {
+    bottom: 0;
 }
-.rd-right-0{
-  right: 0;
+
+.rd-right-0 {
+    right: 0;
 }
+
 .rd-h-auto {
-  height: auto;
+    height: auto;
 }
 
 .rd-text-center {
-  text-align: center;
+    text-align: center;
 }
 
 .rd-bg-transparent {
-  background-color: transparent;
+    background-color: transparent;
 }
 
 .rd-cursor-pointer {
-  cursor: pointer;
+    cursor: pointer;
 }
-.rd-bg-blue{
-  /* background-color: var(--primary-blue); */
-  background-color: var(--robodesk-theme-color);
+
+.rd-bg-blue {
+    /* background-color: var(--primary-blue); */
+    background-color: var(--robodesk-theme-color);
 }
-.rd-border-blue{
-  /* border: 1px solid var(--primary-blue); */
-  border: 1px solid var(--robodesk-theme-color);
+
+.rd-border-blue {
+    /* border: 1px solid var(--primary-blue); */
+    border: 1px solid var(--robodesk-theme-color);
 }
-.rd-text-blue{
-  color: var(--primary-blue) !important;
+
+.rd-text-blue {
+    color: var(--primary-blue) !important;
 }
-.rd-text-white{
-  color: #fff;
+
+.rd-text-white {
+    color: #fff;
 }
-.rd-fw-medium{
-  font-weight: 500 !important;
+
+.rd-fw-medium {
+    font-weight: 500 !important;
 }
-.rd-fw-semi{
-  font-weight: 600 !important;
+
+.rd-fw-semi {
+    font-weight: 600 !important;
 }
-.rd-border-radius-md{
-  border-radius: 10px;
+
+.rd-border-radius-md {
+    border-radius: 10px;
 }
-.rd-title-text{
-  color: var(--title-color);
-font-size: 0.9375rem;
-  line-height: 18px;
-  font-weight: 500;
+
+.rd-title-text {
+    color: var(--title-color);
+    font-size: 0.9375rem;
+    line-height: 18px;
+    font-weight: 500;
 }
-.rd-text-small{
-  font-size: 0.625rem;
-  line-height: 12px;
-  font-weight: 400;
-  color: var(--body-text);
+
+.rd-text-small {
+    font-size: 0.625rem;
+    line-height: 12px;
+    font-weight: 400;
+    color: var(--body-text);
 }
-.text-black{
-  color: rgba(0, 0, 0, 1);
+
+.text-black {
+    color: rgba(0, 0, 0, 1);
 }
-.rd-title-color{
-  color: var(--title-color) !important;
+
+.rd-title-color {
+    color: var(--title-color) !important;
 }
-h3.heading-3{
-  font-size: 1.25rem;
-  line-height: 24px;
-  font-weight: 600;
-  color: var(--title-color);
+
+h3.heading-3 {
+    font-size: 1.25rem;
+    line-height: 24px;
+    font-weight: 600;
+    color: var(--title-color);
 }
-h4.heading-4{
-  font-size: 1.125rem;
-  line-height: 22px;
-  font-weight: 500;
-  transition: font-size 0.5s ease;
+
+h4.heading-4 {
+    font-size: 1.125rem;
+    line-height: 22px;
+    font-weight: 500;
+    transition: font-size 0.5s ease;
 }
-h5.heading-5{
-  font-size: 1rem;
-  line-height: 20px;
-  font-weight: 400;
+
+h5.heading-5 {
+    font-size: 1rem;
+    line-height: 20px;
+    font-weight: 400;
 }
-h5.sub-text{
-  color: var(--body-text);
-font-size: 0.875rem;
-  line-height: 18px;
-  font-weight: 400;
+
+h5.sub-text {
+    color: var(--body-text);
+    font-size: 0.875rem;
+    line-height: 18px;
+    font-weight: 400;
 }
-.rd-border-light{
-  border: 1px solid var(--border-light-gray);
+
+.rd-border-light {
+    border: 1px solid var(--border-light-gray);
 }
-.rd-border-bottom-light{
-  border-bottom: 1px solid var(--border-light-gray);
+
+.rd-border-bottom-light {
+    border-bottom: 1px solid var(--border-light-gray);
 }
-.rd-border-top-light{
-  border-top: 1px solid var(--border-light-gray);
+
+.rd-border-top-light {
+    border-top: 1px solid var(--border-light-gray);
 }
-.rd-border-vertical-light{
-  border-top: 1px solid var(--border-light-gray);
-  border-bottom: 1px solid var(--border-light-gray);
+
+.rd-border-vertical-light {
+    border-top: 1px solid var(--border-light-gray);
+    border-bottom: 1px solid var(--border-light-gray);
 }
+
 .rd-body-text,
-.rd-body-text p
-{
-  color: var(--body-text) !important;
-  font-size: 0.8125rem !important;
-  line-height: 18px !important;
-  font-weight: 400 !important;
-  transition: font-size 0.5s ease;
+.rd-body-text p {
+    color: var(--body-text) !important;
+    font-size: 0.8125rem !important;
+    line-height: 18px !important;
+    font-weight: 400 !important;
+    transition: font-size 0.5s ease;
 }
-.color-body-text{
-  color: var(--body-text);
+
+.color-body-text {
+    color: var(--body-text);
 }
-.rd-color-gray{
-  color: rgba(132, 129, 138, 1) !important;
+
+.rd-color-gray {
+    color: rgba(132, 129, 138, 1) !important;
 }
-.rd-rounded-border{
-  border-radius: var(--border-rounded);
+
+.rd-rounded-border {
+    border-radius: var(--border-rounded);
 }
-.rd-border-none{
-  border: 0;
+
+.rd-border-none {
+    border: 0;
 }
-.rd-object-cover{
-  object-fit: cover;
+
+.rd-object-cover {
+    object-fit: cover;
 }
-.rd-resize-none{
-  resize: none;
+
+.rd-resize-none {
+    resize: none;
 }
-input::placeholder{
-  font-size: 16px;
-  line-height: 20px;
+
+input::placeholder {
+    font-size: 16px;
+    line-height: 20px;
 }
-.robodesk-toggle-btn{
-  align-items: center;
+
+.robodesk-toggle-btn {
+    align-items: center;
     aspect-ratio: 50 / 50;
     display: flex;
     justify-content: center;
@@ -419,179 +510,215 @@ input::placeholder{
     max-width: 50px;
     padding: 10px;
 }
-.robodesk-toggle-btn img{
-  height: 40px;
-  width: 40px;
-}
-.rd-popup-top-icon-container img{
-  width: 100px;
-  height: auto;
-  max-height: 100px;
+
+.robodesk-toggle-btn img {
+    height: 40px;
+    width: 40px;
 }
 
-.text-black{
-  color: rgba(0, 0, 0, 1) !important;
+.rd-popup-top-icon-container img {
+    width: 100px;
+    height: auto;
+    max-height: 100px;
 }
-.rd-hidden{
-  display: none;
+
+.text-black {
+    color: rgba(0, 0, 0, 1) !important;
 }
-.custom-svg svg{
-  height: 20px;
-  width: 20px;
+
+.rd-hidden {
+    display: none;
 }
+
+.custom-svg svg {
+    height: 20px;
+    width: 20px;
+}
+
 .disliked svg,
-.dislike svg path
-{
-  fill: red;
+.dislike svg path {
+    fill: red;
 }
+
 /* popup expanded and contract, open css */
 .robodesk-popup {
-  width: 400px;
-  background-color: #fff;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-  display: flex;
-  flex-direction: column;
-  transition: all 0.3s ease-in-out;
-  opacity: 0;
-  transform: translateY(20px);
-  visibility: hidden;
-  /* max-height: 0; */
-  overflow: hidden;
-  margin-bottom: 10px;
-  height: calc(80vh - 100px);
+    width: 400px;
+    background-color: #fff;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: column;
+    transition: all 0.3s ease-in-out;
+    opacity: 0;
+    transform: translateY(20px);
+    visibility: hidden;
+    /* max-height: 0; */
+    overflow: hidden;
+    margin-bottom: 10px;
+    height: calc(80vh - 100px);
 }
 
 .robodesk-popup.open {
-  opacity: 1;
-  transform: translateY(0);
-  visibility: visible;
-  /* max-height: 560px;
+    opacity: 1;
+    transform: translateY(0);
+    visibility: visible;
+    /* max-height: 560px;
   height: 560px; */
-  min-height: 560px;
+    min-height: 560px;
 }
 
 .robodesk-popup.closed {
-  opacity: 0;
-  transform: translateY(20px);
-  visibility: hidden;
-  max-height: 0;
+    opacity: 0;
+    transform: translateY(20px);
+    visibility: hidden;
+    max-height: 0;
 }
 
 .robodesk-popup.expanded {
-  width: 600px;
-  /* height: 600px;
+    width: 600px;
+    /* height: 600px;
   max-height: 600px; */
 }
 
-.robodesk-popup.expanded .rd-faq-detail .rd-faq-title{
-  /* font-size: 20px; */
-  font-size: 15px;
-  line-height: 24px;
-  transition: font 0.5s ease;
+.robodesk-popup.expanded .rd-faq-detail .rd-faq-title {
+    /* font-size: 20px; */
+    font-size: 15px;
+    line-height: 24px;
+    transition: font 0.5s ease;
 }
+
 .expand-popup.expanded {
-  transform: rotate(180deg);
+    transform: rotate(180deg);
 }
+
 .expand-popup .expand-icon.visible {
-  opacity: 1;
+    opacity: 1;
 }
 
 .expand-popup .expand-icon.hidden {
-  opacity: 0;
-  height: 0;
-  width: 0;
+    opacity: 0;
+    height: 0;
+    width: 0;
 }
+
 /* popup expaned contract closed css end */
 .back-button,
-.rd-back-button
-{
-  height: 20px;
-  width: 20px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+.rd-back-button {
+    height: 20px;
+    width: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
+
 .back-button:hover,
-.rd-back-button:hover
-{
-  background: #004aff12;
+.rd-back-button:hover {
+    background: #004aff12;
     border-radius: 50px;
 }
+
 .rd-hover-underline {
-  position: relative;
-  text-decoration: none; /* Remove default underline */
+    position: relative;
+    text-decoration: none;
+    /* Remove default underline */
 }
 
 .rd-hover-underline::after {
-  content: '';
-  position: absolute;
-  left: 25px;
-  bottom: 5px; 
-  width: 0;
-  height: 2px; 
-  background-color: #004aff; 
-  transition: width 0.3s ease-in-out; 
+    content: '';
+    position: absolute;
+    left: 25px;
+    bottom: 5px;
+    width: 0;
+    height: 2px;
+    background-color: #004aff;
+    transition: width 0.3s ease-in-out;
 }
 
 .rd-hover-underline:hover::after {
-  width:75%; 
+    width: 75%;
 }
+
 .robodesk-toggle-btn {
-  transition: transform 0.5s ease;
+    transition: transform 0.5s ease;
 }
 
 .robodesk-toggle-btn.rotated {
-  transform: rotate(180deg);
+    transform: rotate(180deg);
 }
+
 .robodesk-toggle-btn {
-  transition: transform 0.5s ease;
+    transition: transform 0.5s ease;
 }
 
 .robodesk-toggle-btn.rotated {
-  transform: rotate(180deg);
+    transform: rotate(180deg);
 }
 
 .robodesk-popup {
-  transition: all 0.5s ease-in-out;
-  opacity: 0;
-  transform: translateY(50px);
-  visibility: hidden;
+    transition: all 0.5s ease-in-out;
+    opacity: 0;
+    transform: translateY(50px);
+    visibility: hidden;
 }
 
 .robodesk-popup.open {
-  opacity: 1;
-  transform: translateY(0);
-  visibility: visible;
+    opacity: 1;
+    transform: translateY(0);
+    visibility: visible;
 }
 
 .robodesk-popup.closed {
-  opacity: 0;
-  transform: translateY(50px);
-  visibility: hidden;
+    opacity: 0;
+    transform: translateY(50px);
+    visibility: hidden;
 }
+
 .form-err-msg {
-  color: red;
-  font-size: 12px;
-  font-weight: 500;
+    color: red;
+    font-size: 12px;
+    font-weight: 500;
 }
-.truncate-3-lines{
-  display: -webkit-box;
-  -webkit-line-clamp: 3;
-  -webkit-box-orient: vertical;  
-  overflow: hidden;
-  text-overflow: ellipsis;
+
+.truncate-3-lines {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
-.bi.bi-chevron-up{
-  color: #fff;
+
+.bi.bi-chevron-up {
+    color: #fff;
 }
-.single-content-other-content a{
-  font-size: 14px;
+
+.single-content-other-content a {
+    font-size: 14px;
     text-decoration: none;
-  background-color: var(--robodesk-theme-color);
+    background-color: var(--robodesk-theme-color);
     padding: 10px 24px;
     color: #fff;
     font-weight: 400;
     border-radius: 20px;
     display: flex;
     justify-content: center;
+}
+
+
+/* For notification red dot */
+/* Must remove this later  */
+.rd-title-with-dot {
+    position: relative;
+    display: inline-block;
+}
+
+.rd-title-with-dot::after {
+    content: "";
+    position: absolute;
+    top: -2px;
+    /* adjust vertically */
+    right: -8px;
+    /* adjust horizontally for spacing */
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background-color: red;
 }

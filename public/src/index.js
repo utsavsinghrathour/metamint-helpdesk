@@ -1,5 +1,5 @@
 import { createRoot } from 'react-dom/client'; // Import createRoot
-import App from './App.jsx';
+import App from './App.js';
 
 // Get the localized data
 const { imageUrls = { logo: '' } } = window.robodeskData || { imageUrls: {} };
