@@ -18,6 +18,11 @@ require_once ROBODESK_PLUGIN_PATH . 'public/includes/robodesk-shortcodes.php';
 
 function robodesk_activate()
 {
+    // Ensure WordPress functions are loaded
+    if (!function_exists('add_role')) {
+        require_once ABSPATH . 'wp-includes/capabilities.php';
+    }
+
     $admin_role = get_role('administrator');
     if ($admin_role) {
         $admin_role->add_cap('create_tickets');
@@ -30,7 +35,15 @@ function robodesk_activate()
     }
     add_role('robodesk_support_manager', 'Support Manager', array('read' => true, 'manage_options' => true, 'create_tickets' => true, 'edit_tickets' => true, 'edit_others_tickets' => true, 'publish_tickets' => true, 'read_private_tickets' => true, 'read_ticket' => true, 'delete_ticket' => true));
 
-    add_role('robodesk_support_staff', 'Support Staff', array('read' => true, 'edit_posts' => true, 'create_tickets' => true, 'edit_tickets' => true, 'read_ticket' => true));
+    add_role('robodesk_support_staff', 'Support Staff', array(
+        'read' => true,
+        'edit_posts' => true,
+        // 'manage_categories' => true,  // Add this
+        'manage_options' => true,     // Add this if you want them to access dashboard and fetch tickets
+        'create_tickets' => true,
+        'edit_tickets' => true,
+        'read_ticket' => true
+    ));
 
     add_role('robodesk_support_customer', 'Support Customer', array('read' => true, 'create_tickets' => true, 'read_ticket' => true));
 }
