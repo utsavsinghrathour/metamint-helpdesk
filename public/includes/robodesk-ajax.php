@@ -57,25 +57,26 @@ function robodesk_change_ticket_status_callback()
 //         }else{
 //            wp_set_object_terms($post_id, 31, 'robodesk_ticket_priority');
 //         }
-        
+
 //         $origin =  create_term_if_not_exists();
-        
+
 //         wp_set_object_terms($post_id, (int) $origin['term_id'], 'robodesk_ticket_origin');
-        
+
 //         wp_send_json_success(array('message' => 'Ticket created successfully!'));
 //     }
 // }
 
 
-function create_term_if_not_exists($term_name='Web', $taxonomy = 'robodesk_ticket_origin') {
-  
+function create_term_if_not_exists($term_name = 'Web', $taxonomy = 'robodesk_ticket_origin')
+{
+
     $term = term_exists($term_name, $taxonomy);
-    
+
 
     if ($term === 0 || $term === null) {
         $term = wp_insert_term($term_name, $taxonomy);
     }
-    
+
     return $term;
 }
 
@@ -84,7 +85,8 @@ function create_term_if_not_exists($term_name='Web', $taxonomy = 'robodesk_ticke
 add_action('wp_ajax_robodesk_create_new_ticket', 'handle_robodesk_ticket_submission');
 add_action('wp_ajax_nopriv_robodesk_create_new_ticket', 'handle_robodesk_ticket_submission');
 
-function handle_robodesk_ticket_submission() {
+function handle_robodesk_ticket_submission()
+{
 
     if (!isset($_POST['robodesk_nonce']) || !wp_verify_nonce($_POST['robodesk_nonce'], 'robodesk_create_ticket_nonce')) {
         wp_send_json_error(array('message' => 'Security check failed.'));
@@ -94,8 +96,8 @@ function handle_robodesk_ticket_submission() {
     $title = sanitize_text_field($_POST['ticket_title']);
     $content = wp_kses_post($_POST['ticket_content']);
     $priority = intval($_POST['ticket_priority']);
-    
-    if(empty(trim($title)) || empty(trim($content))){
+
+    if (empty(trim($title)) || empty(trim($content))) {
         wp_send_json_error(array('message' => 'Fill in the required fields first'));
     }
 
@@ -115,14 +117,31 @@ function handle_robodesk_ticket_submission() {
         update_post_meta($post_id, '_robodesk_ticket_status', 'open');
         if ($priority > 0) {
             wp_set_object_terms($post_id, $priority, 'robodesk_ticket_priority');
-        }else{
-           wp_set_object_terms($post_id, 31, 'robodesk_ticket_priority');
+        } else {
+            wp_set_object_terms($post_id, 31, 'robodesk_ticket_priority');
         }
-        
+
         $origin =  create_term_if_not_exists();
-        
+
+        $user_obj = get_user_by('id', $user_id);
+        $user_name = $user_obj->display_name;
+        $email_address = $user_obj->user_email;
+
+
+        wp_insert_comment(array(
+            'comment_post_ID' => $post_id,
+            'user_id'  => $user_id,
+            'comment_content' => $title,
+            'comment_author' => $user_name,
+            'comment_author_email' => $email_address,
+            'comment_approved' => 1,
+            'comment_type' => 'ticket_replies'
+        ));
+
+
+
         wp_set_object_terms($post_id, (int) $origin['term_id'], 'robodesk_ticket_origin');
-        
+
         wp_send_json_success(array('message' => 'Ticket created successfully!'));
     }
 }
@@ -343,102 +362,101 @@ function robodesk_add_ticket_note_callback()
 
 add_action('wp_ajax_robodesk_login_action', 'robodesk_login_action_callback');
 add_action('wp_ajax_nopriv_robodesk_login_action', 'robodesk_login_action_callback');
-function robodesk_login_action_callback() {
+function robodesk_login_action_callback()
+{
 
-    check_ajax_referer( 'robodesk-nonce', 'security' );
+    check_ajax_referer('robodesk-nonce', 'security');
 
-    $email = sanitize_email( $_POST['email'] );
-    if ( empty( $email ) || ! is_email( $email ) ) {
-        wp_send_json_error( [
-            'message' => __( 'Invalid email format.', 'robodesk' )
-        ] );
+    $email = sanitize_email($_POST['email']);
+    if (empty($email) || ! is_email($email)) {
+        wp_send_json_error([
+            'message' => __('Invalid email format.', 'robodesk')
+        ]);
     }
 
-    $user_exists = email_exists( $email );
-    if ( $user_exists ) {
-        wp_send_json_success( [
+    $user_exists = email_exists($email);
+    if ($user_exists) {
+        wp_send_json_success([
             'exists' => true,
             'showPassword' => true
-        ] );
+        ]);
     }
 
-    $password = wp_generate_password( 12, true );
-    $username = sanitize_user( strstr( $email, '@', true ), true );
+    $password = wp_generate_password(12, true);
+    $username = sanitize_user(strstr($email, '@', true), true);
     //this is not checking if the user exists
-    $user_id = wp_create_user( $username, $password, $email );
-    
-    if ( !is_wp_error( $user_id ) ) {
-    
-        wp_send_json_success( [
-            'message' => __( 'Account created! Check your email for your password.', 'robodesk' ),
-            'showPassword' => false
-        ] );
+    $user_id = wp_create_user($username, $password, $email);
 
+    if (!is_wp_error($user_id)) {
+
+        wp_send_json_success([
+            'message' => __('Account created! Check your email for your password.', 'robodesk'),
+            'showPassword' => false
+        ]);
     }
-    wp_send_json_error( [
+    wp_send_json_error([
         'message' => sprintf(
-            __( 'Failed to create account: %s', 'robodesk' ),
+            __('Failed to create account: %s', 'robodesk'),
             $user_id->get_error_message()
         )
-    ] );
-
+    ]);
 }
 
 
 add_action('wp_ajax_robodesk_check_email', 'robodesk_check_email');
 add_action('wp_ajax_nopriv_robodesk_check_email', 'robodesk_check_email');
-function robodesk_check_email(){
-    $email = sanitize_email( $_POST['email'] );
-    if ( empty( $email ) || ! is_email( $email ) ) {
-        wp_send_json_error( [
-             'exists' => false,
-            'message' => __( 'Invalid email format.', 'robodesk' )
-        ] );
-    }                    
-    $user_exists = email_exists( $email );
-    if ( $user_exists ) {
-        wp_send_json_success( [
-            'exists' => true,
-        ] );
+function robodesk_check_email()
+{
+    $email = sanitize_email($_POST['email']);
+    if (empty($email) || ! is_email($email)) {
+        wp_send_json_error([
+            'exists' => false,
+            'message' => __('Invalid email format.', 'robodesk')
+        ]);
     }
-    
-    wp_send_json_error( [
+    $user_exists = email_exists($email);
+    if ($user_exists) {
+        wp_send_json_success([
+            'exists' => true,
+        ]);
+    }
+
+    wp_send_json_error([
         'exists' => false,
-    ] );        
+    ]);
 }
 
 
 //For registering user
 add_action('wp_ajax_robodesk_register_user', 'robodesk_register_user');
-add_action('wp_ajax_nopriv_robodesk_register_user', 'robodesk_register_user');  
-function robodesk_register_user(){
-    $email = sanitize_email( $_POST['email'] );
-    if ( empty( $email ) || ! is_email( $email ) ) {
-        wp_send_json_error( [
-            'message' => __( 'Invalid email .', 'robodesk' )
-        ] );
+add_action('wp_ajax_nopriv_robodesk_register_user', 'robodesk_register_user');
+function robodesk_register_user()
+{
+    $email = sanitize_email($_POST['email']);
+    if (empty($email) || ! is_email($email)) {
+        wp_send_json_error([
+            'message' => __('Invalid email .', 'robodesk')
+        ]);
     }
 
-    $password = wp_generate_password( 12, true );
-    $username = sanitize_user( strstr( $email, '@', true ), true );
-    $user_id = wp_create_user( $username, $password, $email );
-    
-    if ( !is_wp_error( $user_id ) ) {
-    
-        wp_send_json_success( [
-            'message' => __( 'Account created! Check your email for your password.', 'robodesk' ),
+    $password = wp_generate_password(12, true);
+    $username = sanitize_user(strstr($email, '@', true), true);
+    $user_id = wp_create_user($username, $password, $email);
+
+    if (!is_wp_error($user_id)) {
+
+        wp_send_json_success([
+            'message' => __('Account created! Check your email for your password.', 'robodesk'),
             'userId' => $user_id,
             'loggedIn' => true
-        ] );
-
+        ]);
     }
-    wp_send_json_error( [
+    wp_send_json_error([
         'message' => sprintf(
-            __( 'Failed to create account: %s', 'robodesk' ),
+            __('Failed to create account: %s', 'robodesk'),
             $user_id->get_error_message()
         )
-    ] );
-        
+    ]);
 }
 
 

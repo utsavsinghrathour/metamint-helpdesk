@@ -263,8 +263,6 @@ function robodesk_stream($request)
     set_time_limit(0);
     ignore_user_abort(false);
 
-
-
     switch ($type) {
         case ('comments'):
             echo "event: new_comment\n";
@@ -287,9 +285,11 @@ function robodesk_stream($request)
                     flush();
                 }
             }
-            if (!empty(robodesk_get_new_notifications($user_id))) {
+
+            $notifications = robodesk_get_new_notifications($user_id);
+            if (!empty($notifications)) {
                 echo "event: new_notification\n";
-                echo "data: " . json_encode(robodesk_get_new_notifications($user_id)) . "\n\n";
+                echo "data: " . json_encode($notifications) . "\n\n";
                 flush();
             }
 
