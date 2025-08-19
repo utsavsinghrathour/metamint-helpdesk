@@ -447,17 +447,7 @@ function customize_robodesk_ticket_response($response, $post, $request)
         'ticket_last_reply' => !empty($last_reply) ? $last_reply : false,
     ];
 
-    $site_url   = site_url();
-    $referer    = $request->get_header('referer');
-    $origin     = $request->get_header('origin');
 
-    if (
-        (!empty($referer) && strpos($referer, $site_url) === 0) ||
-        (!empty($origin) && strpos($origin, $site_url) === 0)
-    ) {
-        // Update meta for the ticket
-        update_post_meta($ticket_id, 'rbd_all_seen', 'yes');
-    }
 
     $response->set_data($data);
     return $response;
@@ -520,7 +510,7 @@ function robodesk_handle_tickets_webhook(WP_REST_Request $request)
 
             $user_object =  get_user_by('id', $author);
             $user_name = $user_object->display_name;
-            $email_address = $user_object->user_email;
+            $email_address = $user_object->user_email;    //
 
             $comment_id = wp_insert_comment(array(
                 'comment_post_ID' => $ticket,
@@ -533,16 +523,13 @@ function robodesk_handle_tickets_webhook(WP_REST_Request $request)
             ));
 
             $reply_id = !is_wp_error($comment_id) ? $comment_id : false;
-
-
             $ticket_number = 'TCKT-' . str_pad($ticket, 3, '0', STR_PAD_LEFT);
-
             $ticket_origin = get_post_meta($ticket, 'robodesk_ticket_origin', true) ?: 'N/A';
             $ticket_priority_terms = get_the_terms($ticket, 'robodesk_ticket_priority');
             $ticket_priority =  !is_wp_error($ticket_priority_terms) ? $ticket_priority_terms[0]->name : false;
-
             $last_activity = get_post_time('U', true); // Get post creation time in UTC timestamp
             $human_readable_time = human_time_diff($last_activity, current_time('U'));
+
 
             return rest_ensure_response(array(
                 'status'  => 'success',

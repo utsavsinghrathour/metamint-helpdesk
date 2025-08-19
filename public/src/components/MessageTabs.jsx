@@ -17,7 +17,11 @@ import useExclusiveServerEvents from '../Hooks/useExclusiveServerEvents';
 const SingleTicket = React.lazy(() => import('./SingleTicket'));
 
 const TicketItem = ({ ticket, onSelect }) => {
-  const showRedDot = ticket.notifications === 'no' ? true : false;
+  const [showNotification, setShowNotification] = useState(false);
+
+  useEffect(() => {
+    setShowNotification(ticket.notifications === 'no' ? true : false);
+  }, [ticket]);
 
   return (
     <div
@@ -36,7 +40,7 @@ const TicketItem = ({ ticket, onSelect }) => {
         <div className='rd-message-list-wrap'>
           <h5
             className={`sub-text rd-title-color ${
-              showRedDot ? 'rd-title-with-dot' : ''
+              showNotification ? 'rd-title-with-dot' : ''
             }`}
           >
             {ticket.title}
@@ -101,10 +105,23 @@ const MessageTabs = ({
   const messageWrapperRef = useRef(null);
   const { connectExclusive, disconnect } = useExclusiveServerEvents();
   const [refresh, setRefresh] = useState(false);
+  const beep = useRef(new Audio(wpAuth.notificationSound));
+
+  useEffect(() => {
+    if (!loggedInUsrId) {
+      return;
+    }
+    if (beep.current) {
+      beep.current.volume = 1.0;
+      beep.current.preload = 'auto';
+    }
+  }, []);
+
   const fetchTickets = async () => {
     if (!loggedInUsrId) {
       return;
     }
+
     try {
       setLoading(true);
       const tickets = ticketsContext;
@@ -182,17 +199,18 @@ const MessageTabs = ({
             });
           },
           new_notification: (data) => {
-            if (data) updateNewCommentNotification(data);
-            console.log('data', data);
+            const ids = Array.isArray(data)
+              ? data.map((item) => (typeof item === 'object' ? item.id : item))
+              : [];
             setTickets((prevTickets) =>
               prevTickets.map((ticket) =>
-                data.includes(ticket.id) && ticket.notifications === 'yes'
+                ids.includes(ticket.id) && ticket.notifications === 'yes'
                   ? { ...ticket, notifications: 'no' }
                   : ticket
               )
             );
 
-            console.log('after update', tickets);
+            //hger
           },
         }
       );
