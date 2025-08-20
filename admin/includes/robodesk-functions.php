@@ -1222,7 +1222,7 @@ function save_robodesk_user_meta_fields($user_id)
     }
 }
 
-// Automatically assign a ticket to a support staff member according to the least assigned tickets 
+// Automatically assign a ticket to a support staff member according to the least assigned tickets use in email and chat for now
 function auto_assign_ticket_to_support_staff()
 {
     // Get the support staff users with their display names
