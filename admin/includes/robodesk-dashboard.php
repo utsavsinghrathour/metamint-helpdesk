@@ -40,7 +40,6 @@ function robodesk_dashboard_callback()
         };
     </script>';
 
-    // Debugging line to check current user ID and name
     // var_dump($current_user_id); // Debugging line to check current user ID and name
     // var_dump($current_user_name); // Debugging line to check current user name
 
