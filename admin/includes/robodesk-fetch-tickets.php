@@ -574,6 +574,8 @@ function robodesk_imap_settings_callback()
 }
 
 
+// now the email ticket via comment is working
+
 // Disable default WordPress notifications
 add_filter('notify_post_author', '__return_false');
 add_filter('comment_notification_recipients', '__return_empty_array');
