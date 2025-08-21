@@ -210,16 +210,20 @@ add_action('rest_api_init', callback: function () {
                             return in_array($param, ['comments', 'tickets', 'notifications'], true);
                         },
                     ),
+                    //tikcet id
                     'post_id' => array(
                         'validate_callback' => function ($param) {
                             return empty($param) || is_numeric($param);
                         },
                     ),
+
+                    //first id of the ticket and last id of comments
                     'last_id' => array(
                         'validate_callback' => function ($param) {
                             return empty($param) || is_numeric($param);
                         },
                     ),
+                    //logged in user id
                     'user_id' => array(
                         'validate_callback' => function ($param) {
                             return empty($param) || is_numeric($param);
@@ -236,9 +240,6 @@ function robodesk_stream($request)
 
     $type = $request->get_param('type');
     $user_id = $request->get_param('user_id');
-
-
-    // Set proper headers for SSE
     header('Content-Type: text/event-stream');
     header('Cache-Control: no-cache');
     header('Connection: keep-alive');
@@ -246,64 +247,76 @@ function robodesk_stream($request)
     header('Access-Control-Allow-Headers: Cache-Control');
     header('X-Accel-Buffering: no');
 
-    // Disable time limit
     set_time_limit(0);
 
-    // Close the session to allow other requests
     session_write_close();
 
-    // Disable output buffering and compression
     if (ob_get_level()) ob_end_clean();
 
-    // Disable WordPress output compression
     ini_set('zlib.output_compression', 0);
     ini_set('output_buffering', 0);
 
-    // Set execution limits
     set_time_limit(0);
     ignore_user_abort(false);
 
     switch ($type) {
         case ('comments'):
-            echo "event: new_comment\n";
-            echo "data: " . json_encode(array(
-                'status' => 'new_comment',
-                'data' => 'We have a new comment',
-            )) . "\n\n";
-            flush();
-            break;
+
 
         case ('tickets'):
-            $last_ticket_id = (int) $request->get_param('last_id');
 
-            $new_ticket = robodesk_get_new_tickets($last_ticket_id, $user_id);
+            $ticket_id = (int) $request->get_param('post_id');
+            if ($ticket_id > 0) {
+                $ticket_status = get_post_meta($ticket_id, '_robodesk_ticket_status', true);
+                $last_comment_client = $request->get_param('last_id');
+                $new_conversations = robodesk_live_conversations($ticket_id, $last_comment_client, $user_id);
+                if (!empty($new_conversations)) {
+                    foreach ($new_conversations as $c) {
+                        echo "event: new_comment\n";
+                        echo "data: " . json_encode($c) . "\n\n";
+                        flush();
+                    }
+                    update_post_meta($ticket_id, 'rbd_all_seen', 'yes');
+                }
 
-            if (!empty($new_ticket)) {
-                foreach ($new_ticket as $ticket) {
-                    echo "event: new_ticket\n";
-                    echo "data: " . json_encode($ticket) . "\n\n";
+                if ($ticket_status == 'closed') {
+                    echo "event: ticket_closed\n";
+                    echo "data: " . json_encode(array('reason' => 'ticket_closed')) . "\n\n";
+                    flush();
+                    exit;
+                }
+
+
+                if ($ticket_status == 'open') {
+                    echo "event: ticket_open\n";
+                    echo "data: " . json_encode(array('reason' => 'ticket_open')) . "\n\n";
                     flush();
                 }
             }
 
-            $notifications = robodesk_get_new_notifications($user_id);
-            if (!empty($notifications)) {
-                echo "event: new_notification\n";
-                echo "data: " . json_encode($notifications) . "\n\n";
-                flush();
+
+            if ($ticket_id == 0) {
+                //its a first id though
+                $last_ticket_id = (int) $request->get_param('last_id');
+                $new_ticket = robodesk_get_new_tickets($last_ticket_id, $user_id);
+                if ($last_ticket_id > 0 && !empty($new_ticket)) {
+                    foreach ($new_ticket as $ticket) {
+                        echo "event: new_ticket\n";
+                        echo "data: " . json_encode($ticket) . "\n\n";
+                        flush();
+                    }
+                }
+
+                $notifications = robodesk_get_new_notifications($user_id);
+                if (!empty($notifications)) {
+                    echo "event: new_notification\n";
+                    echo "data: " . json_encode($notifications) . "\n\n";
+                    flush();
+                }
             }
 
-
             break;
 
-        case ('notifications'):
-
-            // if (!empty(robodesk_get_new_notifications($user_id))) {
-            //     echo "event: new_notification\n";
-            //     echo "data: " . json_encode(robodesk_get_new_notifications($user_id)) . "\n\n";
-            //     flush();
-            // }
-            break;
         default:
             echo "event: error\n";
             echo "data: " . json_encode(array('message' => 'Invalid stream type')) . "\n\n";
@@ -316,7 +329,7 @@ function robodesk_stream($request)
     exit;
 }
 
-
+//For new notifications
 function robodesk_get_new_notifications($user_id)
 {
     // Get all tickets newer than last_id_client
@@ -337,7 +350,82 @@ function robodesk_get_new_notifications($user_id)
         )
     ));
 
+
+
+
     return $notifications_data;
+}
+
+//For new conversations
+function robodesk_live_conversations($ticket_id, $last_comment_client, $loggedin_user_id)
+{
+
+    if (get_post_type($ticket_id) !== 'robodesk_ticket') return [];
+
+    $last_comment_server = get_comments([
+        'post_id'      => $ticket_id,
+        'number'       => 1,
+        'orderby'      => 'comment_date',
+        'order'        => 'DESC',
+        'status'       => 'approve',
+        'fields'       => 'ids',
+        'type' => 'ticket_replies',
+        'meta_query'   => [
+            [
+                'key'     => 'admin_comment',
+                'value'   => 'yes',
+                'compare' => '='
+            ]
+        ]
+    ]);
+
+    $last_comment_server = !empty($last_comment_server) ? (int) $last_comment_server[0] : false;
+    $new_admin_comments = array();
+    //checking the admin id 
+    if ($last_comment_server && $last_comment_server > $last_comment_client) {
+        $args = array(
+            'post_id' => $ticket_id,
+            'status' => 'approve',
+            'comment__in' => range($last_comment_client + 1, $last_comment_server),
+            'orderby' => 'comment_date',
+            'order' => 'ASC',
+            'type' => 'ticket_replies',
+            'meta_query'   => [
+                [
+                    'key'     => 'admin_comment',
+                    'value'   => 'yes',
+                    'compare' => '='
+                ]
+            ],
+            'comment__not_in' => array($last_comment_client)
+        );
+
+
+        $comments = get_comments($args);
+        foreach ($comments as $comment) {
+            $user = get_userdata($comment->user_id);
+            if ($user && in_array('administrator', $user->roles)) {
+                $new_admin_comments[] = array(
+                    'id' => (int) $comment->comment_ID,
+                    'content' => array(
+                        'rendered' => wpautop($comment->comment_content)
+                    ),
+                    'date' => $comment->comment_date,
+                    'author_data' => array(
+                        'id' => (int) $comment->user_id
+                    ),
+                    'author_name' => $comment->display_name ?: $comment->comment_author,
+                    'author_image' => get_avatar_url($comment->user_id ?: $comment->comment_author_email, array('size' => 32)),
+                    'time_ago' => human_time_diff(strtotime($comment->comment_date), current_time('timestamp')) . ' ago',
+                    'author_id' => (int) $comment->user_id,
+                    'post_author_id' => (int) $ticket_id ? get_post_field('post_author', $ticket_id) : 0,
+                );
+            }
+        }
+    }
+
+
+    return $new_admin_comments;
 }
 
 function robodesk_get_new_tickets($last_id_client, $user_id)
@@ -404,28 +492,24 @@ function robodesk_get_new_tickets($last_id_client, $user_id)
 
         $results[] = [
             'id'                    => $ticket_id,
-            'ticket_number'         => $ticket_number,
-            'ticket_title'          => $conversations->post_title,
-            'ticket_status'         => get_post_meta($conversations->ID, '_robodesk_ticket_status', true) ?? 'open',
-            'ticket_priority'       => $priority_name,
-            'ticket_origin'         => get_post_meta($conversations->ID, 'robodesk_ticket_origin', true) ?: 'N/A',
-            'ticket_author'         => $author_name,
-            'ticket_author_image'   => $author_image,
-            'ticket_time_ago'       => $time_diff,
-            'ticket_total_comments' => $total_comments,
-            'ticket_notifications' => 'yes',
-            'ticket_comments'       => $formatted_comments,
-            'ticket_last_reply'     => $last_reply
+            'ticketNumber'          => $ticket_number,
+            'title'                 => $conversations->post_title,
+            'status'         => get_post_meta($conversations->ID, '_robodesk_ticket_status', true) ?? 'open',
+            'priority'       => $priority_name,
+            'source'         => get_post_meta($conversations->ID, 'robodesk_ticket_origin', true) ?: 'N/A',
+            'author'         => $author_name,
+            'authorImage'   => $author_image,
+            'timeAgo'       => $time_diff,
+            'totalComments' => $total_comments,
+            'notifications' => 'yes',
+            'comments'       => $formatted_comments,
+            'lastReply'     => $last_reply
         ];
     }
 
     return $results;
 }
-function get_notifications($user_id)
-{
-    // Query database for notifications since last_id
-    // Return array of notification objects
-}
+
 
 
 function robodesk_live_comments($request)
@@ -1179,12 +1263,3 @@ function custom_lost_password(WP_REST_Request $request)
         'message' => 'A password reset email has been sent to your email address.'
     ), 200);
 }
-
-
-// add_action('wp_head', function(){
-// $a=0;
-// var_dump(is_numeric($a));
-
-// var_dump(empty($a));
-
-// });

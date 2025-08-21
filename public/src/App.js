@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import HomeTabs from './components/HomeTabs.jsx';
 import MessageTabs from './components/MessageTabs.jsx';
 import NoticeTabs from './components/NoticeTabs.jsx';
@@ -7,10 +7,18 @@ import ActiveFeatured from './components/ActiveFeatured.jsx';
 import './styles/main.css';
 import defaultLogo from './images/robodesk-logo.png';
 import { AppDataProvider, useAppData } from './utils/AppDataContext';
+import useExclusiveServerEvents from './Hooks/useExclusiveServerEvents.js';
 
 const AppContent = ({ imageUrls = { logo: '' } }) => {
-  // ✅ Get context values
-  const { loadingContext, errorContext, ticketsContext } = useAppData();
+  const {
+    loadingContext,
+    ticketsContext,
+    loggedinContext,
+    loggedInUsrId,
+    updateTicket,
+    updateNewCommentNotification,
+    errorContext,
+  } = useAppData();
 
   const [isOpen, setIsOpen] = useState(false);
   const [activeTab, setActiveTab] = useState(0);
@@ -19,18 +27,54 @@ const AppContent = ({ imageUrls = { logo: '' } }) => {
   const [showActiveFeatured, setShowActiveFeatured] = useState(true);
   const [selectedTicket, setSelectedTicket] = useState();
   const [focusedTextArea, setFocusedTextArea] = useState(false);
+  const notificationAudio = useRef(
+    new Audio('http://localhost:10135/wp-content/uploads/2025/08/1.mp3')
+  );
+  const { connectExclusive } = useExclusiveServerEvents();
 
   const handleFocusedTextArea = (focus) => setFocusedTextArea(focus);
 
   // Example: compute notification flag directly from context tickets
   const hasNotificationOff = ticketsContext?.some(
-    (ticket) => ticket.ticket_notifications === 'no'
+    (ticket) => ticket.notifications === 'no'
   );
 
   const handleSelectedTicketUpdate = (newValue) => {
     setSelectedTicket(newValue);
   };
 
+  useEffect(() => {
+    notificationAudio.current.load();
+  }, []);
+
+  useEffect(() => {
+    if (loggedinContext && loggedInUsrId) {
+      connectExclusive(
+        'tickets',
+        {
+          postId: 0,
+          lastId: ticketsContext[0]?.id || 0,
+          userId: loggedInUsrId,
+        },
+        {
+          new_ticket: (data) => {
+            updateTicket(data);
+          },
+          new_notification: (data) => {
+            const ids = Array.isArray(data)
+              ? data.map((item) => (typeof item === 'object' ? item.id : item))
+              : [];
+
+            if (updateNewCommentNotification(ids)) {
+              notificationAudio.current.play();
+            }
+          },
+        }
+      );
+
+      return () => {};
+    }
+  }, [ticketsContext]);
   useEffect(() => {
     if (selectedTicket) {
       setSelectedTicket(selectedTicket);
@@ -201,7 +245,6 @@ const AppContent = ({ imageUrls = { logo: '' } }) => {
     </div>
   );
 };
-
 
 const App = (props) => (
   <AppDataProvider>

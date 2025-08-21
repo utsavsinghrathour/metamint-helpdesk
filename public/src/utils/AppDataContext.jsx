@@ -3,7 +3,6 @@ import { createContext, useEffect, useState, useContext } from 'react';
 const AppDataContext = createContext();
 
 export const AppDataProvider = ({ children }) => {
-  const [ticketsContextData, setTicketsContextData] = useState([]);
   const [data, setData] = useState({
     loadingContext: true,
     errorContext: null,
@@ -14,25 +13,33 @@ export const AppDataProvider = ({ children }) => {
   });
 
   const updateNewCommentNotification = (ids) => {
-    setData((prev) => ({
-      ...prev,
-      ticketsContext: prev.ticketsContext.map((ticket) =>
-        ids.includes(ticket.id) && ticket.notifications === 'yes'
-          ? { ...ticket, notifications: 'no' }
-          : ticket
-      ),
-    }));
+    let isUpdated = false;
+    setData((prev) => {
+      const newTicketsContext = prev.ticketsContext.map((ticket) => {
+        if (ids.includes(ticket.id) && ticket.notifications !== 'no') {
+          isUpdated = true;
+          return { ...ticket, notifications: 'no' };
+        }
+        return ticket;
+      });
+      return {
+        ...prev,
+        ticketsContext: newTicketsContext,
+      };
+    });
+    return isUpdated;
   };
 
+  // Prepend a ticket to top of the ticketContext
   const updateTicket = (ticket) => {
-    // console.log(ticket, 'from context');
+    // console.log('New ticket creation or update:', ticket);
+
     setData((prev) => {
       // Check if the ticket ID already exists in ticketsContext
       const idExists = prev.ticketsContext.some(
         (existingTicket) => existingTicket.id === ticket.id
       );
 
-      // If ID doesn't exist, add the new ticket to the top
       if (!idExists) {
         return {
           ...prev,
@@ -40,8 +47,6 @@ export const AppDataProvider = ({ children }) => {
         };
       }
 
-      // If ID exists, return the previous state unchanged
-      //   console.log('Ticket with this ID already exists.');
       return prev;
     });
   };
@@ -55,14 +60,21 @@ export const AppDataProvider = ({ children }) => {
   };
 
   const updateTicketNotifications = (ticketId, value) => {
-    setData((prev) => ({
-      ...prev,
-      ticketsContext: prev.ticketsContext.map((ticket) =>
-        ticket.id === ticketId
-          ? { ...ticket, ticket_notifications: value }
-          : ticket
-      ),
-    }));
+    if (!ticketId) return;
+
+    setData((prev) => {
+      const updatedTickets = prev.ticketsContext.map((ticket) => {
+        if (ticket.id === ticketId) {
+          return { ...ticket, notifications: value };
+        }
+        return ticket;
+      });
+
+      return {
+        ...prev,
+        ticketsContext: updatedTickets,
+      };
+    });
   };
 
   // Ticket fetching logic moved outside to reuse
@@ -84,18 +96,27 @@ export const AppDataProvider = ({ children }) => {
       }
 
       const tickets = await response.json();
-
-      //   console.log('C', tickets);
-
-      //   const totalPages = parseInt(response.headers.get("X-WP-TotalPages")) || 1;
+      const mappedTickets = tickets.map((ticket) => ({
+        id: ticket.id,
+        ticketNumber: ticket.ticket_number,
+        title: ticket.ticket_title,
+        source: ticket.ticket_origin,
+        timeAgo: ticket.ticket_time_ago + ' ago',
+        authorImage: ticket.ticket_author_image ?? Author1,
+        status: ticket.ticket_status ?? 'New',
+        priority: ticket.ticket_priority ?? 'Medium',
+        author: ticket.ticket_author,
+        lastReply: ticket.ticket_last_reply,
+        totalComments: ticket.ticket_total_comments,
+        notifications: ticket.ticket_notifications,
+        comments: ticket.ticket_comments,
+      }));
 
       setData((prev) => ({
         ...prev,
         loadingContext: false,
-        ticketsContext: tickets,
+        ticketsContext: mappedTickets,
       }));
-
-      setTicketsContextData(tickets);
     } catch (error) {
       setData((prev) => ({
         ...prev,
@@ -190,8 +211,6 @@ export const AppDataProvider = ({ children }) => {
         ...data,
         updateLoginStatus,
         refreshTickets,
-        ticketsContextData,
-        setTicketsContextData,
         updateTicketNotifications,
         updateTicket,
         updateNewCommentNotification,

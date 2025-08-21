@@ -87,20 +87,20 @@ const MessageTabs = ({
   const [selectedTicket, setSelectedTicket] = useState(selectedNewTicket);
   const [currentTab, setCurrentTab] = useState('all');
   const [priorityFilter, setPriorityFilter] = useState('all');
-  const [tickets, setTickets] = useState([]);
+
   const [loading, setLoading] = useState(true);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [loggedInuserId, setloggedInuserId] = useState(null);
+
   const {
     loadingContext,
-    errorContext,
     ticketsContext,
     loggedinContext,
     loggedInUsrId,
-    refreshTickets,
     updateTicket,
     updateNewCommentNotification,
   } = useAppData();
+
   const image_urls = window.robodeskData?.imageUrls || {};
   const messageWrapperRef = useRef(null);
   const { connectExclusive, disconnect } = useExclusiveServerEvents();
@@ -117,127 +117,20 @@ const MessageTabs = ({
     }
   }, []);
 
-  const fetchTickets = async () => {
-    if (!loggedInUsrId) {
-      return;
-    }
-
-    try {
-      setLoading(true);
-      const tickets = ticketsContext;
-
-      const mappedTickets = tickets.map((ticket) => ({
-        id: ticket.id,
-        ticketNumber: ticket.ticket_number,
-        title: ticket.ticket_title,
-        source: ticket.ticket_origin,
-        timeAgo: ticket.ticket_time_ago + ' ago',
-        authorImage: ticket.ticket_author_image ?? Author1,
-        status: ticket.ticket_status ?? 'New',
-        priority: ticket.ticket_priority ?? 'Medium',
-        author: ticket.ticket_author,
-        lastReply: ticket.ticket_last_reply,
-        totalComments: ticket.ticket_total_comments,
-        notifications: ticket.ticket_notifications,
-        comments: ticket.ticket_comments,
-      }));
-
-      setTickets(mappedTickets);
-    } catch (error) {
-    } finally {
-      setLoading(false);
-    }
-  };
   const firstMessageId = useMemo(() => {
-    if (!tickets || tickets.length === 0) return false;
+    if (!ticketsContext || ticketsContext.length === 0) return false;
 
-    return tickets[0].id;
-  }, [tickets]);
-
-  useEffect(() => {
-    // console.log('The first message id', firstMessageId);
-
-    if (loggedinContext && loggedInUsrId && firstMessageId) {
-      connectExclusive(
-        'tickets',
-        {
-          postId: 0,
-          lastId: firstMessageId,
-          userId: loggedInUsrId,
-        },
-        {
-          new_ticket: (data) => {
-            const ticketsArray = Array.isArray(data) ? data : [data];
-
-            const mappedTickets = ticketsArray.map((ticket) => ({
-              id: ticket.id,
-              ticketNumber: ticket.ticket_number,
-              title: ticket.ticket_title,
-              source: ticket.ticket_origin,
-              timeAgo: ticket.ticket_time_ago,
-              authorImage: ticket.ticket_author_image ?? Author1,
-              status: ticket.ticket_status ?? 'New',
-              priority: ticket.ticket_priority ?? 'Medium',
-              author: ticket.ticket_author,
-              lastReply: ticket.ticket_last_reply,
-              notifications: ticket.ticket_notifications,
-              totalComments: ticket.ticket_total_comments,
-              comments: ticket.ticket_comments,
-            }));
-
-            updateTicket(data);
-
-            setTickets((prevTickets) => {
-              const newTickets = mappedTickets.filter(
-                (mappedTicket) =>
-                  !prevTickets.some(
-                    (prevTicket) => prevTicket.id === mappedTicket.id
-                  )
-              );
-
-              return [...newTickets, ...prevTickets];
-            });
-          },
-          new_notification: (data) => {
-            const ids = Array.isArray(data)
-              ? data.map((item) => (typeof item === 'object' ? item.id : item))
-              : [];
-            setTickets((prevTickets) =>
-              prevTickets.map((ticket) =>
-                ids.includes(ticket.id) && ticket.notifications === 'yes'
-                  ? { ...ticket, notifications: 'no' }
-                  : ticket
-              )
-            );
-
-            //hger
-          },
-        }
-      );
-
-      return () => {};
-    }
-  }, [tickets]);
-
-  // useEffect(() => {
-  //     if(refresh){
-  //         refreshTickets();
-  //     }
-
-  // },[refresh])
+    return ticketsContext[0].id;
+  }, [ticketsContext]);
 
   useEffect(() => {
     if (loggedinContext && loggedInUsrId) {
       setIsLoggedIn(true);
       setloggedInuserId(loggedInUsrId);
-
-      fetchTickets();
-
       if (!selectedTicket) {
         setSelectedTicket(selectedNewTicket ? selectedNewTicket : null);
       }
     } else {
-      setTickets([]);
       setLoading(false);
     }
   }, [isLoggedIn, loggedInUsrId, ticketsContext]);
@@ -276,8 +169,8 @@ const MessageTabs = ({
   };
 
   const filteredTickets =
-    Array.isArray(tickets) && tickets.length > 0
-      ? tickets.filter((ticket) => {
+    Array.isArray(ticketsContext) && ticketsContext.length > 0
+      ? ticketsContext.filter((ticket) => {
           const matchesTab =
             currentTab === 'all' || ticket.status === currentTab;
           const matchesPriority =
