@@ -1222,7 +1222,7 @@ function save_robodesk_user_meta_fields($user_id)
     }
 }
 
-// Automatically assign a ticket to a support staff member according to the least assigned tickets 
+// Automatically assign a ticket to a support staff member according to the least assigned tickets use in email and chat for now
 function auto_assign_ticket_to_support_staff()
 {
     // Get the support staff users with their display names
@@ -1280,78 +1280,3 @@ function auto_assign_ticket_to_support_staff()
 
     return $assigned_name;
 }
-
-// // Alternative function if you want to assign ALL unassigned tickets at once
-// function auto_assign_all_unassigned_tickets()
-// {
-//     // Query to get all truly unassigned tickets
-//     $unassigned_tickets = get_posts(array(
-//         'post_type' => 'robodesk_ticket',
-//         'post_status' => 'publish',
-//         'meta_query' => array(
-//             'relation' => 'OR',
-//             array(
-//                 'key' => 'assigned_to',
-//                 'compare' => 'NOT EXISTS'
-//             ),
-//             array(
-//                 'key' => 'assigned_to',
-//                 'value' => array('N/A', '', ' '),
-//                 'compare' => 'IN'
-//             ),
-//             array(
-//                 'key' => 'assigned_to',
-//                 'value' => '',
-//                 'compare' => '='
-//             )
-//         ),
-//         'numberposts' => -1
-//     ));
-
-//     $unassigned_ticket_ids = wp_list_pluck($unassigned_tickets, 'ID');
-
-//     echo '<div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">';
-//     echo '<h4 class="font-medium text-yellow-900 mb-2">Unassigned Tickets Found:</h4>';
-//     if (empty($unassigned_ticket_ids)) {
-//         echo '<p class="text-yellow-700">No unassigned tickets found.</p>';
-//         return;
-//     } else {
-//         echo '<ul class="list-disc list-inside text-yellow-700">';
-//         foreach ($unassigned_ticket_ids as $ticket_id) {
-//             echo '<li>ID: ' . esc_html($ticket_id) . '</li>';
-//         }
-//         echo '</ul>';
-//     }
-//     echo '</div>';
-
-//     // Get support staff
-//     $support_staff = get_users(array(
-//         'role' => 'robodesk_support_staff',
-//         'fields' => array('ID', 'display_name', 'user_login')
-//     ));
-
-//     if (empty($support_staff)) {
-//         echo '<div class="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">';
-//         echo '<p class="text-red-700">No support staff available for assignment.</p>';
-//         echo '</div>';
-//         return;
-//     }
-
-//     // Assign tickets using round-robin distribution
-//     $staff_count = count($support_staff);
-//     $assignments_made = 0;
-
-//     foreach ($unassigned_ticket_ids as $index => $ticket_id) {
-//         $staff_index = $index % $staff_count; // Round-robin assignment
-//         $assigned_user = $support_staff[$staff_index];
-//         $assigned_name = !empty($assigned_user->display_name) ? $assigned_user->display_name : $assigned_user->user_login;
-
-//         update_post_meta($ticket_id, 'assigned_to', $assigned_user->ID);
-//         update_post_meta($ticket_id, 'ticket_assignee', $assigned_name);
-//         $assignments_made++;
-//     }
-
-//     echo '<div class="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">';
-//     echo '<p class="text-green-700">Successfully assigned ' . $assignments_made . ' tickets to support staff using round-robin distribution.</p>';
-//     echo '</div>';
-// }

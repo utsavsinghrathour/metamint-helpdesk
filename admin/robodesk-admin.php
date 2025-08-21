@@ -266,35 +266,6 @@ function add_custom_comment_type($commentdata)
 add_filter('preprocess_comment', 'add_custom_comment_type');
 
 
-// add_action('pre_get_comments', 'exclude_ticket_replies');
-// function exclude_ticket_replies($query)
-// {
-//     global $screen;
-//     $screen = get_current_screen();
-//     if (is_admin() && $screen && $screen->base === 'edit-comments') {
-//         $query->query_vars['type__not_in'] = array('ticket_replies');
-//     }
-// }
-
-
-// add_action('pre_get_comments', 'exclude_ticket_replies');
-// function exclude_ticket_replies($query)
-
-// {
-//     global $pagenow;
-//     // Check if the current page is the comments admin page
-//     if (isset($_GET['page']) && $_GET['page']  !== 'robodesk-dashboard') {
-//         $query->query_vars['type__not_in'] = array('ticket_replies');
-//     }
-// }
-
-
-// add_action('admin_footer', function () {
-
-//     global $pagenow;
-
-//     var_dump($pagenow);
-// });
 
 // Enqueue Tailwind CSS and custom styles
 //if page=robodesk-dashboard then enqueue styles
@@ -303,7 +274,7 @@ if (isset($_GET['page']) && $_GET['page'] === 'robodesk-dashboard') {
 }
 function robodesk_enqueue_tailwind_and_styles()
 {
-    // Load Tailwind CDN browser runtime
+    // Load Tailwind CDN browser runtime thats why wp_enqueue_script is used not style
     wp_enqueue_script(
         'tailwind-browser-cdn',
         'https://cdn.tailwindcss.com',
