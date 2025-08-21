@@ -121,6 +121,8 @@ function handle_robodesk_ticket_submission()
             wp_set_object_terms($post_id, 31, 'robodesk_ticket_priority');
         }
 
+
+
         $origin =  create_term_if_not_exists();
 
         $user_obj = get_user_by('id', $user_id);
@@ -138,7 +140,7 @@ function handle_robodesk_ticket_submission()
             'comment_type' => 'ticket_replies'
         ));
 
-
+        update_post_meta($post_id, 'rbd_all_seen', 'yes');
 
         wp_set_object_terms($post_id, (int) $origin['term_id'], 'robodesk_ticket_origin');
 

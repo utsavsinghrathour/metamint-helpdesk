@@ -5,6 +5,7 @@ import { RiMessage2Fill } from 'react-icons/ri';
 import { GoHomeFill } from 'react-icons/go';
 import '../styles/footer.css';
 import { useAppData } from '../utils/AppDataContext';
+import { useEffect, useState } from 'react';
 
 // Home Icon Component
 // const HomeIcon = (props) => (
@@ -96,9 +97,16 @@ const Footer = ({
 }) => {
   const { ticketsContext } = useAppData();
 
-  const hasNotificationOff = ticketsContext?.some(
-    (ticket) => ticket.ticket_notifications === 'no'
-  );
+  const [showRedDot, setShowRedDot] = useState(false);
+
+  useEffect(() => {
+    const hasNotification = ticketsContext?.some(
+      (ticket) => ticket.notifications === 'no'
+    );
+
+
+    setShowRedDot(hasNotification);
+  }, [ticketsContext]);
 
   const tabs = [
     { id: 0, icon: GoHomeFill, label: '', tooltip: 'Home' },
@@ -107,7 +115,7 @@ const Footer = ({
       icon: RiMessage2Fill,
       label: '',
       tooltip: 'Conversations',
-      notification: hasNotificationOff,
+      notification: showRedDot,
     },
     { id: 2, icon: RiInformation2Fill, label: '', tooltip: 'Notice Board' },
     { id: 3, icon: FaQuestionCircle, label: '', tooltip: 'Wiki' },

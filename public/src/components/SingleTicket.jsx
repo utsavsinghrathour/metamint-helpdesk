@@ -10,6 +10,7 @@ import '../styles/MessageTabs.css';
 import { sendReply } from '../utils/modules';
 import { useAppData } from '../utils/AppDataContext';
 import DefaultAvatar from '../images/default-avatar.jpg';
+import useExclusiveServerEvents from '../Hooks/useExclusiveServerEvents.js';
 
 // Skeleton Loader Component for Conversations
 const ConversationSkeleton = ({ count = 6 }) => {
@@ -169,7 +170,7 @@ const TicketClosed = ({ handleFocusedTextArea, setActiveTab }) => {
 
 // Cache management utilities
 const messageCache = new Map();
-const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes cache
+const CACHE_DURATION = 0;
 
 const getCachedMessages = (ticketId) => {
   const cached = messageCache.get(ticketId);
@@ -220,6 +221,7 @@ const SingleTicket = ({
   const hasConnected = useRef(false);
   const { loggedinContext, loggedInUsrId, updateTicketNotifications } =
     useAppData();
+  const { connectExclusive } = useExclusiveServerEvents();
 
   const [ticketClosed, setTicketClosed] = useState(false);
 
@@ -349,18 +351,15 @@ const SingleTicket = ({
     }
   };
 
-  //handling new comments received from sse
   const handleNewComment = (commentData) => {
+    updateTicketNotifications(ticket.id, 'yes');
     setChatMessages((prev) => {
-      // Check if this message already exists
       const messageExists = prev.some((msg) => msg.id === commentData.id);
 
-      // If message already exists, don't play beep and just return current messages
       if (messageExists) {
         return prev;
       }
 
-      // Only play beep for genuinely new messages
       beep.current.play();
 
       const newMessage = {
@@ -532,7 +531,7 @@ const SingleTicket = ({
         chatContainer.scrollTop = chatContainer.scrollHeight;
       }
     }
-  }, [chatMessages.length]); // Only trigger on message count change
+  }, [chatMessages.length]);
 
   // Updated serverEvents with better error handling
   const serverEvents = (
@@ -546,7 +545,8 @@ const SingleTicket = ({
     );
 
     eventSource.onopen = () => {
-      //   console.log('SSE connection opened');
+      console.log('SSE connection Single ticket opened');
+
       hasConnected.current = true;
     };
 
@@ -559,16 +559,16 @@ const SingleTicket = ({
       const commentData = JSON.parse(event.data);
 
       //   console.log('New comment received:', commentData);
-      if (typeof onNewComment === 'function') {
+      if (typeof handleNewComment === 'function') {
         // Don't play beep here, let handleNewComment decide
-        onNewComment(commentData);
+        handleNewComment(commentData);
       }
     });
 
     eventSource.addEventListener('disconnect', (event) => {
       try {
         const data = JSON.parse(event.data);
-        // console.log('Server requested disconnect:', data);
+        console.log('Server requested disconnect:', data);
       } catch (error) {
         console.error('Error parsing disconnect:', error);
       }
@@ -604,18 +604,34 @@ const SingleTicket = ({
       isMessagingActive &&
       loggedinContext &&
       lastMessageId &&
-      initialLoadComplete // Only start SSE after initial load is complete
+      initialLoadComplete
     ) {
-      const cleanup = serverEvents(
-        ticket.id,
-        lastMessageId,
-        handleNewComment,
-        loggedInUsrId
+      connectExclusive(
+        'tickets',
+        {
+          postId: ticket.id,
+          lastId: lastMessageId,
+          userId: loggedInUsrId,
+        },
+        {
+          new_comment: (data) => {
+            const commentData = data;
+            console.log('new comment foubnd ', data.id);
+            handleNewComment(commentData);
+          },
+
+          ticket_open: (data) => {
+            setTicketClosed(false);
+          },
+          ticket_closed: (data) => {
+            setTicketClosed(true);
+          },
+        }
       );
-      hasConnected.current = true;
-      return cleanup;
+
+      return () => {};
     }
-  }, [lastMessageId, initialLoadComplete]);
+  }, [lastMessageId, initialLoadComplete, chatMessages]);
 
   const handleSend = async () => {
     console.log('From handle send', message);
