@@ -28,7 +28,9 @@ const AppContent = ({ imageUrls = { logo: '' } }) => {
   const [selectedTicket, setSelectedTicket] = useState();
   const [focusedTextArea, setFocusedTextArea] = useState(false);
   const notificationAudio = useRef(
-    new Audio('http://localhost:10135/wp-content/uploads/2025/08/1.mp3')
+    new Audio(
+      'http://woo-escrow.codepixelz.tech/wp-content/uploads/2025/08/1.mp3'
+    )
   );
   const { connectExclusive } = useExclusiveServerEvents();
 
@@ -170,8 +172,8 @@ const AppContent = ({ imageUrls = { logo: '' } }) => {
     },
   ];
 
-  if (loadingContext) return <p>Loading...</p>;
-  if (errorContext) return <p>Error: {errorContext}</p>;
+  //   if (loadingContext) return <p>Loading...</p>;
+  //   if (errorContext) return <p>Error: {errorContext}</p>;
 
   return (
     <div className='robodesk-plugin rd-flex rd-flex-col rd-align-end '>
