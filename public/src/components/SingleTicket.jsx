@@ -604,7 +604,8 @@ const SingleTicket = ({
       isMessagingActive &&
       loggedinContext &&
       lastMessageId &&
-      initialLoadComplete
+      initialLoadComplete &&
+      !loading
     ) {
       connectExclusive(
         'tickets',
@@ -631,7 +632,7 @@ const SingleTicket = ({
 
       return () => {};
     }
-  }, [lastMessageId, initialLoadComplete, chatMessages]);
+  }, [lastMessageId, initialLoadComplete, chatMessages, loading]);
 
   const handleSend = async () => {
     console.log('From handle send', message);
