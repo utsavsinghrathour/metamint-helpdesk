@@ -375,6 +375,42 @@ function robodesk_get_formatted_comments($post_id)
 }
 
 
+add_filter('rest_robodesk_ticket_query', function ($args, $request) {
+    global $wpdb;
+
+
+    if (! empty($request['search'])) {
+        $search_term = sanitize_text_field($request['search']);
+
+        add_filter('posts_where', function ($where) use ($search_term, $wpdb) {
+            $like = '%' . $wpdb->esc_like($search_term) . '%';
+            return $where . $wpdb->prepare(" AND {$wpdb->posts}.post_title LIKE %s ", $like);
+        });
+    }
+
+
+    if (! empty($request['ticket_priority'])) {
+        $args['tax_query'][] = [
+            'taxonomy' => 'robodesk_ticket_priority',
+            'field'    => 'slug',
+            'terms'    => sanitize_text_field($request['ticket_priority']),
+        ];
+    }
+
+
+    if (! empty($request['ticket_status'])) {
+        $statuses = array_map('sanitize_text_field', explode(',', $request['ticket_status']));
+        $args['meta_query'][] = [
+            'key'     => '_robodesk_ticket_status',
+            'value'   => $statuses,
+            'compare' => 'IN'
+        ];
+    }
+
+    return $args;
+}, 10, 2);
+
+
 
 add_filter(
     'rest_prepare_robodesk_ticket',

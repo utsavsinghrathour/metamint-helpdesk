@@ -1,7 +1,6 @@
 import React, { useState, useEffect, Suspense, useRef, useMemo } from 'react';
 import { FaChevronRight, FaChevronLeft } from 'react-icons/fa';
 import '../styles/MessageTabs.css';
-import Author1 from '../images/person1.jpeg';
 
 import { LuDot } from 'react-icons/lu';
 import { RiPencilFill } from 'react-icons/ri';
@@ -11,8 +10,7 @@ import Preloader from '../images/preloader.svg';
 
 import { useAppData } from '../utils/AppDataContext';
 import defaultLogo from '../images/robodesk-logo.png';
-
-import useExclusiveServerEvents from '../Hooks/useExclusiveServerEvents';
+import ChangePassword from './ChangePassword';
 
 const SingleTicket = React.lazy(() => import('./SingleTicket'));
 
@@ -85,12 +83,18 @@ const MessageTabs = ({
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedTicket, setSelectedTicket] = useState(selectedNewTicket);
-  const [currentTab, setCurrentTab] = useState('all');
+  const [currentTab, setCurrentTab] = useState('active-conversations');
   const [priorityFilter, setPriorityFilter] = useState('all');
+
+  const searchKeywordRef = useRef();
+  const prioRityRef = useRef();
+  const statusref = useRef();
 
   const [loading, setLoading] = useState(true);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [loggedInuserId, setloggedInuserId] = useState(null);
+
+  const [showChangePassword, setShowChangePassword] = useState(false);
 
   const {
     loadingContext,
@@ -98,23 +102,29 @@ const MessageTabs = ({
     loggedinContext,
     loggedInUsrId,
     updateTicket,
-    updateNewCommentNotification,
+    setSingleTicketPage,
+    isSingleTicketPage,
+    refreshTickets,
   } = useAppData();
 
   const image_urls = window.robodeskData?.imageUrls || {};
   const messageWrapperRef = useRef(null);
-  const { connectExclusive, disconnect } = useExclusiveServerEvents();
-  const [refresh, setRefresh] = useState(false);
+
   const beep = useRef(new Audio(wpAuth.notificationSound));
 
   useEffect(() => {
     if (!loggedInUsrId) {
       return;
     }
+
     if (beep.current) {
       beep.current.volume = 1.0;
       beep.current.preload = 'auto';
     }
+  }, []);
+
+  useEffect(() => {
+    setSingleTicketPage(false);
   }, []);
 
   const firstMessageId = useMemo(() => {
@@ -162,20 +172,39 @@ const MessageTabs = ({
     if (!wrapper) return;
 
     const { scrollTop, scrollHeight, clientHeight } = wrapper;
-    // console.log('Scroll Top:', scrollTop, 'Client Height:', clientHeight, 'Scroll Height:', scrollHeight);
     if (scrollTop + clientHeight >= scrollHeight) {
       console.log('now');
     }
   };
 
+  function handleSearch() {
+    const keyWord = searchKeywordRef.current.value;
+    const status = statusref.current.value;
+    const priority = prioRityRef.current.value;
+
+    refreshTickets(keyWord, priority, status);
+  }
+
   const filteredTickets =
     Array.isArray(ticketsContext) && ticketsContext.length > 0
       ? ticketsContext.filter((ticket) => {
-          const matchesTab =
-            currentTab === 'all' || ticket.status === currentTab;
-          const matchesPriority =
-            priorityFilter === 'all' || ticket.priority === priorityFilter;
+          // --- Status filter ---
+          let matchesTab = false;
 
+          if (currentTab === 'active-conversations') {
+            matchesTab =
+              ticket.status === 'open' || ticket.status === 'in-progress';
+          } else {
+            matchesTab = ticket.status === currentTab;
+          }
+
+          const ticketPriority = ticket.priority?.toLowerCase() || '';
+          const filterPriority = priorityFilter?.toLowerCase() || 'all';
+
+          const matchesPriority =
+            filterPriority === 'all' || ticketPriority === filterPriority;
+
+          // --- Search filter ---
           const searchLower = searchTerm.toLowerCase();
           const titleLower = ticket.title?.toLowerCase() || '';
           const ticketNumberLower = ticket.ticketNumber?.toLowerCase() || '';
@@ -184,6 +213,7 @@ const MessageTabs = ({
             titleLower.includes(searchLower) ||
             ticketNumberLower.includes(searchLower);
 
+          // --- Final condition ---
           return matchesTab && matchesPriority && matchesSearch;
         })
       : [];
@@ -252,37 +282,41 @@ const MessageTabs = ({
                 </div>
 
                 {/* Search and Priority Filter */}
+
                 <div className='rd-px-18 rd-py-10 rd-flex rd-gap-10 rd-align-center rd-justify-between'>
                   <input
+                    ref={searchKeywordRef}
                     type='text'
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
+                    id='keyword-search'
+                    onChange={(e) => handleSearch()}
                     placeholder='Search for conversation'
                     className='rd-border-light rd-border-radius-md rd-p-10 rd-color-gray rd-fw-medium flex-2'
                   />
                   <select
-                    value={priorityFilter}
-                    onChange={(e) => setPriorityFilter(e.target.value)}
+                    ref={prioRityRef}
+                    id='priority-filter'
+                    onChange={(e) => handleSearch()}
                     className='rd-border-light rd-p-10 rd-body-text rd-border-radius-md rd-color-gray rd-fw-medium flex-1'
                   >
-                    <option value='all'>All Priorities</option>
-                    <option value='Urgent'>High</option>
-                    <option value='Medium'>Medium</option>
-                    <option value='Low'>Low</option>
+                    <option value='all'>All</option>
+                    {wpAuth?.priorityTerms?.map((priority) => (
+                      <option key={priority.term_id}>{priority.name}</option>
+                    ))}
                   </select>
                 </div>
 
-                {/* Tabs */}
                 <div className='rd-flex rd-justify-between rd-py-10 rd-px-20 rd-gap-10 rd-border-bottom-light rd-pt-0'>
                   <select
-                    value={currentTab}
-                    onChange={(e) => setCurrentTab(e.target.value)}
+                    ref={statusref}
+                    id='status-conversation'
+                    onChange={(e) => handleSearch()}
                     className='rd-p-10 rd-py-5 rd-border-light rd-border-radius-md rd-body-text ticket-tab rd-color-gray rd-fw-medium'
                   >
-                    <option value='all'>Active Conversations</option>
-                    <option value='new'>New</option>
-                    <option value='ongoing'>On Going</option>
-                    <option value='resolved'>Resolved</option>
+                    {Object.entries(wpAuth?.status).map(([key, label]) => (
+                      <option key={key} value={key}>
+                        {label}
+                      </option>
+                    ))}
                   </select>
                 </div>
 

@@ -141,15 +141,23 @@ function robodesk_enqueue_scripts()
         wp_localize_script('robodesk-react-script', 'wpAuth', array(
             'isLoggedIn' => is_user_logged_in() ? 'true' : 'false',
             'loggedInUserId' => is_user_logged_in() ? get_current_user_id() : 'false',
-            // get option robodesk_notification_sound for notification sound
+
             'notificationSound' => esc_url(get_option('robodesk_notification_sound', '')),
             'priorityTerms' => get_terms(array(
                 'taxonomy' => 'robodesk_ticket_priority',
                 'hide_empty' => false,
             )),
 
+            'status' => [
+                'active-conversations' => 'Active Conversations',
+                'open' => 'Open',
+                'in-progress' => 'In Progress',
+                'archived' => 'Archived',
+                'closed' => 'Closed',
+            ],
             'wpAjax' => [
                 'nonce' => wp_create_nonce('robodesk-nonce'),
+                'passwordResetNonce' => wp_create_nonce('password-reset'),
                 'ajaxUrl' => admin_url('admin-ajax.php'),
 
             ],
@@ -531,8 +539,6 @@ function robodesk_comment_creation($comment_ID, $comment_approved, $commentdata)
     }
 }
 
-
-
 add_action('wp_insert_comment', 'robodesk_comment_creation_on_insert', 10, 2);
 
 function robodesk_comment_creation_on_insert($comment_ID, $comment_object)
@@ -573,3 +579,19 @@ function disable_jquery_migrate_logging($scripts)
     }
 }
 add_action('wp_default_scripts', 'disable_jquery_migrate_logging');
+
+
+
+// add_filter('retrieve_password_message', 'robodesk_add_param_to_reset_link', 10, 4);
+// function robodesk_add_param_to_reset_link($message, $key, $user_login, $user_data)
+// {
+
+
+//     $reset_url = network_site_url("wp-login.php?action=rp&key=$key&login=" . rawurlencode($user_login), 'login');
+
+//     $modified_reset_url = add_query_arg('lang', 'en', $reset_url);
+
+//     $message = str_replace($reset_url, $modified_reset_url, $message);
+
+//     return $message;
+// }
