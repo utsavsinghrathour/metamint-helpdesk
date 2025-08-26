@@ -1,4 +1,4 @@
-// // hooks/useExclusiveServerEvents.js
+// hooks/useExclusiveServerEvents.js
 // import { useEffect, useRef } from 'react';
 
 // const useExclusiveServerEvents = () => {
@@ -99,6 +99,8 @@
 //     if (lastId !== undefined && lastId !== null) url += `/${lastId}`;
 //     if (userId !== undefined && userId !== null) url += `/${userId}`;
 
+//     console.log('the url is ', url);
+
 //     // Set active stream before creating connection
 //     activeStreamRef.current = streamIdentifier;
 
@@ -112,11 +114,11 @@
 //       };
 
 //       eventSourceRef.current.onerror = (error) => {
-//         console.error(`SSE error in stream ${streamIdentifier}:`, error);
-//         // On error, clear the active stream reference
-//         if (eventSourceRef.current?.readyState === EventSource.CLOSED) {
-//           activeStreamRef.current = null;
-//         }
+//         // console.error(`SSE error in stream ${streamIdentifier}:`, error);
+//         // // On error, clear the active stream reference
+//         // if (eventSourceRef.current?.readyState === EventSource.CLOSED) {
+//         //   activeStreamRef.current = null;
+//         // }
 //       };
 
 //       eventSourceRef.current.onclose = () => {
@@ -172,7 +174,7 @@
 
 // export default useExclusiveServerEvents;
 
-// hooks/useExclusiveServerEvents.js
+// // hooks/useExclusiveServerEvents.js
 import { useEffect, useRef } from 'react';
 
 const useExclusiveServerEvents = () => {
@@ -182,28 +184,10 @@ const useExclusiveServerEvents = () => {
 
   const disconnect = () => {
     if (eventSourceRef.current) {
-      try {
-        // Remove all event listeners
-        Object.entries(eventHandlersRef.current).forEach(([event, handler]) => {
-          try {
-            eventSourceRef.current.removeEventListener(event, handler);
-          } catch (err) {
-            console.warn(`Error removing ${event} listener:`, err);
-          }
-        });
-
-        // Clear handlers reference
-        eventHandlersRef.current = {};
-
-        // Close connection
-        eventSourceRef.current.close();
-      } catch (error) {
-        console.warn('Error during disconnect:', error);
-      } finally {
-        eventSourceRef.current = null;
-        activeStreamRef.current = null;
-        console.log('SSE stream disconnected');
-      }
+      eventSourceRef.current.close();
+      eventSourceRef.current = null;
+      activeStreamRef.current = null;
+      console.log('SSE stream disconnected');
     }
   };
 
@@ -212,11 +196,13 @@ const useExclusiveServerEvents = () => {
     { postId, lastId, userId },
     handlers
   ) => {
-    // If already connected to this exact same stream, do nothing
+    // If already connected to this stream, do nothing
     if (activeStreamRef.current === streamType) return;
 
     // Close any existing connection
     disconnect();
+
+    if (postId !== undefined && postId !== null) url += `/${postId}`;
 
     // Build URL according to your endpoint structure
     let url = `/wp-json/robodesk/v1/stream/${streamType}`;
@@ -226,18 +212,22 @@ const useExclusiveServerEvents = () => {
 
     activeStreamRef.current = streamType;
 
-    // console.log('The streaming url is', url);
     // Create new connection
     eventSourceRef.current = new EventSource(url);
 
+    // console.log(eventSourceRef.current);
+
     // Setup common handlers
     eventSourceRef.current.onopen = () => {
-      //   console.log(`SSE ${streamType} stream connected`);
+      console.log(`SSE ${streamType} stream connected`);
     };
 
     eventSourceRef.current.onerror = (error) => {
       //   console.log(`SSE error in ${streamType} stream:`, error);
     };
+
+    // Clear previous handlers
+    eventHandlersRef.current = {};
 
     // Register all provided handlers
     Object.entries(handlers).forEach(([event, handler]) => {

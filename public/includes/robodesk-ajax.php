@@ -462,8 +462,43 @@ function robodesk_register_user()
 }
 
 
-// 1>>Check if email address exists
-// 2>>If email address exists, display the password field
-// 3>>If email address does not exist, create account and send password to email address    
+// Handle Ajax request
+function handle_change_password()
+{
 
-// function robodesk_
+    check_ajax_referer('password-reset', 'nonce');
+    $password  = isset($_POST['password']) ? sanitize_text_field($_POST['password']) : '';
+    $reset_key = isset($_POST['reset_key']) ? sanitize_text_field($_POST['reset_key']) : '';
+    $user_login = isset($_POST['user']) ? sanitize_text_field($_POST['user']) : '';
+
+    if (empty($password) || empty($reset_key) || empty($user_login)) {
+        wp_send_json_error(['message' => 'Missing required fields.']);
+    }
+
+    $user = get_user_by('login', $user_login);
+    if (!$user && is_email($user_login)) {
+        $user = get_user_by('email', $user_login);
+    }
+
+    if (!$user) {
+        wp_send_json_error(['message' => 'Invalid user.']);
+    }
+
+
+    $check = check_password_reset_key($reset_key, $user->user_login);
+    if (is_wp_error($check)) {
+        wp_send_json_error(['message' => 'Invalid or expired reset key.']);
+    }
+
+
+    reset_password($user, $password);
+
+    wp_send_json_success(['message' => 'Password changed successfully.']);
+
+
+    wp_send_json_success('Password changed successfully');
+
+    wp_die();
+}
+add_action('wp_ajax_change_password', 'handle_change_password');
+add_action('wp_ajax_nopriv_change_password', 'handle_change_password'); // if not logged in

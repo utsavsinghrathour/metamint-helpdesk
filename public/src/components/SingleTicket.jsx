@@ -219,9 +219,14 @@ const SingleTicket = ({
   const beep = useRef(new Audio(wpAuth.notificationSound));
   const isAtTop = useRef(false);
   const hasConnected = useRef(false);
-  const { loggedinContext, loggedInUsrId, updateTicketNotifications } =
-    useAppData();
-  const { connectExclusive } = useExclusiveServerEvents();
+  const {
+    loggedinContext,
+    loggedInUsrId,
+    updateTicketNotifications,
+    isSingleTicketPage,
+    setSingleTicketPage,
+  } = useAppData();
+  const { connectExclusive, disconnect } = useExclusiveServerEvents();
 
   const [ticketClosed, setTicketClosed] = useState(false);
 
@@ -232,6 +237,14 @@ const SingleTicket = ({
   });
 
   const [isMessagingActive, setIsisMessagingActive] = useState(true);
+
+  useEffect(() => {
+    setSingleTicketPage(true);
+
+    return () => {
+      setSingleTicketPage(false);
+    };
+  }, []);
 
   useEffect(() => {
     if (ticket.notifications) {
@@ -605,8 +618,10 @@ const SingleTicket = ({
       loggedinContext &&
       lastMessageId &&
       initialLoadComplete &&
-      !loading
+      !loading &&
+      isSingleTicketPage
     ) {
+
       connectExclusive(
         'tickets',
         {
@@ -617,7 +632,6 @@ const SingleTicket = ({
         {
           new_comment: (data) => {
             const commentData = data;
-            console.log('new comment foubnd ', data.id);
             handleNewComment(commentData);
           },
 
@@ -632,7 +646,13 @@ const SingleTicket = ({
 
       return () => {};
     }
-  }, [lastMessageId, initialLoadComplete, chatMessages, loading]);
+  }, [
+    lastMessageId,
+    initialLoadComplete,
+    chatMessages,
+    loading,
+    isSingleTicketPage,
+  ]);
 
   const handleSend = async () => {
     console.log('From handle send', message);

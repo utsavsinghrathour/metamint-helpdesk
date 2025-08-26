@@ -235,9 +235,9 @@ add_action('rest_api_init', callback: function () {
     );
 });
 
-function robodesk_stream($request)
-{
 
+function robodesk_stream__1($request)
+{
     $type = $request->get_param('type');
     $user_id = $request->get_param('user_id');
     header('Content-Type: text/event-stream');
@@ -258,6 +258,108 @@ function robodesk_stream($request)
 
     set_time_limit(0);
     ignore_user_abort(false);
+
+    switch ($type) {
+        case ('comments'):
+            $ticket_id = (int) $request->get_param('post_id');
+            if ($ticket_id > 0) {
+                $ticket_status = get_post_meta($ticket_id, '_robodesk_ticket_status', true);
+                $last_comment_client = $request->get_param('last_id');
+                $new_conversations = robodesk_live_conversations($ticket_id, $last_comment_client, $user_id);
+                if (!empty($new_conversations)) {
+                    foreach ($new_conversations as $c) {
+                        echo "event: new_comment\n";
+                        echo "data: " . json_encode($c) . "\n\n";
+                        flush();
+                    }
+                    update_post_meta($ticket_id, 'rbd_all_seen', 'yes');
+                }
+
+                if ($ticket_status == 'closed') {
+                    echo "event: ticket_closed\n";
+                    echo "data: " . json_encode(array('reason' => 'ticket_closed')) . "\n\n";
+                    flush();
+                    exit;
+                }
+
+
+                if ($ticket_status == 'open') {
+                    echo "event: ticket_open\n";
+                    echo "data: " . json_encode(array('reason' => 'ticket_open')) . "\n\n";
+                    flush();
+                }
+            }
+
+        case ('tickets'):
+
+            $ticket_id = (int) $request->get_param('post_id');
+            if ($ticket_id == 0) {
+                $last_ticket_id = (int) $request->get_param('last_id');
+                $new_ticket = robodesk_get_new_tickets($last_ticket_id, $user_id);
+                if ($last_ticket_id > 0 && !empty($new_ticket)) {
+                    foreach ($new_ticket as $ticket) {
+                        echo "event: new_ticket\n";
+                        echo "data: " . json_encode($ticket) . "\n\n";
+                        flush();
+                    }
+                }
+
+                $notifications = robodesk_get_new_notifications($user_id);
+                if (!empty($notifications)) {
+                    echo "event: new_notification\n";
+                    echo "data: " . json_encode($notifications) . "\n\n";
+                    flush();
+                }
+            }
+
+            break;
+
+        case ('notifications'):
+            $notifications = robodesk_get_new_notifications($user_id);
+            if (!empty($notifications)) {
+                echo "event: new_notification\n";
+                echo "data: " . json_encode($notifications) . "\n\n";
+                flush();
+            }
+            break;
+
+
+        default:
+            echo "event: error\n";
+            echo "data: " . json_encode(array('message' => 'Invalid stream type')) . "\n\n";
+            flush();
+            exit;
+    }
+
+    echo "retry: 6000\n";
+    flush();
+    exit;
+}
+
+function robodesk_stream($request)
+{
+    $type = $request->get_param('type');
+    $user_id = $request->get_param('user_id');
+    header('Content-Type: text/event-stream');
+    header('Cache-Control: no-cache');
+    header('Connection: keep-alive');
+    header('Access-Control-Allow-Origin: *');
+    header('Access-Control-Allow-Headers: Cache-Control');
+    header('X-Accel-Buffering: no');
+
+    set_time_limit(0);
+
+    session_write_close();
+
+    if (ob_get_level()) ob_end_clean();
+
+    ini_set('zlib.output_compression', 0);
+    ini_set('output_buffering', 0);
+
+    set_time_limit(0);
+    ignore_user_abort(false);
+
+    if (connection_aborted()) return;
 
     switch ($type) {
         case ('comments'):
@@ -317,6 +419,7 @@ function robodesk_stream($request)
 
             break;
 
+
         default:
             echo "event: error\n";
             echo "data: " . json_encode(array('message' => 'Invalid stream type')) . "\n\n";
@@ -349,9 +452,6 @@ function robodesk_get_new_notifications($user_id)
             )
         )
     ));
-
-
-
 
     return $notifications_data;
 }
@@ -1240,19 +1340,21 @@ function get_cached_user_data($user_id)
 add_action('rest_api_init', function () {
     register_rest_route('custom/v1', '/lost-password', array(
         'methods' => 'POST',
-        'callback' => 'custom_lost_password',
-        'permission_callback' => '__return_true', // Allow public access
+        'callback' => 'robodesk_custom_lost_password',
+        'permission_callback' => '__return_true',
     ));
 });
 
-function custom_lost_password(WP_REST_Request $request)
+function robodesk_custom_lost_password(WP_REST_Request $request)
 {
     $user_login = $request->get_param('user_login');
     if (empty($user_login)) {
         return new WP_Error('invalid_input', 'Username or email is required.', array('status' => 400));
     }
 
-    // Use WordPress's default password reset function
+
+    set_transient('is_rest_password_reset_' . md5($user_login), true, 120);
+
     $result = retrieve_password($user_login);
 
     if (is_wp_error($result)) {
@@ -1260,6 +1362,33 @@ function custom_lost_password(WP_REST_Request $request)
     }
 
     return new WP_REST_Response(array(
-        'message' => 'A password reset email has been sent to your email address.'
+        'message' => 'A password reset link has been sent to your email address.'
     ), 200);
+}
+add_filter('retrieve_password_message', 'robodesk_add_param_to_reset_link', 10, 4);
+function robodesk_add_param_to_reset_link($message, $key, $user_login, $user_data)
+{
+    if (get_transient('is_rest_password_reset_' . md5($user_login))) {
+
+        $custom_reset_url = add_query_arg(
+            array(
+                'key'      => $key,
+                'user'     => rawurlencode($user_login),
+                'rbd_popup' => 'true',
+                'initator' => 'robodesk',
+            ),
+            network_site_url()
+        );
+
+
+        $site_name = wp_specialchars_decode(get_option('blogname'), ENT_QUOTES);
+
+        $message  = sprintf(__('Someone has requested a password reset for the following account on %s:'), $site_name) . "\r\n\r\n";
+        $message .= sprintf(__('Username: %s'), $user_login) . "\r\n\r\n";
+        $message .= __("If this was a mistake, just ignore this email and nothing will happen.") . "\r\n\r\n";
+        $message .= __("To reset your password, visit the following address:") . "\r\n\r\n";
+        $message .= $custom_reset_url . "\r\n\r\n";
+    }
+
+    return $message;
 }

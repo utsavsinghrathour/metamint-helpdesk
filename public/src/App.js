@@ -18,6 +18,7 @@ const AppContent = ({ imageUrls = { logo: '' } }) => {
     updateTicket,
     updateNewCommentNotification,
     errorContext,
+    isSingleTicketPage,
   } = useAppData();
 
   const [isOpen, setIsOpen] = useState(false);
@@ -27,11 +28,15 @@ const AppContent = ({ imageUrls = { logo: '' } }) => {
   const [showActiveFeatured, setShowActiveFeatured] = useState(true);
   const [selectedTicket, setSelectedTicket] = useState();
   const [focusedTextArea, setFocusedTextArea] = useState(false);
+
   const notificationAudio = useRef(
     new Audio(
       'http://woo-escrow.codepixelz.tech/wp-content/uploads/2025/08/1.mp3'
     )
   );
+
+  //   const resetPass =
+
   const { connectExclusive } = useExclusiveServerEvents();
 
   const handleFocusedTextArea = (focus) => setFocusedTextArea(focus);
@@ -40,6 +45,26 @@ const AppContent = ({ imageUrls = { logo: '' } }) => {
   const hasNotificationOff = ticketsContext?.some(
     (ticket) => ticket.notifications === 'no'
   );
+
+  const resetPasswordCondition = () => {
+    const params = new URLSearchParams(window.location.search);
+    const popupParam = params.get('rbd_popup');
+    const initiatorParam = params.get('initator');
+    return popupParam === 'true' && initiatorParam === 'robodesk';
+  };
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+
+    const popupParam = params.get('rbd_popup');
+    const initiatorParam = params.get('initator');
+
+    if (popupParam === 'true' && initiatorParam === 'robodesk') {
+      setShowActiveFeatured(false);
+      setIsOpen(true);
+      setActiveTab(1);
+    }
+  }, []);
 
   const handleSelectedTicketUpdate = (newValue) => {
     setSelectedTicket(newValue);
@@ -50,7 +75,11 @@ const AppContent = ({ imageUrls = { logo: '' } }) => {
   }, []);
 
   useEffect(() => {
-    if (loggedinContext && loggedInUsrId) {
+    console.log(isSingleTicketPage);
+  }, [isSingleTicketPage]);
+
+  useEffect(() => {
+    if (loggedinContext && loggedInUsrId && !isSingleTicketPage) {
       connectExclusive(
         'tickets',
         {
@@ -66,9 +95,9 @@ const AppContent = ({ imageUrls = { logo: '' } }) => {
             const ids = Array.isArray(data)
               ? data.map((item) => (typeof item === 'object' ? item.id : item))
               : [];
-
+            handleSelectedTicketUpdate(null);
             if (updateNewCommentNotification(ids)) {
-              notificationAudio.current.play();
+              if (!isOpen) notificationAudio.current.play();
             }
           },
         }
@@ -76,7 +105,7 @@ const AppContent = ({ imageUrls = { logo: '' } }) => {
 
       return () => {};
     }
-  }, [ticketsContext]);
+  }, [ticketsContext, isSingleTicketPage]);
   useEffect(() => {
     if (selectedTicket) {
       setSelectedTicket(selectedTicket);

@@ -9,8 +9,21 @@ export const AppDataProvider = ({ children }) => {
     loggedinContext: false,
     loggedInUsrId: null,
     ticketsContext: [],
+    ticketPagination: {
+      totalTickets: 0,
+      totalPages: 0,
+      currentPage: 1,
+    },
     noticesContext: [],
+    isSingleTicketPage: false,
   });
+
+  const setSingleTicketPage = (val) => {
+    setData((prev) => ({
+      ...prev,
+      isSingleTicketPage: val,
+    }));
+  };
 
   const updateNewCommentNotification = (ids) => {
     let isUpdated = false;
@@ -30,12 +43,8 @@ export const AppDataProvider = ({ children }) => {
     return isUpdated;
   };
 
-  // Prepend a ticket to top of the ticketContext
   const updateTicket = (ticket) => {
-    // console.log('New ticket creation or update:', ticket);
-
     setData((prev) => {
-      // Check if the ticket ID already exists in ticketsContext
       const idExists = prev.ticketsContext.some(
         (existingTicket) => existingTicket.id === ticket.id
       );
@@ -77,8 +86,26 @@ export const AppDataProvider = ({ children }) => {
     });
   };
 
+  function updatePaginationDetails(totalTickets, totalPages, currentPage) {
+    setData((prevData) => ({
+      ...prevData,
+      ticketPagination: {
+        ...prevData.ticketPagination,
+        totalTickets,
+        totalPages,
+      },
+    }));
+  }
+
   // Ticket fetching logic moved outside to reuse
-  const fetchTickets = async (usrId, page = 1, perPage = 4) => {
+  const fetchTickets = async (
+    usrId,
+    page = 1,
+    perPage = 5,
+    keyword = '',
+    priority = '',
+    status = ''
+  ) => {
     if (!usrId) return;
     try {
       setData((prev) => ({
@@ -86,15 +113,37 @@ export const AppDataProvider = ({ children }) => {
         loadingContext: true,
         errorContext: null,
       }));
-      const response = await fetch(
-        `/wp-json/wp/v2/robodesk_ticket?author=${usrId}&page=${page}&per_page=${perPage}&orderby=date&order=desc`
-      );
+
+      let url = `/wp-json/wp/v2/robodesk_ticket?author=${usrId}&page=${page}&per_page=${perPage}&orderby=date&order=desc`;
+
+      if (keyword) {
+        url += `&search=${encodeURIComponent(keyword)}`;
+      }
+
+      if (priority) {
+        if (priority !== 'all') {
+          url += `&ticket_priority=${encodeURIComponent(priority)}`;
+        }
+      }
+
+      if (status) {
+        if (status == 'active-conversations') {
+          url += `&ticket_status=${encodeURIComponent('open,in-progress')}`;
+        } else {
+          url += `&ticket_status=${encodeURIComponent(status)}`;
+        }
+      }
+
+      const response = await fetch(url);
       if (!response.ok) {
         throw new Error(
           `Failed to fetch ticketsContext: ${response.status} ${response.statusText}`
         );
       }
 
+      const totalPages = response.headers.get('X-WP-TotalPages');
+      const totalTickets = response.headers.get('X-WP-Total');
+      updatePaginationDetails(totalTickets, totalPages, page);
       const tickets = await response.json();
       const mappedTickets = tickets.map((ticket) => ({
         id: ticket.id,
@@ -130,10 +179,11 @@ export const AppDataProvider = ({ children }) => {
     }
   };
 
-  const refreshTickets = () => {
-    console.log('Refreshing tickets for user ID:', data.loggedInUsrId);
+  const refreshTickets = (keyWord, priority, status) => {
     if (data.loggedInUsrId) {
-      fetchTickets(data.loggedInUsrId);
+      let pageNo = 1;
+      let ppp = 5;
+      fetchTickets(data.loggedInUsrId, pageNo, ppp, keyWord, priority, status);
     }
   };
 
@@ -214,6 +264,7 @@ export const AppDataProvider = ({ children }) => {
         updateTicketNotifications,
         updateTicket,
         updateNewCommentNotification,
+        setSingleTicketPage,
       }}
     >
       {children}
