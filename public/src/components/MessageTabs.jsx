@@ -10,7 +10,8 @@ import Preloader from '../images/preloader.svg';
 
 import { useAppData } from '../utils/AppDataContext';
 import defaultLogo from '../images/robodesk-logo.png';
-import ChangePassword from './ChangePassword';
+// import ChangePassword from './ChangePassword';
+import { sseManager } from '../Hooks/sseManager';
 
 const SingleTicket = React.lazy(() => import('./SingleTicket'));
 
@@ -94,8 +95,6 @@ const MessageTabs = ({
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [loggedInuserId, setloggedInuserId] = useState(null);
 
-  const [showChangePassword, setShowChangePassword] = useState(false);
-
   const {
     loadingContext,
     ticketsContext,
@@ -132,6 +131,28 @@ const MessageTabs = ({
 
     return ticketsContext[0].id;
   }, [ticketsContext]);
+
+  const url = useMemo(() => {
+    if (!loggedinContext && !loggedInUsrId) return null;
+    return `wp-json/robodesk/v1/stream/tickets/0/${firstMessageId}/${loggedInUsrId}/?ticket=1`;
+  }, [firstMessageId]);
+
+  //   useEffect(() => {
+  //     console.log(url);
+  //     if (!url) return;
+
+  //     sseManager.connect(url);
+
+  //     const unsubscribeNewTicket = sseManager.on('new_ticket', (data) => {
+  //       console.log('New ticket received via SSE:', data);
+  //       //   updateTicket(data);
+  //     });
+
+  //     return () => {
+  //       unsubscribeNewTicket();
+  //       sseManager.disconnect();
+  //     };
+  //   }, [firstMessageId]);
 
   useEffect(() => {
     if (loggedinContext && loggedInUsrId) {

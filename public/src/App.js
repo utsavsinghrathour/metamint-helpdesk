@@ -73,55 +73,12 @@ const AppContent = ({ imageUrls = { logo: '' } }) => {
     return `wp-json/robodesk/v1/stream/tickets/0/${ticketsContext[0]?.id}/${loggedInUsrId}`;
   }, [ticketsContext[0]?.id, loggedInUsrId]);
 
-  //   useSSE(url, {
-  //     new_notification: (data) => {
-  //       const ids = Array.isArray(data)
-  //         ? data.map((item) => (typeof item === 'object' ? item.id : item))
-  //         : [];
-  //       handleSelectedTicketUpdate(null);
-  //       if (updateNewCommentNotification(ids)) {
-  //         notificationAudio.current.play();
-  //       }
-  //     },
-  //     new_ticket: (data) => {
-  //       updateTicket(data);
-  //     },
-  //   });
-
   useEffect(() => {
     notificationAudio.current.load();
     // useSSE(url, handlers);
   }, []);
 
-  useEffect(() => {}, [isSingleTicketPage]);
-
-  useEffect(() => {
-    if (!url) return;
-    sseManager.connect(url);
-    //   sseManager.on('new_ticket', (data) =>
-    //     console.log('New ticket data:', data)
-    //   ),
-    let unsubscribeNotif = [];
-    unsubscribeNotif = [
-      sseManager.on('new_ticket', (data) =>
-        console.log('New ticket data:', data)
-      ),
-      sseManager.on('new_notification', (data) =>
-        console.log('New notification data:', data)
-      ),
-      //   sseManager.on('new_ticket', (data) =>
-      //     console.log('New ticket data:', data)
-      //   ),
-      //   sseManager.on('ticket_open', (data) => setTicketStatus('open')),
-      //   sseManager.on('error', (data) => setError(data.message)),
-    ];
-
-    return () => {
-      unsubscribeNotif.forEach((unsubscribe) => unsubscribe());
-
-      //   sseManager.disconnect();
-    };
-  }, [url]);
+  //   useEffect(() => {}, [isSingleTicketPage]);
 
   useEffect(() => {
     if (!url && !loggedinContext && !loggedInUsrId) return;
@@ -150,36 +107,6 @@ const AppContent = ({ imageUrls = { logo: '' } }) => {
     };
   }, [url]);
 
-  //   useEffect(() => {
-  // if (loggedinContext && loggedInUsrId && !isSingleTicketPage) {
-  //   connectExclusive(
-  //     'tickets',
-  //     {
-  //       postId: 0,
-  //       lastId: ticketsContext[0]?.id || 0,
-  //       userId: loggedInUsrId,
-  //     },
-  //     {
-  //       new_ticket: (data) => {
-  //         updateTicket(data);
-  //       },
-  //       new_notification: (data) => {
-  //         const ids = Array.isArray(data)
-  //           ? data.map((item) => (typeof item === 'object' ? item.id : item))
-  //           : [];
-  //         handleSelectedTicketUpdate(null);
-  //         if (updateNewCommentNotification(ids)) {
-  //           notificationAudio.current.play();
-  //         }
-  //       },
-  //     }
-  //   );
-  //   return () => {};
-  // }
-
-  //     if (loggedinContext && loggedInUsrId && !isSingleTicketPage) {
-  //     }
-  //   }, [ticketsContext, isSingleTicketPage]);
   useEffect(() => {
     if (selectedTicket) {
       setSelectedTicket(selectedTicket);

@@ -15,7 +15,7 @@ class SSEManager {
     console.log('🔌 Connecting to:', url);
     this.currentUrl = url;
     this.eventSource = new EventSource(url);
-
+    // console.log('EventSource instance:', this.eventSource);
     // Handle custom SSE events
     const events = [
       'new_comment',
@@ -43,7 +43,6 @@ class SSEManager {
     });
 
     this.eventSource.onerror = (err) => {
-
       this._emit('error', { message: 'SSE connection error', error: err });
       // Avoid disconnecting unless necessary
       // this.disconnect();

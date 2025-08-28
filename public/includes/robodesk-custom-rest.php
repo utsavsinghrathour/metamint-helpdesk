@@ -393,6 +393,8 @@ function robodesk_stream($request)
                 }
             }
 
+            break;
+
         case ('tickets'):
 
             $ticket_id = (int) $request->get_param('post_id');
