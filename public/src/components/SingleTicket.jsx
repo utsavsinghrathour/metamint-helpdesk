@@ -10,7 +10,9 @@ import '../styles/MessageTabs.css';
 import { sendReply } from '../utils/modules';
 import { useAppData } from '../utils/AppDataContext';
 import DefaultAvatar from '../images/default-avatar.jpg';
-import useExclusiveServerEvents from '../Hooks/useExclusiveServerEvents.js';
+// import useExclusiveServerEvents from '../Hooks/useExclusiveServerEvents.js';
+// import useSSE from '../Hooks/useSSE.js';
+import { sseManager } from '../Hooks/sseManager';
 
 // Skeleton Loader Component for Conversations
 const ConversationSkeleton = ({ count = 6 }) => {
@@ -222,11 +224,11 @@ const SingleTicket = ({
   const {
     loggedinContext,
     loggedInUsrId,
+    ticketsContext,
     updateTicketNotifications,
     isSingleTicketPage,
     setSingleTicketPage,
   } = useAppData();
-  const { connectExclusive, disconnect } = useExclusiveServerEvents();
 
   const [ticketClosed, setTicketClosed] = useState(false);
 
@@ -253,7 +255,6 @@ const SingleTicket = ({
   }, []);
 
   useEffect(() => {
-    // Load the beep sound
     beep.current.load();
 
     return () => {
@@ -546,113 +547,48 @@ const SingleTicket = ({
     }
   }, [chatMessages.length]);
 
-  // Updated serverEvents with better error handling
-  const serverEvents = (
-    ticketId,
-    lastCommentId,
-    onNewComment,
-    loggedInUserId
-  ) => {
-    const eventSource = new EventSource(
-      `/wp-json/robodesk/v1/messaging/${ticketId}/${lastCommentId}/${loggedInUserId}`
-    );
-
-    eventSource.onopen = () => {
-      console.log('SSE connection Single ticket opened');
-
-      hasConnected.current = true;
-    };
-
-    eventSource.addEventListener('handshake', (event) => {
-      // const handshake = JSON.parse(event.data);
-      // console.log("New handshake data received:", handshake);
-    });
-
-    eventSource.addEventListener('new_comment', (event) => {
-      const commentData = JSON.parse(event.data);
-
-      //   console.log('New comment received:', commentData);
-      if (typeof handleNewComment === 'function') {
-        // Don't play beep here, let handleNewComment decide
-        handleNewComment(commentData);
-      }
-    });
-
-    eventSource.addEventListener('disconnect', (event) => {
-      try {
-        const data = JSON.parse(event.data);
-        console.log('Server requested disconnect:', data);
-      } catch (error) {
-        console.error('Error parsing disconnect:', error);
-      }
-    });
-
-    eventSource.addEventListener('retry', (event) => {
-      console.log('Retrying connection...');
-    });
-    eventSource.addEventListener('ticket_open', (event) => {
-      setTicketClosed(false);
-    });
-    eventSource.addEventListener('ticket_closed', (event) => {
-      setTicketClosed(true);
-      // eventSource.close();
-    });
-    eventSource.onerror = (error) => {};
-
-    return () => {
-      console.log('Closing SSE Connection');
-      hasConnected.current = false;
-      eventSource.close();
-    };
-  };
-
   const lastMessageId = useMemo(() => {
     if (!chatMessages || chatMessages.length === 0) return false;
     return chatMessages[chatMessages.length - 1].id;
   }, [chatMessages]);
 
+  const url = useMemo(() => {
+    if (!ticket?.id) return null;
+    if (!loggedinContext && !loggedInUsrId) return null;
+    if (!lastMessageId) return null;
+    return `/wp-json/robodesk/v1/stream/comments/${ticket.id}/${lastMessageId}/${loggedInUsrId}`;
+  }, [lastMessageId, ticket.id]);
+
+  const prevUrl = useMemo(() => {
+    if (!ticketsContext[0]?.id) return null;
+    if (!loggedinContext && !loggedInUsrId) return null;
+    return `/wp-json/robodesk/v1/stream/tickets/0/${ticketsContext[0]?.id}/${loggedInUsrId}`;
+  }, [ticketsContext[0]?.id, loggedInUsrId]);
+
   useEffect(() => {
-    if (
-      !hasConnected.current &&
-      isMessagingActive &&
-      loggedinContext &&
-      lastMessageId &&
-      initialLoadComplete &&
-      !loading &&
-      isSingleTicketPage
-    ) {
+    sseManager.connect(url);
 
-      connectExclusive(
-        'tickets',
-        {
-          postId: ticket.id,
-          lastId: lastMessageId,
-          userId: loggedInUsrId,
-        },
-        {
-          new_comment: (data) => {
-            const commentData = data;
-            handleNewComment(commentData);
-          },
+    const unsubscribeNewComment = sseManager.on('new_comment', (data) => {
+      const commentData = data;
+      handleNewComment(commentData);
+    });
 
-          ticket_open: (data) => {
-            setTicketClosed(false);
-          },
-          ticket_closed: (data) => {
-            setTicketClosed(true);
-          },
-        }
-      );
+    const unsubscribeTicketOpen = sseManager.on('ticket_open', (data) => {
+      setTicketClosed(false);
+    });
 
-      return () => {};
-    }
-  }, [
-    lastMessageId,
-    initialLoadComplete,
-    chatMessages,
-    loading,
-    isSingleTicketPage,
-  ]);
+    const unsubscribeTicketClosed = sseManager.on('ticket_closed', (data) => {
+      //   console.log('🚫 Ticket closed:', data);
+      setTicketClosed(true);
+    });
+
+    return () => {
+      unsubscribeNewComment();
+      unsubscribeTicketOpen();
+      unsubscribeTicketClosed();
+      sseManager.connect(prevUrl);
+    };
+  }, [url]);
 
   const handleSend = async () => {
     console.log('From handle send', message);
@@ -675,7 +611,7 @@ const SingleTicket = ({
       // Optimistically add the message immediately
       setChatMessages((prev) => {
         const updated = [...prev, tempMessage];
-        // Update cache with optimistic message
+
         setCachedMessages(ticket.id, updated);
         return updated;
       });
@@ -693,7 +629,7 @@ const SingleTicket = ({
           loggedInUserId,
           message,
           previewImage,
-          controller.signal // Pass the signal to sendReply if it supports it
+          controller.signal
         );
 
         clearTimeout(timeoutId);

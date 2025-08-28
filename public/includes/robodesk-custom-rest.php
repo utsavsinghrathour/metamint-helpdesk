@@ -364,9 +364,6 @@ function robodesk_stream($request)
     switch ($type) {
         case ('comments'):
 
-
-        case ('tickets'):
-
             $ticket_id = (int) $request->get_param('post_id');
             if ($ticket_id > 0) {
                 $ticket_status = get_post_meta($ticket_id, '_robodesk_ticket_status', true);
@@ -396,9 +393,11 @@ function robodesk_stream($request)
                 }
             }
 
+        case ('tickets'):
 
+            $ticket_id = (int) $request->get_param('post_id');
             if ($ticket_id == 0) {
-                //its a first id though
+
                 $last_ticket_id = (int) $request->get_param('last_id');
                 $new_ticket = robodesk_get_new_tickets($last_ticket_id, $user_id);
                 if ($last_ticket_id > 0 && !empty($new_ticket)) {
