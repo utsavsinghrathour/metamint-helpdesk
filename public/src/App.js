@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import HomeTabs from './components/HomeTabs.jsx';
 import MessageTabs from './components/MessageTabs.jsx';
 import NoticeTabs from './components/NoticeTabs.jsx';
@@ -7,7 +7,9 @@ import ActiveFeatured from './components/ActiveFeatured.jsx';
 import './styles/main.css';
 import defaultLogo from './images/robodesk-logo.png';
 import { AppDataProvider, useAppData } from './utils/AppDataContext';
-import useExclusiveServerEvents from './Hooks/useExclusiveServerEvents.js';
+// import useExclusiveServerEvents from './Hooks/useExclusiveServerEvents.js';
+// import useSSE from './Hooks/useSSE.js';
+import { sseManager } from './Hooks/sseManager';
 
 const AppContent = ({ imageUrls = { logo: '' } }) => {
   const {
@@ -35,13 +37,8 @@ const AppContent = ({ imageUrls = { logo: '' } }) => {
     )
   );
 
-  //   const resetPass =
-
-  const { connectExclusive } = useExclusiveServerEvents();
-
   const handleFocusedTextArea = (focus) => setFocusedTextArea(focus);
 
-  // Example: compute notification flag directly from context tickets
   const hasNotificationOff = ticketsContext?.some(
     (ticket) => ticket.notifications === 'no'
   );
@@ -70,42 +67,119 @@ const AppContent = ({ imageUrls = { logo: '' } }) => {
     setSelectedTicket(newValue);
   };
 
+  const url = useMemo(() => {
+    if (!ticketsContext[0]?.id) return null;
+    if (!loggedinContext && !loggedInUsrId) return null;
+    return `wp-json/robodesk/v1/stream/tickets/0/${ticketsContext[0]?.id}/${loggedInUsrId}`;
+  }, [ticketsContext[0]?.id, loggedInUsrId]);
+
+  //   useSSE(url, {
+  //     new_notification: (data) => {
+  //       const ids = Array.isArray(data)
+  //         ? data.map((item) => (typeof item === 'object' ? item.id : item))
+  //         : [];
+  //       handleSelectedTicketUpdate(null);
+  //       if (updateNewCommentNotification(ids)) {
+  //         notificationAudio.current.play();
+  //       }
+  //     },
+  //     new_ticket: (data) => {
+  //       updateTicket(data);
+  //     },
+  //   });
+
   useEffect(() => {
     notificationAudio.current.load();
+    // useSSE(url, handlers);
   }, []);
 
-  useEffect(() => {
-    console.log(isSingleTicketPage);
-  }, [isSingleTicketPage]);
+  useEffect(() => {}, [isSingleTicketPage]);
 
   useEffect(() => {
-    if (loggedinContext && loggedInUsrId && !isSingleTicketPage) {
-      connectExclusive(
-        'tickets',
-        {
-          postId: 0,
-          lastId: ticketsContext[0]?.id || 0,
-          userId: loggedInUsrId,
-        },
-        {
-          new_ticket: (data) => {
-            updateTicket(data);
-          },
-          new_notification: (data) => {
-            const ids = Array.isArray(data)
-              ? data.map((item) => (typeof item === 'object' ? item.id : item))
-              : [];
-            handleSelectedTicketUpdate(null);
-            if (updateNewCommentNotification(ids)) {
-              if (!isOpen) notificationAudio.current.play();
-            }
-          },
+    if (!url) return;
+    sseManager.connect(url);
+    //   sseManager.on('new_ticket', (data) =>
+    //     console.log('New ticket data:', data)
+    //   ),
+    let unsubscribeNotif = [];
+    unsubscribeNotif = [
+      sseManager.on('new_ticket', (data) =>
+        console.log('New ticket data:', data)
+      ),
+      sseManager.on('new_notification', (data) =>
+        console.log('New notification data:', data)
+      ),
+      //   sseManager.on('new_ticket', (data) =>
+      //     console.log('New ticket data:', data)
+      //   ),
+      //   sseManager.on('ticket_open', (data) => setTicketStatus('open')),
+      //   sseManager.on('error', (data) => setError(data.message)),
+    ];
+
+    return () => {
+      unsubscribeNotif.forEach((unsubscribe) => unsubscribe());
+
+      //   sseManager.disconnect();
+    };
+  }, [url]);
+
+  useEffect(() => {
+    if (!url && !loggedinContext && !loggedInUsrId) return;
+
+    sseManager.connect(url);
+
+    const unsubscribeNewTicket = sseManager.on('new_ticket', (data) => {
+      updateTicket(data);
+    });
+
+    const unsubscribeNotification = sseManager.on(
+      'new_notification',
+      (data) => {
+        const ids = Array.isArray(data)
+          ? data.map((item) => (typeof item === 'object' ? item.id : item))
+          : [];
+        handleSelectedTicketUpdate(null);
+        if (updateNewCommentNotification(ids)) {
+          notificationAudio.current.play();
         }
-      );
+      }
+    );
+    return () => {
+      unsubscribeNewTicket();
+      unsubscribeNotification();
+    };
+  }, [url]);
 
-      return () => {};
-    }
-  }, [ticketsContext, isSingleTicketPage]);
+  //   useEffect(() => {
+  // if (loggedinContext && loggedInUsrId && !isSingleTicketPage) {
+  //   connectExclusive(
+  //     'tickets',
+  //     {
+  //       postId: 0,
+  //       lastId: ticketsContext[0]?.id || 0,
+  //       userId: loggedInUsrId,
+  //     },
+  //     {
+  //       new_ticket: (data) => {
+  //         updateTicket(data);
+  //       },
+  //       new_notification: (data) => {
+  //         const ids = Array.isArray(data)
+  //           ? data.map((item) => (typeof item === 'object' ? item.id : item))
+  //           : [];
+  //         handleSelectedTicketUpdate(null);
+  //         if (updateNewCommentNotification(ids)) {
+  //           notificationAudio.current.play();
+  //         }
+  //       },
+  //     }
+  //   );
+  //   return () => {};
+  // }
+
+  //     if (loggedinContext && loggedInUsrId && !isSingleTicketPage) {
+  //     }
+  //   }, [ticketsContext, isSingleTicketPage]);
   useEffect(() => {
     if (selectedTicket) {
       setSelectedTicket(selectedTicket);
