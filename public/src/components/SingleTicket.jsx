@@ -10,8 +10,7 @@ import '../styles/MessageTabs.css';
 import { sendReply } from '../utils/modules';
 import { useAppData } from '../utils/AppDataContext';
 import DefaultAvatar from '../images/default-avatar.jpg';
-// import useExclusiveServerEvents from '../Hooks/useExclusiveServerEvents.js';
-// import useSSE from '../Hooks/useSSE.js';
+
 import { sseManager } from '../Hooks/sseManager';
 
 // Skeleton Loader Component for Conversations
@@ -578,7 +577,6 @@ const SingleTicket = ({
     });
 
     const unsubscribeTicketClosed = sseManager.on('ticket_closed', (data) => {
-      //   console.log('🚫 Ticket closed:', data);
       setTicketClosed(true);
     });
 
