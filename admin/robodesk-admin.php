@@ -123,14 +123,14 @@ function robodesk_add_admin_menu()
     );
 
     // Fetch Emails
-    add_submenu_page(
-        'robodesk-dashboard',
-        'Fetch Tickets',
-        'Fetch Tickets',
-        'manage_options',
-        'robodesk-email-to-ticket',
-        'robodesk_fetch_emails_callback'
-    );
+    // add_submenu_page(
+    //     'robodesk-dashboard',
+    //     'Fetch Tickets',
+    //     'Fetch Tickets',
+    //     'manage_options',
+    //     'robodesk-email-to-ticket',
+    //     'robodesk_fetch_emails_callback'
+    // );
 
     // Uncomment if needed later
     /*
