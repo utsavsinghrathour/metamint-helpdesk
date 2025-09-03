@@ -1396,7 +1396,7 @@ function robodesk_dashboard_callback()
                                         <input type="file" accept="image/*" name="popover_top_icon" id="popover_top_icon" class="styled-input mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
                                         <div class="mt-2 flex items-center gap-2">
                                             <img id="popover-top-icon-preview" src="<?php echo esc_url(get_option('robodesk_popover_top_icon', '')); ?>" alt="Pop over Top Icon Preview" class="hidden max-w-[150px] h-auto rounded-md">
-                                            <button type="button" onclick="removeImage('popover-top-icon-preview', 'robodesk_popover_top_icon')" class="text-red-600 hover:text-red-800 text-sm <?php echo esc_url(get_option('robodesk_popover_top_icon', '')) ? '' : 'hidden'; ?>">Remove</button>
+                                            <button type="button" onclick="removeImage('popover-top-icon-preview', 'robodesk_popover_top_icon', 'popover_top_icon')" class="text-red-600 hover:text-red-800 text-sm <?php echo get_option('robodesk_popover_top_icon', '') ? '' : 'hidden'; ?>">Remove</button>
                                         </div>
                                         <input type="hidden" name="robodesk_popover_top_icon" id="robodesk_popover_top_icon" value="<?php echo esc_attr(get_option('robodesk_popover_top_icon', '')); ?>">
                                     </div>
@@ -1414,7 +1414,7 @@ function robodesk_dashboard_callback()
                                         <input type="file" accept="image/*" name="popover_icon" id="popover_icon" class="styled-input mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
                                         <div class="mt-2 flex items-center gap-2">
                                             <img id="popover-icon-preview" src="<?php echo esc_url(get_option('robodesk_popover_icon', '')); ?>" alt="Pop over Icon Preview" class="hidden max-w-[150px] h-auto rounded-md">
-                                            <button type="button" onclick="removeImage('popover-icon-preview', 'robodesk_popover_icon')" class="text-red-600 hover:text-red-800 text-sm <?php echo esc_url(get_option('robodesk_popover_icon', '')) ? '' : 'hidden'; ?>">Remove</button>
+                                            <button type="button" onclick="removeImage('popover-icon-preview', 'robodesk_popover_icon', 'popover_icon')" class="text-red-600 hover:text-red-800 text-sm <?php echo get_option('robodesk_popover_icon', '') ? '' : 'hidden'; ?>">Remove</button>
                                         </div>
                                         <input type="hidden" name="robodesk_popover_icon" id="robodesk_popover_icon" value="<?php echo esc_attr(get_option('robodesk_popover_icon', '')); ?>">
                                     </div>
@@ -1435,7 +1435,7 @@ function robodesk_dashboard_callback()
                                         <input type="file" accept="image/*" name="logo" id="logo" class="styled-input mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
                                         <div class="mt-2 flex items-center gap-2">
                                             <img id="logo-preview" src="<?php echo esc_url(get_option('robodesk_logo', '')); ?>" alt="Logo Preview" class="hidden max-w-[150px] h-auto rounded-md">
-                                            <button type="button" onclick="removeImage('logo-preview', 'robodesk_logo')" class="text-red-600 hover:text-red-800 text-sm <?php echo esc_url(get_option('robodesk_logo', '')) ? '' : 'hidden'; ?>">Remove</button>
+                                            <button type="button" onclick="removeImage('logo-preview', 'robodesk_logo', 'logo')" class="text-red-600 hover:text-red-800 text-sm <?php echo get_option('robodesk_logo', '') ? '' : 'hidden'; ?>">Remove</button>
                                         </div>
                                         <input type="hidden" name="robodesk_logo" id="robodesk_logo" value="<?php echo esc_attr(get_option('robodesk_logo', '')); ?>">
                                     </div>
@@ -1444,7 +1444,7 @@ function robodesk_dashboard_callback()
                                         <input type="file" accept="image/*" name="wide_logo" id="wide_logo" class="styled-input mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
                                         <div class="mt-2 flex items-center gap-2">
                                             <img id="wide-logo-preview" src="<?php echo esc_url(get_option('robodesk_wide_logo', '')); ?>" alt="Wide Logo Preview" class="hidden max-w-[150px] h-auto rounded-md">
-                                            <button type="button" onclick="removeImage('wide-logo-preview', 'robodesk_wide_logo')" class="text-red-600 hover:text-red-800 text-sm <?php echo esc_url(get_option('robodesk_wide_logo', '')) ? '' : 'hidden'; ?>">Remove</button>
+                                            <button type="button" onclick="removeImage('wide-logo-preview', 'robodesk_wide_logo', 'wide_logo')" class="text-red-600 hover:text-red-800 text-sm <?php echo get_option('robodesk_wide_logo', '') ? '' : 'hidden'; ?>">Remove</button>
                                         </div>
                                         <input type="hidden" name="robodesk_wide_logo" id="robodesk_wide_logo" value="<?php echo esc_attr(get_option('robodesk_wide_logo', '')); ?>">
                                     </div>

@@ -1161,6 +1161,18 @@ jQuery(document).ready(function ($) {
 
 // basic settings AJAX handler
 jQuery(document).ready(function ($) {
+  // Define removeImage function
+  window.removeImage = function (previewId, hiddenId, inputId) {
+    $("#" + previewId)
+      .attr("src", "")
+      .addClass("hidden");
+    $("#" + hiddenId).val("");
+    $("#" + inputId).val("");
+    $("#" + previewId)
+      .next("button")
+      .addClass("hidden");
+  };
+
   // Media preview handler for image file inputs
   const mediaFields = [
     {
@@ -1225,6 +1237,9 @@ jQuery(document).ready(function ($) {
             $(`#${field.preview}`)
               .removeClass("hidden")
               .attr("src", e.target.result);
+            // Show the remove button when an image is selected
+            const removeButton = $(`#${field.preview}`).next("button");
+            removeButton.removeClass("hidden");
           }
         };
         reader.readAsDataURL(file);
