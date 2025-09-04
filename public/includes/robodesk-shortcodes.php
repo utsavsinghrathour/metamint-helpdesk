@@ -270,7 +270,6 @@ function robodesk_my_tickets_shortcode()
                             'order' => 'DESC'
                         ));
 
-                        // var_dump($comments);
                         $last_activity = !empty($comments) ?  strtotime($comments[0]->comment_date_gmt) : get_the_modified_time('U');
                         $comment_author = !empty($comments) ? get_the_author_meta('display_name', $comments[0]->user_id) :
                             get_the_author_meta('display_name', $post->post_author);
