@@ -56,25 +56,25 @@ function robodesk_dashboard_callback()
                         <div class="flex-shrink-0 flex items-center">
                             <button onclick="showPage('dashboard')" class="text-blue-600 hover:text-blue-800">
                                 <i class="fas fa-ticket-alt text-blue-600 text-2xl"></i>
-                                <span class="ml-2 text-xl font-bold text-gray-900">Robodesk</span>
+                                <span class="ml-2 text-xl font-bold text-gray-900"><?php _e('Robodesk', 'robodesk'); ?></span>
                             </button>
                         </div>
                         <div class="hidden md:ml-10 md:flex md:space-x-8">
                             <button onclick="showPage('dashboard')" class="nav-link inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium" data-page="dashboard">
                                 <i class="fas fa-home mr-2"></i>
-                                Dashboard
+                                <?php _e('Dashboard', 'robodesk'); ?>
                             </button>
                             <button onclick="showPage('tickets')" class="nav-link inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium" data-page="tickets">
                                 <i class="fas fa-ticket-alt mr-2"></i>
-                                Conversations
+                                <?php _e('Conversations', 'robodesk'); ?>
                             </button>
                             <button onclick="showPage('new-ticket')" class="nav-link inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium" data-page="new-ticket">
                                 <i class="fas fa-plus mr-2"></i>
-                                New Conversation
+                                <?php _e('New Conversation', 'robodesk'); ?>
                             </button>
                             <button onclick="showPage('settings')" class="nav-link inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium" data-page="settings">
                                 <i class="fas fa-cog mr-2"></i>
-                                Settings
+                                <?php _e('Settings', 'robodesk'); ?>
                             </button>
                         </div>
                     </div>
