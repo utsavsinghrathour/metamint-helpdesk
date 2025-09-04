@@ -753,12 +753,7 @@ function robodesk_live_comments($request)
 }
 
 
-// add_action('wp_head', function(){
 
-// $ticket_status = get_post_meta(1797, '_robodesk_ticket_status', true);
-
-// var_dump($ticket_status);
-// });
 
 function secure_login_endpoint(WP_REST_Request $request)
 {

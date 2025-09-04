@@ -79,7 +79,7 @@ function order_posts_by_term_meta($clauses, $query)
     }
 
     global $wpdb;
-    
+
     // $clauses['join'] .= " LEFT JOIN {$wpdb->term_relationships} ON {$wpdb->posts}.ID = {$wpdb->term_relationships}.object_id";
     // $clauses['join'] .= " LEFT JOIN {$wpdb->term_taxonomy} ON {$wpdb->term_relationships}.term_taxonomy_id = {$wpdb->term_taxonomy}.term_taxonomy_id AND {$wpdb->term_taxonomy}.taxonomy = 'robodesk_ticket_priority'";
     // $clauses['join'] .= " LEFT JOIN {$wpdb->termmeta} ON {$wpdb->term_taxonomy}.term_id = {$wpdb->termmeta}.term_id AND {$wpdb->termmeta}.meta_key = 'taxonomy_order'";
@@ -279,7 +279,6 @@ function robodesk_my_tickets_shortcode()
                         'order' => 'DESC'
                     ));
 
-                    // var_dump($comments);
                     $last_activity = !empty($comments) ?  strtotime($comments[0]->comment_date_gmt) : get_the_modified_time('U');
                     $comment_author = !empty($comments) ? get_the_author_meta('display_name', $comments[0]->user_id) :
                         get_the_author_meta('display_name', $post->post_author);
@@ -295,8 +294,8 @@ function robodesk_my_tickets_shortcode()
                             <a href="<?php echo esc_url($ticket_url); ?>"><?php the_title(); ?></a>
 
                             <p class="ticket-date">
-                                <span class="ticket-num"><?php echo '#'.get_the_id(); ?></span> 
-                                |<span class="dashicons-calendar"> <?php  echo get_the_date('m/d/Y'); ?></span>
+                                <span class="ticket-num"><?php echo '#' . get_the_id(); ?></span>
+                                |<span class="dashicons-calendar"> <?php echo get_the_date('m/d/Y'); ?></span>
                             </p>
                         </td>
                         <td><?php echo  $comment_count; ?></td>
@@ -305,7 +304,7 @@ function robodesk_my_tickets_shortcode()
                         <!-- Status -->
                         <td>
                             <span class="robodesk-status-pill <?php echo strtolower($status); ?>">
-                                <?php echo $statuses[$status];?>
+                                <?php echo $statuses[$status]; ?>
                             </span>
                         </td>
                         <!-- Priority -->
@@ -1148,4 +1147,3 @@ function robodesk_single_ticket_shortcode($atts)
         return ob_get_clean();
     }
     add_shortcode('robodesk_login_form', 'robodesk_login_form_shortcode');
-

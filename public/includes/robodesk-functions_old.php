@@ -257,10 +257,7 @@ function robodesk_credentials_page()
 
             <h3>My Credentials</h3>
             <?php if ($credentials):
-                // var_dump($credentials);
-                //  $asp = robodesk_decrypt('tram', 'robodesk');
 
-                //  var_dump()
             ?>
                 <table>
                     <thead>
@@ -377,8 +374,6 @@ function add_custom_table_to_my_account()
                             'orderby' => 'comment_date_gmt',
                             'order' => 'DESC'
                         ));
-
-                        // var_dump($comments);
 
 
 

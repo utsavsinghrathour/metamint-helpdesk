@@ -475,7 +475,7 @@ add_filter('rest_prepare_comment', function ($response, $comment, $request) {
     if (!is_wp_error($response) && $response instanceof WP_REST_Response) {
         $data = $response->get_data();
 
-        // var_dump($request->get_params());
+
 
         //plain text
         $data['content']['plain'] = wp_strip_all_tags($data['content']['rendered']);

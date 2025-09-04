@@ -271,8 +271,8 @@ function robodesk_credentials_page()
                                             <td><?php echo esc_html($credential->username); ?></td>
                                             <td><span class="password-hidden">********</span>
                                                 <?php $enc =  robodesk_encrypt($credential->password, 'robodesk'); ?>
-                                                <button class="show-password" data-password="<?php echo  esc_attr(robodesk_decrypt($enc, 'robodesk'));  
-                                                     ?>"><i class="fa-solid fa-eye"></i></button>
+                                                <button class="show-password" data-password="<?php echo  esc_attr(robodesk_decrypt($enc, 'robodesk'));
+                                                                                                ?>"><i class="fa-solid fa-eye"></i></button>
                                             </td>
 
                                             <td class="credential_url"><a href="<?php echo esc_url($credential->url); ?>" target="_blank" rel="noopener noreferrer"><?php echo esc_html($credential->url); ?></a></td>
@@ -361,7 +361,7 @@ function add_custom_table_to_my_account()
                             'order' => 'DESC'
                         ));
 
-                        // var_dump($comments);
+
 
 
 
