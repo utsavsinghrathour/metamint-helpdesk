@@ -154,12 +154,12 @@
                 $query->the_post();
                 $ticket_id = get_the_ID();
 
-                $ticket_status = get_post_meta($ticket_id, '_robodesk_ticket_status', true) ?: __('N/A', 'robodesk');
-                $ticket_origin = get_post_meta($ticket_id, 'robodesk_ticket_origin', true) ?: __('N/A', 'robodesk');
+                $ticket_status = get_post_meta($ticket_id, '_robodesk_ticket_status', true) ?: 'N/A';
+                $ticket_origin = get_post_meta($ticket_id, 'robodesk_ticket_origin', true) ?: 'N/A';
                 $priority_terms = get_the_terms($ticket_id, 'robodesk_ticket_priority');
                 $author_image = get_avatar_url(get_the_author_meta('ID'), ['size' => 32]);
 
-                $ticket_priority = $priority_terms && !is_wp_error($priority_terms) ? $priority_terms[0]->name : __('N/A', 'robodesk');
+                $ticket_priority = $priority_terms && !is_wp_error($priority_terms) ? $priority_terms[0]->name : 'N/A';
                 $updated_at = get_the_modified_date('Y-m-d H:i:s', $ticket_id);
                 $created_at = get_the_date('Y-m-d H:i:s', $ticket_id);
                 $ticket_terms = wp_get_post_terms($ticket_id, 'robodesk_ticket_category');
@@ -198,7 +198,7 @@
                     'created' => $created_at,
                     'priority' => $ticket_priority,
                     'updated' => $updated_at,
-                    'assignee' => get_post_meta($ticket_id, 'ticket_assignee', true) ?: __('N/A', 'robodesk'),
+                    'assignee' => get_post_meta($ticket_id, 'ticket_assignee', true) ?: 'N/A',
                     'replies' => $replies,
                     'replies_count' => $replies_count,
                 ];
@@ -216,7 +216,7 @@
                 case 'my_conversation':
                     return $t['assignee'] === $current_user_name;
                 case 'unassigned_conversation':
-                    return $t['assignee'] === __('N/A', 'robodesk');
+                    return $t['assignee'] === 'N/A';
                 case 'open_conversation':
                     return in_array($t['status'], ['open', 'in-progress']);
                 case 'chat_conversation':
