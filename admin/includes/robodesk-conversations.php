@@ -11,7 +11,7 @@
                 <?php endforeach; ?>
 
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Search Conversations</label>
+                    <label class="block text-sm font-medium text-gray-700 mb-2"><?php _e('Search Conversations', 'robodesk'); ?></label>
                     <div class="relative">
                         <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                             <i class="fas fa-search text-gray-400"></i>
@@ -25,7 +25,7 @@
                 </div>
 
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Search by Customer</label>
+                    <label class="block text-sm font-medium text-gray-700 mb-2"><?php _e('Search by Customer', 'robodesk'); ?></label>
                     <input type="text"
                         name="customer"
                         value="<?php echo esc_attr($customer_filter); ?>"
@@ -34,7 +34,7 @@
                 </div>
 
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Search by Agent</label>
+                    <label class="block text-sm font-medium text-gray-700 mb-2"><?php _e('Search by Agent', 'robodesk'); ?></label>
                     <input type="text"
                         name="agent"
                         value="<?php echo esc_attr($agent_filter); ?>"
@@ -43,19 +43,19 @@
                 </div>
 
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Status Filter</label>
+                    <label class="block text-sm font-medium text-gray-700 mb-2"><?php _e('Status Filter', 'robodesk'); ?></label>
                     <select name="status" class="styled-select block w-full px-3 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 rounded-md">
-                        <option value="all" <?php selected($status_filter, 'all'); ?>>All Status</option>
-                        <option value="open" <?php selected($status_filter, 'open'); ?>>Open</option>
-                        <option value="in-progress" <?php selected($status_filter, 'in-progress'); ?>>In Progress</option>
-                        <option value="closed" <?php selected($status_filter, 'closed'); ?>>Closed</option>
+                        <option value="all" <?php selected($status_filter, 'all'); ?>><?php _e('All Status', 'robodesk'); ?></option>
+                        <option value="open" <?php selected($status_filter, 'open'); ?>><?php _e('Open', 'robodesk'); ?></option>
+                        <option value="in-progress" <?php selected($status_filter, 'in-progress'); ?>><?php _e('In Progress', 'robodesk'); ?></option>
+                        <option value="closed" <?php selected($status_filter, 'closed'); ?>><?php _e('Closed', 'robodesk'); ?></option>
                     </select>
                 </div>
 
                 <div class="flex space-x-2">
                     <button type="submit" class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md shadow-sm text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
                         <i class="fas fa-filter mr-2"></i>
-                        Filter
+                        <?php _e('Filter', 'robodesk'); ?>
                     </button>
 
                     <!-- Clear filters button -->
@@ -65,7 +65,7 @@
                                     }, ARRAY_FILTER_USE_KEY)))); ?>"
                             class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md shadow-sm text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
                             <i class="fas fa-times mr-2"></i>
-                            Clear
+                            <?php _e('Clear', 'robodesk'); ?>
                         </a>
                     <?php endif; ?>
 
@@ -81,31 +81,31 @@
             <div class="flex items-center justify-between">
                 <div class="flex items-center">
                     <i class="fas fa-filter text-blue-600 mr-2"></i>
-                    <span class="text-sm font-medium text-blue-800">Active Filters:</span>
+                    <span class="text-sm font-medium text-blue-800"><?php _e('Active Filters:', 'robodesk'); ?></span>
                     <div class="ml-2 flex flex-wrap gap-2">
                         <?php if (!empty($search_term)) : ?>
                             <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                                Search: "<?php echo esc_html($search_term); ?>"
+                                <?php printf(__('Search: "%s"', 'robodesk'), esc_html($search_term)); ?>
                             </span>
                         <?php endif; ?>
                         <?php if (!empty($customer_filter)) : ?>
                             <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                                Customer: "<?php echo esc_html($customer_filter); ?>"
+                                <?php printf(__('Customer: "%s"', 'robodesk'), esc_html($customer_filter)); ?>
                             </span>
                         <?php endif; ?>
                         <?php if (!empty($agent_filter)) : ?>
                             <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                                Agent: "<?php echo esc_html($agent_filter); ?>"
+                                <?php printf(__('Agent: "%s"', 'robodesk'), esc_html($agent_filter)); ?>
                             </span>
                         <?php endif; ?>
                         <?php if ($status_filter !== 'all') : ?>
                             <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                                Status: <?php echo esc_html(ucfirst(str_replace('-', ' ', $status_filter))); ?>
+                                <?php printf(__('Status: %s', 'robodesk'), esc_html(ucfirst(str_replace('-', ' ', $status_filter)))); ?>
                             </span>
                         <?php endif; ?>
                     </div>
                 </div>
-                <span class="text-sm text-blue-600"><?php echo $total_posts; ?> result<?php echo $total_posts !== 1 ? 's' : ''; ?> found</span>
+                <span class="text-sm text-blue-600"><?php printf(_n('%d result found', '%d results found', $total_posts, 'robodesk'), $total_posts); ?></span>
             </div>
         </div>
     <?php endif; ?>
@@ -115,12 +115,12 @@
         <table class="min-w-full divide-y divide-gray-200">
             <thead class="bg-gray-50">
                 <tr>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Conversation</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Customer</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Priority</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Assignee</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Updated</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"><?php _e('Conversation', 'robodesk'); ?></th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"><?php _e('Customer', 'robodesk'); ?></th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"><?php _e('Status', 'robodesk'); ?></th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"><?php _e('Priority', 'robodesk'); ?></th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"><?php _e('Assignee', 'robodesk'); ?></th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"><?php _e('Updated', 'robodesk'); ?></th>
                 </tr>
             </thead>
             <tbody class="bg-white divide-y divide-gray-200" id="tickets-table">
@@ -161,11 +161,11 @@
                     <tr>
                         <td colspan="6" class="px-6 py-4 text-center text-gray-500">
                             <?php if (!empty($search_term) || !empty($customer_filter) || !empty($agent_filter) || $status_filter !== 'all') : ?>
-                                No conversations found matching your filters. <a href="<?php echo esc_url(admin_url('admin.php?' . http_build_query(array_filter($_GET, function ($key) {
-                                                                                            return !in_array($key, ['search', 'customer', 'agent', 'status', 'paged']);
-                                                                                        }, ARRAY_FILTER_USE_KEY)))); ?>" class="text-blue-600 hover:text-blue-800">Clear filters</a> to see all conversations.
+                                <?php _e('No conversations found matching your filters.', 'robodesk'); ?> <a href="<?php echo esc_url(admin_url('admin.php?' . http_build_query(array_filter($_GET, function ($key) {
+                                                                                                                        return !in_array($key, ['search', 'customer', 'agent', 'status', 'paged']);
+                                                                                                                    }, ARRAY_FILTER_USE_KEY)))); ?>" class="text-blue-600 hover:text-blue-800"><?php _e('Clear filters', 'robodesk'); ?></a> <?php _e('to see all conversations.', 'robodesk'); ?>
                             <?php else : ?>
-                                No Conversations found.
+                                <?php _e('No Conversations found.', 'robodesk'); ?>
                             <?php endif; ?>
                         </td>
                     </tr>
@@ -183,22 +183,22 @@
                     <?php if ($current_page > 1) : ?>
                         <a href="<?php echo esc_url(get_pagination_url($current_page - 1)); ?>"
                             class="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
-                            Previous
+                            <?php _e('Previous', 'robodesk'); ?>
                         </a>
                     <?php else : ?>
                         <span class="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-400 bg-gray-100 cursor-not-allowed">
-                            Previous
+                            <?php _e('Previous', 'robodesk'); ?>
                         </span>
                     <?php endif; ?>
 
                     <?php if ($current_page < $total_pages) : ?>
                         <a href="<?php echo esc_url(get_pagination_url($current_page + 1)); ?>"
                             class="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
-                            Next
+                            <?php _e('Next', 'robodesk'); ?>
                         </a>
                     <?php else : ?>
                         <span class="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-400 bg-gray-100 cursor-not-allowed">
-                            Next
+                            <?php _e('Next', 'robodesk'); ?>
                         </span>
                     <?php endif; ?>
                 </div>
@@ -206,9 +206,9 @@
                 <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
                     <div>
                         <p class="text-sm text-gray-700">
-                            Showing <span class="font-medium"><?php echo (($current_page - 1) * $posts_per_page) + 1; ?></span>
-                            to <span class="font-medium"><?php echo min($current_page * $posts_per_page, $total_posts); ?></span>
-                            of <span class="font-medium"><?php echo $total_posts; ?></span> results
+                            <?php _e('Showing', 'robodesk'); ?> <span class="font-medium"><?php echo (($current_page - 1) * $posts_per_page) + 1; ?></span>
+                            <?php _e('to', 'robodesk'); ?> <span class="font-medium"><?php echo min($current_page * $posts_per_page, $total_posts); ?></span>
+                            <?php _e('of', 'robodesk'); ?> <span class="font-medium"><?php echo $total_posts; ?></span> <?php _e('results', 'robodesk'); ?>
                         </p>
                     </div>
 
@@ -218,14 +218,14 @@
                             <?php if ($current_page > 1) : ?>
                                 <a href="<?php echo esc_url(get_pagination_url($current_page - 1)); ?>"
                                     class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
-                                    <span class="sr-only">Previous</span>
+                                    <span class="sr-only"><?php _e('Previous', 'robodesk'); ?></span>
                                     <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
                                         <path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd" />
                                     </svg>
                                 </a>
                             <?php else : ?>
                                 <span class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-gray-100 text-sm font-medium text-gray-400 cursor-not-allowed">
-                                    <span class="sr-only">Previous</span>
+                                    <span class="sr-only"><?php _e('Previous', 'robodesk'); ?></span>
                                     <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
                                         <path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd" />
                                     </svg>
@@ -276,14 +276,14 @@
                             <?php if ($current_page < $total_pages) : ?>
                                 <a href="<?php echo esc_url(get_pagination_url($current_page + 1)); ?>"
                                     class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
-                                    <span class="sr-only">Next</span>
+                                    <span class="sr-only"><?php _e('Next', 'robodesk'); ?></span>
                                     <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
                                         <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
                                     </svg>
                                 </a>
                             <?php else : ?>
                                 <span class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-gray-100 text-sm font-medium text-gray-400 cursor-not-allowed">
-                                    <span class="sr-only">Next</span>
+                                    <span class="sr-only"><?php _e('Next', 'robodesk'); ?></span>
                                     <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
                                         <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
                                     </svg>
