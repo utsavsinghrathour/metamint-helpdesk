@@ -2,10 +2,10 @@
     <div class="bg-white shadow rounded-lg">
         <div class="px-4 py-5 sm:p-6">
             <div class="flex justify-between items-center mb-6">
-                <h3 class="text-lg font-bold text-gray-900" id="ticket-detail-title">Conversation Details</h3>
+                <h3 class="text-lg font-bold text-gray-900" id="ticket-detail-title"><?php _e('Conversation Details', 'robodesk'); ?></h3>
                 <button onclick="showPage('tickets')" class="text-gray-400 hover:text-gray-600">
                     <i class="fas fa-arrow-left mr-2"></i>
-                    Back to Conversations
+                    <?php _e('Back to Conversations', 'robodesk'); ?>
                 </button>
 
             </div>
@@ -14,24 +14,24 @@
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
                 <!-- Customer Info -->
                 <div class="bg-gray-50 p-4 rounded-lg">
-                    <h4 class="font-medium text-gray-900 mb-3">Customer Information</h4>
+                    <h4 class="font-medium text-gray-900 mb-3"><?php _e('Customer Information', 'robodesk'); ?></h4>
                     <div id="customer-info" class="space-y-2">
                         <!-- Customer info will be populated by JavaScript -->
                     </div>
                     <div class="mt-4">
                         <button onclick="showCustomerTickets()" class="text-blue-600 hover:text-blue-800 text-sm font-medium">
-                            View All Customer Conversations
+                            <?php _e('View All Customer Conversations', 'robodesk'); ?>
                         </button>
                     </div>
                 </div>
 
                 <!-- Ticket Status & Priority -->
                 <div class="bg-gray-50 p-4 rounded-lg">
-                    <h4 class="font-medium text-gray-900 mb-3">Conversation Status</h4>
+                    <h4 class="font-medium text-gray-900 mb-3"><?php _e('Conversation Status', 'robodesk'); ?></h4>
 
                     <div class="space-y-4">
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-1"><?php _e('Status', 'robodesk'); ?></label>
                             <select onchange="updateTicketStatus(currentTicket.id, this.value)" class="styled-select block w-full border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 rounded-md" id="ticket-status-select">
                                 <?php
                                 $statuses = array('open', 'in-progress', 'closed');
@@ -42,7 +42,7 @@
                             </select>
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Priority</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-1"><?php _e('Priority', 'robodesk'); ?></label>
                             <select onchange="updateTicketPriority(currentTicket.id, this.value)" class="styled-select block w-full border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 rounded-md" id="ticket-priority-select">
                                 <?php
                                 $priorities = get_terms([
@@ -60,7 +60,7 @@
                             </select>
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Assignee</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-1"><?php _e('Assignee', 'robodesk'); ?></label>
                             <select onchange="updateTicketAssignee(currentTicket.id, this.value)" class="styled-select block w-full border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 rounded-md" id="ticket-assignee-select">
                                 <?php
                                 $default_agent = get_option('robodesk_default_agent');
@@ -112,7 +112,7 @@
                 ?>
 
                 <div class="bg-gray-50 p-4 rounded-lg">
-                    <h4 class="font-medium text-gray-900 mb-3">Conversation Details</h4>
+                    <h4 class="font-medium text-gray-900 mb-3"><?php _e('Conversation Details', 'robodesk'); ?></h4>
                     <div id="ticket-meta-info" class="space-y-2">
                         <!-- Ticket meta info will be populated by JavaScript -->
                     </div>
@@ -130,7 +130,7 @@
             <div id="customer-tickets-modal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
                 <div class="relative top-20 mx-auto p-5 border w-11/12 md:w-3/4 lg:w-1/2 shadow-lg rounded-md bg-white">
                     <div class="flex justify-between items-center mb-4">
-                        <h3 class="text-lg font-bold text-gray-900" id="customer-tickets-title">Customer Conversations</h3>
+                        <h3 class="text-lg font-bold text-gray-900" id="customer-tickets-title"><?php _e('Customer Conversations', 'robodesk'); ?></h3>
                         <button onclick="hideCustomerTickets()" class="text-gray-400 hover:text-gray-600">
                             <i class="fas fa-times"></i>
                         </button>
@@ -148,10 +148,10 @@
             <div class="border-b border-gray-200">
                 <nav class="-mb-px flex space-x-8">
                     <button onclick="showTicketTab('replies')" class="ticket-tab py-2 px-1 border-b-2 font-medium text-sm" data-tab="replies">
-                        Replies (<span id="replies-count">0</span>)
+                        <?php _e('Replies', 'robodesk'); ?> (<span id="replies-count">0</span>)
                     </button>
                     <button onclick="showTicketTab('notes')" class="ticket-tab py-2 px-1 border-b-2 font-medium text-sm" data-tab="notes">
-                        Internal Notes (<span id="notes-count">0</span>)
+                        <?php _e('Internal Notes', 'robodesk'); ?> (<span id="notes-count">0</span>)
                     </button>
                 </nav>
             </div>
@@ -163,7 +163,7 @@
                         <!-- Replies will be populated by JavaScript -->
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Add Reply</label>
+                        <label class="block text-sm font-medium text-gray-700 mb-2"><?php _e('Add Reply', 'robodesk'); ?></label>
                         <div class="editor-toolbar mb-2">
                             <button type="button" onclick="formatText('bold', 'new-reply')" class="editor-btn"><i class="fas fa-bold"></i></button>
                             <button type="button" onclick="formatText('italic', 'new-reply')" class="editor-btn"><i class="fas fa-italic"></i></button>
@@ -173,12 +173,12 @@
                         </div>
                         <div id="new-reply" class="editor-content placeholder" contenteditable="true"
                             style="min-height: 100px; border: 1px solid #d1d5db; border-radius: 0.375rem; padding: 0.5rem;"
-                            data-placeholder="Type your reply here..." aria-label="Reply input"></div>
+                            data-placeholder="<?php _e('Type your reply here...', 'robodesk'); ?>" aria-label="Reply input"></div>
                         <button id="send-reply-btn" onclick="addReply()" class="mt-2 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-                            Send Reply
+                            <?php _e('Send Reply', 'robodesk'); ?>
                         </button>
 
-                        <button onclick="closeTicket()" class="mt-2 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 float-right">Close Conversation</button>
+                        <button onclick="closeTicket()" class="mt-2 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 float-right"><?php _e('Close Conversation', 'robodesk'); ?></button>
                     </div>
                 </div>
 
@@ -187,7 +187,7 @@
                         <!-- Notes will be populated by JavaScript -->
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Add Internal Note</label>
+                        <label class="block text-sm font-medium text-gray-700 mb-2"><?php _e('Add Internal Note', 'robodesk'); ?></label>
                         <div class="editor-toolbar mb-2">
                             <button type="button" onclick="formatText('bold', 'new-note')" class="editor-btn"><i class="fas fa-bold"></i></button>
                             <button type="button" onclick="formatText('italic', 'new-note')" class="editor-btn"><i class="fas fa-italic"></i></button>
@@ -197,9 +197,9 @@
                         </div>
                         <div id="new-note" class="editor-content placeholder" contenteditable="true"
                             style="min-height: 100px; border: 1px solid #d1d5db; border-radius: 0.375rem; padding: 0.5rem;"
-                            data-placeholder="Type your internal note here..."></div>
+                            data-placeholder="<?php _e('Type your internal note here...', 'robodesk'); ?>"></div>
                         <button onclick="addNote()" class="mt-2 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-yellow-600 hover:bg-yellow-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500">
-                            Add Note
+                            <?php _e('Add Note', 'robodesk'); ?>
                         </button>
 
                     </div>
