@@ -653,6 +653,16 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   }
 });
+// Update URL when navigating between main pages
+document.querySelectorAll(".nav-link").forEach((link) => {
+  link.addEventListener("click", () => {
+    const url = new URL(window.location);
+    url.searchParams.delete("ticket");
+    url.searchParams.delete("paged");
+    url.searchParams.set("view", link.dataset.page);
+    history.pushState({}, "", url);
+  });
+});
 
 // Function to create category dropdown options
 function createCategoryOptions() {
