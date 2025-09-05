@@ -1280,3 +1280,205 @@ function auto_assign_ticket_to_support_staff()
 
     return $assigned_name;
 }
+
+
+
+// bulk action
+// Hook the AJAX action for bulk operations
+add_action('wp_ajax_robodesk_bulk_action', 'robodesk_handle_bulk_action');
+
+function robodesk_handle_bulk_action()
+{
+    // Verify nonce for security
+    if (!wp_verify_nonce($_POST['nonce'], 'robodesk_bulk_action')) {
+        wp_send_json_error(array('message' => 'Security verification failed.'));
+    }
+
+    // Check user capabilities
+    if (!current_user_can('edit_posts')) {
+        wp_send_json_error(array('message' => 'You do not have permission to perform this action.'));
+    }
+
+    // Get the posted data
+    $bulk_action = isset($_POST['bulk_action']) ? sanitize_text_field($_POST['bulk_action']) : '';
+    $ticket_ids_json = isset($_POST['ticket_ids']) ? $_POST['ticket_ids'] : '';
+
+    // Decode ticket IDs
+    $ticket_ids = json_decode($ticket_ids_json, true);
+    if (!is_array($ticket_ids) || empty($ticket_ids)) {
+        wp_send_json_error(array('message' => 'No valid ticket IDs provided.'));
+    }
+
+    // Extract the action type and value
+    $action_type = $bulk_action;
+    $action_value = '';
+    if (strpos($bulk_action, 'status-') === 0) {
+        $action_type = 'status';
+        $action_value = str_replace('status-', '', $bulk_action);
+    } elseif (strpos($bulk_action, 'priority-') === 0) {
+        $action_type = 'priority';
+        $action_value = str_replace('priority-', '', $bulk_action);
+    } elseif (strpos($bulk_action, 'assignee-') === 0) {
+        $action_type = 'assignee';
+        $action_value = str_replace('assignee-', '', $bulk_action);
+    }
+
+    // Validate bulk action
+    if (!in_array($action_type, ['delete', 'status', 'priority', 'assignee'])) {
+        wp_send_json_error(array('message' => 'Invalid bulk action.'));
+    }
+
+    // Validate action value for actions that require it
+    $valid_statuses = ['open', 'in-progress', 'closed'];
+    if ($action_type === 'status' && !in_array($action_value, $valid_statuses)) {
+        wp_send_json_error(array('message' => "Invalid status: $action_value"));
+    }
+
+    // Sanitize ticket IDs to integers
+    $ticket_ids = array_map('intval', $ticket_ids);
+
+    // Process based on bulk action
+    $updated_count = 0;
+    $errors = array();
+
+    foreach ($ticket_ids as $ticket_id) {
+        // Verify post type to prevent accidental updates
+        if (get_post_type($ticket_id) !== 'robodesk_ticket') {
+            $errors[] = "Invalid ticket ID: $ticket_id";
+            continue;
+        }
+
+        switch ($action_type) {
+            case 'delete':
+                // Force delete the ticket (bypass trash)
+                if (wp_delete_post($ticket_id, true)) {
+                    $updated_count++;
+                } else {
+                    $errors[] = "Failed to delete ticket ID: $ticket_id";
+                }
+                break;
+
+            case 'status':
+                // Update status meta
+                if (update_post_meta($ticket_id, '_robodesk_ticket_status', $action_value)) {
+                    // Update modified date to reflect the change
+                    wp_update_post(array(
+                        'ID' => $ticket_id,
+                        'post_modified' => current_time('mysql'),
+                        'post_modified_gmt' => current_time('mysql', 1)
+                    ));
+                    $updated_count++;
+                } else {
+                    $errors[] = "Failed to update status for ticket ID: $ticket_id";
+                }
+                break;
+
+            case 'priority':
+                // Get the term by name
+                $term = get_term_by('name', $action_value, 'robodesk_ticket_priority');
+                if (!$term || is_wp_error($term)) {
+                    $errors[] = "Invalid priority: $action_value for ticket ID: $ticket_id";
+                    continue;
+                }
+
+                $result = wp_set_object_terms($ticket_id, (int)$term->term_id, 'robodesk_ticket_priority', false);
+                if (is_wp_error($result)) {
+                    $errors[] = "Failed to update priority for ticket ID: $ticket_id - " . $result->get_error_message();
+                } else {
+                    // Update modified date to reflect the change
+                    wp_update_post(array(
+                        'ID' => $ticket_id,
+                        'post_modified' => current_time('mysql'),
+                        'post_modified_gmt' => current_time('mysql', 1)
+                    ));
+                    $updated_count++;
+                }
+                break;
+
+            case 'assignee':
+                // Validate assignee (ensure it's a valid user display name)
+                $user = get_user_by('display_name', $action_value);
+                if (!$user) {
+                    // Try searching by login name as fallback
+                    $user = get_user_by('login', $action_value);
+                }
+
+                if (!$user) {
+                    $errors[] = "Invalid assignee: $action_value for ticket ID: $ticket_id";
+                    continue 2;
+                }
+
+                if (update_post_meta($ticket_id, 'ticket_assignee', $action_value)) {
+                    // Update modified date to reflect the change
+                    wp_update_post(array(
+                        'ID' => $ticket_id,
+                        'post_modified' => current_time('mysql'),
+                        'post_modified_gmt' => current_time('mysql', 1)
+                    ));
+                    $updated_count++;
+                } else {
+                    $errors[] = "Failed to update assignee for ticket ID: $ticket_id";
+                }
+                break;
+        }
+    }
+
+    // Prepare response
+    if ($updated_count > 0) {
+        $action_text = ($action_type === 'delete') ? 'deleted' : 'updated';
+        $message = sprintf(
+            '%d conversation%s successfully %s.',
+            $updated_count,
+            ($updated_count !== 1) ? 's' : '',
+            $action_text
+        );
+
+        if (!empty($errors)) {
+            $message .= ' However, there were some errors: ' . implode('; ', $errors);
+        }
+
+        wp_send_json_success(array('message' => $message));
+    } else {
+        $error_message = !empty($errors) ? implode('; ', $errors) : 'No tickets were updated.';
+        wp_send_json_error(array('message' => $error_message));
+    }
+}
+
+// Additional helper function to get available users for assignee dropdown (optional)
+function robodesk_get_available_assignees()
+{
+    $users = get_users(array(
+        'role__not_in' => array('subscriber'),
+        'orderby' => 'display_name',
+        'order' => 'ASC'
+    ));
+
+    $assignees = array();
+    foreach ($users as $user) {
+        $assignees[] = array(
+            'id' => $user->ID,
+            'display_name' => $user->display_name,
+            'user_login' => $user->user_login,
+            'user_email' => $user->user_email
+        );
+    }
+
+    return $assignees;
+}
+
+// Helper function to get available priorities
+function robodesk_get_available_priorities()
+{
+    $terms = get_terms(array(
+        'taxonomy' => 'robodesk_ticket_priority',
+        'hide_empty' => false,
+        'orderby' => 'name',
+        'order' => 'ASC'
+    ));
+
+    if (is_wp_error($terms)) {
+        return array();
+    }
+
+    return $terms;
+}
