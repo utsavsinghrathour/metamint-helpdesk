@@ -36,18 +36,7 @@
                              <label for="admin_email" class="block text-sm font-medium text-gray-700"><?php _e('Admin Email', 'robodesk'); ?></label>
                              <input type="email" name="admin_email" id="admin_email" value="<?php echo esc_attr(get_option('robodesk_admin_email', 'admin@example.com')); ?>" class="styled-input mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
                          </div>
-                         <div>
-                             <label for="timezone" class="block text-sm font-medium text-gray-700"><?php _e('Timezone', 'robodesk'); ?></label>
-                             <select name="timezone" id="timezone" class="styled-select mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
-                                 <?php
-                                    $saved_timezone = get_option('robodesk_timezone', 'UTC');
-                                    $timezones = ['UTC', 'America/New_York', 'America/Los_Angeles', 'GMT'];
-                                    foreach ($timezones as $tz) {
-                                        echo '<option value="' . esc_attr($tz) . '"' . selected($saved_timezone, $tz, false) . '>' . esc_html($tz) . '</option>';
-                                    }
-                                    ?>
-                             </select>
-                         </div>
+
                          <!----------------------------- Image Fields ------------------------------>
                          <div>
                              <label for="popover_top_icon" class="block text-sm font-medium text-gray-700"><?php _e('Pop over Top Icon/Image', 'robodesk'); ?></label>
@@ -76,18 +65,7 @@
                              </div>
                              <input type="hidden" name="robodesk_popover_icon" id="robodesk_popover_icon" value="<?php echo esc_attr(get_option('robodesk_popover_icon', '')); ?>">
                          </div>
-                         <div>
-                             <label for="language" class="block text-sm font-medium text-gray-700"><?php _e('Language', 'robodesk'); ?></label>
-                             <select name="language" id="language" class="styled-select mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
-                                 <?php
-                                    $saved_language = get_option('robodesk_language', 'en');
-                                    $languages = ['en' => 'English', 'es' => 'Spanish', 'fr' => 'French', 'de' => 'German'];
-                                    foreach ($languages as $code => $name) {
-                                        echo '<option value="' . esc_attr($code) . '"' . selected($saved_language, $code, false) . '>' . esc_html($name) . '</option>';
-                                    }
-                                    ?>
-                             </select>
-                         </div>
+
                          <div>
                              <label for="logo" class="block text-sm font-medium text-gray-700"><?php _e('Logo', 'robodesk'); ?></label>
                              <input type="file" accept="image/*" name="logo" id="logo" class="styled-input mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
