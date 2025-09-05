@@ -644,11 +644,14 @@ document.addEventListener("DOMContentLoaded", function () {
   const params = new URLSearchParams(window.location.search);
   const paged = params.get("paged");
   if (paged) {
-    //show page tickets and load the paged tickets
-    showPage("tickets");
+    params.delete("ticket");
+    const ticketsPage = document.getElementById("tickets-page");
+    if (ticketsPage) {
+      showPage("tickets");
+    } else {
+      showPage("dashboard");
+    }
   }
-  // If no ticket is selected, show the dashboard
-  showPage("dashboard");
 });
 
 // Function to create category dropdown options
