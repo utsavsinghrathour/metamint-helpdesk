@@ -2189,7 +2189,7 @@ document.addEventListener("DOMContentLoaded", function () {
       .then((data) => {
         if (data.success) {
           // Show success message
-          showMessage(data.data.message, "success");
+          showToast(data.data.message, "success");
 
           // Clear selections
           clearAllSelections();
@@ -2200,7 +2200,7 @@ document.addEventListener("DOMContentLoaded", function () {
           }, 1500);
         } else {
           // Show error message
-          showMessage(
+          showToast(
             data.data.message ||
               "An error occurred while processing the bulk action.",
             "error"
@@ -2209,7 +2209,7 @@ document.addEventListener("DOMContentLoaded", function () {
       })
       .catch((error) => {
         console.error("Error:", error);
-        showMessage(
+        showToast(
           "An error occurred while processing the bulk action.",
           "error"
         );
@@ -2221,32 +2221,32 @@ document.addEventListener("DOMContentLoaded", function () {
       });
   }
 
-  function showMessage(message, type = "info") {
-    // Create message element
-    const messageDiv = document.createElement("div");
-    messageDiv.className = `fixed top-4 right-4 z-50 max-w-sm p-4 rounded-lg shadow-lg ${
-      type === "success"
-        ? "bg-green-100 border border-green-400 text-green-700"
-        : type === "error"
-        ? "bg-red-100 border border-red-400 text-red-700"
-        : "bg-blue-100 border border-blue-400 text-blue-700"
-    }`;
+  // function showToast(message, type = "info") {
+  //   // Create message element
+  //   const messageDiv = document.createElement("div");
+  //   messageDiv.className = `fixed top-4 right-4 z-50 max-w-sm p-4 rounded-lg shadow-lg ${
+  //     type === "success"
+  //       ? "bg-green-100 border border-green-400 text-green-700"
+  //       : type === "error"
+  //       ? "bg-red-100 border border-red-400 text-red-700"
+  //       : "bg-blue-100 border border-blue-400 text-blue-700"
+  //   }`;
 
-    messageDiv.innerHTML = `
-                        <div class="flex items-center justify-between">
-                            <span class="text-sm font-medium">${message}</span>
-                            <button type="button" class="ml-3 text-lg font-semibold opacity-50 hover:opacity-75" onclick="this.parentElement.parentElement.remove()">×</button>
-                        </div>
-                    `;
+  //   messageDiv.innerHTML = `
+  //                       <div class="flex items-center justify-between">
+  //                           <span class="text-sm font-medium">${message}</span>
+  //                           <button type="button" class="ml-3 text-lg font-semibold opacity-50 hover:opacity-75" onclick="this.parentElement.parentElement.remove()">×</button>
+  //                       </div>
+  //                   `;
 
-    // Add to page
-    document.body.appendChild(messageDiv);
+  //   // Add to page
+  //   document.body.appendChild(messageDiv);
 
-    // Auto remove after 5 seconds
-    setTimeout(() => {
-      if (messageDiv.parentElement) {
-        messageDiv.remove();
-      }
-    }, 5000);
-  }
+  //   // Auto remove after 5 seconds
+  //   setTimeout(() => {
+  //     if (messageDiv.parentElement) {
+  //       messageDiv.remove();
+  //     }
+  //   }, 5000);
+  // }
 });
