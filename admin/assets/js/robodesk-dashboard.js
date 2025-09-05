@@ -2033,3 +2033,220 @@ function renderNotes(notes) {
   }
 }
 // the message is displaying with html tags
+
+//bulk actions on tickets
+document.addEventListener("DOMContentLoaded", function () {
+  const selectAllCheckbox = document.getElementById("select-all-tickets");
+  const ticketCheckboxes = document.querySelectorAll(".ticket-checkbox");
+  const bulkActionsBar = document.getElementById("bulk-actions-bar");
+  const selectedCountSpan = document.getElementById("selected-count");
+  const bulkActionSelect = document.getElementById("bulk-action-select");
+  const applyBulkActionBtn = document.getElementById("apply-bulk-action");
+  const clearSelectionBtn = document.getElementById("clear-selection");
+
+  // Initialize bulk actions functionality
+  initializeBulkActions();
+
+  function initializeBulkActions() {
+    // Select/Deselect All functionality
+    if (selectAllCheckbox) {
+      selectAllCheckbox.addEventListener("change", function () {
+        const isChecked = this.checked;
+        ticketCheckboxes.forEach(function (checkbox) {
+          checkbox.checked = isChecked;
+        });
+        updateBulkActionsUI();
+      });
+    }
+
+    // Individual checkbox change handlers
+    ticketCheckboxes.forEach(function (checkbox) {
+      checkbox.addEventListener("change", function () {
+        updateSelectAllState();
+        updateBulkActionsUI();
+      });
+    });
+
+    // Bulk action select change
+    if (bulkActionSelect) {
+      bulkActionSelect.addEventListener("change", function () {
+        applyBulkActionBtn.disabled =
+          !this.value || getSelectedTicketIds().length === 0;
+      });
+    }
+
+    // Apply bulk action button
+    if (applyBulkActionBtn) {
+      applyBulkActionBtn.addEventListener("click", function () {
+        const selectedIds = getSelectedTicketIds();
+        const action = bulkActionSelect.value;
+
+        if (selectedIds.length === 0) {
+          alert("Please select at least one ticket.");
+          return;
+        }
+
+        if (!action) {
+          alert("Please select an action.");
+          return;
+        }
+
+        // Confirm for delete action
+        if (action === "delete") {
+          if (
+            !confirm(
+              `Are you sure you want to delete ${selectedIds.length} ticket(s)? This action cannot be undone.`
+            )
+          ) {
+            return;
+          }
+        }
+
+        performBulkAction(selectedIds, action);
+      });
+    }
+
+    // Clear selection button
+    if (clearSelectionBtn) {
+      clearSelectionBtn.addEventListener("click", function () {
+        clearAllSelections();
+      });
+    }
+  }
+
+  function updateSelectAllState() {
+    if (!selectAllCheckbox) return;
+
+    const totalCheckboxes = ticketCheckboxes.length;
+    const checkedCheckboxes = document.querySelectorAll(
+      ".ticket-checkbox:checked"
+    ).length;
+
+    if (checkedCheckboxes === 0) {
+      selectAllCheckbox.checked = false;
+      selectAllCheckbox.indeterminate = false;
+    } else if (checkedCheckboxes === totalCheckboxes) {
+      selectAllCheckbox.checked = true;
+      selectAllCheckbox.indeterminate = false;
+    } else {
+      selectAllCheckbox.checked = false;
+      selectAllCheckbox.indeterminate = true;
+    }
+  }
+
+  function updateBulkActionsUI() {
+    const selectedCount = getSelectedTicketIds().length;
+
+    if (selectedCount > 0) {
+      bulkActionsBar.style.display = "block";
+      selectedCountSpan.textContent = `${selectedCount} item${
+        selectedCount !== 1 ? "s" : ""
+      } selected`;
+      applyBulkActionBtn.disabled = !bulkActionSelect.value;
+    } else {
+      bulkActionsBar.style.display = "none";
+      bulkActionSelect.value = "";
+      applyBulkActionBtn.disabled = true;
+    }
+  }
+
+  function getSelectedTicketIds() {
+    const selectedCheckboxes = document.querySelectorAll(
+      ".ticket-checkbox:checked"
+    );
+    return Array.from(selectedCheckboxes).map((checkbox) =>
+      parseInt(checkbox.value)
+    );
+  }
+
+  function clearAllSelections() {
+    if (selectAllCheckbox) selectAllCheckbox.checked = false;
+    ticketCheckboxes.forEach((checkbox) => (checkbox.checked = false));
+    bulkActionSelect.value = "";
+    updateBulkActionsUI();
+  }
+
+  function performBulkAction(ticketIds, action) {
+    // Show loading state
+    const originalButtonText = applyBulkActionBtn.textContent;
+    applyBulkActionBtn.textContent = "Processing...";
+    applyBulkActionBtn.disabled = true;
+
+    // Prepare data for AJAX request
+    const formData = new FormData();
+    formData.append("action", "robodesk_bulk_action");
+    formData.append("nonce", bulkActionNonce);
+    formData.append("bulk_action", action);
+    formData.append("ticket_ids", JSON.stringify(ticketIds));
+
+    // Send AJAX request
+    fetch(ajaxUrl, {
+      method: "POST",
+      body: formData,
+      credentials: "same-origin",
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        if (data.success) {
+          // Show success message
+          showMessage(data.data.message, "success");
+
+          // Clear selections
+          clearAllSelections();
+
+          // Reload the page to reflect changes
+          setTimeout(() => {
+            window.location.reload();
+          }, 1500);
+        } else {
+          // Show error message
+          showMessage(
+            data.data.message ||
+              "An error occurred while processing the bulk action.",
+            "error"
+          );
+        }
+      })
+      .catch((error) => {
+        console.error("Error:", error);
+        showMessage(
+          "An error occurred while processing the bulk action.",
+          "error"
+        );
+      })
+      .finally(() => {
+        // Reset button state
+        applyBulkActionBtn.textContent = originalButtonText;
+        applyBulkActionBtn.disabled = false;
+      });
+  }
+
+  function showMessage(message, type = "info") {
+    // Create message element
+    const messageDiv = document.createElement("div");
+    messageDiv.className = `fixed top-4 right-4 z-50 max-w-sm p-4 rounded-lg shadow-lg ${
+      type === "success"
+        ? "bg-green-100 border border-green-400 text-green-700"
+        : type === "error"
+        ? "bg-red-100 border border-red-400 text-red-700"
+        : "bg-blue-100 border border-blue-400 text-blue-700"
+    }`;
+
+    messageDiv.innerHTML = `
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm font-medium">${message}</span>
+                            <button type="button" class="ml-3 text-lg font-semibold opacity-50 hover:opacity-75" onclick="this.parentElement.parentElement.remove()">×</button>
+                        </div>
+                    `;
+
+    // Add to page
+    document.body.appendChild(messageDiv);
+
+    // Auto remove after 5 seconds
+    setTimeout(() => {
+      if (messageDiv.parentElement) {
+        messageDiv.remove();
+      }
+    }, 5000);
+  }
+});
