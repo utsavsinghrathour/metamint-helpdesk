@@ -2082,28 +2082,77 @@ document.addEventListener("DOMContentLoaded", function () {
         const action = bulkActionSelect.value;
 
         if (selectedIds.length === 0) {
-          alert("Please select at least one ticket.");
+          showCustomAlert("Please select at least one ticket.");
           return;
         }
 
         if (!action) {
-          alert("Please select an action.");
+          showCustomAlert("Please select an action.");
           return;
         }
 
-        // Confirm for delete action
-        if (action === "delete") {
-          if (
-            !confirm(
-              `Are you sure you want to delete ${selectedIds.length} ticket(s)? This action cannot be undone.`
-            )
-          ) {
-            return;
-          }
-        }
+        // Confirm for all actions
+        const actionTexts = {
+          delete: "delete",
+          close: "close",
+          open: "reopen",
+          assign: "assign",
+          unassign: "unassign",
+        };
 
-        performBulkAction(selectedIds, action);
+        const actionText = actionTexts[action] || action;
+        const warningText =
+          action === "delete" ? " This action cannot be undone." : "";
+
+        showCustomConfirm(
+          `Are you sure you want to ${actionText} ${selectedIds.length} ticket(s)?${warningText}`,
+          function onConfirm() {
+            performBulkAction(selectedIds, action);
+          }
+        );
       });
+    }
+
+    // Helper functions for custom modals
+    function showCustomAlert(message) {
+      const modal = document.createElement("div");
+      modal.className =
+        "fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40";
+      modal.innerHTML = `
+      <div class="bg-white rounded-lg shadow-lg p-6 max-w-sm w-full text-center">
+        <div class="mb-4 text-lg font-medium text-gray-800">${message}</div>
+        <button id="custom-alert-ok" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">OK</button>
+      </div>
+      `;
+      document.body.appendChild(modal);
+
+      modal.querySelector("#custom-alert-ok").onclick = function () {
+        document.body.removeChild(modal);
+      };
+    }
+
+    function showCustomConfirm(message, onConfirm) {
+      const modal = document.createElement("div");
+      modal.className =
+        "fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40";
+      modal.innerHTML = `
+      <div class="bg-white rounded-lg shadow-lg p-6 max-w-sm w-full text-center">
+        <div class="mb-4 text-lg font-medium text-gray-800">${message}</div>
+        <div class="flex justify-center gap-4">
+        <button id="custom-confirm-yes" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Yes</button>
+        <button id="custom-confirm-no" class="px-4 py-2 bg-gray-300 text-gray-800 rounded hover:bg-gray-400">Cancel</button>
+        </div>
+      </div>
+      `;
+      document.body.appendChild(modal);
+
+      modal.querySelector("#custom-confirm-yes").onclick = function () {
+        document.body.removeChild(modal);
+        if (typeof onConfirm === "function") onConfirm();
+      };
+      modal.querySelector("#custom-confirm-no").onclick = function () {
+        document.body.removeChild(modal);
+      };
     }
 
     // Clear selection button
