@@ -15,14 +15,13 @@ class SSEManager {
     console.log('🔌 Connecting to:', url);
     this.currentUrl = url;
     this.eventSource = new EventSource(url);
-    // console.log('EventSource instance:', this.eventSource);
-    // Handle custom SSE events
+
     const events = [
+      'new_ticket',
+      'new_notification',
       'new_comment',
       'ticket_closed',
       'ticket_open',
-      'new_ticket',
-      'new_notification',
     ];
     events.forEach((event) => {
       this.eventSource.addEventListener(event, (e) => {
@@ -37,13 +36,19 @@ class SSEManager {
 
           const data = JSON.parse(e.data);
 
+          console.log('The data from sse from' + event, data);
+
           this._emit(event, data);
         } catch (err) {}
       });
     });
 
+    console.log(this.eventSource);
+
     this.eventSource.onerror = (err) => {
       this._emit('error', { message: 'SSE connection error', error: err });
+      console.log('Disconnected');
+      //   this.connect();
       // Avoid disconnecting unless necessary
       // this.disconnect();
     };

@@ -229,6 +229,8 @@ const SingleTicket = ({
     setSingleTicketPage,
   } = useAppData();
 
+  console.log('A single ticket data', ticket);
+
   const [ticketClosed, setTicketClosed] = useState(false);
 
   const [imageUpload, setImageUpload] = useState({
