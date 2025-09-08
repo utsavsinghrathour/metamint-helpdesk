@@ -475,13 +475,10 @@ add_filter('rest_prepare_comment', function ($response, $comment, $request) {
     if (!is_wp_error($response) && $response instanceof WP_REST_Response) {
         $data = $response->get_data();
 
-
-
-        //plain text
         $data['content']['plain'] = wp_strip_all_tags($data['content']['rendered']);
-        // Get user object if registered user
+
         $author_id = $comment->user_id;
-        // Local timestamp using WP timezone
+
         $comment_time_local = strtotime(get_date_from_gmt($comment->comment_date_gmt));
         $now_local = current_time('timestamp');
 
@@ -508,7 +505,6 @@ add_filter('rest_prepare_comment', function ($response, $comment, $request) {
 
         $response->set_data($data);
 
-        // ✅ Check if the request is from your site
         $site_url   = site_url();
         $referer    = $request->get_header('referer');
         $origin     = $request->get_header('origin');
@@ -559,18 +555,6 @@ function robodesk_comment_creation_on_insert($comment_ID, $comment_object)
     }
 }
 
-//####SEEN######/
-//When user make comment from frontend 
-//When admin makes comment from backend and user receives messages from sse(Server Sent Events)
-//As soon as user opens a single tikcet need to make api request mark all messages as seen
-// ==> Update to robodesk_tikcet representing all messages are seen
-
-//##UNSEEN##//
-//When admin makes comment from backend but the user did not receive from sse
-//When user opens the conversation
-
-
-
 
 function disable_jquery_migrate_logging($scripts)
 {
@@ -579,19 +563,3 @@ function disable_jquery_migrate_logging($scripts)
     }
 }
 add_action('wp_default_scripts', 'disable_jquery_migrate_logging');
-
-
-
-// add_filter('retrieve_password_message', 'robodesk_add_param_to_reset_link', 10, 4);
-// function robodesk_add_param_to_reset_link($message, $key, $user_login, $user_data)
-// {
-
-
-//     $reset_url = network_site_url("wp-login.php?action=rp&key=$key&login=" . rawurlencode($user_login), 'login');
-
-//     $modified_reset_url = add_query_arg('lang', 'en', $reset_url);
-
-//     $message = str_replace($reset_url, $modified_reset_url, $message);
-
-//     return $message;
-// }
