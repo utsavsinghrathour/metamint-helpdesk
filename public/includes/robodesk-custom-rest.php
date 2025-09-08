@@ -1334,7 +1334,7 @@ function get_cached_user_data($user_id)
 
 
 add_action('rest_api_init', function () {
-    register_rest_route('custom/v1', '/lost-password', array(
+    register_rest_route('robodeskr/v1', '/lost-password', array(
         'methods' => 'POST',
         'callback' => 'robodesk_custom_lost_password',
         'permission_callback' => '__return_true',

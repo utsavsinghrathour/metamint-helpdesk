@@ -21,7 +21,7 @@ export default function ForgotPassword({ onSent, email }) {
     const userDetail = userDetailRef.current.value;
 
     try {
-      const response = await fetch('/wp-json/custom/v1/lost-password', {
+      const response = await fetch('/wp-json/robodesk/v1/lost-password', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
