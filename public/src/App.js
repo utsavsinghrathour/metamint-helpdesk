@@ -70,7 +70,9 @@ const AppContent = ({ imageUrls = { logo: '' } }) => {
   const url = useMemo(() => {
     if (!ticketsContext[0]?.id) return null;
     if (!loggedinContext && !loggedInUsrId) return null;
-    return `wp-json/robodesk/v1/stream/tickets/0/${ticketsContext[0]?.id}/${loggedInUsrId}`;
+    console.log('The url from memo change');
+    console.log(window.location.origin);
+    return `${window.location.origin}/wp-json/robodesk/v1/stream/tickets/0/${ticketsContext[0]?.id}/${loggedInUsrId}`;
   }, [ticketsContext[0]?.id, loggedInUsrId]);
 
   useEffect(() => {
@@ -78,14 +80,13 @@ const AppContent = ({ imageUrls = { logo: '' } }) => {
     // useSSE(url, handlers);
   }, []);
 
-  //   useEffect(() => {}, [isSingleTicketPage]);
-
   useEffect(() => {
     if (!url && !loggedinContext && !loggedInUsrId) return;
-
+    console.info('I am executed first');
     sseManager.connect(url);
 
     const unsubscribeNewTicket = sseManager.on('new_ticket', (data) => {
+      console.log('Executed From new Ticket');
       updateTicket(data);
     });
 
@@ -95,6 +96,9 @@ const AppContent = ({ imageUrls = { logo: '' } }) => {
         const ids = Array.isArray(data)
           ? data.map((item) => (typeof item === 'object' ? item.id : item))
           : [];
+
+        console.info('Executed From new notif');
+        //   console.log('We ant here')
         handleSelectedTicketUpdate(null);
         if (updateNewCommentNotification(ids)) {
           notificationAudio.current.play();
@@ -102,6 +106,7 @@ const AppContent = ({ imageUrls = { logo: '' } }) => {
       }
     );
     return () => {
+      console.info('closing');
       unsubscribeNewTicket();
       unsubscribeNotification();
     };

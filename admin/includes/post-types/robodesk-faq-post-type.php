@@ -194,6 +194,8 @@ add_filter( 'rest_prepare_robodesk_faq', function( $response, $post, $request ) 
     
     $response->data['author_info'] = $author_info;
 
+    $response->data['featured'] =  get_post_meta($post->ID, '_robodesk_featured', $featured) ?? false;
+
     return $response;
 
 }, 10, 3 );
