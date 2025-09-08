@@ -269,18 +269,15 @@ const Login = ({
     try {
       const loginResponse = await loginUser(formData.email, formData.password);
 
-      //   console.log('The login response', loginResponse);
-      //add token here later
-
       updateLoginStatus(true, loginResponse.user_id);
 
-      console.log('The loggedin user id ', loginResponse.user_id);
+
       try {
         const ticketResponse = await handleTempTicketCreation(
           loginResponse.user_id
         );
 
-        console.log('From the temp ticket resp', ticketResponse);
+       
       } catch (ticketError) {}
     } catch (error) {
       setErrors({
