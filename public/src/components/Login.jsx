@@ -264,16 +264,23 @@ const Login = ({
 
   const handleLogin = async () => {
     if (!validatePassword()) return;
+
     setIsSubmitting(true);
     try {
       const loginResponse = await loginUser(formData.email, formData.password);
+
+      //   console.log('The login response', loginResponse);
+      //add token here later
+
       updateLoginStatus(true, loginResponse.user_id);
 
-      setShowLogin(true);
+      console.log('The loggedin user id ', loginResponse.user_id);
       try {
         const ticketResponse = await handleTempTicketCreation(
           loginResponse.user_id
         );
+
+        console.log('From the temp ticket resp', ticketResponse);
       } catch (ticketError) {}
     } catch (error) {
       setErrors({
@@ -289,9 +296,9 @@ const Login = ({
   };
 
   const handleTempTicketCreation = async (userId) => {
+    // alert('From temp ticket non logged in usr', userId);
     const ticketTitle = localStorage.getItem('temp_ticket_title');
-
-    console.log('Ticket Title:', ticketTitle);
+    console.log('the ticket temp title is thsi');
     if (!ticketTitle) return;
 
     try {
@@ -353,9 +360,6 @@ const Login = ({
   const handleBackToLogin = () => {
     setCurrentForm('login');
   };
-  //   const changeShowForgotPassword = () => {
-  //     setShowForgotPassword(false);
-  //   };
 
   return (
     <>

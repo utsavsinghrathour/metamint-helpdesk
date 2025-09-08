@@ -70,8 +70,8 @@ const AppContent = ({ imageUrls = { logo: '' } }) => {
   const url = useMemo(() => {
     if (!ticketsContext[0]?.id) return null;
     if (!loggedinContext && !loggedInUsrId) return null;
-    console.log('The url from memo change');
-    console.log(window.location.origin);
+    // console.log('The url from memo change');
+    // console.log(window.location.origin);
     return `${window.location.origin}/wp-json/robodesk/v1/stream/tickets/0/${ticketsContext[0]?.id}/${loggedInUsrId}`;
   }, [ticketsContext[0]?.id, loggedInUsrId]);
 
@@ -82,11 +82,11 @@ const AppContent = ({ imageUrls = { logo: '' } }) => {
 
   useEffect(() => {
     if (!url && !loggedinContext && !loggedInUsrId) return;
-    console.info('I am executed first');
+    // console.info('I am executed first');
     sseManager.connect(url);
 
     const unsubscribeNewTicket = sseManager.on('new_ticket', (data) => {
-      console.log('Executed From new Ticket');
+      //   console.log('Executed From new Ticket');
       updateTicket(data);
     });
 
