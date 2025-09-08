@@ -1378,7 +1378,7 @@ function robodesk_handle_bulk_action()
                 $term = get_term_by('name', $action_value, 'robodesk_ticket_priority');
                 if (!$term || is_wp_error($term)) {
                     $errors[] = "Invalid priority: $action_value for ticket ID: $ticket_id";
-                    continue;
+                    continue 2;
                 }
 
                 $result = wp_set_object_terms($ticket_id, (int)$term->term_id, 'robodesk_ticket_priority', false);

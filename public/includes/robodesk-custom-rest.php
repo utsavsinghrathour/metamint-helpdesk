@@ -1361,6 +1361,7 @@ function robodesk_custom_lost_password(WP_REST_Request $request)
         'message' => 'A password reset link has been sent to your email address.'
     ), 200);
 }
+
 add_filter('retrieve_password_message', 'robodesk_add_param_to_reset_link', 10, 4);
 function robodesk_add_param_to_reset_link($message, $key, $user_login, $user_data)
 {
