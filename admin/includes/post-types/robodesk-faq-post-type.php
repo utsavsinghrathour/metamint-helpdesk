@@ -43,7 +43,7 @@ function robodesk_register_faq_post_type()
         'has_archive'        => true,
         'hierarchical'       => false,
         'menu_position'      => null,
-        'supports'           => array('title', 'editor', 'excerpt', 'author', 'custom-fields', 'thumbnail'), 
+        'supports'           => array('title', 'editor', 'excerpt', 'author', 'custom-fields', 'thumbnail'),
     );
 
     register_post_type('robodesk_faq', $faq_args);
@@ -93,7 +93,8 @@ register_post_meta('robodesk_faq', '_robodesk_featured', array(
 ));
 // Add Featured metabox to FAQ post type
 add_action('add_meta_boxes', 'robodesk_add_featured_metabox');
-function robodesk_add_featured_metabox() {
+function robodesk_add_featured_metabox()
+{
     add_meta_box(
         'robodesk_featured_metabox',
         __('Featured?', 'robodesk-support-ticket'),
@@ -105,50 +106,53 @@ function robodesk_add_featured_metabox() {
 }
 
 // Render the Featured metabox
-function robodesk_render_featured_metabox($post) {
+function robodesk_render_featured_metabox($post)
+{
     // Get the current value
     $featured = get_post_meta($post->ID, '_robodesk_featured', true);
-    
+
     // Output the nonce field
     wp_nonce_field('robodesk_featured_metabox', 'robodesk_featured_metabox_nonce');
-    
+
     // Output the checkbox
-    ?>
-    <label for="robodesk_featured">
-        <input type="checkbox" id="robodesk_featured" name="robodesk_featured" value="true" <?php checked($featured, 'true'); ?> />
-        <?php _e('Mark as featured', 'robodesk-support-ticket'); ?>
-    </label>
-    <?php
+?>
+<label for="robodesk_featured">
+    <input type="checkbox" id="robodesk_featured" name="robodesk_featured" value="true"
+        <?php checked($featured, 'true'); ?> />
+    <?php _e('Mark as featured', 'robodesk-support-ticket'); ?>
+</label>
+<?php
 }
 
 // Save the Featured metabox data
 add_action('save_post', 'robodesk_save_featured_metabox');
-function robodesk_save_featured_metabox($post_id) {
+function robodesk_save_featured_metabox($post_id)
+{
     // Check if our nonce is set
     if (!isset($_POST['robodesk_featured_metabox_nonce'])) {
         return;
     }
-    
+
     // Verify the nonce
     if (!wp_verify_nonce($_POST['robodesk_featured_metabox_nonce'], 'robodesk_featured_metabox')) {
         return;
     }
-    
+
     // Check if this is an autosave
     if (defined('DOING_AUTOSAVE') && DOING_AUTOSAVE) {
         return;
     }
-    
+
     // Check the user's permissions
     if (!current_user_can('edit_post', $post_id)) {
         return;
     }
-    
+
     // Check the post type
     if (get_post_type($post_id) !== 'robodesk_faq') {
         return;
     }
-    
+
     // Update the meta field
     $featured = (isset($_POST['robodesk_featured']) && $_POST['robodesk_featured'] === 'true') ? 'true' : 'false';
     update_post_meta($post_id, '_robodesk_featured', $featured);
@@ -157,8 +161,9 @@ function robodesk_save_featured_metabox($post_id) {
 
 
 add_filter('rest_robodesk_faq_query', 'robodesk_filter_faqs_by_featured', 10, 2);
-function robodesk_filter_faqs_by_featured($args, $request) {
-    
+function robodesk_filter_faqs_by_featured($args, $request)
+{
+
     if (isset($request['featured']) && $request['featured'] === 'true') {
         $args['meta_query'] = array(
             array(
@@ -167,38 +172,36 @@ function robodesk_filter_faqs_by_featured($args, $request) {
                 'compare' => '='
             )
         );
-      
     }
     return $args;
 }
 
 
-register_rest_field( 'robodesk_faq', 'author_name', array(
-    'get_callback' => function( $post_arr ) {
+register_rest_field('robodesk_faq', 'author_name', array(
+    'get_callback' => function ($post_arr) {
         $post_id = $post_arr['id'];
-        $post = get_post( $post_id );
-        $author = get_userdata( $post->post_author );
+        $post = get_post($post_id);
+        $author = get_userdata($post->post_author);
         return $author ? $author->display_name : false;
     },
-) );
+));
 
 
-add_filter( 'rest_prepare_robodesk_faq', function( $response, $post, $request ) {
+add_filter('rest_prepare_robodesk_faq', function ($response, $post, $request) {
     $author_id = $post->post_author;
 
     $author_info = array(
-        'display_name' => get_the_author_meta( 'display_name', $author_id ),
-        'gravatar_url' => get_avatar_url( $author_id, array( 'size' => 96 ) ),
-        'total_posts'  => count_user_posts( $author_id, 'robodesk_ticket' )
+        'display_name' => get_the_author_meta('display_name', $author_id),
+        'gravatar_url' => get_avatar_url($author_id, array('size' => 96)),
+        'total_posts'  => count_user_posts($author_id, 'robodesk_ticket')
     );
-    
+
     $response->data['author_info'] = $author_info;
 
-    $response->data['featured'] =  get_post_meta($post->ID, '_robodesk_featured', $featured) ?? false;
+    $response->data['featured'] =  get_post_meta($post->ID, '_robodesk_featured', true) ?? false;
 
     return $response;
-
-}, 10, 3 );
+}, 10, 3);
 
 
 
