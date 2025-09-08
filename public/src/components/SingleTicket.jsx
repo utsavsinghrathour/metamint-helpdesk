@@ -229,7 +229,7 @@ const SingleTicket = ({
     setSingleTicketPage,
   } = useAppData();
 
-  console.log('A single ticket data', ticket);
+  //   console.log('A single ticket data', ticket);
 
   const [ticketClosed, setTicketClosed] = useState(false);
 
@@ -343,7 +343,7 @@ const SingleTicket = ({
       clearTimeout(timeoutId);
 
       if (err.name === 'AbortError') {
-        console.log('Request timed out, using cached data if available');
+        // console.log('Request timed out, using cached data if available');
         // If we have cached data, use it
         const cached = getCachedMessages(ticket.id);
         if (cached && cached.length > 0) {
@@ -478,7 +478,7 @@ const SingleTicket = ({
         await fetchComments(initialOffset, false);
       } catch (err) {
         if (err.name === 'AbortError') {
-          console.log('Initial fetch timed out');
+          //   console.log('Initial fetch timed out');
           if (!cached || cached.length === 0) {
             setError('Connection is slow. Messages may take time to load.');
           }
@@ -591,7 +591,7 @@ const SingleTicket = ({
   }, [url]);
 
   const handleSend = async () => {
-    console.log('From handle send', message);
+    // console.log('From handle send', message);
     if (message.trim() || previewImage) {
       const imageHTML = previewImage
         ? `<a href="${previewImage}" target="_blank"><img src="${previewImage}" alt="Preview" class="rd-comment-img"  /></a>`
