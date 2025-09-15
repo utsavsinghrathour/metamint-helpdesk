@@ -1359,6 +1359,27 @@ function robodesk_handle_bulk_action()
                 break;
 
             case 'status':
+                $current_status = get_post_meta($ticket_id, '_robodesk_ticket_status', true);
+
+                if ($current_status === $action_value) {
+                    // Status is already the desired one → count as successful
+                    $updated_count++;
+                } else {
+                    // Update status meta
+                    if (update_post_meta($ticket_id, '_robodesk_ticket_status', $action_value)) {
+                        // Update modified date to reflect the change
+                        wp_update_post(array(
+                            'ID' => $ticket_id,
+                            'post_modified' => current_time('mysql'),
+                            'post_modified_gmt' => current_time('mysql', 1)
+                        ));
+                        $updated_count++;
+                    } else {
+                        $errors[] = "Failed to update status for ticket ID: $ticket_id";
+                    }
+                }
+                break;
+
                 // Update status meta
                 if (update_post_meta($ticket_id, '_robodesk_ticket_status', $action_value)) {
                     // Update modified date to reflect the change

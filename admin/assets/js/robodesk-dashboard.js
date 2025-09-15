@@ -2045,6 +2045,7 @@ document.addEventListener("DOMContentLoaded", function () {
   const clearSelectionBtn = document.getElementById("clear-selection");
 
   // Initialize bulk actions functionality
+
   initializeBulkActions();
 
   function initializeBulkActions() {
