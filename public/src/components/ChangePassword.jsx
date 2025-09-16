@@ -77,7 +77,7 @@ export default function ChangePassword({ onReset }) {
     // Validate password
     const passwordErrors = validatePassword(formData.password);
     if (passwordErrors.length > 0) {
-      newErrors.password = passwordErrors[0]; // Show first error only
+      newErrors.password = passwordErrors[0];
     }
 
     // Validate confirm password
@@ -94,7 +94,15 @@ export default function ChangePassword({ onReset }) {
 
     setMessage('');
 
-    if (!validateForm() && !resetKey) {
+    if (!validateForm()) {
+      return;
+    }
+
+    if (!resetKey) {
+      setErrors((prev) => ({
+        ...prev,
+        password: 'Reset key is missing. Please try again.',
+      }));
       return;
     }
 
