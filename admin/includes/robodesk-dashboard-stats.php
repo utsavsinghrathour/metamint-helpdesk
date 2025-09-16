@@ -138,13 +138,13 @@
             'posts_per_page' => -1,
             'orderby'        => 'modified',
             'order'          => 'DESC',
-            'meta_query'     => [
-                [
-                    'key'     => '_robodesk_ticket_status',
-                    'value'   => 'closed',
-                    'compare' => '!=',
-                ],
-            ],
+            // 'meta_query'     => [
+            //     [
+            //         'key'     => '_robodesk_ticket_status',
+            //         'value'   => 'closed',
+            //         'compare' => '!=',
+            //     ],
+            // ],
         ];
 
         $query = new WP_Query($args);
