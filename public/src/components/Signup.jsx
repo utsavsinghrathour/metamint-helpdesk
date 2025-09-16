@@ -181,7 +181,7 @@ const Signup = ({ switchToLogin }) => {
           {errors.username && (
             <p
               id="username-error"
-              className="rd-text-red rd-text-sm rd-mt-5 form-err-msg"
+              className="rd-text-red rd-text-sm rd-mt-5 form-err-msg err_msg"
             >
               {errors.username}
             </p>
@@ -204,7 +204,7 @@ const Signup = ({ switchToLogin }) => {
           {errors.email && (
             <p
               id="email-error"
-              className="rd-text-red rd-text-sm rd-mt-5 form-err-msg"
+              className="rd-text-red rd-text-sm rd-mt-5 form-err-msg err_msg"
             >
               {errors.email}
             </p>
@@ -243,13 +243,13 @@ const Signup = ({ switchToLogin }) => {
               </span>
             </div>
           )}
-          <div className="rd-text-xs rd-text-gray-500 rd-mt-5 rd-info">
+          <div className="rd-text-xs rd-text-gray-500 rd-mt-5 rd-info err_msg">
             Password must be at least 8 characters and include uppercase, lowercase, numbers, and special characters.
           </div>
           {errors.password && (
             <p
               id="password-error"
-              className="rd-text-red rd-text-sm rd-mt-5 form-err-msg"
+              className="rd-text-red rd-text-sm rd-mt-5 form-err-msg err_msg"
             >
               {errors.password}
             </p>
@@ -272,7 +272,7 @@ const Signup = ({ switchToLogin }) => {
           {errors.confirmPassword && (
             <p
               id="confirmPassword-error"
-              className="rd-text-red rd-text-sm rd-mt-5 form-err-msg"
+              className="rd-text-red rd-text-sm rd-mt-5 form-err-msg err_msg"
             >
               {errors.confirmPassword}
             </p>

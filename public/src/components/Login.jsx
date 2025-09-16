@@ -64,7 +64,7 @@ const Header = ({ setActiveTab, image_urls, defaultLogo }) => (
 // ErrorMessage Component
 const ErrorMessage = ({ id, message }) =>
   message && (
-    <p id={id} className='rd-text-red rd-text-sm rd-mt-5'>
+    <p id={id} className='rd-text-red rd-text-sm rd-mt-5 err_msg'>
       {message}
     </p>
   );
@@ -107,7 +107,7 @@ const LoginForm = ({
             required
             aria-describedby='email-error'
           />
-          <ErrorMessage id='email-error' message={errors.email} />
+          <ErrorMessage id='email-error' className="err_msg" message={errors.email} />
         </div>
         {showPasswordField && (
           <div>
@@ -126,8 +126,8 @@ const LoginForm = ({
               aria-describedby='password-error'
             />
             <ErrorMessage id='password-error' message={errors.password} />
-            <p>
-              <a href='#' onClick={handleForgotPassword}>
+            <p className='rd-body-text rd-mt-8'>
+              <a href='#' className='rd-decoration-none color-blue' onClick={handleForgotPassword}>
                 Lost your password?
               </a>
             </p>
