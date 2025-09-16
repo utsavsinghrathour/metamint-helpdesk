@@ -8,9 +8,9 @@
  padding: 12px 20px;
  cursor: pointer;
 }
-.rd-faq-item p{
+/* .rd-faq-item p{
     margin-top: 8px;
-}
+} */
 .rd-faq-item .rd-faq-content{
   max-width: 92%;
 }
