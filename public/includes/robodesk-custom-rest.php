@@ -279,6 +279,16 @@ function robodesk_stream($request)
                     update_post_meta($ticket_id, 'rbd_all_seen', 'yes');
                 }
 
+                // $my_own_conversations = robodesk_my_own_conversations($ticket_id, $last_comment_client);
+
+                // if (!empty($my_own_conversations)) {
+                //     foreach ($new_conversations as $moc) {
+                //         echo "event: new_mine_comment\n";
+                //         echo "data: " . json_encode($moc) . "\n\n";
+                //         flush();
+                //     }
+                // }
+
                 if ($ticket_status == 'closed') {
                     echo "event: ticket_closed\n";
                     echo "data: " . json_encode(array('reason' => 'ticket_closed')) . "\n\n";
@@ -357,6 +367,7 @@ function robodesk_get_new_notifications($user_id)
     return $notifications_data;
 }
 
+
 //For new conversations
 function robodesk_live_conversations($ticket_id, $last_comment_client, $loggedin_user_id)
 {
@@ -370,8 +381,8 @@ function robodesk_live_conversations($ticket_id, $last_comment_client, $loggedin
         'order'        => 'DESC',
         'status'       => 'approve',
         'fields'       => 'ids',
-        'type' => 'ticket_replies',
-        'meta_query'   => [
+        'type'          => 'ticket_replies',
+        'meta_query'    => [
             [
                 'key'     => 'admin_comment',
                 'value'   => 'yes',
@@ -379,6 +390,8 @@ function robodesk_live_conversations($ticket_id, $last_comment_client, $loggedin
             ]
         ]
     ]);
+
+
 
     $last_comment_server = !empty($last_comment_server) ? (int) $last_comment_server[0] : false;
     $new_admin_comments = array();
@@ -427,6 +440,79 @@ function robodesk_live_conversations($ticket_id, $last_comment_client, $loggedin
 
 
     return $new_admin_comments;
+}
+//For my own conversations
+function robodesk_my_own_conversations($ticket_id, $last_my_comment_client)
+{
+
+    if (get_post_type($ticket_id) !== 'robodesk_ticket') return [];
+
+    //get comment of the server which is not created by admin
+    $last_my_comment_server = get_comments([
+        'post_id'      => $ticket_id,
+        'number'       => 1,
+        'orderby'      => 'comment_date',
+        'order'        => 'DESC',
+        'status'       => 'approve',
+        'fields'       => 'ids',
+        'type'          => 'ticket_replies',
+        'meta_query'    => [
+            [
+                'key'     => 'admin_comment',
+                'value'   => 'no',
+                'compare' => '='
+            ]
+        ]
+    ]);
+
+    $last_my_comment_server = !empty($last_my_comment_server) ? (int) $last_my_comment_server[0] : false;
+    $new_my_comments = array();
+
+    // var_dump($last_my_comment_server);
+
+    if ($last_my_comment_server > $last_my_comment_client) {
+
+        $args = array(
+            'post_id' => $ticket_id,
+            'status' => 'approve',
+            'comment__in' => [$last_my_comment_server],
+            'orderby' => 'comment_date',
+            'order' => 'ASC',
+            'type' => 'ticket_replies',
+            'meta_query'   => [
+                [
+                    'key'     => 'admin_comment',
+                    'value'   => 'no',
+                    'compare' => '='
+                ]
+            ],
+            'comment__not_in' => array($last_my_comment_client)
+        );
+
+        $comments = get_comments($args);
+        foreach ($comments as $comment) {
+            $user = get_userdata($comment->user_id);
+            if ($user) {
+                $new_my_comments[] = array(
+                    'id' => (int) $comment->comment_ID,
+                    'content' => array(
+                        'rendered' => wpautop($comment->comment_content)
+                    ),
+                    'date' => $comment->comment_date,
+                    'author_data' => array(
+                        'id' => (int) $comment->user_id
+                    ),
+                    'author_name' => $comment->display_name ?: $comment->comment_author,
+                    'author_image' => get_avatar_url($comment->user_id ?: $comment->comment_author_email, array('size' => 32)),
+                    'time_ago' => human_time_diff(strtotime($comment->comment_date), current_time('timestamp')) . ' ago',
+                    'author_id' => (int) $comment->user_id,
+                    'post_author_id' => (int) $ticket_id ? get_post_field('post_author', $ticket_id) : 0,
+                );
+            }
+        }
+    }
+
+    return $new_my_comments;
 }
 
 function robodesk_get_new_tickets($last_id_client, $user_id)
@@ -510,7 +596,6 @@ function robodesk_get_new_tickets($last_id_client, $user_id)
 
     return $results;
 }
-
 
 
 function robodesk_live_comments($request)
@@ -653,11 +738,8 @@ function robodesk_live_comments($request)
 }
 
 
-
-
 function secure_login_endpoint(WP_REST_Request $request)
 {
-
 
     $emailAddr = sanitize_email($request->get_param('email'));
     $password = $request->get_param('password');
@@ -1169,7 +1251,7 @@ function robodesk_handle_reply_receive($data)
         $reply
     ));
 
-    rbd_log('hi hello');
+
 
     return rest_ensure_response(array(
         'status'  => 'success',
@@ -1248,7 +1330,6 @@ function robodesk_custom_lost_password(WP_REST_Request $request)
         return new WP_Error('invalid_input', 'Username or email is required.', array('status' => 400));
     }
 
-
     set_transient('is_rest_password_reset_' . md5($user_login), true, 120);
 
     $result = retrieve_password($user_login);
@@ -1263,14 +1344,6 @@ function robodesk_custom_lost_password(WP_REST_Request $request)
 }
 
 
-// Force WP emails to be sent from admin email & site name
-add_filter('wp_mail_from', function ($email) {
-    return get_option('robodesk_imap_username'); // WordPress admin email
-});
-
-add_filter('wp_mail_from_name', function ($name) {
-    return get_bloginfo('name'); // Site title
-});
 
 
 

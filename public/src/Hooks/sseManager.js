@@ -12,7 +12,7 @@ class SSEManager {
 
     this.disconnect();
 
-    // console.log('🔌 Connecting to:', url);
+    console.log('🔌 Connecting to:', url);
     this.currentUrl = url;
     this.eventSource = new EventSource(url);
 
@@ -27,16 +27,11 @@ class SSEManager {
       this.eventSource.addEventListener(event, (e) => {
         try {
           if (!e.data || e.data === 'undefined' || e.data.trim() === '') {
-            // console.warn(
-            //   `SSE ${event} received invalid or empty data:`,
-            //   e.data
-            // );
+            console.log(`SSE ${event} received invalid or empty data:`, e.data);
             return;
           }
 
           const data = JSON.parse(e.data);
-
-          //   console.log('The data from sse from' + event, data);
 
           this._emit(event, data);
         } catch (err) {}
