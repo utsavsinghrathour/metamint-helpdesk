@@ -262,7 +262,7 @@ const SingleQuestionBox = ({
                     {showHeaderFooter && (
                         <>
                             <div className="rd-text-center rd-px-20 rd-flex rd-flex-col rd-gap-5 rd-mb-20 home-tab-title">
-                                <h3 className="heading-3">Have Questions?</h3>
+                                <h4 className="heading-4">Have Questions?</h4>
                                 <h5 className="sub-text">Have any questions or need a quote? Leave us a message.</h5>
                             </div>
                             <SendMessageField

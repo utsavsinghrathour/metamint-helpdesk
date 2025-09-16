@@ -60,7 +60,7 @@ export default function ForgotPassword({ onSent, email }) {
           <div>
             {!sent && (
               <>
-                <label htmlFor='userdetail' className='rd-body-text'>
+                <label htmlFor='userdetail' className='rd-body-text rd-fw-semi'>
                   Email
                 </label>
 
