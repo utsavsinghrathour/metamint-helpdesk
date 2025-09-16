@@ -620,7 +620,7 @@ function robodesk_create_ticket()
 
 
 
-    wp_send_json_success(['message' => 'Ticket created successfully', 'ticket_id' => $ticket_id]);
+    wp_send_json_success(['message' => 'Conversation created successfully', 'ticket_id' => $ticket_id]);
     wp_die();
 }
 
@@ -686,7 +686,7 @@ function robodesk_update_ticket_status()
             'comment_author'       => $user_object->display_name,
             'comment_author_email' => $user_object->user_email,
             'user_id'              => $user_id,
-            'comment_content'      => 'Ticket status changed to ' . $new_status . ' by ' . $user_object->display_name,
+            'comment_content'      => 'Conversation status changed to ' . $new_status . ' by ' . $user_object->display_name,
             'comment_approved'     => 1,
             'comment_type'         => 'ticket_replies',
             'is_robodesk_reply'    => true, // Custom field to identify as a Robodesk reply
@@ -745,7 +745,7 @@ function robodesk_update_ticket_priority()
             'comment_author'       => $user_object->display_name,
             'comment_author_email' => $user_object->user_email,
             'user_id'              => $user_id,
-            'comment_content'      => 'Ticket priority changed to ' . $new_priority . ' by ' . $user_object->display_name,
+            'comment_content'      => 'Conversation priority changed to ' . $new_priority . ' by ' . $user_object->display_name,
             'comment_approved'     => 1,
             'comment_type'         => 'ticket_replies',
             'is_robodesk_reply'    => true, // Custom field to identify as a Robodesk reply
@@ -794,7 +794,7 @@ function robodesk_update_ticket_assignee()
             'comment_author'       => $user_object->display_name,
             'comment_author_email' => $user_object->user_email,
             'user_id'              => $user_id,
-            'comment_content'      => 'Ticket assigned to ' . $new_assignee . ' by ' . $user_object->display_name,
+            'comment_content'      => 'Conversation assigned to ' . $new_assignee . ' by ' . $user_object->display_name,
             'comment_approved'     => 1,
             'comment_type'         => 'ticket_replies',
             'is_robodesk_reply'    => true, // Custom field to identify as a Robodesk reply
@@ -915,7 +915,7 @@ function robodesk_handle_close_ticket()
         'comment_author'       => $user_object->display_name,
         'comment_author_email' => $user_object->user_email,
         'user_id'              => $user_id,
-        'comment_content'      => 'Ticket closed by ' . $user_object->display_name,
+        'comment_content'      => 'Conversation closed by ' . $user_object->display_name,
         'comment_approved'     => 1,
         'comment_type'         => 'ticket_replies',
         'is_robodesk_reply'   => true,
@@ -928,7 +928,7 @@ function robodesk_handle_close_ticket()
         wp_send_json_error(['message' => 'Failed to add close comment']);
     }
 
-    wp_send_json_success(['message' => 'Ticket closed successfully']);
+    wp_send_json_success(['message' => 'Conversation closed successfully']);
 }
 
 
