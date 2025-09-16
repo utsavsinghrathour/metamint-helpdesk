@@ -29,7 +29,7 @@ const ConversationSkeleton = ({ count = 6 }) => {
   });
 
   return (
-    <div className="rd-skeleton-container" style={{ width: '100%' }}>
+    <div className='rd-skeleton-container' style={{ width: '100%' }}>
       {skeletonMessages.map((msg, index) => {
         const prevMsg = index > 0 ? skeletonMessages[index - 1] : null;
         const isSameSender = prevMsg && prevMsg.sender === msg.sender;
@@ -39,7 +39,9 @@ const ConversationSkeleton = ({ count = 6 }) => {
           <div
             key={index}
             className={`chat-message rd-flex rd-items-start ${
-              msg.sender === 'me' ? 'rd-justify-end' : 'rd-justify-start rd-gap-8'
+              msg.sender === 'me'
+                ? 'rd-justify-end'
+                : 'rd-justify-start rd-gap-8'
             }`}
             style={{
               maxWidth: '100%',
@@ -51,20 +53,22 @@ const ConversationSkeleton = ({ count = 6 }) => {
           >
             {msg.sender === 'other' && (!isSameSender || index === 0) && (
               <div
-                className="rd-skeleton-avatar "
+                className='rd-skeleton-avatar '
                 style={{
                   width: '30px',
                   height: '30px',
-                  borderRadius:'50px',
+                  borderRadius: '50px',
                   backgroundColor: '#e5e7eb',
                   flexShrink: 0,
                   animation: 'shimmer 2s infinite',
                 }}
               />
             )}
-            {msg.sender === 'other' && isSameSender && index !== 0 && <div style={{ width: '30px', height: '30px' }} />}
+            {msg.sender === 'other' && isSameSender && index !== 0 && (
+              <div style={{ width: '30px', height: '30px' }} />
+            )}
             <div
-              className="message-content rd-skeleton-bubble"
+              className='message-content rd-skeleton-bubble'
               style={{
                 backgroundColor: msg.sender === 'me' ? '#007BFF' : '#FFFFFF',
                 border: msg.sender === 'other' ? '1px solid #E0E0E0' : 'none',
@@ -79,10 +83,13 @@ const ConversationSkeleton = ({ count = 6 }) => {
               {Array.from({ length: msg.lines }, (_, lineIndex) => (
                 <div
                   key={lineIndex}
-                  className="rd-skeleton-line"
+                  className='rd-skeleton-line'
                   style={{
                     height: '14px',
-                    backgroundColor: msg.sender === 'me' ? 'rgba(255, 255, 255, 0.3)' : '#e5e7eb',
+                    backgroundColor:
+                      msg.sender === 'me'
+                        ? 'rgba(255, 255, 255, 0.3)'
+                        : '#e5e7eb',
                     borderRadius: '4px',
                     marginBottom: lineIndex < msg.lines - 1 ? '6px' : '0',
                     width: lineIndex === msg.lines - 1 ? '60%' : '100%',
@@ -90,11 +97,14 @@ const ConversationSkeleton = ({ count = 6 }) => {
                 />
               ))}
               <div
-                className="rd-skeleton-time"
+                className='rd-skeleton-time'
                 style={{
                   height: '10px',
                   width: '35px',
-                  backgroundColor: msg.sender === 'me' ? 'rgba(255, 255, 255, 0.2)' : '#d1d5db',
+                  backgroundColor:
+                    msg.sender === 'me'
+                      ? 'rgba(255, 255, 255, 0.2)'
+                      : '#d1d5db',
                   borderRadius: '3px',
                   marginTop: '8px',
                   marginLeft: msg.sender === 'me' ? 'auto' : '0',
@@ -118,7 +128,7 @@ const ConversationSkeleton = ({ count = 6 }) => {
           </div>
         );
       })}
-      <style jsx="true">{`
+      <style jsx='true'>{`
         @keyframes shimmer {
           0%,
           100% {
@@ -164,8 +174,14 @@ const ConversationSkeleton = ({ count = 6 }) => {
 const TicketClosed = ({ handleFocusedTextArea, setActiveTab }) => {
   return (
     <div>
-      <h5 className="rd-fw-semi rd-mb-5 rd-body-text">Still have questions?</h5>
-      <a href="#" className='rd-title-text' onClick={(e) => (e.preventDefault(), setActiveTab(0), handleFocusedTextArea(true))}>
+      <h5 className='rd-fw-semi rd-mb-5 rd-body-text'>Still have questions?</h5>
+      <a
+        href='#'
+        className='rd-title-text'
+        onClick={(e) => (
+          e.preventDefault(), setActiveTab(0), handleFocusedTextArea(true)
+        )}
+      >
         Start a new conversation
       </a>
     </div>
@@ -191,7 +207,13 @@ const setCachedMessages = (ticketId, messages) => {
   });
 };
 
-const SingleTicket = ({ ticket, onBack, loggedInUserId, handleFocusedTextArea, setActiveTab }) => {
+const SingleTicket = ({
+  ticket,
+  onBack,
+  loggedInUserId,
+  handleFocusedTextArea,
+  setActiveTab,
+}) => {
   const [message, setMessage] = useState('');
   const [showPicker, setShowPicker] = useState(false);
   const [previewImage, setPreviewImage] = useState(null);
@@ -297,9 +319,13 @@ const SingleTicket = ({ ticket, onBack, loggedInUserId, handleFocusedTextArea, s
       const formattedComments = formatTicketComments(data);
 
       setChatMessages((prev) => {
-        const newMessages = prepend ? [...formattedComments, ...prev] : formattedComments;
+        const newMessages = prepend
+          ? [...formattedComments, ...prev]
+          : formattedComments;
 
-        const uniqueMessages = Array.from(new Map(newMessages.map((msg) => [msg.id, msg])).values());
+        const uniqueMessages = Array.from(
+          new Map(newMessages.map((msg) => [msg.id, msg])).values()
+        );
 
         // Cache the messages
         if (!prepend) {
@@ -317,7 +343,8 @@ const SingleTicket = ({ ticket, onBack, loggedInUserId, handleFocusedTextArea, s
         if (!prepend) {
           setTimeout(() => {
             if (chatContainerRef.current) {
-              chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+              chatContainerRef.current.scrollTop =
+                chatContainerRef.current.scrollHeight;
             }
           }, 50);
         }
@@ -358,7 +385,7 @@ const SingleTicket = ({ ticket, onBack, loggedInUserId, handleFocusedTextArea, s
     }
   };
 
-  const handleNewComment = (commentData) => {
+  const handleNewComment = (commentData, play = true) => {
     updateTicketNotifications(ticket.id, 'yes');
     setChatMessages((prev) => {
       const messageExists = prev.some((msg) => msg.id === commentData.id);
@@ -366,8 +393,9 @@ const SingleTicket = ({ ticket, onBack, loggedInUserId, handleFocusedTextArea, s
       if (messageExists) {
         return prev;
       }
-
-      beep.current.play();
+      if (play) {
+        beep.current.play();
+      }
 
       const newMessage = {
         id: commentData.id,
@@ -379,10 +407,14 @@ const SingleTicket = ({ ticket, onBack, loggedInUserId, handleFocusedTextArea, s
         isAdmin: commentData.author_id !== ticket.author_id,
       };
 
-      const uniqueMessages = Array.from(new Map([...prev, newMessage].map((msg) => [msg.id, msg])).values());
+      const uniqueMessages = Array.from(
+        new Map([...prev, newMessage].map((msg) => [msg.id, msg])).values()
+      );
 
       // Update cache with new messages
-      const sorted = uniqueMessages.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+      const sorted = uniqueMessages.sort(
+        (a, b) => new Date(a.created_at) - new Date(b.created_at)
+      );
       setCachedMessages(ticket.id, sorted);
 
       return sorted;
@@ -392,21 +424,25 @@ const SingleTicket = ({ ticket, onBack, loggedInUserId, handleFocusedTextArea, s
   const formatTicketComments = (comments) => {
     const formattedComments = comments.map((comment) => {
       const authorId = comment.author_data?.id; // Use author_data.id
-      const sender = String(authorId) === String(loggedInUserId) ? 'me' : 'other'; // Ensure type consistency
+      const sender =
+        String(authorId) === String(loggedInUserId) ? 'me' : 'other'; // Ensure type consistency
 
       return {
         id: comment.id,
         text: comment.content?.rendered || comment.content?.plain || '',
         sender,
         senderName: comment.author_name || 'Unknown',
-        image: comment.author_data?.avatar || comment.author_image || DefaultAvatar,
+        image:
+          comment.author_data?.avatar || comment.author_image || DefaultAvatar,
         created_at: comment.date,
         action: comment.comment_action,
         time_ago: comment.time_ago,
       };
     });
 
-    return formattedComments.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+    return formattedComments.sort(
+      (a, b) => new Date(a.created_at) - new Date(b.created_at)
+    );
   };
 
   // Initial fetch to get total comments and latest messages
@@ -422,7 +458,8 @@ const SingleTicket = ({ ticket, onBack, loggedInUserId, handleFocusedTextArea, s
         // Scroll to bottom after cached messages are set
         setTimeout(() => {
           if (chatContainerRef.current) {
-            chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+            chatContainerRef.current.scrollTop =
+              chatContainerRef.current.scrollHeight;
           }
         }, 50); // Small delay to ensure DOM updates
       }
@@ -432,9 +469,12 @@ const SingleTicket = ({ ticket, onBack, loggedInUserId, handleFocusedTextArea, s
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 8000); // 8 second timeout
 
-        const response = await fetch(`/wp-json/wp/v2/comments?post=${ticket.id}&per_page=1&order=asc&_fields=id`, {
-          signal: controller.signal,
-        });
+        const response = await fetch(
+          `/wp-json/wp/v2/comments?post=${ticket.id}&per_page=1&order=asc&_fields=id`,
+          {
+            signal: controller.signal,
+          }
+        );
 
         clearTimeout(timeoutId);
 
@@ -514,10 +554,17 @@ const SingleTicket = ({ ticket, onBack, loggedInUserId, handleFocusedTextArea, s
     // Don't auto-scroll when loading older messages (pagination)
     if (chatContainer && !isFetching && !isPaginationLoading) {
       // Check if user is near bottom (within 100px)
-      const isNearBottom = chatContainer.scrollHeight - chatContainer.scrollTop - chatContainer.clientHeight < 100;
+      const isNearBottom =
+        chatContainer.scrollHeight -
+          chatContainer.scrollTop -
+          chatContainer.clientHeight <
+        100;
 
       // Only auto-scroll if near bottom or it's the initial load
-      if (isNearBottom || (initialLoadComplete && chatMessages.length <= perPage)) {
+      if (
+        isNearBottom ||
+        (initialLoadComplete && chatMessages.length <= perPage)
+      ) {
         chatContainer.scrollTop = chatContainer.scrollHeight;
       }
     }
@@ -557,10 +604,18 @@ const SingleTicket = ({ ticket, onBack, loggedInUserId, handleFocusedTextArea, s
       setTicketClosed(true);
     });
 
+    const unsubscribeNewMineTicket = sseManager.on(
+      'new_mine_comment',
+      (data) => {
+        handleNewComment(data, false);
+      }
+    );
+
     return () => {
       unsubscribeNewComment();
       unsubscribeTicketOpen();
       unsubscribeTicketClosed();
+      unsubscribeNewMineTicket();
       sseManager.connect(prevUrl);
     };
   }, [url]);
@@ -599,7 +654,13 @@ const SingleTicket = ({ ticket, onBack, loggedInUserId, handleFocusedTextArea, s
       const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout for sending
 
       try {
-        const result = await sendReply(ticket.id, loggedInUserId, message, previewImage, controller.signal);
+        const result = await sendReply(
+          ticket.id,
+          loggedInUserId,
+          message,
+          previewImage,
+          controller.signal
+        );
 
         clearTimeout(timeoutId);
 
@@ -614,15 +675,18 @@ const SingleTicket = ({ ticket, onBack, loggedInUserId, handleFocusedTextArea, s
           senderName: result.data.author_name || 'Me',
           image: result.data.author_image ?? '/default-avatar.jpg',
           created_at: result.data.created_at || tempMessage.created_at,
-          isAdmin: result.data.author_id ? result.data.author_id !== ticket.author_id : false,
+          isAdmin: result.data.author_id
+            ? result.data.author_id !== ticket.author_id
+            : false,
           ...(previewImage && { imageUrl: previewImage }),
         };
 
         // Replace temp message with real one
         setChatMessages((prev) => {
-          const updated = [...prev.filter((msg) => msg.id !== tempMessage.id), newMessage].sort(
-            (a, b) => new Date(a.created_at) - new Date(b.created_at)
-          );
+          const updated = [
+            ...prev.filter((msg) => msg.id !== tempMessage.id),
+            newMessage,
+          ].sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
           // Update cache
           setCachedMessages(ticket.id, updated);
           return updated;
@@ -633,9 +697,15 @@ const SingleTicket = ({ ticket, onBack, loggedInUserId, handleFocusedTextArea, s
         if (err.name === 'AbortError') {
           // Keep the optimistic message but mark it as pending
           setChatMessages((prev) =>
-            prev.map((msg) => (msg.id === tempMessage.id ? { ...msg, isPending: true, isSending: false } : msg))
+            prev.map((msg) =>
+              msg.id === tempMessage.id
+                ? { ...msg, isPending: true, isSending: false }
+                : msg
+            )
           );
-          setError('Message is taking longer to send. It will be delivered when connection improves.');
+          setError(
+            'Message is taking longer to send. It will be delivered when connection improves.'
+          );
         } else {
           console.error('Error sending message:', err);
           // Remove the failed message
@@ -731,11 +801,11 @@ const SingleTicket = ({ ticket, onBack, loggedInUserId, handleFocusedTextArea, s
     });
 
   return (
-    <div className="rd-single-ticket rd-flex rd-flex-col rd-h-full">
-      <div className="single-ticket-header rd-flex-col rd-flex rd-align-center rd-justify-between rd-border-bottom-light rd-px-18 rd-py-15">
-        <div className="rd-flex rd-align-center">
+    <div className='rd-single-ticket rd-flex rd-flex-col rd-h-full'>
+      <div className='single-ticket-header rd-flex-col rd-flex rd-align-center rd-justify-between rd-border-bottom-light rd-px-18 rd-py-15'>
+        <div className='rd-flex rd-align-center'>
           <button
-            className="icon-dark back-button rd-flex rd-items-center rd-bg-transparent rd-border-none rd-p-0 rd-m-0 rd-back-arrow-position"
+            className='icon-dark back-button rd-flex rd-items-center rd-bg-transparent rd-border-none rd-p-0 rd-m-0 rd-back-arrow-position'
             onClick={onBack}
           >
             <FaChevronLeft />
@@ -743,27 +813,32 @@ const SingleTicket = ({ ticket, onBack, loggedInUserId, handleFocusedTextArea, s
           {image_urls.wide_logo && image_urls.wide_logo.trim() !== '' ? (
             <img
               src={image_urls.wide_logo}
-              alt="Plugin Wide Logo"
-              className="rd-h-auto rd-header-logo"
+              alt='Plugin Wide Logo'
+              className='rd-h-auto rd-header-logo'
               onError={(e) => (e.target.style.display = 'none')}
             />
           ) : image_urls.logo && image_urls.logo.trim() !== '' ? (
             <img
               src={image_urls.logo}
-              alt="Plugin Logo"
-              className="rd-h-auto rd-header-logo"
+              alt='Plugin Logo'
+              className='rd-h-auto rd-header-logo'
               onError={(e) => (e.target.style.display = 'none')}
             />
           ) : (
-            <div className="rd-h-auto rd-header-logo default-logo">
-              <img src={defaultLogo} alt="Default Plugin Logo" className="rd-h-auto rd-header-logo" />
+            <div className='rd-h-auto rd-header-logo default-logo'>
+              <img
+                src={defaultLogo}
+                alt='Default Plugin Logo'
+                className='rd-h-auto rd-header-logo'
+              />
             </div>
           )}
         </div>
-        <div className="rd-body-text rd-mt-30">
-          <p className="rd-text-center rd-body-text">
-            If you are interested in working with us, take a step towards discovering exciting opportunities by reaching
-            out to us. We look forward to talking with you soon!
+        <div className='rd-body-text rd-mt-30'>
+          <p className='rd-text-center rd-body-text'>
+            If you are interested in working with us, take a step towards
+            discovering exciting opportunities by reaching out to us. We look
+            forward to talking with you soon!
           </p>
         </div>
       </div>
@@ -775,7 +850,7 @@ const SingleTicket = ({ ticket, onBack, loggedInUserId, handleFocusedTextArea, s
       >
         {/* Show pagination loader at the top when loading older messages */}
         {isPaginationLoading && (
-          <div className="rd-pagination-loader rd-mb-10">
+          <div className='rd-pagination-loader rd-mb-10'>
             <ConversationSkeleton count={3} />
           </div>
         )}
@@ -783,7 +858,7 @@ const SingleTicket = ({ ticket, onBack, loggedInUserId, handleFocusedTextArea, s
         {/* Show connection warning if there's an error but we have cached messages */}
         {error && chatMessages.length > 0 && (
           <div
-            className="rd-connection-warning rd-px-12 rd-py-8 rd-mb-10 rd-text-center"
+            className='rd-connection-warning rd-px-12 rd-py-8 rd-mb-10 rd-text-center'
             style={{
               backgroundColor: '#fff3cd',
               border: '1px solid #ffc107',
@@ -799,9 +874,11 @@ const SingleTicket = ({ ticket, onBack, loggedInUserId, handleFocusedTextArea, s
         {loading && !initialLoadComplete ? (
           <ConversationSkeleton />
         ) : error && chatMessages.length === 0 ? (
-          <p className="err_msg rd-text-center">{error}</p>
+          <p className='err_msg rd-text-center'>{error}</p>
         ) : chatMessages.length === 0 ? (
-          <p className="rd-text-center rd-body-text">No conversations yet. Start a conversation below.</p>
+          <p className='rd-text-center rd-body-text'>
+            No conversations yet. Start a conversation below.
+          </p>
         ) : (
           <>
             {chatMessages.map((msg, index) => {
@@ -813,7 +890,9 @@ const SingleTicket = ({ ticket, onBack, loggedInUserId, handleFocusedTextArea, s
                 <div
                   key={msg.id}
                   className={`chat-message rd-flex rd-items-start ${
-                    msg.sender === 'me' || msg.isSending ? 'rd-ml-auto sent' : 'rd-flex rd-gap-8 received'
+                    msg.sender === 'me' || msg.isSending
+                      ? 'rd-ml-auto sent'
+                      : 'rd-flex rd-gap-8 received'
                   }`}
                   style={{
                     maxWidth: '70%',
@@ -825,7 +904,7 @@ const SingleTicket = ({ ticket, onBack, loggedInUserId, handleFocusedTextArea, s
                     <img
                       src={msg.image}
                       alt={msg.sender === 'me' ? 'You' : msg.senderName}
-                      className="rd-rounded-full rd-object-cover"
+                      className='rd-rounded-full rd-object-cover'
                       style={{
                         height: '30px',
                         width: '30px',
@@ -834,13 +913,24 @@ const SingleTicket = ({ ticket, onBack, loggedInUserId, handleFocusedTextArea, s
                       }}
                     />
                   )}
-                  {isSameSender && index !== 0 && <div style={{ width: '30px', height: '30px' }} />}
+                  {isSameSender && index !== 0 && (
+                    <div style={{ width: '30px', height: '30px' }} />
+                  )}
                   <div
-                    className="message-content"
+                    className='message-content'
                     style={{
-                      backgroundColor: msg.sender === 'me' || msg.isSending ? '#007BFF' : '#FFFFFF',
-                      color: msg.sender === 'me' || msg.isSending ? '#FFFFFF' : '#000000',
-                      border: msg.sender === 'other' && !msg.isSending ? '1px solid #E0E0E0' : 'none',
+                      backgroundColor:
+                        msg.sender === 'me' || msg.isSending
+                          ? '#007BFF'
+                          : '#FFFFFF',
+                      color:
+                        msg.sender === 'me' || msg.isSending
+                          ? '#FFFFFF'
+                          : '#000000',
+                      border:
+                        msg.sender === 'other' && !msg.isSending
+                          ? '1px solid #E0E0E0'
+                          : 'none',
                       borderRadius: '10px',
                       padding: '8px 12px',
                       maxWidth: '100%',
@@ -848,7 +938,7 @@ const SingleTicket = ({ ticket, onBack, loggedInUserId, handleFocusedTextArea, s
                   >
                     {msg.isSending || msg.isPending ? (
                       <span
-                        className="rd-body-text single-message"
+                        className='rd-body-text single-message'
                         style={{ opacity: msg.isPending ? 0.7 : 1 }}
                         dangerouslySetInnerHTML={{ __html: msg.text }}
                       />
@@ -856,7 +946,11 @@ const SingleTicket = ({ ticket, onBack, loggedInUserId, handleFocusedTextArea, s
                       <>
                         {msg.text && (
                           <span
-                            className={['rd-body-text', 'single-message', msg.action ? 'rd-is-action' : null]
+                            className={[
+                              'rd-body-text',
+                              'single-message',
+                              msg.action ? 'rd-is-action' : null,
+                            ]
                               .filter(Boolean)
                               .join(' ')}
                             dangerouslySetInnerHTML={{ __html: msg.text }}
@@ -865,14 +959,21 @@ const SingleTicket = ({ ticket, onBack, loggedInUserId, handleFocusedTextArea, s
                       </>
                     )}
                     <div
-                      className="rd-text-small rd-text-gray"
+                      className='rd-text-small rd-text-gray'
                       style={{
                         marginTop: '4px',
-                        textAlign: msg.sender === 'me' || msg.isSending ? 'right' : 'left',
+                        textAlign:
+                          msg.sender === 'me' || msg.isSending
+                            ? 'right'
+                            : 'left',
                         fontSize: '10px',
                       }}
                     >
-                      {msg.isSending ? '' : msg.isPending ? 'Pending...' : formatTimestamp(msg.created_at)}
+                      {msg.isSending
+                        ? ''
+                        : msg.isPending
+                        ? 'Pending...'
+                        : formatTimestamp(msg.created_at)}
                     </div>
                   </div>
                 </div>
@@ -887,28 +988,28 @@ const SingleTicket = ({ ticket, onBack, loggedInUserId, handleFocusedTextArea, s
         }`}
       >
         {previewImage && (
-          <div className="rd-mb-10 rd-flex rd-align-center">
+          <div className='rd-mb-10 rd-flex rd-align-center'>
             <div>
               <img
                 src={previewImage}
-                alt="Preview"
-                className="rd-max-w-full rd-h-auto rd-border-radius-md rd-preview-image"
+                alt='Preview'
+                className='rd-max-w-full rd-h-auto rd-border-radius-md rd-preview-image'
                 style={{ maxWidth: '80px' }}
               />
               <button
                 onClick={() => setPreviewImage(null)}
-                className="rd-ml-10 rd-text-red-500 rd-border-none rd-cursor-pointer remove-preview rd-position-absolute rd-p-0"
+                className='rd-ml-10 rd-text-red-500 rd-border-none rd-cursor-pointer remove-preview rd-position-absolute rd-p-0'
               >
                 <IoClose />
               </button>
             </div>
           </div>
         )}
-        <div className="rd-flex rd-align-center rd-justify-between">
+        <div className='rd-flex rd-align-center rd-justify-between'>
           {!ticketClosed ? (
             <>
               <textarea
-                id="mesg"
+                id='mesg'
                 ref={textareaRef}
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
@@ -918,47 +1019,50 @@ const SingleTicket = ({ ticket, onBack, loggedInUserId, handleFocusedTextArea, s
                     handleSend();
                   }
                 }}
-                placeholder="Write a message..."
-                className="rd-flex-grow rd-border-none rd-outline-none rd-py-5 rd-w-full rd-resize-none rd-min-h-[40px]"
-                rows="1"
+                placeholder='Write a message...'
+                className='rd-flex-grow rd-border-none rd-outline-none rd-py-5 rd-w-full rd-resize-none rd-min-h-[40px]'
+                rows='1'
               />
-              <div className="rd-flex rd-gap-20 rd-relative">
+              <div className='rd-flex rd-gap-20 rd-relative'>
                 <button
                   onClick={toggleEmojiPicker}
-                  className="rd-bg-transparent rd-border-none rd-mr-10 icon-dark rd-cursor-pointer rd-p-0"
+                  className='rd-bg-transparent rd-border-none rd-mr-10 icon-dark rd-cursor-pointer rd-p-0'
                 >
-                  <FaRegFaceSmileBeam className="icon-dark" size={20} />
+                  <FaRegFaceSmileBeam className='icon-dark' size={20} />
                 </button>
                 {showPicker && (
-                  <div className="rd-position-absolute rd-bottom-0 rd-right-0 rd-top-0 emoji-picker-wrap">
+                  <div className='rd-position-absolute rd-bottom-0 rd-right-0 rd-top-0 emoji-picker-wrap'>
                     <EmojiPicker onEmojiClick={handleEmojiClick} />
                   </div>
                 )}
-                <div className="rd-flex">
+                <div className='rd-flex'>
                   <input
-                    type="file"
+                    type='file'
                     ref={fileInputRef}
                     onChange={handleFileUpload}
-                    accept="image/*"
-                    className="rd-hidden"
+                    accept='image/*'
+                    className='rd-hidden'
                   />
                   <button
                     onClick={triggerFileInput}
-                    className="rd-bg-transparent rd-border-none rd-mr-10 rd-cursor-pointer rd-p-0 icon-dark"
+                    className='rd-bg-transparent rd-border-none rd-mr-10 rd-cursor-pointer rd-p-0 icon-dark'
                   >
-                    <FiPaperclip className="icon-dark" size={20} />
+                    <FiPaperclip className='icon-dark' size={20} />
                   </button>
                 </div>
                 <button
                   onClick={handleSend}
-                  className="rd-bg-transparent rd-border-none rd-ml-10 icon-dark rd-cursor-pointer rd-p-0"
+                  className='rd-bg-transparent rd-border-none rd-ml-10 icon-dark rd-cursor-pointer rd-p-0'
                 >
-                  <PiPaperPlaneRightFill className="icon-dark" size={20} />
+                  <PiPaperPlaneRightFill className='icon-dark' size={20} />
                 </button>
               </div>
             </>
           ) : (
-            <TicketClosed handleFocusedTextArea={handleFocusedTextArea} setActiveTab={setActiveTab} />
+            <TicketClosed
+              handleFocusedTextArea={handleFocusedTextArea}
+              setActiveTab={setActiveTab}
+            />
           )}
         </div>
       </div>

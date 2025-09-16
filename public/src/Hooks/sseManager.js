@@ -22,6 +22,7 @@ class SSEManager {
       'new_comment',
       'ticket_closed',
       'ticket_open',
+      'new_mine_comment',
     ];
     events.forEach((event) => {
       this.eventSource.addEventListener(event, (e) => {
