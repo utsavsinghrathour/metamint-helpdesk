@@ -73,11 +73,11 @@ export default function ForgotPassword({ onSent, email }) {
               defaultValue={email}
             />
             {error && (
-              <p className='rd-text-red-500 rd-mt-2' id='email-error'>
+              <p className='rd-text-red-500 rd-mt-2 err_msg' id='email-error'>
                 {error}
               </p>
             )}
-            {message && <p className='rd-text-green-500 rd-mt-2'>{message}</p>}
+            {message && <p className='text-green color-green rd-mt-5 rd-body-text'>{message}</p>}
             <button
               type='submit'
               className='rd-login-button rd-w-full rd-border-radius-md'

@@ -71,7 +71,19 @@ html {
     font-weight: 500;
     font-size: 14px;
 }
-
+.text-danger{
+    color: red !important;
+}
+.text-green.color-green{
+    color: green !important;    }
+.success_msg{
+    color: green;
+    font-weight: 500;
+    font-size: 14px;
+}
+.color-blue{
+    color: var(--primary-blue) !important;
+}
 /* h1, h2, h3, h4, h5, h6, p, span, a, input, input::placeholder, textarea, textarea::placeholder, select{
 
 } */
@@ -281,7 +293,9 @@ button.no-bg,
 .rd-mt-30 {
     margin-top: 30px;
 }
-
+.rd-mb-5{
+    margin-bottom: 5px;
+}
 .rd-mb-8 {
     margin-bottom: 8px;
 }
@@ -478,6 +492,10 @@ h5.sub-text {
     color: var(--body-text);
 }
 
+.color-danger
+{
+    color: red;
+}
 .rd-color-gray {
     color: rgba(132, 129, 138, 1) !important;
 }
@@ -738,5 +756,4 @@ input::placeholder {
     width: 100% !important;
     height: auto;
     max-height: 400px;
-    margin: 10px 0;
 }

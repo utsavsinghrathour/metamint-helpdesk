@@ -177,7 +177,7 @@ export default function ChangePassword({ onReset }) {
             )}
           </div>
 
-          <div className='rd-mb-24'>
+          <div className='rd-mb-24 rd-mt-10'>
             <label
               htmlFor='confirmPassword'
               className='rd-body-text rd-mb-4 rd-block'
@@ -200,7 +200,7 @@ export default function ChangePassword({ onReset }) {
             {errors.confirmPassword && (
               <p
                 id='confirm-password-error'
-                className='rd-text-error rd-text-sm rd-mt-4'
+                className='rd-text-error rd-text-sm rd-mt-4 err_msg'
               >
                 {errors.confirmPassword}
               </p>

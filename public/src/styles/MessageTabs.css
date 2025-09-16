@@ -169,7 +169,9 @@
     min-height: 355px;
     height: 45vh;
 }
-
+.rd-single-ticket .chat-container.ticket-closed{
+    min-height: 320px;
+}
 .rd-preloader {
     position: absolute;
     top: 50%;
