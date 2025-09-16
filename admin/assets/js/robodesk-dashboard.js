@@ -1846,9 +1846,9 @@ function closeTicket() {
   const ticketId = currentTicket.id;
   // Show a custom modal confirmation instead of native confirm
   showCustomConfirm(
-    "Are you sure you want to close this ticket?",
+    "Are you sure you want to close this Conversation?",
     function onConfirm() {
-      // Proceed with closing the ticket
+      // Proceed with closing the conversation
       closeTicketAjax(ticketId);
     }
   );
