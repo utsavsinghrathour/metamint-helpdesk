@@ -51,10 +51,11 @@ const ConversationSkeleton = ({ count = 6 }) => {
           >
             {msg.sender === 'other' && (!isSameSender || index === 0) && (
               <div
-                className="rd-skeleton-avatar rd-rounded-full"
+                className="rd-skeleton-avatar "
                 style={{
                   width: '30px',
                   height: '30px',
+                  borderRadius:'50px',
                   backgroundColor: '#e5e7eb',
                   flexShrink: 0,
                   animation: 'shimmer 2s infinite',

@@ -93,7 +93,7 @@ const LoginForm = ({
           </p>
         )}
         <div>
-          <label htmlFor='email' className='rd-body-text'>
+          <label htmlFor='email' className='rd-body-text rd-fw-semi'>
             Email
           </label>
           <input
@@ -110,8 +110,8 @@ const LoginForm = ({
           <ErrorMessage id='email-error' className="err_msg" message={errors.email} />
         </div>
         {showPasswordField && (
-          <div>
-            <label htmlFor='password' className='rd-body-text'>
+          <div className='rd-mt-10'>
+            <label htmlFor='password' className='rd-body-text rd-fw-semi'>
               Password
             </label>
             <input
@@ -125,7 +125,7 @@ const LoginForm = ({
               required
               aria-describedby='password-error'
             />
-            <ErrorMessage id='password-error' message={errors.password} />
+            <ErrorMessage id='password-error' className="err_msg" message={errors.password} />
             <p className='rd-body-text rd-mt-8'>
               <a href='#' className='rd-decoration-none color-blue' onClick={handleForgotPassword}>
                 Lost your password?
