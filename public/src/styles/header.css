@@ -87,3 +87,6 @@
  .rd-main-content li {
     margin-bottom: 0.25rem; /* 4px */
 }
+.rd-main-content p a{
+  text-decoration: underline;
+}
