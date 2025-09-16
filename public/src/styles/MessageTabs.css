@@ -24,17 +24,18 @@
 }
 
 .rd-messge-wrapper {
-    max-height: 320px;
+    max-height: 200px;
     overflow: auto;
-    min-height: 220px;
+    min-height: 200px;
 }
 
 .rd-messge-wrapper .rd-send-message {
     position: absolute;
-    bottom: 100px;
+    bottom: 90px;
     left: 50%;
     transform: translate(-50%, 00%);
     width: 100%;
+    background-color: #fff;
 }
 
 .single-ticket-header img {

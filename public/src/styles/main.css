@@ -15,6 +15,7 @@ html {
     font-size: 16px;
 }
 
+
 .robodesk-plugin::-webkit-scrollbar {
     width: 3px;
     height: 3px;
@@ -93,7 +94,8 @@ button.no-bg,
 
 .rd-overflow-h-320 {
     /* max-height: 300px; */
-    height: 30vh;
+    /* height: 30vh; */
+    height: 25vh;
     overflow: auto;
 }
 
@@ -398,21 +400,21 @@ button.no-bg,
 }
 
 .rd-title-text {
-    color: var(--title-color);
-    font-size: 0.9375rem;
+    color: var(--title-color) !important;
+    font-size: 0.9375rem !important;
     line-height: 18px;
     font-weight: 500;
 }
 
 .rd-text-small {
-    font-size: 0.625rem;
+    font-size: 0.625rem !important;
     line-height: 12px;
     font-weight: 400;
     color: var(--body-text);
 }
 
 .text-black {
-    color: rgba(0, 0, 0, 1);
+    color: rgba(0, 0, 0, 1) !important;
 }
 
 .rd-title-color {
@@ -420,28 +422,28 @@ button.no-bg,
 }
 
 h3.heading-3 {
-    font-size: 1.25rem;
+    font-size: 1.25rem !important;
     line-height: 24px;
     font-weight: 600;
     color: var(--title-color);
 }
 
 h4.heading-4 {
-    font-size: 1.125rem;
+    font-size: 1.125rem !important;
     line-height: 22px;
     font-weight: 500;
     transition: font-size 0.5s ease;
 }
 
 h5.heading-5 {
-    font-size: 1rem;
+    font-size: 1rem !important;
     line-height: 20px;
     font-weight: 400;
 }
 
 h5.sub-text {
-    color: var(--body-text);
-    font-size: 0.875rem;
+    color: var(--body-text) !important;
+    font-size: 0.875rem !important;
     line-height: 18px;
     font-weight: 400;
 }
@@ -721,4 +723,20 @@ input::placeholder {
     height: 6px;
     border-radius: 50%;
     background-color: red;
+}
+.rd-main-content .wp-video,
+.rd-main-content .wp-video video
+{
+    width: 100% !important;
+    max-height: 400px;
+    height: auto;
+    margin: 10px 0;
+}
+.rd-main-content figure,
+.rd-main-content figure img
+{
+    width: 100% !important;
+    height: auto;
+    max-height: 400px;
+    margin: 10px 0;
 }
