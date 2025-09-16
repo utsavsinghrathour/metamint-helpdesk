@@ -882,25 +882,50 @@ function robodesk_handle_close_ticket()
         wp_send_json_error(['message' => 'Failed to close the ticket']);
     }
 
-    // Optionally, you can add a comment indicating the ticket was closed
     $user_id = get_current_user_id();
     $user_object = get_userdata($user_id);
 
-    if ($user_object) {
-        wp_insert_comment([
+    if (!$user_id || !$user_object) {
+        wp_send_json_error(['message' => 'User not logged in']);
+    }
+
+    // Add a reply comment if reply content is provided
+    $reply = isset($_POST['reply']) ? wp_kses_post($_POST['reply']) : '';
+
+    if (!empty($reply)) {
+        $comment_id = wp_insert_comment([
             'comment_post_ID'      => $ticket_id,
             'comment_author'       => $user_object->display_name,
             'comment_author_email' => $user_object->user_email,
             'user_id'              => $user_id,
-            'comment_content'      => 'Ticket closed by ' . $user_object->display_name,
+            'comment_content'      => $reply,
             'comment_approved'     => 1,
             'comment_type'         => 'ticket_replies',
             'is_robodesk_reply'   => true,
-            //add comment meta to indicate the ticket was closed
-            'comment_meta'         => [
-                'is_action' => true,
-            ],
         ]);
+
+        if (is_wp_error($comment_id)) {
+            wp_send_json_error(['message' => 'Failed to insert comment']);
+        }
+    }
+
+    // Add a comment indicating the ticket was closed
+    $close_comment_id = wp_insert_comment([
+        'comment_post_ID'      => $ticket_id,
+        'comment_author'       => $user_object->display_name,
+        'comment_author_email' => $user_object->user_email,
+        'user_id'              => $user_id,
+        'comment_content'      => 'Ticket closed by ' . $user_object->display_name,
+        'comment_approved'     => 1,
+        'comment_type'         => 'ticket_replies',
+        'is_robodesk_reply'   => true,
+        'comment_meta'         => [
+            'is_action' => true,
+        ],
+    ]);
+
+    if (is_wp_error($close_comment_id)) {
+        wp_send_json_error(['message' => 'Failed to add close comment']);
     }
 
     wp_send_json_success(['message' => 'Ticket closed successfully']);

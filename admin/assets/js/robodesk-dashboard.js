@@ -1883,6 +1883,8 @@ function closeTicket() {
 
   // Move AJAX logic to a separate function for clarity
   function closeTicketAjax(ticketId) {
+    const replyBox = document.getElementById("new-reply");
+    const replyText = replyBox.innerHTML.trim();
     jQuery.ajax({
       url: robodeskAjax.ajax_url,
       type: "POST",
@@ -1890,6 +1892,7 @@ function closeTicket() {
         action: "close_ticket",
         nonce: robodeskAjax.nonces.close_ticket,
         ticket_id: ticketId,
+        reply: replyText,
       },
       success: function (response) {
         if (response.success) {
