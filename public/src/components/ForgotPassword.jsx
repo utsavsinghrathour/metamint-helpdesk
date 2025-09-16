@@ -58,20 +58,26 @@ export default function ForgotPassword({ onSent, email }) {
       <div className='login-card'>
         <form onSubmit={handleSubmit} noValidate>
           <div>
-            <label htmlFor='userdetail' className='rd-body-text'>
-              Email
-            </label>
-            <input
-              type='text'
-              id='userdetail'
-              name='userdetail'
-              ref={userDetailRef}
-              placeholder='Email'
-              className='rd-w-full rd-border-light rd-p-12 rd-border-radius-md'
-              required
-              aria-describedby='email-error'
-              defaultValue={email}
-            />
+            {!sent && (
+              <>
+                <label htmlFor='userdetail' className='rd-body-text'>
+                  Email
+                </label>
+
+                <input
+                  type='text'
+                  id='userdetail'
+                  name='userdetail'
+                  ref={userDetailRef}
+                  placeholder='Email'
+                  className='rd-w-full rd-border-light rd-p-12 rd-border-radius-md'
+                  required
+                  aria-describedby='email-error'
+                  defaultValue={email}
+                />
+              </>
+            )}
+
             {error && (
               <p className='rd-text-red-500 rd-mt-2 err_msg' id='email-error'>
                 {error}

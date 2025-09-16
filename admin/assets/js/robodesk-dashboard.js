@@ -963,6 +963,13 @@ function fetchEmails() {
   // Optional: hide previous message
   document.getElementById("fetch-results").classList.add("hidden");
 
+  // Change button text to "Fetching emails..."
+  const fetchButton = document.querySelector('[onclick="fetchEmails()"]');
+  if (fetchButton) {
+    fetchButton.textContent = "Fetching emails...";
+    fetchButton.disabled = true;
+  }
+
   fetch(robodeskAjax.ajax_url, {
     method: "POST",
     headers: {
@@ -993,6 +1000,13 @@ function fetchEmails() {
       document.getElementById("fetch-message").textContent =
         "AJAX error occurred.";
       document.getElementById("fetch-results").classList.remove("hidden");
+    })
+    .finally(() => {
+      // Reset button text and enable it
+      if (fetchButton) {
+        fetchButton.textContent = "Fetch Emails Now";
+        fetchButton.disabled = false;
+      }
     });
 }
 
