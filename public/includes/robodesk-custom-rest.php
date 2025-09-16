@@ -279,15 +279,15 @@ function robodesk_stream($request)
                     update_post_meta($ticket_id, 'rbd_all_seen', 'yes');
                 }
 
-                // $my_own_conversations = robodesk_my_own_conversations($ticket_id, $last_comment_client);
+                $my_own_conversations = robodesk_my_own_conversations($ticket_id, $last_comment_client);
 
-                // if (!empty($my_own_conversations)) {
-                //     foreach ($new_conversations as $moc) {
-                //         echo "event: new_mine_comment\n";
-                //         echo "data: " . json_encode($moc) . "\n\n";
-                //         flush();
-                //     }
-                // }
+                if (!empty($my_own_conversations)) {
+                    foreach ($my_own_conversations as $moc) {
+                        echo "event: new_mine_comment\n";
+                        echo "data: " . json_encode($moc) . "\n\n";
+                        flush();
+                    }
+                }
 
                 if ($ticket_status == 'closed') {
                     echo "event: ticket_closed\n";
