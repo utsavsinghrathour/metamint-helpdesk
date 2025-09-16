@@ -1509,7 +1509,7 @@ jQuery(document).ready(function ($) {
     //   return;
     // }
 
-    $button.prop("disabled", true).text("Creating Ticket...");
+    $button.prop("disabled", true).text("Creating Conversation...");
 
     $.ajax({
       url: robodeskAjax.ajax_url, // Use localized AJAX URL
@@ -1533,7 +1533,7 @@ jQuery(document).ready(function ($) {
         showToast("Failed to create ticket: " + error, "error");
       },
       complete: function () {
-        $button.prop("disabled", false).text("Create Ticket");
+        $button.prop("disabled", false).text("Create Conversation");
       },
     });
   });
