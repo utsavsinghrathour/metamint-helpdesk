@@ -21,8 +21,12 @@
 }
 .rd-search-header.login-wrap{
     padding: 10px;
+    max-height: 60px;
+    min-height: 60px;
+    justify-content: center;
 }
 .rd-search-header.login-wrap img{
-    height: 40px;
-    width: 40px;
+    /* height: 40px;
+    width: 40px; */
+    max-height: 40px;
 }
