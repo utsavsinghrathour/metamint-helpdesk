@@ -1543,3 +1543,30 @@ function robodesk_get_available_priorities()
 
     return $terms;
 }
+
+
+// function to send email notifications when a ticket is created of posttype robodesk_ticket
+add_action('save_post', 'robodesk_send_ticket_creation_email', 10, 3);
+function robodesk_send_ticket_creation_email($post_id, $post, $update)
+{
+    // Only send email for new tickets
+    if ($post->post_type !== 'robodesk_ticket' || $update) {
+        return;
+    }
+
+    // Get customer email from post meta
+    $customer_email = get_post_meta($post_id, '_robodesk_customer_email', true);
+    if (!$customer_email || !is_email($customer_email)) {
+        rbd_log("Robodesk: Invalid or missing customer email for ticket ID: $post_id");
+        return;
+    }
+
+    // Prepare email content
+    $subject = 'Your support ticket has been created';
+    $site_url = get_site_url();
+    $message = 'Hello, your support ticket #' . $post_id . ' has been created. We will get back to you shortly. You can view your ticket here: ' . $site_url . '?user=' . urlencode($customer_email) . '&rbd_popup=true&initiator=robodesk';
+
+    // Send email
+    wp_mail($customer_email, $subject, $message);
+    rbd_log("Robodesk: Ticket creation email sent to $customer_email for ticket ID: $post_id");
+}
