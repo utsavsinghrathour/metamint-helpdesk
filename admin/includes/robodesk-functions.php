@@ -927,9 +927,24 @@ function robodesk_handle_close_ticket()
     if (is_wp_error($close_comment_id)) {
         wp_send_json_error(['message' => 'Failed to add close comment']);
     }
+    //if successful send email notification to the customer
+    $customer_email = get_post_meta($ticket_id, '_robodesk_customer_email', true);
 
+    if (!$customer_email) {
+        rbd_log("No email found for ticket ID: $ticket_id");
+    } elseif (!is_email($customer_email)) {
+        rbd_log("Invalid email: $customer_email");
+    } else {
+        rbd_log("Sending email to: $customer_email");
+        $subject = 'Your ticket has been closed';
+        $site_url = get_site_url();
+        $message = 'Hello, your ticket #' . $ticket_id . ' has been closed. If you have any further questions, feel free to reply to this email or visit: ' . $site_url . '?user=' . urlencode($customer_email) . '&rbd_popup=true&initiator=robodesk';
+        wp_mail($customer_email, $subject, $message);
+    }
+    // isiteurl?&user=$customer_email&rbd_popup=true&initator=robodesk
     wp_send_json_success(['message' => 'Conversation closed successfully']);
 }
+
 
 
 
