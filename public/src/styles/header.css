@@ -23,42 +23,42 @@
   }
 }
 
-h1,h2,h3,h4{
+.rd-main-content h1,.rd-main-content h2,.rd-main-content h3, .rd-main-content h4{
     color: var(--title-color);
     margin: 8px 0;
 }
 /* Headings */
- h1 {
+.rd-main-content  h1 {
     font-size: 1.75rem; /* 28px */
     font-weight: 600;
     margin-bottom: 0.75rem; /* 12px */
 }
 
- h2 {
+.rd-main-content  h2 {
     font-size: 1.5rem; /* 24px */
     font-weight: 600;
     margin-bottom: 0.625rem; /* 10px */
 }
 
- h3 {
+.rd-main-content  h3 {
     font-size: 1.25rem; /* 20px */
     font-weight: 500;
     margin-bottom: 0.5rem; /* 8px */
 }
 
- h4 {
+.rd-main-content h4 {
     font-size: 1.125rem; /* 18px */
     font-weight: 500;
     margin-bottom: 0.375rem; /* 6px */
 }
 
- h5 {
+.rd-main-content h5 {
     font-size: 1rem; /* 16px */
     font-weight: 500;
     margin-bottom: 0.25rem; /* 4px */
 }
 
- h6 {
+.rd-main-content  h6 {
     font-size: 0.875rem; /* 14px */
     font-weight: 500;
     margin-bottom: 0.25rem; /* 4px */
@@ -66,13 +66,13 @@ h1,h2,h3,h4{
 
 
 /* Lists */
-ul,
- ol {
+.rd-main-content ul,
+ .rd-main-content ol {
     font-size: 0.9375rem; /* 15px */
     padding-left: 1.25rem; /* 20px */
     margin-bottom: 0.5rem; /* 8px */
 }
 
- li {
+ .rd-main-content li {
     margin-bottom: 0.25rem; /* 4px */
 }

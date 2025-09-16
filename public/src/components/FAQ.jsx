@@ -193,7 +193,7 @@ const FAQDetail = memo(({ faq, onBack, isExpanded, setIsExpanded, faqs, setSelec
 });
 
 const FAQItem = memo(({ faq, onSelect }) => (
-    <div className="rd-faq-item rd-flex rd-align-start rd-border-bottom-light rd-gap-8" onClick={() => onSelect(faq)}>
+    <div className="rd-faq-item rd-flex rd-align-center rd-border-bottom-light rd-gap-8" onClick={() => onSelect(faq)}>
         <div className="rd-faq-content">
             <h3 className="rd-faq-title rd-title-text">{faq.question}</h3>
             <p className="rd-faq-paragraph rd-body-text truncate-3-lines">{faq.summary}</p>
