@@ -159,7 +159,7 @@ export default function ChangePassword({ onReset }) {
       <div className='login-card'>
         <form noValidate onSubmit={handleSubmit}>
           <div className='rd-mb-16'>
-            <label htmlFor='password' className='rd-body-text rd-mb-4 rd-block'>
+            <label htmlFor='password' className='rd-body-text rd-mb-4 rd-block rd-fw-semi'>
               New Password
             </label>
             <input
@@ -169,8 +169,8 @@ export default function ChangePassword({ onReset }) {
               value={formData.password}
               onChange={handleInputChange}
               placeholder='Enter Your New Password'
-              className={`rd-w-full rd-border rd-p-12 rd-border-radius-md ${
-                errors.password ? 'rd-border-error' : 'rd-border-light'
+              className={`rd-w-full rd-border rd-p-12 rd-border-radius-md rd-border-light ${
+                errors.password ? 'rd-border-error' : ''
               }`}
               required
               aria-describedby='password-error'
@@ -178,7 +178,7 @@ export default function ChangePassword({ onReset }) {
             {errors.password && (
               <p
                 id='password-error'
-                className='rd-text-error rd-text-sm rd-mt-4'
+                className='rd-text-error rd-text-sm rd-mt-4 err_msg'
               >
                 {errors.password}
               </p>
@@ -188,7 +188,7 @@ export default function ChangePassword({ onReset }) {
           <div className='rd-mb-24 rd-mt-10'>
             <label
               htmlFor='confirmPassword'
-              className='rd-body-text rd-mb-4 rd-block'
+              className='rd-body-text rd-mb-4 rd-block rd-fw-semi'
             >
               Confirm New Password
             </label>
@@ -199,8 +199,8 @@ export default function ChangePassword({ onReset }) {
               value={formData.confirmPassword}
               onChange={handleInputChange}
               placeholder='Confirm Your New Password'
-              className={`rd-w-full rd-border rd-p-12 rd-border-radius-md ${
-                errors.confirmPassword ? 'rd-border-error' : 'rd-border-light'
+              className={`rd-w-full rd-border rd-p-12 rd-border-radius-md rd-border-light ${
+                errors.confirmPassword ? 'rd-border-error' :''
               }`}
               required
               aria-describedby='confirm-password-error'
@@ -216,7 +216,7 @@ export default function ChangePassword({ onReset }) {
           </div>
           {message && (
             <div
-              className={`rd-alert ${
+              className={`rd-alert success_msg ${
                 message.includes('success')
                   ? 'rd-alert-success'
                   : 'rd-alert-error'
