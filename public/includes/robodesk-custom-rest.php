@@ -283,7 +283,6 @@ function robodesk_stream($request)
                     echo "event: ticket_closed\n";
                     echo "data: " . json_encode(array('reason' => 'ticket_closed')) . "\n\n";
                     flush();
-                    exit;
                 }
 
 
@@ -1262,6 +1261,19 @@ function robodesk_custom_lost_password(WP_REST_Request $request)
         'message' => 'A password reset link has been sent to your email address.'
     ), 200);
 }
+
+
+// Force WP emails to be sent from admin email & site name
+add_filter('wp_mail_from', function ($email) {
+    return get_option('robodesk_imap_username'); // WordPress admin email
+});
+
+add_filter('wp_mail_from_name', function ($name) {
+    return get_bloginfo('name'); // Site title
+});
+
+
+
 
 add_filter('retrieve_password_message', 'robodesk_add_param_to_reset_link', 10, 4);
 function robodesk_add_param_to_reset_link($message, $key, $user_login, $user_data)

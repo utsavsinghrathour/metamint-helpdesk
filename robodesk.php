@@ -526,7 +526,7 @@ add_action('comment_post', 'robodesk_comment_creation', 10, 3);
 
 function robodesk_comment_creation($comment_ID, $comment_approved, $commentdata)
 {
-    if (is_admin() && isset($commentdata['comment_type']) && $commentdata['comment_type'] === 'ticket_replies') {
+    if (isset($commentdata['comment_type']) && $commentdata['comment_type'] === 'ticket_replies') {
 
         $ticketId = $commentdata['comment_post_ID'];
         if (get_post_type($ticketId) == 'robodesk_ticket') {
