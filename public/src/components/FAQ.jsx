@@ -319,6 +319,8 @@ const FAQ = ({
         if (!Array.isArray(data)) {
           throw new Error('Invalid API response: Expected an array');
         }
+        
+        
 
         const formattedFaqs = data.map((faq) => {
           const question = stripHtml(faq.title.rendered);
