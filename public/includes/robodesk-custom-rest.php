@@ -1,11 +1,6 @@
 <?php
-
-
-
 require_once  ROBODESK_PLUGIN_PATH . '/public/includes/php-jwt/src/JWT.php';
 require_once  ROBODESK_PLUGIN_PATH . '/public/includes/php-jwt/src/Key.php';
-
-
 
 
 use \Firebase\JWT\JWT;
