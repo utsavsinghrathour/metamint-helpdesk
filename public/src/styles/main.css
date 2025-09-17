@@ -12,7 +12,7 @@
 }
 
 html {
-  font-size: 16px;
+  font-size: 16px !important;
 }
 
 .robodesk-plugin::-webkit-scrollbar {
@@ -377,7 +377,7 @@ button.no-bg,
 }
 
 .rd-bg-transparent {
-  background-color: transparent;
+  background-color: transparent !important;
 }
 
 .rd-cursor-pointer {
@@ -411,7 +411,7 @@ button.no-bg,
 }
 
 .rd-border-radius-md {
-  border-radius: 10px;
+  border-radius: 10px !important;
 }
 
 .rd-title-text {
@@ -506,8 +506,8 @@ h5.sub-text {
 }
 
 .rd-border-none {
-  border: 0;
-}
+  border: 0 !important;
+ }
 
 .rd-object-cover {
   object-fit: cover;
@@ -533,14 +533,15 @@ input::placeholder {
   aspect-ratio: 50 / 50;
   display: flex;
   justify-content: center;
-  max-height: 50px;
-  max-width: 50px;
+  max-height: 60px;
+  max-width: 60px;
   padding: 10px;
 }
 
 .robodesk-toggle-btn img {
   height: 35px;
   width: 35px;
+  border-radius: 50px;
 }
 
 .rd-popup-top-icon-container img {
