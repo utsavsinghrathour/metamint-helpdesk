@@ -397,10 +397,18 @@ const SingleTicket = ({
         beep.current.play();
       }
 
+      console.log('The author id is ', commentData.author_id);
+      console.log('The actual authorid is', loggedInUserId);
+      console.log(typeof commentData.author_id, typeof loggedInUserId);
+      console.log(String(commentData.author_id) === String(loggedInUserId));
+
       const newMessage = {
         id: commentData.id,
         text: commentData.content?.rendered || '',
-        sender: commentData.author_id === loggedInUserId ? 'me' : 'other',
+        sender:
+          String(commentData.author_id) === String(loggedInUserId)
+            ? 'me'
+            : 'other',
         senderName: commentData.author_name || 'Unknown',
         image: commentData.author_image || DefaultAvatar,
         created_at: commentData.created_at || new Date().toISOString(),
@@ -423,10 +431,9 @@ const SingleTicket = ({
 
   const formatTicketComments = (comments) => {
     const formattedComments = comments.map((comment) => {
-      const authorId = comment.author_data?.id; // Use author_data.id
+      const authorId = comment.author_data?.id; 
       const sender =
-        String(authorId) === String(loggedInUserId) ? 'me' : 'other'; // Ensure type consistency
-
+        String(authorId) === String(loggedInUserId) ? 'me' : 'other'; 
       return {
         id: comment.id,
         text: comment.content?.rendered || comment.content?.plain || '',
@@ -607,6 +614,7 @@ const SingleTicket = ({
     const unsubscribeNewMineTicket = sseManager.on(
       'new_mine_comment',
       (data) => {
+        console.log('New ticky', data);
         handleNewComment(data, false);
       }
     );
