@@ -286,7 +286,7 @@ const SingleQuestionBox = ({
             <>
               <div className='rd-text-center rd-px-20 rd-flex rd-flex-col rd-gap-5 rd-mb-20 home-tab-title'>
                 <h4 className='heading-4'>Have Questions?</h4>
-                <h5 className='sub-text'>
+                <h5 className='sub-text rd-mt-0'>
                   Have any questions or need a quote? Leave us a message.
                 </h5>
               </div>
@@ -306,7 +306,7 @@ const SingleQuestionBox = ({
               ) : error ? (
                 <p className='rd-text-red rd-body-text'>Error: {error}</p>
               ) : questions.length === 0 ? (
-                <p className='rd-body-text'>No FAQs found.</p>
+                <p className='err_msg'>No FAQs found.</p>
               ) : (
                 questions.map((question) => (
                   <QuestionItem key={question.id} question={question} />

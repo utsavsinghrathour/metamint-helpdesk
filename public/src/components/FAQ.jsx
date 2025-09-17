@@ -344,7 +344,7 @@ const FAQ = ({ setActiveTab, setIsOpen, isExpanded, setIsExpanded, activeTab, ha
                             ))}
                         </div>
                     ) : filteredFaqs.length === 0 ? (
-                        <p className="rd-body-text rd-text-center">
+                        <p className="err_msg rd-text-center">
                             {searchTerm ? 'No FAQs match your search.' : 'No FAQs found.'}
                         </p>
                     ) : (
