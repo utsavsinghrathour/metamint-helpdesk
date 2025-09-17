@@ -204,7 +204,7 @@
 
 .rd-message-list-header img {
     height: 40px;
-    width: 40px;
+    /* width: 40px; */
 }
 
 .rd-search-header.rd-message-list-header {
