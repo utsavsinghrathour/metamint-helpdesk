@@ -137,22 +137,6 @@ const MessageTabs = ({
     return `wp-json/robodesk/v1/stream/tickets/0/${firstMessageId}/${loggedInUsrId}/?ticket=1`;
   }, [firstMessageId]);
 
-  //   useEffect(() => {
-  //     console.log(url);
-  //     if (!url) return;
-
-  //     sseManager.connect(url);
-
-  //     const unsubscribeNewTicket = sseManager.on('new_ticket', (data) => {
-  //       console.log('New ticket received via SSE:', data);
-  //       //   updateTicket(data);
-  //     });
-
-  //     return () => {
-  //       unsubscribeNewTicket();
-  //       sseManager.disconnect();
-  //     };
-  //   }, [firstMessageId]);
 
   useEffect(() => {
     if (loggedinContext && loggedInUsrId) {

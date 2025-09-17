@@ -431,9 +431,9 @@ const SingleTicket = ({
 
   const formatTicketComments = (comments) => {
     const formattedComments = comments.map((comment) => {
-      const authorId = comment.author_data?.id; 
+      const authorId = comment.author_data?.id;
       const sender =
-        String(authorId) === String(loggedInUserId) ? 'me' : 'other'; 
+        String(authorId) === String(loggedInUserId) ? 'me' : 'other';
       return {
         id: comment.id,
         text: comment.content?.rendered || comment.content?.plain || '',
@@ -468,7 +468,7 @@ const SingleTicket = ({
             chatContainerRef.current.scrollTop =
               chatContainerRef.current.scrollHeight;
           }
-        }, 50); // Small delay to ensure DOM updates
+        }, 50);
       }
 
       try {
@@ -507,7 +507,6 @@ const SingleTicket = ({
         await fetchComments(initialOffset, false);
       } catch (err) {
         if (err.name === 'AbortError') {
-          //   console.log('Initial fetch timed out');
           if (!cached || cached.length === 0) {
             setError('Connection is slow. Messages may take time to load.');
           }
@@ -614,7 +613,6 @@ const SingleTicket = ({
     const unsubscribeNewMineTicket = sseManager.on(
       'new_mine_comment',
       (data) => {
-        console.log('New ticky', data);
         handleNewComment(data, false);
       }
     );

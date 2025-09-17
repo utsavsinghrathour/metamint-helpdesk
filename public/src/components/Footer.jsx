@@ -50,7 +50,7 @@ const Footer = ({
           <h6 className='rd-m-0'>
             Powered by{' '}
             <a
-              href='http://robodesk.io/'
+              href='https://robodesk.io/'
               target='_blank'
               className='rd-decoration-none'
             >
