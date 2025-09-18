@@ -94,7 +94,7 @@ const SendMessageField = ({ setShowLogin, setActiveTab, updateSelectedTicket, ha
 
     return (
         <div className="send-message-field rd-px-18">
-            <div className="rd-position-relative">
+            <div className="rd-position-relative rd-flex">
                 <textarea
                     className="rd-w-full rd-border-blue rd-border-radius-md"
                     placeholder={placeHolderText}
