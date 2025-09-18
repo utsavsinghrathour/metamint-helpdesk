@@ -1290,8 +1290,8 @@ jQuery(document).ready(function ($) {
     );
     formData.append("settings[site_name]", $form.find("#site_name").val());
     formData.append("settings[admin_email]", $form.find("#admin_email").val());
-    formData.append("settings[timezone]", $form.find("#timezone").val());
-    formData.append("settings[language]", $form.find("#language").val());
+    // formData.append("settings[timezone]", $form.find("#timezone").val());
+    // formData.append("settings[language]", $form.find("#language").val());
     formData.append("settings[theme_color]", $form.find("#theme_color").val());
     formData.append(
       "settings[default_ticket_category]",

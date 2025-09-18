@@ -292,9 +292,7 @@ function robodesk_save_basic_settings()
     }
 
     $settings = $_POST['settings'];
-    $valid_settings = ['site_name', 'admin_email', 'timezone', 'language', 'theme_color', 'default_ticket_category'];
-    $valid_timezones = ['UTC', 'America/New_York', 'America/Los_Angeles', 'GMT'];
-    $valid_languages = ['en', 'es', 'fr', 'de'];
+    $valid_settings = ['site_name', 'admin_email', 'theme_color', 'default_ticket_category'];
     $image_fields = [
         'popover_icon' => 'robodesk_popover_icon',
         'popover_top_icon' => 'robodesk_popover_top_icon',
@@ -323,18 +321,6 @@ function robodesk_save_basic_settings()
             $sanitized_settings[$key] = sanitize_email($settings[$key]);
             if (!is_email($sanitized_settings[$key])) {
                 $results[$key] = ['status' => 'error', 'message' => 'Invalid email address'];
-                continue;
-            }
-        } elseif ($key === 'timezone') {
-            $sanitized_settings[$key] = sanitize_text_field($settings[$key]);
-            if (!in_array($sanitized_settings[$key], $valid_timezones)) {
-                $results[$key] = ['status' => 'error', 'message' => 'Invalid timezone'];
-                continue;
-            }
-        } elseif ($key === 'language') {
-            $sanitized_settings[$key] = sanitize_text_field($settings[$key]);
-            if (!in_array($sanitized_settings[$key], $valid_languages)) {
-                $results[$key] = ['status' => 'error', 'message' => 'Invalid language'];
                 continue;
             }
         } elseif ($key === 'theme_color') {
