@@ -65,7 +65,6 @@ require_once ROBODESK_PLUGIN_PATH . 'admin/includes/robodesk-functions.php';
 require_once ROBODESK_PLUGIN_PATH . 'public/includes/robodesk-shortcodes.php';
 require_once ROBODESK_PLUGIN_PATH . 'public/includes/robodesk-ajax.php';
 require_once ROBODESK_PLUGIN_PATH . 'public/includes/robodesk-notes.php';
-require_once ROBODESK_PLUGIN_PATH . 'vendor/autoload.php';
 require_once ROBODESK_PLUGIN_PATH . 'public/includes/robodesk-custom-rest.php';
 
 

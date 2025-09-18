@@ -12,7 +12,7 @@
 }
 
 html {
-  font-size: 16px;
+  font-size: 16px !important;
 }
 
 .robodesk-plugin::-webkit-scrollbar {
@@ -66,9 +66,9 @@ html {
 }
 
 .err_msg {
-  color: red;
-  font-weight: 500;
-  font-size: 14px;
+  color: red !important;
+  font-weight: 500 !important;
+  font-size: 14px !important;
   word-break: break-word;
 }
 .text-danger {
@@ -78,9 +78,9 @@ html {
   color: green !important;
 }
 .success_msg {
-  color: green;
-  font-weight: 500;
-  font-size: 14px;
+  color: green !important;
+  font-weight: 500 !important;
+  font-size: 14px!important;
 }
 .color-blue {
   color: var(--primary-blue) !important;
@@ -113,11 +113,11 @@ button.no-bg,
 }
 
 .rd-m-auto {
-  margin: auto;
+  margin: auto !important;
 }
 
 .rd-decoration-none {
-  text-decoration: none;
+  text-decoration: none !important; 
 }
 
 .rd-header-logo {
@@ -142,75 +142,75 @@ button.no-bg,
 }
 
 .rd-flex {
-  display: flex;
+  display: flex !important;
 }
 
 .flex-1 {
-  flex: 1;
+  flex: 1 !important;
 }
 
 .flex-2 {
-  flex: 2;
+  flex: 2 !important;
 }
 
 .icon-dark svg {
-  fill: var(--icon-dark);
+  fill: var(--icon-dark) !important;
 }
 
 .rd-justify-between {
-  justify-content: space-between;
+  justify-content: space-between !important;
 }
 
 .rd-justify-center {
-  justify-content: center;
+  justify-content: center !important;
 }
 
 .rd-justify-start {
-  justify-content: flex-start;
+  justify-content: flex-start !important;
 }
 
 .rd-justify-end {
-  justify-content: flex-end;
+  justify-content: flex-end !important;
 }
 
 .rd-align-center {
-  align-items: center;
+  align-items: center !important;
 }
 
 .rd-align-start {
-  align-items: flex-start;
+  align-items: flex-start !important ;
 }
 
 .rd-align-end {
-  align-items: flex-end;
+  align-items: flex-end !important;
 }
 
 .rd-flex-col {
-  flex-direction: column;
+  flex-direction: column !important;
 }
 
 .rd-flex-row {
-  flex-direction: row;
+  flex-direction: row !important;
 }
 
 .rd-gap-5 {
-  gap: 5px;
+  gap: 5px !important;
 }
 
 .rd-gap-8 {
-  gap: 8px;
+  gap: 8px !important;
 }
 
 .rd-gap-10 {
-  gap: 10px;
+  gap: 10px !important;
 }
 
 .rd-gap-15 {
-  gap: 15px;
+  gap: 15px !important;
 }
 
 .rd-gap-20 {
-  gap: 20px;
+  gap: 20px!important ;
 }
 
 .rd-pt-0 {
@@ -222,120 +222,125 @@ button.no-bg,
 }
 
 .rd-p-5 {
-  padding: 5px;
+  padding: 5px !important;
 }
 
 .rd-py-15 {
-  padding-top: 15px;
-  padding-bottom: 15px;
+  padding-top: 15px !important;
+  padding-bottom: 15px !important;
 }
 
 .rd-p-10 {
-  padding: 10px;
+  padding: 10px !important;
 }
 
 .rd-p-20 {
-  padding: 20px;
+  padding: 20px !important;
 }
 
 .rd-p-12 {
-  padding: 12px;
+  padding: 12px !important;
 }
 
 .rd-px-20 {
-  padding-left: 20px;
-  padding-right: 20px;
+  padding-left: 20px !important;
+  padding-right: 20px !important;
 }
 
 .rd-px-18 {
-  padding-left: 18px;
-  padding-right: 18px;
+  padding-left: 18px !important;
+  padding-right: 18px !important;
 }
 
 .rd-py-10 {
-  padding-top: 10px;
-  padding-bottom: 10px;
+  padding-top: 10px !important;
+  padding-bottom: 10px !important;
 }
 
 .rd-m-0 {
-  margin: 0;
+  margin: 0 !important;
 }
 
 .rd-m-5 {
-  margin: 5px;
+  margin: 5px !important;
 }
-
+.rd-mt-0{
+  margin-top: 0 !important;
+}
 .rd-mt-5 {
-  margin-top: 5px;
+  margin-top: 5px !important;
 }
 
 .rd-mt-8 {
-  margin-top: 8px;
+  margin-top: 8px !important;
 }
 
 .rd-m-10 {
-  margin: 10px;
+  margin: 10px !important;
 }
 
 .rd-my-20 {
-  margin-top: 20px;
-  margin-bottom: 20px;
+  margin-top: 20px !important;
+  margin-bottom: 20px !important;
 }
 
 .rd-my-30 {
-  margin-top: 30px;
-  margin-bottom: 30px;
+  margin-top: 30px !important;
+  margin-bottom: 30px !important;
 }
 
 .rd-mt-20 {
-  margin-top: 20px;
+  margin-top: 20px !important;
 }
 
 .rd-mt-30 {
-  margin-top: 30px;
+  margin-top: 30px !important;
+}
+.rd-mb-0{
+  margin-bottom: 0 !important;
 }
 .rd-mb-5 {
-  margin-bottom: 5px;
+  margin-bottom: 5px !important;
 }
 .rd-mb-8 {
-  margin-bottom: 8px;
+  margin-bottom: 8px !important;
 }
 
 .rd-mt-10 {
-  margin-top: 10px;
+  margin-top: 10px !important;
 }
 
 .rd-mt-15 {
-  margin-top: 15px;
+  margin-top: 15px !important;
 }
 
 .rd-mb-10 {
-  margin-bottom: 10px;
+  margin-bottom: 10px !important; 
 }
 
 .rd-my-10 {
-  margin-top: 10px;
-  margin-bottom: 10px;
+  margin-top: 10px !important;
+  margin-bottom: 10px !important;
 }
 
 .rd-mb-15 {
-  margin-bottom: 15px;
+  margin-bottom: 15px !important;
 }
 
 .rd-mb-20 {
-  margin-bottom: 20px;
+  margin-bottom: 20px !important;
 }
 
 .rd-mb-30 {
-  margin-bottom: 30px;
+  margin-bottom: 30px !important;
 }
 
 .rd-w-full {
-  width: 100%;
+  width: 100% !important;
 }
 
 .rd-position-relative {
-  position: relative;
+  position: relative !important;
 }
 
 .rd-back-arrow-position {
@@ -345,27 +350,27 @@ button.no-bg,
 }
 
 .rd-position-absolute {
-  position: absolute;
+  position: absolute !important;
 }
 
 .rd-hover:hover {
-  background-color: #f5f5f5;
+  background-color: #f5f5f5 !important;
 }
 
 .rd-top-100 {
-  top: 100%;
+  top: 100% !important;
 }
 
 .rd-top-0 {
-  top: 0;
+  top: 0 !important;
 }
 
 .rd-bottom-0 {
-  bottom: 0;
+  bottom: 0 !important;
 }
 
 .rd-right-0 {
-  right: 0;
+  right: 0 !important;
 }
 
 .rd-h-auto {
@@ -373,15 +378,15 @@ button.no-bg,
 }
 
 .rd-text-center {
-  text-align: center;
+  text-align: center !important;
 }
 
 .rd-bg-transparent {
-  background-color: transparent;
+  background-color: transparent !important;
 }
 
 .rd-cursor-pointer {
-  cursor: pointer;
+  cursor: pointer !important;
 }
 
 .rd-bg-blue {
@@ -399,7 +404,7 @@ button.no-bg,
 }
 
 .rd-text-white {
-  color: #fff;
+  color: #fff !important;
 }
 
 .rd-fw-medium {
@@ -411,7 +416,7 @@ button.no-bg,
 }
 
 .rd-border-radius-md {
-  border-radius: 10px;
+  border-radius: 10px !important;
 }
 
 .rd-title-text {
@@ -464,20 +469,20 @@ h5.sub-text {
 }
 
 .rd-border-light {
-  border: 1px solid var(--border-light-gray);
+  border: 1px solid var(--border-light-gray) !important;
 }
 
 .rd-border-bottom-light {
-  border-bottom: 1px solid var(--border-light-gray);
+  border-bottom: 1px solid var(--border-light-gray) !important;
 }
 
 .rd-border-top-light {
-  border-top: 1px solid var(--border-light-gray);
+  border-top: 1px solid var(--border-light-gray) !important;
 }
 
 .rd-border-vertical-light {
-  border-top: 1px solid var(--border-light-gray);
-  border-bottom: 1px solid var(--border-light-gray);
+  border-top: 1px solid var(--border-light-gray) !important;
+  border-bottom: 1px solid var(--border-light-gray) !important;
 }
 .rd-main-content .rd-body-text,
 .rd-main-content .rd-body-text p {
@@ -506,41 +511,42 @@ h5.sub-text {
 }
 
 .rd-border-none {
-  border: 0;
-}
+  border: 0 !important;
+ }
 
 .rd-object-cover {
   object-fit: cover;
 }
 
 .rd-resize-none {
-  resize: none;
+  resize: none !important;
 }
 
-input::placeholder {
-  font-size: 16px;
-  line-height: 20px;
+.rd-main-content input::placeholder {
+  font-size: 16px !important;
+  line-height: 20px !important;
 }
 .rd-main-content figcaption {
-  margin: 10px 0;
+  margin: 10px 0 !important;
 }
 .rd-main-content ul,
 .rd-main-content ol {
-  margin: 10px 0;
+  margin: 10px 0 !important;
 }
 .robodesk-toggle-btn {
   align-items: center;
   aspect-ratio: 50 / 50;
   display: flex;
   justify-content: center;
-  max-height: 50px;
-  max-width: 50px;
+  max-height: 60px;
+  max-width: 60px;
   padding: 10px;
 }
 
 .robodesk-toggle-btn img {
   height: 35px;
   width: 35px;
+  border-radius: 50px;
 }
 
 .rd-popup-top-icon-container img {
@@ -554,9 +560,12 @@ input::placeholder {
 }
 
 .rd-hidden {
-  display: none;
+  display: none !important;
 }
-
+.rd-main-content textarea{
+  font-size: 14px !important;
+  line-height: 18px !important;
+}
 .custom-svg svg {
   height: 20px;
   width: 20px;
@@ -716,9 +725,11 @@ input::placeholder {
 .bi.bi-chevron-up {
   color: #fff;
 }
-
+.rd-main-content p{
+  margin-bottom: 0 !important;
+}
 .single-content-other-content a {
-  font-size: 14px;
+  font-size: 14px !important;
   text-decoration: none;
   background-color: var(--robodesk-theme-color);
   padding: 10px 24px;
@@ -727,8 +738,11 @@ input::placeholder {
   border-radius: 20px;
   display: flex;
   justify-content: center;
+  line-height: 18px !important;
 }
-
+.single-content-other-content a:hover{
+  color: #fff;
+}
 /* For notification red dot */
 /* Must remove this later  */
 .rd-title-with-dot {
