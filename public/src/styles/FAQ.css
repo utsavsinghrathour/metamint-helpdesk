@@ -8,9 +8,9 @@
  padding: 12px 20px;
  cursor: pointer;
 }
-.rd-faq-item p{
+/* .rd-faq-item p{
     margin-top: 8px;
-}
+} */
 .rd-faq-item .rd-faq-content{
   max-width: 92%;
 }
@@ -49,8 +49,10 @@
   margin-bottom: 15px;
 }
 .rd-search-header .rd-search-bar input{
-  background-color: #fff;
+  background-color: #fff !important;
   padding: 14px 15px;
+  line-height: 18px;
+  font-size: 14px;
 }
 .rd-search-header .rd-search-bar svg{
   position: absolute;

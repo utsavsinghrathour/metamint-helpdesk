@@ -193,7 +193,7 @@ add_filter('rest_prepare_robodesk_faq', function ($response, $post, $request) {
     $author_info = array(
         'display_name' => get_the_author_meta('display_name', $author_id),
         'gravatar_url' => get_avatar_url($author_id, array('size' => 96)),
-        'total_posts'  => count_user_posts($author_id, 'robodesk_ticket')
+        'total_posts'  => count_user_posts($author_id, ['robodesk_faq'])
     );
 
     $response->data['author_info'] = $author_info;
@@ -202,7 +202,3 @@ add_filter('rest_prepare_robodesk_faq', function ($response, $post, $request) {
 
     return $response;
 }, 10, 3);
-
-
-
-// Filter FAQs by featured with transient caching //removed cached
