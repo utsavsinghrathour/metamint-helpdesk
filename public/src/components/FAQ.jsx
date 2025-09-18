@@ -384,57 +384,52 @@ const FAQ = ({
     );
   }
 
-  return (
-    <div className='rd-faq-container'>
-      <div className='rd-main-content'>
-        <div className='rd-px-18 rd-search-header rd-bg-blue rd-flex rd-items-center rd-justify-between rd-flex-col'>
-          <h5 className='heading-5 rd-text-white rd-text-center'>Search</h5>
-          <div className='rd-mt-20 rd-search-bar rd-flex rd-items-center rd-bg-white rd-rounded rd-position-relative searh-bar'>
-            <input
-              type='text'
-              className='rd-border-none rd-bg-transparent rd-w-full rd-border-radius-md'
-              placeholder='Search your answer here'
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-            <FaSearch className='rd-body-text' />
-          </div>
-          <button
-            className='back-button rd-flex rd-items-center rd-gap-1 rd-border-none rd-bg-transparent rd-m-0 rd-p-0'
-            onClick={() => setActiveTab(0)}
-          >
-            <FaChevronLeft />
-          </button>
-        </div>
-        <div className='rd-mt-8 rd-mb-8 rd-wiki-wrap'>
-          {error ? (
-            <p className='rd-body-text rd-text-red rd-text-center'>
-              Error: {error}
-            </p>
-          ) : isLoading ? (
-            <div className='rd-skeleton'>
-              <p className='rd-body-text rd-text rd-text-center'>Loading...</p>
-              {[...Array(10)].map((_, i) => (
-                <div
-                  key={i}
-                  className='rd-skeleton-item rd-mb-10 rd-p-20 rd-bg-gray-200 rd-rounded'
-                ></div>
-              ))}
+    return (
+        <div className="rd-faq-container">
+            <div className="rd-main-content">
+                <div className="rd-px-18 rd-search-header rd-bg-blue rd-flex rd-items-center rd-justify-between rd-flex-col">
+                    <h5 className="heading-5 rd-text-white rd-text-center">Search</h5>
+                    <div className="rd-mt-20 rd-search-bar rd-flex rd-items-center rd-bg-white rd-rounded rd-position-relative searh-bar">
+                        <input
+                            type="text"
+                            className="rd-border-none rd-bg-transparent rd-w-full rd-border-radius-md"
+                            placeholder="Search your answer here"
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                        />
+                        <FaSearch className="rd-body-text" />
+                    </div>
+                    <button
+                        className="back-button rd-flex rd-items-center rd-gap-1 rd-border-none rd-bg-transparent rd-m-0 rd-p-0"
+                        onClick={() => setActiveTab(0)}
+                    >
+                        <FaChevronLeft />
+                    </button>
+                </div>
+                <div className="rd-mt-8 rd-mb-8 rd-wiki-wrap">
+                    {error ? (
+                        <p className="rd-body-text rd-text-red rd-text-center">Error: {error}</p>
+                    ) : isLoading ? (
+                        <div className="rd-skeleton">
+                            <p className="rd-body-text rd-text rd-text-center">Loading...</p>
+                            {[...Array(10)].map((_, i) => (
+                                <div key={i} className="rd-skeleton-item rd-mb-10 rd-p-20 rd-bg-gray-200 rd-rounded"></div>
+                            ))}
+                        </div>
+                    ) : filteredFaqs.length === 0 ? (
+                        <p className="err_msg rd-text-center">
+                            {searchTerm ? 'No FAQs match your search.' : 'No FAQs found.'}
+                        </p>
+                    ) : (
+                        filteredFaqs.map((faq) => (
+                            <FAQItem key={faq.id} faq={faq} onSelect={setSelectedFAQ} />
+                        ))
+                    )}
+                </div>
             </div>
-          ) : filteredFaqs.length === 0 ? (
-            <p className='rd-body-text rd-text-center'>
-              {searchTerm ? 'No FAQs match your search.' : 'No FAQs found.'}
-            </p>
-          ) : (
-            filteredFaqs.map((faq) => (
-              <FAQItem key={faq.id} faq={faq} onSelect={setSelectedFAQ} />
-            ))
-          )}
+            <Footer activeTab={activeTab} setActiveTab={setActiveTab} />
         </div>
-      </div>
-      <Footer activeTab={activeTab} setActiveTab={setActiveTab} />
-    </div>
-  );
+    );
 };
 
 export default FAQ;

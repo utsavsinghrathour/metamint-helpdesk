@@ -841,7 +841,7 @@ const SingleTicket = ({
           )}
         </div>
         <div className='rd-body-text rd-mt-30'>
-          <p className='rd-text-center rd-body-text'>
+          <p className='rd-text-center rd-body-text rd-mb-0'>
             If you are interested in working with us, take a step towards
             discovering exciting opportunities by reaching out to us. We look
             forward to talking with you soon!
@@ -1026,7 +1026,7 @@ const SingleTicket = ({
                   }
                 }}
                 placeholder='Write a message...'
-                className='rd-flex-grow rd-border-none rd-outline-none rd-py-5 rd-w-full rd-resize-none rd-min-h-[40px]'
+                className='rd-flex-grow rd-border-none rd-outline-none rd-py-5 rd-w-full rd-resize-none'
                 rows='1'
               />
               <div className='rd-flex rd-gap-20 rd-relative'>
