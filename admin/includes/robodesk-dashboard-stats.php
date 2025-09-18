@@ -214,7 +214,7 @@
         $filtered_tickets = array_filter($dashboard_tickets, function ($t) use ($current_user_name, $filter) {
             switch ($filter) {
                 case 'my_conversation':
-                    return $t['assignee'] === $current_user_name;
+                    return $t['assignee'] === $current_user_name && $t['status'] !== 'closed';
                 case 'unassigned_conversation':
                     return $t['assignee'] === 'N/A';
                 case 'open_conversation':
