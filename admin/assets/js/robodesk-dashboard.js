@@ -8,7 +8,9 @@ function loadDashboardTickets() {
   switch (currentDashboardFilter) {
     case "my_conversation":
       filteredTickets = dashboard_tickets
-        .filter((t) => t.assignee === current_user_name)
+        .filter(
+          (t) => t.assignee === current_user_name && t.status !== "closed"
+        )
         .sort((a, b) => new Date(b.updated) - new Date(a.updated));
       break;
     case "unassigned_conversation":
@@ -23,7 +25,7 @@ function loadDashboardTickets() {
       break;
     case "chat_conversation":
       filteredTickets = dashboard_tickets
-        .filter((t) => t.source === "chat")
+        .filter((t) => t.source === "chat" && t.status !== "closed")
         .sort((a, b) => new Date(b.updated) - new Date(a.updated));
       break;
     default:
