@@ -297,7 +297,7 @@ function robodesk_enqueue_tailwind_and_styles()
         plugin_dir_url(__FILE__) . 'assets/js/robodesk-dashboard.js',
         ['jquery'],
         '1.0.0',
-        true // Load in footer
+        true 
     );
 
     // Enqueue Font Awesome for icons
