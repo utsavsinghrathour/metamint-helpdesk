@@ -2395,21 +2395,27 @@ jQuery(document).ready(function ($) {
   var params = getQueryParams();
 
   params = Object.assign({}, params);
-  let sse = null;
-  setTimeout(() => {
-    if (
-      params.page === 'robodesk-dashboard' &&
-      params.view === 'tickets' &&
-      params.ticket
-    ) {
+
+  if (
+    params.page === 'robodesk-dashboard' &&
+    params.view === 'tickets' &&
+    params.ticket
+  ) {
+    setTimeout(() => {
+      //run sse event
+      //
       const ticketId = params.ticket;
+      // Construct SSE URL (must match your registered REST route)
+
+      // Create EventSource
+
       const repliesList = document.getElementById('replies-list');
       const replyElements = repliesList.getElementsByClassName('replys');
       const lastReply = replyElements[replyElements.length - 1];
 
       let lastCid = lastReply ? lastReply.getAttribute('data-cid') : null;
 
-      sse = createSSE(ticketId, lastCid, repliesList);
+      let sse = createSSE(ticketId, lastCid, repliesList);
       sse.connect();
 
       const observer = new MutationObserver((mutationsList) => {
@@ -2437,8 +2443,6 @@ jQuery(document).ready(function ($) {
         childList: true,
         subtree: false,
       });
-    } else {
-      if (sse) sse.disconnect();
-    }
-  }, 3000);
+    }, 3000);
+  }
 });
