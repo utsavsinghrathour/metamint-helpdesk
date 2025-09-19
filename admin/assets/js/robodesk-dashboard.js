@@ -1,31 +1,31 @@
 function loadDashboardTickets() {
-  const tableBody = document.getElementById("dashboard-tickets-table");
+  const tableBody = document.getElementById('dashboard-tickets-table');
   let filteredTickets = [];
   const current_user_name =
-    robodeskCurrentUser?.name || robodeskCurrentUser?.display_name || "";
+    robodeskCurrentUser?.name || robodeskCurrentUser?.display_name || '';
 
   // Filter dashboard_tickets based on currentDashboardFilter
   switch (currentDashboardFilter) {
-    case "my_conversation":
+    case 'my_conversation':
       filteredTickets = dashboard_tickets
         .filter(
-          (t) => t.assignee === current_user_name && t.status !== "closed"
+          (t) => t.assignee === current_user_name && t.status !== 'closed'
         )
         .sort((a, b) => new Date(b.updated) - new Date(a.updated));
       break;
-    case "unassigned_conversation":
+    case 'unassigned_conversation':
       filteredTickets = dashboard_tickets
-        .filter((t) => t.assignee === "N/A" || !t.assignee)
+        .filter((t) => t.assignee === 'N/A' || !t.assignee)
         .sort((a, b) => new Date(b.updated) - new Date(a.updated));
       break;
-    case "open_conversation":
+    case 'open_conversation':
       filteredTickets = dashboard_tickets
-        .filter((t) => t.status === "open" || t.status === "in-progress")
+        .filter((t) => t.status === 'open' || t.status === 'in-progress')
         .sort((a, b) => new Date(b.updated) - new Date(a.updated));
       break;
-    case "chat_conversation":
+    case 'chat_conversation':
       filteredTickets = dashboard_tickets
-        .filter((t) => t.source === "chat" && t.status !== "closed")
+        .filter((t) => t.source === 'chat' && t.status !== 'closed')
         .sort((a, b) => new Date(b.updated) - new Date(a.updated));
       break;
     default:
@@ -37,16 +37,16 @@ function loadDashboardTickets() {
 
   // Check if we need to show assignee column
   const showAssigneeColumn =
-    currentDashboardFilter === "open_conversation" ||
-    currentDashboardFilter === "chat_conversation";
+    currentDashboardFilter === 'open_conversation' ||
+    currentDashboardFilter === 'chat_conversation';
 
   function getBlinkingClass(ticket) {
     // Ensure ticket is from chat and status is open/in-progress
-    const isChat = ticket.source === "chat";
-    const isActiveStatus = ["open", "in-progress"].includes(ticket.status);
+    const isChat = ticket.source === 'chat';
+    const isActiveStatus = ['open', 'in-progress'].includes(ticket.status);
 
     if (!isChat || !isActiveStatus) {
-      return "";
+      return '';
     }
 
     const replies = Array.isArray(ticket.replies) ? ticket.replies : [];
@@ -69,8 +69,8 @@ function loadDashboardTickets() {
       lastReply &&
       (lastReply.author === ticket.customer ||
         lastReply.author === ticket.email ||
-        lastReply.type === "customer" ||
-        lastReply.author_type === "customer");
+        lastReply.type === 'customer' ||
+        lastReply.author_type === 'customer');
 
     // Case: RED
     if (
@@ -79,16 +79,16 @@ function loadDashboardTickets() {
       diffMinutes > 3 &&
       diffMinutes < 60
     ) {
-      return "blinking-red";
+      return 'blinking-red';
     }
 
     // Case: YELLOW
     if (isCustomerReply && diffMinutes !== null && diffMinutes < 3) {
-      return "blinking-yellow";
+      return 'blinking-yellow';
     }
 
     // Case: GREEN (only if chat + status matches)
-    return "blinking-green";
+    return 'blinking-green';
   }
 
   // Update table header based on filter
@@ -118,7 +118,7 @@ function loadDashboardTickets() {
                     ? (() => {
                         const lastReply =
                           ticket.replies[ticket.replies.length - 1];
-                        const lastReplyAuthor = lastReply.author || "N/A";
+                        const lastReplyAuthor = lastReply.author || 'N/A';
                         const lastReplyDate =
                           lastReply.timestamp ||
                           lastReply.date ||
@@ -154,7 +154,7 @@ function loadDashboardTickets() {
                   onclick="event.stopPropagation(); editStatus(${
                     ticket.id
                   }, this)">
-                  ${escapeHTML(ticket.status.replace("-", " "))}
+                  ${escapeHTML(ticket.status.replace('-', ' '))}
                 </span>
               </td>
               <td class="px-6 py-4 whitespace-nowrap">
@@ -162,10 +162,10 @@ function loadDashboardTickets() {
                   ticket.priority
                 )} editable-priority"
                   style="background-color: ${
-                    typeof robodeskPriorityColors !== "undefined" &&
+                    typeof robodeskPriorityColors !== 'undefined' &&
                     robodeskPriorityColors[ticket.priority]
                       ? robodeskPriorityColors[ticket.priority]
-                      : ""
+                      : ''
                   }"
                   onclick="event.stopPropagation(); editPriority(${
                     ticket.id
@@ -181,26 +181,26 @@ function loadDashboardTickets() {
                   onclick="event.stopPropagation(); editAssignee(${
                     ticket.id
                   }, this)">
-                  ${escapeHTML(ticket.assignee || "Unassigned")}
+                  ${escapeHTML(ticket.assignee || 'Unassigned')}
                 </span>
               </td>
               `
-                  : ""
+                  : ''
               }
             </tr>
           `
           )
-          .join("");
+          .join('');
 
   // Add event delegation for row clicks
-  tableBody.addEventListener("click", function (event) {
-    const row = event.target.closest("tr.table-row");
+  tableBody.addEventListener('click', function (event) {
+    const row = event.target.closest('tr.table-row');
     if (row) {
       const ticketId = parseInt(row.dataset.ticketid, 10);
       if (ticketId) {
         viewTicket(ticketId);
       } else {
-        console.error("No ticket ID found for row:", row);
+        console.error('No ticket ID found for row:', row);
       }
     }
   });
@@ -209,25 +209,25 @@ function loadDashboardTickets() {
 // Helper function to update table header based on whether assignee column should be shown
 function updateTableHeader(showAssigneeColumn) {
   const tableHeader = document
-    .querySelector("#dashboard-tickets-table")
-    .closest("table")
-    .querySelector("thead tr");
+    .querySelector('#dashboard-tickets-table')
+    .closest('table')
+    .querySelector('thead tr');
 
   if (!tableHeader) return;
 
   // Define the standard headers
   const standardHeaders = [
-    "Conversation",
-    "Last Reply",
-    "Customer",
-    "Source",
-    "Status",
-    "Priority",
+    'Conversation',
+    'Last Reply',
+    'Customer',
+    'Source',
+    'Status',
+    'Priority',
   ];
 
   // Add assignee header if needed
   const headers = showAssigneeColumn
-    ? [...standardHeaders, "Assignee"]
+    ? [...standardHeaders, 'Assignee']
     : standardHeaders;
 
   // Update the header HTML
@@ -236,7 +236,7 @@ function updateTableHeader(showAssigneeColumn) {
       (header) =>
         `<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">${header}</th>`
     )
-    .join("");
+    .join('');
 }
 
 // Optional: Add function to handle assignee editing if it doesn't exist
@@ -244,11 +244,11 @@ function editAssignee(ticketId, element) {
   const currentAssignee = element.textContent.trim();
 
   // Create a simple input for editing
-  const input = document.createElement("input");
-  input.type = "text";
-  input.value = currentAssignee === "Unassigned" ? "" : currentAssignee;
+  const input = document.createElement('input');
+  input.type = 'text';
+  input.value = currentAssignee === 'Unassigned' ? '' : currentAssignee;
   input.className =
-    "w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500";
+    'w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500';
 
   // Replace the span with input
   element.replaceWith(input);
@@ -257,11 +257,11 @@ function editAssignee(ticketId, element) {
 
   // Handle save on Enter or blur
   const saveAssignee = () => {
-    const newAssignee = input.value.trim() || "Unassigned";
+    const newAssignee = input.value.trim() || 'Unassigned';
 
     // Create new span element
-    const newSpan = document.createElement("span");
-    newSpan.className = "text-sm font-medium text-gray-900 editable-assignee";
+    const newSpan = document.createElement('span');
+    newSpan.className = 'text-sm font-medium text-gray-900 editable-assignee';
     newSpan.textContent = newAssignee;
     newSpan.onclick = (e) => {
       e.stopPropagation();
@@ -285,15 +285,15 @@ function editAssignee(ticketId, element) {
   };
 
   // Save on Enter
-  input.addEventListener("keydown", (e) => {
-    if (e.key === "Enter") {
+  input.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
       e.preventDefault();
       saveAssignee();
-    } else if (e.key === "Escape") {
+    } else if (e.key === 'Escape') {
       // Cancel editing
-      const cancelSpan = document.createElement("span");
+      const cancelSpan = document.createElement('span');
       cancelSpan.className =
-        "text-sm font-medium text-gray-900 editable-assignee";
+        'text-sm font-medium text-gray-900 editable-assignee';
       cancelSpan.textContent = currentAssignee;
       cancelSpan.onclick = (e) => {
         e.stopPropagation();
@@ -304,16 +304,16 @@ function editAssignee(ticketId, element) {
   });
 
   // Save on blur
-  input.addEventListener("blur", saveAssignee);
+  input.addEventListener('blur', saveAssignee);
 }
 
 // Call when DOM is ready
-document.addEventListener("DOMContentLoaded", loadDashboardTickets);
+document.addEventListener('DOMContentLoaded', loadDashboardTickets);
 
 // Helper function to escape HTML (if not already defined)
 function escapeHTML(str) {
-  if (!str) return "";
-  const div = document.createElement("div");
+  if (!str) return '';
+  const div = document.createElement('div');
   div.textContent = str;
   return div.innerHTML;
 }
@@ -334,7 +334,7 @@ function timeSince(date) {
   }
   if (secondsPast > 86400) {
     const day = Math.floor(secondsPast / 86400);
-    return `${day} day${day > 1 ? "s" : ""} ago`;
+    return `${day} day${day > 1 ? 's' : ''} ago`;
   }
 }
 
@@ -342,14 +342,14 @@ function timeSince(date) {
 function formatDate(dateString) {
   const date = new Date(dateString);
   const options = {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
     hour12: false,
   };
-  return date.toLocaleDateString("en-US", options);
+  return date.toLocaleDateString('en-US', options);
 }
 
 // Function to handle filter changes
@@ -358,17 +358,17 @@ function setDashboardFilter(filter) {
   loadDashboardTickets();
 
   // Update active filter button styling
-  document.querySelectorAll(".filter-button").forEach((btn) => {
-    btn.classList.remove("active");
+  document.querySelectorAll('.filter-button').forEach((btn) => {
+    btn.classList.remove('active');
   });
-  document.querySelector(`[data-filter="${filter}"]`)?.classList.add("active");
+  document.querySelector(`[data-filter="${filter}"]`)?.classList.add('active');
 }
 
 // Function to refresh tickets data
 function refreshDashboardTickets() {
   // If you're loading tickets via AJAX, call that function here
   // For example:
-  if (typeof loadTicketsFromServer === "function") {
+  if (typeof loadTicketsFromServer === 'function') {
     loadTicketsFromServer().then(() => {
       loadDashboardTickets();
     });
@@ -382,34 +382,34 @@ function refreshDashboardTickets() {
 
 //for ticket varaibles show and hide
 function toggleAccordion() {
-  const content = document.getElementById("accordion-content");
-  const btn = document.getElementById("toggle-btn");
+  const content = document.getElementById('accordion-content');
+  const btn = document.getElementById('toggle-btn');
 
-  const isHidden = content.classList.contains("hidden");
+  const isHidden = content.classList.contains('hidden');
   if (isHidden) {
-    content.classList.remove("hidden");
-    btn.textContent = "Hide";
+    content.classList.remove('hidden');
+    btn.textContent = 'Hide';
   } else {
-    content.classList.add("hidden");
-    btn.textContent = "Show";
+    content.classList.add('hidden');
+    btn.textContent = 'Show';
   }
 }
 //search form creating user and email
 
-document.addEventListener("DOMContentLoaded", function () {
-  const nameInput = document.getElementById("customer-name");
-  const emailInput = document.getElementById("customer-email");
-  const nameSuggestions = document.getElementById("customer-name-suggestions");
+document.addEventListener('DOMContentLoaded', function () {
+  const nameInput = document.getElementById('customer-name');
+  const emailInput = document.getElementById('customer-email');
+  const nameSuggestions = document.getElementById('customer-name-suggestions');
   const emailSuggestions = document.getElementById(
-    "customer-email-suggestions"
+    'customer-email-suggestions'
   );
 
   function fetchSuggestions(type, value, callback) {
     fetch(ajaxurl, {
-      method: "POST",
-      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
       body: new URLSearchParams({
-        action: "robodesk_user_lookup",
+        action: 'robodesk_user_lookup',
         type: type,
         value: value,
       }),
@@ -419,57 +419,57 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   function populateSuggestions(container, items, onSelect) {
-    container.innerHTML = "";
+    container.innerHTML = '';
     if (!items.length) {
-      container.classList.add("hidden");
+      container.classList.add('hidden');
       return;
     }
     items.forEach((user) => {
-      const div = document.createElement("div");
-      div.className = "cursor-pointer px-3 py-2 hover:bg-blue-100 text-sm";
+      const div = document.createElement('div');
+      div.className = 'cursor-pointer px-3 py-2 hover:bg-blue-100 text-sm';
       div.textContent = `${user.display_name} (${user.user_email})`;
-      div.addEventListener("click", () => onSelect(user));
+      div.addEventListener('click', () => onSelect(user));
       container.appendChild(div);
     });
-    container.classList.remove("hidden");
+    container.classList.remove('hidden');
   }
 
-  nameInput.addEventListener("keyup", () => {
+  nameInput.addEventListener('keyup', () => {
     const value = nameInput.value.trim();
     if (value.length < 2) {
-      nameSuggestions.classList.add("hidden");
+      nameSuggestions.classList.add('hidden');
       return;
     }
-    fetchSuggestions("name", value, (users) => {
+    fetchSuggestions('name', value, (users) => {
       populateSuggestions(nameSuggestions, users, (user) => {
         nameInput.value = user.display_name;
         emailInput.value = user.user_email;
-        nameSuggestions.classList.add("hidden");
+        nameSuggestions.classList.add('hidden');
       });
     });
   });
 
-  emailInput.addEventListener("keyup", () => {
+  emailInput.addEventListener('keyup', () => {
     const value = emailInput.value.trim();
     if (value.length < 3) {
-      emailSuggestions.classList.add("hidden");
+      emailSuggestions.classList.add('hidden');
       return;
     }
-    fetchSuggestions("email", value, (users) => {
+    fetchSuggestions('email', value, (users) => {
       populateSuggestions(emailSuggestions, users, (user) => {
         emailInput.value = user.user_email;
         nameInput.value = user.display_name;
-        emailSuggestions.classList.add("hidden");
+        emailSuggestions.classList.add('hidden');
       });
     });
   });
 
   // Hide suggestion boxes on click outside
-  document.addEventListener("click", (e) => {
+  document.addEventListener('click', (e) => {
     if (!nameSuggestions.contains(e.target))
-      nameSuggestions.classList.add("hidden");
+      nameSuggestions.classList.add('hidden');
     if (!emailSuggestions.contains(e.target))
-      emailSuggestions.classList.add("hidden");
+      emailSuggestions.classList.add('hidden');
   });
 });
 
@@ -479,21 +479,21 @@ function removeImage(previewId, inputId) {
   const input = document.getElementById(inputId);
   const button = preview.nextElementSibling;
 
-  preview.src = "";
-  preview.classList.add("hidden");
-  input.value = "";
-  button.classList.add("hidden");
+  preview.src = '';
+  preview.classList.add('hidden');
+  input.value = '';
+  button.classList.add('hidden');
 }
 
-let currentPage = "dashboard";
+let currentPage = 'dashboard';
 let currentTicket = null;
-let currentTicketTab = "replies";
-let currentSettingsTab = "basic";
-let currentDashboardFilter = "my_conversation"; // Default filter for dashboard
+let currentTicketTab = 'replies';
+let currentSettingsTab = 'basic';
+let currentDashboardFilter = 'my_conversation'; // Default filter for dashboard
 
 // Initialize the application
-document.addEventListener("DOMContentLoaded", function () {
-  showPage("dashboard");
+document.addEventListener('DOMContentLoaded', function () {
+  showPage('dashboard');
   // updateDashboardStats();
   loadDashboardTickets();
   // setupEventListeners();
@@ -515,90 +515,90 @@ function debounce(func, wait) {
 }
 
 function formatDate(dateString) {
-  return new Date(dateString).toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
+  return new Date(dateString).toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
   });
 }
 
 function getStatusClass(status) {
   switch (status) {
-    case "open":
-      return "status-open";
-    case "in-progress":
-      return "status-in-progress";
-    case "closed":
-      return "status-closed";
+    case 'open':
+      return 'status-open';
+    case 'in-progress':
+      return 'status-in-progress';
+    case 'closed':
+      return 'status-closed';
     default:
-      return "bg-gray-100 text-gray-800";
+      return 'bg-gray-100 text-gray-800';
   }
 }
 
 function getPriorityClass(priority) {
   // Use the priority colors from PHP if available
   if (
-    typeof robodeskPriorityColors !== "undefined" &&
+    typeof robodeskPriorityColors !== 'undefined' &&
     robodeskPriorityColors[priority]
   ) {
     return `priority-${priority.toLowerCase()}`;
   }
 }
 
-function showToast(message, type = "success") {
-  const toast = document.getElementById("toast");
-  const toastMessage = document.getElementById("toast-message");
+function showToast(message, type = 'success') {
+  const toast = document.getElementById('toast');
+  const toastMessage = document.getElementById('toast-message');
 
   toastMessage.textContent = message;
   toast.className = `fixed top-4 right-4 z-50 px-4 py-3 rounded-lg shadow-lg ${
-    type === "success" ? "toast-success" : "toast-error"
+    type === 'success' ? 'toast-success' : 'toast-error'
   }`;
-  toast.classList.remove("hidden");
+  toast.classList.remove('hidden');
 
   setTimeout(() => {
-    toast.classList.add("hidden");
+    toast.classList.add('hidden');
   }, 3000);
 }
 
 // Navigation functions
 function showPage(pageName) {
   // Hide all pages
-  document.querySelectorAll(".page-content").forEach((page) => {
-    page.classList.add("hidden");
+  document.querySelectorAll('.page-content').forEach((page) => {
+    page.classList.add('hidden');
   });
 
   // Show selected page
-  document.getElementById(pageName + "-page").classList.remove("hidden");
+  document.getElementById(pageName + '-page').classList.remove('hidden');
 
   // Update navigation
-  document.querySelectorAll(".nav-link").forEach((link) => {
-    link.classList.remove("active");
+  document.querySelectorAll('.nav-link').forEach((link) => {
+    link.classList.remove('active');
   });
   const navLink = document.querySelector(`[data-page="${pageName}"]`);
   if (navLink) {
-    navLink.classList.add("active");
+    navLink.classList.add('active');
   }
-  if (pageName === "conversation") {
+  if (pageName === 'conversation') {
     // Load conversation view
-  } else if (pageName === "ticket-detail") {
+  } else if (pageName === 'ticket-detail') {
     loadTicketDetail();
-  } else if (pageName === "settings") {
-    showSettingsTab("basic");
-  } else if (pageName === "dashboard") {
+  } else if (pageName === 'settings') {
+    showSettingsTab('basic');
+  } else if (pageName === 'dashboard') {
     loadDashboardTickets();
   }
 }
 
 function filterDashboardTickets(filterType) {
   // Update active filter button
-  document.querySelectorAll(".dashboard-filter-btn").forEach((btn) => {
-    btn.classList.remove("active");
+  document.querySelectorAll('.dashboard-filter-btn').forEach((btn) => {
+    btn.classList.remove('active');
   });
   document
     .querySelector(`[data-filter="${filterType}"]`)
-    .classList.add("active");
+    .classList.add('active');
 
   currentDashboardFilter = filterType;
   loadDashboardTickets();
@@ -623,46 +623,46 @@ function viewTicket(ticketId) {
   // Update URL with ticket ID (without reloading)
   if (history.pushState) {
     const url = new URL(window.location);
-    url.searchParams.set("ticket", ticketId);
-    history.pushState({ ticketId }, "", url);
+    url.searchParams.set('ticket', ticketId);
+    history.pushState({ ticketId }, '', url);
   }
 
-  showPage("ticket-detail");
+  showPage('ticket-detail');
   loadTicketDetail();
-  showTicketTab("replies");
+  showTicketTab('replies');
 }
 
 // On page load, check for ticket param and show ticket if present
-document.addEventListener("DOMContentLoaded", function () {
+document.addEventListener('DOMContentLoaded', function () {
   const params = new URLSearchParams(window.location.search);
-  const ticketId = params.get("ticket");
+  const ticketId = params.get('ticket');
   if (ticketId) {
     viewTicket(Number(ticketId));
   }
 });
 
 // On page load, check for paged param and show the paged tickets
-document.addEventListener("DOMContentLoaded", function () {
+document.addEventListener('DOMContentLoaded', function () {
   const params = new URLSearchParams(window.location.search);
-  const paged = params.get("paged");
+  const paged = params.get('paged');
   if (paged) {
-    params.delete("ticket");
-    const ticketsPage = document.getElementById("tickets-page");
+    params.delete('ticket');
+    const ticketsPage = document.getElementById('tickets-page');
     if (ticketsPage) {
-      showPage("tickets");
+      showPage('tickets');
     } else {
-      showPage("dashboard");
+      showPage('dashboard');
     }
   }
 });
 // Update URL when navigating between main pages
-document.querySelectorAll(".nav-link").forEach((link) => {
-  link.addEventListener("click", () => {
+document.querySelectorAll('.nav-link').forEach((link) => {
+  link.addEventListener('click', () => {
     const url = new URL(window.location);
-    url.searchParams.delete("ticket");
-    url.searchParams.delete("paged");
-    url.searchParams.set("view", link.dataset.page);
-    history.pushState({}, "", url);
+    url.searchParams.delete('ticket');
+    url.searchParams.delete('paged');
+    url.searchParams.set('view', link.dataset.page);
+    history.pushState({}, '', url);
   });
 });
 
@@ -689,7 +689,7 @@ function createCategoryOptions() {
     if (category.term_id === currentTicket.category.id) {
       options = options.replace(
         `<option value="${category.term_id}">${category.name}</option>`,
-        ""
+        ''
       );
     }
   });
@@ -702,9 +702,9 @@ function updateTicketCategory(ticketId, categoryId) {
   // WordPress AJAX call
   jQuery.ajax({
     url: robodeskAjax.ajax_url, // Use your existing AJAX URL structure
-    type: "POST",
+    type: 'POST',
     data: {
-      action: "update_ticket_category",
+      action: 'update_ticket_category',
       ticket_id: ticketId,
       category_id: categoryId,
       nonce: robodeskAjax.nonces.update_ticket_category, // Use your existing nonce structure
@@ -713,15 +713,15 @@ function updateTicketCategory(ticketId, categoryId) {
       if (response.success) {
         // console.log("Category updated successfully");
         // Use your existing showToast function
-        showToast("Category updated successfully", "success");
+        showToast('Category updated successfully', 'success');
       } else {
-        console.error("Failed to update category:", response.data);
-        showToast("Failed to update category", "error");
+        console.error('Failed to update category:', response.data);
+        showToast('Failed to update category', 'error');
       }
     },
     error: function (xhr, status, error) {
-      console.error("AJAX error:", error);
-      showToast("Error updating category", "error");
+      console.error('AJAX error:', error);
+      showToast('Error updating category', 'error');
     },
   });
 }
@@ -731,11 +731,11 @@ function loadTicketDetail() {
   if (!currentTicket) return;
 
   document.getElementById(
-    "ticket-detail-title"
+    'ticket-detail-title'
   ).textContent = `Ticket #${currentTicket.id} - ${currentTicket.title}`;
 
   // Load customer information
-  const customerInfo = document.getElementById("customer-info");
+  const customerInfo = document.getElementById('customer-info');
   customerInfo.innerHTML = `
         <div class="text-sm">
             <div class="font-medium text-gray-900">${currentTicket.customer}</div>
@@ -744,7 +744,7 @@ function loadTicketDetail() {
     `;
 
   // Load ticket meta information with category dropdown
-  const ticketMetaInfo = document.getElementById("ticket-meta-info");
+  const ticketMetaInfo = document.getElementById('ticket-meta-info');
 
   ticketMetaInfo.innerHTML = `
     <div class="text-sm space-y-4 bg-gray-50 p-2 rounded-lg shadow-sm">
@@ -769,14 +769,14 @@ function loadTicketDetail() {
 
   // Set the current category if ticket has one
   if (currentTicket.category && currentTicket.category.term_id) {
-    document.getElementById("ticket-category-select").value =
+    document.getElementById('ticket-category-select').value =
       currentTicket.category.term_id;
   }
 
   // Add event listener for category change
   document
-    .getElementById("ticket-category-select")
-    .addEventListener("change", function (e) {
+    .getElementById('ticket-category-select')
+    .addEventListener('change', function (e) {
       const newCategoryId = e.target.value;
       updateTicketCategory(currentTicket.id, newCategoryId);
 
@@ -790,16 +790,16 @@ function loadTicketDetail() {
     });
 
   // Set current values in other dropdowns
-  document.getElementById("ticket-status-select").value = currentTicket.status;
-  document.getElementById("ticket-priority-select").value =
+  document.getElementById('ticket-status-select').value = currentTicket.status;
+  document.getElementById('ticket-priority-select').value =
     currentTicket.priority;
-  document.getElementById("ticket-assignee-select").value =
+  document.getElementById('ticket-assignee-select').value =
     currentTicket.assignee;
 
   // Update reply and note counts
-  document.getElementById("replies-count").textContent =
+  document.getElementById('replies-count').textContent =
     currentTicket.replies?.length || 0;
-  document.getElementById("notes-count").textContent =
+  document.getElementById('notes-count').textContent =
     currentTicket.notes?.length || 0;
 
   loadReplies();
@@ -815,19 +815,19 @@ function showCustomerTickets() {
   );
   const stats = {
     total: customerTickets.length,
-    open: customerTickets.filter((t) => t.status === "open").length,
-    inProgress: customerTickets.filter((t) => t.status === "in-progress")
+    open: customerTickets.filter((t) => t.status === 'open').length,
+    inProgress: customerTickets.filter((t) => t.status === 'in-progress')
       .length,
-    closed: customerTickets.filter((t) => t.status === "closed").length,
+    closed: customerTickets.filter((t) => t.status === 'closed').length,
   };
 
   // Update modal title
   document.getElementById(
-    "customer-tickets-title"
+    'customer-tickets-title'
   ).textContent = `${currentTicket.customer}'s Tickets`;
 
   // Update stats
-  const statsContainer = document.getElementById("customer-tickets-stats");
+  const statsContainer = document.getElementById('customer-tickets-stats');
   statsContainer.innerHTML = `
         <div class="customer-stat-card" onclick="filterCustomerTickets('open')">
             <div class="customer-stat-number text-red-600">${stats.open}</div>
@@ -848,11 +848,11 @@ function showCustomerTickets() {
   loadCustomerTicketsList(customerTickets);
 
   // Show modal
-  document.getElementById("customer-tickets-modal").classList.remove("hidden");
+  document.getElementById('customer-tickets-modal').classList.remove('hidden');
 }
 
 function hideCustomerTickets() {
-  document.getElementById("customer-tickets-modal").classList.add("hidden");
+  document.getElementById('customer-tickets-modal').classList.add('hidden');
 }
 
 function filterCustomerTickets(status) {
@@ -866,7 +866,7 @@ function filterCustomerTickets(status) {
 }
 // shows the customer tickets in the modal  ie view all customer tickets
 function loadCustomerTicketsList(ticketList) {
-  const listContainer = document.getElementById("customer-tickets-list");
+  const listContainer = document.getElementById('customer-tickets-list');
   listContainer.innerHTML = ticketList
     .map(
       (ticket) => `
@@ -889,10 +889,10 @@ function loadCustomerTicketsList(ticketList) {
                         ${ticket.status}
                     </span>
                     <span class="status-badge" style="background-color: ${
-                      typeof robodeskPriorityColors !== "undefined" &&
+                      typeof robodeskPriorityColors !== 'undefined' &&
                       robodeskPriorityColors[ticket.priority]
                         ? robodeskPriorityColors[ticket.priority]
-                        : ""
+                        : ''
                     }" ">
                         ${ticket.priority}
                     </span>
@@ -901,21 +901,21 @@ function loadCustomerTicketsList(ticketList) {
         </div>
     `
     )
-    .join("");
+    .join('');
 }
 
 function showTicketTab(tabName) {
   // Update tab buttons
-  document.querySelectorAll(".ticket-tab").forEach((tab) => {
-    tab.classList.remove("active");
+  document.querySelectorAll('.ticket-tab').forEach((tab) => {
+    tab.classList.remove('active');
   });
-  document.querySelector(`[data-tab="${tabName}"]`).classList.add("active");
+  document.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
 
   // Show/hide tab content
-  document.querySelectorAll(".ticket-tab-content").forEach((content) => {
-    content.classList.add("hidden");
+  document.querySelectorAll('.ticket-tab-content').forEach((content) => {
+    content.classList.add('hidden');
   });
-  document.getElementById(tabName + "-tab").classList.remove("hidden");
+  document.getElementById(tabName + '-tab').classList.remove('hidden');
 
   currentTicketTab = tabName;
 }
@@ -923,33 +923,33 @@ function showTicketTab(tabName) {
 // Settings functions
 function showSettingsTab(tabName) {
   // Update tab buttons
-  document.querySelectorAll(".settings-tab").forEach((tab) => {
-    tab.classList.remove("active");
+  document.querySelectorAll('.settings-tab').forEach((tab) => {
+    tab.classList.remove('active');
   });
-  document.querySelector(`[data-tab="${tabName}"]`).classList.add("active");
+  document.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
 
   // Show/hide tab content
-  document.querySelectorAll(".settings-tab-content").forEach((content) => {
-    content.classList.add("hidden");
+  document.querySelectorAll('.settings-tab-content').forEach((content) => {
+    content.classList.add('hidden');
   });
-  document.getElementById(tabName + "-tab").classList.remove("hidden");
+  document.getElementById(tabName + '-tab').classList.remove('hidden');
 
   currentSettingsTab = tabName;
 }
 
 function saveSettings() {
   if (success === false) {
-    showToast("Failed to save settings", "error");
+    showToast('Failed to save settings', 'error');
   } else {
-    showToast("Settings saved successfully", "success");
+    showToast('Settings saved successfully', 'success');
   }
 }
 
 function testConnection() {
-  if (currentTab === "imap-tab") {
-    showToast("Connection test successful", "success");
+  if (currentTab === 'imap-tab') {
+    showToast('Connection test successful', 'success');
   } else {
-    showToast("Connection test failed", "error");
+    showToast('Connection test failed', 'error');
   }
 }
 
@@ -963,58 +963,58 @@ function formatText(command, editorId) {
 // Fetch emails function
 function fetchEmails() {
   // Optional: hide previous message
-  document.getElementById("fetch-results").classList.add("hidden");
+  document.getElementById('fetch-results').classList.add('hidden');
 
   // Change button text to "Fetching emails..."
   const fetchButton = document.querySelector('[onclick="fetchEmails()"]');
   if (fetchButton) {
-    fetchButton.textContent = "Fetching emails...";
+    fetchButton.textContent = 'Fetching emails...';
     fetchButton.disabled = true;
   }
 
   fetch(robodeskAjax.ajax_url, {
-    method: "POST",
+    method: 'POST',
     headers: {
-      "Content-Type": "application/x-www-form-urlencoded",
+      'Content-Type': 'application/x-www-form-urlencoded',
     },
     body: new URLSearchParams({
-      action: "robodesk_fetch_emails",
+      action: 'robodesk_fetch_emails',
       nonce: robodeskAjax.nonces.fetch_emails,
     }),
   })
     .then((response) => {
-      if (!response.ok) throw new Error("Network error");
+      if (!response.ok) throw new Error('Network error');
       return response.json();
     })
     .then((data) => {
       if (data.success) {
         const message = data.data;
-        document.getElementById("fetch-message").textContent = message;
-        document.getElementById("fetch-results").classList.remove("hidden");
+        document.getElementById('fetch-message').textContent = message;
+        document.getElementById('fetch-results').classList.remove('hidden');
       } else {
-        document.getElementById("fetch-message").textContent =
-          data.data || "An error occurred";
-        document.getElementById("fetch-results").classList.remove("hidden");
+        document.getElementById('fetch-message').textContent =
+          data.data || 'An error occurred';
+        document.getElementById('fetch-results').classList.remove('hidden');
       }
     })
     .catch((error) => {
-      console.error("AJAX error:", error);
-      document.getElementById("fetch-message").textContent =
-        "AJAX error occurred.";
-      document.getElementById("fetch-results").classList.remove("hidden");
+      console.error('AJAX error:', error);
+      document.getElementById('fetch-message').textContent =
+        'AJAX error occurred.';
+      document.getElementById('fetch-results').classList.remove('hidden');
     })
     .finally(() => {
       // Reset button text and enable it
       if (fetchButton) {
-        fetchButton.textContent = "Fetch Emails Now";
+        fetchButton.textContent = 'Fetch Emails Now';
         fetchButton.disabled = false;
       }
     });
 }
 
 // Close modal when clicking outside
-document.addEventListener("click", function (event) {
-  const modal = document.getElementById("customer-tickets-modal");
+document.addEventListener('click', function (event) {
+  const modal = document.getElementById('customer-tickets-modal');
   if (event.target === modal) {
     hideCustomerTickets();
   }
@@ -1026,36 +1026,36 @@ document.addEventListener("click", function (event) {
 
 // IMAP Save Settings AJAX handler
 jQuery(document).ready(function ($) {
-  $("#save-imap-settings").on("click", function (e) {
+  $('#save-imap-settings').on('click', function (e) {
     e.preventDefault();
 
-    var $form = $("#robodesk-imap-form");
+    var $form = $('#robodesk-imap-form');
     var $saveButton = $(this);
-    $saveButton.prop("disabled", true).text("Saving...");
+    $saveButton.prop('disabled', true).text('Saving...');
     $.ajax({
       url: ajaxurl,
-      type: "POST",
+      type: 'POST',
       data: {
-        action: "robodesk_imap_save_settings",
+        action: 'robodesk_imap_save_settings',
         nonce: $form.find('input[name="robodesk_imap_settings_nonce"]').val(),
-        robodesk_imap_hostname: $form.find("#robodesk_imap_hostname").val(),
-        robodesk_imap_port: $form.find("#robodesk_imap_port").val(),
-        robodesk_imap_username: $form.find("#robodesk_imap_username").val(),
-        robodesk_imap_password: $form.find("#robodesk_imap_password").val(),
-        robodesk_imap_auth: $form.find("#robodesk_imap_auth").val(),
+        robodesk_imap_hostname: $form.find('#robodesk_imap_hostname').val(),
+        robodesk_imap_port: $form.find('#robodesk_imap_port').val(),
+        robodesk_imap_username: $form.find('#robodesk_imap_username').val(),
+        robodesk_imap_password: $form.find('#robodesk_imap_password').val(),
+        robodesk_imap_auth: $form.find('#robodesk_imap_auth').val(),
       },
       success: function (response) {
         if (response.success) {
-          showToast(response.data.message, "success");
+          showToast(response.data.message, 'success');
         } else {
-          showToast(response.data.message, "error");
+          showToast(response.data.message, 'error');
         }
       },
       error: function () {
-        showToast("An error occurred. Please try again.", "error");
+        showToast('An error occurred. Please try again.', 'error');
       },
       complete: function () {
-        $saveButton.prop("disabled", false).text("Save Settings");
+        $saveButton.prop('disabled', false).text('Save Settings');
       },
       // timeout: 5000,
     });
@@ -1064,38 +1064,38 @@ jQuery(document).ready(function ($) {
 
 // Handle Test Connection
 jQuery(document).ready(function ($) {
-  $(document).on("click", "#robodesk-imap-test", function () {
-    var $form = $("#robodesk-imap-form");
+  $(document).on('click', '#robodesk-imap-test', function () {
+    var $form = $('#robodesk-imap-form');
     var $testButton = $(this);
 
-    $testButton.prop("disabled", true).text("Testing...");
+    $testButton.prop('disabled', true).text('Testing...');
 
     $.ajax({
       url: ajaxurl, // Ensure ajaxurl is defined via wp_localize_script
-      type: "POST",
+      type: 'POST',
       data: {
-        action: "robodesk_imap_test_connection",
+        action: 'robodesk_imap_test_connection',
         nonce: $form.find('input[name="robodesk_imap_settings_nonce"]').val(),
-        robodesk_imap_hostname: $form.find("#robodesk_imap_hostname").val(),
-        robodesk_imap_port: $form.find("#robodesk_imap_port").val(),
-        robodesk_imap_username: $form.find("#robodesk_imap_username").val(),
-        robodesk_imap_password: $form.find("#robodesk_imap_password").val(),
-        robodesk_imap_auth: $form.find("#robodesk_imap_auth").val(),
+        robodesk_imap_hostname: $form.find('#robodesk_imap_hostname').val(),
+        robodesk_imap_port: $form.find('#robodesk_imap_port').val(),
+        robodesk_imap_username: $form.find('#robodesk_imap_username').val(),
+        robodesk_imap_password: $form.find('#robodesk_imap_password').val(),
+        robodesk_imap_auth: $form.find('#robodesk_imap_auth').val(),
       },
       success: function (response) {
         // console.log(response); // Debug response
         if (response.success) {
-          showToast(response.data.message, "success");
+          showToast(response.data.message, 'success');
         } else {
-          showToast(response.data.message, "error");
+          showToast(response.data.message, 'error');
         }
       },
       error: function (xhr, status, error) {
         // console.log("AJAX Error:", xhr, status, error);
-        showToast("AJAX request failed: " + error, "error");
+        showToast('AJAX request failed: ' + error, 'error');
       },
       complete: function () {
-        $testButton.prop("disabled", false).text("Test Connection Again");
+        $testButton.prop('disabled', false).text('Test Connection Again');
       },
     });
   });
@@ -1103,41 +1103,41 @@ jQuery(document).ready(function ($) {
 
 // email template settings AJAX handler
 jQuery(document).ready(function ($) {
-  $(document).on("click", "#robodesk-save-templates", function () {
-    var $form = $("#robodesk_email_template_save");
+  $(document).on('click', '#robodesk-save-templates', function () {
+    var $form = $('#robodesk_email_template_save');
     var $button = $(this);
 
-    $button.prop("disabled", true).text("Saving Templates...");
+    $button.prop('disabled', true).text('Saving Templates...');
 
     // Collect template data from contenteditable divs
     var templates = {
-      "new-ticket": $("#new-ticket-template").html(),
-      "ticket-closed": $("#ticket-closed-template").html(),
-      "auto-reply": $("#auto-reply-template").html(),
+      'new-ticket': $('#new-ticket-template').html(),
+      'ticket-closed': $('#ticket-closed-template').html(),
+      'auto-reply': $('#auto-reply-template').html(),
     };
 
     $.ajax({
       url: ajaxurl, // Ensure ajaxurl is defined via wp_localize_script
-      type: "POST",
+      type: 'POST',
       data: {
-        action: "robodesk_email_template_save",
+        action: 'robodesk_email_template_save',
         nonce: $form.find('input[name="robodesk_email_template_nonce"]').val(),
         templates: templates,
       },
       success: function (response) {
         // console.log(response); // Debug response
         if (response.success) {
-          showToast(response.data.message, "success");
+          showToast(response.data.message, 'success');
         } else {
-          showToast(response.data.message, "error");
+          showToast(response.data.message, 'error');
         }
       },
       error: function (xhr, status, error) {
         // console.log("AJAX Error:", xhr, status, error);
-        showToast("AJAX request failed: " + error, "error");
+        showToast('AJAX request failed: ' + error, 'error');
       },
       complete: function () {
-        $button.prop("disabled", false).text("Save Templates");
+        $button.prop('disabled', false).text('Save Templates');
       },
     });
   });
@@ -1145,25 +1145,25 @@ jQuery(document).ready(function ($) {
 
 //advanced settings AJAX handler
 jQuery(document).ready(function ($) {
-  $(document).on("click", "#save-advanced-settings", function () {
-    var $form = $("#advanced-settings-form");
+  $(document).on('click', '#save-advanced-settings', function () {
+    var $form = $('#advanced-settings-form');
     var $button = $(this);
 
-    $button.prop("disabled", true).text("Saving Advanced Settings...");
+    $button.prop('disabled', true).text('Saving Advanced Settings...');
 
     // Collect form data
     var settings = {
-      enable_auto_assign: $("#enable-auto-assign").is(":checked"),
-      enable_notifications: $("#enable-notifications").is(":checked"),
-      enable_customer_portal: $("#enable-customer-portal").is(":checked"),
+      enable_auto_assign: $('#enable-auto-assign').is(':checked'),
+      enable_notifications: $('#enable-notifications').is(':checked'),
+      enable_customer_portal: $('#enable-customer-portal').is(':checked'),
       max_file_upload_size: $form.find('input[type="number"]').val(),
     };
 
     $.ajax({
       url: ajaxurl, // Ensure ajaxurl is defined via wp_localize_script
-      type: "POST",
+      type: 'POST',
       data: {
-        action: "robodesk_save_advanced_settings",
+        action: 'robodesk_save_advanced_settings',
         nonce: $form
           .find('input[name="robodesk_advanced_settings_nonce"]')
           .val(),
@@ -1172,17 +1172,17 @@ jQuery(document).ready(function ($) {
       success: function (response) {
         // console.log(response); // Debug response
         if (response.success) {
-          showToast(response.data.message, "success");
+          showToast(response.data.message, 'success');
         } else {
-          showToast(response.data.message, "error");
+          showToast(response.data.message, 'error');
         }
       },
       error: function (xhr, status, error) {
         // console.log("AJAX Error:", xhr, status, error);
-        showToast("AJAX request failed: " + error, "error");
+        showToast('AJAX request failed: ' + error, 'error');
       },
       complete: function () {
-        $button.prop("disabled", false).text("Save Advanced Settings");
+        $button.prop('disabled', false).text('Save Advanced Settings');
       },
     });
   });
@@ -1192,83 +1192,83 @@ jQuery(document).ready(function ($) {
 jQuery(document).ready(function ($) {
   // Define removeImage function
   window.removeImage = function (previewId, hiddenId, inputId) {
-    $("#" + previewId)
-      .attr("src", "")
-      .addClass("hidden");
-    $("#" + hiddenId).val("");
-    $("#" + inputId).val("");
-    $("#" + previewId)
-      .next("button")
-      .addClass("hidden");
+    $('#' + previewId)
+      .attr('src', '')
+      .addClass('hidden');
+    $('#' + hiddenId).val('');
+    $('#' + inputId).val('');
+    $('#' + previewId)
+      .next('button')
+      .addClass('hidden');
   };
 
   // Media preview handler for image file inputs
   const mediaFields = [
     {
-      input: "popover_icon",
-      preview: "popover-icon-preview",
-      hidden: "robodesk_popover_icon",
-      type: "image",
+      input: 'popover_icon',
+      preview: 'popover-icon-preview',
+      hidden: 'robodesk_popover_icon',
+      type: 'image',
     },
     {
-      input: "popover_top_icon",
-      preview: "popover-top-icon-preview",
-      hidden: "robodesk_popover_top_icon",
-      type: "image",
+      input: 'popover_top_icon',
+      preview: 'popover-top-icon-preview',
+      hidden: 'robodesk_popover_top_icon',
+      type: 'image',
     },
     {
-      input: "logo",
-      preview: "logo-preview",
-      hidden: "robodesk_logo",
-      type: "image",
+      input: 'logo',
+      preview: 'logo-preview',
+      hidden: 'robodesk_logo',
+      type: 'image',
     },
     {
-      input: "wide_logo",
-      preview: "wide-logo-preview",
-      hidden: "robodesk_wide_logo",
-      type: "image",
+      input: 'wide_logo',
+      preview: 'wide-logo-preview',
+      hidden: 'robodesk_wide_logo',
+      type: 'image',
     },
   ];
 
   // Theme color preview handler
-  const themeColorInput = $("#theme_color");
-  const themeColorPreview = $("#theme-color-preview");
+  const themeColorInput = $('#theme_color');
+  const themeColorPreview = $('#theme-color-preview');
   if (themeColorInput.val()) {
     themeColorPreview
-      .removeClass("hidden")
-      .css("background-color", themeColorInput.val());
+      .removeClass('hidden')
+      .css('background-color', themeColorInput.val());
   }
 
-  themeColorInput.on("change", function () {
+  themeColorInput.on('change', function () {
     themeColorPreview
-      .removeClass("hidden")
-      .css("background-color", $(this).val());
+      .removeClass('hidden')
+      .css('background-color', $(this).val());
   });
 
   mediaFields.forEach(function (field) {
     // Show existing media on page load
     const hiddenInput = $(`#${field.hidden}`);
     if (hiddenInput.val()) {
-      if (field.type === "image") {
+      if (field.type === 'image') {
         $(`#${field.preview}`)
-          .removeClass("hidden")
-          .attr("src", hiddenInput.val());
+          .removeClass('hidden')
+          .attr('src', hiddenInput.val());
       }
     }
 
     // Handle file input change for preview
-    $(`input[name="${field.input}"]`).on("change", function (event) {
+    $(`input[name="${field.input}"]`).on('change', function (event) {
       const file = event.target.files[0];
       if (file) {
         const reader = new FileReader();
         reader.onload = function (e) {
-          if (field.type === "image") {
+          if (field.type === 'image') {
             $(`#${field.preview}`)
-              .removeClass("hidden")
-              .attr("src", e.target.result);
+              .removeClass('hidden')
+              .attr('src', e.target.result);
             // Show the remove button when an image is selected
-            const removeButton = $(`#${field.preview}`).next("button");
-            removeButton.removeClass("hidden");
+            const removeButton = $(`#${field.preview}`).next('button');
+            removeButton.removeClass('hidden');
           }
         };
         reader.readAsDataURL(file);
@@ -1277,25 +1277,25 @@ jQuery(document).ready(function ($) {
   });
 
   // Handle form submission for basic settings
-  $(document).on("click", "#save-basic-settings", function () {
-    const $form = $("#robodesk-basic-settings-form");
+  $(document).on('click', '#save-basic-settings', function () {
+    const $form = $('#robodesk-basic-settings-form');
     const $button = $(this);
     const formData = new FormData();
 
     // Append basic settings
-    formData.append("action", "robodesk_save_basic_settings");
+    formData.append('action', 'robodesk_save_basic_settings');
     formData.append(
-      "nonce",
+      'nonce',
       $form.find('input[name="robodesk_basic_settings_nonce"]').val()
     );
-    formData.append("settings[site_name]", $form.find("#site_name").val());
-    formData.append("settings[admin_email]", $form.find("#admin_email").val());
+    formData.append('settings[site_name]', $form.find('#site_name').val());
+    formData.append('settings[admin_email]', $form.find('#admin_email').val());
     // formData.append("settings[timezone]", $form.find("#timezone").val());
     // formData.append("settings[language]", $form.find("#language").val());
-    formData.append("settings[theme_color]", $form.find("#theme_color").val());
+    formData.append('settings[theme_color]', $form.find('#theme_color').val());
     formData.append(
-      "settings[default_ticket_category]",
-      $form.find("#robodesk_default_ticket_category").val()
+      'settings[default_ticket_category]',
+      $form.find('#robodesk_default_ticket_category').val()
     );
 
     // Append media URLs and files
@@ -1309,15 +1309,15 @@ jQuery(document).ready(function ($) {
 
     // Append notification sound URL
     formData.append(
-      "robodesk_notification_sound",
-      $("#robodesk_notification_sound").val()
+      'robodesk_notification_sound',
+      $('#robodesk_notification_sound').val()
     );
 
-    $button.prop("disabled", true).text("Saving Settings...");
+    $button.prop('disabled', true).text('Saving Settings...');
 
     $.ajax({
       url: ajaxurl,
-      type: "POST",
+      type: 'POST',
       data: formData,
       processData: false,
       contentType: false,
@@ -1329,41 +1329,41 @@ jQuery(document).ready(function ($) {
             mediaFields.forEach(function (field) {
               if (response.data.urls[field.hidden]) {
                 $(`#${field.hidden}`).val(response.data.urls[field.hidden]);
-                if (field.type === "image") {
+                if (field.type === 'image') {
                   $(`#${field.preview}`)
-                    .removeClass("hidden")
-                    .attr("src", response.data.urls[field.hidden]);
+                    .removeClass('hidden')
+                    .attr('src', response.data.urls[field.hidden]);
                 }
               }
             });
             // Update notification sound preview
             if (response.data.urls.robodesk_notification_sound) {
-              const audioPreview = $("#notification-sound-preview");
-              const audioSource = audioPreview.find("source");
+              const audioPreview = $('#notification-sound-preview');
+              const audioSource = audioPreview.find('source');
               audioSource.attr(
-                "src",
+                'src',
                 response.data.urls.robodesk_notification_sound
               );
-              audioPreview.removeClass("hidden").get(0).load();
+              audioPreview.removeClass('hidden').get(0).load();
               $(
                 `button[onclick="removeAudio('notification-sound-preview', 'robodesk_notification_sound')"]`
-              ).removeClass("hidden");
+              ).removeClass('hidden');
               // Highlight the audio preview to draw attention
-              audioPreview.addClass("border-2 border-blue-500");
+              audioPreview.addClass('border-2 border-blue-500');
               setTimeout(() => {
-                audioPreview.removeClass("border-2 border-blue-500");
+                audioPreview.removeClass('border-2 border-blue-500');
               }, 2000); // Remove highlight after 2 seconds
             }
           }
           // Update theme color preview
           if (response.data.settings && response.data.settings.theme_color) {
             themeColorPreview
-              .removeClass("hidden")
-              .css("background-color", response.data.settings.theme_color);
+              .removeClass('hidden')
+              .css('background-color', response.data.settings.theme_color);
           }
-          showToast(response.data.message, "success");
+          showToast(response.data.message, 'success');
         } else {
-          showToast(response.data.message, "error");
+          showToast(response.data.message, 'error');
           // Log detailed errors for debugging
           if (response.data.details) {
             // console.log("Detailed errors:", response.data.details);
@@ -1372,10 +1372,10 @@ jQuery(document).ready(function ($) {
       },
       error: function (xhr, status, error) {
         // console.log("AJAX Error:", xhr, status, error);
-        showToast("AJAX request failed: " + error, "error");
+        showToast('AJAX request failed: ' + error, 'error');
       },
       complete: function () {
-        $button.prop("disabled", false).text("Save Settings");
+        $button.prop('disabled', false).text('Save Settings');
       },
     });
   });
@@ -1383,88 +1383,88 @@ jQuery(document).ready(function ($) {
 
 // Update audio preview on dropdown change
 document
-  .getElementById("notification_sound")
-  .addEventListener("change", function () {
-    var audio = document.getElementById("notification-sound-preview");
+  .getElementById('notification_sound')
+  .addEventListener('change', function () {
+    var audio = document.getElementById('notification-sound-preview');
     var src = this.value;
     if (src) {
-      audio.classList.remove("hidden");
-      audio.querySelector("source").src = src;
+      audio.classList.remove('hidden');
+      audio.querySelector('source').src = src;
       audio.load();
     } else {
-      audio.classList.add("hidden");
+      audio.classList.add('hidden');
     }
-    document.getElementById("robodesk_notification_sound").value = src;
+    document.getElementById('robodesk_notification_sound').value = src;
   });
 
 // Remove audio preview and reset hidden input
 function removeAudio(previewId, hiddenId) {
   const preview = document.getElementById(previewId);
   const hiddenInput = document.getElementById(hiddenId);
-  preview.classList.add("hidden");
-  preview.querySelector("source").src = "";
-  hiddenInput.value = "";
+  preview.classList.add('hidden');
+  preview.querySelector('source').src = '';
+  hiddenInput.value = '';
   document
     .querySelector(
       `button[onclick="removeAudio('${previewId}', '${hiddenId}')"]`
     )
-    .classList.add("hidden");
+    .classList.add('hidden');
 }
 
 // for configuring ticket assignments (fetch interval and default agent) settings> fetch tickets
 jQuery(document).ready(function ($) {
   // Handle form submission for ticket assignment settings
-  $(document).on("click", "#save-ticket-assignment-settings", function () {
-    const $form = $("#robodesk-fetch-tickets-form");
+  $(document).on('click', '#save-ticket-assignment-settings', function () {
+    const $form = $('#robodesk-fetch-tickets-form');
     const $button = $(this);
     const formData = new FormData();
 
     // Append ticket assignment settings
-    formData.append("action", "robodesk_save_ticket_assignment_settings");
+    formData.append('action', 'robodesk_save_ticket_assignment_settings');
     formData.append(
-      "nonce",
+      'nonce',
       $form.find('input[name="robodesk_ticket_assignment_nonce"]').val()
     );
     formData.append(
-      "fetch_interval",
+      'fetch_interval',
       $form.find('input[name="fetch_interval"]').val()
     );
     formData.append(
-      "default_agent",
+      'default_agent',
       $form.find('select[name="default_agent"]').val()
     );
 
     // Basic validation
     if (!$form.find('input[name="fetch_interval"]').val()) {
-      showToast("Please enter a fetch interval.", "error");
+      showToast('Please enter a fetch interval.', 'error');
       return;
     }
     if (!$form.find('select[name="default_agent"]').val()) {
-      showToast("Please select a team for auto-assignment.", "error");
+      showToast('Please select a team for auto-assignment.', 'error');
       return;
     }
 
-    $button.prop("disabled", true).text("Configuring Auto-Fetch Settings...");
+    $button.prop('disabled', true).text('Configuring Auto-Fetch Settings...');
 
     $.ajax({
       url: ajaxurl,
-      type: "POST",
+      type: 'POST',
       data: formData,
       processData: false,
       contentType: false,
       success: function (response) {
         if (response.success) {
-          showToast(response.data.message, "success");
+          showToast(response.data.message, 'success');
         } else {
-          showToast(response.data.message, "error");
+          showToast(response.data.message, 'error');
         }
       },
       error: function (xhr, status, error) {
         // console.log("AJAX Error:", xhr, status, error);
-        showToast("AJAX request failed: " + error, "error");
+        showToast('AJAX request failed: ' + error, 'error');
       },
       complete: function () {
-        $button.prop("disabled", false).text("Configure Auto-Fetch");
+        $button.prop('disabled', false).text('Configure Auto-Fetch');
       },
     });
   });
@@ -1473,28 +1473,28 @@ jQuery(document).ready(function ($) {
 //create a new ticket ajax
 jQuery(document).ready(function ($) {
   // Handle form submission for ticket creation
-  $("#robodesk-new-ticket-form").on("submit", function (e) {
+  $('#robodesk-new-ticket-form').on('submit', function (e) {
     e.preventDefault(); // Prevent default form submission
 
     const $form = $(this);
-    const $button = $form.find("#robodesk-create-ticket");
+    const $button = $form.find('#robodesk-create-ticket');
     const formData = new FormData();
 
     // Append ticket data
-    formData.append("action", "robodesk_create_ticket");
+    formData.append('action', 'robodesk_create_ticket');
     formData.append(
-      "nonce",
+      'nonce',
       $form.find('input[name="robodesk_create_ticket_nonce"]').val()
     );
-    formData.append("customer_name", $("#customer-name").val());
-    formData.append("customer_email", $("#customer-email").val());
-    formData.append("ticket_title", $("#ticket-title").val());
-    formData.append("ticket_priority", $("#ticket-priority").val());
-    formData.append("ticket_category", $("#ticket-category").val());
-    formData.append("ticket_assignee", $("#ticket-assignee").val());
-    formData.append("ticket_description", $("#ticket-description").html());
+    formData.append('customer_name', $('#customer-name').val());
+    formData.append('customer_email', $('#customer-email').val());
+    formData.append('ticket_title', $('#ticket-title').val());
+    formData.append('ticket_priority', $('#ticket-priority').val());
+    formData.append('ticket_category', $('#ticket-category').val());
+    formData.append('ticket_assignee', $('#ticket-assignee').val());
+    formData.append('ticket_description', $('#ticket-description').html());
     formData.append(
-      "ticket_source",
+      'ticket_source',
       $form.find('input[name="ticket_source"]').val()
     );
 
@@ -1511,31 +1511,31 @@ jQuery(document).ready(function ($) {
     //   return;
     // }
 
-    $button.prop("disabled", true).text("Creating Conversation...");
+    $button.prop('disabled', true).text('Creating Conversation...');
 
     $.ajax({
       url: robodeskAjax.ajax_url, // Use localized AJAX URL
-      type: "POST",
+      type: 'POST',
       data: formData,
       processData: false,
       contentType: false,
       success: function (response) {
         if (response.success) {
-          showToast(response.data.message, "success");
+          showToast(response.data.message, 'success');
           $form[0].reset(); // Reset form on success
         } else {
           showToast(
-            response.data.message || "Failed to create ticket.",
-            "error"
+            response.data.message || 'Failed to create ticket.',
+            'error'
           );
         }
       },
       error: function (xhr, status, error) {
         // console.log("AJAX Error:", xhr, status, error);
-        showToast("Failed to create ticket: " + error, "error");
+        showToast('Failed to create ticket: ' + error, 'error');
       },
       complete: function () {
-        $button.prop("disabled", false).text("Create Conversation");
+        $button.prop('disabled', false).text('Create Conversation');
       },
     });
   });
@@ -1546,12 +1546,12 @@ function updateTicketStatus(ticketId, newStatus) {
   if (!ticketId || !newStatus) return;
 
   fetch(robodeskAjax.ajax_url, {
-    method: "POST",
+    method: 'POST',
     headers: {
-      "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
+      'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
     },
     body: new URLSearchParams({
-      action: "update_ticket_status",
+      action: 'update_ticket_status',
       security: robodeskAjax.nonces.ticket_status,
       ticket_id: ticketId,
       status: newStatus,
@@ -1562,8 +1562,8 @@ function updateTicketStatus(ticketId, newStatus) {
       try {
         if (!response.success) {
           showToast(
-            response.data?.message || "Failed to update status",
-            "error"
+            response.data?.message || 'Failed to update status',
+            'error'
           );
           return;
         }
@@ -1573,7 +1573,7 @@ function updateTicketStatus(ticketId, newStatus) {
         const updatedStatus = response.data.status;
         const updatedTime = response.data.updated;
 
-        if (typeof tickets !== "undefined" && Array.isArray(tickets)) {
+        if (typeof tickets !== 'undefined' && Array.isArray(tickets)) {
           const ticketIndex = tickets.findIndex((t) => t.id === ticketId);
           if (ticketIndex !== -1) {
             tickets[ticketIndex].status = updatedStatus;
@@ -1582,7 +1582,7 @@ function updateTicketStatus(ticketId, newStatus) {
         }
 
         if (
-          typeof currentTicket !== "undefined" &&
+          typeof currentTicket !== 'undefined' &&
           currentTicket.id === ticketId
         ) {
           currentTicket.status = updatedStatus;
@@ -1592,13 +1592,13 @@ function updateTicketStatus(ticketId, newStatus) {
         showToast(`Ticket status updated to ${updatedStatus}`);
         // updateDashboardStats();
       } catch (error) {
-        console.error("Error inside .then:", error);
-        showToast("Error updating ticket status", "error");
+        console.error('Error inside .then:', error);
+        showToast('Error updating ticket status', 'error');
       }
     })
     .catch((err) => {
-      console.error("AJAX catch error:", err);
-      showToast("Error updating ticket status", "error");
+      console.error('AJAX catch error:', err);
+      showToast('Error updating ticket status', 'error');
     });
 }
 
@@ -1607,12 +1607,12 @@ function updateTicketPriority(ticketId, newPriority) {
   if (!ticketId || !newPriority) return;
 
   fetch(robodeskAjax.ajax_url, {
-    method: "POST",
+    method: 'POST',
     headers: {
-      "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
+      'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
     },
     body: new URLSearchParams({
-      action: "update_ticket_priority",
+      action: 'update_ticket_priority',
       security: robodeskAjax.nonces.ticket_priority, // nonce key
       ticket_id: ticketId,
       priority: newPriority,
@@ -1637,12 +1637,12 @@ function updateTicketPriority(ticketId, newPriority) {
 
         showToast(`Ticket priority updated to ${updatedPriority}`);
       } else {
-        showToast("Failed to update priority", "error");
+        showToast('Failed to update priority', 'error');
       }
     })
     .catch((error) => {
       console.error(error);
-      showToast("Error updating ticket priority", "error");
+      showToast('Error updating ticket priority', 'error');
     });
 }
 
@@ -1653,12 +1653,12 @@ function updateTicketAssignee(ticketId, newAssignee) {
   if (!ticketId || !newAssignee) return;
 
   fetch(robodeskAjax.ajax_url, {
-    method: "POST",
+    method: 'POST',
     headers: {
-      "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
+      'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
     },
     body: new URLSearchParams({
-      action: "update_ticket_assignee",
+      action: 'update_ticket_assignee',
       security: robodeskAjax.nonces.ticket_assignment, // nonce key
       ticket_id: ticketId,
       assignee: newAssignee,
@@ -1684,14 +1684,14 @@ function updateTicketAssignee(ticketId, newAssignee) {
         showToast(`Ticket assigned to ${updatedAssignee}`);
       } else {
         showToast(
-          response.data?.message || "Failed to update assignee",
-          "error"
+          response.data?.message || 'Failed to update assignee',
+          'error'
         );
       }
     })
     .catch((error) => {
       console.error(error);
-      showToast("Error updating ticket assignee", "error");
+      showToast('Error updating ticket assignee', 'error');
     });
 }
 //
@@ -1704,27 +1704,27 @@ let isReplySending = false;
 function addReply() {
   if (isReplySending) return; // Prevent double send
   const userRole = robodeskCurrentUser?.role;
-  const replyBox = document.getElementById("new-reply");
+  const replyBox = document.getElementById('new-reply');
   const replyText = replyBox.innerHTML.trim();
-  const sendBtn = document.getElementById("send-reply-btn");
+  const sendBtn = document.getElementById('send-reply-btn');
   if (!replyText || !currentTicket) return;
 
   isReplySending = true;
   if (sendBtn) {
     sendBtn.disabled = true;
-    sendBtn.textContent = "Sending...";
+    sendBtn.textContent = 'Sending...';
   }
 
   const data = {
-    action: "add_ticket_reply",
+    action: 'add_ticket_reply',
     ticket_id: currentTicket.id,
     reply: replyText,
     nonce: robodeskAjax.nonces.add_ticket_reply,
   };
 
   fetch(robodeskAjax.ajax_url, {
-    method: "POST",
-    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     body: new URLSearchParams(data).toString(),
   })
     .then((res) => res.json())
@@ -1735,7 +1735,7 @@ function addReply() {
           author: response.data.author,
           message: replyText,
           timestamp: new Date().toISOString(),
-          type: "userRole" in response.data ? response.data.userRole : userRole,
+          type: 'userRole' in response.data ? response.data.userRole : userRole,
           comment_meta: response.data.comment_meta || { is_action: false },
         };
 
@@ -1746,21 +1746,21 @@ function addReply() {
         const ticketIndex = tickets.findIndex((t) => t.id === currentTicket.id);
         if (ticketIndex !== -1) tickets[ticketIndex] = currentTicket;
 
-        replyBox.innerHTML = "";
-        document.getElementById("replies-count").textContent =
+        replyBox.innerHTML = '';
+        document.getElementById('replies-count').textContent =
           currentTicket.replies.length;
         loadReplies();
-        showToast("Reply added successfully");
+        showToast('Reply added successfully');
       } else {
-        showToast(response.data?.message || "Failed to add reply", "error");
+        showToast(response.data?.message || 'Failed to add reply', 'error');
       }
     })
-    .catch(() => showToast("AJAX error occurred", "error"))
+    .catch(() => showToast('AJAX error occurred', 'error'))
     .finally(() => {
       isReplySending = false;
       if (sendBtn) {
         sendBtn.disabled = false;
-        sendBtn.textContent = "Send Reply";
+        sendBtn.textContent = 'Send Reply';
       }
     });
 }
@@ -1769,60 +1769,61 @@ function addReply() {
 async function loadReplies() {
   if (!currentTicket) return;
 
-  const repliesList = document.getElementById("replies-list");
+  const repliesList = document.getElementById('replies-list');
   if (!repliesList) return;
 
   try {
     const data = {
-      action: "get_ticket_replies",
+      action: 'get_ticket_replies',
       ticket_id: currentTicket.id,
       nonce: robodeskAjax.nonces.get_ticket_replies,
     };
 
     const response = await fetch(robodeskAjax.ajax_url, {
-      method: "POST",
-      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
       body: new URLSearchParams(data).toString(),
     });
 
-    if (!response.ok) throw new Error("Network response was not ok");
+    if (!response.ok) throw new Error('Network response was not ok');
 
     const result = await response.json();
 
     if (result.success) {
       renderReplies(result.data.replies);
-      document.getElementById("replies-count").textContent = result.data.count;
+      document.getElementById('replies-count').textContent = result.data.count;
     } else {
-      throw new Error(result.data?.message || "Failed to load replies");
+      throw new Error(result.data?.message || 'Failed to load replies');
     }
   } catch (error) {
-    console.error("Failed to load replies:", error);
+    console.error('Failed to load replies:', error);
     repliesList.innerHTML = `<div class="text-red-500 p-4">Error: ${error.message}</div>`;
+  } finally {
   }
 }
 
 // Render replies to the DOM and scroll to the last reply
 function renderReplies(replies) {
-  const repliesList = document.getElementById("replies-list");
+  const repliesList = document.getElementById('replies-list');
   if (!repliesList || !Array.isArray(replies)) return;
   // user = robodeskCurrentUser?.role || "Support Staff"; // Fallback to guest if user is not defined
-  userRole = robodeskCurrentUser?.role || "Support Staff"; // Ensure userRole is defined\
+  userRole = robodeskCurrentUser?.role || 'Support Staff'; // Ensure userRole is defined\
 
   repliesList.innerHTML = replies
     .map((reply, index) => {
       // Add special style if reply.comment_meta?.is_action is true
       const isAction = reply.comment_meta?.is_action === true; // Use optional chaining for safety
-      const actionClass = isAction ? "reply-action bg-blue-200" : "";
+      const actionClass = isAction ? 'reply-action bg-blue-200' : '';
 
       return `
-        <div class="p-4 rounded-lg reply-${
-          reply.type
-        } ${actionClass}" id="reply-${index}">
+        <div data-cid="${reply.id}" class="p-4 rounded-lg replys reply-${
+        reply.type
+      } ${actionClass}" id="reply-${index}">
           <div class="flex justify-between items-center mb-2">
             <span class="font-medium text-sm text-gray-900">${escapeHTML(
               reply.author
             )} (${
-        reply.type === "customer" ? "Customer" : `${userRole.toUpperCase()}`
+        reply.type === 'customer' ? 'Customer' : `${userRole.toUpperCase()}`
       })</span>
             <span class="text-xs text-gray-500">${formatDate(
               reply.timestamp
@@ -1834,23 +1835,22 @@ function renderReplies(replies) {
         </div>
       `;
     })
-    .join("");
+    .join('');
 
   // Scroll to the last reply
   const lastReply = repliesList.querySelector(`#reply-${replies.length - 1}`);
   if (lastReply) {
-    lastReply.scrollIntoView({ behavior: "smooth", block: "end" });
+    lastReply.scrollIntoView({ behavior: 'smooth', block: 'end' });
   }
 }
 
 function closeTicket() {
   if (!currentTicket || !currentTicket.id) return;
   const ticketId = currentTicket.id;
-  // Show a custom modal confirmation instead of native confirm
+
   showCustomConfirm(
-    "Are you sure you want to close this Conversation?",
+    'Are you sure you want to close this Conversation?',
     function onConfirm() {
-      // Proceed with closing the conversation
       closeTicketAjax(ticketId);
     }
   );
@@ -1859,9 +1859,9 @@ function closeTicket() {
   // Helper for custom confirmation modal
   function showCustomConfirm(message, onConfirm) {
     // Create modal elements
-    let modal = document.createElement("div");
+    let modal = document.createElement('div');
     modal.className =
-      "fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40";
+      'fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40';
     modal.innerHTML = `
       <div class="bg-white rounded-lg shadow-lg p-6 max-w-sm w-full text-center">
         <div class="mb-4 text-lg font-medium text-gray-800">${message}</div>
@@ -1874,24 +1874,24 @@ function closeTicket() {
     document.body.appendChild(modal);
 
     // Event listeners
-    modal.querySelector("#custom-confirm-yes").onclick = function () {
+    modal.querySelector('#custom-confirm-yes').onclick = function () {
       document.body.removeChild(modal);
-      if (typeof onConfirm === "function") onConfirm();
+      if (typeof onConfirm === 'function') onConfirm();
     };
-    modal.querySelector("#custom-confirm-no").onclick = function () {
+    modal.querySelector('#custom-confirm-no').onclick = function () {
       document.body.removeChild(modal);
     };
   }
 
   // Move AJAX logic to a separate function for clarity
   function closeTicketAjax(ticketId) {
-    const replyBox = document.getElementById("new-reply");
+    const replyBox = document.getElementById('new-reply');
     const replyText = replyBox.innerHTML.trim();
     jQuery.ajax({
       url: robodeskAjax.ajax_url,
-      type: "POST",
+      type: 'POST',
       data: {
-        action: "close_ticket",
+        action: 'close_ticket',
         nonce: robodeskAjax.nonces.close_ticket,
         ticket_id: ticketId,
         reply: replyText,
@@ -1901,11 +1901,11 @@ function closeTicket() {
           showToast(response.data.message);
           location.reload();
         } else {
-          showToast(response.data.message || "Error closing ticket", "error");
+          showToast(response.data.message || 'Error closing ticket', 'error');
         }
       },
       error: function () {
-        showToast("An error occurred while closing the ticket", "error");
+        showToast('An error occurred while closing the ticket', 'error');
       },
     });
   }
@@ -1914,43 +1914,43 @@ function closeTicket() {
 // Helper function to escape HTML
 function escapeHTML(str) {
   return str
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#039;");
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
 }
 
 // Helper function to format dates
 function formatDate(dateString) {
   const date = new Date(dateString);
-  return date.toLocaleString("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-    hour: "numeric",
-    minute: "2-digit",
+  return date.toLocaleString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
   });
 }
 
 // This function add a note to the current ticket
 
 function addNote() {
-  const noteBox = document.getElementById("new-note");
+  const noteBox = document.getElementById('new-note');
   const noteText = noteBox.innerHTML.trim();
   if (!noteText || !currentTicket) return;
-  userRole = robodeskCurrentUser?.role || "Support Staff";
+  userRole = robodeskCurrentUser?.role || 'Support Staff';
 
   const data = {
-    action: "add_ticket_note",
+    action: 'add_ticket_note',
     ticket_id: currentTicket.id,
     note: noteText,
     nonce: robodeskAjax.nonces.add_ticket_note,
   };
 
   fetch(robodeskAjax.ajax_url, {
-    method: "POST",
-    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     body: new URLSearchParams(data).toString(),
   })
     .then((res) => res.json())
@@ -1961,7 +1961,7 @@ function addNote() {
           author: response.data.author,
           message: noteText,
           timestamp: new Date().toISOString(),
-          type: "agent",
+          type: 'agent',
         };
 
         if (!Array.isArray(currentTicket.notes)) currentTicket.notes = [];
@@ -1971,21 +1971,21 @@ function addNote() {
         const ticketIndex = tickets.findIndex((t) => t.id === currentTicket.id);
         if (ticketIndex !== -1) tickets[ticketIndex] = currentTicket;
 
-        noteBox.innerHTML = "Type your internal note here...";
+        noteBox.innerHTML = 'Type your internal note here...';
         loadNotes(); // This will call renderNotes, which handles scrolling
-        showToast("Note added successfully");
+        showToast('Note added successfully');
       } else {
-        showToast(response.data?.message || "Failed to add note", "error");
+        showToast(response.data?.message || 'Failed to add note', 'error');
       }
     })
-    .catch(() => showToast("AJAX error occurred", "error"));
+    .catch(() => showToast('AJAX error occurred', 'error'));
 }
 
 // Function to load notes via AJAX
 async function loadNotes() {
   if (!currentTicket) return;
 
-  const notesList = document.getElementById("notes-list");
+  const notesList = document.getElementById('notes-list');
   if (!notesList) return;
 
   // Show loading state
@@ -1993,38 +1993,38 @@ async function loadNotes() {
 
   try {
     const data = {
-      action: "get_ticket_notes",
+      action: 'get_ticket_notes',
       ticket_id: currentTicket.id,
       nonce: robodeskAjax.nonces.get_ticket_notes,
     };
 
     const response = await fetch(robodeskAjax.ajax_url, {
-      method: "POST",
-      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
       body: new URLSearchParams(data).toString(),
     });
 
-    if (!response.ok) throw new Error("Network response was not ok");
+    if (!response.ok) throw new Error('Network response was not ok');
 
     const result = await response.json();
 
     if (result.success) {
       renderNotes(result.data.notes);
-      document.getElementById("notes-count").textContent = result.data.count;
+      document.getElementById('notes-count').textContent = result.data.count;
     } else {
-      throw new Error(result.data?.message || "Failed to load notes");
+      throw new Error(result.data?.message || 'Failed to load notes');
     }
   } catch (error) {
-    console.error("Failed to load notes:", error);
+    console.error('Failed to load notes:', error);
     notesList.innerHTML = `<div class="text-red-500 p-4">Error: ${error.message}</div>`;
   }
 }
 
 // Render notes to the DOM and scroll to the last note
 function renderNotes(notes) {
-  const notesList = document.getElementById("notes-list");
+  const notesList = document.getElementById('notes-list');
   if (!notesList || !Array.isArray(notes)) return;
-  userRole = robodeskCurrentUser?.role || "Support Staff"; // Fallback to guest if user is not defined
+  userRole = robodeskCurrentUser?.role || 'Support Staff'; // Fallback to guest if user is not defined
 
   notesList.innerHTML = notes
     .map(
@@ -2034,7 +2034,7 @@ function renderNotes(notes) {
         <span class="font-medium text-sm text-gray-900">${escapeHTML(
           note.author
         )} (${
-        note.type === "customer" ? "Customer" : `${userRole.toUpperCase()}`
+        note.type === 'customer' ? 'Customer' : `${userRole.toUpperCase()}`
       })</span>
     
         <span class="text-xs text-gray-500">${formatDate(note.timestamp)}</span>
@@ -2043,25 +2043,25 @@ function renderNotes(notes) {
     </div>
   `
     )
-    .join("");
+    .join('');
 
   // Scroll to the last note
   const lastNote = notesList.querySelector(`#note-${notes.length - 1}`);
   if (lastNote) {
-    lastNote.scrollIntoView({ behavior: "smooth", block: "end" });
+    lastNote.scrollIntoView({ behavior: 'smooth', block: 'end' });
   }
 }
 // the message is displaying with html tags
 
 //bulk actions on tickets
-document.addEventListener("DOMContentLoaded", function () {
-  const selectAllCheckbox = document.getElementById("select-all-tickets");
-  const ticketCheckboxes = document.querySelectorAll(".ticket-checkbox");
-  const bulkActionsBar = document.getElementById("bulk-actions-bar");
-  const selectedCountSpan = document.getElementById("selected-count");
-  const bulkActionSelect = document.getElementById("bulk-action-select");
-  const applyBulkActionBtn = document.getElementById("apply-bulk-action");
-  const clearSelectionBtn = document.getElementById("clear-selection");
+document.addEventListener('DOMContentLoaded', function () {
+  const selectAllCheckbox = document.getElementById('select-all-tickets');
+  const ticketCheckboxes = document.querySelectorAll('.ticket-checkbox');
+  const bulkActionsBar = document.getElementById('bulk-actions-bar');
+  const selectedCountSpan = document.getElementById('selected-count');
+  const bulkActionSelect = document.getElementById('bulk-action-select');
+  const applyBulkActionBtn = document.getElementById('apply-bulk-action');
+  const clearSelectionBtn = document.getElementById('clear-selection');
 
   // Initialize bulk actions functionality
 
@@ -2070,7 +2070,7 @@ document.addEventListener("DOMContentLoaded", function () {
   function initializeBulkActions() {
     // Select/Deselect All functionality
     if (selectAllCheckbox) {
-      selectAllCheckbox.addEventListener("change", function () {
+      selectAllCheckbox.addEventListener('change', function () {
         const isChecked = this.checked;
         ticketCheckboxes.forEach(function (checkbox) {
           checkbox.checked = isChecked;
@@ -2081,7 +2081,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // Individual checkbox change handlers
     ticketCheckboxes.forEach(function (checkbox) {
-      checkbox.addEventListener("change", function () {
+      checkbox.addEventListener('change', function () {
         updateSelectAllState();
         updateBulkActionsUI();
       });
@@ -2089,7 +2089,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // Bulk action select change
     if (bulkActionSelect) {
-      bulkActionSelect.addEventListener("change", function () {
+      bulkActionSelect.addEventListener('change', function () {
         applyBulkActionBtn.disabled =
           !this.value || getSelectedTicketIds().length === 0;
       });
@@ -2097,32 +2097,32 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // Apply bulk action button
     if (applyBulkActionBtn) {
-      applyBulkActionBtn.addEventListener("click", function () {
+      applyBulkActionBtn.addEventListener('click', function () {
         const selectedIds = getSelectedTicketIds();
         const action = bulkActionSelect.value;
 
         if (selectedIds.length === 0) {
-          showCustomAlert("Please select at least one ticket.");
+          showCustomAlert('Please select at least one ticket.');
           return;
         }
 
         if (!action) {
-          showCustomAlert("Please select an action.");
+          showCustomAlert('Please select an action.');
           return;
         }
 
         // Confirm for all actions
         const actionTexts = {
-          delete: "delete",
-          close: "close",
-          open: "reopen",
-          assign: "assign",
-          unassign: "unassign",
+          delete: 'delete',
+          close: 'close',
+          open: 'reopen',
+          assign: 'assign',
+          unassign: 'unassign',
         };
 
         const actionText = actionTexts[action] || action;
         const warningText =
-          action === "delete" ? " This action cannot be undone." : "";
+          action === 'delete' ? ' This action cannot be undone.' : '';
 
         showCustomConfirm(
           `Are you sure you want to ${actionText} ${selectedIds.length} ticket(s)?${warningText}`,
@@ -2135,9 +2135,9 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // Helper functions for custom modals
     function showCustomAlert(message) {
-      const modal = document.createElement("div");
+      const modal = document.createElement('div');
       modal.className =
-        "fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40";
+        'fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40';
       modal.innerHTML = `
       <div class="bg-white rounded-lg shadow-lg p-6 max-w-sm w-full text-center">
         <div class="mb-4 text-lg font-medium text-gray-800">${message}</div>
@@ -2146,15 +2146,15 @@ document.addEventListener("DOMContentLoaded", function () {
       `;
       document.body.appendChild(modal);
 
-      modal.querySelector("#custom-alert-ok").onclick = function () {
+      modal.querySelector('#custom-alert-ok').onclick = function () {
         document.body.removeChild(modal);
       };
     }
 
     function showCustomConfirm(message, onConfirm) {
-      const modal = document.createElement("div");
+      const modal = document.createElement('div');
       modal.className =
-        "fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40";
+        'fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40';
       modal.innerHTML = `
       <div class="bg-white rounded-lg shadow-lg p-6 max-w-sm w-full text-center">
         <div class="mb-4 text-lg font-medium text-gray-800">${message}</div>
@@ -2166,18 +2166,18 @@ document.addEventListener("DOMContentLoaded", function () {
       `;
       document.body.appendChild(modal);
 
-      modal.querySelector("#custom-confirm-yes").onclick = function () {
+      modal.querySelector('#custom-confirm-yes').onclick = function () {
         document.body.removeChild(modal);
-        if (typeof onConfirm === "function") onConfirm();
+        if (typeof onConfirm === 'function') onConfirm();
       };
-      modal.querySelector("#custom-confirm-no").onclick = function () {
+      modal.querySelector('#custom-confirm-no').onclick = function () {
         document.body.removeChild(modal);
       };
     }
 
     // Clear selection button
     if (clearSelectionBtn) {
-      clearSelectionBtn.addEventListener("click", function () {
+      clearSelectionBtn.addEventListener('click', function () {
         clearAllSelections();
       });
     }
@@ -2188,7 +2188,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     const totalCheckboxes = ticketCheckboxes.length;
     const checkedCheckboxes = document.querySelectorAll(
-      ".ticket-checkbox:checked"
+      '.ticket-checkbox:checked'
     ).length;
 
     if (checkedCheckboxes === 0) {
@@ -2207,21 +2207,21 @@ document.addEventListener("DOMContentLoaded", function () {
     const selectedCount = getSelectedTicketIds().length;
 
     if (selectedCount > 0) {
-      bulkActionsBar.style.display = "block";
+      bulkActionsBar.style.display = 'block';
       selectedCountSpan.textContent = `${selectedCount} item${
-        selectedCount !== 1 ? "s" : ""
+        selectedCount !== 1 ? 's' : ''
       } selected`;
       applyBulkActionBtn.disabled = !bulkActionSelect.value;
     } else {
-      bulkActionsBar.style.display = "none";
-      bulkActionSelect.value = "";
+      bulkActionsBar.style.display = 'none';
+      bulkActionSelect.value = '';
       applyBulkActionBtn.disabled = true;
     }
   }
 
   function getSelectedTicketIds() {
     const selectedCheckboxes = document.querySelectorAll(
-      ".ticket-checkbox:checked"
+      '.ticket-checkbox:checked'
     );
     return Array.from(selectedCheckboxes).map((checkbox) =>
       parseInt(checkbox.value)
@@ -2231,34 +2231,34 @@ document.addEventListener("DOMContentLoaded", function () {
   function clearAllSelections() {
     if (selectAllCheckbox) selectAllCheckbox.checked = false;
     ticketCheckboxes.forEach((checkbox) => (checkbox.checked = false));
-    bulkActionSelect.value = "";
+    bulkActionSelect.value = '';
     updateBulkActionsUI();
   }
 
   function performBulkAction(ticketIds, action) {
     // Show loading state
     const originalButtonText = applyBulkActionBtn.textContent;
-    applyBulkActionBtn.textContent = "Processing...";
+    applyBulkActionBtn.textContent = 'Processing...';
     applyBulkActionBtn.disabled = true;
 
     // Prepare data for AJAX request
     const formData = new FormData();
-    formData.append("action", "robodesk_bulk_action");
-    formData.append("nonce", bulkActionNonce);
-    formData.append("bulk_action", action);
-    formData.append("ticket_ids", JSON.stringify(ticketIds));
+    formData.append('action', 'robodesk_bulk_action');
+    formData.append('nonce', bulkActionNonce);
+    formData.append('bulk_action', action);
+    formData.append('ticket_ids', JSON.stringify(ticketIds));
 
     // Send AJAX request
     fetch(ajaxUrl, {
-      method: "POST",
+      method: 'POST',
       body: formData,
-      credentials: "same-origin",
+      credentials: 'same-origin',
     })
       .then((response) => response.json())
       .then((data) => {
         if (data.success) {
           // Show success message
-          showToast(data.data.message, "success");
+          showToast(data.data.message, 'success');
 
           // Clear selections
           clearAllSelections();
@@ -2271,16 +2271,16 @@ document.addEventListener("DOMContentLoaded", function () {
           // Show error message
           showToast(
             data.data.message ||
-              "An error occurred while processing the bulk action.",
-            "error"
+              'An error occurred while processing the bulk action.',
+            'error'
           );
         }
       })
       .catch((error) => {
-        console.error("Error:", error);
+        console.error('Error:', error);
         showToast(
-          "An error occurred while processing the bulk action.",
-          "error"
+          'An error occurred while processing the bulk action.',
+          'error'
         );
       })
       .finally(() => {
@@ -2289,4 +2289,156 @@ document.addEventListener("DOMContentLoaded", function () {
         applyBulkActionBtn.disabled = false;
       });
   }
+});
+
+jQuery(document).ready(function ($) {
+  function createSSE(ticketId, lastCid, userId = '142', parentElement) {
+    let eventSource = null;
+
+    function connect() {
+      const sseUrl = `${
+        window.location.origin
+      }/wp-json/robodesk/v1/adminstream/${ticketId}/${lastCid || ''}/${'42'}`;
+      console.log('🔌 Connecting to SSE:', sseUrl);
+
+      eventSource = new EventSource(sseUrl);
+
+      eventSource.addEventListener('new_admin_comment', function (event) {
+        const comment = JSON.parse(event.data);
+        let index = 12;
+        const isAction = comment.comment_meta?.is_action === true;
+        const actionClass = isAction ? 'reply-action bg-blue-200' : '';
+        const content = `
+                      <div
+                        data-cid="${comment.id}"
+                        class="p-4 rounded-lg replys reply-${
+                          comment.type
+                        } ${actionClass}"
+                        id="reply-${index}"
+                      >
+                        <div class="flex justify-between items-center mb-2">
+                          <span class="font-medium text-sm text-gray-900">
+                            ${escapeHTML(comment.author)} (${
+          comment.type === 'customer' ? 'Customer' : userRole.toUpperCase()
+        })
+                          </span>
+                          <span class="text-xs text-gray-500">
+                            ${formatDate(comment.timestamp)}
+                          </span>
+                        </div>
+                        <p class="text-sm text-gray-700">
+                          ${isAction ? comment.message : comment.message}
+                        </p>
+                      </div>
+                    `;
+        const repliesList = document.getElementById('replies-list');
+
+        // Insert new reply
+        repliesList.insertAdjacentHTML('beforeend', content);
+
+        const audioUrl = repliesList.getAttribute('data-audio');
+        const audio = new Audio(audioUrl);
+        audio.play().catch((err) => {
+          console.warn('Autoplay blocked by browser:', err);
+        });
+
+        // Scroll to the last reply
+        const lastReply = repliesList.querySelector('.replys:last-child');
+        if (lastReply) {
+          lastReply.scrollIntoView({ behavior: 'smooth', block: 'end' });
+        }
+      });
+
+      eventSource.onerror = function (err) {
+        // console.error('❌ SSE error:', err);
+      };
+    }
+
+    function disconnect() {
+      if (eventSource) {
+        console.log('🔌 Disconnecting SSE...');
+        eventSource.close();
+        eventSource = null;
+      }
+    }
+
+    // Return control functions
+    return {
+      connect,
+      disconnect,
+    };
+  }
+
+  function getQueryParams() {
+    var params = {};
+
+    if (window.location.search) {
+      try {
+        var usp = new URLSearchParams(window.location.search);
+        usp.forEach(function (value, key) {
+          params[key] = value;
+        });
+        return params;
+      } catch (e) {}
+    }
+
+    var qs = window.location.search.replace(/^\?/, '');
+    if (!qs) return params;
+    qs.split('&').forEach(function (pair) {
+      var parts = pair.split('=').map(decodeURIComponent);
+      params[parts[0]] = parts[1] === undefined ? '' : parts[1];
+    });
+    return params;
+  }
+
+  // Use params (querystring takes precedence; merge with hash if needed)
+  var params = getQueryParams();
+
+  params = Object.assign({}, params);
+  let sse = null;
+  setTimeout(() => {
+    if (
+      params.page === 'robodesk-dashboard' &&
+      params.view === 'tickets' &&
+      params.ticket
+    ) {
+      const ticketId = params.ticket;
+      const repliesList = document.getElementById('replies-list');
+      const replyElements = repliesList.getElementsByClassName('replys');
+      const lastReply = replyElements[replyElements.length - 1];
+
+      let lastCid = lastReply ? lastReply.getAttribute('data-cid') : null;
+
+      sse = createSSE(ticketId, lastCid, repliesList);
+      sse.connect();
+
+      const observer = new MutationObserver((mutationsList) => {
+        for (let mutation of mutationsList) {
+          if (mutation.type === 'childList' && mutation.addedNodes.length > 0) {
+            const newReplies = Array.from(mutation.addedNodes).filter(
+              (node) => node.nodeType === 1 && node.classList.contains('replys')
+            );
+
+            if (newReplies.length > 0) {
+              const recentlyAddedItem = newReplies[newReplies.length - 1];
+              lastCid = recentlyAddedItem
+                ? recentlyAddedItem.getAttribute('data-cid')
+                : null;
+
+              sse.disconnect();
+              sse = createSSE(ticketId, lastCid, repliesList);
+              sse.connect();
+            }
+          }
+        }
+      });
+
+      observer.observe(repliesList, {
+        childList: true,
+        subtree: false,
+      });
+    } else {
+      if (sse) sse.disconnect();
+    }
+  }, 3000);
 });

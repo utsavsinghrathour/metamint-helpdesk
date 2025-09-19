@@ -67,6 +67,8 @@ require_once ROBODESK_PLUGIN_PATH . 'public/includes/robodesk-ajax.php';
 require_once ROBODESK_PLUGIN_PATH . 'public/includes/robodesk-notes.php';
 require_once ROBODESK_PLUGIN_PATH . 'public/includes/robodesk-custom-rest.php';
 
+require_once ROBODESK_PLUGIN_PATH . 'admin/includes/rbodesk-admin-rest.php';
+
 
 // }
 
