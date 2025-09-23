@@ -2405,9 +2405,6 @@ jQuery(document).ready(function ($) {
       //run sse event
       //
       const ticketId = params.ticket;
-      // Construct SSE URL (must match your registered REST route)
-
-      // Create EventSource
 
       const repliesList = document.getElementById('replies-list');
       const replyElements = repliesList.getElementsByClassName('replys');
