@@ -1556,3 +1556,106 @@ function robodesk_send_ticket_creation_email($post_id, $post, $update)
     wp_mail($customer_email, $subject, $message);
     rbd_log("Robodesk: Ticket creation email sent to $customer_email for ticket ID: $post_id");
 }
+
+// AJAX handler for refreshing dashboard tickets
+add_action('wp_ajax_robodesk_refresh_dashboard_tickets', 'robodesk_refresh_dashboard_tickets');
+function robodesk_refresh_dashboard_tickets()
+{
+    // Verify nonce for security
+    if (!wp_verify_nonce($_POST['nonce'], 'robodesk_refresh_dashboard_tickets_action')) {
+        wp_send_json_error(array('message' => 'Security verification failed.'));
+    }
+
+    // Check user capabilities
+    if (!current_user_can('read')) {
+        wp_send_json_error(array('message' => 'You do not have permission to perform this action.'));
+    }
+
+    // Get current user info for filtering
+    $current_user = wp_get_current_user();
+    $current_user_name = $current_user->display_name ?: $current_user->user_login;
+
+    // Initialize tickets array
+    $dashboard_tickets = [];
+
+    // WP_Query arguments to fetch ALL tickets
+    $args = [
+        'post_type'      => 'robodesk_ticket',
+        'post_status'    => 'publish',
+        'posts_per_page' => -1,
+        'orderby'        => 'modified',
+        'order'          => 'DESC',
+    ];
+
+    $query = new WP_Query($args);
+
+    if ($query->have_posts()) {
+        while ($query->have_posts()) {
+            $query->the_post();
+            $ticket_id = get_the_ID();
+
+            $ticket_status = get_post_meta($ticket_id, '_robodesk_ticket_status', true) ?: 'N/A';
+            $ticket_origin = get_post_meta($ticket_id, 'robodesk_ticket_origin', true) ?: 'N/A';
+            $priority_terms = get_the_terms($ticket_id, 'robodesk_ticket_priority');
+            $author_image = get_avatar_url(get_the_author_meta('ID'), ['size' => 32]);
+
+            $ticket_priority = $priority_terms && !is_wp_error($priority_terms) ? $priority_terms[0]->name : 'N/A';
+            $updated_at = get_the_modified_date('Y-m-d H:i:s', $ticket_id);
+            $created_at = get_the_date('Y-m-d H:i:s', $ticket_id);
+            $ticket_terms = wp_get_post_terms($ticket_id, 'robodesk_ticket_category');
+
+            $ticket_category = '';
+            if (!is_wp_error($ticket_terms) && !empty($ticket_terms)) {
+                $ticket_category = [
+                    'name' => $ticket_terms[0]->name,
+                    'id'   => $ticket_terms[0]->term_id,
+                    'term_id' => $ticket_terms[0]->term_id,
+                ];
+            }
+
+            // Fetch replies using comments
+            $replies = get_comments(['post_id' => $ticket_id]);
+            $replies_count = count($replies);
+            $formatted_replies = array_map(function ($reply) use ($ticket_id) {
+                $comment_meta = get_comment_meta($reply->comment_ID);
+                $author_type = isset($comment_meta['author_type']) ? $comment_meta['author_type'][0] : 'agent';
+                
+                return [
+                    'id' => $reply->comment_ID,
+                    'author' => $reply->comment_author,
+                    'message' => $reply->comment_content,
+                    'content' => $reply->comment_content,
+                    'date' => $reply->comment_date,
+                    'timestamp' => $reply->comment_date,
+                    'type' => $author_type,
+                    'author_type' => $author_type,
+                ];
+            }, $replies);
+
+            $dashboard_tickets[] = [
+                'id' => $ticket_id,
+                'title' => get_the_title(),
+                'customer' => get_the_author(),
+                'email' => get_the_author_meta('user_email'),
+                'author_id' => get_the_author_meta('ID'),
+                'category' => $ticket_category,
+                'source' => $ticket_origin,
+                'status' => $ticket_status,
+                'author_image' => $author_image,
+                'created' => $created_at,
+                'priority' => $ticket_priority,
+                'updated' => $updated_at,
+                'assignee' => get_post_meta($ticket_id, 'ticket_assignee', true) ?: 'N/A',
+                'replies' => $formatted_replies,
+                'replies_count' => $replies_count,
+            ];
+        }
+        wp_reset_postdata();
+    }
+
+    // Return the tickets data
+    wp_send_json_success([
+        'tickets' => $dashboard_tickets,
+        'current_user_name' => $current_user_name,
+    ]);
+}

@@ -20,9 +20,28 @@ $args = array(
     'order' => 'DESC'
 );
 
+// Initialize meta_query array
+$meta_query = array();
+
 // Add meta query for status filter
-if ($status_filter !== 'all') {
-    $args['meta_query'][] = array(
+if ($status_filter === 'all') {
+    // Show only open and in-progress tickets by default
+    $meta_query[] = array(
+        'relation' => 'OR',
+        array(
+            'key' => '_robodesk_ticket_status',
+            'value' => 'open',
+            'compare' => '='
+        ),
+        array(
+            'key' => '_robodesk_ticket_status',
+            'value' => 'in-progress',
+            'compare' => '='
+        )
+    );
+} else {
+    // Filter for specific status
+    $meta_query[] = array(
         'key' => '_robodesk_ticket_status',
         'value' => $status_filter,
         'compare' => '='
@@ -31,11 +50,19 @@ if ($status_filter !== 'all') {
 
 // Add meta query for agent filter
 if (!empty($agent_filter)) {
-    $args['meta_query'][] = array(
+    $meta_query[] = array(
         'key' => 'ticket_assignee',
         'value' => $agent_filter,
         'compare' => 'LIKE'
     );
+}
+
+// Set the meta_query with AND relation if there are multiple conditions
+if (!empty($meta_query)) {
+    if (count($meta_query) > 1) {
+        $meta_query['relation'] = 'AND';
+    }
+    $args['meta_query'] = $meta_query;
 }
 
 // Add search functionality - check if it's a ticket ID or general search
@@ -65,11 +92,6 @@ if (!empty($customer_filter)) {
         // If no users found, set impossible condition to return no results
         $args['author__in'] = array(0);
     }
-}
-
-// Set meta_query relation if multiple meta queries exist
-if (isset($args['meta_query']) && count($args['meta_query']) > 1) {
-    $args['meta_query']['relation'] = 'AND';
 }
 
 // Get total count with same filters for pagination
@@ -230,7 +252,7 @@ $priority_terms = get_terms(array(
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">Status Filter</label>
                     <select name="status" class="styled-select block w-full px-3 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 rounded-md">
-                        <option value="all" <?php selected($status_filter, 'all'); ?>>All Status</option>
+                        <option value="all" <?php selected($status_filter, 'all'); ?>> Active Conversations</option>
                         <option value="open" <?php selected($status_filter, 'open'); ?>>Open</option>
                         <option value="in-progress" <?php selected($status_filter, 'in-progress'); ?>>In Progress</option>
                         <option value="closed" <?php selected($status_filter, 'closed'); ?>>Closed</option>
