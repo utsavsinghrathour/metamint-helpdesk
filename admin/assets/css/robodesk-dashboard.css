@@ -492,3 +492,64 @@
     opacity: 1;
   }
 }
+
+/* Notification bell pulse animation */
+.animate-pulse {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+/* Notification badge styles */
+#notification-badge {
+  z-index: 50;
+  line-height: 1.25rem;
+  pointer-events: none;
+}
+
+/* Force badge visibility when display is flex */
+#notification-badge[style*="display: flex"] {
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Notification dropdown styles */
+#notification-dropdown {
+  animation: slideDown 0.2s ease-out;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+#notification-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+#notification-list::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+#notification-list::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 3px;
+}
+
+#notification-list::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
