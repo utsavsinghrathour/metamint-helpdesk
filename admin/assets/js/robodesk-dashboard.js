@@ -356,7 +356,7 @@ function formatDate(dateString) {
 function setDashboardFilter(filter) {
   currentDashboardFilter = filter;
   loadDashboardTickets();
-
+conssole.log('clicked',filter);
   // Update active filter button styling
   document.querySelectorAll('.filter-button').forEach((btn) => {
     btn.classList.remove('active');
@@ -2443,3 +2443,243 @@ jQuery(document).ready(function ($) {
     }, 3000);
   }
 });
+
+// Auto-refresh functionality for dashboard tickets
+let dashboardRefreshInterval = null;
+
+// Function to refresh dashboard tickets via AJAX
+function refreshDashboardTicketsData() {
+  // Only refresh when on my_conversation or unassigned_conversation filters
+  if (
+    currentDashboardFilter !== 'my_conversation' &&
+    currentDashboardFilter !== 'unassigned_conversation'
+  ) {
+    return;
+  }
+
+  fetch(robodeskAjax.ajax_url, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+    },
+    body: new URLSearchParams({
+      action: 'robodesk_refresh_dashboard_tickets',
+      nonce: robodeskAjax.nonces.refresh_dashboard_tickets,
+    }),
+  })
+    .then((res) => res.json())
+    .then((response) => {
+      if (response.success) {
+        // Update the global dashboard_tickets array with fresh data
+        dashboard_tickets.length = 0; // Clear the array
+        Array.prototype.push.apply(dashboard_tickets, response.data.tickets);
+
+        // Re-render the table with updated data
+        loadDashboardTickets();
+
+        console.log('Dashboard tickets refreshed successfully');
+      } else {
+        console.error('Failed to refresh dashboard tickets:', response.data);
+      }
+    })
+    .catch((error) => {
+      console.error('Error refreshing dashboard tickets:', error);
+    });
+}
+
+// Function to start auto-refresh
+function startDashboardAutoRefresh() {
+  // Clear any existing interval
+  if (dashboardRefreshInterval) {
+    clearInterval(dashboardRefreshInterval);
+  }
+
+  // Start auto-refresh every 30 seconds (30000 milliseconds)
+  dashboardRefreshInterval = setInterval(refreshDashboardTicketsData, 30000);
+
+  console.log('Dashboard auto-refresh started');
+}
+
+// Function to stop auto-refresh
+function stopDashboardAutoRefresh() {
+  if (dashboardRefreshInterval) {
+    clearInterval(dashboardRefreshInterval);
+    dashboardRefreshInterval = null;
+    console.log('Dashboard auto-refresh stopped');
+  }
+}
+
+// Start auto-refresh when on dashboard page
+document.addEventListener('DOMContentLoaded', function () {
+  // Check if we're on the dashboard page
+  if (document.getElementById('dashboard-page')) {
+    // Start auto-refresh for my_conversation and unassigned_conversation
+    if (
+      currentDashboardFilter === 'my_conversation' ||
+      currentDashboardFilter === 'unassigned_conversation'
+    ) {
+      startDashboardAutoRefresh();
+    }
+  }
+});
+
+// Override the filterDashboardTickets function to control auto-refresh
+const originalFilterDashboardTickets = filterDashboardTickets;
+filterDashboardTickets = function (filterType) {
+  // Call the original function
+  originalFilterDashboardTickets(filterType);
+
+  // Start or stop auto-refresh based on filter
+  if (filterType === 'my_conversation' || filterType === 'unassigned_conversation') {
+    startDashboardAutoRefresh();
+  } else {
+    stopDashboardAutoRefresh();
+  }
+};
+
+// Auto-refresh functionality for ticket detail replies
+let repliesRefreshInterval = null;
+
+// Function to refresh replies for the current ticket
+function refreshTicketReplies() {
+  if (!currentTicket || !currentTicket.id) {
+    return;
+  }
+
+  // Only refresh if we're on the replies tab
+  const repliesTab = document.getElementById('replies-tab');
+  if (!repliesTab || repliesTab.classList.contains('hidden')) {
+    return;
+  }
+
+  const data = {
+    action: 'get_ticket_replies',
+    ticket_id: currentTicket.id,
+    nonce: robodeskAjax.nonces.get_ticket_replies,
+  };
+
+  fetch(robodeskAjax.ajax_url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams(data).toString(),
+  })
+    .then((res) => res.json())
+    .then((result) => {
+      if (result.success) {
+        const currentRepliesCount = currentTicket.replies
+          ? currentTicket.replies.length
+          : 0;
+        const newRepliesCount = result.data.count;
+
+        // Only update if there are new replies
+        if (newRepliesCount > currentRepliesCount) {
+          // Update current ticket replies
+          currentTicket.replies = result.data.replies;
+
+          // Update the ticket in the tickets array
+          const ticketIndex = tickets.findIndex((t) => t.id === currentTicket.id);
+          if (ticketIndex !== -1) {
+            tickets[ticketIndex].replies = result.data.replies;
+          }
+
+          // Re-render replies
+          renderReplies(result.data.replies);
+
+          // Update count badge
+          document.getElementById('replies-count').textContent = newRepliesCount;
+
+          console.log('New replies detected and loaded');
+
+          // Play notification sound if available
+          const repliesList = document.getElementById('replies-list');
+          const audioUrl = repliesList.getAttribute('data-audio');
+          if (audioUrl) {
+            const audio = new Audio(audioUrl);
+            audio.play().catch((err) => {
+              console.warn('Autoplay blocked by browser:', err);
+            });
+          }
+        }
+      }
+    })
+    .catch((error) => {
+      console.error('Error refreshing replies:', error);
+    });
+}
+
+// Function to start replies auto-refresh
+function startRepliesAutoRefresh() {
+  // Clear any existing interval
+  if (repliesRefreshInterval) {
+    clearInterval(repliesRefreshInterval);
+  }
+
+  // Start auto-refresh every 10 seconds
+  repliesRefreshInterval = setInterval(refreshTicketReplies, 10000);
+
+  console.log('Replies auto-refresh started for ticket #' + currentTicket.id);
+}
+
+// Function to stop replies auto-refresh
+function stopRepliesAutoRefresh() {
+  if (repliesRefreshInterval) {
+    clearInterval(repliesRefreshInterval);
+    repliesRefreshInterval = null;
+    console.log('Replies auto-refresh stopped');
+  }
+}
+
+// Override the viewTicket function to start auto-refresh
+const originalViewTicket = viewTicket;
+viewTicket = function (ticketId) {
+  // Stop any existing refresh
+  stopRepliesAutoRefresh();
+
+  // Call the original function
+  originalViewTicket(ticketId);
+
+  // Start auto-refresh for replies after a short delay to ensure page is loaded
+  setTimeout(() => {
+    if (currentTicket && currentTicket.id === ticketId) {
+      startRepliesAutoRefresh();
+    }
+  }, 1000);
+};
+
+// Override the showPage function to stop refresh when leaving ticket detail
+const originalShowPage = showPage;
+showPage = function (pageName) {
+  // Stop replies refresh when leaving ticket detail page
+  if (pageName !== 'ticket-detail') {
+    stopRepliesAutoRefresh();
+  }
+
+  // Call the original function
+  originalShowPage(pageName);
+
+  // Start dashboard refresh when going to dashboard
+  if (pageName === 'dashboard') {
+    if (
+      currentDashboardFilter === 'my_conversation' ||
+      currentDashboardFilter === 'unassigned_conversation'
+    ) {
+      startDashboardAutoRefresh();
+    }
+  } else {
+    stopDashboardAutoRefresh();
+  }
+};
+
+// Override the showTicketTab function to control refresh based on active tab
+const originalShowTicketTab = showTicketTab;
+showTicketTab = function (tabName) {
+  // Call the original function
+  originalShowTicketTab(tabName);
+
+  // Only auto-refresh when on replies tab
+  if (tabName === 'replies' && currentTicket) {
+    startRepliesAutoRefresh();
+  } else {
+    stopRepliesAutoRefresh();
+  }
+};
