@@ -78,10 +78,29 @@ function robodesk_dashboard_callback()
                             </button>
                         </div>
                     </div>
-                    <div class="flex items-center">
-                        <button class="bg-gray-100 p-2 rounded-full text-gray-600 hover:text-gray-900">
+                    <div class="flex items-center relative">
+                        <button id="dashboard-notification-bell" onclick="toggleNotificationDropdown()" class="bg-gray-100 p-2 rounded-full text-gray-600 hover:text-gray-900 relative transition-all" title="<?php _e('View notifications', 'robodesk'); ?>">
                             <i class="fas fa-bell"></i>
+                            <span id="notification-badge" class="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 items-center justify-center shadow-lg" style="display: none;">0</span>
                         </button>
+                        
+                        <!-- Notification Dropdown -->
+                        <div id="notification-dropdown" class="hidden absolute right-0 top-12 w-96 bg-white rounded-lg shadow-xl border border-gray-200 z-50 max-h-96 overflow-hidden">
+                            <div class="px-4 py-3 border-b border-gray-200 bg-gray-50">
+                                <h3 class="text-sm font-semibold text-gray-900"><?php _e('Recent Updates', 'robodesk'); ?></h3>
+                            </div>
+                            <div id="notification-list" class="overflow-y-auto max-h-80">
+                                <div class="px-4 py-8 text-center text-gray-500 text-sm">
+                                    <i class="fas fa-bell-slash text-3xl mb-2 text-gray-400"></i>
+                                    <p><?php _e('No new notifications', 'robodesk'); ?></p>
+                                </div>
+                            </div>
+                            <div class="px-4 py-3 border-t border-gray-200 bg-gray-50">
+                                <button onclick="clearAllNotifications()" class="w-full px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded hover:bg-blue-700 transition-colors">
+                                    <?php _e('Clear All', 'robodesk'); ?>
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>

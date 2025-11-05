@@ -334,4 +334,7 @@ function robodesk_enqueue_tailwind_and_styles()
 
         ]
     ]);
+
+    // Pass notification sound URL to JavaScript
+    wp_localize_script('robodesk-dashboard-script', 'robodeskNotificationSound', get_option('robodesk_notification_sound', ''));
 }

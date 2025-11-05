@@ -2446,6 +2446,260 @@ jQuery(document).ready(function ($) {
 
 // Auto-refresh functionality for dashboard tickets
 let dashboardRefreshInterval = null;
+let notificationCount = 0;
+let previousTicketsSnapshot = [];
+let notificationItems = [];
+
+// Function to create a snapshot of tickets for comparison
+function createTicketsSnapshot(tickets) {
+  return tickets.map((t) => ({
+    id: t.id,
+    status: t.status,
+    assignee: t.assignee,
+    updated: t.updated,
+    replies_count: t.replies ? t.replies.length : 0,
+  }));
+}
+
+// Function to compare tickets and detect changes
+function detectTicketChanges(oldTickets, newTickets) {
+  const changes = {
+    new: [],
+    updated: [],
+    statusChanged: [],
+    assigneeChanged: [],
+    newReplies: [],
+  };
+
+  const oldTicketsMap = new Map(oldTickets.map((t) => [t.id, t]));
+  const newTicketsMap = new Map(newTickets.map((t) => [t.id, t]));
+
+  // Check for new tickets and changes in existing tickets
+  newTickets.forEach((newTicket) => {
+    const oldTicket = oldTicketsMap.get(newTicket.id);
+
+    if (!oldTicket) {
+      // New ticket detected
+      changes.new.push(newTicket);
+    } else {
+      // Check for updates
+      if (newTicket.updated !== oldTicket.updated) {
+        changes.updated.push(newTicket);
+      }
+
+      // Check for status changes
+      if (newTicket.status !== oldTicket.status) {
+        changes.statusChanged.push({
+          ticket: newTicket,
+          oldStatus: oldTicket.status,
+          newStatus: newTicket.status,
+        });
+      }
+
+      // Check for assignee changes
+      if (newTicket.assignee !== oldTicket.assignee) {
+        changes.assigneeChanged.push({
+          ticket: newTicket,
+          oldAssignee: oldTicket.assignee,
+          newAssignee: newTicket.assignee,
+        });
+      }
+
+      // Check for new replies
+      if (newTicket.replies_count > oldTicket.replies_count) {
+        changes.newReplies.push({
+          ticket: newTicket,
+          newRepliesCount: newTicket.replies_count - oldTicket.replies_count,
+        });
+      }
+    }
+  });
+
+  return changes;
+}
+
+// Function to update notification badge
+function updateNotificationBadge(count) {
+  const badge = document.getElementById('notification-badge');
+  const bell = document.getElementById('dashboard-notification-bell');
+
+  if (badge && bell) {
+    if (count > 0) {
+      badge.textContent = count > 99 ? '99+' : count;
+      badge.style.display = 'flex';
+      bell.classList.add('animate-pulse');
+    } else {
+      badge.style.display = 'none';
+      bell.classList.remove('animate-pulse');
+    }
+  }
+}
+
+// Function to show notification toast for changes
+function showChangeNotification(changes) {
+  const messages = [];
+
+  if (changes.new.length > 0) {
+    messages.push(
+      `${changes.new.length} new conversation${changes.new.length > 1 ? 's' : ''}`
+    );
+  }
+
+  if (changes.newReplies.length > 0) {
+    const totalNewReplies = changes.newReplies.reduce(
+      (sum, item) => sum + item.newRepliesCount,
+      0
+    );
+    messages.push(
+      `${totalNewReplies} new ${totalNewReplies > 1 ? 'replies' : 'reply'}`
+    );
+  }
+
+  if (changes.statusChanged.length > 0) {
+    messages.push(
+      `${changes.statusChanged.length} status ${
+        changes.statusChanged.length > 1 ? 'changes' : 'change'
+      }`
+    );
+  }
+
+  if (changes.assigneeChanged.length > 0) {
+    messages.push(
+      `${changes.assigneeChanged.length} assignment ${
+        changes.assigneeChanged.length > 1 ? 'changes' : 'change'
+      }`
+    );
+  }
+
+  if (messages.length > 0) {
+    showToast('Updates: ' + messages.join(', '), 'success');
+  }
+}
+
+// Function to toggle notification dropdown
+function toggleNotificationDropdown() {
+  const dropdown = document.getElementById('notification-dropdown');
+  if (dropdown.classList.contains('hidden')) {
+    dropdown.classList.remove('hidden');
+    renderNotificationList();
+  } else {
+    dropdown.classList.add('hidden');
+  }
+}
+
+// Function to render notification list
+function renderNotificationList() {
+  const listContainer = document.getElementById('notification-list');
+  
+  if (notificationItems.length === 0) {
+    listContainer.innerHTML = `
+      <div class="px-4 py-8 text-center text-gray-500 text-sm">
+        <i class="fas fa-bell-slash text-3xl mb-2 text-gray-400"></i>
+        <p>No new notifications</p>
+      </div>
+    `;
+    return;
+  }
+  
+  // Reverse to show newest first
+  const sortedItems = [...notificationItems].reverse();
+  
+  listContainer.innerHTML = sortedItems.map((item, index) => {
+    const timeAgo = timeSince(new Date(item.timestamp));
+    let icon = 'fa-bell';
+    let iconColor = 'text-blue-500';
+    
+    switch(item.type) {
+      case 'new_conversation':
+        icon = 'fa-plus-circle';
+        iconColor = 'text-green-500';
+        break;
+      case 'new_reply':
+        icon = 'fa-comment';
+        iconColor = 'text-blue-500';
+        break;
+      case 'status_change':
+        icon = 'fa-exchange-alt';
+        iconColor = 'text-yellow-500';
+        break;
+      case 'assignment_change':
+        icon = 'fa-user';
+        iconColor = 'text-purple-500';
+        break;
+    }
+    
+    return `
+      <div class="px-4 py-3 hover:bg-gray-50 border-b border-gray-100 cursor-pointer transition-colors" onclick="handleNotificationClick(${item.ticketId})">
+        <div class="flex items-start space-x-3">
+          <div class="flex-shrink-0 mt-1">
+            <i class="fas ${icon} ${iconColor}"></i>
+          </div>
+          <div class="flex-1 min-w-0">
+            <p class="text-sm font-medium text-gray-900">${escapeHTML(item.title)}</p>
+            <p class="text-xs text-gray-500 mt-1">${escapeHTML(item.message)}</p>
+            <p class="text-xs text-gray-400 mt-1">
+              <i class="far fa-clock"></i> ${timeAgo}
+            </p>
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+// Function to handle notification click
+function handleNotificationClick(ticketId) {
+  if (ticketId) {
+    // Close dropdown
+    document.getElementById('notification-dropdown').classList.add('hidden');
+    // View the ticket
+    viewTicket(ticketId);
+  }
+}
+
+// Function to clear all notifications
+function clearAllNotifications() {
+  notificationCount = 0;
+  notificationItems = [];
+  updateNotificationBadge(0);
+  renderNotificationList();
+  
+  // Close dropdown
+  document.getElementById('notification-dropdown').classList.add('hidden');
+  
+  // Refresh the snapshot
+  previousTicketsSnapshot = createTicketsSnapshot(dashboard_tickets);
+  
+  showToast('All notifications cleared', 'success');
+}
+
+// Close dropdown when clicking outside
+document.addEventListener('click', function(event) {
+  const dropdown = document.getElementById('notification-dropdown');
+  const bell = document.getElementById('dashboard-notification-bell');
+  
+  if (dropdown && bell && !dropdown.contains(event.target) && !bell.contains(event.target)) {
+    dropdown.classList.add('hidden');
+  }
+});
+
+// Test function - can be called from browser console: testDashboardNotification()
+window.testDashboardNotification = function() {
+  notificationCount += 1;
+  
+  // Add a test notification item
+  notificationItems.push({
+    type: 'new_reply',
+    ticketId: 123,
+    title: 'Test Notification #' + notificationCount,
+    message: 'This is a test notification to verify the system is working',
+    timestamp: new Date().toISOString()
+  });
+  
+  updateNotificationBadge(notificationCount);
+  showToast('Test notification #' + notificationCount, 'success');
+  console.log('Test notification triggered. Badge should now show:', notificationCount);
+};
 
 // Function to refresh dashboard tickets via AJAX
 function refreshDashboardTicketsData() {
@@ -2470,14 +2724,98 @@ function refreshDashboardTicketsData() {
     .then((res) => res.json())
     .then((response) => {
       if (response.success) {
+        // Create snapshot of current tickets before update
+        const currentSnapshot = createTicketsSnapshot(dashboard_tickets);
+
+        // Create snapshot of new tickets
+        const newSnapshot = createTicketsSnapshot(response.data.tickets);
+
+        // Detect changes
+        const changes = detectTicketChanges(currentSnapshot, newSnapshot);
+
+        // Calculate total changes
+        const totalChanges =
+          changes.new.length +
+          changes.newReplies.length +
+          changes.statusChanged.length +
+          changes.assigneeChanged.length;
+
+        // Update notification count if there are changes
+        if (totalChanges > 0) {
+          notificationCount += totalChanges;
+          
+          // Add notification items for each change
+          const timestamp = new Date().toISOString();
+          
+          // New conversations
+          changes.new.forEach(ticket => {
+            notificationItems.push({
+              type: 'new_conversation',
+              ticketId: ticket.id,
+              title: 'New Conversation #' + ticket.id,
+              message: ticket.title || 'New conversation assigned to you',
+              timestamp: timestamp
+            });
+          });
+          
+          // New replies
+          changes.newReplies.forEach(item => {
+            notificationItems.push({
+              type: 'new_reply',
+              ticketId: item.ticket.id,
+              title: 'New Reply on #' + item.ticket.id,
+              message: item.newRepliesCount + ' new ' + (item.newRepliesCount > 1 ? 'replies' : 'reply'),
+              timestamp: timestamp
+            });
+          });
+          
+          // Status changes
+          changes.statusChanged.forEach(item => {
+            notificationItems.push({
+              type: 'status_change',
+              ticketId: item.ticket.id,
+              title: 'Status Changed #' + item.ticket.id,
+              message: 'Changed from ' + item.oldStatus + ' to ' + item.newStatus,
+              timestamp: timestamp
+            });
+          });
+          
+          // Assignment changes
+          changes.assigneeChanged.forEach(item => {
+            notificationItems.push({
+              type: 'assignment_change',
+              ticketId: item.ticket.id,
+              title: 'Assignment Changed #' + item.ticket.id,
+              message: 'Assigned to ' + item.newAssignee,
+              timestamp: timestamp
+            });
+          });
+          
+          updateNotificationBadge(notificationCount);
+          showChangeNotification(changes);
+
+          // Play notification sound if available
+          const audioUrl =
+            typeof robodeskNotificationSound !== 'undefined'
+              ? robodeskNotificationSound
+              : null;
+          if (audioUrl) {
+            const audio = new Audio(audioUrl);
+            audio.play().catch((err) => {
+              console.warn('Autoplay blocked by browser:', err);
+            });
+          }
+        }
+
         // Update the global dashboard_tickets array with fresh data
         dashboard_tickets.length = 0; // Clear the array
         Array.prototype.push.apply(dashboard_tickets, response.data.tickets);
 
+        // Update the previous snapshot
+        previousTicketsSnapshot = newSnapshot;
+
         // Re-render the table with updated data
         loadDashboardTickets();
-
-        console.log('Dashboard tickets refreshed successfully');
       } else {
         console.error('Failed to refresh dashboard tickets:', response.data);
       }
@@ -2496,8 +2834,6 @@ function startDashboardAutoRefresh() {
 
   // Start auto-refresh every 30 seconds (30000 milliseconds)
   dashboardRefreshInterval = setInterval(refreshDashboardTicketsData, 30000);
-
-  console.log('Dashboard auto-refresh started');
 }
 
 // Function to stop auto-refresh
@@ -2505,12 +2841,16 @@ function stopDashboardAutoRefresh() {
   if (dashboardRefreshInterval) {
     clearInterval(dashboardRefreshInterval);
     dashboardRefreshInterval = null;
-    console.log('Dashboard auto-refresh stopped');
   }
 }
 
 // Start auto-refresh when on dashboard page
 document.addEventListener('DOMContentLoaded', function () {
+  // Initialize the snapshot on page load
+  if (typeof dashboard_tickets !== 'undefined' && dashboard_tickets.length > 0) {
+    previousTicketsSnapshot = createTicketsSnapshot(dashboard_tickets);
+  }
+
   // Check if we're on the dashboard page
   if (document.getElementById('dashboard-page')) {
     // Start auto-refresh for my_conversation and unassigned_conversation
@@ -2528,6 +2868,13 @@ const originalFilterDashboardTickets = filterDashboardTickets;
 filterDashboardTickets = function (filterType) {
   // Call the original function
   originalFilterDashboardTickets(filterType);
+
+  // Clear notifications when user actively changes filter (they're viewing the updates)
+  if (notificationCount > 0) {
+    notificationCount = 0;
+    updateNotificationBadge(0);
+    previousTicketsSnapshot = createTicketsSnapshot(dashboard_tickets);
+  }
 
   // Start or stop auto-refresh based on filter
   if (filterType === 'my_conversation' || filterType === 'unassigned_conversation') {
@@ -2588,8 +2935,6 @@ function refreshTicketReplies() {
           // Update count badge
           document.getElementById('replies-count').textContent = newRepliesCount;
 
-          console.log('New replies detected and loaded');
-
           // Play notification sound if available
           const repliesList = document.getElementById('replies-list');
           const audioUrl = repliesList.getAttribute('data-audio');
@@ -2616,8 +2961,6 @@ function startRepliesAutoRefresh() {
 
   // Start auto-refresh every 10 seconds
   repliesRefreshInterval = setInterval(refreshTicketReplies, 10000);
-
-  console.log('Replies auto-refresh started for ticket #' + currentTicket.id);
 }
 
 // Function to stop replies auto-refresh
@@ -2625,7 +2968,6 @@ function stopRepliesAutoRefresh() {
   if (repliesRefreshInterval) {
     clearInterval(repliesRefreshInterval);
     repliesRefreshInterval = null;
-    console.log('Replies auto-refresh stopped');
   }
 }
 
