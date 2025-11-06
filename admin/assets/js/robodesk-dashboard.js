@@ -2742,68 +2742,117 @@ function refreshDashboardTicketsData() {
 
         // Update notification count if there are changes
         if (totalChanges > 0) {
-          notificationCount += totalChanges;
+          // Get current user name for filtering
+          const current_user_name = typeof robodeskCurrentUser !== 'undefined' 
+            ? (robodeskCurrentUser?.name || robodeskCurrentUser?.display_name || '')
+            : response.data.current_user_name || '';
           
-          // Add notification items for each change
-          const timestamp = new Date().toISOString();
+          // Filter changes to only show notifications for My Conversations and Unassigned
+          const filteredChanges = {
+            new: [],
+            newReplies: [],
+            statusChanged: [],
+            assigneeChanged: []
+          };
           
-          // New conversations
-          changes.new.forEach(ticket => {
-            notificationItems.push({
-              type: 'new_conversation',
-              ticketId: ticket.id,
-              title: 'New Conversation #' + ticket.id,
-              message: ticket.title || 'New conversation assigned to you',
-              timestamp: timestamp
-            });
+          // Helper function to check if ticket is relevant for notifications
+          const isRelevantTicket = (ticket) => {
+            // Check if ticket is assigned to current user OR is unassigned
+            const isMyTicket = ticket.assignee === current_user_name;
+            const isUnassigned = ticket.assignee === 'N/A' || !ticket.assignee;
+            return isMyTicket || isUnassigned;
+          };
+          
+          // Filter new conversations
+          filteredChanges.new = changes.new.filter(ticket => isRelevantTicket(ticket));
+          
+          // Filter new replies
+          filteredChanges.newReplies = changes.newReplies.filter(item => isRelevantTicket(item.ticket));
+          
+          // Filter status changes
+          filteredChanges.statusChanged = changes.statusChanged.filter(item => isRelevantTicket(item.ticket));
+          
+          // Filter assignment changes - include if it's being assigned TO current user or FROM current user
+          filteredChanges.assigneeChanged = changes.assigneeChanged.filter(item => {
+            const isMyTicket = item.ticket.assignee === current_user_name;
+            const wasMyTicket = item.oldAssignee === current_user_name;
+            const isUnassigned = item.ticket.assignee === 'N/A' || !item.ticket.assignee;
+            const wasUnassigned = item.oldAssignee === 'N/A' || !item.oldAssignee;
+            return isMyTicket || wasMyTicket || isUnassigned || wasUnassigned;
           });
           
-          // New replies
-          changes.newReplies.forEach(item => {
-            notificationItems.push({
-              type: 'new_reply',
-              ticketId: item.ticket.id,
-              title: 'New Reply on #' + item.ticket.id,
-              message: item.newRepliesCount + ' new ' + (item.newRepliesCount > 1 ? 'replies' : 'reply'),
-              timestamp: timestamp
-            });
-          });
+          // Calculate filtered changes count
+          const filteredCount = 
+            filteredChanges.new.length +
+            filteredChanges.newReplies.length +
+            filteredChanges.statusChanged.length +
+            filteredChanges.assigneeChanged.length;
           
-          // Status changes
-          changes.statusChanged.forEach(item => {
-            notificationItems.push({
-              type: 'status_change',
-              ticketId: item.ticket.id,
-              title: 'Status Changed #' + item.ticket.id,
-              message: 'Changed from ' + item.oldStatus + ' to ' + item.newStatus,
-              timestamp: timestamp
+          // Only show notifications if there are relevant changes
+          if (filteredCount > 0) {
+            notificationCount += filteredCount;
+            
+            // Add notification items for each filtered change
+            const timestamp = new Date().toISOString();
+            
+            // New conversations
+            filteredChanges.new.forEach(ticket => {
+              notificationItems.push({
+                type: 'new_conversation',
+                ticketId: ticket.id,
+                title: 'New Conversation #' + ticket.id,
+                message: ticket.title || 'New conversation assigned to you',
+                timestamp: timestamp
+              });
             });
-          });
-          
-          // Assignment changes
-          changes.assigneeChanged.forEach(item => {
-            notificationItems.push({
-              type: 'assignment_change',
-              ticketId: item.ticket.id,
-              title: 'Assignment Changed #' + item.ticket.id,
-              message: 'Assigned to ' + item.newAssignee,
-              timestamp: timestamp
+            
+            // New replies
+            filteredChanges.newReplies.forEach(item => {
+              notificationItems.push({
+                type: 'new_reply',
+                ticketId: item.ticket.id,
+                title: 'New Reply on #' + item.ticket.id,
+                message: item.newRepliesCount + ' new ' + (item.newRepliesCount > 1 ? 'replies' : 'reply'),
+                timestamp: timestamp
+              });
             });
-          });
-          
-          updateNotificationBadge(notificationCount);
-          showChangeNotification(changes);
+            
+            // Status changes
+            filteredChanges.statusChanged.forEach(item => {
+              notificationItems.push({
+                type: 'status_change',
+                ticketId: item.ticket.id,
+                title: 'Status Changed #' + item.ticket.id,
+                message: 'Changed from ' + item.oldStatus + ' to ' + item.newStatus,
+                timestamp: timestamp
+              });
+            });
+            
+            // Assignment changes
+            filteredChanges.assigneeChanged.forEach(item => {
+              notificationItems.push({
+                type: 'assignment_change',
+                ticketId: item.ticket.id,
+                title: 'Assignment Changed #' + item.ticket.id,
+                message: 'Assigned to ' + item.newAssignee,
+                timestamp: timestamp
+              });
+            });
+            
+            updateNotificationBadge(notificationCount);
+            showChangeNotification(filteredChanges);
 
-          // Play notification sound if available
-          const audioUrl =
-            typeof robodeskNotificationSound !== 'undefined'
-              ? robodeskNotificationSound
-              : null;
-          if (audioUrl) {
-            const audio = new Audio(audioUrl);
-            audio.play().catch((err) => {
-              console.warn('Autoplay blocked by browser:', err);
-            });
+            // Play notification sound if available
+            const audioUrl =
+              typeof robodeskNotificationSound !== 'undefined'
+                ? robodeskNotificationSound
+                : null;
+            if (audioUrl) {
+              const audio = new Audio(audioUrl);
+              audio.play().catch((err) => {
+                console.warn('Autoplay blocked by browser:', err);
+              });
+            }
           }
         }
 
