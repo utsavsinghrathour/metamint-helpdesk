@@ -76,6 +76,12 @@ function robodesk_dashboard_callback()
                                 <i class="fas fa-cog mr-2"></i>
                                 <?php _e('Settings', 'robodesk'); ?>
                             </button>
+                            <?php if (defined('ROBODESK_ADDON_VERSION')): ?>
+                            <button onclick="showPage('addons')" class="nav-link inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium" data-page="addons">
+                                <i class="fas fa-puzzle-piece mr-2"></i>
+                                <?php _e('Addons', 'robodesk-addon'); ?>
+                            </button>
+                            <?php endif; ?>
                         </div>
                     </div>
                     <div class="flex items-center relative">
@@ -132,6 +138,17 @@ function robodesk_dashboard_callback()
             <!---------------------- Settings Page ---------------------->
             <?php
             include 'robodesk-settings.php';
+            ?>
+
+            <!---------------------- Addons Page ---------------------->
+            <?php
+            // Include Addons page if Robodesk Addon plugin is active
+            if (defined('ROBODESK_ADDON_PLUGIN_PATH')) {
+                $addons_file = ROBODESK_ADDON_PLUGIN_PATH . 'admin/includes/robodesk-addons.php';
+                if (file_exists($addons_file)) {
+                    include $addons_file;
+                }
+            }
             ?>
         </main>
 
