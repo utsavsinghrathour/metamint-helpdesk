@@ -300,6 +300,9 @@ function robodesk_enqueue_tailwind_and_styles()
         true 
     );
 
+    // Note: Slack and Discord integration scripts have been moved to the robodesk-addon plugin
+    // They will be enqueued automatically when the respective addons are activated
+
     // Enqueue Font Awesome for icons
     wp_enqueue_style(
         'font-awesome',
@@ -310,7 +313,8 @@ function robodesk_enqueue_tailwind_and_styles()
 
     // Localize script with all necessary nonces
     wp_localize_script('robodesk-dashboard-script', 'robodeskAjax', [
-        'ajax_url' => admin_url('admin-ajax.php'),
+        'ajaxurl' => admin_url('admin-ajax.php'),
+        'ajax_url' => admin_url('admin-ajax.php'), // Backward compatibility
         'nonces' => [
             'imap_settings' => wp_create_nonce('robodesk_imap_settings_action'),
             'email_template' => wp_create_nonce('robodesk_email_template_action'),
@@ -327,6 +331,26 @@ function robodesk_enqueue_tailwind_and_styles()
             'add_ticket_note' => wp_create_nonce('robodesk_add_ticket_note_action'),
             'get_ticket_notes' => wp_create_nonce('robodesk_get_ticket_notes_action'),
             'fetch_emails' => wp_create_nonce('robodesk_fetch_emails_action'),
+            // Slack Integration Nonces
+            'slack_status' => wp_create_nonce('robodesk_slack_status_action'),
+            'slack_connect' => wp_create_nonce('robodesk_slack_connect_action'),
+            'slack_disconnect' => wp_create_nonce('robodesk_slack_disconnect_action'),
+            'slack_save_credentials' => wp_create_nonce('robodesk_slack_credentials_action'),
+            'slack_get_credentials' => wp_create_nonce('robodesk_slack_get_credentials_action'),
+            'slack_save_settings' => wp_create_nonce('robodesk_slack_settings_action'),
+            'slack_workspace' => wp_create_nonce('robodesk_slack_workspace_action'),
+            'slack_send_message' => wp_create_nonce('robodesk_slack_send_message_action'),
+            'slack_send_ticket' => wp_create_nonce('robodesk_slack_send_ticket_action'),
+            'slack_send_reply' => wp_create_nonce('robodesk_slack_send_reply_action'),
+            'slack_fetch_messages' => wp_create_nonce('robodesk_slack_fetch_messages_action'),
+            'slack_test' => wp_create_nonce('robodesk_slack_test_action'),
+            // Discord Integration Nonces
+            'discord_save_webhook' => wp_create_nonce('robodesk_discord_save_webhook'),
+            'discord_get_webhook' => wp_create_nonce('robodesk_discord_get_webhook'),
+            'discord_test_connection' => wp_create_nonce('robodesk_discord_test_connection'),
+            'discord_disconnect' => wp_create_nonce('robodesk_discord_disconnect'),
+            'discord_save_settings' => wp_create_nonce('robodesk_discord_save_settings'),
+            'discord_send_test_message' => wp_create_nonce('robodesk_discord_send_test_message'),
             'close_ticket' => wp_create_nonce('robodesk_close_ticket_action'),
             'update_ticket_category' => wp_create_nonce('robodesk_update_ticket_category_action'),
             'bulk_action' => wp_create_nonce('robodesk_bulk_action'),

@@ -14,11 +14,20 @@
                  <button onclick="showSettingsTab('fetch')" class="settings-tab py-4 px-1 border-b-2 font-medium text-sm" data-tab="fetch">
                      <?php _e('Fetch Tickets', 'robodesk'); ?>
                  </button>
-                 <button onclick="showSettingsTab('advanced')" class="settings-tab py-4 px-1 border-b-2 font-medium text-sm" data-tab="advanced">
-                     <?php _e('Advanced', 'robodesk'); ?>
-                 </button>
-             </nav>
-         </div>
+                <button onclick="showSettingsTab('advanced')" class="settings-tab py-4 px-1 border-b-2 font-medium text-sm" data-tab="advanced">
+                    <?php _e('Advanced', 'robodesk'); ?>
+                </button>
+               <?php
+               // Allow addons to add their settings tabs
+               $addon_tabs = apply_filters('robodesk_settings_tabs', array());
+               foreach ($addon_tabs as $tab_key => $tab_label) {
+                   echo '<button onclick="showSettingsTab(\'' . esc_js($tab_key) . '\')" class="settings-tab py-4 px-1 border-b-2 font-medium text-sm" data-tab="' . esc_attr($tab_key) . '">';
+                   echo $tab_label;
+                   echo '</button>';
+               }
+               ?>
+           </nav>
+        </div>
          <!------------------------------------------ overall setting page with all the tabs---------------------------------------->
          <div class="p-6">
              <!------------------------------Basic Settings Tab --------------------------------->
@@ -401,13 +410,19 @@
                              <label class="block text-sm font-medium text-gray-700"><?php _e('Maximum file upload size (MB)', 'robodesk'); ?></label>
                              <input type="number" name="max_file_upload_size" value="<?php echo esc_attr($settings['max_file_upload_size']); ?>" min="1" max="100" class="styled-input mt-1 block w-32 border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
                          </div>
-                     </div>
-                     <hr class="my-6 border-gray-200">
-                     <button type="button" id="save-advanced-settings" class="mt-6 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">
-                         <?php _e('Save Advanced Settings', 'robodesk'); ?>
-                     </button>
-                 </form>
-             </div>
-         </div>
-     </div>
- </div>
+                    </div>
+                    <hr class="my-6 border-gray-200">
+                    <button type="button" id="save-advanced-settings" class="mt-6 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">
+                        <?php _e('Save Advanced Settings', 'robodesk'); ?>
+                    </button>
+                </form>
+            </div>
+
+            <?php
+            // Allow addons to add their settings content (Slack, Discord, etc.)
+            // Addons hook into 'robodesk_settings_content' action to render their settings UI
+            do_action('robodesk_settings_content');
+            ?>
+        </div>
+    </div>
+</div>
