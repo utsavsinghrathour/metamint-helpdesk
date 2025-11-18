@@ -685,6 +685,9 @@ function robodesk_handle_tickets_webhook(WP_REST_Request $request)
 
 
         if ($comment_id) {
+            // Trigger action for integrations (Slack, Discord, etc.)
+            do_action('robodesk_after_reply_added', $ticket_id, $comment_id, $reply, $user_object);
+            
             // update_user_meta($user_id, 'rbd_all_seen', 'yes');
 
             $comment = get_comment($comment_id);
