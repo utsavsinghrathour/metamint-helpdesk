@@ -1234,6 +1234,9 @@ function robodesk_handle_reply_receive($data)
         return new WP_Error('comment_failed', 'Failed to add reply', array('status' => 500));
     }
 
+    // Trigger action for integrations (Slack, Discord, etc.)
+    do_action('robodesk_after_reply_added', $ticket_id, $comment_id, $reply, $user_object);
+
 
 
     $comment = get_comment($comment_id);

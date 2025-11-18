@@ -839,6 +839,9 @@ function robodesk_handle_add_ticket_reply()
         wp_send_json_error(['message' => 'Failed to insert comment']);
     }
 
+    // Trigger action for integrations (Slack, Discord, etc.)
+    do_action('robodesk_after_reply_added', $ticket_id, $comment_id, $reply, $user_object);
+
     wp_send_json_success([
         'comment_id' => $comment_id,
         'author'     => $user_object->display_name,
