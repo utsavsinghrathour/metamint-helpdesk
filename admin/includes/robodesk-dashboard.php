@@ -45,9 +45,9 @@ function robodesk_dashboard_callback()
 
     // Start output buffering to capture the HTML
     ob_start();
-?>
+    ?>
 
-    <div class="min-h-screen bg-gray-100">
+    <div class="bg-gray-100">
         <!-- Navigation -->
         <nav class="bg-white shadow-lg border-b border-gray-200">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -56,44 +56,61 @@ function robodesk_dashboard_callback()
                         <div class="flex-shrink-0 flex items-center">
                             <button onclick="showPage('dashboard')" class="text-blue-600 hover:text-blue-800">
                                 <i class="fas fa-ticket-alt text-blue-600 text-2xl"></i>
-                                <span class="ml-2 text-xl font-bold text-gray-900"><?php _e('Robodesk', 'robodesk'); ?></span>
+                                <span
+                                    class="ml-2 text-xl font-bold text-gray-900"><?php _e('Robodesk', 'robodesk'); ?></span>
                             </button>
                         </div>
                         <div class="hidden md:ml-10 md:flex md:space-x-8">
-                            <button onclick="showPage('dashboard')" class="nav-link inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium" data-page="dashboard">
+                            <button onclick="showPage('dashboard')"
+                                class="nav-link inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
+                                data-page="dashboard">
                                 <i class="fas fa-home mr-2"></i>
                                 <?php _e('Dashboard', 'robodesk'); ?>
                             </button>
-                            <button onclick="showPage('tickets')" class="nav-link inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium" data-page="tickets">
+                            <button onclick="showPage('tickets')"
+                                class="nav-link inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
+                                data-page="tickets">
                                 <i class="fas fa-ticket-alt mr-2"></i>
                                 <?php _e('Conversations', 'robodesk'); ?>
                             </button>
-                            <button onclick="showPage('new-ticket')" class="nav-link inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium" data-page="new-ticket">
+                            <button onclick="showPage('new-ticket')"
+                                class="nav-link inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
+                                data-page="new-ticket">
                                 <i class="fas fa-plus mr-2"></i>
                                 <?php _e('New Conversation', 'robodesk'); ?>
                             </button>
-                            <button onclick="showPage('settings')" class="nav-link inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium" data-page="settings">
+                            <button onclick="showPage('settings')"
+                                class="nav-link inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
+                                data-page="settings">
                                 <i class="fas fa-cog mr-2"></i>
                                 <?php _e('Settings', 'robodesk'); ?>
                             </button>
                             <?php if (defined('ROBODESK_ADDON_VERSION')): ?>
-                            <button onclick="showPage('addons')" class="nav-link inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium" data-page="addons">
-                                <i class="fas fa-puzzle-piece mr-2"></i>
-                                <?php _e('Addons', 'robodesk-addon'); ?>
-                            </button>
+                                <button onclick="showPage('addons')"
+                                    class="nav-link inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
+                                    data-page="addons">
+                                    <i class="fas fa-puzzle-piece mr-2"></i>
+                                    <?php _e('Addons', 'robodesk-addon'); ?>
+                                </button>
                             <?php endif; ?>
                         </div>
                     </div>
                     <div class="flex items-center relative">
-                        <button id="dashboard-notification-bell" onclick="toggleNotificationDropdown()" class="bg-gray-100 p-2 rounded-full text-gray-600 hover:text-gray-900 relative transition-all" title="<?php _e('View notifications', 'robodesk'); ?>">
+                        <button id="dashboard-notification-bell" onclick="toggleNotificationDropdown()"
+                            class="bg-gray-100 p-2 rounded-full text-gray-600 hover:text-gray-900 relative transition-all"
+                            title="<?php _e('View notifications', 'robodesk'); ?>">
                             <i class="fas fa-bell"></i>
-                            <span id="notification-badge" class="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 items-center justify-center shadow-lg" style="display: none;">0</span>
+                            <span id="notification-badge"
+                                class="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 items-center justify-center shadow-lg"
+                                style="display: none;">0</span>
                         </button>
-                        
+
                         <!-- Notification Dropdown -->
-                        <div id="notification-dropdown" class="hidden absolute right-0 top-12 w-96 bg-white rounded-lg shadow-xl border border-gray-200 z-50 max-h-96 overflow-hidden">
+                        <div id="notification-dropdown"
+                            class="hidden absolute right-0 top-12 w-96 bg-white rounded-lg shadow-xl border border-gray-200 z-50 max-h-96 overflow-hidden">
                             <div class="px-4 py-3 border-b border-gray-200 bg-gray-50">
-                                <h3 class="text-sm font-semibold text-gray-900"><?php _e('Recent Updates', 'robodesk'); ?></h3>
+                                <h3 class="text-sm font-semibold text-gray-900"><?php _e('Recent Updates', 'robodesk'); ?>
+                                </h3>
                             </div>
                             <div id="notification-list" class="overflow-y-auto max-h-80">
                                 <div class="px-4 py-8 text-center text-gray-500 text-sm">
@@ -102,7 +119,8 @@ function robodesk_dashboard_callback()
                                 </div>
                             </div>
                             <div class="px-4 py-3 border-t border-gray-200 bg-gray-50">
-                                <button onclick="clearAllNotifications()" class="w-full px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded hover:bg-blue-700 transition-colors">
+                                <button onclick="clearAllNotifications()"
+                                    class="w-full px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded hover:bg-blue-700 transition-colors">
                                     <?php _e('Clear All', 'robodesk'); ?>
                                 </button>
                             </div>
@@ -126,16 +144,16 @@ function robodesk_dashboard_callback()
             ?>
 
             <!------------------------------------- Tickets Page ------------------------------------->
-            <?php
-            include 'robodesk-conversations.php';
-            ?>
+        <?php
+        include 'robodesk-conversations.php';
+        ?>
 
-            <!------------------------------- Ticket Detail Page ----------------------->
-            <?php
-            include 'robodesk-conversation-detail.php';
-            ?>
+        <!------------------------------- Ticket Detail Page ----------------------->
+        <?php
+        include 'robodesk-conversation-detail.php';
+        ?>
 
-            <!---------------------- Settings Page ---------------------->
+        <!---------------------- Settings Page ---------------------->
             <?php
             include 'robodesk-settings.php';
             ?>
@@ -153,7 +171,8 @@ function robodesk_dashboard_callback()
         </main>
 
         <!-- Toast Notification -->
-        <div id="toast" class="fixed top-4 right-4 z-50 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded-lg shadow-lg hidden">
+        <div id="toast"
+            class="fixed top-4 right-4 z-50 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded-lg shadow-lg hidden">
             <div class="flex items-center">
                 <i class="fas fa-check-circle mr-2"></i>
                 <span id="toast-message"></span>
@@ -163,7 +182,7 @@ function robodesk_dashboard_callback()
 
     </div>
 
-<?php
+    <?php
     // Output the buffered content
     echo ob_get_clean();
 }
