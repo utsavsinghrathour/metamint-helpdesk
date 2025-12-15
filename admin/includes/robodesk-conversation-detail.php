@@ -3,7 +3,8 @@
         <div class="px-4 py-5 sm:p-6">
             <div class="flex justify-between items-center mb-6">
                 <h3 class="text-lg font-bold text-gray-900" id="ticket-detail-title">
-                    <?php _e('Conversation Details', 'robodesk'); ?></h3>
+                    <?php _e('Conversation Details', 'robodesk'); ?>
+                </h3>
                 <button onclick="showPage('tickets')" class="text-gray-400 hover:text-gray-600">
                     <i class="fas fa-arrow-left mr-2"></i>
                     <?php _e('Back to Conversations', 'robodesk'); ?>
@@ -54,7 +55,7 @@
                                 id="ticket-priority-select">
                                 <?php
                                 $priorities = get_terms([
-                                    'taxonomy'   => 'robodesk_ticket_priority',
+                                    'taxonomy' => 'robodesk_ticket_priority',
                                     'hide_empty' => false,
                                 ]);
 
@@ -81,7 +82,7 @@
                                 // Get users by role with display_name only
                                 $agents = get_users([
                                     'role__in' => ['robodesk_support_staff', 'robodesk_support_manager', 'author', 'editor', 'administrator'],
-                                    'fields'   => ['display_name'],
+                                    'fields' => ['display_name'],
                                 ]);
 
                                 // Convert to simple array of display names
@@ -89,8 +90,7 @@
                                 ?>
 
                                 <?php foreach ($agent_names as $agent): ?>
-                                    <option value="<?php echo esc_attr($agent); ?>"
-                                        <?php selected($default_agent, $agent); ?>>
+                                    <option value="<?php echo esc_attr($agent); ?>" <?php selected($default_agent, $agent); ?>>
                                         <?php echo esc_html($agent); ?>
                                     </option>
                                 <?php endforeach; ?>
@@ -103,10 +103,10 @@
                 <!-- Ticket Details -->
                 <?php
                 // In your PHP file (where you're already outputting the script)
-
+                
                 // Get ticket categories
                 $terms = get_terms(array(
-                    'taxonomy'   => 'robodesk_ticket_category',
+                    'taxonomy' => 'robodesk_ticket_category',
                     'hide_empty' => false,
                 ));
 
@@ -144,7 +144,8 @@
                 <div class="relative top-20 mx-auto p-5 border w-11/12 md:w-3/4 lg:w-1/2 shadow-lg rounded-md bg-white">
                     <div class="flex justify-between items-center mb-4">
                         <h3 class="text-lg font-bold text-gray-900" id="customer-tickets-title">
-                            <?php _e('Customer Conversations', 'robodesk'); ?></h3>
+                            <?php _e('Customer Conversations', 'robodesk'); ?>
+                        </h3>
                         <button onclick="hideCustomerTickets()" class="text-gray-400 hover:text-gray-600">
                             <i class="fas fa-times"></i>
                         </button>
@@ -200,6 +201,17 @@
                             data-placeholder="<?php _e('Type your reply here...', 'robodesk'); ?>"
                             aria-label="Reply input">
                         </div>
+                        <?php
+                        /**
+                         * Fires after the reply editor.
+                         * 
+                         * This hook allows you to add custom fields, text, or any content
+                         * after the reply editor div.
+                         *
+                         * @since 1.0.0
+                         */
+                        do_action('robodesk_after_reply_editor');
+                        ?>
                         <button id="send-reply-btn" onclick="addReply()"
                             class="mt-2 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
                             <?php _e('Send Reply', 'robodesk'); ?>
