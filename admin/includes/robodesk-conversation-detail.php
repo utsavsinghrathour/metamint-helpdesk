@@ -182,8 +182,11 @@
                     </div>
                     <!-- We are here and there -->
                     <div>
-                        <label
-                            class="block text-sm font-medium text-gray-700 mb-2"><?php _e('Add Reply', 'robodesk'); ?></label>
+                        <div class="add-label-wrapper d-flex justify-content-between align-items-center">
+                            <label
+                                class="block text-sm font-medium text-gray-700 mb-2"><?php _e('Add Reply', 'robodesk'); ?></label>
+                            <?php do_action('robodesk_before_reply_editor'); ?>
+                        </div>
                         <div class=" editor-toolbar mb-2">
                             <button type="button" onclick="formatText('bold', 'new-reply')" class="editor-btn"><i
                                     class="fas fa-bold"></i></button>
