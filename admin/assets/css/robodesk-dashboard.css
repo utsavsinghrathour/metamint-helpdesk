@@ -553,3 +553,18 @@
 #notification-list::-webkit-scrollbar-thumb:hover {
   background: #555;
 }
+
+.add-label-wrapper {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.add-label-wrapper .select2-container--default .select2-selection--single {
+    border: 1px solid #d1d5db;
+    border-radius: 0.5rem;
+    height: auto;
+    padding: 0;
+}
+.toplevel_page_robodesk-dashboard .select2-container--default .select2-search--dropdown .select2-search__field,.toplevel_page_robodesk-dashboard .select2-container--default .select2-results__option{
+  padding: 4px;
+}
