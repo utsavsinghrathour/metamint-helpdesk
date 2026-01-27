@@ -1,6 +1,10 @@
 import React from "react";
 import PropTypes from "prop-types";
 import { useEffect, useRef, useState } from "@wordpress/element";
+import { FaRegFaceSmileBeam } from 'react-icons/fa6';
+import { PiPaperPlaneRightFill } from 'react-icons/pi';
+import { FiPaperclip } from 'react-icons/fi';
+import EmojiPicker from 'emoji-picker-react';
 
 export default function RobodeskBotChatWidgetMain({ widgetConfig, activeAIMode }) {
     const rootRef = useRef(null);
@@ -22,9 +26,9 @@ export default function RobodeskBotChatWidgetMain({ widgetConfig, activeAIMode }
      */
     function AssistantMessage({ msg }) {
         return (
-            <div className="ai-block">
+            <div className="ai-block chat-container">
                 {/* MAIN MESSAGE TEXT */}
-                {msg.message && <div className="ai-text">{msg.message}</div>}
+                {msg.message && <div className="ai-text rd-body-text"><p>{msg.message}</p></div>}
 
                 {/* INTENT PILL */}
                 {msg.intent && (
@@ -161,38 +165,122 @@ export default function RobodeskBotChatWidgetMain({ widgetConfig, activeAIMode }
     return (
         <>
             <div id="robodesk-bot-panel">
-                <div id="robodesk-bot-header">
+                {/* <div id="robodesk-bot-header">
                     <strong>AI Assistant ({AIMode})</strong>
                     <button onClick={() => setOpen(false)}>x</button>
-                </div>
+                </div> */}
 
                 {/* MESSAGES */}
-                <div id="robodesk-bot-messages" ref={rootRef}>
-                    {messages.map((m, i) => (
-                        <div
-                            key={i}
-                            className={`robodesk-bot-msg robodesk-bot-${m.role} ${m.thinking ? "thinking" : ""
-                                }`}
-                        >
-                            {m.role === "assistant" ? <AssistantMessage msg={m} /> : m.text}
-                        </div>
-                    ))}
+                <div id="robodesk-bot-messages" ref={rootRef} style={{
+                    maxHeight: '300px',
+                    overflowY: 'auto',
+                    padding: '16px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '4px'
+                }}>
+                    {messages.map((m, i) => {
+                        const prevMsg = i > 0 ? messages[i - 1] : null;
+                        const isSameSender = prevMsg && prevMsg.role === m.role;
+                        const marginBottom = isSameSender ? '4px' : '12px';
+
+                        return (
+                            <div
+                                key={i}
+                                className={`chat-message ${m.role === 'user'
+                                    ? 'rd-ml-auto sent'
+                                    : 'rd-flex rd-gap-8 received'
+                                    }`}
+                                style={{
+                                    maxWidth: '70%',
+                                    marginBottom,
+                                    marginTop: i === 0 || !isSameSender ? '12px' : '4px',
+                                    display: 'flex',
+                                    alignItems: 'flex-start',
+                                    marginLeft: m.role === 'user' ? 'auto' : '0',
+                                    gap: m.role === 'assistant' ? '8px' : '0'
+                                }}
+                            >
+                                {m.role === 'assistant' && (!isSameSender || i === 0) && (
+                                    <div
+                                        style={{
+                                            height: '30px',
+                                            width: '30px',
+                                            borderRadius: '50px',
+                                            backgroundColor: '#007BFF',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            color: 'white',
+                                            fontSize: '14px',
+                                            fontWeight: 'bold',
+                                            flexShrink: 0
+                                        }}
+                                    >
+                                        AI
+                                    </div>
+                                )}
+                                {m.role === 'assistant' && isSameSender && i !== 0 && (
+                                    <div style={{ width: '30px', height: '30px' }} />
+                                )}
+                                <div
+                                    className="message-content"
+                                    style={{
+                                        backgroundColor: m.role === 'user' || m.thinking ? '#007BFF' : '#FFFFFF',
+                                        color: m.role === 'user' || m.thinking ? '#FFFFFF' : '#000000',
+                                        border: m.role === 'assistant' && !m.thinking ? '1px solid #E0E0E0' : 'none',
+                                        borderRadius: '10px',
+                                        padding: '8px 12px',
+                                        maxWidth: '100%',
+                                        opacity: m.thinking ? 0.7 : 1
+                                    }}
+                                >
+                                    {m.role === 'assistant' ? <AssistantMessage msg={m} /> : (
+                                        <span className="rd-body-text"><p>{m.text}</p></span>
+                                    )}
+                                    {!m.thinking && (
+                                        <div
+                                            className="rd-text-small rd-text-gray"
+                                            style={{
+                                                marginTop: '4px',
+                                                textAlign: m.role === 'user' ? 'right' : 'left',
+                                                fontSize: '10px',
+                                                opacity: 0.7
+                                            }}
+                                        >
+                                            {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        );
+                    })}
                 </div>
 
                 {/* INPUT */}
-                <div id="robodesk-bot-input">
-                    <input
-                        value={input}
-                        placeholder="Ask about this site..."
-                        onChange={(e) => setInput(e.target.value)}
-                        onKeyDown={(e) => {
-                            if (e.key === "Enter" && !e.shiftKey) {
-                                e.preventDefault();
-                                sendMessage();
-                            }
-                        }}
-                    />
-                    <button onClick={sendMessage}>Send</button>
+                <div id="robodesk-bot-input" className="chat-input rd-flex rd-px-18 rd-py-15 rd-border-top-light rd-bg-white rd-justify-between">
+                    <>
+                        <input
+                            value={input}
+                            placeholder="Ask about this site..."
+                            onChange={(e) => setInput(e.target.value)}
+                            onKeyDown={(e) => {
+                                if (e.key === "Enter" && !e.shiftKey) {
+                                    e.preventDefault();
+                                    sendMessage();
+                                }
+                            }}
+                        />
+                        <div className='rd-flex rd-gap-20 rd-relative'>
+                            <button
+                                onClick={sendMessage}
+                                className='rd-bg-transparent rd-border-none rd-ml-10 icon-dark rd-cursor-pointer rd-p-0'
+                            >
+                                <PiPaperPlaneRightFill className='icon-dark' size={20} />
+                            </button>
+                        </div>
+                        {/* <button onClick={sendMessage}>Send</button> */}
+                    </>
                 </div>
             </div>
         </>
