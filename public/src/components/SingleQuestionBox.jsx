@@ -5,6 +5,7 @@ import parse from 'html-react-parser';
 import DOMPurify from 'dompurify';
 import Footer from './Footer';
 import '../styles/SingleQuestionBox.css';
+import RobodeskBotChatWidgetMain from './RobodeskBotChatWidgetMain';
 
 import defaultLogo from '../images/robodesk-logo.png';
 
@@ -44,6 +45,8 @@ const SingleQuestionBox = ({
   const [isAddonActive, setIsAddonActive] = useState(false);
   const [loadingAddonStatus, setLoadingAddonStatus] = useState(true);
   const [primaryBot, setPrimaryBot] = useState(false);
+  const [widgetConfig, setWidgetConfig] = useState(null);
+  const [activeAIMode, setActiveAIMode] = useState('');
 
 
   useEffect(() => {
@@ -133,11 +136,12 @@ const SingleQuestionBox = ({
     try {
       const response = await fetch("/wp-json/robodesk-bot/v1/widget-config");
       const data = await response.json();
+      console.log('data', data);
       if (response.ok) {
         setPrimaryBot(!!data?.primaryBot);
-        console.log('check', !!data?.primaryBot);
-        console.log('check', data?.primaryBot);
-        console.log("primaryBot", primaryBot);
+        setWidgetConfig(data?.widgetConfig || { enabled: true });
+        setActiveAIMode(data?.activeAIMode || '');
+        console.log('primaryBot', primaryBot);
       } else {
         setPrimaryBot(false);
       }
@@ -334,14 +338,10 @@ const SingleQuestionBox = ({
               </div>
               {isAddonActive && (
                 primaryBot ? (
-                  // <SendMessageField
-                  //   setShowLogin={setShowLogin}
-                  //   setActiveTab={setActiveTab}
-                  //   updateSelectedTicket={updateSelectedTicket}
-                  //   focused={focused}
-                  //   handleFocusedTextArea={handleFocusedTextArea}
-                  // />
-                  <h1>hello</h1>
+                  <RobodeskBotChatWidgetMain
+                    widgetConfig={widgetConfig}
+                    activeAIMode={activeAIMode}
+                  />
                 ) : (
                   <SendMessageField primaryBot={primaryBot}
                     setShowLogin={setShowLogin}
