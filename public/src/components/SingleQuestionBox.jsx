@@ -330,12 +330,12 @@ const SingleQuestionBox = ({
         <>
           {showHeaderFooter && (
             <>
-              <div className='rd-text-center rd-px-20 rd-flex rd-flex-col rd-gap-5 rd-mb-20 home-tab-title'>
+              {/* <div className='rd-text-center rd-px-20 rd-flex rd-flex-col rd-gap-5 rd-mb-20 home-tab-title'>
                 <h4 className='heading-4'>Have Questions?</h4>
                 <h5 className='sub-text rd-mt-0'>
                   Have any questions or need a quote? Leave us a message.
                 </h5>
-              </div>
+              </div> */}
               {isAddonActive && (
                 primaryBot ? (
                   <RobodeskBotChatWidgetMain
@@ -354,7 +354,7 @@ const SingleQuestionBox = ({
               )}
             </>
           )}
-          <div className='rd-px-18 rd-mt-20 rd-mb-15 rd-overflow-h-320'>
+          {/* <div className='rd-px-18 rd-mt-20 rd-mb-15 rd-overflow-h-320'>
             <div className='rd-flex rd-flex-col rd-gap-20'>
               {isLoading ? (
                 <p className='rd-body-text rd-text-center'>Loading FAQs...</p>
@@ -368,7 +368,7 @@ const SingleQuestionBox = ({
                 ))
               )}
             </div>
-          </div>
+          </div> */}
         </>
       )}
     </>
