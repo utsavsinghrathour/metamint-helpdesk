@@ -41,6 +41,10 @@ const SingleQuestionBox = ({
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const image_urls = window.robodeskData?.imageUrls || {};
+  const [isAddonActive, setIsAddonActive] = useState(false);
+  const [loadingAddonStatus, setLoadingAddonStatus] = useState(true);
+  const [primaryBot, setPrimaryBot] = useState(false);
+
 
   useEffect(() => {
     const fetchFAQs = async () => {
@@ -91,6 +95,20 @@ const SingleQuestionBox = ({
     if (isDisliked) setIsDisliked(false);
   };
 
+  useEffect(() => {
+    fetch("/wp-json/robodesk-addon/v1/status")
+      .then((res) => res.json())
+      .then((data) => {
+        setIsAddonActive(!!data?.activated);
+      })
+      .catch((error) => {
+        setIsAddonActive(false);
+      })
+      .finally(() => {
+        setLoadingAddonStatus(false);
+      });
+  }, []);
+
   const handleDislike = () => {
     setIsDisliked(!isDisliked);
     if (isLiked) setIsLiked(false);
@@ -110,6 +128,31 @@ const SingleQuestionBox = ({
   const handleImageError = (e) => {
     console.error('Image failed to load:', e.target.src);
   };
+
+  const fetchApiKey = async () => {
+    try {
+      const response = await fetch("/wp-json/robodesk-bot/v1/widget-config");
+      const data = await response.json();
+      if (response.ok) {
+        setPrimaryBot(!!data?.primaryBot);
+        console.log('check', !!data?.primaryBot);
+        console.log('check', data?.primaryBot);
+        console.log("primaryBot", primaryBot);
+      } else {
+        setPrimaryBot(false);
+      }
+    } catch (error) {
+      console.error("Error fetching widget config:", error);
+      setPrimaryBot(false);
+    } finally {
+      setLoadingAddonStatus(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchApiKey();
+  }, [primaryBot]);
+
 
   const QuestionItem = ({ question }) => (
     <div
@@ -179,9 +222,8 @@ const SingleQuestionBox = ({
               </div>
             )}
             <button
-              className={`expand-popup rd-bg-transparent rd-border-none rd-cursor-pointer rd-p-0 ${
-                isExpanded ? 'expanded' : ''
-              }`}
+              className={`expand-popup rd-bg-transparent rd-border-none rd-cursor-pointer rd-p-0 ${isExpanded ? 'expanded' : ''
+                }`}
               onClick={handleExpandClick}
             >
               <svg
@@ -230,19 +272,19 @@ const SingleQuestionBox = ({
                 <div className='rd-body-text rd-my-10'>
                   {selectedQuestion.content
                     ? parse(selectedQuestion.content, {
-                        replace: (domNode) => {
-                          if (domNode.name === 'img') {
-                            domNode.attribs = {
-                              ...domNode.attribs,
-                              onError: handleImageError,
-                            };
-                          }
-                          return domNode;
-                        },
-                      })
+                      replace: (domNode) => {
+                        if (domNode.name === 'img') {
+                          domNode.attribs = {
+                            ...domNode.attribs,
+                            onError: handleImageError,
+                          };
+                        }
+                        return domNode;
+                      },
+                    })
                     : selectedQuestion.excerpt
-                    ? parse(selectedQuestion.excerpt)
-                    : null}
+                      ? parse(selectedQuestion.excerpt)
+                      : null}
                 </div>
               </div>
             </div>
@@ -290,13 +332,26 @@ const SingleQuestionBox = ({
                   Have any questions or need a quote? Leave us a message.
                 </h5>
               </div>
-              <SendMessageField
-                setShowLogin={setShowLogin}
-                setActiveTab={setActiveTab}
-                updateSelectedTicket={updateSelectedTicket}
-                focused={focused}
-                handleFocusedTextArea={handleFocusedTextArea}
-              />
+              {isAddonActive && (
+                primaryBot ? (
+                  // <SendMessageField
+                  //   setShowLogin={setShowLogin}
+                  //   setActiveTab={setActiveTab}
+                  //   updateSelectedTicket={updateSelectedTicket}
+                  //   focused={focused}
+                  //   handleFocusedTextArea={handleFocusedTextArea}
+                  // />
+                  <h1>hello</h1>
+                ) : (
+                  <SendMessageField primaryBot={primaryBot}
+                    setShowLogin={setShowLogin}
+                    setActiveTab={setActiveTab}
+                    updateSelectedTicket={updateSelectedTicket}
+                    focused={focused}
+                    handleFocusedTextArea={handleFocusedTextArea}
+                  />
+                )
+              )}
             </>
           )}
           <div className='rd-px-18 rd-mt-20 rd-mb-15 rd-overflow-h-320'>
