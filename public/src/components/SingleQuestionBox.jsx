@@ -47,6 +47,7 @@ const SingleQuestionBox = ({
   const [primaryBot, setPrimaryBot] = useState(false);
   const [widgetConfig, setWidgetConfig] = useState(null);
   const [activeAIMode, setActiveAIMode] = useState('');
+  const [talkToHuman, setTalkToHuman] = useState(false);
 
 
   useEffect(() => {
@@ -139,15 +140,18 @@ const SingleQuestionBox = ({
       console.log('data', data);
       if (response.ok) {
         setPrimaryBot(!!data?.primaryBot);
+        setTalkToHuman(!!data?.talkToHuman);
         setWidgetConfig(data?.widgetConfig || { enabled: true });
-        setActiveAIMode(data?.activeAIMode || '');
-        console.log('primaryBot', primaryBot);
+        setActiveAIMode(data?.enabled);
+        console.log('activeAIMode', data?.enabled);
       } else {
         setPrimaryBot(false);
+        setTalkToHuman(false);
       }
     } catch (error) {
       console.error("Error fetching widget config:", error);
       setPrimaryBot(false);
+      setTalkToHuman(false);
     } finally {
       setLoadingAddonStatus(false);
     }
@@ -337,38 +341,40 @@ const SingleQuestionBox = ({
                 </h5>
               </div> */}
               {isAddonActive && (
-                primaryBot ? (
+                activeAIMode && primaryBot ? (
                   <RobodeskBotChatWidgetMain
                     widgetConfig={widgetConfig}
                     activeAIMode={activeAIMode}
                   />
                 ) : (
-                  <SendMessageField primaryBot={primaryBot}
-                    setShowLogin={setShowLogin}
-                    setActiveTab={setActiveTab}
-                    updateSelectedTicket={updateSelectedTicket}
-                    focused={focused}
-                    handleFocusedTextArea={handleFocusedTextArea}
-                  />
+                  <>
+                    <SendMessageField primaryBot={primaryBot}
+                      setShowLogin={setShowLogin}
+                      setActiveTab={setActiveTab}
+                      updateSelectedTicket={updateSelectedTicket}
+                      focused={focused}
+                      handleFocusedTextArea={handleFocusedTextArea}
+                    />
+                    <div className='rd-px-18 rd-mt-20 rd-mb-15 rd-overflow-h-320'>
+                      <div className='rd-flex rd-flex-col rd-gap-20'>
+                        {isLoading ? (
+                          <p className='rd-body-text rd-text-center'>Loading FAQs...</p>
+                        ) : error ? (
+                          <p className='rd-text-red rd-body-text'>Error: {error}</p>
+                        ) : questions.length === 0 ? (
+                          <p className='err_msg'>No FAQs found.</p>
+                        ) : (
+                          questions.map((question) => (
+                            <QuestionItem key={question.id} question={question} />
+                          ))
+                        )}
+                      </div>
+                    </div>
+                  </>
                 )
               )}
             </>
           )}
-          {/* <div className='rd-px-18 rd-mt-20 rd-mb-15 rd-overflow-h-320'>
-            <div className='rd-flex rd-flex-col rd-gap-20'>
-              {isLoading ? (
-                <p className='rd-body-text rd-text-center'>Loading FAQs...</p>
-              ) : error ? (
-                <p className='rd-text-red rd-body-text'>Error: {error}</p>
-              ) : questions.length === 0 ? (
-                <p className='err_msg'>No FAQs found.</p>
-              ) : (
-                questions.map((question) => (
-                  <QuestionItem key={question.id} question={question} />
-                ))
-              )}
-            </div>
-          </div> */}
         </>
       )}
     </>

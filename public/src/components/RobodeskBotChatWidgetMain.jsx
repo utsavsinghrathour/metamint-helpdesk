@@ -174,7 +174,7 @@ export default function RobodeskBotChatWidgetMain({ widgetConfig, activeAIMode }
                 <div id="robodesk-bot-messages" ref={rootRef} style={
                     messages.length > 0
                         ? {
-                            maxHeight: '300px',
+                            maxHeight: '145px',
                             overflowY: 'auto',
                             padding: '16px',
                             display: 'flex',
@@ -183,7 +183,7 @@ export default function RobodeskBotChatWidgetMain({ widgetConfig, activeAIMode }
                         }
                         : {}
                 }>
-                    {messages.map((m, i) => {
+                    {messages.length > 0 && messages.map((m, i) => {
                         const prevMsg = i > 0 ? messages[i - 1] : null;
                         const isSameSender = prevMsg && prevMsg.role === m.role;
                         const marginBottom = isSameSender ? '4px' : '12px';
@@ -259,10 +259,18 @@ export default function RobodeskBotChatWidgetMain({ widgetConfig, activeAIMode }
                             </div>
                         );
                     })}
+                    {messages.length === 0 && (
+                        <div className='rd-text-center rd-px-20 rd-flex rd-flex-col rd-gap-5 rd-mb-20 home-tab-title'>
+                            <h4 className='heading-4'>Have Questions?</h4>
+                            <h5 className='sub-text rd-mt-0'>
+                                Have any questions or need a quote? Leave us a message.
+                            </h5>
+                        </div>
+                    )}
                 </div>
 
                 {/* INPUT */}
-                <div id="robodesk-bot-input" className="chat-input rd-flex rd-px-18 rd-py-15 rd-border-top-light rd-bg-white rd-justify-between">
+                <div id="robodesk-bot-input" className="chat-input rd-flex rd-px-18 rd-py-15 rd-border-top-light rd-border-bottom-light rd-bg-white rd-justify-between">
                     <>
                         <input
                             value={input}
@@ -283,7 +291,6 @@ export default function RobodeskBotChatWidgetMain({ widgetConfig, activeAIMode }
                                 <PiPaperPlaneRightFill className='icon-dark' size={20} />
                             </button>
                         </div>
-                        {/* <button onClick={sendMessage}>Send</button> */}
                     </>
                 </div>
             </div>
