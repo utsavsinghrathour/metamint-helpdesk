@@ -47,7 +47,6 @@ const SingleQuestionBox = ({
   const [primaryBot, setPrimaryBot] = useState(false);
   const [widgetConfig, setWidgetConfig] = useState(null);
   const [activeAIMode, setActiveAIMode] = useState('');
-  const [talkToHuman, setTalkToHuman] = useState(false);
 
 
   useEffect(() => {
@@ -137,21 +136,16 @@ const SingleQuestionBox = ({
     try {
       const response = await fetch("/wp-json/robodesk-bot/v1/widget-config");
       const data = await response.json();
-      console.log('data', data);
       if (response.ok) {
         setPrimaryBot(!!data?.primaryBot);
-        setTalkToHuman(!!data?.talkToHuman);
         setWidgetConfig(data?.widgetConfig || { enabled: true });
         setActiveAIMode(data?.enabled);
-        console.log('activeAIMode', data?.enabled);
       } else {
         setPrimaryBot(false);
-        setTalkToHuman(false);
       }
     } catch (error) {
       console.error("Error fetching widget config:", error);
       setPrimaryBot(false);
-      setTalkToHuman(false);
     } finally {
       setLoadingAddonStatus(false);
     }

@@ -17,7 +17,7 @@ const HomeTabs = ({ setActiveTab, setIsOpen, isExpanded, setIsExpanded, handleCl
   return (
     <div className="rd-flex rd-flex-col rd-h-full featured-faq">
       <div className="rd-main-content">
-        {!showLogin && showHeaderFooter && <Header logo={logo} onClose={handleClose} />}
+        {!showLogin && showHeaderFooter && <Header logo={logo} onClose={handleClose} setActiveTab={setActiveTab} setShowLogin={setShowLogin} updateSelectedTicket={updateSelectedTicket} />}
         <div className="rd-flex-1 rd-overflow-auto">
           <SingleQuestionBox
             setShowHeaderFooter={setShowHeaderFooter}
