@@ -176,7 +176,7 @@ add_action('rest_api_init', callback: function () {
     ));
 
     register_rest_route('robodesk/selected', '/staff', array(
-        'methods' => 'POST',
+        'methods' => 'GET',
         'callback' => 'robodesk_handle_selected_staff',
         'permission_callback' => '__return_true',
     ));
@@ -1032,17 +1032,29 @@ function robodesk_handle_tickets(WP_REST_Request $request)
 
 function robodesk_handle_selected_staff(WP_REST_Request $request)
 {
-    $selected_staff = get_option('robodesk_default_staff', '');
-    $staff_details = get_user_meta($selected_staff);
-    $staff_display_name = $staff_details['display_name'];
-    $staff_user_image = $staff_details['avatar'];
-    $staff_user_email = $staff_details['email'];
-    $staff_user_id = $staff_details['id'];
+    $selected_staff_id = get_option('robodesk_default_staff', '');
+
+    // Check if staff ID is set
+    if (empty($selected_staff_id)) {
+        return new WP_REST_Response(array(
+            'error' => 'No default staff member configured'
+        ), 404);
+    }
+
+    // Get user data
+    $staff_user = get_userdata($selected_staff_id);
+
+    if (!$staff_user) {
+        return new WP_REST_Response(array(
+            'error' => 'Staff member not found'
+        ), 404);
+    }
+
     return new WP_REST_Response(array(
-        'staff_display_name' => $staff_display_name,
-        'staff_user_image' => $staff_user_image,
-        'staff_user_email' => $staff_user_email,
-        'staff_user_id' => $staff_user_id,
+        'staff_display_name' => $staff_user->display_name,
+        'staff_user_image' => get_avatar_url($staff_user->ID),
+        'staff_user_email' => $staff_user->user_email,
+        'staff_user_id' => $staff_user->ID,
     ), 200);
 }
 
