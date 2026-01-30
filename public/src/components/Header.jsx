@@ -39,6 +39,7 @@ const Header = ({ logo, onClose, setActiveTab, setShowLogin, updateSelectedTicke
     const saved = sessionStorage.getItem(CHAT_KEY);
     console.log('Raw session storage data:', saved);
     const messages = saved ? JSON.parse(saved) : [];
+    const messagesExceptFirst = messages.slice(1);
     console.log('Parsed messages:', messages);
 
     // If no messages, return early
