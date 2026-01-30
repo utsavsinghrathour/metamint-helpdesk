@@ -9,6 +9,7 @@ import { createTicket } from "../utils/modules";
 const Header = ({ logo, onClose, setActiveTab, setShowLogin, updateSelectedTicket }) => {
   const [talkToHuman, setTalkToHuman] = useState(false);
   const CHAT_KEY = "robodesk_chat_session";
+  const [selectedStaff, setSelectedStaff] = useState(null);
   const { loggedinContext, loggedInUsrId, refreshTickets } = useAppData();
 
   const handleCloseClick = () => {
@@ -30,6 +31,24 @@ const Header = ({ logo, onClose, setActiveTab, setShowLogin, updateSelectedTicke
     }
   };
 
+  const fetchDefaultStaff = async () => {
+    try {
+      const response = await fetch("/wp-json/robodesk/selected/staff");
+      const data = await response.json();
+      console.log('API Response:', response.status, data);
+
+      if (response.ok && data?.staff_user_id) {
+        console.log('Setting staff ID:', data.staff_user_id);
+        setSelectedStaff(data.staff_user_id);
+      } else {
+        console.log('No default staff configured or error:', data);
+        setSelectedStaff(null);
+      }
+    } catch (error) {
+      console.error("Error fetching default staff:", error);
+      setSelectedStaff(null);
+    }
+  };
 
 
   const handleTalkToHumanClick = async () => {
@@ -104,6 +123,7 @@ const Header = ({ logo, onClose, setActiveTab, setShowLogin, updateSelectedTicke
 
   useEffect(() => {
     fetchApiKey();
+    fetchDefaultStaff();
   }, []);
 
   return (
