@@ -190,10 +190,10 @@ function robodesk_replace_template_tags($template, $ticket_id)
 
     // You can add more fields as needed
     $replacements = [
-        '{ticket_id}'     => $ticket_id,
+        '{ticket_id}' => $ticket_id,
         '{ticket_author}' => esc_html($author_name),
-        '{ticket_link}'   => esc_url($ticket_link),
-        '{ticket_title}'  => esc_html($ticket_title),
+        '{ticket_link}' => esc_url($ticket_link),
+        '{ticket_title}' => esc_html($ticket_title),
         '{ticket_status}' => ucfirst(esc_html($ticket_status)),
     ];
 
@@ -292,7 +292,7 @@ function robodesk_save_basic_settings()
     }
 
     $settings = $_POST['settings'];
-    $valid_settings = ['site_name', 'admin_email', 'theme_color', 'default_ticket_category'];
+    $valid_settings = ['site_name', 'admin_email', 'theme_color', 'default_ticket_category', 'default_staff'];
     $image_fields = [
         'popover_icon' => 'robodesk_popover_icon',
         'popover_top_icon' => 'robodesk_popover_top_icon',
@@ -333,6 +333,12 @@ function robodesk_save_basic_settings()
             $sanitized_settings[$key] = absint($settings[$key]);
             if (!empty($sanitized_settings[$key]) && !term_exists($sanitized_settings[$key], 'robodesk_ticket_category')) {
                 $results[$key] = ['status' => 'error', 'message' => 'Invalid ticket category'];
+                continue;
+            }
+        } elseif ($key === 'default_staff') {
+            $sanitized_settings[$key] = absint($settings[$key]);
+            if (!empty($sanitized_settings[$key]) && !get_userdata($sanitized_settings[$key])) {
+                $results[$key] = ['status' => 'error', 'message' => 'Invalid staff member'];
                 continue;
             }
         }
@@ -521,11 +527,11 @@ function robodesk_create_ticket()
         }
 
         $user_id = wp_insert_user([
-            'user_login'   => $user_login,
-            'user_email'   => $customer_email,
-            'user_pass'    => wp_generate_password(),
+            'user_login' => $user_login,
+            'user_email' => $customer_email,
+            'user_pass' => wp_generate_password(),
             'display_name' => $customer_name,
-            'role'         => $role,
+            'role' => $role,
         ]);
 
         if (is_wp_error($user_id)) {
@@ -544,31 +550,31 @@ function robodesk_create_ticket()
 
     // Create the ticket
     $ticket_id = wp_insert_post([
-        'post_title'   => $ticket_title,
+        'post_title' => $ticket_title,
         'post_content' => $ticket_description,
-        'post_type'    => 'robodesk_ticket',
-        'post_status'  => 'publish',
-        'post_author'  => $user_id, // Set the user ID as the post author
-        'meta_input'   => [
+        'post_type' => 'robodesk_ticket',
+        'post_status' => 'publish',
+        'post_author' => $user_id, // Set the user ID as the post author
+        'meta_input' => [
             '_robodesk_customer_email' => $customer_email,
-            '_robodesk_ticket_status'  => 'open',
+            '_robodesk_ticket_status' => 'open',
 
-            'ticket_assignee'          => $ticket_assignee,
-            'robodesk_ticket_origin'   => 'Admin-Form', // Default source
+            'ticket_assignee' => $ticket_assignee,
+            'robodesk_ticket_origin' => 'Admin-Form', // Default source
         ],
     ]);
 
     // adding the message of the ticket to comment of the ticket
     if ($ticket_id && !is_wp_error($ticket_id)) {
         $comment_id = wp_insert_comment([
-            'comment_post_ID'      => $ticket_id,
-            'comment_author'       => $customer_name,
+            'comment_post_ID' => $ticket_id,
+            'comment_author' => $customer_name,
             'comment_author_email' => $customer_email,
-            'user_id'              => $user_id,
-            'comment_content'      => $ticket_description,
-            'comment_approved'     => 1,
-            'comment_type'         => 'ticket_replies',
-            'is_robodesk_reply'    => true, // Custom field to identify as a Robodesk reply
+            'user_id' => $user_id,
+            'comment_content' => $ticket_description,
+            'comment_approved' => 1,
+            'comment_type' => 'ticket_replies',
+            'is_robodesk_reply' => true, // Custom field to identify as a Robodesk reply
         ]);
 
         if ($comment_id === false || is_wp_error($comment_id)) {
@@ -633,7 +639,7 @@ function robodesk_user_lookup()
     $results = array_map(function ($user) {
         return [
             'display_name' => $user->display_name,
-            'user_email'   => $user->user_email,
+            'user_email' => $user->user_email,
         ];
     }, $users);
 
@@ -668,16 +674,16 @@ function robodesk_update_ticket_status()
     $user_object = get_userdata($user_id);
     if ($user_object) {
         wp_insert_comment([
-            'comment_post_ID'      => $ticket_id,
-            'comment_author'       => $user_object->display_name,
+            'comment_post_ID' => $ticket_id,
+            'comment_author' => $user_object->display_name,
             'comment_author_email' => $user_object->user_email,
-            'user_id'              => $user_id,
-            'comment_content'      => 'Conversation status changed to ' . $new_status . ' by ' . $user_object->display_name,
-            'comment_approved'     => 1,
-            'comment_type'         => 'ticket_replies',
-            'is_robodesk_reply'    => true, // Custom field to identify as a Robodesk reply
+            'user_id' => $user_id,
+            'comment_content' => 'Conversation status changed to ' . $new_status . ' by ' . $user_object->display_name,
+            'comment_approved' => 1,
+            'comment_type' => 'ticket_replies',
+            'is_robodesk_reply' => true, // Custom field to identify as a Robodesk reply
             //add comment meta to indicate the status change
-            'comment_meta'         => [
+            'comment_meta' => [
                 'is_action' => true,
             ],
         ]);
@@ -718,7 +724,7 @@ function robodesk_update_ticket_priority()
         wp_send_json_error(['message' => 'Failed to assign priority']);
     }
 
-    wp_set_post_terms($ticket_id, [(int)$term['term_id']], 'robodesk_ticket_priority');
+    wp_set_post_terms($ticket_id, [(int) $term['term_id']], 'robodesk_ticket_priority');
 
     $updated = current_time('mysql');
 
@@ -727,23 +733,23 @@ function robodesk_update_ticket_priority()
     $user_object = get_userdata($user_id);
     if ($user_object) {
         wp_insert_comment([
-            'comment_post_ID'      => $ticket_id,
-            'comment_author'       => $user_object->display_name,
+            'comment_post_ID' => $ticket_id,
+            'comment_author' => $user_object->display_name,
             'comment_author_email' => $user_object->user_email,
-            'user_id'              => $user_id,
-            'comment_content'      => 'Conversation priority changed to ' . $new_priority . ' by ' . $user_object->display_name,
-            'comment_approved'     => 1,
-            'comment_type'         => 'ticket_replies',
-            'is_robodesk_reply'    => true, // Custom field to identify as a Robodesk reply
+            'user_id' => $user_id,
+            'comment_content' => 'Conversation priority changed to ' . $new_priority . ' by ' . $user_object->display_name,
+            'comment_approved' => 1,
+            'comment_type' => 'ticket_replies',
+            'is_robodesk_reply' => true, // Custom field to identify as a Robodesk reply
             //add comment meta to indicate the priority change
-            'comment_meta'         => [
+            'comment_meta' => [
                 'is_action' => true,
             ],
         ]);
     }
     wp_send_json_success([
         'priority' => $new_priority,
-        'updated'  => $updated,
+        'updated' => $updated,
     ]);
 }
 
@@ -776,23 +782,23 @@ function robodesk_update_ticket_assignee()
     $user_object = get_userdata($user_id);
     if ($user_object) {
         wp_insert_comment([
-            'comment_post_ID'      => $ticket_id,
-            'comment_author'       => $user_object->display_name,
+            'comment_post_ID' => $ticket_id,
+            'comment_author' => $user_object->display_name,
             'comment_author_email' => $user_object->user_email,
-            'user_id'              => $user_id,
-            'comment_content'      => 'Conversation assigned to ' . $new_assignee . ' by ' . $user_object->display_name,
-            'comment_approved'     => 1,
-            'comment_type'         => 'ticket_replies',
-            'is_robodesk_reply'    => true, // Custom field to identify as a Robodesk reply
+            'user_id' => $user_id,
+            'comment_content' => 'Conversation assigned to ' . $new_assignee . ' by ' . $user_object->display_name,
+            'comment_approved' => 1,
+            'comment_type' => 'ticket_replies',
+            'is_robodesk_reply' => true, // Custom field to identify as a Robodesk reply
             //add comment meta to indicate the assignee change
-            'comment_meta'         => [
+            'comment_meta' => [
                 'is_action' => true,
             ],
         ]);
     }
     wp_send_json_success([
         'assignee' => $new_assignee,
-        'updated'  => $updated,
+        'updated' => $updated,
     ]);
 }
 
@@ -825,14 +831,14 @@ function robodesk_handle_add_ticket_reply()
     }
 
     $comment_id = wp_insert_comment([
-        'comment_post_ID'      => $ticket_id,
-        'comment_author'       => $user_object->display_name,
+        'comment_post_ID' => $ticket_id,
+        'comment_author' => $user_object->display_name,
         'comment_author_email' => $user_object->user_email,
-        'user_id'              => $user_id,
-        'comment_content'      => $reply,
-        'comment_approved'     => 1,
-        'comment_type'         => 'ticket_replies',
-        'is_robodesk_reply'   => true,
+        'user_id' => $user_id,
+        'comment_content' => $reply,
+        'comment_approved' => 1,
+        'comment_type' => 'ticket_replies',
+        'is_robodesk_reply' => true,
     ]);
 
     if (is_wp_error($comment_id)) {
@@ -844,7 +850,7 @@ function robodesk_handle_add_ticket_reply()
 
     wp_send_json_success([
         'comment_id' => $comment_id,
-        'author'     => $user_object->display_name,
+        'author' => $user_object->display_name,
     ]);
 }
 
@@ -883,14 +889,14 @@ function robodesk_handle_close_ticket()
 
     if (!empty($reply)) {
         $comment_id = wp_insert_comment([
-            'comment_post_ID'      => $ticket_id,
-            'comment_author'       => $user_object->display_name,
+            'comment_post_ID' => $ticket_id,
+            'comment_author' => $user_object->display_name,
             'comment_author_email' => $user_object->user_email,
-            'user_id'              => $user_id,
-            'comment_content'      => $reply,
-            'comment_approved'     => 1,
-            'comment_type'         => 'ticket_replies',
-            'is_robodesk_reply'   => true,
+            'user_id' => $user_id,
+            'comment_content' => $reply,
+            'comment_approved' => 1,
+            'comment_type' => 'ticket_replies',
+            'is_robodesk_reply' => true,
         ]);
 
         if (is_wp_error($comment_id)) {
@@ -900,15 +906,15 @@ function robodesk_handle_close_ticket()
 
     // Add a comment indicating the ticket was closed
     $close_comment_id = wp_insert_comment([
-        'comment_post_ID'      => $ticket_id,
-        'comment_author'       => $user_object->display_name,
+        'comment_post_ID' => $ticket_id,
+        'comment_author' => $user_object->display_name,
         'comment_author_email' => $user_object->user_email,
-        'user_id'              => $user_id,
-        'comment_content'      => 'Conversation closed by ' . $user_object->display_name,
-        'comment_approved'     => 1,
-        'comment_type'         => 'ticket_replies',
-        'is_robodesk_reply'   => true,
-        'comment_meta'         => [
+        'user_id' => $user_id,
+        'comment_content' => 'Conversation closed by ' . $user_object->display_name,
+        'comment_approved' => 1,
+        'comment_type' => 'ticket_replies',
+        'is_robodesk_reply' => true,
+        'comment_meta' => [
             'is_action' => true,
         ],
     ]);
@@ -957,8 +963,8 @@ function robodesk_handle_get_ticket_replies()
     // Get ticket replies (comments)
     $comments = get_comments([
         'post_id' => $ticket_id,
-        'order'   => 'ASC',
-        'type'    => 'ticket_replies',
+        'order' => 'ASC',
+        'type' => 'ticket_replies',
         'is_robodesk_reply' => true,
     ]);
 
@@ -982,18 +988,18 @@ function robodesk_handle_get_ticket_replies()
         ];
 
         $replies[] = [
-            'id'        => $comment->comment_ID,
-            'author'    => $comment->comment_author,
-            'message'   => $comment->comment_content,
+            'id' => $comment->comment_ID,
+            'author' => $comment->comment_author,
+            'message' => $comment->comment_content,
             'timestamp' => $comment->comment_date,
-            'type'      => $type,
+            'type' => $type,
             'comment_meta' => $comment_meta, // Include comment_meta object
         ];
     }
 
     wp_send_json_success([
         'replies' => $replies,
-        'count'   => count($replies),
+        'count' => count($replies),
     ]);
 }
 
@@ -1032,14 +1038,14 @@ function robodesk_handle_add_ticket_note()
     }
 
     $note_id = wp_insert_comment([
-        'comment_post_ID'      => $ticket_id,
-        'comment_author'       => $user_object->display_name,
+        'comment_post_ID' => $ticket_id,
+        'comment_author' => $user_object->display_name,
         'comment_author_email' => $user_object->user_email,
-        'user_id'              => $user_id,
-        'comment_content'      => $note,
-        'comment_approved'     => 1,
-        'comment_type'         => 'ticket_notes',
-        'is_robodesk_note'     => true, // Custom field to identify as a Robodesk note
+        'user_id' => $user_id,
+        'comment_content' => $note,
+        'comment_approved' => 1,
+        'comment_type' => 'ticket_notes',
+        'is_robodesk_note' => true, // Custom field to identify as a Robodesk note
     ]);
 
     if (is_wp_error($note_id)) {
@@ -1048,7 +1054,7 @@ function robodesk_handle_add_ticket_note()
 
     wp_send_json_success([
         'note_id' => $note_id,
-        'author'  => $user_object->display_name,
+        'author' => $user_object->display_name,
     ]);
 }
 
@@ -1071,8 +1077,8 @@ function robodesk_handle_get_ticket_notes()
     // Get ticket notes (comments)
     $comments = get_comments([
         'post_id' => $ticket_id,
-        'order'   => 'ASC',
-        'type'    => 'ticket_notes',
+        'order' => 'ASC',
+        'type' => 'ticket_notes',
         'is_robodesk_note' => true,
     ]);
 
@@ -1090,11 +1096,11 @@ function robodesk_handle_get_ticket_notes()
             }
         }
         $notes[] = [
-            'id'        => $comment->comment_ID,
-            'author'    => $comment->comment_author,
-            'message'   => $comment->comment_content,
+            'id' => $comment->comment_ID,
+            'author' => $comment->comment_author,
+            'message' => $comment->comment_content,
             'timestamp' => $comment->comment_date,
-            'type'      => $type,
+            'type' => $type,
         ];
     }
 
@@ -1196,7 +1202,7 @@ function set_default_taxonomy_term($post_id, $post, $update)
     if (empty($terms) || is_wp_error($terms)) {
         $default_term_id = get_option('robodesk_default_ticket_category', false);
         if ($default_term_id) {
-            wp_set_post_terms($post_id, array((int)$default_term_id), $taxonomy, false);
+            wp_set_post_terms($post_id, array((int) $default_term_id), $taxonomy, false);
         }
     }
 
@@ -1213,7 +1219,7 @@ add_action('edit_user_profile_update', 'save_robodesk_user_meta_fields');
 
 function add_robodesk_user_meta_fields($user)
 {
-?>
+    ?>
     <h3><?php _e('Robodesk Support Department', 'robodesk'); ?></h3>
     <table class="form-table">
         <tr>
@@ -1237,7 +1243,7 @@ function add_robodesk_user_meta_fields($user)
             </td>
         </tr>
     </table>
-<?php
+    <?php
 }
 
 function save_robodesk_user_meta_fields($user_id)
@@ -1431,7 +1437,7 @@ function robodesk_handle_bulk_action()
                     continue 2;
                 }
 
-                $result = wp_set_object_terms($ticket_id, (int)$term->term_id, 'robodesk_ticket_priority', false);
+                $result = wp_set_object_terms($ticket_id, (int) $term->term_id, 'robodesk_ticket_priority', false);
                 if (is_wp_error($result)) {
                     $errors[] = "Failed to update priority for ticket ID: $ticket_id - " . $result->get_error_message();
                 } else {
@@ -1583,11 +1589,11 @@ function robodesk_refresh_dashboard_tickets()
 
     // WP_Query arguments to fetch ALL tickets
     $args = [
-        'post_type'      => 'robodesk_ticket',
-        'post_status'    => 'publish',
+        'post_type' => 'robodesk_ticket',
+        'post_status' => 'publish',
         'posts_per_page' => -1,
-        'orderby'        => 'modified',
-        'order'          => 'DESC',
+        'orderby' => 'modified',
+        'order' => 'DESC',
     ];
 
     $query = new WP_Query($args);
@@ -1611,7 +1617,7 @@ function robodesk_refresh_dashboard_tickets()
             if (!is_wp_error($ticket_terms) && !empty($ticket_terms)) {
                 $ticket_category = [
                     'name' => $ticket_terms[0]->name,
-                    'id'   => $ticket_terms[0]->term_id,
+                    'id' => $ticket_terms[0]->term_id,
                     'term_id' => $ticket_terms[0]->term_id,
                 ];
             }
@@ -1622,7 +1628,7 @@ function robodesk_refresh_dashboard_tickets()
             $formatted_replies = array_map(function ($reply) use ($ticket_id) {
                 $comment_meta = get_comment_meta($reply->comment_ID);
                 $author_type = isset($comment_meta['author_type']) ? $comment_meta['author_type'][0] : 'agent';
-                
+
                 return [
                     'id' => $reply->comment_ID,
                     'author' => $reply->comment_author,

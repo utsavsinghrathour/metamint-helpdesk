@@ -1297,7 +1297,10 @@ jQuery(document).ready(function ($) {
       'settings[default_ticket_category]',
       $form.find('#robodesk_default_ticket_category').val()
     );
-
+    formData.append(
+      'settings[default_staff]',
+      $form.find('#robodesk_default_staff').val()
+    );
     // Append media URLs and files
     mediaFields.forEach(function (field) {
       formData.append(field.hidden, $(`#${field.hidden}`).val());
