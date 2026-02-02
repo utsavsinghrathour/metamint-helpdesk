@@ -141,7 +141,6 @@ export default function RobodeskBotChatWidgetMain({ widgetConfig, activeAIMode }
             });
 
             const j = await resp.json();
-            console.log("AI response", j);
 
             setMessages((m) => [
                 ...m.filter((x) => !x.thinking),
