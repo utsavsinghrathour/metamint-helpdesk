@@ -52,18 +52,13 @@ const Header = ({ logo, onClose, setActiveTab, setShowLogin, updateSelectedTicke
 
 
   const handleTalkToHumanClick = async () => {
-    console.log('talkToHuman Click', talkToHuman);
-
     // Retrieve chat messages from session storage
     const saved = sessionStorage.getItem(CHAT_KEY);
-    console.log('Raw session storage data:', saved);
     const messages = saved ? JSON.parse(saved) : [];
     const messagesExceptFirst = messages.slice(1);
-    console.log('Parsed messages:', messages);
 
     // If no messages, return early
     if (!messages || messages.length === 0) {
-      console.log('No messages found in session storage');
       return;
     }
 
@@ -112,6 +107,18 @@ const Header = ({ logo, onClose, setActiveTab, setShowLogin, updateSelectedTicke
       updateSelectedTicket(newTicket);
       setActiveTab(1);
 
+
+      if (messagesExceptFirst.length > 0) {
+        messagesExceptFirst.forEach((message) => {
+          if (message.role === 'user') {
+            sendReply(newTicket.id, loggedInUsrId, message.text);
+          } else if (message.role === 'assistant') {
+            sendReply(newTicket.id, selectedStaff, message.message);
+          }
+        });
+      }
+
+
       // Clear session storage after successful ticket creation
       sessionStorage.removeItem(CHAT_KEY);
 
@@ -122,8 +129,8 @@ const Header = ({ logo, onClose, setActiveTab, setShowLogin, updateSelectedTicke
 
 
   useEffect(() => {
-    fetchApiKey();
     fetchDefaultStaff();
+    fetchApiKey();
   }, []);
 
   return (
