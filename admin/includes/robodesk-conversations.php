@@ -209,10 +209,13 @@ $priority_terms = get_terms(array(
     <!-- Search and Filter Bar -->
     <div class="bg-white shadow rounded-lg mb-6">
         <div class="px-4 py-5 sm:p-6">
-            <form method="GET" action="" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 items-end">
+            <form method="GET" action="<?php echo esc_url(admin_url('admin.php')); ?>" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 items-end">
                 <!-- Preserve other GET parameters -->
+                <!-- Keep the page parameter to stay on Conversations tab -->
+                <input type="hidden" name="page" value="robodesk-dashboard">
+                <input type="hidden" name="tab" value="tickets">
                 <?php foreach ($_GET as $key => $value) : ?>
-                    <?php if (!in_array($key, ['search', 'customer', 'agent', 'status', 'paged'])) : ?>
+                    <?php if (!in_array($key, ['page', 'tab', 'search', 'customer', 'agent', 'status', 'paged'])) : ?>
                         <input type="hidden" name="<?php echo esc_attr($key); ?>" value="<?php echo esc_attr($value); ?>">
                     <?php endif; ?>
                 <?php endforeach; ?>
@@ -267,9 +270,7 @@ $priority_terms = get_terms(array(
 
                     <!-- Clear filters button -->
                     <?php if (!empty($search_term) || !empty($customer_filter) || !empty($agent_filter) || $status_filter !== 'all') : ?>
-                        <a href="<?php echo esc_url(admin_url('admin.php?' . http_build_query(array_filter($_GET, function ($key) {
-                                        return !in_array($key, ['search', 'customer', 'agent', 'status', 'paged']);
-                                    }, ARRAY_FILTER_USE_KEY)))); ?>"
+                        <a href="<?php echo esc_url(admin_url('admin.php?page=robodesk-dashboard&tab=tickets')); ?>"
                             class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md shadow-sm text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
                             <i class="fas fa-times mr-2"></i>
                             Clear
@@ -555,3 +556,18 @@ $priority_terms = get_terms(array(
         </div>
     <?php endif; ?>
 </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Get the filter form
+        const filterForm = document.querySelector('#tickets-page form');
+
+        if (filterForm) {
+            // Allow normal form submission - let the server handle filtering
+            filterForm.addEventListener('submit', function(e) {
+                // Allow default form submission to reload with filters
+                // No preventDefault() - let the form submit normally
+            });
+        }
+    });
+</script>
