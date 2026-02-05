@@ -155,7 +155,14 @@
                 $ticket_id = get_the_ID();
 
                 $ticket_status = get_post_meta($ticket_id, '_robodesk_ticket_status', true) ?: 'N/A';
-                $ticket_origin = get_post_meta($ticket_id, 'robodesk_ticket_origin', true) ?: 'N/A';
+                $ticket_origin = get_post_meta($ticket_id, 'robodesk_ticket_origin', true);
+                if (empty($ticket_origin)) {
+                    $origin_terms = wp_get_post_terms($ticket_id, 'robodesk_ticket_origin');
+                    if (!is_wp_error($origin_terms) && !empty($origin_terms)) {
+                        $ticket_origin = $origin_terms[0]->name;
+                    }
+                }
+                $ticket_origin = $ticket_origin ?: 'N/A';
                 $priority_terms = get_the_terms($ticket_id, 'robodesk_ticket_priority');
                 $author_image = get_avatar_url(get_the_author_meta('ID'), ['size' => 32]);
 

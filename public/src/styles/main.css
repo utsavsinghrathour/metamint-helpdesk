@@ -599,8 +599,7 @@ h5.sub-text {
   visibility: visible;
   /* max-height: 560px;
   height: 560px; */
-  /* min-height: 560px; */
-  min-height: 420px;
+  min-height: 560px;
 }
 
 .robodesk-popup.closed {

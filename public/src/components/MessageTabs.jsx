@@ -38,8 +38,9 @@ const TicketItem = ({ ticket, onSelect }) => {
       <div className='rd-flex rd-justify-between rd-w-full'>
         <div className='rd-message-list-wrap'>
           <h5
-            className={`sub-text rd-title-color ${showNotification ? 'rd-title-with-dot' : ''
-              }`}
+            className={`sub-text rd-title-color ${
+              showNotification ? 'rd-title-with-dot' : ''
+            }`}
           >
             {ticket.title}
           </h5>
@@ -50,12 +51,13 @@ const TicketItem = ({ ticket, onSelect }) => {
           </div>
           <div className='rd-flex rd-align-center rd-gap-10 rd-mt-10'>
             <span
-              className={`rd-priority rd-fw-medium ${ticket.priority === 'Urgent'
+              className={`rd-priority rd-fw-medium ${
+                ticket.priority === 'Urgent'
                   ? 'rd-urgent'
                   : ticket.priority === 'Medium'
-                    ? 'rd-medium'
-                    : 'rd-low'
-                }`}
+                  ? 'rd-medium'
+                  : 'rd-low'
+              }`}
             >
               {ticket.priority}
             </span>
@@ -191,34 +193,34 @@ const MessageTabs = ({
   const filteredTickets =
     Array.isArray(ticketsContext) && ticketsContext.length > 0
       ? ticketsContext.filter((ticket) => {
-        // --- Status filter ---
-        let matchesTab = false;
+          // --- Status filter ---
+          let matchesTab = false;
 
-        if (currentTab === 'active-conversations') {
-          matchesTab =
-            ticket.status === 'open' || ticket.status === 'in-progress';
-        } else {
-          matchesTab = ticket.status === currentTab;
-        }
+          if (currentTab === 'active-conversations') {
+            matchesTab =
+              ticket.status === 'open' || ticket.status === 'in-progress';
+          } else {
+            matchesTab = ticket.status === currentTab;
+          }
 
-        const ticketPriority = ticket.priority?.toLowerCase() || '';
-        const filterPriority = priorityFilter?.toLowerCase() || 'all';
+          const ticketPriority = ticket.priority?.toLowerCase() || '';
+          const filterPriority = priorityFilter?.toLowerCase() || 'all';
 
-        const matchesPriority =
-          filterPriority === 'all' || ticketPriority === filterPriority;
+          const matchesPriority =
+            filterPriority === 'all' || ticketPriority === filterPriority;
 
-        // --- Search filter ---
-        const searchLower = searchTerm.toLowerCase();
-        const titleLower = ticket.title?.toLowerCase() || '';
-        const ticketNumberLower = ticket.ticketNumber?.toLowerCase() || '';
+          // --- Search filter ---
+          const searchLower = searchTerm.toLowerCase();
+          const titleLower = ticket.title?.toLowerCase() || '';
+          const ticketNumberLower = ticket.ticketNumber?.toLowerCase() || '';
 
-        const matchesSearch =
-          titleLower.includes(searchLower) ||
-          ticketNumberLower.includes(searchLower);
+          const matchesSearch =
+            titleLower.includes(searchLower) ||
+            ticketNumberLower.includes(searchLower);
 
-        // --- Final condition ---
-        return matchesTab && matchesPriority && matchesSearch;
-      })
+          // --- Final condition ---
+          return matchesTab && matchesPriority && matchesSearch;
+        })
       : [];
 
   return (

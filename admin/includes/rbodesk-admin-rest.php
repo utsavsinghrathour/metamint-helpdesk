@@ -128,7 +128,7 @@ function robodesk_live_admin_comments($request)
                 'message'   => $comment->comment_content,
                 'timestamp' => $comment->comment_date,
                 'type'      => $type,
-                'comment_meta' => $comment_meta, 
+                'comment_meta' => $comment_meta,
             ];
         }
 
