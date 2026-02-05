@@ -15,7 +15,6 @@
   "author": "Arpan Adhikari",
   "license": "ISC",
   "devDependencies": {
-    "@babel/preset-react": "^7.28.5",
     "@types/react": "^19.1.8",
     "@wordpress/scripts": "^30.19.0"
   },

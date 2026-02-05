@@ -59,11 +59,11 @@
                         </select>
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2"><?php _e('Category', 'robodesk'); ?>
-                            *</label>
-                        <select id="ticket-category" name="ticket_category" required
+                        <label class="block text-sm font-medium text-gray-700 mb-2"><?php _e('Department', 'robodesk'); ?>
+                        </label>
+                        <select id="ticket-category" name="ticket_category"
                             class="styled-select block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
-                            <option value=""><?php _e('Select Category', 'robodesk'); ?></option>
+                            <option value=""><?php _e('Select Department', 'robodesk'); ?></option>
                             <?php
                             $default_category_id = get_option('robodesk_default_ticket_category', '');
                             if (!empty($default_category_id)) {

@@ -172,8 +172,8 @@
 
 .rd-single-ticket .chat-container {
     /* min-height: 370px; */
-    min-height: 300px;
-    height: 40vh;
+    min-height: 355px;
+    height: 44vh;
 }
 .rd-single-ticket .chat-container.ticket-closed{
     min-height: 320px;
