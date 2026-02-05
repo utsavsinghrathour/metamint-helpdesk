@@ -60,22 +60,19 @@ function robodesk_fetch_emails()
 
     // Verify the custom post type exists
     if (!post_type_exists('robodesk_ticket')) {
-        echo '<div class="error"><p>Custom post type "robodesk_ticket" does not exist!</p></div>';
         error_log('Custom post type "robodesk_ticket" does not exist!');
-        return;
+        return 'Error: Custom post type "robodesk_ticket" does not exist!';
     }
 
     // Check if required taxonomies exist
     if (!taxonomy_exists('robodesk_ticket_origin')) {
-        echo '<div class="error"><p>Taxonomy "robodesk_ticket_origin" does not exist!</p></div>';
         error_log('Taxonomy "robodesk_ticket_origin" does not exist!');
-        return;
+        return 'Error: Taxonomy "robodesk_ticket_origin" does not exist!';
     }
 
     if (!taxonomy_exists('robodesk_ticket_priority')) {
-        echo '<div class="error"><p>Taxonomy "robodesk_ticket_priority" does not exist!</p></div>';
         error_log('Taxonomy "robodesk_ticket_priority" does not exist!');
-        return;
+        return 'Error: Taxonomy "robodesk_ticket_priority" does not exist!';
     }
 
     // Get last fetched date
@@ -111,8 +108,7 @@ function robodesk_fetch_emails()
     if (!$email) {
         $error_message = 'Cannot connect to email: ' . imap_last_error();
         error_log($error_message);
-        echo '<div class="error"><p>' . esc_html($error_message) . '</p></div>';
-        return;
+        return 'Error: ' . $error_message;
     }
 
     error_log('Successfully connected to IMAP server');
@@ -311,6 +307,17 @@ function robodesk_fetch_emails()
             $useremail = $headerInfo->from[0]->mailbox . '@' . $headerInfo->from[0]->host;
             error_log('Creating new ticket from email: ' . $useremail);
 
+            // Check if email should be filtered before creating ticket
+            if (!apply_filters('robodesk_before_create_ticket_from_email', true, [
+                'from' => $useremail,
+                'subject' => $subject,
+                'message' => $message
+            ])) {
+                error_log('Email from ' . $useremail . ' was filtered by exclusion rules');
+                $skipped_count++;
+                continue;
+            }
+
             $user = get_user_by('email', $useremail);
             if (!$user) {
                 error_log('User not found, creating new user with email: ' . $useremail);
@@ -366,7 +373,6 @@ function robodesk_fetch_emails()
 
             if (is_wp_error($term_email) || is_wp_error($term_priority)) {
                 error_log('Cannot proceed without required terms');
-                echo '<div class="error"><p>Failed to create required taxonomy terms</p></div>';
                 $error_count++;
                 continue;
             }
