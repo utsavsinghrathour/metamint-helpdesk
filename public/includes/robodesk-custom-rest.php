@@ -1,6 +1,6 @@
 <?php
-require_once ROBODESK_PLUGIN_PATH . '/public/includes/php-jwt/src/JWT.php';
-require_once ROBODESK_PLUGIN_PATH . '/public/includes/php-jwt/src/Key.php';
+require_once  ROBODESK_PLUGIN_PATH . '/public/includes/php-jwt/src/JWT.php';
+require_once  ROBODESK_PLUGIN_PATH . '/public/includes/php-jwt/src/Key.php';
 
 
 use \Firebase\JWT\JWT;
@@ -99,11 +99,11 @@ function robodesk_generate_token($user, $expiration_in_days = 7)
 
     // Token payload
     $token = array(
-        'iss' => get_site_url(),
-        'iat' => $issued_at,
-        'exp' => $expire,
+        'iss'  => get_site_url(),
+        'iat'  => $issued_at,
+        'exp'  => $expire,
         'data' => array(
-            'user_id' => $user->ID,
+            'user_id'    => $user->ID,
             'user_email' => $user->user_email,
         ),
     );
@@ -170,14 +170,8 @@ add_action('rest_api_init', callback: function () {
     ));
 
     register_rest_route('robodesk/chat/v1', '/tickets', array(
-        'methods' => 'POST',
+        'methods'  => 'POST',
         'callback' => 'robodesk_handle_tickets',
-        'permission_callback' => '__return_true',
-    ));
-
-    register_rest_route('robodesk/selected', '/staff', array(
-        'methods' => 'GET',
-        'callback' => 'robodesk_handle_selected_staff',
         'permission_callback' => '__return_true',
     ));
 
@@ -210,10 +204,10 @@ add_action('rest_api_init', callback: function () {
         '/stream/(?P<type>[^/]+)/(?P<post_id>\d+)(?:/(?P<last_id>\d+))?(?:/(?P<user_id>\d+))?',
         array(
             array(
-                'methods' => 'GET',
-                'callback' => 'robodesk_stream',
+                'methods'             => 'GET',
+                'callback'            => 'robodesk_stream',
                 'permission_callback' => '__return_true',
-                'args' => array(
+                'args'                => array(
                     'type' => array(
                         'validate_callback' => function ($param) {
                             return in_array($param, ['comments', 'tickets', 'notifications'], true);
@@ -261,8 +255,7 @@ function robodesk_stream($request)
 
     session_write_close();
 
-    if (ob_get_level())
-        ob_end_clean();
+    if (ob_get_level()) ob_end_clean();
 
     ini_set('zlib.output_compression', 0);
     ini_set('output_buffering', 0);
@@ -270,8 +263,7 @@ function robodesk_stream($request)
     set_time_limit(0);
     ignore_user_abort(false);
 
-    if (connection_aborted())
-        return;
+    if (connection_aborted()) return;
 
     switch ($type) {
         case ('comments'):
@@ -359,17 +351,17 @@ function robodesk_get_new_notifications($user_id)
 {
     // Get all tickets newer than last_id_client
     $notifications_data = get_posts(array(
-        'post_type' => 'robodesk_ticket',
-        'post_status' => 'publish',
-        'author' => $user_id,
-        'orderby' => 'date',
-        'order' => 'DESC',
-        'fields' => 'ids',
+        'post_type'      => 'robodesk_ticket',
+        'post_status'    => 'publish',
+        'author'         => $user_id,
+        'orderby'        => 'date',
+        'order'          => 'DESC',
+        'fields'         => 'ids',
         'posts_per_page' => 4,
-        'meta_query' => array(
+        'meta_query'     => array(
             array(
-                'key' => 'rbd_all_seen',
-                'value' => 'no',
+                'key'     => 'rbd_all_seen',
+                'value'   => 'no',
                 'compare' => '='
             )
         )
@@ -383,21 +375,20 @@ function robodesk_get_new_notifications($user_id)
 function robodesk_live_conversations($ticket_id, $last_comment_client, $loggedin_user_id)
 {
 
-    if (get_post_type($ticket_id) !== 'robodesk_ticket')
-        return [];
+    if (get_post_type($ticket_id) !== 'robodesk_ticket') return [];
 
     $last_comment_server = get_comments([
-        'post_id' => $ticket_id,
-        'number' => 1,
-        'orderby' => 'comment_date',
-        'order' => 'DESC',
-        'status' => 'approve',
-        'fields' => 'ids',
-        'type' => 'ticket_replies',
-        'meta_query' => [
+        'post_id'      => $ticket_id,
+        'number'       => 1,
+        'orderby'      => 'comment_date',
+        'order'        => 'DESC',
+        'status'       => 'approve',
+        'fields'       => 'ids',
+        'type'          => 'ticket_replies',
+        'meta_query'    => [
             [
-                'key' => 'admin_comment',
-                'value' => 'yes',
+                'key'     => 'admin_comment',
+                'value'   => 'yes',
                 'compare' => '='
             ]
         ]
@@ -416,10 +407,10 @@ function robodesk_live_conversations($ticket_id, $last_comment_client, $loggedin
             'orderby' => 'comment_date',
             'order' => 'ASC',
             'type' => 'ticket_replies',
-            'meta_query' => [
+            'meta_query'   => [
                 [
-                    'key' => 'admin_comment',
-                    'value' => 'yes',
+                    'key'     => 'admin_comment',
+                    'value'   => 'yes',
                     'compare' => '='
                 ]
             ],
@@ -457,22 +448,21 @@ function robodesk_live_conversations($ticket_id, $last_comment_client, $loggedin
 function robodesk_my_own_conversations($ticket_id, $last_my_comment_client)
 {
 
-    if (get_post_type($ticket_id) !== 'robodesk_ticket')
-        return [];
+    if (get_post_type($ticket_id) !== 'robodesk_ticket') return [];
 
     //get comment of the server which is not created by admin
     $last_my_comment_server = get_comments([
-        'post_id' => $ticket_id,
-        'number' => 1,
-        'orderby' => 'comment_date',
-        'order' => 'DESC',
-        'status' => 'approve',
-        'fields' => 'ids',
-        'type' => 'ticket_replies',
-        'meta_query' => [
+        'post_id'      => $ticket_id,
+        'number'       => 1,
+        'orderby'      => 'comment_date',
+        'order'        => 'DESC',
+        'status'       => 'approve',
+        'fields'       => 'ids',
+        'type'          => 'ticket_replies',
+        'meta_query'    => [
             [
-                'key' => 'admin_comment',
-                'value' => 'no',
+                'key'     => 'admin_comment',
+                'value'   => 'no',
                 'compare' => '='
             ]
         ]
@@ -492,10 +482,10 @@ function robodesk_my_own_conversations($ticket_id, $last_my_comment_client)
             'orderby' => 'comment_date',
             'order' => 'ASC',
             'type' => 'ticket_replies',
-            'meta_query' => [
+            'meta_query'   => [
                 [
-                    'key' => 'admin_comment',
-                    'value' => 'no',
+                    'key'     => 'admin_comment',
+                    'value'   => 'no',
                     'compare' => '='
                 ]
             ],
@@ -530,16 +520,15 @@ function robodesk_my_own_conversations($ticket_id, $last_my_comment_client)
 
 function robodesk_get_new_tickets($last_id_client, $user_id)
 {
-    if (get_post_type($last_id_client) !== 'robodesk_ticket')
-        return [];
+    if (get_post_type($last_id_client) !== 'robodesk_ticket') return [];
 
     $server_ticket_id = get_posts(array(
-        'post_type' => 'robodesk_ticket',
+        'post_type'      => 'robodesk_ticket',
         'posts_per_page' => 1,
-        'author' => $user_id,
-        'fields' => 'ids',
-        'orderby' => 'date',
-        'order' => 'DESC'
+        'author'         => $user_id,
+        'fields'         => 'ids',
+        'orderby'        => 'date',
+        'order'          => 'DESC'
     ))[0] ?? null;
 
     // If no tickets found or no newer tickets, return empty array
@@ -549,12 +538,12 @@ function robodesk_get_new_tickets($last_id_client, $user_id)
 
     // Get all tickets newer than last_id_client
     $sending_tickets_data = get_posts(array(
-        'post_type' => 'robodesk_ticket',
-        'post_status' => 'publish',
-        'author' => $user_id,
-        'post__in' => range($last_id_client + 1, $server_ticket_id),
-        'orderby' => 'date',
-        'order' => 'DESC'
+        'post_type'      => 'robodesk_ticket',
+        'post_status'    => 'publish',
+        'author'         => $user_id,
+        'post__in'       => range($last_id_client + 1, $server_ticket_id),
+        'orderby'        => 'date',
+        'order'          => 'DESC'
     ));
 
     $results = [];
@@ -564,13 +553,13 @@ function robodesk_get_new_tickets($last_id_client, $user_id)
     }
 
     foreach ($sending_tickets_data as $conversations) {
-        $ticket_id = $conversations->ID;
+        $ticket_id     = $conversations->ID;
         $ticket_number = 'TCKT-' . str_pad($ticket_id, 3, '0', STR_PAD_LEFT);
         $priority_name = get_post_meta($ticket_id, '_robodesk_ticket_priority', true) ?: 'Medium';
 
         // Author details
-        $author_id = $conversations->post_author;
-        $author_name = get_the_author_meta('display_name', $author_id);
+        $author_id    = $conversations->post_author;
+        $author_name  = get_the_author_meta('display_name', $author_id);
         $author_image = get_avatar_url($author_id);
 
         // Time ago
@@ -581,10 +570,10 @@ function robodesk_get_new_tickets($last_id_client, $user_id)
         $total_comments = count($comments);
         $formatted_comments = array_map(function ($comment) {
             return [
-                'id' => $comment->comment_ID,
-                'author' => $comment->comment_author,
+                'id'      => $comment->comment_ID,
+                'author'  => $comment->comment_author,
                 'content' => $comment->comment_content,
-                'date' => $comment->comment_date
+                'date'    => $comment->comment_date
             ];
         }, $comments);
 
@@ -592,19 +581,19 @@ function robodesk_get_new_tickets($last_id_client, $user_id)
         $last_reply = !empty($comments) ? $comments[0]->comment_content : false;
 
         $results[] = [
-            'id' => $ticket_id,
-            'ticketNumber' => $ticket_number,
-            'title' => $conversations->post_title,
-            'status' => get_post_meta($conversations->ID, '_robodesk_ticket_status', true) ?? 'open',
-            'priority' => $priority_name,
-            'source' => get_post_meta($conversations->ID, 'robodesk_ticket_origin', true) ?: 'N/A',
-            'author' => $author_name,
-            'authorImage' => $author_image,
-            'timeAgo' => $time_diff,
+            'id'                    => $ticket_id,
+            'ticketNumber'          => $ticket_number,
+            'title'                 => $conversations->post_title,
+            'status'         => get_post_meta($conversations->ID, '_robodesk_ticket_status', true) ?? 'open',
+            'priority'       => $priority_name,
+            'source'         => get_post_meta($conversations->ID, 'robodesk_ticket_origin', true) ?: 'N/A',
+            'author'         => $author_name,
+            'authorImage'   => $author_image,
+            'timeAgo'       => $time_diff,
             'totalComments' => $total_comments,
             'notifications' => 'yes',
-            'comments' => $formatted_comments,
-            'lastReply' => $last_reply
+            'comments'       => $formatted_comments,
+            'lastReply'     => $last_reply
         ];
     }
 
@@ -617,8 +606,7 @@ function robodesk_live_comments($request)
     $ticket_id = $request->get_param('post_id');
     $last_comment_client = (int) $request->get_param('last_comment_id'); //from frontend 
     $loggedin_user_id = $request->get_param('user_id');
-    if (get_post_type($ticket_id) !== 'robodesk_ticket')
-        return;
+    if (get_post_type($ticket_id) !== 'robodesk_ticket') return;
 
     header('Content-Type: text/event-stream');
     header('Cache-Control: no-cache');
@@ -628,8 +616,7 @@ function robodesk_live_comments($request)
     header('X-Accel-Buffering: no');
 
     // Disable output buffering and compression
-    if (ob_get_level())
-        ob_end_clean();
+    if (ob_get_level()) ob_end_clean();
 
     // Disable WordPress output compression
     ini_set('zlib.output_compression', 0);
@@ -642,17 +629,17 @@ function robodesk_live_comments($request)
     $ticket_status = get_post_meta($ticket_id, '_robodesk_ticket_status', true);
 
     $last_comment_server = get_comments([
-        'post_id' => $ticket_id,
-        'number' => 1,
-        'orderby' => 'comment_date',
-        'order' => 'DESC',
-        'status' => 'approve',
-        'fields' => 'ids',
+        'post_id'      => $ticket_id,
+        'number'       => 1,
+        'orderby'      => 'comment_date',
+        'order'        => 'DESC',
+        'status'       => 'approve',
+        'fields'       => 'ids',
         'type' => 'ticket_replies',
-        'meta_query' => [
+        'meta_query'   => [
             [
-                'key' => 'admin_comment',
-                'value' => 'yes',
+                'key'     => 'admin_comment',
+                'value'   => 'yes',
                 'compare' => '='
             ]
         ]
@@ -667,7 +654,7 @@ function robodesk_live_comments($request)
         'timestamp' => time(),
         'server_comment' => $last_comment_server,
         'client_comment' => $last_comment_client,
-        'ranges' => range($last_comment_client, $last_comment_server)
+        'ranges' =>  range($last_comment_client, $last_comment_server)
     )) . "\n\n";
     flush();
 
@@ -682,10 +669,10 @@ function robodesk_live_comments($request)
             'orderby' => 'comment_date',
             'order' => 'ASC',
             'type' => 'ticket_replies',
-            'meta_query' => [
+            'meta_query'   => [
                 [
-                    'key' => 'admin_comment',
-                    'value' => 'yes',
+                    'key'     => 'admin_comment',
+                    'value'   => 'yes',
                     'compare' => '='
                 ]
             ]
@@ -922,9 +909,9 @@ function robodesk_user_signup(WP_REST_Request $request)
     }
 
     $creds = array(
-        'user_login' => $email,
+        'user_login'    => $email,
         'user_password' => $password,
-        'remember' => true,
+        'remember'      => true,
     );
 
     // Sign in the user
@@ -989,7 +976,7 @@ function build_ticket_response_data($ticket_id, $user_object, $reply_id = false)
 function robodesk_handle_tickets(WP_REST_Request $request)
 {
     $payload = $request->get_body();
-    $data = json_decode($payload, true);
+    $data    = json_decode($payload, true);
     // Validate payload
     if (empty($payload) || json_last_error() !== JSON_ERROR_NONE) {
         return new WP_Error(
@@ -1030,49 +1017,20 @@ function robodesk_handle_tickets(WP_REST_Request $request)
     }
 }
 
-function robodesk_handle_selected_staff(WP_REST_Request $request)
-{
-    $selected_staff_id = get_option('robodesk_default_staff', '');
-
-    // Check if staff ID is set
-    if (empty($selected_staff_id)) {
-        return new WP_REST_Response(array(
-            'error' => 'No default staff member configured'
-        ), 404);
-    }
-
-    // Get user data
-    $staff_user = get_userdata($selected_staff_id);
-
-    if (!$staff_user) {
-        return new WP_REST_Response(array(
-            'error' => 'Staff member not found'
-        ), 404);
-    }
-
-    return new WP_REST_Response(array(
-        'staff_display_name' => $staff_user->display_name,
-        'staff_user_image' => get_avatar_url($staff_user->ID),
-        'staff_user_email' => $staff_user->user_email,
-        'staff_user_id' => $staff_user->ID,
-    ), 200);
-}
-
-
 // Handles ticket creation event need to remove this later
 function robodesk_handle_ticket_creation($data)
 {
-    $title = sanitize_text_field($data['data']['title'] ?? '');
-    $content = sanitize_textarea_field($data['data']['description'] ?? '');
-    $author = sanitize_text_field($data['data']['uid'] ?? '');
+    $title    = sanitize_text_field($data['data']['title'] ?? '');
+    $content  = sanitize_textarea_field($data['data']['description'] ?? '');
+    $author   = sanitize_text_field($data['data']['uid'] ?? '');
 
     $ticket = wp_insert_post(array(
-        'post_type' => 'robodesk_ticket',
+        'post_type'   => 'robodesk_ticket',
         'post_title' => $title,
         'post_content' => $content,
         'post_status' => 'publish',
         'post_author' => $author,
-        'meta_input' => array(
+        'meta_input'   => array(
             '_robodesk_ticket_status' => 'open',
             'robodesk_ticket_origin' => 'chat'
         ),
@@ -1084,7 +1042,7 @@ function robodesk_handle_ticket_creation($data)
 
     // Check and create the priority term 'high' if it does not exist
     $term_name = 'High';
-    $taxonomy = 'robodesk_ticket_priority';
+    $taxonomy  = 'robodesk_ticket_priority';
 
     // Check if the term exists, and get or create it
     $term = term_exists($term_name, $taxonomy);
@@ -1123,7 +1081,7 @@ function robodesk_handle_ticket_creation($data)
     // Add initial comment
     $comment_id = wp_insert_comment(array(
         'comment_post_ID' => $ticket,
-        'user_id' => $author,
+        'user_id'  => $author,
         'comment_content' => $title,
         'comment_author' => $user_name,
         'comment_author_email' => $email_address,
@@ -1136,9 +1094,9 @@ function robodesk_handle_ticket_creation($data)
     $response_data = build_ticket_response_data($ticket, $user_object, $reply_id);
 
     return rest_ensure_response(array(
-        'status' => 'success',
+        'status'  => 'success',
         'message' => 'Ticket created successfully',
-        'data' => $response_data
+        'data'    => $response_data
     ));
 }
 
@@ -1235,9 +1193,9 @@ function get_tickets_batch_data($ticket_ids, $user_id)
 
 function robodesk_handle_reply_receive($data)
 {
-    $ticket_id = sanitize_text_field($data['data']['ticket_id'] ?? '');
-    $user_id = sanitize_text_field($data['data']['user_id'] ?? '');
-    $reply = sanitize_textarea_field($data['data']['message'] ?? '');
+    $ticket_id  = sanitize_text_field($data['data']['ticket_id'] ?? '');
+    $user_id   = sanitize_text_field($data['data']['user_id'] ?? '');
+    $reply     = sanitize_textarea_field($data['data']['message'] ?? '');
 
     if (empty($ticket_id)) {
         return new WP_Error(
@@ -1266,7 +1224,7 @@ function robodesk_handle_reply_receive($data)
         'comment_post_ID' => $ticket_id,
         'comment_author' => $user_object->display_name,
         'comment_author_email' => $user_object->user_email,
-        'user_id' => $user_id,
+        'user_id'  => $user_id,
         'comment_content' => $reply,
         'comment_approved' => 1,
         'comment_type' => 'ticket_replies'
@@ -1302,9 +1260,9 @@ function robodesk_handle_reply_receive($data)
 
 
     return rest_ensure_response(array(
-        'status' => 'success',
+        'status'  => 'success',
         'message' => 'Reply added successfully',
-        'data' => $response_data
+        'data'    => $response_data
     ));
 }
 
@@ -1345,7 +1303,7 @@ function robodesk_handle_comments_get($data)
     }, $comments);
 
     return rest_ensure_response([
-        'status' => 'success',
+        'status'  => 'success',
         'message' => 'Comments found',
         'data' => $formatted_comments,
     ]);
@@ -1403,8 +1361,8 @@ function robodesk_add_param_to_reset_link($message, $key, $user_login, $user_dat
 
         $custom_reset_url = add_query_arg(
             array(
-                'key' => $key,
-                'user' => rawurlencode($user_login),
+                'key'      => $key,
+                'user'     => rawurlencode($user_login),
                 'rbd_popup' => 'true',
                 'initator' => 'robodesk',
             ),
@@ -1414,7 +1372,7 @@ function robodesk_add_param_to_reset_link($message, $key, $user_login, $user_dat
 
         $site_name = wp_specialchars_decode(get_option('blogname'), ENT_QUOTES);
 
-        $message = sprintf(__('Someone has requested a password reset for the following account on %s:'), $site_name) . "\r\n\r\n";
+        $message  = sprintf(__('Someone has requested a password reset for the following account on %s:'), $site_name) . "\r\n\r\n";
         $message .= sprintf(__('Username: %s'), $user_login) . "\r\n\r\n";
         $message .= __("If this was a mistake, just ignore this email and nothing will happen.") . "\r\n\r\n";
         $message .= __("To reset your password, visit the following address:") . "\r\n\r\n";

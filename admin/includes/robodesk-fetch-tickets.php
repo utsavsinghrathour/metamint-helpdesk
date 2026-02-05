@@ -311,17 +311,6 @@ function robodesk_fetch_emails()
             $useremail = $headerInfo->from[0]->mailbox . '@' . $headerInfo->from[0]->host;
             error_log('Creating new ticket from email: ' . $useremail);
 
-            // Check if email should be filtered before creating ticket
-            if (!apply_filters('robodesk_before_create_ticket_from_email', true, [
-                'from' => $useremail,
-                'subject' => $subject,
-                'message' => $message
-            ])) {
-                error_log('Email from ' . $useremail . ' was filtered by exclusion rules');
-                $skipped_count++;
-                continue;
-            }
-
             $user = get_user_by('email', $useremail);
             if (!$user) {
                 error_log('User not found, creating new user with email: ' . $useremail);
