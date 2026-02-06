@@ -2980,7 +2980,7 @@ function refreshDashboardTicketsData() {
 
           // Only show notifications if there are relevant changes
           if (filteredCount > 0) {
-            notificationCount += filteredCount;
+            let addedCount = 0;
 
             // Add notification items for each filtered change
             const timestamp = new Date().toISOString();
@@ -3003,6 +3003,7 @@ function refreshDashboardTicketsData() {
                   assignee: ticket.assignee || "Unassigned",
                   timestamp: timestamp,
                 });
+                addedCount += 1;
               }
             });
 
@@ -3020,6 +3021,7 @@ function refreshDashboardTicketsData() {
                 assignee: item.ticket.assignee || "Unassigned",
                 timestamp: timestamp,
               });
+              addedCount += 1;
             });
 
             // Status changes
@@ -3034,6 +3036,7 @@ function refreshDashboardTicketsData() {
                 assignee: item.ticket.assignee || "Unassigned",
                 timestamp: timestamp,
               });
+              addedCount += 1;
             });
 
             // Assignment changes
@@ -3047,7 +3050,12 @@ function refreshDashboardTicketsData() {
                 assignee: item.newAssignee || "Unassigned",
                 timestamp: timestamp,
               });
+              addedCount += 1;
             });
+
+            if (addedCount > 0) {
+              notificationCount += addedCount;
+            }
 
             updateNotificationBadge(notificationCount);
 
