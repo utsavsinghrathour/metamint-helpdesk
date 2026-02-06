@@ -380,10 +380,14 @@ function refreshDashboardTickets() {
 
 // Sample data
 
-//for ticket varaibles show and hide
-function toggleAccordion() {
-  const content = document.getElementById("accordion-content");
-  const btn = document.getElementById("toggle-btn");
+// Toggle Email Templates variables list without clashing with addon scripts.
+function robodeskToggleEmailVariables() {
+  const content = document.getElementById("robodesk-email-variables-content");
+  const btn = document.getElementById("robodesk-email-variables-toggle");
+
+  if (!content || !btn) {
+    return;
+  }
 
   const isHidden = content.classList.contains("hidden");
   if (isHidden) {
@@ -394,6 +398,20 @@ function toggleAccordion() {
     btn.textContent = "Show";
   }
 }
+
+document.addEventListener("DOMContentLoaded", function () {
+  const toggleBtn = document.getElementById("robodesk-email-variables-toggle");
+  const content = document.getElementById("robodesk-email-variables-content");
+
+  if (!toggleBtn || !content) {
+    return;
+  }
+
+  toggleBtn.addEventListener("click", function (event) {
+    event.preventDefault();
+    robodeskToggleEmailVariables();
+  });
+});
 //search form creating user and email
 
 document.addEventListener("DOMContentLoaded", function () {
