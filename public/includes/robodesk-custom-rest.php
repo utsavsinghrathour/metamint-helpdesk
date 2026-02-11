@@ -421,7 +421,11 @@ function robodesk_live_conversations($ticket_id, $last_comment_client, $loggedin
         $comments = get_comments($args);
         foreach ($comments as $comment) {
             $user = get_userdata($comment->user_id);
-            if ($user && in_array('administrator', $user->roles)) {
+            if ($user && (
+                in_array('administrator', $user->roles, true) ||
+                in_array('robodesk_support_manager', $user->roles, true) ||
+                in_array('robodesk_support_staff', $user->roles, true)
+            )) {
                 $new_admin_comments[] = array(
                     'id' => (int) $comment->comment_ID,
                     'content' => array(
@@ -684,7 +688,11 @@ function robodesk_live_comments($request)
 
         foreach ($comments as $comment) {
             $user = get_userdata($comment->user_id);
-            if ($user && in_array('administrator', $user->roles)) {
+            if ($user && (
+                in_array('administrator', $user->roles, true) ||
+                in_array('robodesk_support_manager', $user->roles, true) ||
+                in_array('robodesk_support_staff', $user->roles, true)
+            )) {
                 $new_admin_comments[] = array(
                     'id' => (int) $comment->comment_ID,
                     'content' => array(
@@ -1089,9 +1097,17 @@ function robodesk_handle_ticket_creation($data)
         'comment_type' => 'ticket_replies'
     ));
 
+    if (!is_wp_error($comment_id)) {
+        add_comment_meta($comment_id, 'comment_source', 'chat', true);
+        add_comment_meta($comment_id, 'author_type', robodesk_get_author_type($author), true);
+        add_comment_meta($comment_id, 'rbd_suppress_notification', 1, true);
+    }
+
     $reply_id = !is_wp_error($comment_id) ? $comment_id : false;
 
     $response_data = build_ticket_response_data($ticket, $user_object, $reply_id);
+
+    robodesk_notify_ticket_created($ticket, 'chat');
 
     return rest_ensure_response(array(
         'status'  => 'success',
@@ -1233,6 +1249,9 @@ function robodesk_handle_reply_receive($data)
     if (!$comment_id) {
         return new WP_Error('comment_failed', 'Failed to add reply', array('status' => 500));
     }
+
+    add_comment_meta($comment_id, 'comment_source', 'chat', true);
+    add_comment_meta($comment_id, 'author_type', robodesk_get_author_type($user_id), true);
 
     // Trigger action for integrations (Slack, Discord, etc.)
     do_action('robodesk_after_reply_added', $ticket_id, $comment_id, $reply, $user_object);

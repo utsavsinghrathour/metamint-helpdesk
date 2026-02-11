@@ -82,16 +82,18 @@
                                 // Get users by role with display_name only
                                 $agents = get_users([
                                     'role__in' => ['robodesk_support_staff', 'robodesk_support_manager', 'author', 'editor', 'administrator'],
-                                    'fields' => ['display_name'],
+                                    'fields' => ['ID', 'display_name'],
                                 ]);
-
-                                // Convert to simple array of display names
-                                $agent_names = wp_list_pluck($agents, 'display_name');
                                 ?>
 
-                                <?php foreach ($agent_names as $agent): ?>
-                                    <option value="<?php echo esc_attr($agent); ?>" <?php selected($default_agent, $agent); ?>>
-                                        <?php echo esc_html($agent); ?>
+                                <?php foreach ($agents as $agent): ?>
+                                    <?php
+                                    $agent_value = (int) $agent->ID;
+                                    $is_selected = (string) $default_agent === (string) $agent_value ||
+                                        (string) $default_agent === (string) $agent->display_name;
+                                    ?>
+                                    <option value="<?php echo esc_attr($agent_value); ?>" <?php selected($is_selected, true); ?>>
+                                        <?php echo esc_html($agent->display_name); ?>
                                     </option>
                                 <?php endforeach; ?>
                             </select>
@@ -103,7 +105,7 @@
                 <!-- Ticket Details -->
                 <?php
                 // In your PHP file (where you're already outputting the script)
-                
+
                 // Get ticket categories
                 $terms = get_terms(array(
                     'taxonomy' => 'robodesk_ticket_category',
