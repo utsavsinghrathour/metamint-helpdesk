@@ -130,7 +130,7 @@ function handle_robodesk_ticket_submission()
         $email_address = $user_obj->user_email;
 
 
-        wp_insert_comment(array(
+        $comment_id = wp_insert_comment(array(
             'comment_post_ID' => $post_id,
             'user_id'  => $user_id,
             'comment_content' => $title,
@@ -140,9 +140,17 @@ function handle_robodesk_ticket_submission()
             'comment_type' => 'ticket_replies'
         ));
 
+        if (!is_wp_error($comment_id)) {
+            add_comment_meta($comment_id, 'comment_source', 'chat', true);
+            add_comment_meta($comment_id, 'author_type', robodesk_get_author_type($user_id), true);
+            add_comment_meta($comment_id, 'rbd_suppress_notification', 1, true);
+        }
+
         update_post_meta($post_id, 'rbd_all_seen', 'yes');
 
         wp_set_object_terms($post_id, (int) $origin['term_id'], 'robodesk_ticket_origin');
+
+        robodesk_notify_ticket_created($post_id, 'chat');
 
         wp_send_json_success(array('message' => 'Ticket created successfully!'));
     }

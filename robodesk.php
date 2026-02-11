@@ -310,6 +310,47 @@ function robodesk_create_credentials_table()
 // Hook to run the function on plugin activation
 register_activation_hook(__FILE__, 'robodesk_create_credentials_table');
 
+// Create notifications table
+function robodesk_create_notifications_table()
+{
+    global $wpdb;
+
+    $table_name = $wpdb->prefix . 'robodesk_notifications';
+    $charset_collate = $wpdb->get_charset_collate();
+
+    $sql = "CREATE TABLE $table_name (
+        id BIGINT(20) UNSIGNED NOT NULL AUTO_INCREMENT,
+        recipient_user_id BIGINT(20) UNSIGNED NOT NULL,
+        ticket_id BIGINT(20) UNSIGNED NOT NULL,
+        comment_id BIGINT(20) UNSIGNED NULL,
+        type VARCHAR(32) NOT NULL,
+        source VARCHAR(32) NOT NULL,
+        message TEXT NOT NULL,
+        created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        read_at DATETIME NULL,
+        PRIMARY KEY (id),
+        KEY recipient_user_id (recipient_user_id),
+        KEY ticket_id (ticket_id),
+        KEY comment_id (comment_id),
+        KEY read_at (read_at)
+    ) $charset_collate;";
+
+    require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
+    dbDelta($sql);
+}
+
+register_activation_hook(__FILE__, 'robodesk_create_notifications_table');
+
+function robodesk_maybe_create_notifications_table()
+{
+    $version = get_option('robodesk_notifications_table_version');
+    if ($version !== '1.0') {
+        robodesk_create_notifications_table();
+        update_option('robodesk_notifications_table_version', '1.0');
+    }
+}
+add_action('init', 'robodesk_maybe_create_notifications_table');
+
 
 
 function robodesk_encrypt($plaintext, $key)
@@ -341,6 +382,326 @@ function rbd_log($message)
     }
 
     error_log(date('[Y-m-d H:i:s] ') . $message . PHP_EOL, 3, $log_file);
+}
+
+function robodesk_get_support_user_ids()
+{
+    $users = get_users([
+        'role__in' => [
+            'administrator',
+            'robodesk_support_manager',
+            'robodesk_support_staff',
+        ],
+        'fields' => ['ID'],
+    ]);
+
+    return array_values(array_unique(array_map(function ($user) {
+        return (int) $user->ID;
+    }, $users)));
+}
+
+function robodesk_resolve_user_id_from_assignee($assignee_name)
+{
+    $assignee_name = trim((string) $assignee_name);
+    if ($assignee_name === '') {
+        return 0;
+    }
+
+    if (is_numeric($assignee_name)) {
+        return (int) $assignee_name;
+    }
+
+    $assignee_lower = strtolower($assignee_name);
+    if ($assignee_lower === 'n/a' || $assignee_lower === 'unassigned') {
+        return 0;
+    }
+
+    $user = get_user_by('display_name', $assignee_name);
+    if ($user && $user->ID) {
+        return (int) $user->ID;
+    }
+
+    $user = get_user_by('login', $assignee_name);
+    if ($user && $user->ID) {
+        return (int) $user->ID;
+    }
+
+    $assignee_key = strtolower($assignee_name);
+    $candidates = get_users([
+        'search' => '*' . $assignee_name . '*',
+        'search_columns' => ['display_name', 'user_login'],
+        'fields' => ['ID', 'display_name', 'user_login'],
+        'number' => 20,
+    ]);
+
+    foreach ($candidates as $candidate) {
+        if (strtolower((string) $candidate->display_name) === $assignee_key) {
+            return (int) $candidate->ID;
+        }
+        if (strtolower((string) $candidate->user_login) === $assignee_key) {
+            return (int) $candidate->ID;
+        }
+    }
+
+    return 0;
+}
+
+function robodesk_backfill_ticket_assignee_ids()
+{
+    if (get_option('robodesk_assignee_id_backfill_done') === '1') {
+        return;
+    }
+
+    $query = new WP_Query([
+        'post_type' => 'robodesk_ticket',
+        'post_status' => 'publish',
+        'posts_per_page' => 200,
+        'fields' => 'ids',
+        'meta_query' => [
+            [
+                'key' => 'ticket_assignee',
+                'compare' => 'EXISTS',
+            ],
+            [
+                'key' => 'ticket_assignee_id',
+                'compare' => 'NOT EXISTS',
+            ],
+        ],
+    ]);
+
+    if (!empty($query->posts)) {
+        foreach ($query->posts as $ticket_id) {
+            $assignee_name = get_post_meta($ticket_id, 'ticket_assignee', true);
+            robodesk_store_ticket_assignee_id($ticket_id, $assignee_name);
+        }
+    }
+
+    update_option('robodesk_assignee_id_backfill_done', '1');
+}
+add_action('init', 'robodesk_backfill_ticket_assignee_ids');
+
+function robodesk_store_ticket_assignee_id($ticket_id, $assignee_name)
+{
+    $assignee_id = robodesk_resolve_user_id_from_assignee($assignee_name);
+    if ($assignee_id > 0) {
+        update_post_meta($ticket_id, 'ticket_assignee_id', $assignee_id);
+    }
+
+    return $assignee_id;
+}
+
+function robodesk_get_ticket_source($ticket_id)
+{
+    $origin = get_post_meta($ticket_id, 'robodesk_ticket_origin', true);
+    if (empty($origin)) {
+        $origin_terms = wp_get_post_terms($ticket_id, 'robodesk_ticket_origin');
+        if (!is_wp_error($origin_terms) && !empty($origin_terms)) {
+            $origin = $origin_terms[0]->name;
+        }
+    }
+
+    $origin = strtolower((string) $origin);
+    if (strpos($origin, 'email') !== false) {
+        return 'email';
+    }
+    if (strpos($origin, 'admin') !== false) {
+        return 'admin';
+    }
+    if (strpos($origin, 'chat') !== false) {
+        return 'chat';
+    }
+
+    return 'chat';
+}
+
+function robodesk_get_author_type($user_id)
+{
+    $user_id = (int) $user_id;
+    if ($user_id <= 0) {
+        return 'customer';
+    }
+
+    $user = get_userdata($user_id);
+    if (!$user) {
+        return 'customer';
+    }
+
+    $roles = (array) $user->roles;
+    if (
+        in_array('administrator', $roles, true) ||
+        in_array('robodesk_support_manager', $roles, true) ||
+        in_array('robodesk_support_staff', $roles, true)
+    ) {
+        return 'agent';
+    }
+
+    return 'customer';
+}
+
+function robodesk_create_notification($recipient_user_id, $ticket_id, $comment_id, $type, $source, $message)
+{
+    global $wpdb;
+
+    $table_name = $wpdb->prefix . 'robodesk_notifications';
+    $wpdb->insert(
+        $table_name,
+        [
+            'recipient_user_id' => (int) $recipient_user_id,
+            'ticket_id' => (int) $ticket_id,
+            'comment_id' => $comment_id ? (int) $comment_id : null,
+            'type' => sanitize_text_field($type),
+            'source' => sanitize_text_field($source),
+            'message' => sanitize_textarea_field($message),
+            'created_at' => current_time('mysql'),
+            'read_at' => null,
+        ],
+        ['%d', '%d', '%d', '%s', '%s', '%s', '%s', '%s']
+    );
+}
+
+function robodesk_notify_ticket_created($ticket_id, $source = '')
+{
+    $ticket_id = (int) $ticket_id;
+    if ($ticket_id <= 0 || get_post_type($ticket_id) !== 'robodesk_ticket') {
+        return;
+    }
+
+    $assignee_name = trim((string) get_post_meta($ticket_id, 'ticket_assignee', true));
+    $assignee_is_unassigned = $assignee_name === '' ||
+        strtolower($assignee_name) === 'n/a' ||
+        strtolower($assignee_name) === 'unassigned';
+
+    $assignee_id = (int) get_post_meta($ticket_id, 'ticket_assignee_id', true);
+    if ($assignee_id <= 0 && !$assignee_is_unassigned) {
+        $assignee_id = robodesk_store_ticket_assignee_id($ticket_id, $assignee_name);
+    }
+
+    if ($assignee_id <= 0 && !$assignee_is_unassigned) {
+        return;
+    }
+
+    $recipients = $assignee_id > 0 ? [$assignee_id] : robodesk_get_support_user_ids();
+    $recipients = array_values(array_unique(array_filter($recipients)));
+    if (empty($recipients)) {
+        return;
+    }
+
+    $source = $source !== '' ? $source : robodesk_get_ticket_source($ticket_id);
+    $message = get_the_title($ticket_id);
+
+    foreach ($recipients as $recipient_id) {
+        robodesk_create_notification($recipient_id, $ticket_id, null, 'ticket_created', $source, $message);
+    }
+}
+
+function robodesk_notify_comment_created($comment_id)
+{
+    $comment_id = (int) $comment_id;
+    if ($comment_id <= 0) {
+        return;
+    }
+
+    $comment = get_comment($comment_id);
+    if (!$comment || $comment->comment_type !== 'ticket_replies') {
+        return;
+    }
+
+    $ticket_id = (int) $comment->comment_post_ID;
+    if ($ticket_id <= 0 || get_post_type($ticket_id) !== 'robodesk_ticket') {
+        return;
+    }
+
+    if (get_comment_meta($comment_id, 'rbd_suppress_notification', true)) {
+        return;
+    }
+
+    if (get_comment_meta($comment_id, 'is_action', true)) {
+        return;
+    }
+
+    $assignee_name = trim((string) get_post_meta($ticket_id, 'ticket_assignee', true));
+    $assignee_is_unassigned = $assignee_name === '' ||
+        strtolower($assignee_name) === 'n/a' ||
+        strtolower($assignee_name) === 'unassigned';
+
+    $assignee_id = (int) get_post_meta($ticket_id, 'ticket_assignee_id', true);
+    if ($assignee_id <= 0 && !$assignee_is_unassigned) {
+        $assignee_id = robodesk_store_ticket_assignee_id($ticket_id, $assignee_name);
+    }
+
+    if ($assignee_id <= 0 && !$assignee_is_unassigned) {
+        return;
+    }
+
+    $recipients = $assignee_id > 0 ? [$assignee_id] : robodesk_get_support_user_ids();
+    $recipients = array_values(array_unique(array_filter($recipients)));
+    if (empty($recipients)) {
+        return;
+    }
+
+    $source = get_comment_meta($comment_id, 'comment_source', true);
+    if ($source === '') {
+        $source = robodesk_get_ticket_source($ticket_id);
+    }
+
+    $author_type = get_comment_meta($comment_id, 'author_type', true);
+    if ($author_type === '') {
+        $author_type = robodesk_get_author_type($comment->user_id);
+    }
+
+    $author_id = (int) $comment->user_id;
+    $message = $comment->comment_author . ' replied';
+
+    foreach ($recipients as $recipient_id) {
+        if ($recipient_id === $author_id) {
+            continue;
+        }
+        if ($author_type === 'customer') {
+            global $wpdb;
+            $table_name = $wpdb->prefix . 'robodesk_notifications';
+
+            $existing = $wpdb->get_row(
+                $wpdb->prepare(
+                    "SELECT id, message FROM $table_name
+                     WHERE recipient_user_id = %d
+                       AND ticket_id = %d
+                       AND type = %s
+                       AND read_at IS NULL
+                     ORDER BY id DESC LIMIT 1",
+                    $recipient_id,
+                    $ticket_id,
+                    'reply_added'
+                ),
+                ARRAY_A
+            );
+
+            if ($existing) {
+                $count = 1;
+                if (preg_match('/^(\d+)\s+new\s+repl(?:y|ies)$/i', (string) $existing['message'], $matches)) {
+                    $count = (int) $matches[1];
+                }
+                $count += 1;
+                $new_message = $count . ' new replies';
+
+                $wpdb->update(
+                    $table_name,
+                    [
+                        'message' => $new_message,
+                        'created_at' => current_time('mysql'),
+                    ],
+                    ['id' => (int) $existing['id']],
+                    ['%s', '%s'],
+                    ['%d']
+                );
+                continue;
+            }
+
+            robodesk_create_notification($recipient_id, $ticket_id, $comment_id, 'reply_added', $source, '1 new reply');
+            continue;
+        }
+
+        robodesk_create_notification($recipient_id, $ticket_id, $comment_id, 'reply_added', $source, $message);
+    }
 }
 
 if (is_admin()) {
@@ -547,13 +908,31 @@ function robodesk_comment_creation_on_insert($comment_ID, $comment_object)
 
     if (get_post_type($ticketId) !== 'robodesk_ticket') return;
 
-    $meta_value = is_admin() ? 'yes' : 'no';
+    $author_type = get_comment_meta($comment_ID, 'author_type', true);
+    if ($author_type === '') {
+        $author_type = robodesk_get_author_type($comment_object->user_id);
+        update_comment_meta($comment_ID, 'author_type', $author_type);
+    }
+
+    $meta_value = $author_type === 'agent' ? 'yes' : 'no';
 
     update_comment_meta($comment_ID, 'admin_comment', $meta_value);
 
     if ($meta_value == 'yes' && $ticketId) {
         update_post_meta($ticketId, 'rbd_all_seen', 'no');
     }
+
+    $comment_source = get_comment_meta($comment_ID, 'comment_source', true);
+    if ($comment_source === '') {
+        if ($comment_object->user_id === 0 && robodesk_get_ticket_source($ticketId) === 'email') {
+            $comment_source = 'email';
+        } else {
+            $comment_source = is_admin() ? 'admin' : robodesk_get_ticket_source($ticketId);
+        }
+        update_comment_meta($comment_ID, 'comment_source', $comment_source);
+    }
+
+    robodesk_notify_comment_created($comment_ID);
 }
 
 

@@ -159,13 +159,13 @@ function robodesk_status_meta_box_callback($post)
     wp_nonce_field('robodesk_ticket_status_nonce', 'robodesk_ticket_status_nonce');
     $value = get_post_meta($post->ID, '_robodesk_ticket_status', true);
 ?>
-<select name="robodesk_ticket_status" id="robodesk_ticket_status">
-    <option value="open" <?php selected($value, 'open'); ?>>Open</option>
-    <option value="in-progress" <?php selected($value, 'in-progress'); ?>>In Progress</option>
-    <option value="closed" <?php selected($value, 'closed'); ?>>Closed</option>
-    <option value="archived" <?php selected($value, 'archived'); ?>>Archived</option>
-</select>
-<?php
+    <select name="robodesk_ticket_status" id="robodesk_ticket_status">
+        <option value="open" <?php selected($value, 'open'); ?>>Open</option>
+        <option value="in-progress" <?php selected($value, 'in-progress'); ?>>In Progress</option>
+        <option value="closed" <?php selected($value, 'closed'); ?>>Closed</option>
+        <option value="archived" <?php selected($value, 'archived'); ?>>Archived</option>
+    </select>
+    <?php
 }
 
 add_action('save_post', 'robodesk_save_status_meta_box_data');
@@ -254,12 +254,12 @@ function add_color_picker_to_new_term($taxonomy)
 {
     if ($taxonomy === 'robodesk_ticket_priority') {
     ?>
-<div class="form-field term-colorpicker-wrap">
-    <label for="priority_color">Priority Color</label>
-    <input type="text" name="priority_color" id="priority_color" value="#ffffff" class="color-picker-field" />
-    <p>Select a color for this priority.</p>
-</div>
-<?php
+        <div class="form-field term-colorpicker-wrap">
+            <label for="priority_color">Priority Color</label>
+            <input type="text" name="priority_color" id="priority_color" value="#ffffff" class="color-picker-field" />
+            <p>Select a color for this priority.</p>
+        </div>
+    <?php
     }
 }
 add_action('robodesk_ticket_priority_add_form_fields', 'add_color_picker_to_new_term', 10, 1);
@@ -271,14 +271,14 @@ function add_color_picker_to_edit_term($term)
     $color = !empty($color) ? $color : '#ffffff'; // Default to white if no color is set
 
     ?>
-<tr class="form-field term-colorpicker-wrap">
-    <th scope="row"><label for="priority_color">Priority Color</label></th>
-    <td>
-        <input type="text" name="priority_color" id="priority_color" value="<?php echo esc_attr($color); ?>"
-            class="color-picker-field" />
-        <p class="description">Select a color for this priority.</p>
-    </td>
-</tr>
+    <tr class="form-field term-colorpicker-wrap">
+        <th scope="row"><label for="priority_color">Priority Color</label></th>
+        <td>
+            <input type="text" name="priority_color" id="priority_color" value="<?php echo esc_attr($color); ?>"
+                class="color-picker-field" />
+            <p class="description">Select a color for this priority.</p>
+        </td>
+    </tr>
 <?php
 }
 add_action('robodesk_ticket_priority_edit_form_fields', 'add_color_picker_to_edit_term', 10, 1);
@@ -300,11 +300,11 @@ add_action('admin_enqueue_scripts', 'enqueue_color_picker_scripts');
 function initialize_color_picker()
 {
 ?>
-<script type="text/javascript">
-jQuery(document).ready(function($) {
-    $('.color-picker-field').wpColorPicker();
-});
-</script>
+    <script type="text/javascript">
+        jQuery(document).ready(function($) {
+            $('.color-picker-field').wpColorPicker();
+        });
+    </script>
 <?php
 }
 
@@ -543,6 +543,7 @@ function robodesk_handle_tickets_webhook(WP_REST_Request $request)
             $assigned = auto_assign_ticket_to_support_staff();
 
             update_post_meta($ticket, 'ticket_assignee', $assigned);
+            robodesk_store_ticket_assignee_id($ticket, $assigned);
 
             $user_object =  get_user_by('id', $author);
             $user_name = $user_object->display_name;
@@ -558,6 +559,12 @@ function robodesk_handle_tickets_webhook(WP_REST_Request $request)
                 'comment_type' => 'ticket_replies'
             ));
 
+            if (!is_wp_error($comment_id)) {
+                add_comment_meta($comment_id, 'comment_source', 'chat', true);
+                add_comment_meta($comment_id, 'author_type', robodesk_get_author_type($author), true);
+                add_comment_meta($comment_id, 'rbd_suppress_notification', 1, true);
+            }
+
             $reply_id = !is_wp_error($comment_id) ? $comment_id : false;
             $ticket_number = 'TCKT-' . str_pad($ticket, 3, '0', STR_PAD_LEFT);
             $ticket_origin = get_post_meta($ticket, 'robodesk_ticket_origin', true) ?: 'N/A';
@@ -565,6 +572,8 @@ function robodesk_handle_tickets_webhook(WP_REST_Request $request)
             $ticket_priority =  !is_wp_error($ticket_priority_terms) ? $ticket_priority_terms[0]->name : false;
             $last_activity = get_post_time('U', true); // Get post creation time in UTC timestamp
             $human_readable_time = human_time_diff($last_activity, current_time('U'));
+
+            robodesk_notify_ticket_created($ticket, 'chat');
 
 
             return rest_ensure_response(array(
@@ -685,9 +694,11 @@ function robodesk_handle_tickets_webhook(WP_REST_Request $request)
 
 
         if ($comment_id) {
+            add_comment_meta($comment_id, 'comment_source', 'chat', true);
+            add_comment_meta($comment_id, 'author_type', robodesk_get_author_type($user_id), true);
             // Trigger action for integrations (Slack, Discord, etc.)
             do_action('robodesk_after_reply_added', $ticket_id, $comment_id, $reply, $user_object);
-            
+
             // update_user_meta($user_id, 'rbd_all_seen', 'yes');
 
             $comment = get_comment($comment_id);
@@ -767,18 +778,18 @@ add_filter('use_block_editor_for_post_type', function ($use_block_editor, $post_
 function robodesk_user_data_to_session_storage()
 {
 ?>
-<script type="text/javascript">
-// Check if sessionStorage is available
-if (typeof(Storage) !== "undefined") {
-    var userData = {
-        isLoggedIn: <?php echo is_user_logged_in() ? 'true' : 'false'; ?>,
-        loggedInUserId: "<?php echo is_user_logged_in() ? get_current_user_id() : ''; ?>"
-    };
+    <script type="text/javascript">
+        // Check if sessionStorage is available
+        if (typeof(Storage) !== "undefined") {
+            var userData = {
+                isLoggedIn: <?php echo is_user_logged_in() ? 'true' : 'false'; ?>,
+                loggedInUserId: "<?php echo is_user_logged_in() ? get_current_user_id() : ''; ?>"
+            };
 
-    sessionStorage.setItem('wpUserData', JSON.stringify(userData));
+            sessionStorage.setItem('wpUserData', JSON.stringify(userData));
 
-}
-</script>
+        }
+    </script>
 <?php
 }
 add_action('wp_footer', 'robodesk_user_data_to_session_storage');

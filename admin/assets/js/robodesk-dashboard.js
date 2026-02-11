@@ -835,7 +835,7 @@ function loadTicketDetail() {
         <span id="ticket-source" class="inline-block px-2 py-1 bg-blue-100 text-blue-700 rounded"><strong>${currentTicket.source.toUpperCase()}</strong></span>
       </div>
       <div>
-        <strong class="text-gray-700">Category:</strong>
+        <strong class="text-gray-700">Department:</strong>
         <select id="ticket-category-select" class="ml-2 px-2 py-1 border border-gray-300 rounded text-sm bg-white focus:ring focus:ring-blue-200">
           ${createCategoryOptions()}
         </select>
@@ -869,8 +869,16 @@ function loadTicketDetail() {
   document.getElementById("ticket-status-select").value = currentTicket.status;
   document.getElementById("ticket-priority-select").value =
     currentTicket.priority;
-  document.getElementById("ticket-assignee-select").value =
-    currentTicket.assignee;
+  const assigneeSelect = document.getElementById("ticket-assignee-select");
+  assigneeSelect.value = currentTicket.assignee_id || currentTicket.assignee;
+  if (!assigneeSelect.value && currentTicket.assignee) {
+    const matchingOption = Array.from(assigneeSelect.options).find(
+      (option) => option.textContent.trim() === currentTicket.assignee,
+    );
+    if (matchingOption) {
+      assigneeSelect.value = matchingOption.value;
+    }
+  }
 
   // Update reply and note counts
   document.getElementById("replies-count").textContent =
@@ -1628,41 +1636,7 @@ jQuery(document).ready(function ($) {
       success: function (response) {
         if (response.success) {
           showToast(response.data.message, "success");
-          // Add a notification item immediately for the newly created conversation
-          const createdTicketId = response.data.ticket_id;
-          const createdTitle = $("#ticket-title").val() || "New conversation";
-          const rawSource = $form.find('input[name="ticket_source"]').val();
-          const createdSource =
-            rawSource && rawSource.toLowerCase() === "form"
-              ? "Admin-Form"
-              : rawSource || "Admin-Form";
-          const createdAssignee = $("#ticket-assignee").val() || "Unassigned";
-          const createdTimestamp = new Date().toISOString();
-
-          const alreadyNotified = notificationItems.some(
-            (item) =>
-              item.type === "new_conversation" &&
-              String(item.ticketId) === String(createdTicketId),
-          );
-
-          if (!alreadyNotified) {
-            notificationItems.push({
-              type: "new_conversation",
-              ticketId: createdTicketId,
-              title: "New Conversation #" + createdTicketId,
-              message: createdTitle,
-              source: createdSource,
-              assignee: createdAssignee,
-              timestamp: createdTimestamp,
-            });
-
-            notificationCount += 1;
-            updateNotificationBadge(notificationCount);
-            localStorage.setItem(
-              "robodesk_notification_items",
-              JSON.stringify(notificationItems),
-            );
-          }
+          fetchNotifications();
 
           $form[0].reset(); // Reset form on success
 
@@ -1813,16 +1787,19 @@ function updateTicketAssignee(ticketId, newAssignee) {
     .then((response) => {
       if (response.success) {
         const updatedAssignee = response.data.assignee;
+        const updatedAssigneeId = response.data.assignee_id || 0;
         const updatedTime = response.data.updated;
 
         const ticketIndex = tickets.findIndex((t) => t.id === ticketId);
         if (ticketIndex !== -1) {
           tickets[ticketIndex].assignee = updatedAssignee;
+          tickets[ticketIndex].assignee_id = updatedAssigneeId;
           tickets[ticketIndex].updated = updatedTime;
         }
 
         if (currentTicket && currentTicket.id === ticketId) {
           currentTicket.assignee = updatedAssignee;
+          currentTicket.assignee_id = updatedAssigneeId;
           currentTicket.updated = updatedTime;
         }
 
@@ -2597,13 +2574,9 @@ jQuery(document).ready(function ($) {
 
 // Auto-refresh functionality for dashboard tickets
 let dashboardRefreshInterval = null;
-let notificationCount = parseInt(
-  localStorage.getItem("robodesk_notification_count") || "0",
-);
-let previousTicketsSnapshot = [];
-let notificationItems = JSON.parse(
-  localStorage.getItem("robodesk_notification_items") || "[]",
-);
+let notificationPollInterval = null;
+let notificationCount = 0;
+let notificationItems = [];
 
 // Function to create a snapshot of tickets for comparison
 function createTicketsSnapshot(tickets) {
@@ -2680,9 +2653,6 @@ function updateNotificationBadge(count) {
   const badge = document.getElementById("notification-badge");
   const bell = document.getElementById("dashboard-notification-bell");
 
-  // Persist to localStorage
-  localStorage.setItem("robodesk_notification_count", count.toString());
-
   if (badge && bell) {
     if (count > 0) {
       badge.textContent = count > 99 ? "99+" : count;
@@ -2736,11 +2706,59 @@ function showChangeNotification(changes) {
   }
 }
 
+function fetchNotifications() {
+  return fetch(robodeskAjax.ajax_url, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
+    },
+    body: new URLSearchParams({
+      action: "robodesk_get_notifications",
+      nonce: robodeskAjax.nonces.notifications,
+    }),
+  })
+    .then((res) => res.json())
+    .then((response) => {
+      if (!response.success) {
+        return;
+      }
+
+      const prevCount = notificationCount;
+      notificationItems = Array.isArray(response.data.items)
+        ? response.data.items
+        : [];
+      notificationCount = Number(response.data.count || 0);
+      updateNotificationBadge(notificationCount);
+
+      if (notificationCount > prevCount) {
+        const audioUrl =
+          typeof robodeskNotificationSound !== "undefined"
+            ? robodeskNotificationSound
+            : null;
+        if (audioUrl) {
+          const audio = new Audio(audioUrl);
+          audio.play().catch((err) => {
+            console.warn("Autoplay blocked by browser:", err);
+          });
+        }
+      }
+
+      const dropdown = document.getElementById("notification-dropdown");
+      if (dropdown && !dropdown.classList.contains("hidden")) {
+        renderNotificationList();
+      }
+    })
+    .catch((error) => {
+      console.error("Error fetching notifications:", error);
+    });
+}
+
 // Function to toggle notification dropdown
 function toggleNotificationDropdown() {
   const dropdown = document.getElementById("notification-dropdown");
   if (dropdown.classList.contains("hidden")) {
     dropdown.classList.remove("hidden");
+    fetchNotifications();
     renderNotificationList();
   } else {
     dropdown.classList.add("hidden");
@@ -2778,11 +2796,11 @@ function renderNotificationList() {
         item.assignee || (ticketData && ticketData.assignee) || "Unassigned";
 
       switch (item.type) {
-        case "new_conversation":
+        case "ticket_created":
           icon = "fa-plus-circle";
           iconColor = "text-green-500";
           break;
-        case "new_reply":
+        case "reply_added":
           icon = "fa-comment";
           iconColor = "text-blue-500";
           break;
@@ -2797,7 +2815,7 @@ function renderNotificationList() {
       }
 
       return `
-      <div class="px-4 py-3 hover:bg-gray-50 border-b border-gray-100 cursor-pointer transition-colors" onclick="handleNotificationClick(${item.ticketId})">
+      <div class="px-4 py-3 hover:bg-gray-50 border-b border-gray-100 cursor-pointer transition-colors" onclick="handleNotificationClick(${item.ticketId}, ${item.id})">
         <div class="flex items-start space-x-3">
           <div class="flex-shrink-0 mt-1">
             <i class="fas ${icon} ${iconColor}"></i>
@@ -2819,33 +2837,66 @@ function renderNotificationList() {
 }
 
 // Function to handle notification click
-function handleNotificationClick(ticketId) {
+function handleNotificationClick(ticketId, notificationId) {
+  if (notificationId) {
+    fetch(robodeskAjax.ajax_url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
+      },
+      body: new URLSearchParams({
+        action: "robodesk_mark_notification_read",
+        nonce: robodeskAjax.nonces.notifications,
+        notification_id: notificationId,
+      }),
+    }).catch((error) => {
+      console.error("Failed to mark notification as read:", error);
+    });
+
+    notificationItems = notificationItems.filter(
+      (item) => item.id !== notificationId,
+    );
+    notificationCount = Math.max(0, notificationCount - 1);
+    updateNotificationBadge(notificationCount);
+    renderNotificationList();
+  }
+
   if (ticketId) {
-    // Close dropdown
     document.getElementById("notification-dropdown").classList.add("hidden");
-    // View the ticket
     viewTicket(ticketId);
   }
 }
 
 // Function to clear all notifications
 function clearAllNotifications() {
-  notificationCount = 0;
-  notificationItems = [];
-  updateNotificationBadge(0);
+  fetch(robodeskAjax.ajax_url, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
+    },
+    body: new URLSearchParams({
+      action: "robodesk_clear_notifications",
+      nonce: robodeskAjax.nonces.notifications,
+    }),
+  })
+    .then((res) => res.json())
+    .then((response) => {
+      if (!response.success) {
+        showToast("Failed to clear notifications", "error");
+        return;
+      }
 
-  // Clear from localStorage
-  localStorage.setItem("robodesk_notification_items", "[]");
-
-  renderNotificationList();
-
-  // Close dropdown
-  document.getElementById("notification-dropdown").classList.add("hidden");
-
-  // Refresh the snapshot
-  previousTicketsSnapshot = createTicketsSnapshot(dashboard_tickets);
-
-  showToast("All notifications cleared", "success");
+      notificationCount = 0;
+      notificationItems = [];
+      updateNotificationBadge(0);
+      renderNotificationList();
+      document.getElementById("notification-dropdown").classList.add("hidden");
+      showToast("All notifications cleared", "success");
+    })
+    .catch((error) => {
+      console.error("Failed to clear notifications:", error);
+      showToast("Failed to clear notifications", "error");
+    });
 }
 
 // Close dropdown when clicking outside
@@ -2865,23 +2916,22 @@ document.addEventListener("click", function (event) {
 
 // Test function - can be called from browser console: testDashboardNotification()
 window.testDashboardNotification = function () {
-  notificationCount += 1;
-
-  // Add a test notification item
+  const fakeId = Date.now();
   notificationItems.push({
-    type: "new_reply",
+    id: fakeId,
+    type: "ticket_created",
     ticketId: 123,
-    title: "Test Notification #" + notificationCount,
+    title: "Test Notification #" + fakeId,
     message: "This is a test notification to verify the system is working",
+    source: "admin",
+    assignee: "Unassigned",
     timestamp: new Date().toISOString(),
   });
 
+  notificationCount = notificationItems.length;
   updateNotificationBadge(notificationCount);
-  showToast("Test notification #" + notificationCount, "success");
-  console.log(
-    "Test notification triggered. Badge should now show:",
-    notificationCount,
-  );
+  renderNotificationList();
+  showToast("Test notification added", "success");
 };
 
 // Function to refresh dashboard tickets via AJAX
@@ -2901,192 +2951,9 @@ function refreshDashboardTicketsData() {
     .then((res) => res.json())
     .then((response) => {
       if (response.success) {
-        // Create snapshot of current tickets before update
-        const currentSnapshot = createTicketsSnapshot(dashboard_tickets);
-
-        // Create snapshot of new tickets
-        const newSnapshot = createTicketsSnapshot(response.data.tickets);
-
-        // Detect changes
-        const changes = detectTicketChanges(currentSnapshot, newSnapshot);
-
-        // Calculate total changes
-        const totalChanges =
-          changes.new.length +
-          changes.newReplies.length +
-          changes.statusChanged.length +
-          changes.assigneeChanged.length;
-
-        // Update notification count if there are changes
-        if (totalChanges > 0) {
-          // Get current user name for filtering
-          const current_user_name =
-            typeof robodeskCurrentUser !== "undefined"
-              ? robodeskCurrentUser?.name ||
-                robodeskCurrentUser?.display_name ||
-                ""
-              : response.data.current_user_name || "";
-
-          // Filter changes to only show notifications for My Conversations and Unassigned
-          const filteredChanges = {
-            new: [],
-            newReplies: [],
-            statusChanged: [],
-            assigneeChanged: [],
-          };
-
-          // Helper function to check if ticket is relevant for notifications
-          const isRelevantTicket = (ticket) => {
-            // Check if ticket is assigned to current user OR is unassigned
-            const isMyTicket = ticket.assignee === current_user_name;
-            const isUnassigned = ticket.assignee === "N/A" || !ticket.assignee;
-            return isMyTicket || isUnassigned;
-          };
-
-          // Filter new conversations
-          filteredChanges.new = changes.new.filter((ticket) =>
-            isRelevantTicket(ticket),
-          );
-
-          // Filter new replies
-          filteredChanges.newReplies = changes.newReplies.filter((item) =>
-            isRelevantTicket(item.ticket),
-          );
-
-          // Filter status changes
-          filteredChanges.statusChanged = changes.statusChanged.filter((item) =>
-            isRelevantTicket(item.ticket),
-          );
-
-          // Filter assignment changes - include if it's being assigned TO current user or FROM current user
-          filteredChanges.assigneeChanged = changes.assigneeChanged.filter(
-            (item) => {
-              const isMyTicket = item.ticket.assignee === current_user_name;
-              const wasMyTicket = item.oldAssignee === current_user_name;
-              const isUnassigned =
-                item.ticket.assignee === "N/A" || !item.ticket.assignee;
-              const wasUnassigned =
-                item.oldAssignee === "N/A" || !item.oldAssignee;
-              return isMyTicket || wasMyTicket || isUnassigned || wasUnassigned;
-            },
-          );
-
-          // Calculate filtered changes count
-          const filteredCount =
-            filteredChanges.new.length +
-            filteredChanges.newReplies.length +
-            filteredChanges.statusChanged.length +
-            filteredChanges.assigneeChanged.length;
-
-          // Only show notifications if there are relevant changes
-          if (filteredCount > 0) {
-            let addedCount = 0;
-
-            // Add notification items for each filtered change
-            const timestamp = new Date().toISOString();
-
-            // New conversations
-            filteredChanges.new.forEach((ticket) => {
-              const alreadyNotified = notificationItems.some(
-                (item) =>
-                  item.type === "new_conversation" &&
-                  String(item.ticketId) === String(ticket.id),
-              );
-
-              if (!alreadyNotified) {
-                notificationItems.push({
-                  type: "new_conversation",
-                  ticketId: ticket.id,
-                  title: "New Conversation #" + ticket.id,
-                  message: ticket.title || "New conversation has been created",
-                  source: ticket.source || "N/A",
-                  assignee: ticket.assignee || "Unassigned",
-                  timestamp: timestamp,
-                });
-                addedCount += 1;
-              }
-            });
-
-            // New replies
-            filteredChanges.newReplies.forEach((item) => {
-              notificationItems.push({
-                type: "new_reply",
-                ticketId: item.ticket.id,
-                title: "New Reply on #" + item.ticket.id,
-                message:
-                  item.newRepliesCount +
-                  " new " +
-                  (item.newRepliesCount > 1 ? "replies" : "reply"),
-                source: item.ticket.source || "N/A",
-                assignee: item.ticket.assignee || "Unassigned",
-                timestamp: timestamp,
-              });
-              addedCount += 1;
-            });
-
-            // Status changes
-            filteredChanges.statusChanged.forEach((item) => {
-              notificationItems.push({
-                type: "status_change",
-                ticketId: item.ticket.id,
-                title: "Status Changed #" + item.ticket.id,
-                message:
-                  "Changed from " + item.oldStatus + " to " + item.newStatus,
-                source: item.ticket.source || "N/A",
-                assignee: item.ticket.assignee || "Unassigned",
-                timestamp: timestamp,
-              });
-              addedCount += 1;
-            });
-
-            // Assignment changes
-            filteredChanges.assigneeChanged.forEach((item) => {
-              notificationItems.push({
-                type: "assignment_change",
-                ticketId: item.ticket.id,
-                title: "Assignment Changed #" + item.ticket.id,
-                message: "Assigned to " + item.newAssignee,
-                source: item.ticket.source || "N/A",
-                assignee: item.newAssignee || "Unassigned",
-                timestamp: timestamp,
-              });
-              addedCount += 1;
-            });
-
-            if (addedCount > 0) {
-              notificationCount += addedCount;
-            }
-
-            updateNotificationBadge(notificationCount);
-
-            // Persist notification items to localStorage
-            localStorage.setItem(
-              "robodesk_notification_items",
-              JSON.stringify(notificationItems),
-            );
-
-            showChangeNotification(filteredChanges);
-
-            // Play notification sound if available
-            const audioUrl =
-              typeof robodeskNotificationSound !== "undefined"
-                ? robodeskNotificationSound
-                : null;
-            if (audioUrl) {
-              const audio = new Audio(audioUrl);
-              audio.play().catch((err) => {
-                console.warn("Autoplay blocked by browser:", err);
-              });
-            }
-          }
-        }
-
         // Update the global dashboard_tickets array with fresh data
         dashboard_tickets.length = 0; // Clear the array
         Array.prototype.push.apply(dashboard_tickets, response.data.tickets);
-
-        // Update the previous snapshot
-        previousTicketsSnapshot = newSnapshot;
 
         // Re-render the table with updated data
         loadDashboardTickets();
@@ -3123,13 +2990,11 @@ document.addEventListener("DOMContentLoaded", function () {
   // Initialize the notification badge with stored count on page load
   updateNotificationBadge(notificationCount);
 
-  // Initialize the snapshot on page load
-  if (
-    typeof dashboard_tickets !== "undefined" &&
-    dashboard_tickets.length > 0
-  ) {
-    previousTicketsSnapshot = createTicketsSnapshot(dashboard_tickets);
+  fetchNotifications();
+  if (notificationPollInterval) {
+    clearInterval(notificationPollInterval);
   }
+  notificationPollInterval = setInterval(fetchNotifications, 15000);
 
   // Start auto-refresh to keep notifications updated across all dashboard views
   startDashboardAutoRefresh();
@@ -3140,18 +3005,6 @@ const originalFilterDashboardTickets = filterDashboardTickets;
 filterDashboardTickets = function (filterType) {
   // Call the original function
   originalFilterDashboardTickets(filterType);
-
-  // Clear notifications when user actively changes filter (they're viewing the updates)
-  if (notificationCount > 0) {
-    notificationCount = 0;
-    notificationItems = [];
-    updateNotificationBadge(0);
-
-    // Clear from localStorage
-    localStorage.setItem("robodesk_notification_items", "[]");
-
-    previousTicketsSnapshot = createTicketsSnapshot(dashboard_tickets);
-  }
 
   // Keep auto-refresh running to update notifications
   startDashboardAutoRefresh();

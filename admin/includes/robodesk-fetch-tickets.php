@@ -285,6 +285,8 @@ function robodesk_fetch_emails()
 
                         if (!is_wp_error($comment_id)) {
                             add_comment_meta($comment_id, 'email_message_id', $message_id, true);
+                            add_comment_meta($comment_id, 'comment_source', 'email', true);
+                            add_comment_meta($comment_id, 'author_type', 'customer', true);
                             error_log('Successfully added comment ID: ' . $comment_id);
                             $reply_count++;
                         } else {
@@ -400,6 +402,7 @@ function robodesk_fetch_emails()
                 // If an assignee was found, add it as post meta
                 if ($assignee) {
                     add_post_meta($post_id, 'ticket_assignee', $assignee);
+                    robodesk_store_ticket_assignee_id($post_id, $assignee);
                 } else {
                     // Optional: Handle case where no assignee was found (e.g., log or set default)
                     rbd_log('Robodesk: Failed to assign ticket ID ' . $post_id . ' - no support staff available.');
@@ -424,6 +427,9 @@ function robodesk_fetch_emails()
                 ]);
                 if (!is_wp_error($comment_id)) {
                     add_comment_meta($comment_id, 'email_message_id', $message_id, true);
+                    add_comment_meta($comment_id, 'comment_source', 'email', true);
+                    add_comment_meta($comment_id, 'author_type', 'customer', true);
+                    add_comment_meta($comment_id, 'rbd_suppress_notification', 1, true);
                     error_log('Added comment ID: ' . $comment_id . ' to ticket ID: ' . $post_id);
                 } else {
                     error_log('Failed to add comment: ' . $comment_id->get_error_message());
@@ -454,6 +460,8 @@ function robodesk_fetch_emails()
             update_post_meta($post_id, '_robodesk_ticket_status', 'open');
             add_post_meta($post_id, 'email_message_id', $message_id);
             add_post_meta($post_id, 'email_from', $from);
+
+            robodesk_notify_ticket_created($post_id, 'email');
 
             $processed_count++;
 

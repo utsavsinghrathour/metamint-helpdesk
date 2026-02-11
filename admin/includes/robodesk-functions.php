@@ -542,6 +542,19 @@ function robodesk_create_ticket()
         error_log('Using existing user with ID: ' . $user_id);
     }
 
+    // Normalize assignee for display name + ID
+    $assignee_user = null;
+    if (is_numeric($ticket_assignee)) {
+        $assignee_user = get_user_by('id', (int) $ticket_assignee);
+    } elseif (!empty($ticket_assignee)) {
+        $assignee_user = get_user_by('display_name', $ticket_assignee);
+        if (!$assignee_user) {
+            $assignee_user = get_user_by('login', $ticket_assignee);
+        }
+    }
+
+    $assignee_display = $assignee_user ? $assignee_user->display_name : $ticket_assignee;
+
     // Create the ticket
     $ticket_id = wp_insert_post([
         'post_title'   => $ticket_title,
@@ -553,13 +566,19 @@ function robodesk_create_ticket()
             '_robodesk_customer_email' => $customer_email,
             '_robodesk_ticket_status'  => 'open',
 
-            'ticket_assignee'          => $ticket_assignee,
+            'ticket_assignee'          => $assignee_display,
             'robodesk_ticket_origin'   => 'Admin-Form', // Default source
         ],
     ]);
 
     // adding the message of the ticket to comment of the ticket
     if ($ticket_id && !is_wp_error($ticket_id)) {
+        if ($assignee_user && $assignee_user->ID) {
+            update_post_meta($ticket_id, 'ticket_assignee_id', (int) $assignee_user->ID);
+        } else {
+            robodesk_store_ticket_assignee_id($ticket_id, $assignee_display);
+        }
+
         $comment_id = wp_insert_comment([
             'comment_post_ID'      => $ticket_id,
             'comment_author'       => $customer_name,
@@ -575,6 +594,10 @@ function robodesk_create_ticket()
             error_log('Failed to add comment to ticket: ' . (is_wp_error($comment_id) ? $comment_id->get_error_message() : 'Unknown error'));
             wp_send_json_error(['message' => 'Failed to add comment to ticket']);
             wp_die();
+        } else {
+            add_comment_meta($comment_id, 'comment_source', 'admin', true);
+            add_comment_meta($comment_id, 'author_type', 'agent', true);
+            add_comment_meta($comment_id, 'rbd_suppress_notification', 1, true);
         }
     }
 
@@ -607,6 +630,10 @@ function robodesk_create_ticket()
     }
 
 
+
+    if (!is_wp_error($ticket_id)) {
+        robodesk_notify_ticket_created($ticket_id, 'admin');
+    }
 
     wp_send_json_success(['message' => 'Conversation created successfully', 'ticket_id' => $ticket_id]);
     wp_die();
@@ -658,7 +685,13 @@ function robodesk_update_ticket_status()
         wp_send_json_error(['message' => 'Invalid data']);
     }
 
-    if (!current_user_can('edit_post', $ticket_id)) {
+    $current_user = wp_get_current_user();
+    $roles = (array) $current_user->roles;
+    $is_support_role = in_array('administrator', $roles, true) ||
+        in_array('robodesk_support_manager', $roles, true) ||
+        in_array('robodesk_support_staff', $roles, true);
+
+    if (!$is_support_role && !current_user_can('edit_post', $ticket_id)) {
         wp_send_json_error(['message' => 'Permission denied']);
     }
 
@@ -706,7 +739,13 @@ function robodesk_update_ticket_priority()
         wp_send_json_error(['message' => 'Invalid input']);
     }
 
-    if (!current_user_can('edit_post', $ticket_id)) {
+    $current_user = wp_get_current_user();
+    $roles = (array) $current_user->roles;
+    $is_support_role = in_array('administrator', $roles, true) ||
+        in_array('robodesk_support_manager', $roles, true) ||
+        in_array('robodesk_support_staff', $roles, true);
+
+    if (!$is_support_role && !current_user_can('edit_post', $ticket_id)) {
         wp_send_json_error(['message' => 'Permission denied']);
     }
 
@@ -728,7 +767,7 @@ function robodesk_update_ticket_priority()
     $user_id = get_current_user_id();
     $user_object = get_userdata($user_id);
     if ($user_object) {
-        wp_insert_comment([
+        $comment_id = wp_insert_comment([
             'comment_post_ID'      => $ticket_id,
             'comment_author'       => $user_object->display_name,
             'comment_author_email' => $user_object->user_email,
@@ -742,6 +781,11 @@ function robodesk_update_ticket_priority()
                 'is_action' => true,
             ],
         ]);
+
+        if (!is_wp_error($comment_id)) {
+            add_comment_meta($comment_id, 'comment_source', 'admin', true);
+            add_comment_meta($comment_id, 'author_type', 'agent', true);
+        }
     }
     wp_send_json_success([
         'priority' => $new_priority,
@@ -764,12 +808,35 @@ function robodesk_update_ticket_assignee()
         wp_send_json_error(['message' => 'Invalid input']);
     }
 
-    if (!current_user_can('edit_post', $ticket_id)) {
+    $current_user = wp_get_current_user();
+    $roles = (array) $current_user->roles;
+    $is_support_role = in_array('administrator', $roles, true) ||
+        in_array('robodesk_support_manager', $roles, true) ||
+        in_array('robodesk_support_staff', $roles, true);
+
+    if (!$is_support_role && !current_user_can('edit_post', $ticket_id)) {
         wp_send_json_error(['message' => 'Permission denied']);
     }
 
+    $assignee_user = null;
+    if (is_numeric($new_assignee)) {
+        $assignee_user = get_user_by('id', (int) $new_assignee);
+    } elseif (!empty($new_assignee)) {
+        $assignee_user = get_user_by('display_name', $new_assignee);
+        if (!$assignee_user) {
+            $assignee_user = get_user_by('login', $new_assignee);
+        }
+    }
+
+    $assignee_display = $assignee_user ? $assignee_user->display_name : $new_assignee;
+
     // Update post meta
-    update_post_meta($ticket_id, 'ticket_assignee', $new_assignee);
+    update_post_meta($ticket_id, 'ticket_assignee', $assignee_display);
+    if ($assignee_user && $assignee_user->ID) {
+        update_post_meta($ticket_id, 'ticket_assignee_id', (int) $assignee_user->ID);
+    } else {
+        robodesk_store_ticket_assignee_id($ticket_id, $assignee_display);
+    }
     $updated = current_time('mysql');
 
 
@@ -777,12 +844,12 @@ function robodesk_update_ticket_assignee()
     $user_id = get_current_user_id();
     $user_object = get_userdata($user_id);
     if ($user_object) {
-        wp_insert_comment([
+        $comment_id = wp_insert_comment([
             'comment_post_ID'      => $ticket_id,
             'comment_author'       => $user_object->display_name,
             'comment_author_email' => $user_object->user_email,
             'user_id'              => $user_id,
-            'comment_content'      => 'Conversation assigned to ' . $new_assignee . ' by ' . $user_object->display_name,
+            'comment_content'      => 'Conversation assigned to ' . $assignee_display . ' by ' . $user_object->display_name,
             'comment_approved'     => 1,
             'comment_type'         => 'ticket_replies',
             'is_robodesk_reply'    => true, // Custom field to identify as a Robodesk reply
@@ -791,9 +858,15 @@ function robodesk_update_ticket_assignee()
                 'is_action' => true,
             ],
         ]);
+
+        if (!is_wp_error($comment_id)) {
+            add_comment_meta($comment_id, 'comment_source', 'admin', true);
+            add_comment_meta($comment_id, 'author_type', 'agent', true);
+        }
     }
     wp_send_json_success([
-        'assignee' => $new_assignee,
+        'assignee' => $assignee_display,
+        'assignee_id' => $assignee_user ? (int) $assignee_user->ID : 0,
         'updated'  => $updated,
     ]);
 }
@@ -840,6 +913,9 @@ function robodesk_handle_add_ticket_reply()
     if (is_wp_error($comment_id)) {
         wp_send_json_error(['message' => 'Failed to insert comment']);
     }
+
+    add_comment_meta($comment_id, 'comment_source', 'admin', true);
+    add_comment_meta($comment_id, 'author_type', 'agent', true);
 
     // Trigger action for integrations (Slack, Discord, etc.)
     do_action('robodesk_after_reply_added', $ticket_id, $comment_id, $reply, $user_object);
@@ -897,6 +973,9 @@ function robodesk_handle_close_ticket()
 
         if (is_wp_error($comment_id)) {
             wp_send_json_error(['message' => 'Failed to insert comment']);
+        } else {
+            add_comment_meta($comment_id, 'comment_source', 'admin', true);
+            add_comment_meta($comment_id, 'author_type', 'agent', true);
         }
     }
 
@@ -917,6 +996,9 @@ function robodesk_handle_close_ticket()
 
     if (is_wp_error($close_comment_id)) {
         wp_send_json_error(['message' => 'Failed to add close comment']);
+    } else {
+        add_comment_meta($close_comment_id, 'comment_source', 'admin', true);
+        add_comment_meta($close_comment_id, 'author_type', 'agent', true);
     }
     //if successful send email notification to the customer
     $customer_email = get_post_meta($ticket_id, '_robodesk_customer_email', true);
@@ -1176,7 +1258,13 @@ function handle_update_ticket_category()
     }
 
     // Check user permissions
-    if (!current_user_can('edit_posts')) {
+    $current_user = wp_get_current_user();
+    $roles = (array) $current_user->roles;
+    $is_support_role = in_array('administrator', $roles, true) ||
+        in_array('robodesk_support_manager', $roles, true) ||
+        in_array('robodesk_support_staff', $roles, true);
+
+    if (!$is_support_role && !current_user_can('edit_posts')) {
         wp_send_json_error('Insufficient permissions');
         return;
     }
@@ -1480,11 +1568,14 @@ function robodesk_handle_bulk_action()
                 break;
 
             case 'assignee':
-                // Validate assignee (ensure it's a valid user display name)
-                $user = get_user_by('display_name', $action_value);
-                if (!$user) {
-                    // Try searching by login name as fallback
-                    $user = get_user_by('login', $action_value);
+                $user = null;
+                if (is_numeric($action_value)) {
+                    $user = get_user_by('id', (int) $action_value);
+                } else {
+                    $user = get_user_by('display_name', $action_value);
+                    if (!$user) {
+                        $user = get_user_by('login', $action_value);
+                    }
                 }
 
                 if (!$user) {
@@ -1492,7 +1583,10 @@ function robodesk_handle_bulk_action()
                     continue 2;
                 }
 
-                if (update_post_meta($ticket_id, 'ticket_assignee', $action_value)) {
+                $assignee_display = $user->display_name;
+
+                if (update_post_meta($ticket_id, 'ticket_assignee', $assignee_display)) {
+                    update_post_meta($ticket_id, 'ticket_assignee_id', (int) $user->ID);
                     // Update modified date to reflect the change
                     wp_update_post(array(
                         'ID' => $ticket_id,
@@ -1690,6 +1784,7 @@ function robodesk_refresh_dashboard_tickets()
                 'priority' => $ticket_priority,
                 'updated' => $updated_at,
                 'assignee' => get_post_meta($ticket_id, 'ticket_assignee', true) ?: 'N/A',
+                'assignee_id' => (int) get_post_meta($ticket_id, 'ticket_assignee_id', true),
                 'replies' => $formatted_replies,
                 'replies_count' => $replies_count,
             ];
@@ -1702,4 +1797,120 @@ function robodesk_refresh_dashboard_tickets()
         'tickets' => $dashboard_tickets,
         'current_user_name' => $current_user_name,
     ]);
+}
+
+add_action('wp_ajax_robodesk_get_notifications', 'robodesk_get_notifications');
+function robodesk_get_notifications()
+{
+    if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'robodesk_notifications_action')) {
+        wp_send_json_error(['message' => 'Security verification failed.']);
+    }
+
+    $user_id = get_current_user_id();
+    if (!$user_id) {
+        wp_send_json_error(['message' => 'User not logged in.']);
+    }
+
+    global $wpdb;
+    $table_name = $wpdb->prefix . 'robodesk_notifications';
+
+    $rows = $wpdb->get_results(
+        $wpdb->prepare(
+            "SELECT id, ticket_id, comment_id, type, source, message, created_at
+             FROM $table_name
+             WHERE recipient_user_id = %d AND read_at IS NULL
+             ORDER BY created_at DESC
+             LIMIT 50",
+            $user_id
+        ),
+        ARRAY_A
+    );
+
+    $items = [];
+    foreach ($rows as $row) {
+        $ticket_id = (int) $row['ticket_id'];
+        $items[] = [
+            'id' => (int) $row['id'],
+            'ticketId' => $ticket_id,
+            'commentId' => $row['comment_id'] ? (int) $row['comment_id'] : null,
+            'type' => $row['type'],
+            'source' => $row['source'],
+            'message' => $row['message'],
+            'title' => $row['type'] === 'ticket_created'
+                ? 'New Conversation #' . $ticket_id
+                : 'New Reply on #' . $ticket_id,
+            'assignee' => get_post_meta($ticket_id, 'ticket_assignee', true) ?: 'Unassigned',
+            'timestamp' => $row['created_at'],
+        ];
+    }
+
+    wp_send_json_success([
+        'items' => $items,
+        'count' => count($items),
+    ]);
+}
+
+add_action('wp_ajax_robodesk_mark_notification_read', 'robodesk_mark_notification_read');
+function robodesk_mark_notification_read()
+{
+    if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'robodesk_notifications_action')) {
+        wp_send_json_error(['message' => 'Security verification failed.']);
+    }
+
+    $user_id = get_current_user_id();
+    if (!$user_id) {
+        wp_send_json_error(['message' => 'User not logged in.']);
+    }
+
+    $notification_id = isset($_POST['notification_id']) ? intval($_POST['notification_id']) : 0;
+    if (!$notification_id) {
+        wp_send_json_error(['message' => 'Invalid notification ID.']);
+    }
+
+    global $wpdb;
+    $table_name = $wpdb->prefix . 'robodesk_notifications';
+
+    $updated = $wpdb->update(
+        $table_name,
+        ['read_at' => current_time('mysql')],
+        ['id' => $notification_id, 'recipient_user_id' => $user_id],
+        ['%s'],
+        ['%d', '%d']
+    );
+
+    if ($updated === false) {
+        wp_send_json_error(['message' => 'Failed to update notification.']);
+    }
+
+    wp_send_json_success(['message' => 'Notification marked as read.']);
+}
+
+add_action('wp_ajax_robodesk_clear_notifications', 'robodesk_clear_notifications');
+function robodesk_clear_notifications()
+{
+    if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'robodesk_notifications_action')) {
+        wp_send_json_error(['message' => 'Security verification failed.']);
+    }
+
+    $user_id = get_current_user_id();
+    if (!$user_id) {
+        wp_send_json_error(['message' => 'User not logged in.']);
+    }
+
+    global $wpdb;
+    $table_name = $wpdb->prefix . 'robodesk_notifications';
+
+    $updated = $wpdb->query(
+        $wpdb->prepare(
+            "UPDATE $table_name SET read_at = %s WHERE recipient_user_id = %d AND read_at IS NULL",
+            current_time('mysql'),
+            $user_id
+        )
+    );
+
+    if ($updated === false) {
+        wp_send_json_error(['message' => 'Failed to clear notifications.']);
+    }
+
+    wp_send_json_success(['message' => 'Notifications cleared.']);
 }
