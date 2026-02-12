@@ -116,8 +116,18 @@ function loadDashboardTickets() {
                 ${
                   Array.isArray(ticket.replies) && ticket.replies.length > 0
                     ? (() => {
-                        const lastReply =
-                          ticket.replies[ticket.replies.length - 1];
+                        const sortedReplies = [...ticket.replies].sort(
+                          (a, b) => {
+                            const aDate = new Date(
+                              a?.timestamp || a?.date || 0,
+                            );
+                            const bDate = new Date(
+                              b?.timestamp || b?.date || 0,
+                            );
+                            return bDate - aDate;
+                          },
+                        );
+                        const lastReply = sortedReplies[0] || {};
                         const lastReplyAuthor = lastReply.author || "N/A";
                         const lastReplyDate =
                           lastReply.timestamp ||
