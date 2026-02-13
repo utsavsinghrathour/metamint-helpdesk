@@ -1239,6 +1239,17 @@ jQuery(document).ready(function ($) {
 
 //advanced settings AJAX handler
 jQuery(document).ready(function ($) {
+  function toggleUnseenReplyOptions() {
+    var enabled = $("#enable-unseen-reply-email").is(":checked");
+    $("#reply-unseen-email-options").toggle(enabled);
+  }
+
+  toggleUnseenReplyOptions();
+
+  $(document).on("change", "#enable-unseen-reply-email", function () {
+    toggleUnseenReplyOptions();
+  });
+
   $(document).on("click", "#save-advanced-settings", function () {
     var $form = $("#advanced-settings-form");
     var $button = $(this);
@@ -1246,11 +1257,15 @@ jQuery(document).ready(function ($) {
     $button.prop("disabled", true).text("Saving Advanced Settings...");
 
     // Collect form data
+    var unseenEnabled = $("#enable-unseen-reply-email").is(":checked");
     var settings = {
       enable_auto_assign: $("#enable-auto-assign").is(":checked"),
       enable_notifications: $("#enable-notifications").is(":checked"),
       enable_customer_portal: $("#enable-customer-portal").is(":checked"),
       max_file_upload_size: $form.find('input[type="number"]').val(),
+      reply_unseen_email_minutes: unseenEnabled
+        ? $("#reply-unseen-email-minutes").val()
+        : 0,
     };
 
     $.ajax({

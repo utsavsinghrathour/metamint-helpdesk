@@ -380,7 +380,8 @@
                     'enable_auto_assign' => false,
                     'enable_notifications' => true,
                     'enable_customer_portal' => true,
-                    'max_file_upload_size' => 10
+                    'max_file_upload_size' => 10,
+                    'reply_unseen_email_minutes' => 15
                 ]);
                 ?>
              <div id="advanced-tab" class="settings-tab-content hidden">
@@ -399,6 +400,29 @@
                              <label for="enable-notifications" class="ml-2 block text-sm text-gray-900">
                                  <?php _e('Enable email notifications', 'robodesk'); ?>
                              </label>
+                         </div>
+                         <?php
+                            $reply_unseen_minutes = isset($settings['reply_unseen_email_minutes']) ? absint($settings['reply_unseen_email_minutes']) : 15;
+                            $reply_unseen_enabled = $reply_unseen_minutes > 0;
+                            ?>
+                         <div>
+                             <div class="flex items-center gap-2">
+                                 <input id="enable-unseen-reply-email" type="checkbox" <?php checked($reply_unseen_enabled, true); ?> class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                                 <label for="enable-unseen-reply-email" class="block text-sm font-medium text-gray-700">
+                                     <?php _e("Email the reply if the client hasn't seen it for", 'robodesk'); ?>
+                                 </label>
+                             </div>
+                             <div id="reply-unseen-email-options" class="mt-2 flex items-center gap-2" style="<?php echo $reply_unseen_enabled ? '' : 'display:none;'; ?>">
+                                 <select name="reply_unseen_email_minutes" id="reply-unseen-email-minutes" class="styled-select block w-40 border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                                     <?php
+                                        $reply_minute_options = [5, 10, 15, 30, 60, 120];
+                                        foreach ($reply_minute_options as $minutes) {
+                                            echo '<option value="' . esc_attr($minutes) . '" ' . selected($reply_unseen_minutes, $minutes, false) . '>' . esc_html($minutes) . '</option>';
+                                        }
+                                        ?>
+                                 </select>
+                                 <span class="text-sm text-gray-600"><?php _e('minutes', 'robodesk'); ?></span>
+                             </div>
                          </div>
                          <div class="flex items-center">
                              <input id="enable-customer-portal" type="checkbox" <?php checked($settings['enable_customer_portal'], true); ?> class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">

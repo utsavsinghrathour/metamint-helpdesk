@@ -704,6 +704,129 @@ function robodesk_notify_comment_created($comment_id)
     }
 }
 
+add_action('robodesk_after_reply_added', 'robodesk_schedule_unseen_reply_email', 10, 4);
+function robodesk_schedule_unseen_reply_email($ticket_id, $comment_id, $reply, $user_object)
+{
+    rbd_log("Robodesk: Unseen reply email check triggered for ticket #{$ticket_id}, comment #{$comment_id}");
+
+    $settings = get_option('robodesk_advanced_settings', []);
+    $minutes = isset($settings['reply_unseen_email_minutes']) ? absint($settings['reply_unseen_email_minutes']) : 0;
+    if ($minutes <= 0) {
+        rbd_log("Robodesk: Unseen reply email skipped - minutes not configured (value: {$minutes})");
+        return;
+    }
+
+    if (isset($settings['enable_notifications']) && !$settings['enable_notifications']) {
+        rbd_log("Robodesk: Unseen reply email skipped - notifications disabled");
+        return;
+    }
+
+    $comment_id = (int) $comment_id;
+    $ticket_id = (int) $ticket_id;
+    $comment = get_comment($comment_id);
+    if (!$comment || $comment->comment_type !== 'ticket_replies') {
+        $type = $comment ? $comment->comment_type : 'null';
+        rbd_log("Robodesk: Unseen reply email skipped - invalid comment type: {$type}");
+        return;
+    }
+
+    $author_type = get_comment_meta($comment_id, 'author_type', true);
+    if ($author_type === '') {
+        $author_type = robodesk_get_author_type($comment->user_id);
+    }
+    if ($author_type !== 'agent') {
+        rbd_log("Robodesk: Unseen reply email skipped - author type is '{$author_type}' not 'agent'");
+        return;
+    }
+
+    if (get_comment_meta($comment_id, 'rbd_unseen_email_scheduled', true)) {
+        rbd_log("Robodesk: Unseen reply email skipped - already scheduled for comment #{$comment_id}");
+        return;
+    }
+
+    update_comment_meta($comment_id, 'rbd_unseen_email_scheduled', 1);
+
+    $timestamp = time() + ($minutes * 60);
+    wp_schedule_single_event($timestamp, 'robodesk_send_unseen_reply_email', [$comment_id]);
+
+    rbd_log("Robodesk: Unseen reply email scheduled for comment #{$comment_id} to run in {$minutes} minutes");
+}
+
+add_action('robodesk_send_unseen_reply_email', 'robodesk_send_unseen_reply_email', 10, 1);
+function robodesk_send_unseen_reply_email($comment_id)
+{
+    $comment_id = (int) $comment_id;
+    $comment = get_comment($comment_id);
+    if (!$comment || $comment->comment_type !== 'ticket_replies') {
+        return;
+    }
+
+    $ticket_id = (int) $comment->comment_post_ID;
+    if ($ticket_id <= 0 || get_post_type($ticket_id) !== 'robodesk_ticket') {
+        return;
+    }
+
+    $settings = get_option('robodesk_advanced_settings', []);
+    $minutes = isset($settings['reply_unseen_email_minutes']) ? absint($settings['reply_unseen_email_minutes']) : 0;
+    if ($minutes <= 0) {
+        return;
+    }
+
+    if (isset($settings['enable_notifications']) && !$settings['enable_notifications']) {
+        return;
+    }
+
+    if (get_post_meta($ticket_id, 'rbd_all_seen', true) === 'yes') {
+        return;
+    }
+
+    if (get_comment_meta($comment_id, 'rbd_unseen_email_sent', true)) {
+        return;
+    }
+
+    $author_type = get_comment_meta($comment_id, 'author_type', true);
+    if ($author_type === '') {
+        $author_type = robodesk_get_author_type($comment->user_id);
+    }
+    if ($author_type !== 'agent') {
+        return;
+    }
+
+    $customer_email = get_post_meta($ticket_id, '_robodesk_customer_email', true);
+    if (!$customer_email || !is_email($customer_email)) {
+        return;
+    }
+
+    $assignee_name = trim((string) get_post_meta($ticket_id, 'ticket_assignee', true));
+    if ($assignee_name === '') {
+        $assignee_name = $comment->comment_author;
+    }
+
+    $ticket_title = get_the_title($ticket_id);
+    $reply_plain = trim(wp_strip_all_tags($comment->comment_content));
+    $subject = 'New reply on #' . $ticket_id;
+
+    $site_url = get_site_url();
+    $ticket_link = $site_url . '?user=' . urlencode($customer_email) . '&rbd_popup=true&initiator=robodesk';
+
+    $message = "New reply on #{$ticket_id}\n";
+    $message .= "From: {$assignee_name}\n";
+    if ($ticket_title) {
+        $message .= "Ticket: {$ticket_title}\n";
+    }
+    if ($reply_plain !== '') {
+        $message .= "\nReply:\n{$reply_plain}\n";
+    }
+    $message .= "\nView the conversation: {$ticket_link}\n";
+
+    if (wp_mail($customer_email, $subject, $message)) {
+        update_comment_meta($comment_id, 'rbd_unseen_email_sent', 1);
+        rbd_log("Robodesk: Unseen reply email sent to {$customer_email} for ticket #{$ticket_id}");
+    } else {
+        rbd_log("Robodesk: Unseen reply email failed to send to {$customer_email} for ticket #{$ticket_id}");
+    }
+}
+
 if (is_admin()) {
     add_filter('use_block_editor_for_post', 'disable_block_for_post_type', 10, 2);
 }

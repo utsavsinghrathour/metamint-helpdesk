@@ -129,6 +129,10 @@ function handle_robodesk_ticket_submission()
         $user_name = $user_obj->display_name;
         $email_address = $user_obj->user_email;
 
+        if ($email_address) {
+            update_post_meta($post_id, '_robodesk_customer_email', $email_address);
+        }
+
 
         $comment_id = wp_insert_comment(array(
             'comment_post_ID' => $post_id,
