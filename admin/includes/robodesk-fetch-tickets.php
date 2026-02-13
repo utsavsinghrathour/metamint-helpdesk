@@ -608,85 +608,85 @@ if (!function_exists('rbd_log')) {
 /**
  * Send custom reply emails for ticket comments
  */
-function robodesk_reply_email($comment_id, $comment)
-{
-    // rbd_log("Triggered for comment ID $comment_id");
+// function robodesk_reply_email($comment_id, $comment)
+// {
+//     // rbd_log("Triggered for comment ID $comment_id");
 
-    // Check if comment is approved (wp_insert_comment provides the full comment object)
-    if (!$comment || !in_array($comment->comment_approved, [1, '1', 'approved'])) {
-        // rbd_log("Skipped - comment ID $comment_id not found or not approved");
-        return;
-    }
+//     // Check if comment is approved (wp_insert_comment provides the full comment object)
+//     if (!$comment || !in_array($comment->comment_approved, [1, '1', 'approved'])) {
+//         // rbd_log("Skipped - comment ID $comment_id not found or not approved");
+//         return;
+//     }
 
-    if ($comment->comment_type !== 'ticket_replies') {
-        // rbd_log("Skipped - comment type = " . $comment->comment_type);
-        return;
-    }
+//     if ($comment->comment_type !== 'ticket_replies') {
+//         // rbd_log("Skipped - comment type = " . $comment->comment_type);
+//         return;
+//     }
 
-    $post = get_post($comment->comment_post_ID);
-    if (!$post) {
-        // rbd_log("No post found for comment ID $comment_id");
-        return;
-    }
+//     $post = get_post($comment->comment_post_ID);
+//     if (!$post) {
+//         // rbd_log("No post found for comment ID $comment_id");
+//         return;
+//     }
 
-    $ticket_creator_email = get_post_meta($post->ID, '_robodesk_customer_email', true);
-    $email_message_id = get_post_meta($post->ID, 'email_message_id', true);
-    $comment_author_email = $comment->comment_author_email;
+//     $ticket_creator_email = get_post_meta($post->ID, '_robodesk_customer_email', true);
+//     $email_message_id = get_post_meta($post->ID, 'email_message_id', true);
+//     $comment_author_email = $comment->comment_author_email;
 
-    if (empty($ticket_creator_email)) {
-        // rbd_log("No _robodesk_customer_email meta for post ID $post->ID");
-        return;
-    }
+//     if (empty($ticket_creator_email)) {
+//         // rbd_log("No _robodesk_customer_email meta for post ID $post->ID");
+//         return;
+//     }
 
-    // Clean and validate emails
-    $pure_creator_email = filter_var($ticket_creator_email, FILTER_VALIDATE_EMAIL) ?: (preg_match('/<(.*?)>/', $ticket_creator_email, $matches) ? $matches[1] : $ticket_creator_email);
-    $pure_commenter_email = filter_var($comment_author_email, FILTER_VALIDATE_EMAIL) ?: (preg_match('/<(.*?)>/', $comment_author_email, $matches) ? $matches[1] : $comment_author_email);
+//     // Clean and validate emails
+//     $pure_creator_email = filter_var($ticket_creator_email, FILTER_VALIDATE_EMAIL) ?: (preg_match('/<(.*?)>/', $ticket_creator_email, $matches) ? $matches[1] : $ticket_creator_email);
+//     $pure_commenter_email = filter_var($comment_author_email, FILTER_VALIDATE_EMAIL) ?: (preg_match('/<(.*?)>/', $comment_author_email, $matches) ? $matches[1] : $comment_author_email);
 
-    if (!filter_var($pure_creator_email, FILTER_VALIDATE_EMAIL) || !filter_var($pure_commenter_email, FILTER_VALIDATE_EMAIL)) {
-        // rbd_log("Invalid emails → Creator: $pure_creator_email | Commenter: $pure_commenter_email");
-        return;
-    }
+//     if (!filter_var($pure_creator_email, FILTER_VALIDATE_EMAIL) || !filter_var($pure_commenter_email, FILTER_VALIDATE_EMAIL)) {
+//         // rbd_log("Invalid emails → Creator: $pure_creator_email | Commenter: $pure_commenter_email");
+//         return;
+//     }
 
-    // Skip if creator replies to their own ticket
-    if (strtolower(trim($pure_creator_email)) === strtolower(trim($pure_commenter_email))) {
-        // rbd_log("No email sent (creator replied to own ticket)");
-        return;
-    }
+//     // Skip if creator replies to their own ticket
+//     if (strtolower(trim($pure_creator_email)) === strtolower(trim($pure_commenter_email))) {
+//         // rbd_log("No email sent (creator replied to own ticket)");
+//         return;
+//     }
 
-    // Prepare email
-    $to = $pure_creator_email;
-    $reply_to = $pure_commenter_email;
-    $subject = 'Re: ' . $post->post_title;
-    $content = $comment->comment_content;
-    $user = get_user_by('email', $pure_creator_email);
-    $user_name = $user ? $user->display_name : $pure_creator_email;
-    $ticket_url = esc_url(admin_url("post.php?post=$post->ID&action=edit"));
+//     // Prepare email
+//     $to = $pure_creator_email;
+//     $reply_to = $pure_commenter_email;
+//     $subject = 'Re: ' . $post->post_title;
+//     $content = $comment->comment_content;
+//     $user = get_user_by('email', $pure_creator_email);
+//     $user_name = $user ? $user->display_name : $pure_creator_email;
+//     $ticket_url = esc_url(admin_url("post.php?post=$post->ID&action=edit"));
 
-    $reply_message = '<html><body>';
-    $reply_message .= '<p>Hi ' . esc_html($user_name) . ',</p>';
-    $reply_message .= '<p>A new reply has been added to your ticket <a href="' . $ticket_url . '">#' . esc_html($post->ID) . '</a>.</p>';
-    $reply_message .= '<blockquote style="border-left:3px solid #ccc;padding-left:10px;">' . nl2br(esc_html($content)) . '</blockquote>';
-    $reply_message .= '<p><a href="' . $ticket_url . '" style="display:inline-block;padding:10px 20px;background-color:#0073aa;color:#ffffff;text-decoration:none;border-radius:5px;">Reply</a></p>';
-    $reply_message .= '</body></html>';
+//     $reply_message = '<html><body>';
+//     $reply_message .= '<p>Hi ' . esc_html($user_name) . ',</p>';
+//     $reply_message .= '<p>A new reply has been added to your ticket <a href="' . $ticket_url . '">#' . esc_html($post->ID) . '</a>.</p>';
+//     $reply_message .= '<blockquote style="border-left:3px solid #ccc;padding-left:10px;">' . nl2br(esc_html($content)) . '</blockquote>';
+//     $reply_message .= '<p><a href="' . $ticket_url . '" style="display:inline-block;padding:10px 20px;background-color:#0073aa;color:#ffffff;text-decoration:none;border-radius:5px;">Reply</a></p>';
+//     $reply_message .= '</body></html>';
 
-    $headers = [
-        'From: Robodesk Support <pipetest@wplocatepress.com>',
-        'Reply-To: ' . $reply_to,
-        'MIME-Version: 1.0',
-        'Content-Type: text/html; charset=UTF-8'
-    ];
+//     $headers = [
+//         'From: Robodesk Support <pipetest@wplocatepress.com>',
+//         'Reply-To: ' . $reply_to,
+//         'MIME-Version: 1.0',
+//         'Content-Type: text/html; charset=UTF-8'
+//     ];
 
-    if ($email_message_id) {
-        $headers[] = 'References: ' . $email_message_id;
-        $headers[] = 'In-Reply-To: ' . $email_message_id;
-    }
+//     if ($email_message_id) {
+//         $headers[] = 'References: ' . $email_message_id;
+//         $headers[] = 'In-Reply-To: ' . $email_message_id;
+//     }
 
-    // Send mail
-    // rbd_log("Sending email to $to, Reply-To: $reply_to");
-    $mail_sent = wp_mail($to, $subject, $reply_message, $headers);
+//     // Send mail
+//     // rbd_log("Sending email to $to, Reply-To: $reply_to");
+//     $mail_sent = wp_mail($to, $subject, $reply_message, $headers);
 
-    // rbd_log($mail_sent ? "SUCCESS - Email sent to $to" : "FAILED to send email to $to");
-}
+//     // rbd_log($mail_sent ? "SUCCESS - Email sent to $to" : "FAILED to send email to $to");
+// }
 
 // Use wp_insert_comment hook instead of comment_post
-add_action('wp_insert_comment', 'robodesk_reply_email', 10, 2);
+// add_action('wp_insert_comment', 'robodesk_reply_email', 10, 2);

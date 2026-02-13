@@ -226,7 +226,8 @@ function robodesk_save_advanced_settings()
         'enable_auto_assign',
         'enable_notifications',
         'enable_customer_portal',
-        'max_file_upload_size'
+        'max_file_upload_size',
+        'reply_unseen_email_minutes'
     ];
 
     $sanitized_settings = [];
@@ -243,6 +244,13 @@ function robodesk_save_advanced_settings()
             $value = intval($settings[$key]);
             if ($value < 1 || $value > 100) {
                 $results[$key] = ['status' => 'error', 'message' => 'Invalid file upload size (must be 1–100 MB)'];
+                continue;
+            }
+            $sanitized_settings[$key] = $value;
+        } elseif ($key === 'reply_unseen_email_minutes') {
+            $value = absint($settings[$key]);
+            if ($value < 0 || $value > 1440) {
+                $results[$key] = ['status' => 'error', 'message' => 'Invalid reply email minutes (must be 0–1440)'];
                 continue;
             }
             $sanitized_settings[$key] = $value;
@@ -1674,8 +1682,16 @@ function robodesk_send_ticket_creation_email($post_id, $post, $update)
     // Get customer email from post meta
     $customer_email = get_post_meta($post_id, '_robodesk_customer_email', true);
     if (!$customer_email || !is_email($customer_email)) {
-        rbd_log("Robodesk: Invalid or missing customer email for ticket ID: $post_id");
-        return;
+        $author = get_userdata($post->post_author);
+        $author_email = $author ? $author->user_email : '';
+
+        if ($author_email && is_email($author_email)) {
+            update_post_meta($post_id, '_robodesk_customer_email', $author_email);
+            $customer_email = $author_email;
+        } else {
+            rbd_log("Robodesk: Invalid or missing customer email for ticket ID: $post_id");
+            return;
+        }
     }
 
     // Prepare email content
