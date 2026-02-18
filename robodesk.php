@@ -550,7 +550,7 @@ function robodesk_create_notification($recipient_user_id, $ticket_id, $comment_i
     global $wpdb;
 
     $table_name = $wpdb->prefix . 'robodesk_notifications';
-    
+
     // Determine creator
     $created_by = get_current_user_id();
     if ($created_by == 0) {
