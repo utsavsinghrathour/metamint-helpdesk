@@ -322,3 +322,18 @@ function add_custom_table_to_my_account()
 <?php
     }
 }
+// Function to get notifications
+function robodesk_get_user_notifications($user_id, $limit = 20)
+{
+    global $wpdb;
+    $table_name = $wpdb->prefix . 'robodesk_notifications';
+    
+    // Check if table exists to avoid errors on fresh installs before init hook runs
+    if ($wpdb->get_var("SHOW TABLES LIKE '$table_name'") != $table_name) {
+        return array();
+    }
+
+    $notifications = $wpdb->get_results($wpdb->prepare("SELECT * FROM $table_name WHERE user_id = %d ORDER BY notification_date DESC LIMIT %d", $user_id, $limit));
+
+    return $notifications;
+}

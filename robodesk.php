@@ -319,20 +319,27 @@ function robodesk_create_notifications_table()
     $charset_collate = $wpdb->get_charset_collate();
 
     $sql = "CREATE TABLE $table_name (
-        id BIGINT(20) UNSIGNED NOT NULL AUTO_INCREMENT,
-        recipient_user_id BIGINT(20) UNSIGNED NOT NULL,
-        ticket_id BIGINT(20) UNSIGNED NOT NULL,
-        comment_id BIGINT(20) UNSIGNED NULL,
-        type VARCHAR(32) NOT NULL,
-        source VARCHAR(32) NOT NULL,
-        message TEXT NOT NULL,
-        created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-        read_at DATETIME NULL,
+        id bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT,
+        notification_date datetime NOT NULL DEFAULT '0000-00-00 00:00:00',
+        user_id bigint(20) UNSIGNED NOT NULL,
+        message text NOT NULL,
+        ticket_id bigint(20) UNSIGNED DEFAULT NULL,
+        status varchar(20) NOT NULL DEFAULT 'unread',
+        created_by bigint(20) UNSIGNED NOT NULL,
+        recipient_user_id bigint(20) UNSIGNED NOT NULL,
+        comment_id bigint(20) UNSIGNED DEFAULT NULL,
+        type varchar(32) NOT NULL,
+        source varchar(32) NOT NULL,
+        created_at datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        read_at datetime DEFAULT NULL,
         PRIMARY KEY (id),
         KEY recipient_user_id (recipient_user_id),
         KEY ticket_id (ticket_id),
         KEY comment_id (comment_id),
-        KEY read_at (read_at)
+        KEY read_at (read_at),
+        KEY user_id (user_id),
+        KEY created_by (created_by),
+        KEY status (status)
     ) $charset_collate;";
 
     require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
@@ -344,9 +351,9 @@ register_activation_hook(__FILE__, 'robodesk_create_notifications_table');
 function robodesk_maybe_create_notifications_table()
 {
     $version = get_option('robodesk_notifications_table_version');
-    if ($version !== '1.0') {
+    if ($version !== '1.1') {
         robodesk_create_notifications_table();
-        update_option('robodesk_notifications_table_version', '1.0');
+        update_option('robodesk_notifications_table_version', '1.1');
     }
 }
 add_action('init', 'robodesk_maybe_create_notifications_table');
@@ -543,19 +550,30 @@ function robodesk_create_notification($recipient_user_id, $ticket_id, $comment_i
     global $wpdb;
 
     $table_name = $wpdb->prefix . 'robodesk_notifications';
+    
+    // Determine creator
+    $created_by = get_current_user_id();
+    if ($created_by == 0) {
+        $created_by = 1; // Fallback to admin/system if no user logged in
+    }
+
     $wpdb->insert(
         $table_name,
         [
             'recipient_user_id' => (int) $recipient_user_id,
-            'ticket_id' => (int) $ticket_id,
-            'comment_id' => $comment_id ? (int) $comment_id : null,
-            'type' => sanitize_text_field($type),
-            'source' => sanitize_text_field($source),
-            'message' => sanitize_textarea_field($message),
-            'created_at' => current_time('mysql'),
-            'read_at' => null,
+            'user_id'           => (int) $recipient_user_id, // Map recipient to user_id for frontend fetch compatibility
+            'ticket_id'         => (int) $ticket_id,
+            'comment_id'        => $comment_id ? (int) $comment_id : null,
+            'type'              => sanitize_text_field($type),
+            'source'            => sanitize_text_field($source),
+            'message'           => sanitize_textarea_field($message),
+            'status'            => 'unread',
+            'created_by'        => (int) $created_by,
+            'notification_date' => current_time('mysql'),
+            'created_at'        => current_time('mysql'),
+            'read_at'           => null,
         ],
-        ['%d', '%d', '%d', '%s', '%s', '%s', '%s', '%s']
+        ['%d', '%d', '%d', '%d', '%s', '%s', '%s', '%s', '%d', '%s', '%s', '%s']
     );
 }
 
