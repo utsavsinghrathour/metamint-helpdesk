@@ -157,6 +157,7 @@ if ($query->have_posts()) {
             'updated' => $updated_at,
             'category' => $ticket_category,
             'assignee' => get_post_meta($ticket_id, 'ticket_assignee', true) ?: 'N/A',
+            'assignee_id' => (int) get_post_meta($ticket_id, 'ticket_assignee_id', true),
             'replies' => $replies_count ? $replies : [
                 'id' => 0,
                 'author' => 'N/A',
@@ -196,7 +197,7 @@ function get_filter_url($new_params = array())
 // Get users for assignee options
 $users =  get_users([
     'role__in' => ['robodesk_support_staff', 'robodesk_support_manager', 'author', 'editor', 'administrator'],
-    'fields'   => ['display_name'],
+    'fields'   => ['ID', 'display_name'],
 ]);
 
 // Get priority terms
@@ -339,7 +340,7 @@ $priority_terms = get_terms(array(
                             </optgroup>
                             <optgroup label="Assignee">
                                 <?php foreach ($users as $user) : ?>
-                                    <option value="assignee-<?php echo esc_attr($user->display_name); ?>">Assign to: <?php echo esc_html($user->display_name); ?></option>
+                                    <option value="assignee-<?php echo esc_attr($user->ID); ?>">Assign to: <?php echo esc_html($user->display_name); ?></option>
                                 <?php endforeach; ?>
                             </optgroup>
                             <optgroup label="Actions">
@@ -563,6 +564,34 @@ $priority_terms = get_terms(array(
         const filterForm = document.querySelector('#tickets-page form');
 
         if (filterForm) {
+            // Get search inputs
+            const searchInput = filterForm.querySelector('input[name="search"]');
+            const customerInput = filterForm.querySelector('input[name="customer"]');
+            const agentInput = filterForm.querySelector('input[name="agent"]');
+
+            let searchTimeout;
+
+            // Function to auto-submit form with debounce
+            function autoSubmitForm() {
+                clearTimeout(searchTimeout);
+                searchTimeout = setTimeout(function() {
+                    filterForm.submit();
+                }, 500); // Wait 500ms after user stops typing
+            }
+
+            // Add event listeners to all search fields
+            if (searchInput) {
+                searchInput.addEventListener('input', autoSubmitForm);
+            }
+
+            if (customerInput) {
+                customerInput.addEventListener('input', autoSubmitForm);
+            }
+
+            if (agentInput) {
+                agentInput.addEventListener('input', autoSubmitForm);
+            }
+
             // Allow normal form submission - let the server handle filtering
             filterForm.addEventListener('submit', function(e) {
                 // Allow default form submission to reload with filters

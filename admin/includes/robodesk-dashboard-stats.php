@@ -206,6 +206,7 @@
                     'priority' => $ticket_priority,
                     'updated' => $updated_at,
                     'assignee' => get_post_meta($ticket_id, 'ticket_assignee', true) ?: 'N/A',
+                    'assignee_id' => (int) get_post_meta($ticket_id, 'ticket_assignee_id', true),
                     'replies' => $replies,
                     'replies_count' => $replies_count,
                 ];

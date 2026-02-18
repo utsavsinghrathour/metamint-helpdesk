@@ -643,10 +643,16 @@ function robodesk_profile_content()
     }
 }
 
+
 function robodesk_notifications_content()
 {
     $user_id = get_current_user_id();
-    $notifications = robodesk_get_notifications($user_id);
+    // Use the renamed function to avoid conflict with admin AJAX handler
+    if (function_exists('robodesk_get_user_notifications')) {
+        $notifications = robodesk_get_user_notifications($user_id);
+    } else {
+        $notifications = array();
+    }
     ?>
     <h2>Notifications</h2>
     <?php if ($notifications): ?>
