@@ -598,7 +598,14 @@ function robodesk_notify_ticket_created($ticket_id, $source = '')
         return;
     }
 
-    $recipients = $assignee_id > 0 ? [$assignee_id] : robodesk_get_support_user_ids();
+    if ($assignee_id > 0) {
+        // Ticket is assigned — notify only the assigned user
+        $recipients = [$assignee_id];
+    } else {
+        // Ticket is unassigned — notify all support users (admins + staff)
+        $recipients = robodesk_get_support_user_ids();
+    }
+
     $recipients = array_values(array_unique(array_filter($recipients)));
     if (empty($recipients)) {
         return;
@@ -651,7 +658,14 @@ function robodesk_notify_comment_created($comment_id)
         return;
     }
 
-    $recipients = $assignee_id > 0 ? [$assignee_id] : robodesk_get_support_user_ids();
+    if ($assignee_id > 0) {
+        // Ticket is assigned — notify only the assigned user
+        $recipients = [$assignee_id];
+    } else {
+        // Ticket is unassigned — notify all support users (admins + staff)
+        $recipients = robodesk_get_support_user_ids();
+    }
+
     $recipients = array_values(array_unique(array_filter($recipients)));
     if (empty($recipients)) {
         return;
@@ -1042,8 +1056,8 @@ add_action('wp_insert_comment', 'robodesk_comment_creation_on_insert', 10, 2);
 
 function robodesk_comment_creation_on_insert($comment_ID, $comment_object)
 {
-
-    if (!isset($comment_object->comment_type) && $comment_object->comment_type !== 'ticket_replies') return;
+    // Return early if not a ticket reply
+    if (!isset($comment_object->comment_type) || $comment_object->comment_type !== 'ticket_replies') return;
 
     $ticketId = $comment_object->comment_post_ID;
 
