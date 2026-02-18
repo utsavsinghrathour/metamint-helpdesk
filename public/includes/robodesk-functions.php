@@ -133,85 +133,6 @@ function robodesk_maybe_create_ticket_notes_table()
 // Call the function on WordPress initialization
 add_action('init', 'robodesk_maybe_create_ticket_notes_table');
 
-function robodesk_maybe_create_notifications_table()
-{
-    global $wpdb;
-    $table_name = $wpdb->prefix . 'robodesk_notifications';
-
-    // Check if the table exists
-    if ($wpdb->get_var("SHOW TABLES LIKE '{$table_name}'") !== $table_name) {
-        $charset_collate = $wpdb->get_charset_collate();
-
-        $sql = "CREATE TABLE $table_name (
-            id mediumint(9) NOT NULL AUTO_INCREMENT,
-            notification_date datetime DEFAULT '0000-00-00 00:00:00' NOT NULL,
-            user_id bigint(20) unsigned NOT NULL,
-            message text NOT NULL,
-            ticket_id bigint(20) unsigned,
-            status varchar(20) DEFAULT 'unread' NOT NULL,
-            created_by bigint(20) unsigned NOT NULL,
-            PRIMARY KEY  (id)
-        ) $charset_collate;";
-
-        require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
-        dbDelta($sql);
-    }
-}
-
-// Call the function on WordPress initialization
-add_action('init', 'robodesk_maybe_create_notifications_table');
-
-
-
-// Function to create a notification
-function robodesk_create_notification($user_id, $message, $ticket_id, $created_by)
-{
-    global $wpdb;
-    $table_name = $wpdb->prefix . 'robodesk_notifications';
-
-    $wpdb->insert(
-        $table_name,
-        array(
-            'notification_date' => current_time('mysql'),
-            'user_id' => $user_id,
-            'message' => $message,
-            'ticket_id' => $ticket_id,
-            'status' => 'unread',
-            'created_by' => $created_by,
-        )
-    );
-}
-
-// Function to get notification count
-function robodesk_get_notification_count($user_id)
-{
-    global $wpdb;
-    $table_name = $wpdb->prefix . 'robodesk_notifications';
-    $count = $wpdb->get_var($wpdb->prepare("SELECT COUNT(*) FROM $table_name WHERE user_id = %d AND status = 'unread'", $user_id));
-    return $count;
-}
-
-// Function to get notifications
-function robodesk_get_notifications($user_id, $limit = 10)
-{
-    global $wpdb;
-    $table_name = $wpdb->prefix . 'robodesk_notifications';
-    $notifications = $wpdb->get_results($wpdb->prepare("SELECT * FROM $table_name WHERE user_id = %d ORDER BY notification_date DESC LIMIT %d", $user_id, $limit));
-
-    foreach ($notifications as $notification) {
-        $wpdb->update(
-            $table_name,
-            array(
-                'status' => 'read',
-            ),
-            array('id' => $notification->id)
-        );
-    }
-
-    return $notifications;
-}
-
-
 function robodesk_credentials_page()
 {
     if (is_user_logged_in()) {
@@ -400,4 +321,19 @@ function add_custom_table_to_my_account()
 
 <?php
     }
+}
+// Function to get notifications
+function robodesk_get_user_notifications($user_id, $limit = 20)
+{
+    global $wpdb;
+    $table_name = $wpdb->prefix . 'robodesk_notifications';
+    
+    // Check if table exists to avoid errors on fresh installs before init hook runs
+    if ($wpdb->get_var("SHOW TABLES LIKE '$table_name'") != $table_name) {
+        return array();
+    }
+
+    $notifications = $wpdb->get_results($wpdb->prepare("SELECT * FROM $table_name WHERE user_id = %d ORDER BY notification_date DESC LIMIT %d", $user_id, $limit));
+
+    return $notifications;
 }

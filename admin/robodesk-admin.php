@@ -297,7 +297,7 @@ function robodesk_enqueue_tailwind_and_styles()
         plugin_dir_url(__FILE__) . 'assets/js/robodesk-dashboard.js',
         ['jquery'],
         '1.0.0',
-        true 
+        true
     );
 
     // Note: Slack and Discord integration scripts have been moved to the robodesk-addon plugin
@@ -355,6 +355,7 @@ function robodesk_enqueue_tailwind_and_styles()
             'update_ticket_category' => wp_create_nonce('robodesk_update_ticket_category_action'),
             'bulk_action' => wp_create_nonce('robodesk_bulk_action'),
             'refresh_dashboard_tickets' => wp_create_nonce('robodesk_refresh_dashboard_tickets_action'),
+            'notifications' => wp_create_nonce('robodesk_notifications_action'),
 
         ]
     ]);

@@ -285,6 +285,8 @@ function robodesk_fetch_emails()
 
                         if (!is_wp_error($comment_id)) {
                             add_comment_meta($comment_id, 'email_message_id', $message_id, true);
+                            add_comment_meta($comment_id, 'comment_source', 'email', true);
+                            add_comment_meta($comment_id, 'author_type', 'customer', true);
                             error_log('Successfully added comment ID: ' . $comment_id);
                             $reply_count++;
                         } else {
@@ -400,6 +402,7 @@ function robodesk_fetch_emails()
                 // If an assignee was found, add it as post meta
                 if ($assignee) {
                     add_post_meta($post_id, 'ticket_assignee', $assignee);
+                    robodesk_store_ticket_assignee_id($post_id, $assignee);
                 } else {
                     // Optional: Handle case where no assignee was found (e.g., log or set default)
                     rbd_log('Robodesk: Failed to assign ticket ID ' . $post_id . ' - no support staff available.');
@@ -424,6 +427,9 @@ function robodesk_fetch_emails()
                 ]);
                 if (!is_wp_error($comment_id)) {
                     add_comment_meta($comment_id, 'email_message_id', $message_id, true);
+                    add_comment_meta($comment_id, 'comment_source', 'email', true);
+                    add_comment_meta($comment_id, 'author_type', 'customer', true);
+                    add_comment_meta($comment_id, 'rbd_suppress_notification', 1, true);
                     error_log('Added comment ID: ' . $comment_id . ' to ticket ID: ' . $post_id);
                 } else {
                     error_log('Failed to add comment: ' . $comment_id->get_error_message());
@@ -454,6 +460,8 @@ function robodesk_fetch_emails()
             update_post_meta($post_id, '_robodesk_ticket_status', 'open');
             add_post_meta($post_id, 'email_message_id', $message_id);
             add_post_meta($post_id, 'email_from', $from);
+
+            robodesk_notify_ticket_created($post_id, 'email');
 
             $processed_count++;
 
@@ -596,89 +604,3 @@ if (!function_exists('rbd_log')) {
         error_log("[Robodesk] $message");
     }
 }
-
-/**
- * Send custom reply emails for ticket comments
- */
-function robodesk_reply_email($comment_id, $comment)
-{
-    // rbd_log("Triggered for comment ID $comment_id");
-
-    // Check if comment is approved (wp_insert_comment provides the full comment object)
-    if (!$comment || !in_array($comment->comment_approved, [1, '1', 'approved'])) {
-        // rbd_log("Skipped - comment ID $comment_id not found or not approved");
-        return;
-    }
-
-    if ($comment->comment_type !== 'ticket_replies') {
-        // rbd_log("Skipped - comment type = " . $comment->comment_type);
-        return;
-    }
-
-    $post = get_post($comment->comment_post_ID);
-    if (!$post) {
-        // rbd_log("No post found for comment ID $comment_id");
-        return;
-    }
-
-    $ticket_creator_email = get_post_meta($post->ID, '_robodesk_customer_email', true);
-    $email_message_id = get_post_meta($post->ID, 'email_message_id', true);
-    $comment_author_email = $comment->comment_author_email;
-
-    if (empty($ticket_creator_email)) {
-        // rbd_log("No _robodesk_customer_email meta for post ID $post->ID");
-        return;
-    }
-
-    // Clean and validate emails
-    $pure_creator_email = filter_var($ticket_creator_email, FILTER_VALIDATE_EMAIL) ?: (preg_match('/<(.*?)>/', $ticket_creator_email, $matches) ? $matches[1] : $ticket_creator_email);
-    $pure_commenter_email = filter_var($comment_author_email, FILTER_VALIDATE_EMAIL) ?: (preg_match('/<(.*?)>/', $comment_author_email, $matches) ? $matches[1] : $comment_author_email);
-
-    if (!filter_var($pure_creator_email, FILTER_VALIDATE_EMAIL) || !filter_var($pure_commenter_email, FILTER_VALIDATE_EMAIL)) {
-        // rbd_log("Invalid emails → Creator: $pure_creator_email | Commenter: $pure_commenter_email");
-        return;
-    }
-
-    // Skip if creator replies to their own ticket
-    if (strtolower(trim($pure_creator_email)) === strtolower(trim($pure_commenter_email))) {
-        // rbd_log("No email sent (creator replied to own ticket)");
-        return;
-    }
-
-    // Prepare email
-    $to = $pure_creator_email;
-    $reply_to = $pure_commenter_email;
-    $subject = 'Re: ' . $post->post_title;
-    $content = $comment->comment_content;
-    $user = get_user_by('email', $pure_creator_email);
-    $user_name = $user ? $user->display_name : $pure_creator_email;
-    $ticket_url = esc_url(admin_url("post.php?post=$post->ID&action=edit"));
-
-    $reply_message = '<html><body>';
-    $reply_message .= '<p>Hi ' . esc_html($user_name) . ',</p>';
-    $reply_message .= '<p>A new reply has been added to your ticket <a href="' . $ticket_url . '">#' . esc_html($post->ID) . '</a>.</p>';
-    $reply_message .= '<blockquote style="border-left:3px solid #ccc;padding-left:10px;">' . nl2br(esc_html($content)) . '</blockquote>';
-    $reply_message .= '<p><a href="' . $ticket_url . '" style="display:inline-block;padding:10px 20px;background-color:#0073aa;color:#ffffff;text-decoration:none;border-radius:5px;">Reply</a></p>';
-    $reply_message .= '</body></html>';
-
-    $headers = [
-        'From: Robodesk Support <pipetest@wplocatepress.com>',
-        'Reply-To: ' . $reply_to,
-        'MIME-Version: 1.0',
-        'Content-Type: text/html; charset=UTF-8'
-    ];
-
-    if ($email_message_id) {
-        $headers[] = 'References: ' . $email_message_id;
-        $headers[] = 'In-Reply-To: ' . $email_message_id;
-    }
-
-    // Send mail
-    // rbd_log("Sending email to $to, Reply-To: $reply_to");
-    $mail_sent = wp_mail($to, $subject, $reply_message, $headers);
-
-    // rbd_log($mail_sent ? "SUCCESS - Email sent to $to" : "FAILED to send email to $to");
-}
-
-// Use wp_insert_comment hook instead of comment_post
-add_action('wp_insert_comment', 'robodesk_reply_email', 10, 2);
