@@ -545,16 +545,141 @@ function robodesk_get_author_type($user_id)
     return 'customer';
 }
 
+function robodesk_get_agent_source_by_user($user_id)
+{
+    $user_id = (int) $user_id;
+    if ($user_id <= 0) {
+        return '';
+    }
+
+    $user = get_userdata($user_id);
+    if (!$user) {
+        return '';
+    }
+
+    $roles = (array) $user->roles;
+    if (in_array('administrator', $roles, true)) {
+        return 'admin';
+    }
+
+    if (
+        in_array('robodesk_support_manager', $roles, true) ||
+        in_array('robodesk_support_staff', $roles, true)
+    ) {
+        return 'staff';
+    }
+
+    return '';
+}
+
+function robodesk_get_ticket_customer_user_id($ticket_id)
+{
+    $ticket_id = (int) $ticket_id;
+    if ($ticket_id <= 0) {
+        return 0;
+    }
+
+    $ticket_author_id = (int) get_post_field('post_author', $ticket_id);
+    if ($ticket_author_id > 0 && robodesk_get_author_type($ticket_author_id) === 'customer') {
+        return $ticket_author_id;
+    }
+
+    $customer_email = trim((string) get_post_meta($ticket_id, '_robodesk_customer_email', true));
+    if ($customer_email !== '' && is_email($customer_email)) {
+        $email_user = get_user_by('email', $customer_email);
+        if ($email_user && !empty($email_user->ID)) {
+            return (int) $email_user->ID;
+        }
+    }
+
+    return 0;
+}
+
 function robodesk_create_notification($recipient_user_id, $ticket_id, $comment_id, $type, $source, $message)
 {
     global $wpdb;
 
     $table_name = $wpdb->prefix . 'robodesk_notifications';
 
-    // Determine creator
-    $created_by = get_current_user_id();
-    if ($created_by == 0) {
-        $created_by = 1; // Fallback to admin/system if no user logged in
+    $ticket_id = (int) $ticket_id;
+    $comment_id = (int) $comment_id;
+    $created_by = (int) get_current_user_id();
+
+    $normalized_source = strtolower(trim((string) $source));
+    $comment_user_id = 0;
+    $comment_author_type = '';
+
+    if ($comment_id > 0) {
+        $comment = get_comment($comment_id);
+        if ($comment && !is_wp_error($comment)) {
+            $comment_user_id = (int) $comment->user_id;
+            $comment_author_type = (string) get_comment_meta($comment_id, 'author_type', true);
+            if ($comment_author_type === '') {
+                $comment_author_type = robodesk_get_author_type($comment_user_id);
+            }
+
+            if ($normalized_source === '') {
+                $normalized_source = strtolower((string) get_comment_meta($comment_id, 'comment_source', true));
+            }
+        }
+    }
+
+    if ($normalized_source === '' && $ticket_id > 0) {
+        $normalized_source = robodesk_get_ticket_source($ticket_id);
+    }
+
+    $customer_user_id = $ticket_id > 0 ? robodesk_get_ticket_customer_user_id($ticket_id) : 0;
+
+    switch ($normalized_source) {
+        case 'chat':
+            if ($comment_user_id > 0 && $comment_author_type === 'customer') {
+                $created_by = $comment_user_id;
+            } elseif ($customer_user_id > 0) {
+                $created_by = $customer_user_id;
+            }
+            break;
+
+        case 'email':
+            if ($comment_user_id > 0 && $comment_author_type === 'customer') {
+                $created_by = $comment_user_id;
+            } elseif ($customer_user_id > 0) {
+                $created_by = $customer_user_id;
+            }
+            break;
+
+        case 'admin':
+        case 'staff':
+            if ($comment_user_id > 0) {
+                $created_by = $comment_user_id;
+            }
+            if ($created_by > 0) {
+                $agent_source = robodesk_get_agent_source_by_user($created_by);
+                if ($agent_source !== '') {
+                    $normalized_source = $agent_source;
+                }
+            }
+            break;
+
+        default:
+            if ($comment_user_id > 0) {
+                $created_by = $comment_user_id;
+            }
+            break;
+    }
+
+    if ($created_by <= 0 && $ticket_id > 0) {
+        $ticket_author_id = (int) get_post_field('post_author', $ticket_id);
+        if ($ticket_author_id > 0) {
+            $created_by = $ticket_author_id;
+        }
+    }
+
+    if ($created_by <= 0) {
+        $created_by = 1;
+    }
+
+    if ($normalized_source === '') {
+        $normalized_source = 'chat';
     }
 
     $wpdb->insert(
@@ -565,7 +690,7 @@ function robodesk_create_notification($recipient_user_id, $ticket_id, $comment_i
             'ticket_id'         => (int) $ticket_id,
             'comment_id'        => $comment_id ? (int) $comment_id : null,
             'type'              => sanitize_text_field($type),
-            'source'            => sanitize_text_field($source),
+            'source'            => sanitize_text_field($normalized_source),
             'message'           => sanitize_textarea_field($message),
             'status'            => 'unread',
             'created_by'        => (int) $created_by,
