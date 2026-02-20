@@ -1930,3 +1930,41 @@ function robodesk_clear_notifications()
 
     wp_send_json_success(['message' => 'Notifications cleared.']);
 }
+
+
+// Custom email function for wp_mail with html with header and footer
+function robodesk_send_email($to, $subject, $message, $headers = [], $attachments = [])
+{
+    $default_headers = array('Content-Type: text/html; charset=UTF-8');
+    $headers = array_merge($default_headers, $headers);
+    $site_name = get_bloginfo('name');
+    $email_template = '<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #f4f4
+        ; margin: 0; padding: 20px; }
+        .email-container { background-color: #ffffff; padding: 20px; border-radius  
+        : 5px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); }
+        .email-header { background-color: #0073aa; color: #ffffff; padding: 10px; border-radius: 5px 5px 0 0; }
+        .email-footer { background-color: #f4f4f4; color: #333333; padding: 10px; border-radius: 0 0 5px 5px; text-align: center; font-size: 12px; }
+        .email-body { padding: 20px; }
+    </style>
+</head>
+<body>
+    <div class="email-container">
+        <div class="email-header">
+            <h1>' . esc_html($site_name) . '</h1>
+        </div>
+        <div class="email-body">
+            ' . $message . '
+        </div>
+        <div class="email-footer">
+            <p>&copy; ' . date('Y') . ' ' . esc_html($site_name) . '. All rights reserved.</p>
+        </div>
+    </div>
+</body>
+</html>';
+    return wp_mail($to, $subject, $email_template, $headers, $attachments);
+}
