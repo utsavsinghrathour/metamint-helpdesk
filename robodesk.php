@@ -966,17 +966,17 @@ function robodesk_send_unseen_reply_email($comment_id)
     $site_url = get_site_url();
     $ticket_link = $site_url . '?user=' . urlencode($customer_email) . '&rbd_popup=true&initiator=robodesk';
 
-    $message = "New reply on #{$ticket_id}\n";
-    $message .= "From: {$assignee_name}\n";
+    $message = "<p><strong>New reply on #{$ticket_id}</strong></p>";
+    $message .= "<p><strong>From:</strong> {$assignee_name}</p>";
     if ($ticket_title) {
-        $message .= "Ticket: {$ticket_title}\n";
+        $message .= "<p><strong>Ticket:</strong> {$ticket_title}</p>";
     }
     if ($reply_plain !== '') {
-        $message .= "\nReply:\n{$reply_plain}\n";
+        $message .= "<p><strong>Reply:</strong></p><p>" . nl2br(esc_html($reply_plain)) . "</p>";
     }
-    $message .= "\nView the conversation: {$ticket_link}\n";
+    $message .= "<p><a href=\"{$ticket_link}\">View the conversation</a></p>";
 
-    if (wp_mail($customer_email, $subject, $message)) {
+    if (robodesk_send_email($customer_email, $subject, $message)) {
         update_comment_meta($comment_id, 'rbd_unseen_email_sent', 1);
         rbd_log("Robodesk: Unseen reply email sent to {$customer_email} for ticket #{$ticket_id}");
     } else {
