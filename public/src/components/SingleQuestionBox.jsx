@@ -5,6 +5,7 @@ import parse from 'html-react-parser';
 import DOMPurify from 'dompurify';
 import Footer from './Footer';
 import '../styles/SingleQuestionBox.css';
+import RobodeskBotChatWidgetMain from './RobodeskBotChatWidgetMain';
 
 import defaultLogo from '../images/robodesk-logo.png';
 
@@ -41,6 +42,12 @@ const SingleQuestionBox = ({
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const image_urls = window.robodeskData?.imageUrls || {};
+  const [isAddonActive, setIsAddonActive] = useState(false);
+  const [loadingAddonStatus, setLoadingAddonStatus] = useState(true);
+  const [primaryBot, setPrimaryBot] = useState(false);
+  const [widgetConfig, setWidgetConfig] = useState(null);
+  const [activeAIMode, setActiveAIMode] = useState('');
+
 
   useEffect(() => {
     const fetchFAQs = async () => {
@@ -91,6 +98,20 @@ const SingleQuestionBox = ({
     if (isDisliked) setIsDisliked(false);
   };
 
+  useEffect(() => {
+    fetch("/wp-json/robodesk-addon/v1/status")
+      .then((res) => res.json())
+      .then((data) => {
+        setIsAddonActive(!!data?.activated);
+      })
+      .catch((error) => {
+        setIsAddonActive(false);
+      })
+      .finally(() => {
+        setLoadingAddonStatus(false);
+      });
+  }, []);
+
   const handleDislike = () => {
     setIsDisliked(!isDisliked);
     if (isLiked) setIsLiked(false);
@@ -110,6 +131,30 @@ const SingleQuestionBox = ({
   const handleImageError = (e) => {
     console.error('Image failed to load:', e.target.src);
   };
+
+  const fetchApiKey = async () => {
+    try {
+      const response = await fetch("/wp-json/robodesk-bot/v1/widget-config");
+      const data = await response.json();
+      if (response.ok) {
+        setPrimaryBot(!!data?.primaryBot);
+        setWidgetConfig(data?.widgetConfig || { enabled: true });
+        setActiveAIMode(data?.enabled);
+      } else {
+        setPrimaryBot(false);
+      }
+    } catch (error) {
+      console.error("Error fetching widget config:", error);
+      setPrimaryBot(false);
+    } finally {
+      setLoadingAddonStatus(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchApiKey();
+  }, [primaryBot]);
+
 
   const QuestionItem = ({ question }) => (
     <div
@@ -283,36 +328,47 @@ const SingleQuestionBox = ({
         <>
           {showHeaderFooter && (
             <>
-              <div className='rd-text-center rd-px-20 rd-flex rd-flex-col rd-gap-5 rd-mb-20 home-tab-title'>
+              {/* <div className='rd-text-center rd-px-20 rd-flex rd-flex-col rd-gap-5 rd-mb-20 home-tab-title'>
                 <h4 className='heading-4'>Have Questions?</h4>
                 <h5 className='sub-text rd-mt-0'>
                   Have any questions or need a quote? Leave us a message.
                 </h5>
-              </div>
-              <SendMessageField
-                setShowLogin={setShowLogin}
-                setActiveTab={setActiveTab}
-                updateSelectedTicket={updateSelectedTicket}
-                focused={focused}
-                handleFocusedTextArea={handleFocusedTextArea}
-              />
+              </div> */}
+              {isAddonActive && (
+                activeAIMode && primaryBot ? (
+                  <RobodeskBotChatWidgetMain
+                    widgetConfig={widgetConfig}
+                    activeAIMode={activeAIMode}
+                  />
+                ) : (
+                  <>
+                    <SendMessageField primaryBot={primaryBot}
+                      setShowLogin={setShowLogin}
+                      setActiveTab={setActiveTab}
+                      updateSelectedTicket={updateSelectedTicket}
+                      focused={focused}
+                      handleFocusedTextArea={handleFocusedTextArea}
+                    />
+                    <div className='rd-px-18 rd-mt-20 rd-mb-15 rd-overflow-h-320'>
+                      <div className='rd-flex rd-flex-col rd-gap-20'>
+                        {isLoading ? (
+                          <p className='rd-body-text rd-text-center'>Loading FAQs...</p>
+                        ) : error ? (
+                          <p className='rd-text-red rd-body-text'>Error: {error}</p>
+                        ) : questions.length === 0 ? (
+                          <p className='err_msg'>No FAQs found.</p>
+                        ) : (
+                          questions.map((question) => (
+                            <QuestionItem key={question.id} question={question} />
+                          ))
+                        )}
+                      </div>
+                    </div>
+                  </>
+                )
+              )}
             </>
           )}
-          <div className='rd-px-18 rd-mt-20 rd-mb-15 rd-overflow-h-320'>
-            <div className='rd-flex rd-flex-col rd-gap-20'>
-              {isLoading ? (
-                <p className='rd-body-text rd-text-center'>Loading FAQs...</p>
-              ) : error ? (
-                <p className='rd-text-red rd-body-text'>Error: {error}</p>
-              ) : questions.length === 0 ? (
-                <p className='err_msg'>No FAQs found.</p>
-              ) : (
-                questions.map((question) => (
-                  <QuestionItem key={question.id} question={question} />
-                ))
-              )}
-            </div>
-          </div>
         </>
       )}
     </>
