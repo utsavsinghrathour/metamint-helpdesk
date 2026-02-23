@@ -1,2 +1,7 @@
 *.log
 .DS_Store
+/public/build
+build
+node_modules
+logs
+package-lock.json
