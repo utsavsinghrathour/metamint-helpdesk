@@ -689,7 +689,7 @@ td.credential_url a {
   display: flex;
   flex-direction: column;
   gap: 4px;
-  height: 48vh;
+  height: calc(70vh - 200px);
 }
 @media screen and (max-width: 768px) {
   .desktop-menu {
