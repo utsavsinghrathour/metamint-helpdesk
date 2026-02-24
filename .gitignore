@@ -5,3 +5,4 @@ build
 node_modules
 logs
 package-lock.json
+logs/debug.log
