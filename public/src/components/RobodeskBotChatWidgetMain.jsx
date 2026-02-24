@@ -170,18 +170,7 @@ export default function RobodeskBotChatWidgetMain({ widgetConfig, activeAIMode }
                 </div> */}
 
                 {/* MESSAGES */}
-                <div id="robodesk-bot-messages" ref={rootRef} style={
-                    messages.length > 0
-                        ? {
-                            maxHeight: '145px',
-                            overflowY: 'auto',
-                            padding: '16px',
-                            display: 'flex',
-                            flexDirection: 'column',
-                            gap: '4px',
-                        }
-                        : {}
-                }>
+                <div id="robodesk-bot-messages" className="robodesk-bot-message" ref={rootRef}>
                     {messages.length > 0 && messages.map((m, i) => {
                         const prevMsg = i > 0 ? messages[i - 1] : null;
                         const isSameSender = prevMsg && prevMsg.role === m.role;
