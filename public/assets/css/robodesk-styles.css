@@ -671,6 +671,25 @@ td.credential_url a{
   text-decoration: underline;
   text-underline-offset: 3px;
 }
+.robodesk-header button {
+  background: none;
+}
+#robodesk-bot-input.chat-input{
+  position: absolute;
+  width: 100%;
+  bottom: 88px;
+}
+#robodesk-bot-input.chat-input input[type="text"]{
+  width: 100%;
+}
+.robodesk-bot-message{
+  overflow-y: auto;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  height: 55vh;
+}
 @media screen and (max-width: 768px) {
   .desktop-menu {
     display: none;
