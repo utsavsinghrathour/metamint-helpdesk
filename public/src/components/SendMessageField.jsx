@@ -7,16 +7,16 @@ const SendMessageField = ({ setShowLogin, setActiveTab, updateSelectedTicket, ha
     const [message, setMessage] = useState("");
     const [loggedIn, setLoggedIn] = useState(false);
     const [userId, setUserId] = useState(null);
-    const [placeHolderText, setplaceHolderText] = useState('Start a conversation....');
+    const [placeHolderText, setplaceHolderText] = useState('Start a conversation...');
     const { loggedinContext, loggedInUsrId, refreshTickets } = useAppData();
 
 
     const handleInputChange = (e) => {
         setMessage(e.target.value);
     };
-    
-    
-    
+
+
+
     const textareaRef = useRef(null);
     const prevFocusedRef = useRef(false);
 
@@ -60,9 +60,9 @@ const SendMessageField = ({ setShowLogin, setActiveTab, updateSelectedTicket, ha
         if (!message.trim()) return;
         if (!loggedinContext) {
             localStorage.setItem('temp_ticket_title', message);
-                setActiveTab(1);
+            setActiveTab(1);
             setShowLogin(true);
-      
+
             return;
         }
 
@@ -82,7 +82,7 @@ const SendMessageField = ({ setShowLogin, setActiveTab, updateSelectedTicket, ha
             };
             refreshTickets();
             updateSelectedTicket(newTicket);
-           
+
             setActiveTab(1);
             setMessage("");
 
@@ -94,6 +94,12 @@ const SendMessageField = ({ setShowLogin, setActiveTab, updateSelectedTicket, ha
 
     return (
         <div className="send-message-field rd-px-18">
+            <div className='rd-text-center rd-px-20 rd-flex rd-flex-col rd-gap-5 rd-mb-20 home-tab-title'>
+                <h4 className='heading-4'>Have Questions?</h4>
+                <h5 className='sub-text rd-mt-0'>
+                    Have any questions or need a quote? Leave us a message.
+                </h5>
+            </div>
             <div className="rd-position-relative rd-flex">
                 <textarea
                     className="rd-w-full rd-border-blue rd-border-radius-md"
