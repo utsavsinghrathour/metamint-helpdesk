@@ -5,10 +5,10 @@
   margin: 0 auto;
   padding: 20px;
 }
-.text-start {
+.robodesk-plugin .text-start {
   text-align: start;
 }
-.flex-1 {
+.robodesk-plugin .flex-1 {
   flex: 1;
 }
 .robodesk-dashboard-content h3 {
@@ -673,6 +673,7 @@ td.credential_url a {
 }
 .robodesk-header button {
   background: none;
+  padding: 0;
 }
 #robodesk-bot-input.chat-input {
   background: #fff;
