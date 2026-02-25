@@ -2352,5 +2352,14 @@
 [2026-02-24 08:08:39] Robodesk: Unseen reply email skipped - minutes not configured (value: 0)
 [2026-02-24 08:08:39] Comment received for ticket #184: Show all my orders
 
+<<<<<<< HEAD
 [2026-02-24 08:09:29] Robodesk: Ticket creation email sent to joshichakramani@gmail.com for ticket ID: 185
 [2026-02-24 08:09:29] Robodesk: No support staff users found.
+=======
+[2026-02-25 06:58:02] Robodesk: Ticket creation email sent to dev-email@wpengine.local for ticket ID: 27
+[2026-02-25 06:58:02] Robodesk: No support staff users found.
+[2026-02-25 06:58:02] Robodesk: Unseen reply email check triggered for ticket #27, comment #20
+[2026-02-25 06:58:02] Robodesk: Unseen reply email skipped - minutes not configured (value: 0)
+[2026-02-25 06:58:02] Comment received for ticket #27: FileStore is not configured
+
+>>>>>>> 7edd09ab (added the prefix:robodesk-plugin in css for overall so that it will not affect the theme)
