@@ -671,9 +671,11 @@ td.credential_url a {
   text-decoration: underline;
   text-underline-offset: 3px;
 }
-.robodesk-header button {
+.robodesk-header button,
+.robodesk-header button:hover {
   background: none;
   padding: 0;
+  border: none;
 }
 #robodesk-bot-input.chat-input {
   background: #fff;
