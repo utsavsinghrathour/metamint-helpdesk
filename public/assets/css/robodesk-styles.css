@@ -672,7 +672,8 @@ td.credential_url a {
   text-underline-offset: 3px;
 }
 .robodesk-header button,
-.robodesk-header button:hover {
+.robodesk-header button:hover,
+.robodesk-header button:focus {
   background: none;
   padding: 0;
   border: none;
