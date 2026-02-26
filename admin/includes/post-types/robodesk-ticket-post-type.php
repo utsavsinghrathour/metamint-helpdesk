@@ -799,9 +799,44 @@ function robodesk_user_data_to_session_storage()
 add_action('wp_footer', 'robodesk_user_data_to_session_storage');
 
 
-function robodesk_allow_image_in_comments($allowed_tags)
+function robodesk_is_ticket_kses_context()
 {
-    $allowed_tags['img'] = array(
+    $possible_post_ids = [];
+
+    if (isset($_POST['ticket_id'])) {
+        $possible_post_ids[] = absint($_POST['ticket_id']);
+    }
+
+    if (isset($_POST['comment_post_ID'])) {
+        $possible_post_ids[] = absint($_POST['comment_post_ID']);
+    }
+
+    if (isset($_REQUEST['post_id'])) {
+        $possible_post_ids[] = absint($_REQUEST['post_id']);
+    }
+
+    if (isset($_REQUEST['ticket_id'])) {
+        $possible_post_ids[] = absint($_REQUEST['ticket_id']);
+    }
+
+    $possible_post_ids = array_filter(array_unique($possible_post_ids));
+
+    foreach ($possible_post_ids as $post_id) {
+        if ($post_id > 0 && get_post_type($post_id) === 'robodesk_ticket') {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+function robodesk_allow_image_in_comments($allowed_tags, $context)
+{
+    if (!robodesk_is_ticket_kses_context()) {
+        return $allowed_tags;
+    }
+
+    $img_attributes = array(
         'src' => array(),
         'alt' => array(),
         'class' => array(),
@@ -809,17 +844,31 @@ function robodesk_allow_image_in_comments($allowed_tags)
         'height' => array()
     );
 
+    if (!isset($allowed_tags['img']) || !is_array($allowed_tags['img'])) {
+        $allowed_tags['img'] = [];
+    }
+
+    $allowed_tags['img'] = array_merge($allowed_tags['img'], $img_attributes);
+
     // Allow <a> tag with common safe attributes
-    $allowed_tags['a'] = array(
+    $anchor_attributes = array(
         'href'   => array(),
         'title'  => array(),
         'target' => array(),
         'rel'    => array(),
         'class'  => array(),
+        'style'  => array(),
     );
+
+    if (!isset($allowed_tags['a']) || !is_array($allowed_tags['a'])) {
+        $allowed_tags['a'] = [];
+    }
+
+    $allowed_tags['a'] = array_merge($allowed_tags['a'], $anchor_attributes);
+
     return $allowed_tags;
 }
-add_filter('wp_kses_allowed_html', 'robodesk_allow_image_in_comments', 10, 1);
+add_filter('wp_kses_allowed_html', 'robodesk_allow_image_in_comments', 10, 2);
 
 
 function robodesk_base64_image_upload($base64_data)
