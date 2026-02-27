@@ -681,7 +681,7 @@ td.credential_url a {
 #robodesk-bot-input.chat-input {
   background: #fff;
   position: absolute;
-  width: 100%;
+  width: calc(100% - 36px);
   bottom: 88px;
 }
 #robodesk-bot-input.chat-input input[type="text"] {
