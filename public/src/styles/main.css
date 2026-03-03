@@ -11,13 +11,15 @@
   --icon-dark: rgba(51, 51, 51, 1);
 }
 
-html {
+.robodesk-plugin {
+  z-index: 9999999 !important;
   font-size: 16px !important;
+  letter-spacing: normal !important;
 }
 
 .robodesk-plugin::-webkit-scrollbar {
   width: 3px;
-  height: 3px;
+  height: 10px;
 }
 
 .robodesk-plugin::-webkit-scrollbar-thumb {
@@ -75,12 +77,6 @@ html {
 .robodesk-plugin .color-blue {
   color: var(--primary-blue) !important;
 }
-/* h1, h2, h3, h4, h5, h6, p, span, a, input, input::placeholder, textarea, textarea::placeholder, select{
-
-} */
-.robodesk-plugin {
-  z-index: 9999999 !important;
-}
 
 .robodesk-plugin .chat-input input {
   width: 100%;
@@ -130,14 +126,14 @@ button.no-bg,
   height: 30px;
 }
 
-.rd-header-logo img:not(.rd-faq-header img),
-.default-logo img {
+.robodesk-plugin .rd-header-logo img:not(.rd-faq-header img),
+.robodesk-plugin .default-logo img {
   height: 30px;
 }
 
-.rd-faq-header img,
-.single-faq-header img,
-.single-ticket-header img {
+.robodesk-plugin .rd-faq-header img,
+.robodesk-plugin .single-faq-header img,
+.robodesk-plugin .single-ticket-header img {
   height: 40px;
 }
 
@@ -154,7 +150,7 @@ button.no-bg,
 }
 
 .icon-dark svg {
-  /* fill: var(--icon-dark) !important; */
+  fill: var(--icon-dark) !important;
 }
 
 .rd-justify-between {
@@ -701,12 +697,14 @@ button.no-bg,
   opacity: 1;
   transform: translateY(0);
   visibility: visible;
+  display: flex !important;
 }
 
 .robodesk-popup.closed {
   opacity: 0;
   transform: translateY(50px);
   visibility: hidden;
+  display: none !important;
 }
 
 .form-err-msg {
