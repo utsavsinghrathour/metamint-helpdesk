@@ -1,6 +1,10 @@
 .robodesk-header {
   padding: 15px 20px;
   border-bottom: 1px solid var(--border-light-gray);
+  background-color: var(--robodesk-theme-color);
+}
+.robodesk-header .icon-dark svg{
+  fill: #fff !important;
 }
 .robodesk-plugin {
   position: fixed;
@@ -61,6 +65,7 @@
     font-weight: 500;
     margin-bottom: 0.8rem; 
          line-height: 1.1;
+         margin-bottom: 0rem;
 }
 
 .rd-main-content  h6 {
