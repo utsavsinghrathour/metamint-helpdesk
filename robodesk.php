@@ -761,6 +761,20 @@ function robodesk_notify_comment_created($comment_id)
         return;
     }
 
+    $first_reply_ids = get_comments([
+        'post_id' => $ticket_id,
+        'type' => 'ticket_replies',
+        'status' => 'approve',
+        'orderby' => 'comment_ID',
+        'order' => 'ASC',
+        'number' => 1,
+        'fields' => 'ids',
+    ]);
+
+    if (!empty($first_reply_ids) && (int) $first_reply_ids[0] === $comment_id) {
+        return;
+    }
+
     if (get_comment_meta($comment_id, 'rbd_suppress_notification', true)) {
         return;
     }
