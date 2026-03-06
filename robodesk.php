@@ -876,6 +876,96 @@ function robodesk_notify_comment_created($comment_id)
 }
 
 add_action('robodesk_after_reply_added', 'robodesk_schedule_unseen_reply_email', 10, 4);
+function robodesk_add_internal_ticket_note($ticket_id, $note_content)
+{
+    $ticket_id = (int) $ticket_id;
+    $note_content = trim((string) $note_content);
+
+    if ($ticket_id <= 0 || $note_content === '') {
+        return 0;
+    }
+
+    $system_email = (string) get_option('admin_email');
+    if (!is_email($system_email)) {
+        $system_email = 'no-reply@localhost.invalid';
+    }
+
+    $note_id = wp_insert_comment([
+        'comment_post_ID'      => $ticket_id,
+        'comment_author'       => 'Robodesk System',
+        'comment_author_email' => $system_email,
+        'user_id'              => 0,
+        'comment_content'      => $note_content,
+        'comment_approved'     => 1,
+        'comment_type'         => 'ticket_notes',
+        'comment_meta'         => [
+            'is_robodesk_note' => 1,
+            'is_system_note'   => 1,
+        ],
+    ]);
+
+    if (!$note_id || is_wp_error($note_id)) {
+        return 0;
+    }
+
+    return (int) $note_id;
+}
+
+function robodesk_output_unseen_reply_tracking_pixel()
+{
+    if (!headers_sent()) {
+        nocache_headers();
+        header('Content-Type: image/gif');
+    }
+
+    echo base64_decode('R0lGODlhAQABAPAAAAAAAAAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw==');
+    wp_die();
+}
+
+add_action('wp_ajax_robodesk_track_unseen_reply_email_read', 'robodesk_track_unseen_reply_email_read');
+add_action('wp_ajax_nopriv_robodesk_track_unseen_reply_email_read', 'robodesk_track_unseen_reply_email_read');
+function robodesk_track_unseen_reply_email_read()
+{
+    $comment_id = isset($_GET['comment_id']) ? absint(wp_unslash($_GET['comment_id'])) : 0;
+    $token = isset($_GET['token']) ? (string) wp_unslash($_GET['token']) : '';
+    $token = preg_replace('/[^a-zA-Z0-9]/', '', $token);
+
+    if ($comment_id <= 0 || $token === '') {
+        robodesk_output_unseen_reply_tracking_pixel();
+    }
+
+    $stored_token = (string) get_comment_meta($comment_id, 'rbd_unseen_email_tracking_token', true);
+    if ($stored_token === '' || !hash_equals($stored_token, $token)) {
+        robodesk_output_unseen_reply_tracking_pixel();
+    }
+
+    $comment = get_comment($comment_id);
+    if (!$comment || $comment->comment_type !== 'ticket_replies') {
+        robodesk_output_unseen_reply_tracking_pixel();
+    }
+
+    $ticket_id = (int) $comment->comment_post_ID;
+    if ($ticket_id <= 0 || get_post_type($ticket_id) !== 'robodesk_ticket') {
+        robodesk_output_unseen_reply_tracking_pixel();
+    }
+
+    $already_read_at = (string) get_comment_meta($comment_id, 'rbd_unseen_email_read_at', true);
+    if ($already_read_at === '') {
+        $read_at = current_time('mysql');
+        update_comment_meta($comment_id, 'rbd_unseen_email_read_at', $read_at);
+        update_comment_meta($comment_id, 'rbd_unseen_email_read', 1);
+
+        robodesk_add_internal_ticket_note(
+            $ticket_id,
+            sprintf('Unseen reply reminder email was read at %s.', $read_at)
+        );
+
+        rbd_log("Robodesk: Unseen reply email read tracked for ticket #{$ticket_id}, comment #{$comment_id} at {$read_at}");
+    }
+
+    robodesk_output_unseen_reply_tracking_pixel();
+}
+
 function robodesk_schedule_unseen_reply_email($ticket_id, $comment_id, $reply, $user_object)
 {
     rbd_log("Robodesk: Unseen reply email check triggered for ticket #{$ticket_id}, comment #{$comment_id}");
@@ -980,6 +1070,18 @@ function robodesk_send_unseen_reply_email($comment_id)
     $site_url = get_site_url();
     $ticket_link = $site_url . '?user=' . urlencode($customer_email) . '&rbd_popup=true&initiator=robodesk';
 
+    $tracking_token = wp_generate_password(32, false, false);
+    update_comment_meta($comment_id, 'rbd_unseen_email_tracking_token', $tracking_token);
+
+    $tracking_url = add_query_arg(
+        [
+            'action' => 'robodesk_track_unseen_reply_email_read',
+            'comment_id' => $comment_id,
+            'token' => $tracking_token,
+        ],
+        admin_url('admin-ajax.php')
+    );
+
     $message = "<p><strong>New reply on #{$ticket_id}</strong></p>";
     $message .= "<p><strong>From:</strong> {$assignee_name}</p>";
     if ($ticket_title) {
@@ -989,11 +1091,54 @@ function robodesk_send_unseen_reply_email($comment_id)
         $message .= "<p><strong>Reply:</strong></p><p>" . nl2br(esc_html($reply_plain)) . "</p>";
     }
     $message .= "<p><a href=\"{$ticket_link}\">View the conversation</a></p>";
+    $message .= '<img src="' . esc_url($tracking_url) . '" width="1" height="1" alt="" style="display:block;border:0;outline:none;text-decoration:none;" />';
 
-    if (robodesk_send_email($customer_email, $subject, $message)) {
+    $mail_failed_message = '';
+    $mail_failed_listener = function ($wp_error) use (&$mail_failed_message) {
+        if (is_wp_error($wp_error)) {
+            $mail_failed_message = (string) $wp_error->get_error_message();
+        }
+    };
+
+    add_action('wp_mail_failed', $mail_failed_listener, 10, 1);
+
+    $sent = false;
+    $send_error_message = '';
+
+    try {
+        $sent = robodesk_send_email($customer_email, $subject, $message);
+        if (!$sent && $mail_failed_message !== '') {
+            $send_error_message = $mail_failed_message;
+        }
+    } catch (Throwable $e) {
+        $send_error_message = $e->getMessage();
+    }
+
+    remove_action('wp_mail_failed', $mail_failed_listener, 10);
+
+    $event_time = current_time('mysql');
+
+    if ($sent) {
         update_comment_meta($comment_id, 'rbd_unseen_email_sent', 1);
+        update_comment_meta($comment_id, 'rbd_unseen_email_sent_at', $event_time);
+
+        robodesk_add_internal_ticket_note(
+            $ticket_id,
+            sprintf('Unseen reply reminder email sent successfully to %s at %s.', $customer_email, $event_time)
+        );
+
         rbd_log("Robodesk: Unseen reply email sent to {$customer_email} for ticket #{$ticket_id}");
     } else {
+        $send_error_message = trim(wp_strip_all_tags((string) $send_error_message));
+        if ($send_error_message !== '') {
+            $send_error_message = ' Error: ' . $send_error_message;
+        }
+
+        robodesk_add_internal_ticket_note(
+            $ticket_id,
+            sprintf('Failed to send unseen reply reminder email to %s at %s.%s', $customer_email, $event_time, $send_error_message)
+        );
+
         rbd_log("Robodesk: Unseen reply email failed to send to {$customer_email} for ticket #{$ticket_id}");
     }
 }
