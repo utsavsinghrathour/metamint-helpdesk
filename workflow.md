@@ -20,3 +20,12 @@
 - When scrolling to the top of the message list:
   - Older messages are loaded, but the view automatically scrolls to the bottom.
   - **Fix:** Prevent auto-scroll to bottom when loading older messages.
+
+## Tracking Pixels
+
+A tracking pixel is a tiny invisible image (usually 1x1) embedded in an email.
+When the email client loads that image URL, your server receives a request.
+That request is treated as an “email opened/read” signal and you can log the timestamp.
+Your email now includes a pixel URL with comment_id + a unique token.
+When that URL is requested, the AJAX handler validates the token, records first read time, and adds an internal ticket note.
+This gives you send status + read status history directly in ticket notes.
