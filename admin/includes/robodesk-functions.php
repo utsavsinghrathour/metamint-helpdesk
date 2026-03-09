@@ -1845,6 +1845,19 @@ function robodesk_get_notifications()
     $items = [];
     foreach ($rows as $row) {
         $ticket_id = (int) $row['ticket_id'];
+
+        if ($ticket_id > 0) {
+            $current_assignee_id = (int) get_post_meta($ticket_id, 'ticket_assignee_id', true);
+            if ($current_assignee_id > 0 && $current_assignee_id !== $user_id) {
+                $wpdb->delete(
+                    $table_name,
+                    ['id' => (int) $row['id'], 'recipient_user_id' => $user_id],
+                    ['%d', '%d']
+                );
+                continue;
+            }
+        }
+
         $items[] = [
             'id' => (int) $row['id'],
             'ticketId' => $ticket_id,
@@ -1886,19 +1899,42 @@ function robodesk_mark_notification_read()
     global $wpdb;
     $table_name = $wpdb->prefix . 'robodesk_notifications';
 
-    $updated = $wpdb->update(
+    $row = $wpdb->get_row(
+        $wpdb->prepare(
+            "SELECT id, ticket_id FROM $table_name WHERE id = %d AND recipient_user_id = %d LIMIT 1",
+            $notification_id,
+            $user_id
+        ),
+        ARRAY_A
+    );
+
+    if (!$row) {
+        wp_send_json_error(['message' => 'Notification not found.']);
+    }
+
+    $ticket_id = isset($row['ticket_id']) ? (int) $row['ticket_id'] : 0;
+    if ($ticket_id > 0) {
+        $current_assignee_id = (int) get_post_meta($ticket_id, 'ticket_assignee_id', true);
+        if ($current_assignee_id > 0 && $current_assignee_id !== $user_id) {
+            wp_send_json_error(['message' => 'Notification is no longer assigned to you.']);
+        }
+    }
+
+    $deleted = $wpdb->delete(
         $table_name,
-        ['read_at' => current_time('mysql')],
         ['id' => $notification_id, 'recipient_user_id' => $user_id],
-        ['%s'],
         ['%d', '%d']
     );
 
-    if ($updated === false) {
-        wp_send_json_error(['message' => 'Failed to update notification.']);
+    if ($deleted === false) {
+        wp_send_json_error(['message' => 'Failed to remove notification.']);
     }
 
-    wp_send_json_success(['message' => 'Notification marked as read.']);
+    if ($deleted < 1) {
+        wp_send_json_error(['message' => 'Notification not found.']);
+    }
+
+    wp_send_json_success(['message' => 'Notification opened and removed.']);
 }
 
 add_action('wp_ajax_robodesk_clear_notifications', 'robodesk_clear_notifications');
@@ -1916,19 +1952,21 @@ function robodesk_clear_notifications()
     global $wpdb;
     $table_name = $wpdb->prefix . 'robodesk_notifications';
 
-    $updated = $wpdb->query(
+    $deleted = $wpdb->query(
         $wpdb->prepare(
-            "UPDATE $table_name SET read_at = %s WHERE recipient_user_id = %d AND read_at IS NULL",
-            current_time('mysql'),
+            "DELETE FROM $table_name WHERE recipient_user_id = %d AND read_at IS NULL",
             $user_id
         )
     );
 
-    if ($updated === false) {
+    if ($deleted === false) {
         wp_send_json_error(['message' => 'Failed to clear notifications.']);
     }
 
-    wp_send_json_success(['message' => 'Notifications cleared.']);
+    wp_send_json_success([
+        'message' => 'Notifications cleared.',
+        'deleted_count' => (int) $deleted,
+    ]);
 }
 
 
