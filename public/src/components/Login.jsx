@@ -1,59 +1,59 @@
-import '../styles/Login.css';
-import { useEffect, useState } from 'react';
-import { loginUser, registerUser, createTicket } from '../utils/modules';
-import { useAppData } from '../utils/AppDataContext';
-import defaultLogo from '../images/robodesk-logo.png';
-import ForgotPassword from './ForgotPassword';
-import ChangePassword from './ChangePassword';
+import "../styles/Login.css";
+import { useEffect, useState } from "react";
+import { loginUser, registerUser, createTicket } from "../utils/modules";
+import { useAppData } from "../utils/AppDataContext";
+import defaultLogo from "../images/robodesk-logo.png";
+import ForgotPassword from "./ForgotPassword";
+import ChangePassword from "./ChangePassword";
 
 // Header Component
 const Header = ({ setActiveTab, image_urls, defaultLogo }) => (
-  <div className='rd-px-18 rd-search-header rd-bg-blue rd-flex rd-items-center rd-justify-between rd-flex-col login-wrap'>
-    <div className='rd-flex rd-items-center rd-w-full rd-justify-center'>
+  <div className="rd-px-18 rd-search-header rd-bg-blue rd-flex rd-items-center rd-justify-between rd-flex-col login-wrap">
+    <div className="rd-flex rd-items-center rd-w-full rd-justify-center">
       <button
-        type='button'
-        className='rd-bg-transparent rd-text-white rd-p-0 rd-m-0 back-button rd-flex rd-items-center'
-        aria-label='Go back to home'
+        type="button"
+        className="rd-bg-transparent rd-text-white rd-p-0 rd-m-0 back-button rd-flex rd-items-center"
+        aria-label="Go back to home"
         onClick={() => setActiveTab(0)}
       >
         <svg
-          xmlns='http://www.w3.org/2000/svg'
-          width='20'
-          height='20'
-          viewBox='0 0 24 24'
-          fill='none'
-          stroke='currentColor'
-          strokeWidth='2'
-          strokeLinecap='round'
-          strokeLinejoin='round'
+          xmlns="http://www.w3.org/2000/svg"
+          width="20"
+          height="20"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
         >
-          <path d='M15 18l-6-6 6-6' />
+          <path d="M15 18l-6-6 6-6" />
         </svg>
       </button>
-      {image_urls.wide_logo && image_urls.wide_logo.trim() !== '' ? (
+      {image_urls.wide_logo && image_urls.wide_logo.trim() !== "" ? (
         <img
           src={image_urls.wide_logo}
-          alt='Plugin Wide Logo'
-          className='rd-h-auto rd-header-logo'
+          alt="Plugin Wide Logo"
+          className="rd-h-auto rd-header-logo"
           onError={(e) => {
-            e.target.style.display = 'none';
+            e.target.style.display = "none";
           }}
         />
-      ) : image_urls.logo && image_urls.logo.trim() !== '' ? (
+      ) : image_urls.logo && image_urls.logo.trim() !== "" ? (
         <img
           src={image_urls.logo}
-          alt='Plugin Logo'
-          className='rd-h-auto rd-header-logo'
+          alt="Plugin Logo"
+          className="rd-h-auto rd-header-logo"
           onError={(e) => {
-            e.target.style.display = 'none';
+            e.target.style.display = "none";
           }}
         />
       ) : (
-        <div className='rd-h-auto rd-header-logo default-logo'>
+        <div className="rd-h-auto rd-header-logo default-logo">
           <img
             src={defaultLogo}
-            alt='Default Plugin Logo'
-            className='rd-h-auto rd-header-logo'
+            alt="Default Plugin Logo"
+            className="rd-h-auto rd-header-logo"
           />
         </div>
       )}
@@ -64,7 +64,7 @@ const Header = ({ setActiveTab, image_urls, defaultLogo }) => (
 // ErrorMessage Component
 const ErrorMessage = ({ id, message }) =>
   message && (
-    <p id={id} className='rd-text-red rd-text-sm rd-mt-5 err_msg'>
+    <p id={id} className="rd-text-red rd-text-sm rd-mt-5 err_msg">
       {message}
     </p>
   );
@@ -80,69 +80,81 @@ const LoginForm = ({
   handleChange,
   handleForgotPassword,
 }) => (
-  <div className='login-container rd-px-18'>
-    <h4 className='heading-4 rd-text-center'>Login</h4>
-    <div className='rd-body-text rd-mt-8 rd-text-center rd-mb-20'>
+  <div className="login-container rd-px-18">
+    <h4 className="heading-4 rd-text-center">Login</h4>
+    <div className="rd-body-text rd-mt-8 rd-text-center rd-mb-20">
       <p>How do we get in touch with you?</p>
     </div>
-    <div className='login-card'>
+    <div className="login-card">
       <form onSubmit={handleSubmit} noValidate>
         {successMessage && (
-          <p className='rd-text-green rd-text-sm rd-mt-5 rd-mb-10'>
+          <p className="rd-text-green rd-text-sm rd-mt-5 rd-mb-10">
             {successMessage}
           </p>
         )}
-        <div>
-          <label htmlFor='email' className='rd-body-text rd-fw-semi'>
+        <div className="rd-flex rd-flex-col rd-gap-10">
+          <label htmlFor="email" className="rd-body-text rd-fw-semi">
             Email
           </label>
           <input
-            type='email'
-            id='email'
-            name='email'
+            type="email"
+            id="email"
+            name="email"
             value={formData.email}
             onChange={handleChange}
-            placeholder='Email'
-            className='rd-w-full rd-border-light rd-p-12 rd-border-radius-md'
+            placeholder="Email"
+            className="rd-border-light rd-p-12 rd-border-radius-md"
             required
-            aria-describedby='email-error'
+            aria-describedby="email-error"
           />
-          <ErrorMessage id='email-error' className="err_msg" message={errors.email} />
+          <ErrorMessage
+            id="email-error"
+            className="err_msg"
+            message={errors.email}
+          />
         </div>
         {showPasswordField && (
-          <div className='rd-mt-10'>
-            <label htmlFor='password' className='rd-body-text rd-fw-semi'>
+          <div className="rd-mt-10">
+            <label htmlFor="password" className="rd-body-text rd-fw-semi">
               Password
             </label>
             <input
-              type='password'
-              id='password'
-              name='password'
+              type="password"
+              id="password"
+              name="password"
               value={formData.password}
               onChange={handleChange}
-              placeholder='Password'
-              className='rd-w-full rd-border-light rd-p-12 rd-border-radius-md'
+              placeholder="Password"
+              className="rd-w-full rd-border-light rd-p-12 rd-border-radius-md"
               required
-              aria-describedby='password-error'
+              aria-describedby="password-error"
             />
-            <ErrorMessage id='password-error' className="err_msg" message={errors.password} />
-            <p className='rd-body-text rd-mt-8'>
-              <a href='#' className='rd-decoration-none color-blue' onClick={handleForgotPassword}>
+            <ErrorMessage
+              id="password-error"
+              className="err_msg"
+              message={errors.password}
+            />
+            <p className="rd-body-text rd-mt-8">
+              <a
+                href="#"
+                className="rd-decoration-none color-blue"
+                onClick={handleForgotPassword}
+              >
                 Lost your password?
               </a>
             </p>
           </div>
         )}
         <button
-          type='submit'
-          className='rd-login-button rd-w-full rd-border-radius-md'
+          type="submit"
+          className="rd-login-button rd-w-full rd-border-radius-md"
           disabled={isSubmitting}
         >
           {isSubmitting
-            ? 'Just a moment...'
+            ? "Just a moment..."
             : showPasswordField
-            ? 'Login'
-            : 'Continue'}
+            ? "Login"
+            : "Continue"}
         </button>
       </form>
     </div>
@@ -157,23 +169,23 @@ const Login = ({
   updateSelectedTicket,
 }) => {
   const { updateLoginStatus, refreshTickets } = useAppData();
-  const [formData, setFormData] = useState({ email: '', password: '' });
-  const [errors, setErrors] = useState({ email: '', password: '' });
+  const [formData, setFormData] = useState({ email: "", password: "" });
+  const [errors, setErrors] = useState({ email: "", password: "" });
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [successMessage, setSuccessMessage] = useState('');
+  const [successMessage, setSuccessMessage] = useState("");
   const [showPasswordField, setShowPasswordField] = useState(false);
 
-  const [currentForm, setCurrentForm] = useState('login');
+  const [currentForm, setCurrentForm] = useState("login");
 
   const image_urls = window.robodeskData?.imageUrls || {};
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    const popupParam = params.get('rbd_popup');
-    const initiatorParam = params.get('initator');
+    const popupParam = params.get("rbd_popup");
+    const initiatorParam = params.get("initator");
 
-    if (popupParam === 'true' && initiatorParam === 'robodesk') {
-      setCurrentForm('change');
+    if (popupParam === "true" && initiatorParam === "robodesk") {
+      setCurrentForm("change");
     }
   }, [currentForm]);
 
@@ -183,14 +195,14 @@ const Login = ({
   };
 
   const validateEmail = () => {
-    const newErrors = { email: '', password: '' };
+    const newErrors = { email: "", password: "" };
     let isValid = true;
 
     if (!formData.email) {
-      newErrors.email = 'Your email address is needed to continue.';
+      newErrors.email = "Your email address is needed to continue.";
       isValid = false;
     } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      newErrors.email = 'Oops! That doesn’t look like a valid email.';
+      newErrors.email = "Oops! That doesn’t look like a valid email.";
       isValid = false;
     }
 
@@ -199,14 +211,14 @@ const Login = ({
   };
 
   const validatePassword = () => {
-    const newErrors = { email: '', password: '' };
+    const newErrors = { email: "", password: "" };
     let isValid = true;
 
     if (!formData.password) {
-      newErrors.password = 'Password is required';
+      newErrors.password = "Password is required";
       isValid = false;
     } else if (formData.password.length < 5) {
-      newErrors.password = 'Password must be at least 5 characters';
+      newErrors.password = "Password must be at least 5 characters";
       isValid = false;
     }
 
@@ -222,12 +234,12 @@ const Login = ({
     setIsSubmitting(true);
     try {
       const response = await fetch(wpAuth.wpAjax.ajaxUrl, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
+          "Content-Type": "application/x-www-form-urlencoded",
         },
         body: new URLSearchParams({
-          action: 'robodesk_check_email',
+          action: "robodesk_check_email",
           security: wpAuth.wpAjax.nonce,
           email: formData.email,
         }),
@@ -240,10 +252,10 @@ const Login = ({
         await createUserAndLogin();
       }
     } catch (error) {
-      console.error('Email check error:', error);
+      console.error("Email check error:", error);
       setErrors({
         ...errors,
-        email: 'Error checking email. Please try again.',
+        email: "Error checking email. Please try again.",
       });
     } finally {
       setIsSubmitting(false);
@@ -258,7 +270,7 @@ const Login = ({
       await handleTempTicketCreation(user_id);
       updateLoginStatus(true, user_id);
     } catch (err) {
-      console.error('Failed to create ticket:', err);
+      console.error("Failed to create ticket:", err);
     }
   };
 
@@ -271,20 +283,17 @@ const Login = ({
 
       updateLoginStatus(true, loginResponse.user_id);
 
-
       try {
         const ticketResponse = await handleTempTicketCreation(
-          loginResponse.user_id
+          loginResponse.user_id,
         );
-
-       
       } catch (ticketError) {}
     } catch (error) {
       setErrors({
         ...errors,
-        password: error.message.includes('invalid_credentials')
+        password: error.message.includes("invalid_credentials")
           ? error.message
-          : 'Oops! That’s not the right password.',
+          : "Oops! That’s not the right password.",
       });
       setShowLogin(false);
     } finally {
@@ -294,15 +303,15 @@ const Login = ({
 
   const handleTempTicketCreation = async (userId) => {
     // alert('From temp ticket non logged in usr', userId);
-    const ticketTitle = localStorage.getItem('temp_ticket_title');
-    console.log('the ticket temp title is thsi');
+    const ticketTitle = localStorage.getItem("temp_ticket_title");
+    console.log("the ticket temp title is thsi");
     if (!ticketTitle) return;
 
     try {
       const ticketResponse = await createTicket(
         userId,
         ticketTitle,
-        ticketTitle
+        ticketTitle,
       );
 
       const newTicket = {
@@ -320,11 +329,11 @@ const Login = ({
       handleStateUpdate(newTicket);
       return ticketResponse;
     } catch (ticketError) {
-      console.error('Ticket creation error:', ticketError);
-      localStorage.removeItem('temp_ticket_title');
+      console.error("Ticket creation error:", ticketError);
+      localStorage.removeItem("temp_ticket_title");
       throw ticketError;
     } finally {
-      localStorage.removeItem('temp_ticket_title');
+      localStorage.removeItem("temp_ticket_title");
     }
   };
 
@@ -340,22 +349,22 @@ const Login = ({
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
-    if (name === 'email') {
+    if (name === "email") {
       setShowPasswordField(false);
     }
   };
 
   const onPasswordReset = () => {
-    setCurrentForm('login');
+    setCurrentForm("login");
     // setShowPasswordField(true);
   };
 
   const handleForgotPassword = (e) => {
     e.preventDefault();
-    setCurrentForm('forgot');
+    setCurrentForm("forgot");
   };
   const handleBackToLogin = () => {
-    setCurrentForm('login');
+    setCurrentForm("login");
   };
 
   return (
@@ -366,7 +375,7 @@ const Login = ({
         defaultLogo={defaultLogo}
       />
 
-      {currentForm === 'login' && (
+      {currentForm === "login" && (
         <LoginForm
           formData={formData}
           errors={errors}
@@ -378,11 +387,11 @@ const Login = ({
           handleForgotPassword={handleForgotPassword}
         />
       )}
-      {currentForm === 'forgot' && (
+      {currentForm === "forgot" && (
         <ForgotPassword onSent={handleBackToLogin} email={formData.email} />
       )}
 
-      {currentForm === 'change' && (
+      {currentForm === "change" && (
         <ChangePassword setActiveTab={setActiveTab} onReset={onPasswordReset} />
       )}
     </>
