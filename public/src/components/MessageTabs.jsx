@@ -233,7 +233,10 @@ const MessageTabs = ({
             >
               <SingleTicket
                 ticket={selectedNewTicket ? selectedNewTicket : selectedTicket}
-                onBack={() => setSelectedTicket(null)}
+                onBack={() => {
+                  setSelectedTicket(null);
+                  if (updateSelectedTicket) updateSelectedTicket(null);
+                }}
                 loggedInUserId={loggedInuserId}
                 setActiveTab={setActiveTab}
                 handleFocusedTextArea={handleFocusedTextArea}
@@ -342,7 +345,10 @@ const MessageTabs = ({
                           <TicketItem
                             key={ticket.id}
                             ticket={ticket}
-                            onSelect={setSelectedTicket}
+                            onSelect={(t) => {
+                              setSelectedTicket(t);
+                              if (updateSelectedTicket) updateSelectedTicket(t);
+                            }}
                             setActiveTab={setActiveTab}
                           />
                         ))

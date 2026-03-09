@@ -7,5 +7,3 @@ logs
 package-lock.json
 logs/debug.log
 *.zip
-
-
