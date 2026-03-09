@@ -2874,16 +2874,35 @@ function handleNotificationClick(ticketId, notificationId) {
         nonce: robodeskAjax.nonces.notifications,
         notification_id: notificationId,
       }),
-    }).catch((error) => {
-      console.error("Failed to mark notification as read:", error);
-    });
+    })
+      .then((res) => res.json())
+      .then((response) => {
+        if (!response.success) {
+          showToast(
+            response.data?.message || "Failed to open notification",
+            "error",
+          );
+          return;
+        }
 
-    notificationItems = notificationItems.filter(
-      (item) => item.id !== notificationId,
-    );
-    notificationCount = Math.max(0, notificationCount - 1);
-    updateNotificationBadge(notificationCount);
-    renderNotificationList();
+        notificationItems = notificationItems.filter(
+          (item) => item.id !== notificationId,
+        );
+        notificationCount = Math.max(0, notificationCount - 1);
+        updateNotificationBadge(notificationCount);
+        renderNotificationList();
+      })
+      .catch((error) => {
+        console.error("Failed to open notification:", error);
+        showToast("Failed to open notification", "error");
+      });
+
+    if (ticketId) {
+      document.getElementById("notification-dropdown").classList.add("hidden");
+      viewTicket(ticketId);
+    }
+
+    return;
   }
 
   if (ticketId) {
