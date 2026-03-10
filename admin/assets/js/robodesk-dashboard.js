@@ -1850,13 +1850,40 @@ function updateTicketAssignee(ticketId, newAssignee) {
 // Ajax request is made to the server to save the reply
 let isReplySending = false;
 
+function resolveTemplateVariables(content, ticket) {
+  if (!content || !ticket) return content;
+
+  const fullName = (ticket.customer || "").trim();
+  const nameParts = fullName ? fullName.split(/\s+/) : [];
+  const fname = nameParts[0] || "";
+  const lname = nameParts.slice(1).join(" ") || "";
+
+  const valueMap = {
+    fname,
+    lname,
+    email: ticket.email || "",
+    ticket_id: ticket.id != null ? String(ticket.id) : "",
+    ticket_status: ticket.status || "",
+    ticket_title: ticket.title || "",
+  };
+
+  return content.replace(
+    /\{\{\s*(fname|lname|email|ticket_id|ticket_status|ticket_title)\s*\}\}/gi,
+    (match, key) => {
+      const normalizedKey = String(key).toLowerCase();
+      return valueMap[normalizedKey] != null ? valueMap[normalizedKey] : match;
+    },
+  );
+}
+
 function addReply() {
   if (isReplySending) return; // Prevent double send
   const userRole = robodeskCurrentUser?.role;
   const replyBox = document.getElementById("new-reply");
   const replyText = replyBox.innerHTML.trim();
+  const resolvedReplyText = resolveTemplateVariables(replyText, currentTicket);
   const sendBtn = document.getElementById("send-reply-btn");
-  if (!replyText || !currentTicket) return;
+  if (!resolvedReplyText || !currentTicket) return;
 
   isReplySending = true;
   if (sendBtn) {
@@ -1867,7 +1894,7 @@ function addReply() {
   const data = {
     action: "add_ticket_reply",
     ticket_id: currentTicket.id,
-    reply: replyText,
+    reply: resolvedReplyText,
     nonce: robodeskAjax.nonces.add_ticket_reply,
   };
 
@@ -1882,7 +1909,7 @@ function addReply() {
         const newReply = {
           id: response.data.comment_id,
           author: response.data.author,
-          message: replyText,
+          message: resolvedReplyText,
           timestamp: new Date().toISOString(),
           type: "userRole" in response.data ? response.data.userRole : userRole,
           comment_meta: response.data.comment_meta || { is_action: false },
@@ -2032,6 +2059,10 @@ function closeTicket() {
   function closeTicketAjax(ticketId) {
     const replyBox = document.getElementById("new-reply");
     const replyText = replyBox.innerHTML.trim();
+    const resolvedReplyText = resolveTemplateVariables(
+      replyText,
+      currentTicket,
+    );
     jQuery.ajax({
       url: robodeskAjax.ajax_url,
       type: "POST",
@@ -2039,7 +2070,7 @@ function closeTicket() {
         action: "close_ticket",
         nonce: robodeskAjax.nonces.close_ticket,
         ticket_id: ticketId,
-        reply: replyText,
+        reply: resolvedReplyText,
       },
       success: function (response) {
         if (response.success) {
@@ -2093,13 +2124,14 @@ function formatDate(dateString) {
 function addNote() {
   const noteBox = document.getElementById("new-note");
   const noteText = noteBox.innerHTML.trim();
-  if (!noteText || !currentTicket) return;
+  const resolvedNoteText = resolveTemplateVariables(noteText, currentTicket);
+  if (!resolvedNoteText || !currentTicket) return;
   userRole = robodeskCurrentUser?.role || "Support Staff";
 
   const data = {
     action: "add_ticket_note",
     ticket_id: currentTicket.id,
-    note: noteText,
+    note: resolvedNoteText,
     nonce: robodeskAjax.nonces.add_ticket_note,
   };
 
@@ -2114,7 +2146,7 @@ function addNote() {
         const newNote = {
           id: response.data.note_id,
           author: response.data.author,
-          message: noteText,
+          message: resolvedNoteText,
           timestamp: new Date().toISOString(),
           type: "agent",
         };
