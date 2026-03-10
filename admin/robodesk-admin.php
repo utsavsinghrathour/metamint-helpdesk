@@ -32,6 +32,16 @@ function robodesk_add_admin_menu()
         'robodesk_dashboard_callback'
     );
 
+    // Debug Log
+    add_submenu_page(
+        'robodesk-dashboard',
+        'Debug Log',
+        'Debug Log',
+        'manage_options',
+        'robodesk-debug-log',
+        'robodesk_debug_log_page_callback'
+    );
+
     // All Tickets (linking to CPT)
     add_submenu_page(
         'robodesk-dashboard',
