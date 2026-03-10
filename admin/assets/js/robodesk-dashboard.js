@@ -671,37 +671,33 @@ function viewTicket(ticketId) {
   currentTicket = dashboard_tickets.find((t) => t.id === ticketId);
   window.currentTicket = currentTicket; // Make available globally for templates
 
-  // If not found in dashboard_tickets, try to fetch from the conversations table
+  // If local cache is stale, fetch the latest detail from server.
   if (!currentTicket) {
-    const row = document.querySelector(`[data-ticket-id="${ticketId}"]`);
-    if (row) {
-      // Fetch ticket data from server since it's not in dashboard_tickets
-      fetch(robodeskAjax.ajax_url, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
-        },
-        body: new URLSearchParams({
-          action: "get_ticket_detail",
-          ticket_id: ticketId,
-          nonce: robodeskAjax.nonces.get_ticket_detail,
-        }),
+    fetch(robodeskAjax.ajax_url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
+      },
+      body: new URLSearchParams({
+        action: "get_ticket_detail",
+        ticket_id: ticketId,
+        nonce: robodeskAjax.nonces.get_ticket_detail,
+      }),
+    })
+      .then((res) => res.json())
+      .then((response) => {
+        if (response.success) {
+          currentTicket = response.data;
+          window.currentTicket = currentTicket; // Make available globally for templates
+          navigateToTicket(ticketId);
+        } else {
+          console.error("Failed to fetch ticket details", response.data);
+        }
       })
-        .then((res) => res.json())
-        .then((response) => {
-          if (response.success) {
-            currentTicket = response.data;
-            window.currentTicket = currentTicket; // Make available globally for templates
-            navigateToTicket(ticketId);
-          } else {
-            console.error("Failed to fetch ticket details");
-          }
-        })
-        .catch((error) => {
-          console.error("Error fetching ticket:", error);
-        });
-      return;
-    }
+      .catch((error) => {
+        console.error("Error fetching ticket:", error);
+      });
+    return;
   }
 
   if (!currentTicket) {
@@ -1597,18 +1593,38 @@ function updateDashboardAfterTicketCreation(ticketId) {
     openElement.textContent = currentOpen + 1;
   }
 
-  // Refresh the dashboard tickets to include the new ticket
-  // This will also handle notification count increment via refreshDashboardTicketsData
-  if (typeof refreshDashboardTicketsData === "function") {
-    refreshDashboardTicketsData();
-  }
+  const normalizedTicketId = Number(ticketId);
 
-  // Open the newly created ticket after a short delay to allow data refresh
-  setTimeout(function () {
-    if (typeof viewTicket === "function") {
-      viewTicket(ticketId);
+  const tryOpenCreatedTicket = (attempt = 0) => {
+    const maxAttempts = 3;
+    const hasTicket =
+      Array.isArray(dashboard_tickets) &&
+      dashboard_tickets.some((t) => Number(t.id) === normalizedTicketId);
+
+    if (hasTicket || attempt >= maxAttempts) {
+      if (typeof viewTicket === "function") {
+        viewTicket(normalizedTicketId);
+      }
+      return;
     }
-  }, 500);
+
+    if (typeof refreshDashboardTicketsData === "function") {
+      refreshDashboardTicketsData().finally(() => {
+        setTimeout(() => tryOpenCreatedTicket(attempt + 1), 250);
+      });
+    } else {
+      setTimeout(() => tryOpenCreatedTicket(attempt + 1), 250);
+    }
+  };
+
+  // Refresh first, then open once the created ticket is present in local data.
+  if (typeof refreshDashboardTicketsData === "function") {
+    refreshDashboardTicketsData().finally(() => {
+      tryOpenCreatedTicket(0);
+    });
+  } else {
+    tryOpenCreatedTicket(0);
+  }
 }
 
 //create a new ticket ajax
@@ -3016,7 +3032,7 @@ window.testDashboardNotification = function () {
 function refreshDashboardTicketsData() {
   // Refresh on all dashboard views to keep notifications updated
 
-  fetch(robodeskAjax.ajax_url, {
+  return fetch(robodeskAjax.ajax_url, {
     method: "POST",
     headers: {
       "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
@@ -3035,12 +3051,15 @@ function refreshDashboardTicketsData() {
 
         // Re-render the table with updated data
         loadDashboardTickets();
+        return response.data.tickets || [];
       } else {
         console.error("Failed to refresh dashboard tickets:", response.data);
+        return [];
       }
     })
     .catch((error) => {
       console.error("Error refreshing dashboard tickets:", error);
+      return [];
     });
 }
 

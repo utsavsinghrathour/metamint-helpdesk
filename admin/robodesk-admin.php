@@ -333,6 +333,7 @@ function robodesk_enqueue_tailwind_and_styles()
             'fetch_emails' => wp_create_nonce('robodesk_fetch_emails_action'),
             'ticket_assignment' => wp_create_nonce('robodesk_ticket_assignment_action'),
             'create_ticket' => wp_create_nonce('robodesk_create_ticket_action'),
+            'get_ticket_detail' => wp_create_nonce('robodesk_get_ticket_detail_action'),
             'ticket_status' => wp_create_nonce('robodesk_ticket_status_action'),
             'ticket_priority' => wp_create_nonce('robodesk_ticket_priority_action'),
             'ticket_assignment' => wp_create_nonce('robodesk_ticket_assignment_action'),
