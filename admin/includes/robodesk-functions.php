@@ -1224,7 +1224,7 @@ function robodesk_handle_close_ticket()
         $subject = 'Your ticket has been closed';
         $site_url = get_site_url();
         $message = 'Hello, your ticket #' . $ticket_id . ' has been closed. If you have any further questions, feel free to reply to this email or visit: ' . $site_url . '?user=' . urlencode($customer_email) . '&rbd_popup=true&initiator=robodesk';
-        wp_mail($customer_email, $subject, $message);
+        robodesk_send_email($customer_email, $subject, $message);
     }
     // isiteurl?&user=$customer_email&rbd_popup=true&initator=robodesk
     wp_send_json_success(['message' => 'Conversation closed successfully']);
@@ -1899,12 +1899,36 @@ function robodesk_send_ticket_creation_email($post_id, $post, $update)
     }
 
     // Prepare email content
-    $subject = 'Your support ticket has been created';
+    $subject = 'Your support ticket has been created.';
     $site_url = get_site_url();
-    $message = 'Hello, your support ticket #' . $post_id . ' has been created. We will get back to you shortly. You can view your ticket here: ' . $site_url . '?user=' . urlencode($customer_email) . '&rbd_popup=true&initiator=robodesk';
+    $ticket_link = $site_url . '?user=' . urlencode($customer_email) . '&rbd_popup=true&initiator=robodesk';
+    $theme_color = robodesk_get_email_theme_color();
+
+    $author = get_userdata($post->post_author);
+    $first_name = '';
+    if ($author && $author->ID) {
+        $first_name = trim((string) get_user_meta($author->ID, 'first_name', true));
+        if ($first_name === '') {
+            $display_name = trim((string) $author->display_name);
+            if ($display_name !== '') {
+                $name_parts = preg_split('/\s+/', $display_name);
+                $first_name = isset($name_parts[0]) ? (string) $name_parts[0] : '';
+            }
+        }
+    }
+
+    if ($first_name === '') {
+        $first_name = 'there';
+    }
+
+    $message = '<p>Hello ' . esc_html($first_name) . ',</p>';
+    $message .= '<p>Your support ticket #' . (int) $post_id . ' has been created.</p>';
+    $message .= '<p>We will get back to you shortly. If you need to add to your conversation you can do so by clicking the button.</p>';
+    $message .= '<p><a href="' . esc_url($ticket_link) . '" style="display:inline-block;padding:12px 18px;background-color:' . esc_attr($theme_color) . ';color:#ffffff;text-decoration:none;border-radius:6px;font-weight:600;">View your conversation</a></p>';
+    $message .= '<p>If the button above does not work, please use this link: <a href="' . esc_url($ticket_link) . '">' . esc_html($ticket_link) . '</a></p>';
 
     // Send email
-    wp_mail($customer_email, $subject, $message);
+    robodesk_send_email($customer_email, $subject, $message);
     rbd_log("Robodesk: Ticket creation email sent to $customer_email for ticket ID: $post_id");
 }
 
@@ -2175,38 +2199,235 @@ function robodesk_clear_notifications()
 
 
 // Custom email function for wp_mail with html with header and footer
-function robodesk_send_email($to, $subject, $message, $headers = [], $attachments = [])
+function robodesk_prepare_email_content($message)
 {
-    $default_headers = array('Content-Type: text/html; charset=UTF-8');
-    $headers = array_merge($default_headers, $headers);
-    $site_name = get_bloginfo('name');
-    $email_template = '<!DOCTYPE html>
-<html>
+    $message = (string) $message;
+    if ($message === '') {
+        return '';
+    }
+
+    if ($message === wp_strip_all_tags($message)) {
+        $safe_message = esc_html($message);
+        $safe_message = preg_replace_callback(
+            '#(https?://[^\s<]+)#i',
+            function ($matches) {
+                $display_url = $matches[1];
+                $href_url = esc_url(html_entity_decode($display_url, ENT_QUOTES, 'UTF-8'));
+                if ($href_url === '') {
+                    return $display_url;
+                }
+
+                return '<a href="' . $href_url . '" target="_blank" rel="noopener noreferrer">' . $display_url . '</a>';
+            },
+            $safe_message
+        );
+
+        return nl2br(wp_kses_post($safe_message));
+    }
+
+    return wp_kses_post($message);
+}
+
+function robodesk_get_email_theme_color()
+{
+    $theme_color = sanitize_hex_color((string) get_option('robodesk_theme_color', ''));
+    return $theme_color ?: '#000000';
+}
+
+function robodesk_get_email_logo_url()
+{
+    $robodesk_wide_logo = trim((string) get_option('robodesk_wide_logo', ''));
+    if ($robodesk_wide_logo !== '') {
+        return $robodesk_wide_logo;
+    }
+
+    return '';
+}
+
+function robodesk_get_default_email_header_template()
+{
+    return <<<'HTML'
+<!DOCTYPE html>
+<html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <style>
-        body { font-family: Arial, sans-serif; background-color: #f4f4
-        ; margin: 0; padding: 20px; }
-        .email-container { background-color: #ffffff; padding: 20px; border-radius  
-        : 5px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); }
-        .email-header { background-color: #0073aa; color: #ffffff; padding: 10px; border-radius: 5px 5px 0 0; }
-        .email-footer { background-color: #f4f4f4; color: #333333; padding: 10px; border-radius: 0 0 5px 5px; text-align: center; font-size: 12px; }
-        .email-body { padding: 20px; }
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <title>{{EMAIL_SUBJECT}}</title>
+    <style type="text/css">
+        body { margin: 0; padding: 0; background-color: #f1f1f1; font-family: Arial, sans-serif; color: #212529; }
+        table { border-collapse: collapse; border-spacing: 0; }
+        .wrapper { width: 100%; background-color: #f1f1f1; padding: 24px 0; }
+        .container { width: 100%; max-width: 650px; margin: 0 auto; background-color: #ffffff; border-radius: 14px; overflow: hidden; }
+        .header { padding: 24px 28px; text-align: center; }
+        .header img { max-width: 220px; width: 100%; height: auto; }
+        .subject { margin: 0; padding: 0; font-size: 22px; line-height: 1.4; color: #2c2c2c; font-weight: 700; }
+        .content { padding: 30px; font-size: 16px; line-height: 1.6; color: #212529; }
+        .content a { color: {{THEME_COLOR}}; word-break: break-word; }
+        .content p { margin: 0 0 14px; }
+        .footer { text-align: center; padding: 18px 24px; }
+        .footer, .footer a { color: #ffffff; font-size: 12px; line-height: 1.5; text-decoration: none; }
+        @media only screen and (max-width: 680px) {
+            .wrapper { padding: 12px; }
+            .content { padding: 20px; }
+            .subject { font-size: 20px; }
+        }
     </style>
 </head>
 <body>
-    <div class="email-container">
-        <div class="email-header">
-            <h1>' . esc_html($site_name) . '</h1>
-        </div>
-        <div class="email-body">
-            ' . $message . '
-        </div>
-        <div class="email-footer">
-            <p>&copy; ' . date('Y') . ' ' . esc_html($site_name) . '. All rights reserved.</p>
-        </div>
-    </div>
+    <table role="presentation" class="wrapper" width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+            <td align="center">
+                <table role="presentation" class="container" width="650" cellpadding="0" cellspacing="0" border="0">
+                    <tr>
+                        <td class="header" style="background-color: {{THEME_COLOR}};">
+                            {{BRAND_HTML}}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 24px 30px 0;">
+                            <h2 class="subject">{{EMAIL_SUBJECT}}</h2>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="content">
+HTML;
+}
+
+function robodesk_get_default_email_footer_template()
+{
+    return <<<'HTML'
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="footer" style="background-color: {{THEME_COLOR}};">
+                            <div>
+                                <a href="{{SITE_URL}}" target="_blank" rel="noopener noreferrer">{{SITE_NAME}}</a>
+                            </div>
+                            <div>&copy; {{YEAR}} {{SITE_NAME}}. All rights reserved.</div>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
 </body>
-</html>';
+</html>
+HTML;
+}
+
+function robodesk_get_email_template_parts()
+{
+    $header_option_key = 'robodesk_email_template_header';
+    $footer_option_key = 'robodesk_email_template_footer';
+
+    $header_template = get_option($header_option_key, '');
+    if (!is_string($header_template) || trim($header_template) === '') {
+        $header_template = robodesk_get_default_email_header_template();
+        update_option($header_option_key, $header_template);
+    } else {
+        $original_header_template = $header_template;
+
+        $header_template = preg_replace(
+            '#\.content\s+a\s*\{\s*color\s*:[^;]+;#i',
+            '.content a { color: {{THEME_COLOR}};',
+            $header_template
+        );
+
+        if (strpos($header_template, '{{BRAND_HTML}}') === false) {
+            $header_template = preg_replace(
+                '#<td([^>]*)class="header"([^>]*)>.*?</td>#is',
+                '<td$1class="header"$2>{{BRAND_HTML}}</td>',
+                $header_template,
+                1
+            );
+        }
+
+        if (!is_string($header_template) || strpos($header_template, '{{BRAND_HTML}}') === false) {
+            $header_template = robodesk_get_default_email_header_template();
+        }
+
+        if ($header_template !== $original_header_template) {
+            update_option($header_option_key, $header_template);
+        }
+    }
+
+    $footer_template = get_option($footer_option_key, '');
+    if (!is_string($footer_template) || trim($footer_template) === '') {
+        $footer_template = robodesk_get_default_email_footer_template();
+        update_option($footer_option_key, $footer_template);
+    } elseif (strpos($footer_template, '{{THEME_COLOR}}') === false) {
+        $original_footer_template = $footer_template;
+        $footer_template = preg_replace(
+            '#<td([^>]*)class="footer"([^>]*)style="([^"]*)"#i',
+            '<td$1class="footer"$2style="background-color: {{THEME_COLOR}}; $3"',
+            $footer_template,
+            1
+        );
+
+        if ($footer_template !== $original_footer_template) {
+            update_option($footer_option_key, $footer_template);
+        }
+    }
+
+    return [
+        'header' => $header_template,
+        'footer' => $footer_template,
+    ];
+}
+
+function robodesk_render_email_template($subject, $message)
+{
+    $site_name = get_bloginfo('name');
+    $site_url = get_home_url();
+    $year = date_i18n('Y');
+    $email_subject = wp_strip_all_tags((string) $subject);
+    $email_content = robodesk_prepare_email_content($message);
+    $logo_url = esc_url(robodesk_get_email_logo_url());
+    $theme_color = robodesk_get_email_theme_color();
+
+    if ($email_subject === '') {
+        $email_subject = $site_name;
+    }
+
+    $template_parts = robodesk_get_email_template_parts();
+
+    if ($logo_url !== '') {
+        $brand_html = '<a href="' . esc_url($site_url) . '" target="_blank" rel="noopener noreferrer"><img src="' . $logo_url . '" alt="' . esc_attr($site_name) . '" /></a>';
+    } else {
+        $brand_html = '<a href="' . esc_url($site_url) . '" target="_blank" rel="noopener noreferrer" style="text-decoration:none;"><h1 class="subject" style="margin:0;color:#ffffff;">' . esc_html($site_name) . '</h1></a>';
+    }
+
+    $replacements = [
+        '{{SITE_NAME}}' => esc_html($site_name),
+        '{{SITE_NAME_ATTR}}' => esc_attr($site_name),
+        '{{SITE_URL}}' => esc_url($site_url),
+        '{{YEAR}}' => esc_html($year),
+        '{{EMAIL_SUBJECT}}' => esc_html($email_subject),
+        '{{LOGO_URL}}' => $logo_url,
+        '{{THEME_COLOR}}' => esc_attr($theme_color),
+        '{{BRAND_HTML}}' => $brand_html,
+    ];
+
+    $email_header = strtr((string) $template_parts['header'], $replacements);
+    $email_footer = strtr((string) $template_parts['footer'], $replacements);
+
+    return $email_header . $email_content . $email_footer;
+}
+
+function robodesk_send_email($to, $subject, $message, $headers = [], $attachments = [])
+{
+    if (!is_array($headers)) {
+        $headers = [$headers];
+    }
+
+    $headers = array_values(array_filter($headers, function ($header) {
+        return stripos((string) $header, 'Content-Type:') !== 0;
+    }));
+
+    array_unshift($headers, 'Content-Type: text/html; charset=UTF-8');
+
+    $email_template = robodesk_render_email_template($subject, $message);
+
     return wp_mail($to, $subject, $email_template, $headers, $attachments);
 }
