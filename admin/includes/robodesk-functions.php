@@ -767,6 +767,90 @@ function robodesk_create_ticket()
     wp_die();
 }
 
+add_action('wp_ajax_get_ticket_detail', 'robodesk_get_ticket_detail');
+function robodesk_get_ticket_detail()
+{
+    if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'robodesk_get_ticket_detail_action')) {
+        wp_send_json_error(['message' => 'Security check failed']);
+    }
+
+    $ticket_id = isset($_POST['ticket_id']) ? absint($_POST['ticket_id']) : 0;
+    if (!$ticket_id) {
+        wp_send_json_error(['message' => 'Invalid ticket id']);
+    }
+
+    $post = get_post($ticket_id);
+    if (!$post || $post->post_type !== 'robodesk_ticket') {
+        wp_send_json_error(['message' => 'Ticket not found']);
+    }
+
+    if (!current_user_can('read_post', $ticket_id) && !current_user_can('edit_post', $ticket_id)) {
+        wp_send_json_error(['message' => 'Permission denied']);
+    }
+
+    $author = get_userdata((int) $post->post_author);
+    $ticket_status = get_post_meta($ticket_id, '_robodesk_ticket_status', true) ?: 'N/A';
+
+    $ticket_origin = get_post_meta($ticket_id, 'robodesk_ticket_origin', true);
+    if (empty($ticket_origin)) {
+        $origin_terms = wp_get_post_terms($ticket_id, 'robodesk_ticket_origin');
+        if (!is_wp_error($origin_terms) && !empty($origin_terms)) {
+            $ticket_origin = $origin_terms[0]->name;
+        }
+    }
+    $ticket_origin = $ticket_origin ?: 'N/A';
+
+    $priority_terms = get_the_terms($ticket_id, 'robodesk_ticket_priority');
+    $ticket_priority = $priority_terms && !is_wp_error($priority_terms) ? $priority_terms[0]->name : 'N/A';
+
+    $ticket_terms = wp_get_post_terms($ticket_id, 'robodesk_ticket_category');
+    $ticket_category = '';
+    if (!is_wp_error($ticket_terms) && !empty($ticket_terms)) {
+        $ticket_category = [
+            'name' => $ticket_terms[0]->name,
+            'id' => $ticket_terms[0]->term_id,
+            'term_id' => $ticket_terms[0]->term_id,
+        ];
+    }
+
+    $replies = get_comments(['post_id' => $ticket_id]);
+    $formatted_replies = array_map(function ($reply) {
+        $comment_meta = get_comment_meta($reply->comment_ID);
+        $author_type = isset($comment_meta['author_type']) ? $comment_meta['author_type'][0] : 'agent';
+
+        return [
+            'id' => $reply->comment_ID,
+            'author' => $reply->comment_author,
+            'message' => $reply->comment_content,
+            'content' => $reply->comment_content,
+            'date' => $reply->comment_date,
+            'timestamp' => $reply->comment_date,
+            'type' => $author_type,
+            'author_type' => $author_type,
+        ];
+    }, $replies);
+
+    wp_send_json_success([
+        'id' => $ticket_id,
+        'title' => get_the_title($ticket_id),
+        'customer' => $author ? $author->display_name : '',
+        'email' => $author ? $author->user_email : '',
+        'author_id' => $author ? (int) $author->ID : 0,
+        'category' => $ticket_category,
+        'source' => $ticket_origin,
+        'status' => $ticket_status,
+        'author_image' => get_avatar_url($post->post_author, ['size' => 32]),
+        'created' => get_the_date('Y-m-d H:i:s', $ticket_id),
+        'priority' => $ticket_priority,
+        'updated' => get_the_modified_date('Y-m-d H:i:s', $ticket_id),
+        'assignee' => get_post_meta($ticket_id, 'ticket_assignee', true) ?: 'N/A',
+        'assignee_id' => (int) get_post_meta($ticket_id, 'ticket_assignee_id', true),
+        'replies' => $formatted_replies,
+        'replies_count' => count($formatted_replies),
+        'notes' => [],
+    ]);
+}
+
 
 //for search of username and email in create ticket form
 add_action('wp_ajax_robodesk_user_lookup', 'robodesk_user_lookup');
