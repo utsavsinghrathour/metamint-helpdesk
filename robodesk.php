@@ -1065,7 +1065,7 @@ function robodesk_send_unseen_reply_email($comment_id)
 
     $ticket_title = get_the_title($ticket_id);
     $reply_plain = trim(wp_strip_all_tags($comment->comment_content));
-    $subject = 'New reply on #' . $ticket_id;
+    $subject = 'You have a new reply on your conversation:#' . $ticket_id;
 
     $site_url = get_site_url();
     $ticket_link = $site_url . '?user=' . urlencode($customer_email) . '&rbd_popup=true&initiator=robodesk';
@@ -1082,15 +1082,22 @@ function robodesk_send_unseen_reply_email($comment_id)
         admin_url('admin-ajax.php')
     );
 
-    $message = "<p><strong>New reply on #{$ticket_id}</strong></p>";
-    $message .= "<p><strong>From:</strong> {$assignee_name}</p>";
-    if ($ticket_title) {
-        $message .= "<p><strong>Ticket:</strong> {$ticket_title}</p>";
-    }
+    $theme_color = function_exists('robodesk_get_email_theme_color') ? robodesk_get_email_theme_color() : '#000000';
+    $reply_excerpt = $reply_plain;
     if ($reply_plain !== '') {
-        $message .= "<p><strong>Reply:</strong></p><p>" . nl2br(esc_html($reply_plain)) . "</p>";
+        $reply_words = preg_split('/\s+/', $reply_plain);
+        if (is_array($reply_words) && count($reply_words) > 20) {
+            $reply_excerpt = implode(' ', array_slice($reply_words, 0, 20)) . '...';
+        }
     }
-    $message .= "<p><a href=\"{$ticket_link}\">View the conversation</a></p>";
+
+
+    $message .= "<p><strong>" . esc_html($assignee_name) . "</strong> replied with:</p>";
+    if ($reply_excerpt !== '') {
+        $message .= "<p>\"" . esc_html($reply_excerpt) . "\"</p>";
+    }
+    $message .= '<p><a href="' . esc_url($ticket_link) . '" style="display:inline-block;padding:12px 18px;background-color:' . esc_attr($theme_color) . ';color:#ffffff;text-decoration:none;border-radius:6px;font-weight:600;">View conversation</a></p>';
+    $message .= '<p>If the button above doesn\'t work, please use this link: <a href="' . esc_url($ticket_link) . '">' . esc_html($ticket_link) . '</a></p>';
     $message .= '<img src="' . esc_url($tracking_url) . '" width="1" height="1" alt="" style="display:block;border:0;outline:none;text-decoration:none;" />';
 
     $mail_failed_message = '';
