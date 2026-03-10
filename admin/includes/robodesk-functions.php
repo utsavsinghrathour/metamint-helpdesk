@@ -1,4 +1,124 @@
 <?php
+
+if (!function_exists('robodesk_get_debug_log_path')) {
+    function robodesk_get_debug_log_path()
+    {
+        return ROBODESK_PLUGIN_PATH . 'logs/debug.log';
+    }
+}
+
+if (!function_exists('robodesk_read_debug_log_tail')) {
+    function robodesk_read_debug_log_tail($lines = 80, $max_bytes = 524288)
+    {
+        $log_path = robodesk_get_debug_log_path();
+
+        if (!file_exists($log_path) || !is_readable($log_path)) {
+            return [];
+        }
+
+        $size = filesize($log_path);
+        if ($size === false || $size <= 0) {
+            return [];
+        }
+
+        $fp = fopen($log_path, 'rb');
+        if ($fp === false) {
+            return [];
+        }
+
+        $offset = max(0, $size - (int) $max_bytes);
+        fseek($fp, $offset);
+        $content = stream_get_contents($fp);
+        fclose($fp);
+
+        if ($content === false || $content === '') {
+            return [];
+        }
+
+        if ($offset > 0) {
+            $first_newline = strpos($content, "\n");
+            if ($first_newline !== false) {
+                $content = substr($content, $first_newline + 1);
+            }
+        }
+
+        $rows = preg_split('/\r\n|\r|\n/', $content);
+        if (!is_array($rows)) {
+            return [];
+        }
+
+        $rows = array_values(array_filter($rows, static function ($line) {
+            return trim($line) !== '';
+        }));
+
+        return array_slice($rows, -1 * max(1, (int) $lines));
+    }
+}
+
+if (!function_exists('robodesk_download_debug_log')) {
+    function robodesk_download_debug_log()
+    {
+        if (!current_user_can('manage_options')) {
+            wp_die(__('You do not have sufficient permissions to access this file.', 'robodesk'));
+        }
+
+        check_admin_referer('robodesk_download_debug_log', 'robodesk_debug_log_nonce');
+
+        $log_path = robodesk_get_debug_log_path();
+        if (!file_exists($log_path) || !is_readable($log_path)) {
+            wp_die(__('Debug log file is not available.', 'robodesk'));
+        }
+
+        nocache_headers();
+        header('Content-Type: text/plain; charset=utf-8');
+        header('Content-Disposition: attachment; filename="robodesk-debug.log"');
+        header('Content-Length: ' . filesize($log_path));
+
+        readfile($log_path);
+        exit;
+    }
+}
+add_action('admin_post_robodesk_download_debug_log', 'robodesk_download_debug_log');
+
+if (!function_exists('robodesk_debug_log_page_callback')) {
+    function robodesk_debug_log_page_callback()
+    {
+        if (!current_user_can('manage_options')) {
+            wp_die(__('You do not have sufficient permissions to access this page.', 'robodesk'));
+        }
+
+        $debug_log_path = robodesk_get_debug_log_path();
+        $debug_log_exists = file_exists($debug_log_path) && is_readable($debug_log_path);
+        $debug_log_lines = $debug_log_exists ? robodesk_read_debug_log_tail(200) : [];
+        $debug_log_size = $debug_log_exists ? (int) filesize($debug_log_path) : 0;
+        $debug_log_modified = $debug_log_exists ? (int) filemtime($debug_log_path) : 0;
+        $debug_log_download_url = wp_nonce_url(
+            admin_url('admin-post.php?action=robodesk_download_debug_log'),
+            'robodesk_download_debug_log',
+            'robodesk_debug_log_nonce'
+        );
+
+        echo '<div class="wrap">';
+        echo '<h1>' . esc_html__('Robodesk Debug Log', 'robodesk') . '</h1>';
+
+        if ($debug_log_exists) {
+            echo '<p>';
+            printf(
+                esc_html__('Size: %1$s | Last updated: %2$s', 'robodesk'),
+                esc_html(size_format($debug_log_size)),
+                esc_html(date_i18n(get_option('date_format') . ' ' . get_option('time_format'), $debug_log_modified))
+            );
+            echo '</p>';
+            echo '<p><a href="' . esc_url($debug_log_download_url) . '" class="button button-primary">' . esc_html__('Download Full Log', 'robodesk') . '</a></p>';
+            echo '<textarea readonly style="width:100%;min-height:520px;font-family:monospace;line-height:1.4;">' . esc_textarea(implode("\n", $debug_log_lines)) . '</textarea>';
+        } else {
+            echo '<div class="notice notice-error"><p>' . esc_html__('Debug log file was not found or is not readable at logs/debug.log.', 'robodesk') . '</p></div>';
+        }
+
+        echo '</div>';
+    }
+}
+
 // Ajax handler for testing credential for IMAP connection
 // This function will be called via AJAX to test the IMAP connection
 add_action('wp_ajax_robodesk_imap_test_connection', 'robodesk_imap_test_connection');

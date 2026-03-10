@@ -669,6 +669,7 @@ function viewTicket(ticketId) {
 
   // Try to find in dashboard_tickets first (for dashboard tab)
   currentTicket = dashboard_tickets.find((t) => t.id === ticketId);
+  window.currentTicket = currentTicket; // Make available globally for templates
 
   // If not found in dashboard_tickets, try to fetch from the conversations table
   if (!currentTicket) {
@@ -690,6 +691,7 @@ function viewTicket(ticketId) {
         .then((response) => {
           if (response.success) {
             currentTicket = response.data;
+            window.currentTicket = currentTicket; // Make available globally for templates
             navigateToTicket(ticketId);
           } else {
             console.error("Failed to fetch ticket details");
