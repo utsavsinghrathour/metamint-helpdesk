@@ -1,0 +1,99 @@
+name: Robodesk Plugin Auto Release (main)
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+    types: [closed]
+
+jobs:
+
+  release-plugin:
+    name: Release Full Plugin (Dev Push)
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push'
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Generate next tag
+        id: tag
+        run: |
+          PREFIX="robodesk-v"
+
+          LAST_TAG=$(git tag --list "${PREFIX}*" --sort=-version:refname | head -n 1)
+
+          if [ -z "$LAST_TAG" ]; then
+            NEW_TAG="${PREFIX}1.0.0"
+          else
+            VERSION="${LAST_TAG#$PREFIX}"
+            IFS='.' read -r MAJOR MINOR PATCH <<< "$VERSION"
+            if [ "$PATCH" -ge 9 ]; then
+              PATCH=0
+              MINOR=$((MINOR + 1))
+            else
+              PATCH=$((PATCH + 1))
+            fi
+            NEW_TAG="${PREFIX}${MAJOR}.${MINOR}.${PATCH}"
+          fi
+
+          echo "new_tag=$NEW_TAG" >> $GITHUB_OUTPUT
+          echo "last_tag=$LAST_TAG" >> $GITHUB_OUTPUT
+
+      - name: Create full plugin zip
+        run: |
+          zip -r "robodesk.zip" . \
+            -x ".git/*" ".github/*" "*.zip" "**/src/*" "**/node_modules/*" "composer.json" "composer.lock" "package.json" "**/package.json" "**/package-lock.json" "plugin-zip.js" "stylelint.config.mjs" ".php-cs-fixer.dist.php" "eslint.config.mjs" ".stylelintignore" ".gitignore" ".husky/*" "**/.babelrc"
+
+      - name: Create and push tag
+        run: |
+          git tag "${{ steps.tag.outputs.new_tag }}"
+          git push origin "${{ steps.tag.outputs.new_tag }}"
+
+      - name: Generate changelog
+        id: changelog
+        run: |
+          echo "📄 Generating changelog..."
+
+          # Get latest tag (previous release)
+          LAST_TAG="${{ steps.tag.outputs.last_tag }}"
+
+          echo "Last tag: $LAST_TAG"
+
+          if [ -z "$LAST_TAG" ]; then
+            LOG=$(git log --pretty=format:"- %s (%an)")
+          else
+            LOG=$(git log "$LAST_TAG"..HEAD --pretty=format:"- %s (%an)")
+          fi
+
+          if [ -z "$LOG" ]; then
+            LOG="- No code changes (version bump only)"
+          fi
+
+          echo "changelog<<EOF" >> $GITHUB_OUTPUT
+          echo "$LOG" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+      - name: Create GitHub release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: "${{ steps.tag.outputs.new_tag }}"
+          name: "${{ steps.tag.outputs.new_tag }}"
+          body: |
+            ## 🚀 Robodesk Release
+
+            **Release Tag:** `${{ steps.tag.outputs.new_tag }}`
+
+            ### 📌 Changes since last release
+            ${{ steps.changelog.outputs.changelog }}
+            ---
+            **Full diff:**  
+            https://github.com/${{ github.repository }}/compare/${{ steps.tag.outputs.last_tag }}...${{ steps.tag.outputs.new_tag }}
+
+          files: "robodesk.zip"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
