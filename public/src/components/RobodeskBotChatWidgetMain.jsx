@@ -12,14 +12,15 @@ export default function RobodeskBotChatWidgetMain({ widgetConfig, activeAIMode }
     const [enabled, setEnabled] = useState(true);
     const [AIMode, setAIMode] = useState(activeAIMode || "");
     const [open, setOpen] = useState(false);
-    // const [messages, setMessages] = useState([]);
     const [messages, setMessages] = useState(() => {
         const saved = sessionStorage.getItem(CHAT_KEY);
         return saved ? JSON.parse(saved) : [];
     });
     const [input, setInput] = useState("");
-
+    const [loadingText, setLoadingText] = useState("");
+    const [isStreaming, setIsStreaming] = useState(false);
     const apiProxy = window.location.origin + "/wp-json/robodesk-bot/v1/chat";
+    const apiProxyStream = window.location.origin + "/wp-json/robodesk-bot/v1/chat-stream";
 
     /**
      * ASSISTANT MESSAGE RENDERER
@@ -161,6 +162,106 @@ export default function RobodeskBotChatWidgetMain({ widgetConfig, activeAIMode }
         }
     };
 
+    const sendMessageStream = async () => {
+    const q = input.trim();
+    if (!q) return;
+
+    setMessages((m) => [...m, { role: "user", text: q }]);
+    setInput("");
+    setIsStreaming(true);
+    setLoadingText("Thinking...");
+
+    const headers = { "Content-Type": "application/json" };
+    if (window.RobodeskBotConfig?.restNonce) {
+        headers["X-WP-Nonce"] = RobodeskBotConfig.restNonce;
+    }
+
+    try {
+        const resp = await fetch(apiProxyStream, {
+            method: "POST",
+            headers,
+            body: JSON.stringify({ query: q }),
+        });
+
+        if (!resp.body) throw new Error("Streaming not supported");
+
+        const reader = resp.body.getReader();
+        const decoder = new TextDecoder("utf-8");
+
+        let buffer = "";
+
+        while (true) {
+            const { value, done } = await reader.read();
+            if (done) break;
+
+            buffer += decoder.decode(value, { stream: true });
+
+            const events = buffer.split("\n\n");
+            buffer = events.pop();
+
+            for (const ev of events) {
+                const lines = ev.split("\n");
+
+                let eventName = "";
+                let data = "";
+
+                for (const line of lines) {
+                    if (line.startsWith("event:")) {
+                        eventName = line.replace("event:", "").trim();
+                    }
+                    if (line.startsWith("data:")) {
+                        data += line.replace("data:", "").trim();
+                    }
+                }
+
+                if (!data) continue;
+
+                const parsed = JSON.parse(data);
+
+                // update loader text
+                if (
+                    eventName.startsWith("thinking")
+                ) {
+                    console.log("Received thinking event:", eventName,);
+                    setLoadingText(parsed.message);
+                }
+
+                // final message
+                if (eventName === "Final Response:") {
+                    
+                    const finalText =
+                        parsed.message ||
+                        parsed.response?.text ||
+                        parsed.response?.message ||
+                        "";
+                    console.log("Final parsed response:", finalText,);
+                    setMessages((m) => [
+                        ...m,
+                        {
+                            role: "assistant",
+                            mode: parsed.mode || "",
+                            message: finalText || "",
+                            data: parsed.response || null,
+                            data: parsed.data || null,
+                            ui: parsed.ui || { suggestions: [], actions: [] },
+                            intent: parsed.intent || "",
+                        },
+                    ]);
+
+                    setIsStreaming(false);
+                    setLoadingText("");
+                }
+            }
+        }
+    } catch (e) {
+        setMessages((m) => [
+            ...m,
+            { role: "assistant", text: e.message },
+        ]);
+        setIsStreaming(false);
+        setLoadingText("");
+    }
+};
     return (
         <>
             <div id="robodesk-bot-panel">
@@ -255,8 +356,54 @@ export default function RobodeskBotChatWidgetMain({ widgetConfig, activeAIMode }
                             </h5>
                         </div>
                     )}
-                </div>
+                    {/* STREAMING LOADER */}
+                    {isStreaming && (
+                        <div
+                            className="chat-message rd-flex rd-gap-8 received"
+                            style={{
+                                maxWidth: '70%',
+                                marginBottom: '12px',
+                                marginTop: '4px',
+                                display: 'flex',
+                                alignItems: 'flex-start',
+                                gap: '8px'
+                            }}
+                        >
+                            <div
+                                style={{
+                                    height: '30px',
+                                    width: '30px',
+                                    borderRadius: '50px',
+                                    backgroundColor: '#007BFF',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    color: 'white',
+                                    fontSize: '14px',
+                                    fontWeight: 'bold',
+                                    flexShrink: 0
+                                }}
+                            >
+                                AI
+                            </div>
 
+                            <div
+                                className="message-content"
+                                style={{
+                                    backgroundColor: '#FFFFFF',
+                                    border: '1px solid #E0E0E0',
+                                    borderRadius: '10px',
+                                    padding: '8px 12px'
+                                }}
+                            >
+                                <span className="rd-body-text">
+                                    {loadingText || "Thinking..."}
+                                </span>
+                            </div>
+                        </div>
+                    )}
+                </div>
+                
                 {/* INPUT */}
                 <div id="robodesk-bot-input" className="chat-input rd-flex rd-px-18 rd-py-15 rd-border-top-light rd-border-bottom-light rd-bg-white rd-justify-between">
                     <>
@@ -267,13 +414,13 @@ export default function RobodeskBotChatWidgetMain({ widgetConfig, activeAIMode }
                             onKeyDown={(e) => {
                                 if (e.key === "Enter" && !e.shiftKey) {
                                     e.preventDefault();
-                                    sendMessage();
+                                    sendMessageStream();
                                 }
                             }}
                         />
                         <div className='rd-flex rd-gap-20 rd-relative'>
                             <button
-                                onClick={sendMessage}
+                                onClick={sendMessageStream}
                                 className='rd-bg-transparent rd-border-none rd-ml-10 icon-dark rd-cursor-pointer rd-p-0'
                             >
                                 <PiPaperPlaneRightFill className='icon-dark' size={20} />
