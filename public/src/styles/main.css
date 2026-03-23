@@ -535,14 +535,14 @@ button.no-bg,
   aspect-ratio: 50 / 50;
   display: flex;
   justify-content: center;
-  max-height: 60px;
-  max-width: 60px;
+  max-height: 44px;
+  max-width: 44px;
   padding: 10px;
 }
 
 .robodesk-toggle-btn img {
-  height: 35px;
-  width: 35px;
+  height: 30px;
+  width: 30px;
   border-radius: 50px;
 }
 
@@ -619,23 +619,23 @@ button.no-bg,
   transition: font 0.5s ease;
 }
 
-.expand-popup.expanded {
+#robodesk-plugin .expand-popup.expanded {
   transform: rotate(180deg);
 }
 
-.expand-popup .expand-icon.visible {
+#robodesk-plugin .expand-popup .expand-icon.visible {
   opacity: 1;
 }
 
-.expand-popup .expand-icon.hidden {
+#robodesk-plugin .expand-popup .expand-icon.hidden {
   opacity: 0;
   height: 0;
   width: 0;
 }
 
 /* popup expaned contract closed css end */
-.back-button,
-.rd-back-button {
+#robodesk-plugin .back-button,
+#robodesk-plugin .rd-back-button {
   height: 20px;
   width: 20px;
   display: flex;
@@ -643,8 +643,8 @@ button.no-bg,
   justify-content: center;
 }
 
-.back-button:hover,
-.rd-back-button:hover {
+#robodesk-plugin .back-button:hover,
+#robodesk-plugin .rd-back-button:hover {
   background: #004aff12;
   border-radius: 50px;
 }
