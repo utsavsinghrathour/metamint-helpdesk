@@ -4,19 +4,22 @@
  * Modifications Related to comments hooks, functions etc
  */
 
-
-//Tiny mce editor for comments
 add_filter('comment_form_defaults', 'robodesk_add_tinymce_to_comments');
 
 function robodesk_add_tinymce_to_comments($defaults)
 {
+    // Only swap in the rich editor when viewing a robodesk ticket
+    if (!isset($_GET['tid'])) {
+        return $defaults;
+    }
+
     ob_start();
 
-    if (isset($_GET['tid']) && !is_wp_error(get_post_type($_GET['tid']))) {
+    if (!is_wp_error(get_post_type(sanitize_text_field($_GET['tid'])))) {
         $value = get_post_meta(sanitize_text_field($_GET['tid']), '_robodesk_ticket_status', true);
-?>
+        ?>
         <div class="robodesk-status-selector">
-            <label for="robodesk_ticket_status_comment"><?php _e('Select Status *','robodesk') ?></label>
+            <label for="robodesk_ticket_status_comment"><?php _e('Select Status *', 'robodesk') ?></label>
             <select name="robodesk_ticket_status_comment" id="robodesk_ticket_status_comment" required>
                 <option value="open" <?php selected($value, 'new'); ?>>New</option>
                 <option value="open" <?php selected($value, 'open'); ?>>Open</option>
@@ -24,31 +27,41 @@ function robodesk_add_tinymce_to_comments($defaults)
                 <option value="closed" <?php selected($value, 'closed'); ?>>Closed</option>
             </select>
         </div>
-<?php
+        <?php
     }
 
     wp_editor('', 'comment', array(
         'media_buttons' => false,
         'textarea_rows' => 10,
-        'teeny'         => true,
-        'quicktags'     => false,
-        'tinymce'       => array(
+        'teeny' => true,
+        'quicktags' => false,
+        'tinymce' => array(
             'toolbar1' => 'bold italic underline link | fullscreen',
             'toolbar2' => '',
         ),
     ));
 
-
     $defaults['comment_field'] = ob_get_clean();
     return $defaults;
 }
 
+add_action('wp_enqueue_scripts', 'robodesk_restore_editor_styles', 99);
+function robodesk_restore_editor_styles()
+{
+    if (!isset($_GET['tid'])) {
+        if (!wp_style_is('editor-buttons', 'enqueued')) {
+            wp_enqueue_style('editor-buttons');
+        }
+    }
+}
+
 
 //Saving Comments status dropdown field
-function robodesk_save_custom_comment_field($comment_id) {
+function robodesk_save_custom_comment_field($comment_id)
+{
     if (!empty($_POST['robodesk_ticket_status_comment'])) {
         $dropdown_value = sanitize_text_field(wp_unslash($_POST['robodesk_ticket_status_comment']));
-        $comment_post_id =  sanitize_text_field(wp_unslash($_POST['comment_post_ID']));
+        $comment_post_id = sanitize_text_field(wp_unslash($_POST['comment_post_ID']));
         update_post_meta($comment_post_id, '_robodesk_ticket_status', $dropdown_value);
     }
 }
