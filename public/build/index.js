@@ -98302,16 +98302,16 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
 
 
 var stripHtml = function stripHtml(html) {
-  return he__WEBPACK_IMPORTED_MODULE_3___default().decode(html.replace(/<[^>]+>/g, '')).trim();
+  return he__WEBPACK_IMPORTED_MODULE_3___default().decode(html.replace(/<[^>]+>/g, "")).trim();
 };
 var wpTrimWords = function wpTrimWords(text, numWords) {
   var words = stripHtml(text).split(/\s+/);
-  return words.slice(0, numWords).join(' ') + (words.length > numWords ? '...' : '');
+  return words.slice(0, numWords).join(" ") + (words.length > numWords ? "..." : "");
 };
 var normalizeImagePaths = function normalizeImagePaths(html) {
-  var baseUrl = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : '/';
+  var baseUrl = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : "/";
   return html.replace(/(<img[^>]+src=['"])(\/[^'"]+)(['"][^>]*>)/gi, function (match, prefix, path, suffix) {
-    if (path.startsWith('/')) {
+    if (path.startsWith("/")) {
       return "".concat(prefix).concat(baseUrl).concat(path).concat(suffix);
     }
     return match;
@@ -98348,11 +98348,11 @@ var FAQDetail = /*#__PURE__*/(0,react__WEBPACK_IMPORTED_MODULE_0__.memo)(functio
     var fetchFAQDetails = function fetchFAQDetails() {
       try {
         setFullContent(faq.content);
-        setAuthorNames(faq.author ? faq.author.split(',').map(function (name) {
+        setAuthorNames(faq.author ? faq.author.split(",").map(function (name) {
           return name.trim();
-        }) : ['Unknown']);
+        }) : ["Unknown"]);
       } catch (err) {
-        setAuthorNames(['Unknown']);
+        setAuthorNames(["Unknown"]);
       }
     };
     fetchFAQDetails();
@@ -98361,17 +98361,17 @@ var FAQDetail = /*#__PURE__*/(0,react__WEBPACK_IMPORTED_MODULE_0__.memo)(functio
     if (!fullContent) return null;
     var normalizedAnswer = normalizeImagePaths(fullContent);
     var sanitizedAnswer = dompurify__WEBPACK_IMPORTED_MODULE_2__["default"].sanitize(normalizedAnswer, {
-      ADD_TAGS: ['iframe', 'img'],
-      ADD_ATTR: ['allow', 'allowfullscreen', 'frameborder', 'src', 'alt', 'title', 'width', 'height'],
+      ADD_TAGS: ["iframe", "img"],
+      ADD_ATTR: ["allow", "allowfullscreen", "frameborder", "src", "alt", "title", "width", "height"],
       ALLOWED_URI_REGEXP: /^(?:https?:\/\/|\/|data:image\/)/
     });
     return (0,html_react_parser__WEBPACK_IMPORTED_MODULE_1__["default"])(sanitizedAnswer, {
       replace: function replace(domNode) {
-        if (domNode.name === 'img') {
+        if (domNode.name === "img") {
           domNode.attribs = _objectSpread(_objectSpread({}, domNode.attribs), {}, {
-            loading: 'lazy',
+            loading: "lazy",
             onError: function onError(e) {
-              return console.error('Image failed to load:', e.target.src);
+              return console.error("Image failed to load:", e.target.src);
             }
           });
         }
@@ -98397,19 +98397,19 @@ var FAQDetail = /*#__PURE__*/(0,react__WEBPACK_IMPORTED_MODULE_0__.memo)(functio
           className: "back-button rd-flex rd-items-center rd-bg-transparent rd-border-none icon-dark rd-p-0 rd-m-0",
           onClick: onBack,
           children: /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_9__.jsx)(react_icons_fa__WEBPACK_IMPORTED_MODULE_10__.FaChevronLeft, {})
-        }), image_urls.wide_logo && image_urls.wide_logo.trim() !== '' ? /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_9__.jsx)("img", {
+        }), image_urls.wide_logo && image_urls.wide_logo.trim() !== "" ? /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_9__.jsx)("img", {
           src: image_urls.wide_logo,
           alt: "Plugin Wide Logo",
           className: "rd-h-auto rd-header-logo",
           onError: function onError(e) {
-            e.target.style.display = 'none';
+            e.target.style.display = "none";
           }
-        }) : image_urls.logo && image_urls.logo.trim() !== '' ? /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_9__.jsx)("img", {
+        }) : image_urls.logo && image_urls.logo.trim() !== "" ? /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_9__.jsx)("img", {
           src: image_urls.logo,
           alt: "Plugin Logo",
           className: "rd-h-auto rd-header-logo",
           onError: function onError(e) {
-            e.target.style.display = 'none';
+            e.target.style.display = "none";
           }
         }) : /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_9__.jsx)("div", {
           className: "rd-h-auto rd-header-logo default-logo",
@@ -98419,12 +98419,12 @@ var FAQDetail = /*#__PURE__*/(0,react__WEBPACK_IMPORTED_MODULE_0__.memo)(functio
             className: "rd-h-auto rd-header-logo"
           })
         }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_9__.jsxs)("button", {
-          className: "expand-popup rd-bg-transparent rd-border-none rd-cursor-pointer rd-p-0 ".concat(isExpanded ? 'expanded' : ''),
+          className: "expand-popup rd-bg-transparent rd-border-none rd-cursor-pointer rd-p-0 ".concat(isExpanded ? "expanded" : ""),
           onClick: function onClick() {
             return setIsExpanded(!isExpanded);
           },
           children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_9__.jsxs)("svg", {
-            className: "expand-icon ".concat(isExpanded ? 'hidden' : 'visible'),
+            className: "expand-icon ".concat(isExpanded ? "hidden" : "visible"),
             xmlns: "http://www.w3.org/2000/svg",
             width: "18",
             height: "23",
@@ -98438,7 +98438,7 @@ var FAQDetail = /*#__PURE__*/(0,react__WEBPACK_IMPORTED_MODULE_0__.memo)(functio
               fill: "black"
             })]
           }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_9__.jsxs)("svg", {
-            className: "expand-icon ".concat(isExpanded ? 'visible' : 'hidden'),
+            className: "expand-icon ".concat(isExpanded ? "visible" : "hidden"),
             xmlns: "http://www.w3.org/2000/svg",
             width: "18",
             height: "22",
@@ -98557,7 +98557,7 @@ var FAQ = function FAQ(_ref3) {
     _useState0 = _slicedToArray(_useState9, 2),
     selectedFAQ = _useState0[0],
     setSelectedFAQ = _useState0[1];
-  var _useState1 = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(''),
+  var _useState1 = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(""),
     _useState10 = _slicedToArray(_useState1, 2),
     searchTerm = _useState10[0],
     setSearchTerm = _useState10[1];
@@ -98623,13 +98623,13 @@ var FAQ = function FAQ(_ref3) {
                 _context.n = 6;
                 break;
               }
-              throw new Error('Invalid API response: Expected an array');
+              throw new Error("Invalid API response: Expected an array");
             case 6:
               formattedFaqs = data.map(function (faq) {
                 var _faq$excerpt, _faq$content, _faq$content2;
                 var question = stripHtml(faq.title.rendered);
-                var summary = (_faq$excerpt = faq.excerpt) !== null && _faq$excerpt !== void 0 && _faq$excerpt.rendered && stripHtml(faq.excerpt.rendered).trim() ? wpTrimWords(stripHtml(faq.excerpt.rendered), 20) : (_faq$content = faq.content) !== null && _faq$content !== void 0 && _faq$content.rendered ? wpTrimWords(stripHtml(faq.content.rendered), 20) : 'No summary available';
-                var content = (_faq$content2 = faq.content) !== null && _faq$content2 !== void 0 && _faq$content2.rendered ? faq.content.rendered : 'No content available';
+                var summary = (_faq$excerpt = faq.excerpt) !== null && _faq$excerpt !== void 0 && _faq$excerpt.rendered && stripHtml(faq.excerpt.rendered).trim() ? wpTrimWords(stripHtml(faq.excerpt.rendered), 20) : (_faq$content = faq.content) !== null && _faq$content !== void 0 && _faq$content.rendered ? wpTrimWords(stripHtml(faq.content.rendered), 20) : "No summary available";
+                var content = (_faq$content2 = faq.content) !== null && _faq$content2 !== void 0 && _faq$content2.rendered ? faq.content.rendered : "No content available";
                 return {
                   id: faq.id,
                   question: question,
@@ -98732,7 +98732,7 @@ var FAQ = function FAQ(_ref3) {
           })]
         }) : filteredFaqs.length === 0 ? /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_9__.jsx)("p", {
           className: "err_msg rd-text-center",
-          children: searchTerm ? 'No FAQs match your search.' : 'No FAQs found.'
+          children: searchTerm ? "No FAQs match your search." : "No FAQs found."
         }) : filteredFaqs.map(function (faq) {
           return /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_9__.jsx)(FAQItem, {
             faq: faq,

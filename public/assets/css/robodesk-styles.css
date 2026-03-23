@@ -378,7 +378,7 @@
 .robodesk-container th {
   background-color: #f9fafb;
 }
-
+/* 
 .custom-file-upload {
   border: 1px solid #ccc;
   display: inline-block;
@@ -399,15 +399,15 @@
 .media-sidebar,
 .media-frame-router {
   display: none !important;
-}
+} */
 
-.media-frame-content {
+/* .media-frame-content {
   border: 1px dashed gray;
   max-width: 700px;
   margin: auto !important;
   max-height: 400px !important;
-}
-.button-hero {
+} */
+/* .button-hero {
   border-radius: 20px !important;
   color: white !important;
   background: black !important;
@@ -416,20 +416,20 @@
   border-radius: 20px !important;
   color: white !important;
   background: black !important;
-}
-
+} */
+/* 
 .wp-media-buttons {
   float: right !important;
-}
+} */
 
-#mceu_11 {
+/* #mceu_11 {
   background: black;
   border-radius: 20px 20px 0px 0px !important;
   border-bottom: none !important;
-}
-.wp-editor-container {
+} */
+/* .wp-editor-container {
   border: none !important;
-}
+} */
 
 .robodesk-login-form {
   max-width: 400px;
@@ -491,7 +491,7 @@
 }
 
 /*Pagination For my tickets table*/
-.pagination {
+/* .pagination {
   text-align: center;
   margin-top: 20px;
 }
@@ -506,10 +506,10 @@
   background: #0073aa;
   color: #fff;
   border-color: #0073aa;
-}
+} */
 
 /* Tiny mce style */
-
+/* 
 .tox-tbtn[aria-label="Fullscreen"] {
   margin-left: auto;
 }
@@ -526,7 +526,7 @@
 
 .comment-list .children {
   list-style: none;
-  padding-left: 20px; /* Indent replies */
+  padding-left: 20px; 
   margin: 0;
 }
 
@@ -535,7 +535,7 @@
   padding: 15px;
   border: 1px solid #eee;
   background: #fff;
-  display: block; /* Ensure each comment is a block */
+  display: block; 
 }
 
 .comment-meta {
@@ -577,7 +577,6 @@
   margin-top: 10px;
 }
 
-/* Clear floats if any */
 .comment-body:after {
   content: "";
   display: table;
@@ -601,7 +600,7 @@
 #credential-form h3 {
   font-weight: 600;
   margin-bottom: 20px;
-}
+} */
 .robodesk-my-credentials {
   margin: 30px 0;
 }
