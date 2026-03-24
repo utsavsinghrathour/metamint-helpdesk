@@ -2,7 +2,7 @@ name: Deploy from Release Tag
 
 on:
   workflow_run:
-    workflows: ["Robodesk Auto Release (Dev)"]
+    workflows: ["Robodesk Plugin Auto Release (main)"]
     types:
       - completed
 
