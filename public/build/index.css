@@ -130,6 +130,10 @@
   position: absolute;
 }
 
+.robodesk-footer button svg:focus {
+  outline: none;
+}
+
 .robodesk-footer button.active-tab svg,
 .robodesk-footer button.active-tab svg path {
   fill: var(--robodesk-theme-color) !important;
