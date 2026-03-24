@@ -1,4 +1,7 @@
 /* General Styles */
+:root {
+  --rd-primary-color: #007cba;
+}
 .robodesk-container {
   /* A general container for consistent spacing */
   max-width: 1360px;
@@ -34,7 +37,7 @@
 
 .robodesk-ticket-form input[type="submit"] {
   padding: 10px 20px;
-  background-color: #007cba;
+  background-color: var(--rd-primary-color);
   color: white;
   border: none;
   cursor: pointer;
@@ -92,6 +95,10 @@
   list-style: none;
   padding: 0;
   margin: 0;
+}
+
+.robodesk-frontend-dashboard nav li a:focus {
+  outline: none;
 }
 
 .robodesk-frontend-dashboard nav li a {
@@ -193,6 +200,7 @@
 }
 .robodesk-table-content .ticket-comment-by {
   font-weight: 500;
+  margin: 0;
 }
 .robodesk-status-pill.open {
   background-color: #fef2f2;
@@ -223,15 +231,16 @@
   border-radius: 9999px;
 }
 
-.ticket-num {
+.robodesk-frontend-dashboard .ticket-num {
   font-size: 13px;
   font-weight: 400;
   color: #000;
 }
-.ticket-date {
+.robodesk-frontend-dashboard .ticket-date {
   font-size: 14px;
   color: #6b7280;
   margin-top: 5px;
+  margin-bottom: 0;
 }
 /* FAQ Styles */
 .robodesk-faq-single {
@@ -378,7 +387,7 @@
 .robodesk-container th {
   background-color: #f9fafb;
 }
-
+/* 
 .custom-file-upload {
   border: 1px solid #ccc;
   display: inline-block;
@@ -399,15 +408,15 @@
 .media-sidebar,
 .media-frame-router {
   display: none !important;
-}
+} */
 
-.media-frame-content {
+/* .media-frame-content {
   border: 1px dashed gray;
   max-width: 700px;
   margin: auto !important;
   max-height: 400px !important;
-}
-.button-hero {
+} */
+/* .button-hero {
   border-radius: 20px !important;
   color: white !important;
   background: black !important;
@@ -416,20 +425,20 @@
   border-radius: 20px !important;
   color: white !important;
   background: black !important;
-}
-
+} */
+/* 
 .wp-media-buttons {
   float: right !important;
-}
+} */
 
-#mceu_11 {
+/* #mceu_11 {
   background: black;
   border-radius: 20px 20px 0px 0px !important;
   border-bottom: none !important;
-}
-.wp-editor-container {
+} */
+/* .wp-editor-container {
   border: none !important;
-}
+} */
 
 .robodesk-login-form {
   max-width: 400px;
@@ -491,25 +500,27 @@
 }
 
 /*Pagination For my tickets table*/
-.pagination {
+.robodesk-dashboard-content .pagination {
   text-align: center;
   margin-top: 20px;
 }
-.pagination a,
-.pagination span {
+.robodesk-dashboard-content .pagination a,
+.robodesk-dashboard-content .pagination span {
   padding: 5px 10px;
   margin: 0 2px;
   border: 1px solid #ddd;
   text-decoration: none;
+  font-size: 14px;
 }
-.pagination .current {
-  background: #0073aa;
+.robodesk-dashboard-content .pagination .current {
+  background: var(--rd-primary-color);
   color: #fff;
-  border-color: #0073aa;
+  border-color: var(--rd-primary-color);
+  cursor: not-allowed;
 }
 
 /* Tiny mce style */
-
+/* 
 .tox-tbtn[aria-label="Fullscreen"] {
   margin-left: auto;
 }
@@ -526,7 +537,7 @@
 
 .comment-list .children {
   list-style: none;
-  padding-left: 20px; /* Indent replies */
+  padding-left: 20px; 
   margin: 0;
 }
 
@@ -535,7 +546,7 @@
   padding: 15px;
   border: 1px solid #eee;
   background: #fff;
-  display: block; /* Ensure each comment is a block */
+  display: block; 
 }
 
 .comment-meta {
@@ -577,7 +588,6 @@
   margin-top: 10px;
 }
 
-/* Clear floats if any */
 .comment-body:after {
   content: "";
   display: table;
@@ -601,7 +611,7 @@
 #credential-form h3 {
   font-weight: 600;
   margin-bottom: 20px;
-}
+} */
 .robodesk-my-credentials {
   margin: 30px 0;
 }
