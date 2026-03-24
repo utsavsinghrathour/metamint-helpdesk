@@ -1,0 +1,54 @@
+name: Deploy from Release Tag
+
+on:
+  workflow_run:
+    workflows: ["Robodesk Auto Release (Dev)"]
+    types:
+      - completed
+
+jobs:
+  deploy:
+    name: Update Changes on server
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Download release asset
+        run: |
+          gh release download "${{ github.event.release.tag_name }}" \
+            --pattern "robodesk.zip" \
+            --repo "${{ github.repository }}"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Copy ZIP File to Server via SSH
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          source: "robodesk.zip"
+          target: "${{ secrets.PROJECT_GIT_PATH }}"
+
+      - name: Extract ZIP on Server
+        uses: appleboy/ssh-action@v0.1.10
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          script_stop: true
+          script: |
+            DEST_PATH="${{secrets.PROJECT_GIT_PATH}}"
+            ZIP_NAME="robodesk.zip"
+
+            cd "$DEST_PATH"
+
+            echo "🧹 Cleaning old files..."
+            rm -rf wooescrow
+
+            echo "📦 Extracting ZIP..."
+            unzip -o "$ZIP_NAME"
+
+            echo "🗑 Removing ZIP..."
+            rm -f "$ZIP_NAME"
+
+            echo "✅ Deployment complete!"
