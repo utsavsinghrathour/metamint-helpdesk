@@ -20,7 +20,6 @@
     "@wordpress/scripts": "^30.19.0"
   },
   "dependencies": {
-    "caniuse-lite": "^1.0.30001741",
     "dompurify": "^3.2.5",
     "emoji-picker-react": "^4.12.2",
     "he": "^1.2.0",
