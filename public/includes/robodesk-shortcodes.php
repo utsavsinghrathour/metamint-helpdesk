@@ -656,11 +656,13 @@ function robodesk_notifications_content()
     ?>
     <h2>Notifications</h2>
     <?php if ($notifications): ?>
-        <ul>
-            <?php foreach ($notifications as $notification): ?>
-                <li><?php echo esc_html($notification->message); ?> - <small><?php echo date("F j, Y, g:i a", strtotime($notification->notification_date)); ?></small></li>
-            <?php endforeach; ?>
-        </ul>
+        <div class="robodesk-notifications-list">
+            <ul>
+                <?php foreach ($notifications as $notification): ?>
+                    <li><?php echo esc_html($notification->message); ?> - <small><?php echo date("F j, Y, g:i a", strtotime($notification->notification_date)); ?></small></li>
+                <?php endforeach; ?>
+            </ul>
+        </div>
     <?php else: ?>
         <p>No notifications found.</p>
     <?php endif;
