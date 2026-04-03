@@ -228,12 +228,21 @@ export default function RobodeskBotChatWidgetMain({ widgetConfig, activeAIMode }
 
                 // final message
                 if (eventName === "Final Response:") {
-                    
-                    const finalText =
-                        parsed.message ||
-                        parsed.response?.text ||
-                        parsed.response?.message ||
-                        "";
+                    console.log("Received final response event:", parsed,); 
+                    let finalText = "";
+
+                    if (typeof parsed.message === "string") {
+                        finalText = parsed.message;
+                    } else if (parsed.message && typeof parsed.message === "object") {
+                        // If message is an object, try to get text or response field
+                        finalText = parsed.message?.text;
+                    } else if (parsed.response && typeof parsed.response === "object") {
+                        finalText = parsed.response.text || parsed.response.message || JSON.stringify(parsed.response);
+                    } else if (typeof parsed.response === "string") {
+                        finalText = parsed.response;
+                    } else {
+                        finalText = "";
+                    }
                     console.log("Final parsed response:", finalText,);
                     setMessages((m) => [
                         ...m,
