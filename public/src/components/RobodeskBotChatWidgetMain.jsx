@@ -333,23 +333,6 @@ export default function RobodeskBotChatWidgetMain({ widgetConfig, activeAIMode }
                         </div>
                     )}
                 </div>
-
-                            <div
-                                className="message-content"
-                                style={{
-                                    backgroundColor: '#FFFFFF',
-                                    border: '1px solid #E0E0E0',
-                                    borderRadius: '10px',
-                                    padding: '8px 12px'
-                                }}
-                            >
-                                <span className="rd-body-text">
-                                    {loadingText || "Thinking..."}
-                                </span>
-                            </div>
-                        </div>
-                    )}
-                </div>
                 
                 {/* INPUT */}
                 <div id="robodesk-bot-input" className="chat-input rd-flex rd-px-18 rd-py-15 rd-border-top-light rd-border-bottom-light rd-bg-white rd-justify-between">
