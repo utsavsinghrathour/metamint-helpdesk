@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useMemo } from "react";
+import apiFetch from "@wordpress/api-fetch";
 import HomeTabs from "./components/HomeTabs.jsx";
 import MessageTabs from "./components/MessageTabs.jsx";
 import NoticeTabs from "./components/NoticeTabs.jsx";
@@ -123,12 +124,56 @@ const AppContent = ({ imageUrls = { logo: "" } }) => {
     setIsOpen(true);
   };
 
-  const handlePopupToggle = () => {
+  const generateToken = async () => {
+    let duration = 1 * 24 * 60 * 60; // Default to 1 day
+    const STORAGE_KEY = "mcp_jwt_token";
+    try {
+      const stored = localStorage.getItem(STORAGE_KEY);
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        const now = Math.floor(Date.now() / 1000); // current time in seconds
+        // 2. Check if token is still valid
+        if (parsed.token && parsed.expiry && parsed.expiry > now) {
+          console.log("Using available token");
+          return parsed.token;
+        } else {
+          console.log("Token expired, generating new one...");
+        }
+      }
+      const response = await apiFetch({
+        path: "/jwt-auth/v1/token",
+        method: "POST",
+        data: {
+          expires_in: duration,
+        },
+        includeCredentials: true,
+      });
+       const now = Math.floor(Date.now() / 1000);
+
+      const tokenData = {
+        token: response.token,
+        expiry: now + duration,
+      };
+
+      // 4. Store token + expiry
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(tokenData));
+      console.log("Generated new token");
+      return response.token;
+    } catch (err) {
+      console.error(err.message || __("Error generating token", "wordpress-mcp"));
+    }
+  };
+
+  const handlePopupToggle = async () => {
+    console.log("Toggle Clicked",wpAuth.isLoggedIn, typeof(wpAuth.isLoggedIn));
     if (isOpen) {
       setIsOpen(false);
       setShowActiveFeatured(true);
       setSelectedNotice(null);
     } else {
+      if (wpAuth.isLoggedIn === 'true') {
+        await generateToken(); // Generate token on popup toggle open
+      }
       setIsOpen(true);
       setShowActiveFeatured(false);
     }
