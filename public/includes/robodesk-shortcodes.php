@@ -132,6 +132,11 @@ function robodesk_my_tickets_shortcode()
     global $wp;
 
     $user_id = get_current_user_id();
+    $dashboard_base_url = get_permalink(get_queried_object_id());
+
+    if (empty($dashboard_base_url)) {
+        $dashboard_base_url = site_url('/dashboard/');
+    }
 
     $paged = (get_query_var('paged')) ? absint(get_query_var('paged')) : 1;
 
@@ -280,7 +285,7 @@ function robodesk_my_tickets_shortcode()
                         <tr class="robodesk-table-content robodesk-ticket-table-content">
                             <td>
                                 <?php
-                                $ticket_url = add_query_arg(array('robodesk_page' => 'my-tickets', 'tid' => get_the_ID()), site_url('/dashboard/'));
+                                $ticket_url = add_query_arg(array('robodesk_page' => 'my-tickets', 'tid' => get_the_ID()), $dashboard_base_url);
                                 ?>
                                 <a class="robodesk-table-content-title" href="<?php echo esc_url($ticket_url); ?>"><?php the_title(); ?></a>
 
@@ -656,11 +661,13 @@ function robodesk_notifications_content()
     ?>
     <h2>Notifications</h2>
     <?php if ($notifications): ?>
-        <ul>
-            <?php foreach ($notifications as $notification): ?>
-                <li><?php echo esc_html($notification->message); ?> - <small><?php echo date("F j, Y, g:i a", strtotime($notification->notification_date)); ?></small></li>
-            <?php endforeach; ?>
-        </ul>
+        <div class="rd-content-list">
+            <ul>
+                <?php foreach ($notifications as $notification): ?>
+                    <li><?php echo esc_html($notification->message); ?> - <small><?php echo date("F j, Y, g:i a", strtotime($notification->notification_date)); ?></small></li>
+                <?php endforeach; ?>
+            </ul>
+        </div>
     <?php else: ?>
         <p>No notifications found.</p>
     <?php endif;

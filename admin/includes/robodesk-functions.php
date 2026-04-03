@@ -1,4 +1,124 @@
 <?php
+
+if (!function_exists('robodesk_get_debug_log_path')) {
+    function robodesk_get_debug_log_path()
+    {
+        return ROBODESK_PLUGIN_PATH . 'logs/debug.log';
+    }
+}
+
+if (!function_exists('robodesk_read_debug_log_tail')) {
+    function robodesk_read_debug_log_tail($lines = 80, $max_bytes = 524288)
+    {
+        $log_path = robodesk_get_debug_log_path();
+
+        if (!file_exists($log_path) || !is_readable($log_path)) {
+            return [];
+        }
+
+        $size = filesize($log_path);
+        if ($size === false || $size <= 0) {
+            return [];
+        }
+
+        $fp = fopen($log_path, 'rb');
+        if ($fp === false) {
+            return [];
+        }
+
+        $offset = max(0, $size - (int) $max_bytes);
+        fseek($fp, $offset);
+        $content = stream_get_contents($fp);
+        fclose($fp);
+
+        if ($content === false || $content === '') {
+            return [];
+        }
+
+        if ($offset > 0) {
+            $first_newline = strpos($content, "\n");
+            if ($first_newline !== false) {
+                $content = substr($content, $first_newline + 1);
+            }
+        }
+
+        $rows = preg_split('/\r\n|\r|\n/', $content);
+        if (!is_array($rows)) {
+            return [];
+        }
+
+        $rows = array_values(array_filter($rows, static function ($line) {
+            return trim($line) !== '';
+        }));
+
+        return array_slice($rows, -1 * max(1, (int) $lines));
+    }
+}
+
+if (!function_exists('robodesk_download_debug_log')) {
+    function robodesk_download_debug_log()
+    {
+        if (!current_user_can('manage_options')) {
+            wp_die(__('You do not have sufficient permissions to access this file.', 'robodesk'));
+        }
+
+        check_admin_referer('robodesk_download_debug_log', 'robodesk_debug_log_nonce');
+
+        $log_path = robodesk_get_debug_log_path();
+        if (!file_exists($log_path) || !is_readable($log_path)) {
+            wp_die(__('Debug log file is not available.', 'robodesk'));
+        }
+
+        nocache_headers();
+        header('Content-Type: text/plain; charset=utf-8');
+        header('Content-Disposition: attachment; filename="robodesk-debug.log"');
+        header('Content-Length: ' . filesize($log_path));
+
+        readfile($log_path);
+        exit;
+    }
+}
+add_action('admin_post_robodesk_download_debug_log', 'robodesk_download_debug_log');
+
+if (!function_exists('robodesk_debug_log_page_callback')) {
+    function robodesk_debug_log_page_callback()
+    {
+        if (!current_user_can('manage_options')) {
+            wp_die(__('You do not have sufficient permissions to access this page.', 'robodesk'));
+        }
+
+        $debug_log_path = robodesk_get_debug_log_path();
+        $debug_log_exists = file_exists($debug_log_path) && is_readable($debug_log_path);
+        $debug_log_lines = $debug_log_exists ? robodesk_read_debug_log_tail(200) : [];
+        $debug_log_size = $debug_log_exists ? (int) filesize($debug_log_path) : 0;
+        $debug_log_modified = $debug_log_exists ? (int) filemtime($debug_log_path) : 0;
+        $debug_log_download_url = wp_nonce_url(
+            admin_url('admin-post.php?action=robodesk_download_debug_log'),
+            'robodesk_download_debug_log',
+            'robodesk_debug_log_nonce'
+        );
+
+        echo '<div class="wrap">';
+        echo '<h1>' . esc_html__('Robodesk Debug Log', 'robodesk') . '</h1>';
+
+        if ($debug_log_exists) {
+            echo '<p>';
+            printf(
+                esc_html__('Size: %1$s | Last updated: %2$s', 'robodesk'),
+                esc_html(size_format($debug_log_size)),
+                esc_html(date_i18n(get_option('date_format') . ' ' . get_option('time_format'), $debug_log_modified))
+            );
+            echo '</p>';
+            echo '<p><a href="' . esc_url($debug_log_download_url) . '" class="button button-primary">' . esc_html__('Download Full Log', 'robodesk') . '</a></p>';
+            echo '<textarea readonly style="width:100%;min-height:520px;font-family:monospace;line-height:1.4;">' . esc_textarea(implode("\n", $debug_log_lines)) . '</textarea>';
+        } else {
+            echo '<div class="notice notice-error"><p>' . esc_html__('Debug log file was not found or is not readable at logs/debug.log.', 'robodesk') . '</p></div>';
+        }
+
+        echo '</div>';
+    }
+}
+
 // Ajax handler for testing credential for IMAP connection
 // This function will be called via AJAX to test the IMAP connection
 add_action('wp_ajax_robodesk_imap_test_connection', 'robodesk_imap_test_connection');
@@ -647,6 +767,90 @@ function robodesk_create_ticket()
     wp_die();
 }
 
+add_action('wp_ajax_get_ticket_detail', 'robodesk_get_ticket_detail');
+function robodesk_get_ticket_detail()
+{
+    if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'robodesk_get_ticket_detail_action')) {
+        wp_send_json_error(['message' => 'Security check failed']);
+    }
+
+    $ticket_id = isset($_POST['ticket_id']) ? absint($_POST['ticket_id']) : 0;
+    if (!$ticket_id) {
+        wp_send_json_error(['message' => 'Invalid ticket id']);
+    }
+
+    $post = get_post($ticket_id);
+    if (!$post || $post->post_type !== 'robodesk_ticket') {
+        wp_send_json_error(['message' => 'Ticket not found']);
+    }
+
+    if (!current_user_can('read_post', $ticket_id) && !current_user_can('edit_post', $ticket_id)) {
+        wp_send_json_error(['message' => 'Permission denied']);
+    }
+
+    $author = get_userdata((int) $post->post_author);
+    $ticket_status = get_post_meta($ticket_id, '_robodesk_ticket_status', true) ?: 'N/A';
+
+    $ticket_origin = get_post_meta($ticket_id, 'robodesk_ticket_origin', true);
+    if (empty($ticket_origin)) {
+        $origin_terms = wp_get_post_terms($ticket_id, 'robodesk_ticket_origin');
+        if (!is_wp_error($origin_terms) && !empty($origin_terms)) {
+            $ticket_origin = $origin_terms[0]->name;
+        }
+    }
+    $ticket_origin = $ticket_origin ?: 'N/A';
+
+    $priority_terms = get_the_terms($ticket_id, 'robodesk_ticket_priority');
+    $ticket_priority = $priority_terms && !is_wp_error($priority_terms) ? $priority_terms[0]->name : 'N/A';
+
+    $ticket_terms = wp_get_post_terms($ticket_id, 'robodesk_ticket_category');
+    $ticket_category = '';
+    if (!is_wp_error($ticket_terms) && !empty($ticket_terms)) {
+        $ticket_category = [
+            'name' => $ticket_terms[0]->name,
+            'id' => $ticket_terms[0]->term_id,
+            'term_id' => $ticket_terms[0]->term_id,
+        ];
+    }
+
+    $replies = get_comments(['post_id' => $ticket_id]);
+    $formatted_replies = array_map(function ($reply) {
+        $comment_meta = get_comment_meta($reply->comment_ID);
+        $author_type = isset($comment_meta['author_type']) ? $comment_meta['author_type'][0] : 'agent';
+
+        return [
+            'id' => $reply->comment_ID,
+            'author' => $reply->comment_author,
+            'message' => $reply->comment_content,
+            'content' => $reply->comment_content,
+            'date' => $reply->comment_date,
+            'timestamp' => $reply->comment_date,
+            'type' => $author_type,
+            'author_type' => $author_type,
+        ];
+    }, $replies);
+
+    wp_send_json_success([
+        'id' => $ticket_id,
+        'title' => get_the_title($ticket_id),
+        'customer' => $author ? $author->display_name : '',
+        'email' => $author ? $author->user_email : '',
+        'author_id' => $author ? (int) $author->ID : 0,
+        'category' => $ticket_category,
+        'source' => $ticket_origin,
+        'status' => $ticket_status,
+        'author_image' => get_avatar_url($post->post_author, ['size' => 32]),
+        'created' => get_the_date('Y-m-d H:i:s', $ticket_id),
+        'priority' => $ticket_priority,
+        'updated' => get_the_modified_date('Y-m-d H:i:s', $ticket_id),
+        'assignee' => get_post_meta($ticket_id, 'ticket_assignee', true) ?: 'N/A',
+        'assignee_id' => (int) get_post_meta($ticket_id, 'ticket_assignee_id', true),
+        'replies' => $formatted_replies,
+        'replies_count' => count($formatted_replies),
+        'notes' => [],
+    ]);
+}
+
 
 //for search of username and email in create ticket form
 add_action('wp_ajax_robodesk_user_lookup', 'robodesk_user_lookup');
@@ -1020,7 +1224,7 @@ function robodesk_handle_close_ticket()
         $subject = 'Your ticket has been closed';
         $site_url = get_site_url();
         $message = 'Hello, your ticket #' . $ticket_id . ' has been closed. If you have any further questions, feel free to reply to this email or visit: ' . $site_url . '?user=' . urlencode($customer_email) . '&rbd_popup=true&initiator=robodesk';
-        wp_mail($customer_email, $subject, $message);
+        robodesk_send_email($customer_email, $subject, $message);
     }
     // isiteurl?&user=$customer_email&rbd_popup=true&initator=robodesk
     wp_send_json_success(['message' => 'Conversation closed successfully']);
@@ -1695,12 +1899,36 @@ function robodesk_send_ticket_creation_email($post_id, $post, $update)
     }
 
     // Prepare email content
-    $subject = 'Your support ticket has been created';
+    $subject = 'Your support ticket has been created.';
     $site_url = get_site_url();
-    $message = 'Hello, your support ticket #' . $post_id . ' has been created. We will get back to you shortly. You can view your ticket here: ' . $site_url . '?user=' . urlencode($customer_email) . '&rbd_popup=true&initiator=robodesk';
+    $ticket_link = $site_url . '?user=' . urlencode($customer_email) . '&rbd_popup=true&initiator=robodesk';
+    $theme_color = robodesk_get_email_theme_color();
+
+    $author = get_userdata($post->post_author);
+    $first_name = '';
+    if ($author && $author->ID) {
+        $first_name = trim((string) get_user_meta($author->ID, 'first_name', true));
+        if ($first_name === '') {
+            $display_name = trim((string) $author->display_name);
+            if ($display_name !== '') {
+                $name_parts = preg_split('/\s+/', $display_name);
+                $first_name = isset($name_parts[0]) ? (string) $name_parts[0] : '';
+            }
+        }
+    }
+
+    if ($first_name === '') {
+        $first_name = 'there';
+    }
+
+    $message = '<p>Hello ' . esc_html($first_name) . ',</p>';
+    $message .= '<p>Your support ticket #' . (int) $post_id . ' has been created.</p>';
+    $message .= '<p>We will get back to you shortly. If you need to add to your conversation you can do so by clicking the button.</p>';
+    $message .= '<p><a href="' . esc_url($ticket_link) . '" style="display:inline-block;padding:12px 18px;background-color:' . esc_attr($theme_color) . ';color:#ffffff;text-decoration:none;border-radius:6px;font-weight:600;">View your conversation</a></p>';
+    $message .= '<p>If the button above does not work, please use this link: <a href="' . esc_url($ticket_link) . '">' . esc_html($ticket_link) . '</a></p>';
 
     // Send email
-    wp_mail($customer_email, $subject, $message);
+    robodesk_send_email($customer_email, $subject, $message);
     rbd_log("Robodesk: Ticket creation email sent to $customer_email for ticket ID: $post_id");
 }
 
@@ -1845,6 +2073,19 @@ function robodesk_get_notifications()
     $items = [];
     foreach ($rows as $row) {
         $ticket_id = (int) $row['ticket_id'];
+
+        if ($ticket_id > 0) {
+            $current_assignee_id = (int) get_post_meta($ticket_id, 'ticket_assignee_id', true);
+            if ($current_assignee_id > 0 && $current_assignee_id !== $user_id) {
+                $wpdb->delete(
+                    $table_name,
+                    ['id' => (int) $row['id'], 'recipient_user_id' => $user_id],
+                    ['%d', '%d']
+                );
+                continue;
+            }
+        }
+
         $items[] = [
             'id' => (int) $row['id'],
             'ticketId' => $ticket_id,
@@ -1886,19 +2127,42 @@ function robodesk_mark_notification_read()
     global $wpdb;
     $table_name = $wpdb->prefix . 'robodesk_notifications';
 
-    $updated = $wpdb->update(
+    $row = $wpdb->get_row(
+        $wpdb->prepare(
+            "SELECT id, ticket_id FROM $table_name WHERE id = %d AND recipient_user_id = %d LIMIT 1",
+            $notification_id,
+            $user_id
+        ),
+        ARRAY_A
+    );
+
+    if (!$row) {
+        wp_send_json_error(['message' => 'Notification not found.']);
+    }
+
+    $ticket_id = isset($row['ticket_id']) ? (int) $row['ticket_id'] : 0;
+    if ($ticket_id > 0) {
+        $current_assignee_id = (int) get_post_meta($ticket_id, 'ticket_assignee_id', true);
+        if ($current_assignee_id > 0 && $current_assignee_id !== $user_id) {
+            wp_send_json_error(['message' => 'Notification is no longer assigned to you.']);
+        }
+    }
+
+    $deleted = $wpdb->delete(
         $table_name,
-        ['read_at' => current_time('mysql')],
         ['id' => $notification_id, 'recipient_user_id' => $user_id],
-        ['%s'],
         ['%d', '%d']
     );
 
-    if ($updated === false) {
-        wp_send_json_error(['message' => 'Failed to update notification.']);
+    if ($deleted === false) {
+        wp_send_json_error(['message' => 'Failed to remove notification.']);
     }
 
-    wp_send_json_success(['message' => 'Notification marked as read.']);
+    if ($deleted < 1) {
+        wp_send_json_error(['message' => 'Notification not found.']);
+    }
+
+    wp_send_json_success(['message' => 'Notification opened and removed.']);
 }
 
 add_action('wp_ajax_robodesk_clear_notifications', 'robodesk_clear_notifications');
@@ -1916,55 +2180,254 @@ function robodesk_clear_notifications()
     global $wpdb;
     $table_name = $wpdb->prefix . 'robodesk_notifications';
 
-    $updated = $wpdb->query(
+    $deleted = $wpdb->query(
         $wpdb->prepare(
-            "UPDATE $table_name SET read_at = %s WHERE recipient_user_id = %d AND read_at IS NULL",
-            current_time('mysql'),
+            "DELETE FROM $table_name WHERE recipient_user_id = %d AND read_at IS NULL",
             $user_id
         )
     );
 
-    if ($updated === false) {
+    if ($deleted === false) {
         wp_send_json_error(['message' => 'Failed to clear notifications.']);
     }
 
-    wp_send_json_success(['message' => 'Notifications cleared.']);
+    wp_send_json_success([
+        'message' => 'Notifications cleared.',
+        'deleted_count' => (int) $deleted,
+    ]);
 }
 
 
 // Custom email function for wp_mail with html with header and footer
-function robodesk_send_email($to, $subject, $message, $headers = [], $attachments = [])
+function robodesk_prepare_email_content($message)
 {
-    $default_headers = array('Content-Type: text/html; charset=UTF-8');
-    $headers = array_merge($default_headers, $headers);
-    $site_name = get_bloginfo('name');
-    $email_template = '<!DOCTYPE html>
-<html>
+    $message = (string) $message;
+    if ($message === '') {
+        return '';
+    }
+
+    if ($message === wp_strip_all_tags($message)) {
+        $safe_message = esc_html($message);
+        $safe_message = preg_replace_callback(
+            '#(https?://[^\s<]+)#i',
+            function ($matches) {
+                $display_url = $matches[1];
+                $href_url = esc_url(html_entity_decode($display_url, ENT_QUOTES, 'UTF-8'));
+                if ($href_url === '') {
+                    return $display_url;
+                }
+
+                return '<a href="' . $href_url . '" target="_blank" rel="noopener noreferrer">' . $display_url . '</a>';
+            },
+            $safe_message
+        );
+
+        return nl2br(wp_kses_post($safe_message));
+    }
+
+    return wp_kses_post($message);
+}
+
+function robodesk_get_email_theme_color()
+{
+    $theme_color = sanitize_hex_color((string) get_option('robodesk_theme_color', ''));
+    return $theme_color ?: '#000000';
+}
+
+function robodesk_get_email_logo_url()
+{
+    $robodesk_wide_logo = trim((string) get_option('robodesk_wide_logo', ''));
+    if ($robodesk_wide_logo !== '') {
+        return $robodesk_wide_logo;
+    }
+
+    return '';
+}
+
+function robodesk_get_default_email_header_template()
+{
+    return <<<'HTML'
+<!DOCTYPE html>
+<html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <style>
-        body { font-family: Arial, sans-serif; background-color: #f4f4
-        ; margin: 0; padding: 20px; }
-        .email-container { background-color: #ffffff; padding: 20px; border-radius  
-        : 5px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); }
-        .email-header { background-color: #0073aa; color: #ffffff; padding: 10px; border-radius: 5px 5px 0 0; }
-        .email-footer { background-color: #f4f4f4; color: #333333; padding: 10px; border-radius: 0 0 5px 5px; text-align: center; font-size: 12px; }
-        .email-body { padding: 20px; }
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <title>{{EMAIL_SUBJECT}}</title>
+    <style type="text/css">
+        body { margin: 0; padding: 0; background-color: #f1f1f1; font-family: Arial, sans-serif; color: #212529; }
+        table { border-collapse: collapse; border-spacing: 0; }
+        .wrapper { width: 100%; background-color: #f1f1f1; padding: 24px 0; }
+        .container { width: 100%; max-width: 650px; margin: 0 auto; background-color: #ffffff; border-radius: 14px; overflow: hidden; }
+        .header { padding: 24px 28px; text-align: center; }
+        .header img { max-width: 220px; width: 100%; height: auto; }
+        .subject { margin: 0; padding: 0; font-size: 22px; line-height: 1.4; color: #2c2c2c; font-weight: 700; }
+        .content { padding: 30px; font-size: 16px; line-height: 1.6; color: #212529; }
+        .content a { color: {{THEME_COLOR}}; word-break: break-word; }
+        .content p { margin: 0 0 14px; }
+        .footer { text-align: center; padding: 18px 24px; }
+        .footer, .footer a { color: #ffffff; font-size: 12px; line-height: 1.5; text-decoration: none; }
+        @media only screen and (max-width: 680px) {
+            .wrapper { padding: 12px; }
+            .content { padding: 20px; }
+            .subject { font-size: 20px; }
+        }
     </style>
 </head>
 <body>
-    <div class="email-container">
-        <div class="email-header">
-            <h1>' . esc_html($site_name) . '</h1>
-        </div>
-        <div class="email-body">
-            ' . $message . '
-        </div>
-        <div class="email-footer">
-            <p>&copy; ' . date('Y') . ' ' . esc_html($site_name) . '. All rights reserved.</p>
-        </div>
-    </div>
+    <table role="presentation" class="wrapper" width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+            <td align="center">
+                <table role="presentation" class="container" width="650" cellpadding="0" cellspacing="0" border="0">
+                    <tr>
+                        <td class="header" style="background-color: {{THEME_COLOR}};">
+                            {{BRAND_HTML}}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 24px 30px 0;">
+                            <h2 class="subject">{{EMAIL_SUBJECT}}</h2>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="content">
+HTML;
+}
+
+function robodesk_get_default_email_footer_template()
+{
+    return <<<'HTML'
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="footer" style="background-color: {{THEME_COLOR}};">
+                            <div>
+                                <a href="{{SITE_URL}}" target="_blank" rel="noopener noreferrer">{{SITE_NAME}}</a>
+                            </div>
+                            <div>&copy; {{YEAR}} {{SITE_NAME}}. All rights reserved.</div>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
 </body>
-</html>';
+</html>
+HTML;
+}
+
+function robodesk_get_email_template_parts()
+{
+    $header_option_key = 'robodesk_email_template_header';
+    $footer_option_key = 'robodesk_email_template_footer';
+
+    $header_template = get_option($header_option_key, '');
+    if (!is_string($header_template) || trim($header_template) === '') {
+        $header_template = robodesk_get_default_email_header_template();
+        update_option($header_option_key, $header_template);
+    } else {
+        $original_header_template = $header_template;
+
+        $header_template = preg_replace(
+            '#\.content\s+a\s*\{\s*color\s*:[^;]+;#i',
+            '.content a { color: {{THEME_COLOR}};',
+            $header_template
+        );
+
+        if (strpos($header_template, '{{BRAND_HTML}}') === false) {
+            $header_template = preg_replace(
+                '#<td([^>]*)class="header"([^>]*)>.*?</td>#is',
+                '<td$1class="header"$2>{{BRAND_HTML}}</td>',
+                $header_template,
+                1
+            );
+        }
+
+        if (!is_string($header_template) || strpos($header_template, '{{BRAND_HTML}}') === false) {
+            $header_template = robodesk_get_default_email_header_template();
+        }
+
+        if ($header_template !== $original_header_template) {
+            update_option($header_option_key, $header_template);
+        }
+    }
+
+    $footer_template = get_option($footer_option_key, '');
+    if (!is_string($footer_template) || trim($footer_template) === '') {
+        $footer_template = robodesk_get_default_email_footer_template();
+        update_option($footer_option_key, $footer_template);
+    } elseif (strpos($footer_template, '{{THEME_COLOR}}') === false) {
+        $original_footer_template = $footer_template;
+        $footer_template = preg_replace(
+            '#<td([^>]*)class="footer"([^>]*)style="([^"]*)"#i',
+            '<td$1class="footer"$2style="background-color: {{THEME_COLOR}}; $3"',
+            $footer_template,
+            1
+        );
+
+        if ($footer_template !== $original_footer_template) {
+            update_option($footer_option_key, $footer_template);
+        }
+    }
+
+    return [
+        'header' => $header_template,
+        'footer' => $footer_template,
+    ];
+}
+
+function robodesk_render_email_template($subject, $message)
+{
+    $site_name = get_bloginfo('name');
+    $site_url = get_home_url();
+    $year = date_i18n('Y');
+    $email_subject = wp_strip_all_tags((string) $subject);
+    $email_content = robodesk_prepare_email_content($message);
+    $logo_url = esc_url(robodesk_get_email_logo_url());
+    $theme_color = robodesk_get_email_theme_color();
+
+    if ($email_subject === '') {
+        $email_subject = $site_name;
+    }
+
+    $template_parts = robodesk_get_email_template_parts();
+
+    if ($logo_url !== '') {
+        $brand_html = '<a href="' . esc_url($site_url) . '" target="_blank" rel="noopener noreferrer"><img src="' . $logo_url . '" alt="' . esc_attr($site_name) . '" /></a>';
+    } else {
+        $brand_html = '<a href="' . esc_url($site_url) . '" target="_blank" rel="noopener noreferrer" style="text-decoration:none;"><h1 class="subject" style="margin:0;color:#ffffff;">' . esc_html($site_name) . '</h1></a>';
+    }
+
+    $replacements = [
+        '{{SITE_NAME}}' => esc_html($site_name),
+        '{{SITE_NAME_ATTR}}' => esc_attr($site_name),
+        '{{SITE_URL}}' => esc_url($site_url),
+        '{{YEAR}}' => esc_html($year),
+        '{{EMAIL_SUBJECT}}' => esc_html($email_subject),
+        '{{LOGO_URL}}' => $logo_url,
+        '{{THEME_COLOR}}' => esc_attr($theme_color),
+        '{{BRAND_HTML}}' => $brand_html,
+    ];
+
+    $email_header = strtr((string) $template_parts['header'], $replacements);
+    $email_footer = strtr((string) $template_parts['footer'], $replacements);
+
+    return $email_header . $email_content . $email_footer;
+}
+
+function robodesk_send_email($to, $subject, $message, $headers = [], $attachments = [])
+{
+    if (!is_array($headers)) {
+        $headers = [$headers];
+    }
+
+    $headers = array_values(array_filter($headers, function ($header) {
+        return stripos((string) $header, 'Content-Type:') !== 0;
+    }));
+
+    array_unshift($headers, 'Content-Type: text/html; charset=UTF-8');
+
+    $email_template = robodesk_render_email_template($subject, $message);
+
     return wp_mail($to, $subject, $email_template, $headers, $attachments);
 }
