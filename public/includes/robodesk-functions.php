@@ -38,9 +38,7 @@ function robodesk_send_ticket_update_email($ticket_id, $comment_content, $update
 
     $message .= "View the ticket here: " . $ticket_link . "\n\nThank you,\nThe Robodesk Team";
 
-    $headers = array('Content-Type: text/plain; charset=UTF-8');
-
-    wp_mail($to, $subject, $message, $headers);
+    robodesk_send_email($to, $subject, $message);
 }
 
 global $wpdb;
@@ -327,7 +325,7 @@ function robodesk_get_user_notifications($user_id, $limit = 20)
 {
     global $wpdb;
     $table_name = $wpdb->prefix . 'robodesk_notifications';
-    
+
     // Check if table exists to avoid errors on fresh installs before init hook runs
     if ($wpdb->get_var("SHOW TABLES LIKE '$table_name'") != $table_name) {
         return array();

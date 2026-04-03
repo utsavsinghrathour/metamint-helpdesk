@@ -275,7 +275,6 @@ export default function RobodeskBotChatWidgetMain({ widgetConfig, activeAIMode }
                     {messages.length > 0 && messages.map((m, i) => {
                         const prevMsg = i > 0 ? messages[i - 1] : null;
                         const isSameSender = prevMsg && prevMsg.role === m.role;
-                        const marginBottom = isSameSender ? '4px' : '12px';
 
                         return (
                             <div
@@ -283,64 +282,28 @@ export default function RobodeskBotChatWidgetMain({ widgetConfig, activeAIMode }
                                 className={`chat-message ${m.role === 'user'
                                     ? 'rd-ml-auto sent'
                                     : 'rd-flex rd-gap-8 received'
-                                    }`}
-                                style={{
-                                    maxWidth: '70%',
-                                    marginBottom,
-                                    marginTop: i === 0 || !isSameSender ? '12px' : '4px',
-                                    display: 'flex',
-                                    alignItems: 'flex-start',
-                                    marginLeft: m.role === 'user' ? 'auto' : '0',
-                                    gap: m.role === 'assistant' ? '8px' : '0'
-                                }}
+                                } ${isSameSender ? 'rd-msg-same-sender' : 'rd-msg-new-sender'} ${m.role === 'user' ? 'rd-msg-user' : 'rd-msg-assistant'}`}
                             >
+                                {/* AI AVATAR */}
                                 {m.role === 'assistant' && (!isSameSender || i === 0) && (
-                                    <div
-                                        style={{
-                                            height: '30px',
-                                            width: '30px',
-                                            borderRadius: '50px',
-                                            backgroundColor: '#007BFF',
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            justifyContent: 'center',
-                                            color: 'white',
-                                            fontSize: '14px',
-                                            fontWeight: 'bold',
-                                            flexShrink: 0
-                                        }}
-                                    >
-                                        AI
-                                    </div>
+                                    <div className="rd-ai-avatar">AI</div>
                                 )}
+
+                                {/* AI AVATAR SPACER */}
                                 {m.role === 'assistant' && isSameSender && i !== 0 && (
-                                    <div style={{ width: '30px', height: '30px' }} />
+                                    <div className="rd-ai-avatar-spacer" />
                                 )}
+
                                 <div
-                                    className="message-content"
-                                    style={{
-                                        backgroundColor: m.role === 'user' || m.thinking ? '#007BFF' : '#FFFFFF',
-                                        color: m.role === 'user' || m.thinking ? '#FFFFFF' : '#000000',
-                                        border: m.role === 'assistant' && !m.thinking ? '1px solid #E0E0E0' : 'none',
-                                        borderRadius: '10px',
-                                        padding: '8px 12px',
-                                        maxWidth: '100%',
-                                        opacity: m.thinking ? 0.7 : 1
-                                    }}
+                                    className={`rd-message-content ${m.role === 'user' ? 'rd-msg-content-user' : 'rd-msg-content-assistant'} ${m.thinking ? 'rd-msg-content-thinking' : ''}`}
                                 >
-                                    {m.role === 'assistant' ? <AssistantMessage msg={m} /> : (
+                                    {m.role === 'assistant' ? (
+                                        <AssistantMessage msg={m} />
+                                    ) : (
                                         <span className="rd-body-text"><p>{m.text}</p></span>
                                     )}
                                     {!m.thinking && (
-                                        <div
-                                            className="rd-text-small rd-text-gray"
-                                            style={{
-                                                marginTop: '4px',
-                                                textAlign: m.role === 'user' ? 'right' : 'left',
-                                                fontSize: '10px',
-                                                opacity: 0.7
-                                            }}
-                                        >
+                                        <div className={`rd-text-small rd-text-gray rd-msg-timestamp ${m.role === 'user' ? 'rd-msg-timestamp-user' : 'rd-msg-timestamp-assistant'}`}>
                                             {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                         </div>
                                     )}
@@ -348,6 +311,7 @@ export default function RobodeskBotChatWidgetMain({ widgetConfig, activeAIMode }
                             </div>
                         );
                     })}
+
                     {messages.length === 0 && (
                         <div className='rd-text-center rd-px-20 rd-flex rd-flex-col rd-gap-5 rd-mb-20 home-tab-title'>
                             <h4 className='heading-4'>Have Questions?</h4>
@@ -356,46 +320,12 @@ export default function RobodeskBotChatWidgetMain({ widgetConfig, activeAIMode }
                             </h5>
                         </div>
                     )}
+
                     {/* STREAMING LOADER */}
                     {isStreaming && (
-                        <div
-                            className="chat-message rd-flex rd-gap-8 received"
-                            style={{
-                                maxWidth: '70%',
-                                marginBottom: '12px',
-                                marginTop: '4px',
-                                display: 'flex',
-                                alignItems: 'flex-start',
-                                gap: '8px'
-                            }}
-                        >
-                            <div
-                                style={{
-                                    height: '30px',
-                                    width: '30px',
-                                    borderRadius: '50px',
-                                    backgroundColor: '#007BFF',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                    color: 'white',
-                                    fontSize: '14px',
-                                    fontWeight: 'bold',
-                                    flexShrink: 0
-                                }}
-                            >
-                                AI
-                            </div>
-
-                            <div
-                                className="message-content"
-                                style={{
-                                    backgroundColor: '#FFFFFF',
-                                    border: '1px solid #E0E0E0',
-                                    borderRadius: '10px',
-                                    padding: '8px 12px'
-                                }}
-                            >
+                        <div className="chat-message rd-flex rd-gap-8 received rd-streaming-loader">
+                            <div className="rd-ai-avatar">AI</div>
+                            <div className="rd-message-content rd-msg-content-assistant">
                                 <span className="rd-body-text">
                                     {loadingText || "Thinking..."}
                                 </span>
