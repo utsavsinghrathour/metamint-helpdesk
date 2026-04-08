@@ -17,7 +17,7 @@ function robodesk_add_tinymce_to_comments($defaults)
 
     if (!is_wp_error(get_post_type(sanitize_text_field($_GET['tid'])))) {
         $value = get_post_meta(sanitize_text_field($_GET['tid']), '_robodesk_ticket_status', true);
-        ?>
+?>
         <div class="robodesk-status-selector">
             <label for="robodesk_ticket_status_comment"><?php _e('Select Status *', 'robodesk') ?></label>
             <select name="robodesk_ticket_status_comment" id="robodesk_ticket_status_comment" required>
@@ -27,7 +27,7 @@ function robodesk_add_tinymce_to_comments($defaults)
                 <option value="closed" <?php selected($value, 'closed'); ?>>Closed</option>
             </select>
         </div>
-        <?php
+<?php
     }
 
     wp_editor('', 'comment', array(
@@ -62,7 +62,21 @@ function robodesk_save_custom_comment_field($comment_id)
     if (!empty($_POST['robodesk_ticket_status_comment'])) {
         $dropdown_value = sanitize_text_field(wp_unslash($_POST['robodesk_ticket_status_comment']));
         $comment_post_id = sanitize_text_field(wp_unslash($_POST['comment_post_ID']));
+        $old_status = (string) get_post_meta($comment_post_id, '_robodesk_ticket_status', true);
         update_post_meta($comment_post_id, '_robodesk_ticket_status', $dropdown_value);
+
+        if ($old_status !== $dropdown_value && function_exists('robodesk_notify_status_changed')) {
+            $comment = get_comment($comment_id);
+            $source = is_admin() ? 'admin' : 'chat';
+            if ($comment && !is_wp_error($comment)) {
+                $comment_source = (string) get_comment_meta($comment_id, 'comment_source', true);
+                if ($comment_source !== '') {
+                    $source = $comment_source;
+                }
+            }
+
+            robodesk_notify_status_changed($comment_post_id, $dropdown_value, get_current_user_id(), $source);
+        }
     }
 }
 

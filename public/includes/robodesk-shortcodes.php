@@ -658,13 +658,75 @@ function robodesk_notifications_content()
     } else {
         $notifications = array();
     }
+
+    $dashboard_base_url = get_permalink(get_queried_object_id());
+    if (empty($dashboard_base_url)) {
+        $dashboard_base_url = site_url('/dashboard/');
+    }
+
+    $unread_count = 0;
+    foreach ($notifications as $notification) {
+        if (empty($notification->read_at)) {
+            $unread_count++;
+        }
+    }
     ?>
-    <h2>Notifications</h2>
+    <div class="robodesk-notifications-header">
+        <h2>Notifications</h2>
+        <?php if ($unread_count > 0): ?>
+            <button id="robodesk-mark-all-notifications-read" class="robodesk-mark-all-read-btn" type="button">Mark all as read</button>
+        <?php endif; ?>
+    </div>
     <?php if ($notifications): ?>
-        <div class="rd-content-list">
-            <ul>
+        <div class="rd-content-list robodesk-notifications-list-wrap">
+            <ul class="robodesk-notifications-list">
                 <?php foreach ($notifications as $notification): ?>
-                    <li><?php echo esc_html($notification->message); ?> - <small><?php echo date("F j, Y, g:i a", strtotime($notification->notification_date)); ?></small></li>
+                    <?php
+                    $ticket_id = isset($notification->ticket_id) ? (int) $notification->ticket_id : 0;
+                    $ticket_title = $ticket_id > 0 ? get_the_title($ticket_id) : '';
+                    if ($ticket_title === '') {
+                        $ticket_title = 'ticket';
+                    }
+
+                    $ticket_url = '#';
+                    if ($ticket_id > 0) {
+                        $ticket_url = add_query_arg(
+                            array(
+                                'robodesk_page' => 'my-tickets',
+                                'tid' => $ticket_id,
+                            ),
+                            $dashboard_base_url
+                        );
+
+                        $comment_id = isset($notification->comment_id) ? (int) $notification->comment_id : 0;
+                        if ($comment_id > 0) {
+                            $ticket_url .= '#comment-' . $comment_id;
+                        }
+                    }
+
+                    $actor_name = 'Someone';
+                    if (!empty($notification->created_by)) {
+                        $actor = get_userdata((int) $notification->created_by);
+                        if ($actor && !empty($actor->display_name)) {
+                            $actor_name = $actor->display_name;
+                        }
+                    }
+
+                    $notification_text = (string) $notification->message;
+                    if (($notification->type ?? '') === 'reply_added') {
+                        $notification_text = sprintf('%s has replied to', $actor_name);
+                    }
+
+                    $formatted_time = date_i18n('F j, Y, g:i a', strtotime($notification->notification_date));
+                    ?>
+                    <?php $is_unread = empty($notification->read_at); ?>
+                    <li class="robodesk-notification-item <?php echo $is_unread ? 'is-unread' : 'is-read'; ?>" data-notification-id="<?php echo esc_attr((int) $notification->id); ?>">
+                        <div class="robodesk-notification-main">
+                            <?php echo esc_html($notification_text); ?>
+                            <a class="robodesk-notification-ticket-link" href="<?php echo esc_url($ticket_url); ?>" data-notification-id="<?php echo esc_attr((int) $notification->id); ?>"><?php echo esc_html($ticket_title); ?></a>
+                        </div>
+                        <small class="robodesk-notification-time"><?php echo esc_html($formatted_time); ?></small>
+                    </li>
                 <?php endforeach; ?>
             </ul>
         </div>
