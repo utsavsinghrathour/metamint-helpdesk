@@ -539,13 +539,20 @@ function robodesk_profile_content()
             echo '<p style="color:red;">Nonce verification failed</p>';
             return;
         }
-        $first_name = sanitize_text_field($_POST['first_name']);
-        $last_name = sanitize_text_field($_POST['last_name']);
+        $first_name = sanitize_text_field(wp_unslash($_POST['first_name']));
+        $last_name = sanitize_text_field(wp_unslash($_POST['last_name']));
+        $full_name = trim($first_name . ' ' . $last_name);
+
         $userdata = array(
             'ID'         => $user_id,
             'first_name' => $first_name,
             'last_name'  => $last_name,
         );
+
+        if ($full_name !== '') {
+            $userdata['display_name'] = $full_name;
+        }
+
         $user_id_update = wp_update_user($userdata);
 
         if (is_wp_error($user_id_update)) {
