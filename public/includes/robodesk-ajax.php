@@ -241,13 +241,15 @@ function robodesk_add_credential_callback()
 
     $name = isset($_POST['credential_name']) ? sanitize_text_field($_POST['credential_name']) : '';
     $username = isset($_POST['credential_username']) ? sanitize_text_field($_POST['credential_username']) : '';
-    $password = isset($_POST['credential_password']) ? sanitize_text_field($_POST['credential_password']) : '';
+    $password = isset($_POST['credential_password']) ? wp_unslash($_POST['credential_password']) : '';
     $url = isset($_POST['credential_url']) ? esc_url_raw($_POST['credential_url']) : '';
     $notes = isset($_POST['credential_notes']) ? sanitize_textarea_field($_POST['credential_notes']) : '';
 
-    if (empty($name) || empty($username) || empty($password)) {
+    if (empty($name) || empty($username) || trim($password) === '') {
         wp_send_json_error('Please fill in all required fields.');
     }
+
+    $encrypted_password = robodesk_encrypt($password, 'robodesk');
 
     $inserted = $wpdb->insert(
         $credentials_table,
@@ -255,7 +257,7 @@ function robodesk_add_credential_callback()
             'user_id' => $user_id,
             'name' => $name,
             'username' => $username,
-            'password' => $password,
+            'password' => $encrypted_password,
             'url' => $url,
             'notes' => $notes,
         ),
@@ -274,7 +276,7 @@ function robodesk_add_credential_callback()
 add_action('wp_ajax_robodesk_delete_credential', 'robodesk_delete_credential_callback');
 function robodesk_delete_credential_callback()
 {
-    check_ajax_referer('robodesk_delete_credential_nonce');
+    check_ajax_referer('robodesk_delete_credential_nonce', 'nonce');
     global $wpdb;
     $credentials_table = $wpdb->prefix . 'robodesk_credentials';
     $credential_id = isset($_POST['credential_id']) ? intval($_POST['credential_id']) : 0;
@@ -282,19 +284,18 @@ function robodesk_delete_credential_callback()
 
     if ($credential_id <= 0) {
         wp_send_json_error('Invalid Credential ID');
-        wp_die(); // Important: Always call wp_die() in AJAX callbacks
+        wp_die();
     }
 
-    // Security check: Make sure the user owns the credential
-    $credential_user = $wpdb->get_var("SELECT user_id FROM $credentials_table WHERE id = $credential_id");
-    if ($credential_user != $user_id) {
+    $credential_user = $wpdb->get_var($wpdb->prepare("SELECT user_id FROM $credentials_table WHERE id = %d", $credential_id));
+    if ((int) $credential_user !== (int) $user_id) {
         wp_send_json_error('You do not have permission to delete this credential.');
-        wp_die(); // Important: Always call wp_die() in AJAX callbacks
+        wp_die();
     }
 
     $deleted = $wpdb->delete(
         $credentials_table,
-        array('id' => $credential_id, 'user_id' => $user_id), // added user id for security
+        array('id' => $credential_id, 'user_id' => $user_id),
         array('%d', '%d')
     );
 
@@ -303,7 +304,8 @@ function robodesk_delete_credential_callback()
     } else {
         wp_send_json_error('Error deleting credential.');
     }
-    wp_die(); // Important: Always call wp_die() in AJAX callbacks
+
+    wp_die();
 }
 
 
