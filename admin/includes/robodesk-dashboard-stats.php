@@ -164,7 +164,10 @@
                 }
                 $ticket_origin = $ticket_origin ?: 'N/A';
                 $priority_terms = get_the_terms($ticket_id, 'robodesk_ticket_priority');
-                $author_image = get_avatar_url(get_the_author_meta('ID'), ['size' => 32]);
+                $author_id = (int) get_the_author_meta('ID');
+                $author_image = function_exists('robodesk_get_avatar_url')
+                    ? robodesk_get_avatar_url($author_id, 32)
+                    : get_avatar_url($author_id, ['size' => 32]);
 
                 $ticket_priority = $priority_terms && !is_wp_error($priority_terms) ? $priority_terms[0]->name : 'N/A';
                 $updated_at = get_the_modified_date('Y-m-d H:i:s', $ticket_id);

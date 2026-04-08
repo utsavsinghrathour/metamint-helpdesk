@@ -607,6 +607,24 @@ function robodesk_get_ticket_customer_user_id($ticket_id)
     return 0;
 }
 
+function robodesk_get_avatar_url($user_id, $size = 96)
+{
+    $user_id = (int) $user_id;
+    if ($user_id <= 0) {
+        return '';
+    }
+
+    $avatar_id = (int) get_user_meta($user_id, 'wp_user_avatar', true);
+    if ($avatar_id > 0) {
+        $avatar_url = wp_get_attachment_image_url($avatar_id, 'thumbnail');
+        if ($avatar_url) {
+            return $avatar_url;
+        }
+    }
+
+    return get_avatar_url($user_id, array('size' => (int) $size));
+}
+
 function robodesk_create_notification($recipient_user_id, $ticket_id, $comment_id, $type, $source, $message)
 {
     global $wpdb;
