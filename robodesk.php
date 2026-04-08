@@ -292,7 +292,7 @@ function robodesk_create_credentials_table()
         user_id BIGINT(20) UNSIGNED NOT NULL,
         name VARCHAR(255) NOT NULL,
         username VARCHAR(255) NOT NULL,
-        password VARCHAR(255) NOT NULL,
+        password LONGTEXT NOT NULL,
         url VARCHAR(255),
         notes TEXT,
         created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -309,6 +309,17 @@ function robodesk_create_credentials_table()
 
 // Hook to run the function on plugin activation
 register_activation_hook(__FILE__, 'robodesk_create_credentials_table');
+
+function robodesk_maybe_create_credentials_table()
+{
+    $version = get_option('robodesk_credentials_table_version');
+    if ($version !== '1.1') {
+        robodesk_create_credentials_table();
+        update_option('robodesk_credentials_table_version', '1.1');
+    }
+}
+
+add_action('init', 'robodesk_maybe_create_credentials_table');
 
 // Create notifications table
 function robodesk_create_notifications_table()
