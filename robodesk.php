@@ -106,6 +106,7 @@ function robodesk_enqueue_scripts()
             'faq_nonce' => wp_create_nonce('robodesk_faq_vote_nonce'),
             'add_credential_nonce' => wp_create_nonce('robodesk_add_credential_nonce'),
             'delete_credential_nonce' => wp_create_nonce('robodesk_delete_credential_nonce'),
+            'notifications_nonce' => wp_create_nonce('robodesk_notifications_action'),
 
 
         ));
@@ -292,7 +293,7 @@ function robodesk_create_credentials_table()
         user_id BIGINT(20) UNSIGNED NOT NULL,
         name VARCHAR(255) NOT NULL,
         username VARCHAR(255) NOT NULL,
-        password VARCHAR(255) NOT NULL,
+        password LONGTEXT NOT NULL,
         url VARCHAR(255),
         notes TEXT,
         created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -309,6 +310,17 @@ function robodesk_create_credentials_table()
 
 // Hook to run the function on plugin activation
 register_activation_hook(__FILE__, 'robodesk_create_credentials_table');
+
+function robodesk_maybe_create_credentials_table()
+{
+    $version = get_option('robodesk_credentials_table_version');
+    if ($version !== '1.1') {
+        robodesk_create_credentials_table();
+        update_option('robodesk_credentials_table_version', '1.1');
+    }
+}
+
+add_action('init', 'robodesk_maybe_create_credentials_table');
 
 // Create notifications table
 function robodesk_create_notifications_table()
@@ -595,6 +607,24 @@ function robodesk_get_ticket_customer_user_id($ticket_id)
     return 0;
 }
 
+function robodesk_get_avatar_url($user_id, $size = 96)
+{
+    $user_id = (int) $user_id;
+    if ($user_id <= 0) {
+        return '';
+    }
+
+    $avatar_id = (int) get_user_meta($user_id, 'wp_user_avatar', true);
+    if ($avatar_id > 0) {
+        $avatar_url = wp_get_attachment_image_url($avatar_id, 'thumbnail');
+        if ($avatar_url) {
+            return $avatar_url;
+        }
+    }
+
+    return get_avatar_url($user_id, array('size' => (int) $size));
+}
+
 function robodesk_create_notification($recipient_user_id, $ticket_id, $comment_id, $type, $source, $message)
 {
     global $wpdb;
@@ -744,6 +774,63 @@ function robodesk_notify_ticket_created($ticket_id, $source = '')
     }
 }
 
+function robodesk_notify_status_changed($ticket_id, $new_status, $actor_user_id = 0, $source = '')
+{
+    $ticket_id = (int) $ticket_id;
+    $new_status = sanitize_text_field((string) $new_status);
+    $actor_user_id = (int) $actor_user_id;
+
+    if ($ticket_id <= 0 || $new_status === '' || get_post_type($ticket_id) !== 'robodesk_ticket') {
+        return;
+    }
+
+    $assignee_name = trim((string) get_post_meta($ticket_id, 'ticket_assignee', true));
+    $assignee_is_unassigned = $assignee_name === '' ||
+        strtolower($assignee_name) === 'n/a' ||
+        strtolower($assignee_name) === 'unassigned';
+
+    $assignee_id = (int) get_post_meta($ticket_id, 'ticket_assignee_id', true);
+    if ($assignee_id <= 0 && !$assignee_is_unassigned) {
+        $assignee_id = robodesk_store_ticket_assignee_id($ticket_id, $assignee_name);
+    }
+
+    $customer_user_id = robodesk_get_ticket_customer_user_id($ticket_id);
+
+    if ($assignee_id > 0) {
+        $recipients = [$assignee_id];
+    } else {
+        $recipients = robodesk_get_support_user_ids();
+    }
+
+    if ($customer_user_id > 0) {
+        $recipients[] = $customer_user_id;
+    }
+
+    $recipients = array_values(array_unique(array_filter(array_map('intval', $recipients))));
+    if (empty($recipients)) {
+        return;
+    }
+
+    if ($actor_user_id <= 0) {
+        $actor_user_id = (int) get_current_user_id();
+    }
+
+    if ($source === '') {
+        $source = robodesk_get_ticket_source($ticket_id);
+    }
+
+    $readable_status = ucwords(str_replace('-', ' ', $new_status));
+    $message = 'Ticket status changed to ' . $readable_status;
+
+    foreach ($recipients as $recipient_id) {
+        if ($recipient_id === $actor_user_id) {
+            continue;
+        }
+
+        robodesk_create_notification($recipient_id, $ticket_id, null, 'status_changed', $source, $message);
+    }
+}
+
 function robodesk_notify_comment_created($comment_id)
 {
     $comment_id = (int) $comment_id;
@@ -805,11 +892,6 @@ function robodesk_notify_comment_created($comment_id)
         $recipients = robodesk_get_support_user_ids();
     }
 
-    $recipients = array_values(array_unique(array_filter($recipients)));
-    if (empty($recipients)) {
-        return;
-    }
-
     $source = get_comment_meta($comment_id, 'comment_source', true);
     if ($source === '') {
         $source = robodesk_get_ticket_source($ticket_id);
@@ -818,6 +900,17 @@ function robodesk_notify_comment_created($comment_id)
     $author_type = get_comment_meta($comment_id, 'author_type', true);
     if ($author_type === '') {
         $author_type = robodesk_get_author_type($comment->user_id);
+    }
+
+    // Also notify the ticket customer when the reply is from support/admin.
+    $customer_user_id = robodesk_get_ticket_customer_user_id($ticket_id);
+    if ($customer_user_id > 0 && $author_type !== 'customer') {
+        $recipients[] = $customer_user_id;
+    }
+
+    $recipients = array_values(array_unique(array_filter($recipients)));
+    if (empty($recipients)) {
+        return;
     }
 
     $author_id = (int) $comment->user_id;

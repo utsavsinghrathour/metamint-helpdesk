@@ -131,89 +131,111 @@ function robodesk_maybe_create_ticket_notes_table()
 // Call the function on WordPress initialization
 add_action('init', 'robodesk_maybe_create_ticket_notes_table');
 
+function robodesk_get_credential_password_value($stored_password)
+{
+    if ($stored_password === '' || $stored_password === null) {
+        return '';
+    }
+
+    $stored_password = (string) $stored_password;
+    $decoded_password = base64_decode($stored_password, true);
+
+    if ($decoded_password !== false && strpos($decoded_password, '::') !== false) {
+        $decrypted_password = robodesk_decrypt($stored_password, 'robodesk');
+        if ($decrypted_password !== false) {
+            return $decrypted_password;
+        }
+
+        return false;
+    }
+
+    return $stored_password;
+}
+
 function robodesk_credentials_page()
 {
-    if (is_user_logged_in()) {
-        global $wpdb;
-        $credentials_table = $wpdb->prefix . 'robodesk_credentials';
-        $user_id = get_current_user_id();
-        $credentials = $wpdb->get_results("SELECT * FROM $credentials_table WHERE user_id = $user_id ORDER BY name ASC");
-        ob_start();
-?>
-        <div class="robodesk-container">
-            <h2>Credentials Vault</h2>
-
-            <button id="add-credential-button">Add Credential</button>
-
-            <div id="credential-form" style="display: none;">
-                <h3>Add New Credential</h3>
-                <form id="robodesk-add-credential">
-                    <label for="credential_name">Name:</label><br>
-                    <input type="text" id="credential_name" name="credential_name" required><br><br>
-
-                    <label for="credential_username">Username:</label><br>
-                    <input type="text" id="credential_username" name="credential_username" required><br><br>
-
-                    <label for="credential_password">Password:</label><br>
-                    <input type="password" id="credential_password" name="credential_password" required><br><br>
-
-                    <label for="credential_url">URL:</label><br>
-                    <input type="text" id="credential_url" name="credential_url"><br><br>
-
-                    <label for="credential_notes">Notes:</label><br>
-                    <textarea id="credential_notes" name="credential_notes"></textarea><br><br>
-
-                    <input type="hidden" name="action" value="robodesk_add_credential">
-                    <?php wp_nonce_field('robodesk_add_credential_nonce'); ?>
-                    <input type="submit" value="Add">
-                </form>
-            </div>
-            <div class="robodesk-my-credentials">
-                <h2>My Credentials</h3>
-                    <?php if ($credentials): ?>
-                        <div class="credential-table-wrapper">
-                            <table>
-                                <thead>
-                                    <tr>
-                                        <th>Name</th>
-                                        <th>Username</th>
-                                        <th>Password</th>
-                                        <th>URL</th>
-                                        <th>Notes</th>
-                                        <th>Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <?php foreach ($credentials as $credential): ?>
-                                        <tr class="robodesk-table-content">
-                                            <td><?php echo esc_html($credential->name); ?></td>
-                                            <td><?php echo esc_html($credential->username); ?></td>
-                                            <td><span class="password-hidden">********</span>
-                                                <?php $enc =  robodesk_encrypt($credential->password, 'robodesk'); ?>
-                                                <button class="show-password" data-password="<?php echo  esc_attr(robodesk_decrypt($enc, 'robodesk'));
-                                                                                                ?>"><i class="fa-solid fa-eye"></i></button>
-                                            </td>
-
-                                            <td class="credential_url"><a href="<?php echo esc_url($credential->url); ?>" target="_blank" rel="noopener noreferrer"><?php echo esc_html($credential->url); ?></a></td>
-                                            <td><?php echo esc_html($credential->notes); ?></td>
-                                            <td>
-                                                <button class="delete-credential" data-credential-id="<?php echo esc_attr($credential->id); ?>">Delete</button>
-                                            </td>
-                                        </tr>
-                                    <?php endforeach; ?>
-                                </tbody>
-                            </table>
-                        </div>
-                    <?php else: ?>
-                        <p>No credentials saved yet.</p>
-                    <?php endif; ?>
-            </div>
-        </div>
-    <?php
-        return ob_get_clean();
-    } else {
+    if (!is_user_logged_in()) {
         return '<div class="robodesk-container"><p>Please <a href="' . wp_login_url(get_permalink('login')) . '">login</a> to view your credentials.</p></div>';
     }
+
+    global $wpdb;
+    $credentials_table = $wpdb->prefix . 'robodesk_credentials';
+    $user_id = get_current_user_id();
+    $credentials = $wpdb->get_results("SELECT * FROM $credentials_table WHERE user_id = $user_id ORDER BY name ASC");
+
+    ob_start();
+?>
+    <div class="robodesk-container">
+        <h2>Credentials Vault</h2>
+
+        <button id="add-credential-button">Add Credential</button>
+
+        <div id="credential-form" style="display: none;">
+            <h3>Add New Credential</h3>
+            <form id="robodesk-add-credential">
+                <label for="credential_name">Name:</label><br>
+                <input type="text" id="credential_name" name="credential_name" required><br><br>
+
+                <label for="credential_username">Username:</label><br>
+                <input type="text" id="credential_username" name="credential_username" required><br><br>
+
+                <label for="credential_password">Password:</label><br>
+                <input type="password" id="credential_password" name="credential_password" required><br><br>
+
+                <label for="credential_url">URL:</label><br>
+                <input type="text" id="credential_url" name="credential_url"><br><br>
+
+                <label for="credential_notes">Notes:</label><br>
+                <textarea id="credential_notes" name="credential_notes"></textarea><br><br>
+
+                <input type="hidden" name="action" value="robodesk_add_credential">
+                <?php wp_nonce_field('robodesk_add_credential_nonce'); ?>
+                <input type="submit" value="Add">
+            </form>
+        </div>
+
+        <div class="robodesk-my-credentials">
+            <h2>My Credentials</h2>
+            <?php if ($credentials): ?>
+                <div class="credential-table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Username</th>
+                                <th>Password</th>
+                                <th>URL</th>
+                                <th>Notes</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php foreach ($credentials as $credential): ?>
+                                <tr class="robodesk-table-content">
+                                    <td><?php echo esc_html($credential->name); ?></td>
+                                    <td><?php echo esc_html($credential->username); ?></td>
+                                    <td>
+                                        <span class="password-hidden">********</span>
+                                        <?php $display_password = robodesk_get_credential_password_value($credential->password); ?>
+                                        <button class="show-password" data-password="<?php echo esc_attr($display_password !== false ? $display_password : ''); ?>"><i class="fa-solid fa-eye"></i></button>
+                                    </td>
+                                    <td class="credential_url"><a href="<?php echo esc_url($credential->url); ?>" target="_blank" rel="noopener noreferrer"><?php echo esc_html($credential->url); ?></a></td>
+                                    <td><?php echo esc_html($credential->notes); ?></td>
+                                    <td>
+                                        <button class="delete-credential" data-credential-id="<?php echo esc_attr($credential->id); ?>">Delete</button>
+                                    </td>
+                                </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                </div>
+            <?php else: ?>
+                <p>No credentials saved yet.</p>
+            <?php endif; ?>
+        </div>
+    </div>
+    <?php
+    return ob_get_clean();
 }
 
 /**
@@ -334,4 +356,21 @@ function robodesk_get_user_notifications($user_id, $limit = 20)
     $notifications = $wpdb->get_results($wpdb->prepare("SELECT * FROM $table_name WHERE user_id = %d ORDER BY notification_date DESC LIMIT %d", $user_id, $limit));
 
     return $notifications;
+}
+
+function robodesk_get_notification_count($user_id)
+{
+    global $wpdb;
+    $table_name = $wpdb->prefix . 'robodesk_notifications';
+
+    if ($wpdb->get_var("SHOW TABLES LIKE '$table_name'") != $table_name) {
+        return 0;
+    }
+
+    return (int) $wpdb->get_var(
+        $wpdb->prepare(
+            "SELECT COUNT(*) FROM $table_name WHERE user_id = %d AND read_at IS NULL",
+            $user_id
+        )
+    );
 }

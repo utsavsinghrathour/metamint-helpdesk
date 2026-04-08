@@ -839,7 +839,7 @@ function robodesk_get_ticket_detail()
         'category' => $ticket_category,
         'source' => $ticket_origin,
         'status' => $ticket_status,
-        'author_image' => get_avatar_url($post->post_author, ['size' => 32]),
+        'author_image' => function_exists('robodesk_get_avatar_url') ? robodesk_get_avatar_url((int) $post->post_author, 32) : get_avatar_url($post->post_author, ['size' => 32]),
         'created' => get_the_date('Y-m-d H:i:s', $ticket_id),
         'priority' => $ticket_priority,
         'updated' => get_the_modified_date('Y-m-d H:i:s', $ticket_id),
@@ -892,6 +892,7 @@ function robodesk_update_ticket_status()
 
     $ticket_id = intval($_POST['ticket_id'] ?? 0);
     $new_status = sanitize_text_field($_POST['status'] ?? '');
+    $old_status = $ticket_id > 0 ? (string) get_post_meta($ticket_id, '_robodesk_ticket_status', true) : '';
 
     if (!$ticket_id || !$new_status) {
         wp_send_json_error(['message' => 'Invalid data']);
@@ -909,6 +910,10 @@ function robodesk_update_ticket_status()
 
     update_post_meta($ticket_id, '_robodesk_ticket_status', $new_status);
     $updated = current_time('mysql');
+
+    if ($old_status !== $new_status && function_exists('robodesk_notify_status_changed')) {
+        robodesk_notify_status_changed($ticket_id, $new_status, get_current_user_id(), 'admin');
+    }
 
     // Add a comment to indicate the status change
     $user_id = get_current_user_id();
@@ -1979,7 +1984,7 @@ function robodesk_refresh_dashboard_tickets()
             }
             $ticket_origin = $ticket_origin ?: 'N/A';
             $priority_terms = get_the_terms($ticket_id, 'robodesk_ticket_priority');
-            $author_image = get_avatar_url(get_the_author_meta('ID'), ['size' => 32]);
+            $author_image = function_exists('robodesk_get_avatar_url') ? robodesk_get_avatar_url((int) get_the_author_meta('ID'), 32) : get_avatar_url(get_the_author_meta('ID'), ['size' => 32]);
 
             $ticket_priority = $priority_terms && !is_wp_error($priority_terms) ? $priority_terms[0]->name : 'N/A';
             $updated_at = get_the_modified_date('Y-m-d H:i:s', $ticket_id);
