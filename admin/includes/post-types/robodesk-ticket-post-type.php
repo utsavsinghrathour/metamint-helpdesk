@@ -338,7 +338,9 @@ function robodesk_get_formatted_comments($post_id)
     $formatted_comments = array_map(function ($comment) {
         $author_id = (int) $comment->user_id;
         $author_name = $comment->comment_author;
-        $author_avatar = get_avatar_url($comment->comment_author_email, ['size' => 32]);
+        $author_avatar = function_exists('robodesk_get_avatar_url')
+            ? robodesk_get_avatar_url($author_id, 32)
+            : get_avatar_url($comment->comment_author_email, ['size' => 32]);
 
         $rendered_content = wpautop($comment->comment_content);
         $plain_content = wp_strip_all_tags($rendered_content);
@@ -451,7 +453,9 @@ function customize_robodesk_ticket_response($response, $post, $request)
     $author_image = '';
     if ($author = get_userdata($post->post_author)) {
         $author_name = $author->display_name;
-        $author_image = get_avatar_url($author->ID);
+        $author_image = function_exists('robodesk_get_avatar_url')
+            ? robodesk_get_avatar_url((int) $author->ID, 96)
+            : get_avatar_url($author->ID);
     }
     $last_reply =  get_post_meta($post->ID, 'rbd_last_reply_id', true);
 
@@ -593,7 +597,7 @@ function robodesk_handle_tickets_webhook(WP_REST_Request $request)
                     'ticket_origin' => $ticket_origin,
                     'ticket_author' => $user_name,
                     'ticket_author_email' => $email_address,
-                    'ticket_author_image' => get_avatar_url($author),
+                    'ticket_author_image' => function_exists('robodesk_get_avatar_url') ? robodesk_get_avatar_url((int) $author, 96) : get_avatar_url($author),
                     'ticket_time_ago' => $human_readable_time,
                     'comment_id' => $reply_id,
                 )
@@ -634,7 +638,7 @@ function robodesk_handle_tickets_webhook(WP_REST_Request $request)
                     'ticket_priority' => $ticket_priority,
                     'ticket_origin' => $ticket_origin,
                     'ticket_author' => get_user_by('id', $user_id)->display_name,
-                    'ticket_author_image' => get_avatar_url($user_id),
+                    'ticket_author_image' => function_exists('robodesk_get_avatar_url') ? robodesk_get_avatar_url((int) $user_id, 96) : get_avatar_url($user_id),
                     'ticket_time_ago' => $human_readable_time,
 
                 ];
@@ -710,7 +714,7 @@ function robodesk_handle_tickets_webhook(WP_REST_Request $request)
                 'id' => $comment->comment_ID,
                 'author' => $comment->comment_author, // Display name
                 'author_id' => $comment->user_id,    // User ID
-                'author_image' => get_avatar_url($comment->user_id, ['size' => 96]),
+                'author_image' => function_exists('robodesk_get_avatar_url') ? robodesk_get_avatar_url((int) $comment->user_id, 96) : get_avatar_url($comment->user_id, ['size' => 96]),
                 'content' => $comment->comment_content,
                 'created_at' => $comment->comment_date,
 
@@ -747,7 +751,7 @@ function robodesk_handle_tickets_webhook(WP_REST_Request $request)
         }
         $formatted_comments = [];
         foreach ($comments as $comment) {
-            $author_image = get_avatar_url($comment->user_id, ['size' => 96]);
+            $author_image = function_exists('robodesk_get_avatar_url') ? robodesk_get_avatar_url((int) $comment->user_id, 96) : get_avatar_url($comment->user_id, ['size' => 96]);
             $formatted_comments[] = [
                 'id' => $comment->comment_ID,
                 'author' => $comment->comment_author,

@@ -8,11 +8,15 @@ function robodesk_change_ticket_status_callback()
 
     $ticket_id = isset($_POST['ticket_id']) ? intval($_POST['ticket_id']) : 0;
     $new_status = isset($_POST['new_status']) ? sanitize_text_field($_POST['new_status']) : '';
+    $old_status = $ticket_id > 0 ? (string) get_post_meta($ticket_id, '_robodesk_ticket_status', true) : '';
 
     $allowed_statuses = array('new', 'in-progress', 'archived', 'completed'); // Valid statuses
     if ($ticket_id > 0 && in_array($new_status, $allowed_statuses)) {
         $updated = update_post_meta($ticket_id, '_robodesk_ticket_status', $new_status);
         if ($updated !== false) {
+            if ($old_status !== $new_status && function_exists('robodesk_notify_status_changed')) {
+                robodesk_notify_status_changed($ticket_id, $new_status, get_current_user_id(), 'chat');
+            }
             wp_send_json_success();
         } else {
             wp_send_json_error('Failed to update ticket status.');
@@ -241,13 +245,15 @@ function robodesk_add_credential_callback()
 
     $name = isset($_POST['credential_name']) ? sanitize_text_field($_POST['credential_name']) : '';
     $username = isset($_POST['credential_username']) ? sanitize_text_field($_POST['credential_username']) : '';
-    $password = isset($_POST['credential_password']) ? sanitize_text_field($_POST['credential_password']) : '';
+    $password = isset($_POST['credential_password']) ? wp_unslash($_POST['credential_password']) : '';
     $url = isset($_POST['credential_url']) ? esc_url_raw($_POST['credential_url']) : '';
     $notes = isset($_POST['credential_notes']) ? sanitize_textarea_field($_POST['credential_notes']) : '';
 
-    if (empty($name) || empty($username) || empty($password)) {
+    if (empty($name) || empty($username) || trim($password) === '') {
         wp_send_json_error('Please fill in all required fields.');
     }
+
+    $encrypted_password = robodesk_encrypt($password, 'robodesk');
 
     $inserted = $wpdb->insert(
         $credentials_table,
@@ -255,7 +261,7 @@ function robodesk_add_credential_callback()
             'user_id' => $user_id,
             'name' => $name,
             'username' => $username,
-            'password' => $password,
+            'password' => $encrypted_password,
             'url' => $url,
             'notes' => $notes,
         ),
@@ -274,7 +280,7 @@ function robodesk_add_credential_callback()
 add_action('wp_ajax_robodesk_delete_credential', 'robodesk_delete_credential_callback');
 function robodesk_delete_credential_callback()
 {
-    check_ajax_referer('robodesk_delete_credential_nonce');
+    check_ajax_referer('robodesk_delete_credential_nonce', 'nonce');
     global $wpdb;
     $credentials_table = $wpdb->prefix . 'robodesk_credentials';
     $credential_id = isset($_POST['credential_id']) ? intval($_POST['credential_id']) : 0;
@@ -282,19 +288,18 @@ function robodesk_delete_credential_callback()
 
     if ($credential_id <= 0) {
         wp_send_json_error('Invalid Credential ID');
-        wp_die(); // Important: Always call wp_die() in AJAX callbacks
+        wp_die();
     }
 
-    // Security check: Make sure the user owns the credential
-    $credential_user = $wpdb->get_var("SELECT user_id FROM $credentials_table WHERE id = $credential_id");
-    if ($credential_user != $user_id) {
+    $credential_user = $wpdb->get_var($wpdb->prepare("SELECT user_id FROM $credentials_table WHERE id = %d", $credential_id));
+    if ((int) $credential_user !== (int) $user_id) {
         wp_send_json_error('You do not have permission to delete this credential.');
-        wp_die(); // Important: Always call wp_die() in AJAX callbacks
+        wp_die();
     }
 
     $deleted = $wpdb->delete(
         $credentials_table,
-        array('id' => $credential_id, 'user_id' => $user_id), // added user id for security
+        array('id' => $credential_id, 'user_id' => $user_id),
         array('%d', '%d')
     );
 
@@ -303,7 +308,69 @@ function robodesk_delete_credential_callback()
     } else {
         wp_send_json_error('Error deleting credential.');
     }
-    wp_die(); // Important: Always call wp_die() in AJAX callbacks
+
+    wp_die();
+}
+
+add_action('wp_ajax_robodesk_mark_user_notification_read', 'robodesk_mark_user_notification_read');
+function robodesk_mark_user_notification_read()
+{
+    check_ajax_referer('robodesk_notifications_action', 'nonce');
+
+    $user_id = get_current_user_id();
+    if (!$user_id) {
+        wp_send_json_error('User not logged in.');
+    }
+
+    $notification_id = isset($_POST['notification_id']) ? intval($_POST['notification_id']) : 0;
+    if ($notification_id <= 0) {
+        wp_send_json_error('Invalid notification ID.');
+    }
+
+    global $wpdb;
+    $table_name = $wpdb->prefix . 'robodesk_notifications';
+
+    $deleted = $wpdb->delete(
+        $table_name,
+        array(
+            'id' => $notification_id,
+            'user_id' => $user_id,
+        ),
+        array('%d', '%d')
+    );
+
+    if ($deleted === false) {
+        wp_send_json_error('Could not delete notification.');
+    }
+
+    wp_send_json_success();
+}
+
+add_action('wp_ajax_robodesk_mark_all_user_notifications_read', 'robodesk_mark_all_user_notifications_read');
+function robodesk_mark_all_user_notifications_read()
+{
+    check_ajax_referer('robodesk_notifications_action', 'nonce');
+
+    $user_id = get_current_user_id();
+    if (!$user_id) {
+        wp_send_json_error('User not logged in.');
+    }
+
+    global $wpdb;
+    $table_name = $wpdb->prefix . 'robodesk_notifications';
+
+    $deleted = $wpdb->query(
+        $wpdb->prepare(
+            "DELETE FROM $table_name WHERE user_id = %d",
+            $user_id
+        )
+    );
+
+    if ($deleted === false) {
+        wp_send_json_error('Could not delete notifications.');
+    }
+
+    wp_send_json_success(array('deleted_count' => (int) $deleted));
 }
 
 
