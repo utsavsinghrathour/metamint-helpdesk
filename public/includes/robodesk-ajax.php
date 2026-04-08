@@ -8,11 +8,15 @@ function robodesk_change_ticket_status_callback()
 
     $ticket_id = isset($_POST['ticket_id']) ? intval($_POST['ticket_id']) : 0;
     $new_status = isset($_POST['new_status']) ? sanitize_text_field($_POST['new_status']) : '';
+    $old_status = $ticket_id > 0 ? (string) get_post_meta($ticket_id, '_robodesk_ticket_status', true) : '';
 
     $allowed_statuses = array('new', 'in-progress', 'archived', 'completed'); // Valid statuses
     if ($ticket_id > 0 && in_array($new_status, $allowed_statuses)) {
         $updated = update_post_meta($ticket_id, '_robodesk_ticket_status', $new_status);
         if ($updated !== false) {
+            if ($old_status !== $new_status && function_exists('robodesk_notify_status_changed')) {
+                robodesk_notify_status_changed($ticket_id, $new_status, get_current_user_id(), 'chat');
+            }
             wp_send_json_success();
         } else {
             wp_send_json_error('Failed to update ticket status.');
@@ -306,6 +310,67 @@ function robodesk_delete_credential_callback()
     }
 
     wp_die();
+}
+
+add_action('wp_ajax_robodesk_mark_user_notification_read', 'robodesk_mark_user_notification_read');
+function robodesk_mark_user_notification_read()
+{
+    check_ajax_referer('robodesk_notifications_action', 'nonce');
+
+    $user_id = get_current_user_id();
+    if (!$user_id) {
+        wp_send_json_error('User not logged in.');
+    }
+
+    $notification_id = isset($_POST['notification_id']) ? intval($_POST['notification_id']) : 0;
+    if ($notification_id <= 0) {
+        wp_send_json_error('Invalid notification ID.');
+    }
+
+    global $wpdb;
+    $table_name = $wpdb->prefix . 'robodesk_notifications';
+
+    $deleted = $wpdb->delete(
+        $table_name,
+        array(
+            'id' => $notification_id,
+            'user_id' => $user_id,
+        ),
+        array('%d', '%d')
+    );
+
+    if ($deleted === false) {
+        wp_send_json_error('Could not delete notification.');
+    }
+
+    wp_send_json_success();
+}
+
+add_action('wp_ajax_robodesk_mark_all_user_notifications_read', 'robodesk_mark_all_user_notifications_read');
+function robodesk_mark_all_user_notifications_read()
+{
+    check_ajax_referer('robodesk_notifications_action', 'nonce');
+
+    $user_id = get_current_user_id();
+    if (!$user_id) {
+        wp_send_json_error('User not logged in.');
+    }
+
+    global $wpdb;
+    $table_name = $wpdb->prefix . 'robodesk_notifications';
+
+    $deleted = $wpdb->query(
+        $wpdb->prepare(
+            "DELETE FROM $table_name WHERE user_id = %d",
+            $user_id
+        )
+    );
+
+    if ($deleted === false) {
+        wp_send_json_error('Could not delete notifications.');
+    }
+
+    wp_send_json_success(array('deleted_count' => (int) $deleted));
 }
 
 

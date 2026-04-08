@@ -185,6 +185,56 @@ jQuery(document).ready(function ($) {
 });
 
 jQuery(document).ready(function ($) {
+  $(document).on("click", ".robodesk-notification-ticket-link", function (e) {
+    var link = $(this);
+    var notificationId = parseInt(link.data("notification-id"), 10) || 0;
+    var item = link.closest(".robodesk-notification-item");
+    var href = link.attr("href");
+
+    if (!notificationId || !item.hasClass("is-unread")) {
+      return;
+    }
+
+    e.preventDefault();
+
+    $.ajax({
+      url: robodesk_ajax_object.ajax_url,
+      type: "POST",
+      data: {
+        action: "robodesk_mark_user_notification_read",
+        notification_id: notificationId,
+        nonce: robodesk_ajax_object.notifications_nonce,
+      },
+      complete: function () {
+        item.removeClass("is-unread").addClass("is-read");
+        window.location.href = href;
+      },
+    });
+  });
+
+  $(document).on("click", "#robodesk-mark-all-notifications-read", function () {
+    $.ajax({
+      url: robodesk_ajax_object.ajax_url,
+      type: "POST",
+      data: {
+        action: "robodesk_mark_all_user_notifications_read",
+        nonce: robodesk_ajax_object.notifications_nonce,
+      },
+      success: function (response) {
+        if (response.success) {
+          window.location.reload();
+        } else {
+          alert(response.data || "Could not mark notifications as read.");
+        }
+      },
+      error: function () {
+        alert("Could not mark notifications as read.");
+      },
+    });
+  });
+});
+
+jQuery(document).ready(function ($) {
   // ... other code
 
   $("#robodesk-add-note").submit(function (e) {

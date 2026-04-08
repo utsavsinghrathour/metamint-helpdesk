@@ -357,3 +357,20 @@ function robodesk_get_user_notifications($user_id, $limit = 20)
 
     return $notifications;
 }
+
+function robodesk_get_notification_count($user_id)
+{
+    global $wpdb;
+    $table_name = $wpdb->prefix . 'robodesk_notifications';
+
+    if ($wpdb->get_var("SHOW TABLES LIKE '$table_name'") != $table_name) {
+        return 0;
+    }
+
+    return (int) $wpdb->get_var(
+        $wpdb->prepare(
+            "SELECT COUNT(*) FROM $table_name WHERE user_id = %d AND read_at IS NULL",
+            $user_id
+        )
+    );
+}

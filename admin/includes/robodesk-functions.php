@@ -892,6 +892,7 @@ function robodesk_update_ticket_status()
 
     $ticket_id = intval($_POST['ticket_id'] ?? 0);
     $new_status = sanitize_text_field($_POST['status'] ?? '');
+    $old_status = $ticket_id > 0 ? (string) get_post_meta($ticket_id, '_robodesk_ticket_status', true) : '';
 
     if (!$ticket_id || !$new_status) {
         wp_send_json_error(['message' => 'Invalid data']);
@@ -909,6 +910,10 @@ function robodesk_update_ticket_status()
 
     update_post_meta($ticket_id, '_robodesk_ticket_status', $new_status);
     $updated = current_time('mysql');
+
+    if ($old_status !== $new_status && function_exists('robodesk_notify_status_changed')) {
+        robodesk_notify_status_changed($ticket_id, $new_status, get_current_user_id(), 'admin');
+    }
 
     // Add a comment to indicate the status change
     $user_id = get_current_user_id();
