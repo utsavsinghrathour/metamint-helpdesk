@@ -79,8 +79,8 @@ function robodesk_init_debug_log()
     // Check if debug.log file exists, create if not
     if (!file_exists($debug_log)) {
         $initial_content = "[DEBUG LOG]\n";
-        $initial_content .= "Log file created on: " . date('Y-m-d H:i:s') . "\n";
-        $initial_content .= "Plugin initialized.\n\n";
+
+
 
         if (!file_put_contents($debug_log, $initial_content)) {
             error_log('Failed to create Robodesk debug.log file');
