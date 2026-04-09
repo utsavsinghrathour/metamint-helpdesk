@@ -854,7 +854,7 @@ function loadTicketDetail() {
   if (!currentTicket) return;
 
   document.getElementById("ticket-detail-title").textContent =
-    `Ticket #${currentTicket.id} - ${currentTicket.title}`;
+    `Conversation #${currentTicket.id} - ${currentTicket.title}`;
 
   // Load customer information
   const customerInfo = document.getElementById("customer-info");
