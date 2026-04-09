@@ -4,6 +4,8 @@ function loadDashboardTickets() {
   const current_user_name =
     robodeskCurrentUser?.name || robodeskCurrentUser?.display_name || "";
 
+  updateDashboardFilterCounts(current_user_name);
+
   // Filter dashboard_tickets based on currentDashboardFilter
   switch (currentDashboardFilter) {
     case "my_conversation":
@@ -211,6 +213,42 @@ function loadDashboardTickets() {
         viewTicket(ticketId);
       } else {
         console.error("No ticket ID found for row:", row);
+      }
+    }
+  });
+}
+
+function updateDashboardFilterCounts(currentUserName) {
+  const myCount = dashboard_tickets.filter(
+    (t) => t.assignee === currentUserName && t.status !== "closed",
+  ).length;
+  const unassignedCount = dashboard_tickets.filter(
+    (t) => t.assignee === "N/A" || !t.assignee,
+  ).length;
+  const openCount = dashboard_tickets.filter(
+    (t) => t.status === "open" || t.status === "in-progress",
+  ).length;
+  const chatCount = dashboard_tickets.filter(
+    (t) => t.source === "chat" && t.status !== "closed",
+  ).length;
+
+  const countTargets = {
+    "dashboard-count-my-conversation": myCount,
+    "dashboard-count-unassigned-conversation": unassignedCount,
+    "dashboard-count-open-conversation": openCount,
+    "dashboard-count-chat-conversation": chatCount,
+  };
+
+  Object.entries(countTargets).forEach(([id, value]) => {
+    const el = document.getElementById(id);
+    if (el) {
+      const count = Number(value) || 0;
+      if (count > 0) {
+        el.textContent = count > 99 ? "99+" : String(count);
+        el.classList.add("is-visible");
+      } else {
+        el.textContent = "0";
+        el.classList.remove("is-visible");
       }
     }
   });
