@@ -2,8 +2,12 @@
 
 /**
  * Plugin Name: Robodesk Support Ticket System
+ * Plugin URI: https://example.com/robodesk
  * Description: A support ticket and FAQ system.
  * Version: 1.0.6
+ * Author: Your Name
+ * License: GPL2
+ * Text Domain: robodesk
  */
 
 // Define constants
