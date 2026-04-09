@@ -59,6 +59,44 @@ function robodesk_deactivate()
     remove_role('robodesk_support_customer');
 }
 
+/**
+ * Initialize debug log file
+ * Creates logs directory and debug.log file if they don't exist
+ */
+function robodesk_init_debug_log()
+{
+    $logs_dir = ROBODESK_PLUGIN_PATH . 'logs';
+    $debug_log = $logs_dir . '/debug.log';
+
+    // Check if logs directory exists, create if not
+    if (!is_dir($logs_dir)) {
+        if (!mkdir($logs_dir, 0755, true)) {
+            error_log('Failed to create Robodesk logs directory');
+            return false;
+        }
+    }
+
+    // Check if debug.log file exists, create if not
+    if (!file_exists($debug_log)) {
+        $initial_content = "[DEBUG LOG]\n";
+        $initial_content .= "Log file created on: " . date('Y-m-d H:i:s') . "\n";
+        $initial_content .= "Plugin initialized.\n\n";
+
+        if (!file_put_contents($debug_log, $initial_content)) {
+            error_log('Failed to create Robodesk debug.log file');
+            return false;
+        }
+
+        // Set file permissions
+        chmod($debug_log, 0644);
+    }
+
+    return true;
+}
+
+// Call debug log initialization on plugin load
+robodesk_init_debug_log();
+
 // Include necessary files
 // if (is_admin()) {
 require_once ROBODESK_PLUGIN_PATH . 'admin/robodesk-admin.php';
