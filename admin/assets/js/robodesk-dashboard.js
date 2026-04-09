@@ -1231,6 +1231,95 @@ jQuery(document).ready(function ($) {
   });
 });
 
+// SMTP Save Settings AJAX handler
+jQuery(document).ready(function ($) {
+  $(document).on("click", "#save-smtp-settings", function (e) {
+    e.preventDefault();
+
+    var $form = $("#robodesk-smtp-form");
+    var $saveButton = $(this);
+    $saveButton.prop("disabled", true).text("Saving...");
+
+    $.ajax({
+      url: ajaxurl,
+      type: "POST",
+      data: {
+        action: "robodesk_smtp_save_settings",
+        nonce: $form.find('input[name="robodesk_smtp_settings_nonce"]').val(),
+        robodesk_smtp_enabled: $form
+          .find("#robodesk_smtp_enabled")
+          .is(":checked")
+          ? "1"
+          : "0",
+        robodesk_smtp_host: $form.find("#robodesk_smtp_host").val(),
+        robodesk_smtp_port: $form.find("#robodesk_smtp_port").val(),
+        robodesk_smtp_username: $form.find("#robodesk_smtp_username").val(),
+        robodesk_smtp_password: $form.find("#robodesk_smtp_password").val(),
+        robodesk_smtp_encryption: $form.find("#robodesk_smtp_encryption").val(),
+        robodesk_smtp_from_email: $form.find("#robodesk_smtp_from_email").val(),
+        robodesk_smtp_from_name: $form.find("#robodesk_smtp_from_name").val(),
+      },
+      success: function (response) {
+        if (response.success) {
+          showToast(response.data.message, "success");
+        } else {
+          showToast(response.data.message, "error");
+        }
+      },
+      error: function () {
+        showToast("An error occurred. Please try again.", "error");
+      },
+      complete: function () {
+        $saveButton.prop("disabled", false).text("Save SMTP Settings");
+      },
+    });
+  });
+});
+
+// SMTP Test Connection handler
+jQuery(document).ready(function ($) {
+  $(document).on("click", "#robodesk-smtp-test", function () {
+    var $form = $("#robodesk-smtp-form");
+    var $testButton = $(this);
+
+    $testButton.prop("disabled", true).text("Testing...");
+
+    $.ajax({
+      url: ajaxurl,
+      type: "POST",
+      data: {
+        action: "robodesk_smtp_test_connection",
+        nonce: $form.find('input[name="robodesk_smtp_settings_nonce"]').val(),
+        robodesk_smtp_enabled: $form
+          .find("#robodesk_smtp_enabled")
+          .is(":checked")
+          ? "1"
+          : "0",
+        robodesk_smtp_host: $form.find("#robodesk_smtp_host").val(),
+        robodesk_smtp_port: $form.find("#robodesk_smtp_port").val(),
+        robodesk_smtp_username: $form.find("#robodesk_smtp_username").val(),
+        robodesk_smtp_password: $form.find("#robodesk_smtp_password").val(),
+        robodesk_smtp_encryption: $form.find("#robodesk_smtp_encryption").val(),
+        robodesk_smtp_from_email: $form.find("#robodesk_smtp_from_email").val(),
+        robodesk_smtp_from_name: $form.find("#robodesk_smtp_from_name").val(),
+      },
+      success: function (response) {
+        if (response.success) {
+          showToast(response.data.message, "success");
+        } else {
+          showToast(response.data.message, "error");
+        }
+      },
+      error: function (xhr, status, error) {
+        showToast("AJAX request failed: " + error, "error");
+      },
+      complete: function () {
+        $testButton.prop("disabled", false).text("Test SMTP Connection");
+      },
+    });
+  });
+});
+
 // email template settings AJAX handler
 jQuery(document).ready(function ($) {
   $(document).on("click", "#robodesk-save-templates", function () {

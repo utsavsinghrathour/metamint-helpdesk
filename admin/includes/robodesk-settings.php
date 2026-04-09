@@ -6,7 +6,7 @@
                      <?php _e('Basic Settings', 'robodesk'); ?>
                  </button>
                  <button onclick="showSettingsTab('imap')" class="settings-tab py-4 px-1 border-b-2 font-medium text-sm" data-tab="imap">
-                     <?php _e('IMAP Settings', 'robodesk'); ?>
+                     <?php _e('Mail Settings', 'robodesk'); ?>
                  </button>
                  <button onclick="showSettingsTab('templates')" class="settings-tab py-4 px-1 border-b-2 font-medium text-sm" data-tab="templates">
                      <?php _e('Email Templates', 'robodesk'); ?>
@@ -173,6 +173,26 @@
                 $password = $settings['password'];
                 $auth     = isset($settings['auth']) ? $settings['auth'] : true;
 
+                $smtp_settings = get_option('robodesk_smtp_settings', array(
+                    'enabled' => false,
+                    'host' => '',
+                    'port' => 587,
+                    'username' => '',
+                    'password' => '',
+                    'encryption' => 'tls',
+                    'from_email' => get_option('admin_email', ''),
+                    'from_name' => get_bloginfo('name'),
+                ));
+
+                $smtp_enabled = !empty($smtp_settings['enabled']);
+                $smtp_host = isset($smtp_settings['host']) ? $smtp_settings['host'] : '';
+                $smtp_port = isset($smtp_settings['port']) ? (int) $smtp_settings['port'] : 587;
+                $smtp_username = isset($smtp_settings['username']) ? $smtp_settings['username'] : '';
+                $smtp_password = isset($smtp_settings['password']) ? $smtp_settings['password'] : '';
+                $smtp_encryption = isset($smtp_settings['encryption']) ? $smtp_settings['encryption'] : 'tls';
+                $smtp_from_email = isset($smtp_settings['from_email']) ? $smtp_settings['from_email'] : get_option('admin_email', '');
+                $smtp_from_name = isset($smtp_settings['from_name']) ? $smtp_settings['from_name'] : get_bloginfo('name');
+
                 ?>
 
              <!--------------------------- IMAP Settings Tab ---------------------------------------->
@@ -216,14 +236,86 @@
                      </div>
                      <div class="mt-6 flex gap-4">
                          <button type="button" id="robodesk-imap-test" onclick="testConnection()"
-                             class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">
+                             class="mt-4 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">
                              <?php _e('Test Connection', 'robodesk'); ?>
                          </button>
-                     </div>
-                     <hr class="my-6 border-gray-200">
-                     <div>
-                         <button type="button" id="save-imap-settings" class="mt-6 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">
+
+
+                         <button type="button" id="save-imap-settings" class="mt-4 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">
                              <?php _e('Save Settings', 'robodesk'); ?>
+                         </button>
+
+                     </div>
+
+                 </form>
+
+                 <hr class="my-8 border-gray-200">
+
+                 <h3 class="text-lg font-medium text-gray-900 mb-6"><?php _e('SMTP Settings', 'robodesk'); ?></h3>
+                 <form method="post" action="" id="robodesk-smtp-form" class="space-y-6">
+                     <?php wp_nonce_field('robodesk_smtp_settings_action', 'robodesk_smtp_settings_nonce'); ?>
+
+                     <div class="flex items-center">
+                         <input id="robodesk_smtp_enabled" type="checkbox" <?php checked($smtp_enabled, true); ?> class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                         <label for="robodesk_smtp_enabled" class="ml-2 block text-sm text-gray-900">
+                             <?php _e('Enable SMTP for outgoing emails', 'robodesk'); ?>
+                         </label>
+                     </div>
+
+                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                         <div>
+                             <label for="robodesk_smtp_host" class="block text-sm font-medium text-gray-700"><?php _e('SMTP Host', 'robodesk'); ?></label>
+                             <input type="text" name="robodesk_smtp_host" id="robodesk_smtp_host"
+                                 value="<?php echo esc_attr($smtp_host); ?>"
+                                 class="styled-input mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                         </div>
+                         <div>
+                             <label for="robodesk_smtp_port" class="block text-sm font-medium text-gray-700"><?php _e('SMTP Port', 'robodesk'); ?></label>
+                             <input type="number" name="robodesk_smtp_port" id="robodesk_smtp_port"
+                                 value="<?php echo esc_attr($smtp_port); ?>"
+                                 class="styled-input mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                         </div>
+                         <div>
+                             <label for="robodesk_smtp_username" class="block text-sm font-medium text-gray-700"><?php _e('SMTP Username', 'robodesk'); ?></label>
+                             <input type="text" name="robodesk_smtp_username" id="robodesk_smtp_username"
+                                 value="<?php echo esc_attr($smtp_username); ?>"
+                                 class="styled-input mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                         </div>
+                         <div>
+                             <label for="robodesk_smtp_password" class="block text-sm font-medium text-gray-700"><?php _e('SMTP Password', 'robodesk'); ?></label>
+                             <input type="password" name="robodesk_smtp_password" id="robodesk_smtp_password"
+                                 value="<?php echo esc_attr($smtp_password); ?>"
+                                 class="styled-input mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                         </div>
+                         <div>
+                             <label for="robodesk_smtp_encryption" class="block text-sm font-medium text-gray-700"><?php _e('Encryption', 'robodesk'); ?></label>
+                             <select name="robodesk_smtp_encryption" id="robodesk_smtp_encryption"
+                                 class="styled-select mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                                 <option value="none" <?php selected($smtp_encryption, 'none'); ?>><?php _e('None', 'robodesk'); ?></option>
+                                 <option value="ssl" <?php selected($smtp_encryption, 'ssl'); ?>><?php _e('SSL', 'robodesk'); ?></option>
+                                 <option value="tls" <?php selected($smtp_encryption, 'tls'); ?>><?php _e('TLS', 'robodesk'); ?></option>
+                             </select>
+                         </div>
+                         <div>
+                             <label for="robodesk_smtp_from_email" class="block text-sm font-medium text-gray-700"><?php _e('From Email', 'robodesk'); ?></label>
+                             <input type="email" name="robodesk_smtp_from_email" id="robodesk_smtp_from_email"
+                                 value="<?php echo esc_attr($smtp_from_email); ?>"
+                                 class="styled-input mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                         </div>
+                         <div class="md:col-span-2">
+                             <label for="robodesk_smtp_from_name" class="block text-sm font-medium text-gray-700"><?php _e('From Name', 'robodesk'); ?></label>
+                             <input type="text" name="robodesk_smtp_from_name" id="robodesk_smtp_from_name"
+                                 value="<?php echo esc_attr($smtp_from_name); ?>"
+                                 class="styled-input mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                         </div>
+                     </div>
+
+                     <div class="mt-6 flex gap-4">
+                         <button type="button" id="robodesk-smtp-test" class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">
+                             <?php _e('Test SMTP Connection', 'robodesk'); ?>
+                         </button>
+                         <button type="button" id="save-smtp-settings" class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">
+                             <?php _e('Save SMTP Settings', 'robodesk'); ?>
                          </button>
                      </div>
                  </form>
