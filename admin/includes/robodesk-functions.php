@@ -561,7 +561,7 @@ function robodesk_save_basic_settings()
     }
 
     $settings = $_POST['settings'];
-    $valid_settings = ['site_name', 'admin_email', 'theme_color', 'default_ticket_category'];
+    $valid_settings = ['site_name', 'admin_email', 'theme_color', 'default_ticket_category', 'chat_heading', 'welcome_message', 'ticket_intro_message'];
     $image_fields = [
         'popover_icon' => 'robodesk_popover_icon',
         'popover_top_icon' => 'robodesk_popover_top_icon',
@@ -604,6 +604,12 @@ function robodesk_save_basic_settings()
                 $results[$key] = ['status' => 'error', 'message' => 'Invalid ticket category'];
                 continue;
             }
+        } elseif ($key === 'chat_heading') {
+            $sanitized_settings[$key] = sanitize_text_field($settings[$key]);
+        } elseif ($key === 'ticket_intro_message') {
+            $sanitized_settings[$key] = sanitize_textarea_field($settings[$key]);
+        } elseif ($key === 'welcome_message') {
+            $sanitized_settings[$key] = sanitize_textarea_field($settings[$key]);
         }
         $results[$key] = ['status' => 'success', 'message' => ucfirst(str_replace('_', ' ', $key)) . ' saved successfully'];
     }
