@@ -1531,6 +1531,18 @@ jQuery(document).ready(function ($) {
       "settings[default_ticket_category]",
       $form.find("#robodesk_default_ticket_category").val(),
     );
+    formData.append(
+      "settings[chat_heading]",
+      $form.find("#chat_heading").val(),
+    );
+    formData.append(
+      "settings[welcome_message]",
+      $form.find("#welcome_message").val(),
+    );
+    formData.append(
+      "settings[ticket_intro_message]",
+      $form.find("#ticket_intro_message").val(),
+    );
 
     // Append media URLs and files
     mediaFields.forEach(function (field) {

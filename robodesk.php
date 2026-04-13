@@ -178,6 +178,9 @@ function robodesk_enqueue_scripts()
             'robodeskData',
             [
                 'imageUrls' => $image_urls,
+                'chatHeading' => get_option('robodesk_chat_heading', 'Have Questions?'),
+                'welcomeMessage' => get_option('robodesk_welcome_message', 'Have any questions or need a quote? Leave us a message.'),
+                'ticketIntroMessage' => get_option('robodesk_ticket_intro_message', 'If you are interested in working with us, take a step towards discovering exciting opportunities by reaching out to us. We look forward to talking with you soon!'),
             ]
         );
 
