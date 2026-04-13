@@ -639,7 +639,7 @@ function showToast(message, type = "success") {
 }
 
 // Navigation functions
-function showPage(pageName) {
+function showPage(pageName, fromClick = false) {
   // Update the currentPage variable
   currentPage = pageName;
 
@@ -673,6 +673,10 @@ function showPage(pageName) {
   } else if (pageName === "tickets") {
     // Load conversations/tickets list - the content is rendered server-side
     // Just ensure page visibility
+    if (fromClick) {
+      window.location.reload();
+      return;
+    }
   } else if (pageName === "ticket-detail") {
     loadTicketDetail();
   } else if (pageName === "settings") {
@@ -3355,14 +3359,14 @@ viewTicket = function (ticketId) {
 
 // Override the showPage function to stop refresh when leaving ticket detail
 const originalShowPage = showPage;
-showPage = function (pageName) {
+showPage = function (pageName, fromClick = false) {
   // Stop replies refresh when leaving ticket detail page
   if (pageName !== "ticket-detail") {
     stopRepliesAutoRefresh();
   }
 
   // Call the original function
-  originalShowPage(pageName);
+  originalShowPage(pageName, fromClick);
 
   // Start dashboard refresh when going to dashboard
   if (pageName === "dashboard") {
