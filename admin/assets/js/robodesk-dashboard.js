@@ -1941,6 +1941,13 @@ function addReply() {
         replyBox.innerHTML = "";
         document.getElementById("replies-count").textContent =
           currentTicket.replies.length;
+
+        // Uncheck signature checkbox after reply if signature addon is active
+        if (typeof robodeskSignature !== "undefined") {
+          const sigCheckbox = document.getElementById("include-signature");
+          if (sigCheckbox) sigCheckbox.checked = false;
+        }
+
         loadReplies();
         showToast("Reply added successfully");
       } else {
