@@ -122,6 +122,7 @@ export default function RobodeskBotChatWidgetMain({ widgetConfig, activeAIMode }
 
         setMessages((m) => [...m, { role: "user", text: q }]);
         setInput("");
+        window.dispatchEvent(new CustomEvent("robodesk:messageSent", { detail: { count: messages.length + 1 } }));
 
         // add thinking placeholder
         setMessages((m) => [
@@ -168,6 +169,7 @@ export default function RobodeskBotChatWidgetMain({ widgetConfig, activeAIMode }
 
     setMessages((m) => [...m, { role: "user", text: q }]);
     setInput("");
+    window.dispatchEvent(new CustomEvent("robodesk:messageSent", { detail: { count: messages.length + 1 } }));
     setIsStreaming(true);
     setLoadingText("Thinking...");
 
