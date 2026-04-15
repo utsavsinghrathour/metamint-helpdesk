@@ -67,7 +67,7 @@ function robodesk_dashboard_callback()
                                 <i class="fas fa-home mr-2"></i>
                                 <?php _e('Dashboard', 'robodesk'); ?>
                             </button>
-                            <button onclick="showPage('tickets', true)"
+                            <button type="button" onclick="showPage('tickets', true)"
                                 class="nav-link inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
                                 data-page="tickets">
                                 <i class="fas fa-ticket-alt mr-2"></i>

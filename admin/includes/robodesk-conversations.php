@@ -178,7 +178,10 @@ function get_pagination_url($page)
 {
     $current_url = admin_url('admin.php');
     $params = $_GET;
+    $params['page'] = 'robodesk-dashboard';
+    $params['tab'] = 'tickets';
     $params['paged'] = $page;
+    unset($params['ticket']);
     return add_query_arg($params, $current_url);
 }
 
@@ -188,8 +191,12 @@ function get_filter_url($new_params = array())
     $current_url = admin_url('admin.php');
     $params = $_GET;
 
+    $params['page'] = 'robodesk-dashboard';
+    $params['tab'] = 'tickets';
+
     // Remove paged parameter when filtering to start from page 1
     unset($params['paged']);
+    unset($params['ticket']);
 
     // Merge new parameters
     $params = array_merge($params, $new_params);
