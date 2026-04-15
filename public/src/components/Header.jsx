@@ -8,6 +8,7 @@ import { createTicket } from "../utils/modules";
 
 const Header = ({ logo, onClose, setActiveTab, setShowLogin, updateSelectedTicket }) => {
   const [talkToHuman, setTalkToHuman] = useState(false);
+  const [messageCount, setMessageCount] = useState(0);
   const CHAT_KEY = "robodesk_chat_session";
   const [selectedStaff, setSelectedStaff] = useState(null);
   const { loggedinContext, loggedInUsrId, refreshTickets } = useAppData();
@@ -131,6 +132,16 @@ const Header = ({ logo, onClose, setActiveTab, setShowLogin, updateSelectedTicke
   useEffect(() => {
     fetchDefaultStaff();
     fetchApiKey();
+    const saved = sessionStorage.getItem(CHAT_KEY);
+    const messages = saved ? JSON.parse(saved) : [];
+    setMessageCount(messages.length);
+
+    const handleMessageSent = (e) => {
+      setMessageCount(e.detail?.count ?? 1);
+    };
+
+    window.addEventListener("robodesk:messageSent", handleMessageSent);
+    return () => window.removeEventListener("robodesk:messageSent", handleMessageSent);
   }, []);
 
   return (
@@ -154,7 +165,7 @@ const Header = ({ logo, onClose, setActiveTab, setShowLogin, updateSelectedTicke
             />
           </div>
         )}
-        {talkToHuman && (
+        {talkToHuman && messageCount > 0 && (
           <button
             className="rd-m-5"
             onClick={handleTalkToHumanClick}
