@@ -281,12 +281,14 @@ function robodesk_enqueue_admin_scripts($hook)
         wp_enqueue_script('custom-taxonomy-order', ROBODESK_PLUGIN_URL . 'admin/assets/js/custom-taxonomy-order.js', array('jquery', 'jquery-ui-sortable'), time(), true);
         wp_localize_script('custom-taxonomy-order', 'taxonomyOrderData', array(
             'ajax_url' => admin_url('admin-ajax.php'),
-            'nonce'    => wp_create_nonce('taxonomy_order_nonce')
+            'nonce' => wp_create_nonce('taxonomy_order_nonce')
         ));
     }
 
-    if ('post.php' != $hook && 'post-new.php' != $hook) return;
-    if (!isset($post) || $post->post_type != 'robodesk_ticket') return;
+    if ('post.php' != $hook && 'post-new.php' != $hook)
+        return;
+    if (!isset($post) || $post->post_type != 'robodesk_ticket')
+        return;
 
     wp_enqueue_style('robodesk-admin-styles', ROBODESK_PLUGIN_URL . 'admin/assets/css/robodesk-admin-styles.css', array(), '1.0');
 
@@ -437,7 +439,7 @@ function rbd_log($message)
 {
     $log_file = plugin_dir_path(__FILE__) . 'logs/debug.log';
 
-    if (! file_exists(dirname($log_file))) {
+    if (!file_exists(dirname($log_file))) {
         mkdir(dirname($log_file), 0755, true);
     }
 
@@ -445,7 +447,7 @@ function rbd_log($message)
         $message = print_r($message, true);
     }
 
-    error_log(date('[Y-m-d H:i:s] ') . $message . PHP_EOL, 3, $log_file);
+    error_log(wp_date('[Y-m-d H:i:s] ') . $message . PHP_EOL, 3, $log_file);
 }
 
 function robodesk_get_support_user_ids()
@@ -761,17 +763,17 @@ function robodesk_create_notification($recipient_user_id, $ticket_id, $comment_i
         $table_name,
         [
             'recipient_user_id' => (int) $recipient_user_id,
-            'user_id'           => (int) $recipient_user_id, // Map recipient to user_id for frontend fetch compatibility
-            'ticket_id'         => (int) $ticket_id,
-            'comment_id'        => $comment_id ? (int) $comment_id : null,
-            'type'              => sanitize_text_field($type),
-            'source'            => sanitize_text_field($normalized_source),
-            'message'           => sanitize_textarea_field($message),
-            'status'            => 'unread',
-            'created_by'        => (int) $created_by,
+            'user_id' => (int) $recipient_user_id, // Map recipient to user_id for frontend fetch compatibility
+            'ticket_id' => (int) $ticket_id,
+            'comment_id' => $comment_id ? (int) $comment_id : null,
+            'type' => sanitize_text_field($type),
+            'source' => sanitize_text_field($normalized_source),
+            'message' => sanitize_textarea_field($message),
+            'status' => 'unread',
+            'created_by' => (int) $created_by,
             'notification_date' => current_time('mysql'),
-            'created_at'        => current_time('mysql'),
-            'read_at'           => null,
+            'created_at' => current_time('mysql'),
+            'read_at' => null,
         ],
         ['%d', '%d', '%d', '%d', '%s', '%s', '%s', '%s', '%d', '%s', '%s', '%s']
     );
@@ -1029,16 +1031,16 @@ function robodesk_add_internal_ticket_note($ticket_id, $note_content)
     }
 
     $note_id = wp_insert_comment([
-        'comment_post_ID'      => $ticket_id,
-        'comment_author'       => 'Robodesk System',
+        'comment_post_ID' => $ticket_id,
+        'comment_author' => 'Robodesk System',
         'comment_author_email' => $system_email,
-        'user_id'              => 0,
-        'comment_content'      => $note_content,
-        'comment_approved'     => 1,
-        'comment_type'         => 'ticket_notes',
-        'comment_meta'         => [
+        'user_id' => 0,
+        'comment_content' => $note_content,
+        'comment_approved' => 1,
+        'comment_type' => 'ticket_notes',
+        'comment_meta' => [
             'is_robodesk_note' => 1,
-            'is_system_note'   => 1,
+            'is_system_note' => 1,
         ],
     ]);
 
@@ -1296,10 +1298,12 @@ function disable_block_for_post_type($use_block_editor, $post)
 {
     if ('robodesk_faq' === $post->post_type) {
         return false;
-    };
+    }
+    ;
     if ('notice' === $post->post_type) {
         return false;
-    };
+    }
+    ;
     return $use_block_editor;
 }
 
@@ -1322,11 +1326,11 @@ function robodesk_create_support_page()
 
 
         $page_data = array(
-            'post_title'    => 'Robodesk Support',
-            'post_content'  => '[robodesk_frontend_dashboard]',
-            'post_status'   => 'publish',
-            'post_author'   => 1,
-            'post_type'     => 'page',
+            'post_title' => 'Robodesk Support',
+            'post_content' => '[robodesk_frontend_dashboard]',
+            'post_status' => 'publish',
+            'post_author' => 1,
+            'post_type' => 'page',
         );
 
 
@@ -1444,16 +1448,16 @@ add_filter('rest_prepare_comment', function ($response, $comment, $request) {
         $data['ticket_id'] = $comment->comment_post_ID;
 
         $data['author_data'] = array(
-            'id'    => $author_id,
-            'name'  => $author_name,
+            'id' => $author_id,
+            'name' => $author_name,
             'avatar' => $author_avatar,
         );
 
         $response->set_data($data);
 
-        $site_url   = site_url();
-        $referer    = $request->get_header('referer');
-        $origin     = $request->get_header('origin');
+        $site_url = site_url();
+        $referer = $request->get_header('referer');
+        $origin = $request->get_header('origin');
 
         if (
             (!empty($referer) && strpos($referer, $site_url) === 0) ||
@@ -1486,11 +1490,13 @@ add_action('wp_insert_comment', 'robodesk_comment_creation_on_insert', 10, 2);
 function robodesk_comment_creation_on_insert($comment_ID, $comment_object)
 {
     // Return early if not a ticket reply
-    if (!isset($comment_object->comment_type) || $comment_object->comment_type !== 'ticket_replies') return;
+    if (!isset($comment_object->comment_type) || $comment_object->comment_type !== 'ticket_replies')
+        return;
 
     $ticketId = $comment_object->comment_post_ID;
 
-    if (get_post_type($ticketId) !== 'robodesk_ticket') return;
+    if (get_post_type($ticketId) !== 'robodesk_ticket')
+        return;
 
     $author_type = get_comment_meta($comment_ID, 'author_type', true);
     if ($author_type === '') {
@@ -1522,7 +1528,7 @@ function robodesk_comment_creation_on_insert($comment_ID, $comment_object)
 
 function disable_jquery_migrate_logging($scripts)
 {
-    if (! is_admin() && isset($scripts->registered['jquery-migrate'])) {
+    if (!is_admin() && isset($scripts->registered['jquery-migrate'])) {
         $scripts->registered['jquery-migrate']->src = '';
     }
 }
