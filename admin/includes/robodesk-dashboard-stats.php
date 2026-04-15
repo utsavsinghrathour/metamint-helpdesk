@@ -9,11 +9,12 @@
                     </div>
                     <div class="ml-5 w-0 flex-1">
                         <dl>
-                            <dt class="text-sm font-medium text-gray-500 truncate"><?php _e('Total Conversations', 'robodesk'); ?></dt>
+                            <dt class="text-sm font-medium text-gray-500 truncate">
+                                <?php _e('Total Conversations', 'robodesk'); ?></dt>
                             <dd class="text-lg font-medium text-gray-900" id="total-tickets"><?php
-                                                                                                $total_tickets = wp_count_posts('robodesk_ticket')->publish;
-                                                                                                echo $total_tickets;
-                                                                                                ?></dd>
+                            $total_tickets = wp_count_posts('robodesk_ticket')->publish;
+                            echo $total_tickets;
+                            ?></dd>
                         </dl>
                     </div>
                 </div>
@@ -28,24 +29,25 @@
                     </div>
                     <div class="ml-5 w-0 flex-1">
                         <dl>
-                            <dt class="text-sm font-medium text-gray-500 truncate"><?php _e('Open Conversations', 'robodesk'); ?></dt>
+                            <dt class="text-sm font-medium text-gray-500 truncate">
+                                <?php _e('Open Conversations', 'robodesk'); ?></dt>
                             <dd class="text-lg font-medium text-gray-900" id="open-tickets"><?php
-                                                                                            $args = array(
-                                                                                                'post_type' => 'robodesk_ticket',
-                                                                                                'post_status' => 'publish', // Adjust if you need other statuses like 'draft'
-                                                                                                'meta_query' => array(
-                                                                                                    array(
-                                                                                                        'key' => '_robodesk_ticket_status',
-                                                                                                        'value' => 'open',
-                                                                                                        'compare' => '='
-                                                                                                    )
-                                                                                                ),
-                                                                                                'posts_per_page' => -1, // Retrieve all matching posts
-                                                                                            );
-                                                                                            $query = new WP_Query($args);
-                                                                                            $open_tickets = $query->found_posts;
-                                                                                            echo $open_tickets;
-                                                                                            ?></dd>
+                            $args = array(
+                                'post_type' => 'robodesk_ticket',
+                                'post_status' => 'publish', // Adjust if you need other statuses like 'draft'
+                                'meta_query' => array(
+                                    array(
+                                        'key' => '_robodesk_ticket_status',
+                                        'value' => 'open',
+                                        'compare' => '='
+                                    )
+                                ),
+                                'posts_per_page' => -1, // Retrieve all matching posts
+                            );
+                            $query = new WP_Query($args);
+                            $open_tickets = $query->found_posts;
+                            echo $open_tickets;
+                            ?></dd>
                         </dl>
                     </div>
                 </div>
@@ -60,24 +62,25 @@
                     </div>
                     <div class="ml-5 w-0 flex-1">
                         <dl>
-                            <dt class="text-sm font-medium text-gray-500 truncate"><?php _e('In Progress', 'robodesk'); ?></dt>
+                            <dt class="text-sm font-medium text-gray-500 truncate">
+                                <?php _e('In Progress', 'robodesk'); ?></dt>
                             <dd class="text-lg font-medium text-gray-900" id="in-progress-tickets"><?php
-                                                                                                    $args = array(
-                                                                                                        'post_type' => 'robodesk_ticket',
-                                                                                                        'post_status' => 'publish', // Adjust if you need other statuses like 'draft'
-                                                                                                        'meta_query' => array(
-                                                                                                            array(
-                                                                                                                'key' => '_robodesk_ticket_status',
-                                                                                                                'value' => 'in-progress',
-                                                                                                                'compare' => '='
-                                                                                                            )
-                                                                                                        ),
-                                                                                                        'posts_per_page' => -1, // Retrieve all matching posts
-                                                                                                    );
-                                                                                                    $query = new WP_Query($args);
-                                                                                                    $in_progress_tickets = $query->found_posts;
-                                                                                                    echo $in_progress_tickets;
-                                                                                                    ?></dd>
+                            $args = array(
+                                'post_type' => 'robodesk_ticket',
+                                'post_status' => 'publish', // Adjust if you need other statuses like 'draft'
+                                'meta_query' => array(
+                                    array(
+                                        'key' => '_robodesk_ticket_status',
+                                        'value' => 'in-progress',
+                                        'compare' => '='
+                                    )
+                                ),
+                                'posts_per_page' => -1, // Retrieve all matching posts
+                            );
+                            $query = new WP_Query($args);
+                            $in_progress_tickets = $query->found_posts;
+                            echo $in_progress_tickets;
+                            ?></dd>
                         </dl>
                     </div>
                 </div>
@@ -92,24 +95,25 @@
                     </div>
                     <div class="ml-5 w-0 flex-1">
                         <dl>
-                            <dt class="text-sm font-medium text-gray-500 truncate"><?php _e('Closed', 'robodesk'); ?></dt>
+                            <dt class="text-sm font-medium text-gray-500 truncate"><?php _e('Closed', 'robodesk'); ?>
+                            </dt>
                             <dd class="text-lg font-medium text-gray-900" id="closed-tickets"><?php
-                                                                                                $args = array(
-                                                                                                    'post_type' => 'robodesk_ticket',
-                                                                                                    'post_status' => 'publish', // Adjust if you need other statuses like 'draft'
-                                                                                                    'meta_query' => array(
-                                                                                                        array(
-                                                                                                            'key' => '_robodesk_ticket_status',
-                                                                                                            'value' => 'closed',
-                                                                                                            'compare' => '='
-                                                                                                        )
-                                                                                                    ),
-                                                                                                    'posts_per_page' => -1, // Retrieve all matching posts
-                                                                                                );
-                                                                                                $query = new WP_Query($args);
-                                                                                                $closed_tickets = $query->found_posts;
-                                                                                                echo $closed_tickets;
-                                                                                                ?></dd>
+                            $args = array(
+                                'post_type' => 'robodesk_ticket',
+                                'post_status' => 'publish', // Adjust if you need other statuses like 'draft'
+                                'meta_query' => array(
+                                    array(
+                                        'key' => '_robodesk_ticket_status',
+                                        'value' => 'closed',
+                                        'compare' => '='
+                                    )
+                                ),
+                                'posts_per_page' => -1, // Retrieve all matching posts
+                            );
+                            $query = new WP_Query($args);
+                            $closed_tickets = $query->found_posts;
+                            echo $closed_tickets;
+                            ?></dd>
                         </dl>
                     </div>
                 </div>
@@ -120,7 +124,7 @@
     <!-- Dashboard Filter -->
     <?php
     // Function to load tickets based on filter
-
+    
     function load_dashboard_tickets($filter = 'my_conversation')
     {
         // Sanitize filter input
@@ -133,11 +137,11 @@
 
         // WP_Query arguments to fetch ALL tickets
         $args = [
-            'post_type'      => 'robodesk_ticket',
-            'post_status'    => 'publish',
+            'post_type' => 'robodesk_ticket',
+            'post_status' => 'publish',
             'posts_per_page' => -1,
-            'orderby'        => 'modified',
-            'order'          => 'DESC',
+            'orderby' => 'modified',
+            'order' => 'DESC',
             // 'meta_query'     => [
             //     [
             //         'key'     => '_robodesk_ticket_status',
@@ -178,7 +182,7 @@
                 if (!is_wp_error($ticket_terms) && !empty($ticket_terms)) {
                     $ticket_category = [
                         'name' => $ticket_terms[0]->name,
-                        'id'   => $ticket_terms[0]->term_id,
+                        'id' => $ticket_terms[0]->term_id,
                     ];
                 }
 
@@ -304,7 +308,7 @@
         if (!function_exists('format_date')) {
             function format_date($date)
             {
-                return date('M j, Y H:i', strtotime($date));
+                return wp_date('M j, Y H:i', strtotime($date));
             }
         }
 
@@ -365,19 +369,25 @@
 
         // Generate table HTML
         ob_start();
-    ?>
+        ?>
         <div class="overflow-auto">
             <table class="min-w-full divide-y divide-gray-200">
                 <thead class="bg-gray-50">
                     <tr>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"><?php _e('Conversation', 'robodesk'); ?></th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"><?php _e('Last Reply', 'robodesk'); ?></th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"><?php _e('Customer', 'robodesk'); ?></th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"><?php _e('Source', 'robodesk'); ?></th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"><?php _e('Status', 'robodesk'); ?></th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"><?php _e('Priority', 'robodesk'); ?></th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            <?php _e('Conversation', 'robodesk'); ?></th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            <?php _e('Last Reply', 'robodesk'); ?></th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            <?php _e('Customer', 'robodesk'); ?></th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            <?php _e('Source', 'robodesk'); ?></th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            <?php _e('Status', 'robodesk'); ?></th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            <?php _e('Priority', 'robodesk'); ?></th>
                         <!-- <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"><?php //_e('Updated', 'robodesk'); 
-                                                                                                                        ?></th> -->
+                            ?></th> -->
                     </tr>
                 </thead>
                 <tbody class="bg-white divide-y divide-gray-200" id="dashboard-tickets-table">
@@ -388,7 +398,7 @@
         <script>
             const dashboard_tickets = <?php echo wp_json_encode($dashboard_tickets); ?>;
         </script>
-    <?php
+        <?php
         return ob_get_clean();
     }
 
@@ -399,15 +409,16 @@
     <div class="bg-white shadow rounded-lg mb-6">
         <div class="px-4 py-5 sm:p-6">
             <div class="flex justify-between items-center mb-4">
-                <h3 class="text-lg leading-6 font-medium text-gray-900"><?php _e('Conversation Overview', 'robodesk'); ?></h3>
+                <h3 class="text-lg leading-6 font-medium text-gray-900">
+                    <?php _e('Conversation Overview', 'robodesk'); ?></h3>
                 <div class="flex space-x-2">
-                    <button onclick="filterDashboardTickets('my_conversation')" class="dashboard-filter-btn px-3 py-1 text-sm rounded-md border <?php echo $filter === 'my_conversation' ? 'active' : ''; ?>" data-filter="my_conversation"><?php _e('My Conversations', 'robodesk'); ?></button>
+                    <button onclick="filterDashboardTickets('my_conversation')" class="dashboard-filter-btn px-3 py-1 text-sm rounded-md border <?php echo $filter === 'my_conversation' ? 'active' : ''; ?>" data-filter="my_conversation"><?php _e('My Conversations', 'robodesk'); ?> <span id="dashboard-count-my-conversation" class="dashboard-filter-count-badge" aria-hidden="true"></span></button>
 
-                    <button onclick="filterDashboardTickets('unassigned_conversation')" class="dashboard-filter-btn px-3 py-1 text-sm rounded-md border <?php echo $filter === 'unassigned_conversation' ? 'active' : ''; ?>" data-filter="unassigned_conversation"><?php _e('Unassigned Conversations', 'robodesk'); ?></button>
+                    <button onclick="filterDashboardTickets('unassigned_conversation')" class="dashboard-filter-btn px-3 py-1 text-sm rounded-md border <?php echo $filter === 'unassigned_conversation' ? 'active' : ''; ?>" data-filter="unassigned_conversation"><?php _e('Unassigned Conversations', 'robodesk'); ?> <span id="dashboard-count-unassigned-conversation" class="dashboard-filter-count-badge" aria-hidden="true"></span></button>
 
-                    <button onclick="filterDashboardTickets('open_conversation')" class="dashboard-filter-btn px-3 py-1 text-sm rounded-md border <?php echo $filter === 'open_conversation' ? 'active' : ''; ?>" data-filter="open_conversation"><?php _e('Open Conversations', 'robodesk'); ?></button>
+                    <button onclick="filterDashboardTickets('open_conversation')" class="dashboard-filter-btn px-3 py-1 text-sm rounded-md border <?php echo $filter === 'open_conversation' ? 'active' : ''; ?>" data-filter="open_conversation"><?php _e('Open Conversations', 'robodesk'); ?> <span id="dashboard-count-open-conversation" class="dashboard-filter-count-badge" aria-hidden="true"></span></button>
 
-                    <button onclick="filterDashboardTickets('chat_conversation')" class="dashboard-filter-btn px-3 py-1 text-sm rounded-md border <?php echo $filter === 'chat_conversation' ? 'active' : ''; ?>" data-filter="chat_conversation"><?php _e('Chat Conversations', 'robodesk'); ?></button>
+                    <button onclick="filterDashboardTickets('chat_conversation')" class="dashboard-filter-btn px-3 py-1 text-sm rounded-md border <?php echo $filter === 'chat_conversation' ? 'active' : ''; ?>" data-filter="chat_conversation"><?php _e('Chat Conversations', 'robodesk'); ?> <span id="dashboard-count-chat-conversation" class="dashboard-filter-count-badge" aria-hidden="true"></span></button>
 
                 </div>
             </div>
@@ -420,18 +431,24 @@
         <div class="px-4 py-5 sm:p-6">
             <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4"><?php _e('Quick Actions', 'robodesk'); ?></h3>
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <button onclick="showPage('new-ticket')" class="bg-blue-50 hover:bg-blue-100 p-4 rounded-lg text-left transition-colors">
+                <button onclick="showPage('new-ticket')"
+                    class="bg-blue-50 hover:bg-blue-100 p-4 rounded-lg text-left transition-colors">
                     <i class="fas fa-plus text-blue-600 text-xl mb-2"></i>
-                    <div class="text-sm font-medium text-blue-900"><?php _e('Create New Conversation', 'robodesk'); ?></div>
+                    <div class="text-sm font-medium text-blue-900"><?php _e('Create New Conversation', 'robodesk'); ?>
+                    </div>
                     <div class="text-xs text-blue-700"><?php _e('Add a new support conversation', 'robodesk'); ?></div>
                 </button>
-                <button onclick="window.location.href='<?php echo admin_url('users.php?role=robodesk_support_customer'); ?>'" class="bg-green-50 hover:bg-green-100 p-4 rounded-lg text-left transition-colors">
+                <button
+                    onclick="window.location.href='<?php echo admin_url('users.php?role=robodesk_support_customer'); ?>'"
+                    class="bg-green-50 hover:bg-green-100 p-4 rounded-lg text-left transition-colors">
                     <i class="fas fa-users text-green-600 text-xl mb-2"></i>
                     <div class="text-sm font-medium text-green-900"><?php _e('Manage Customers', 'robodesk'); ?></div>
-                    <div class="text-xs text-green-700"><?php _e('View and edit customer information', 'robodesk'); ?></div>
+                    <div class="text-xs text-green-700"><?php _e('View and edit customer information', 'robodesk'); ?>
+                    </div>
                 </button>
 
-                <button onclick="showPage('settings')" class="bg-purple-50 hover:bg-purple-100 p-4 rounded-lg text-left transition-colors">
+                <button onclick="showPage('settings')"
+                    class="bg-purple-50 hover:bg-purple-100 p-4 rounded-lg text-left transition-colors">
                     <i class="fas fa-cog text-purple-600 text-xl mb-2"></i>
                     <div class="text-sm font-medium text-purple-900"><?php _e('System Settings', 'robodesk'); ?></div>
                     <div class="text-xs text-purple-700"><?php _e('Configure system preferences', 'robodesk'); ?></div>
