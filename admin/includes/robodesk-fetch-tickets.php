@@ -76,9 +76,10 @@ function robodesk_fetch_emails()
     }
 
     // Get last fetched date
-    $last_fetched_date = ('2021-01-01 00:00:00');
-    // $last_fetched_date = get_option('robodesk_last_fetched_date', '2021-01-01 00:00:00'); // Default to a past date if not set( as we are also using the ticket id to retrieve the last mail or reply    )
+
+    $last_fetched_date = get_option('robodesk_last_fetched_date', '2021-01-01 00:00:00'); // Default to a past date if not set( as we are also using the ticket id to retrieve the last mail or reply    )
     error_log('Last fetched date: ' . $last_fetched_date);
+    rbd_log('Robodesk: Last email fetched date/time: ' . $last_fetched_date);
 
     // Convert to IMAP-compatible date with time
     $since_date = date('d-M-Y H:i:s', strtotime($last_fetched_date));
@@ -299,6 +300,7 @@ function robodesk_fetch_emails()
 
                     // Update last fetched date
                     update_option('robodesk_last_fetched_date', $date); // Update last fetched date to current email date
+                    rbd_log('Robodesk: Updated last fetched email date/time to: ' . $date);
                     continue; // Skip creating a new ticket for replies
                 } else {
                     error_log('Could not find original ticket for reply, creating new ticket instead');
@@ -467,6 +469,7 @@ function robodesk_fetch_emails()
 
             // Update last fetched date
             update_option('robodesk_last_fetched_date', $date);
+            rbd_log('Robodesk: Updated last fetched email date/time to: ' . $date);
         }
 
         // Display summary

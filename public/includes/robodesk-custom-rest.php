@@ -1,6 +1,25 @@
 <?php
-require_once ROBODESK_PLUGIN_PATH . 'public/includes/php-jwt/src/JWT.php';
-require_once ROBODESK_PLUGIN_PATH . 'public/includes/php-jwt/src/Key.php';
+$robodesk_jwt_file = ROBODESK_PLUGIN_PATH . 'public/includes/php-jwt/src/JWT.php';
+$robodesk_key_file = ROBODESK_PLUGIN_PATH . 'public/includes/php-jwt/src/Key.php';
+
+if (file_exists($robodesk_jwt_file) && file_exists($robodesk_key_file)) {
+    require_once $robodesk_jwt_file;
+    require_once $robodesk_key_file;
+} else {
+    if (!function_exists('robodesk_missing_jwt_library_notice')) {
+        function robodesk_missing_jwt_library_notice()
+        {
+            if (!current_user_can('manage_options')) {
+                return;
+            }
+
+            echo '<div class="notice notice-error"><p><strong>Robodesk:</strong> JWT library files are missing. Please reinstall the plugin package.</p></div>';
+        }
+    }
+
+    add_action('admin_notices', 'robodesk_missing_jwt_library_notice');
+    return;
+}
 
 
 use \Firebase\JWT\JWT;
@@ -190,7 +209,7 @@ add_filter('rest_pre_serve_request', function ($value, $result, $request, $serve
 
 /* Public Rest Api registration hooks */
 
-add_action('rest_api_init', callback: function () {
+add_action('rest_api_init', function () {
 
     register_rest_route('robodesk/v1', '/login', array(
         'methods' => 'POST',
