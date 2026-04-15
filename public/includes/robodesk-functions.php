@@ -2,10 +2,10 @@
 
 // Woocommerce modifications
 if (in_array('woocommerce/woocommerce.php', apply_filters('active_plugins', get_option('active_plugins')))) {
-    require_once('robodesk-woocommerce.php');
+    require_once ROBODESK_PLUGIN_PATH . 'public/includes/robodesk-woocommerce.php';
 }
 // for comments
-require_once('robodesk-comments.php');
+require_once ROBODESK_PLUGIN_PATH . 'public/includes/robodesk-comments.php';
 
 // Function to send notification email
 function robodesk_send_ticket_update_email($ticket_id, $comment_content, $update_type)

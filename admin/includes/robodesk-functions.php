@@ -1591,7 +1591,7 @@ function robodesk_handle_get_ticket_notes()
 
 
 
-include_once 'robodesk-fetch-tickets.php'; // Include the file that contains the robodesk_fetch_emails function
+include_once ROBODESK_PLUGIN_PATH . 'admin/includes/robodesk-fetch-tickets.php'; // Include the file that contains the robodesk_fetch_emails function
 // for fetching emails
 add_action('wp_ajax_robodesk_fetch_emails', 'robodesk_fetch_emails_handler');
 //display the email fetching result
