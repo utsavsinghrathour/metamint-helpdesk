@@ -489,12 +489,6 @@ function robodesk_fetch_emails()
 }
 
 
-
-
-
-
-
-
 // Function to display the IMAP settings page
 function robodesk_imap_settings_callback()
 {
