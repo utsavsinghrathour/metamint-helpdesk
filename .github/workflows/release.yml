@@ -8,7 +8,6 @@ on:
     types: [closed]
 
 jobs:
-
   release-plugin:
     name: Release Full Plugin (Dev Push)
     runs-on: ubuntu-latest
@@ -50,7 +49,7 @@ jobs:
           zip -r "robodesk.zip" . -x ".git/*" ".github/*" "*.zip" "**/node_modules/*" \
           "composer.json" "composer.lock" "package.json" "**/package.json" "**/package-lock.json" \
           "plugin-zip.js" "stylelint.config.mjs" ".php-cs-fixer.dist.php" "eslint.config.mjs" \
-          ".stylelintignore" ".gitignore" ".husky/*" "**/.babelrc" "**/src/**"
+          ".stylelintignore" ".gitignore" ".husky/*" "**/.babelrc" "public/src/**"
 
       - name: Create and push tag
         run: |
