@@ -190,7 +190,7 @@ add_filter('rest_pre_serve_request', function ($value, $result, $request, $serve
 
 /* Public Rest Api registration hooks */
 
-add_action('rest_api_init', callback: function () {
+add_action('rest_api_init', function () {
 
     register_rest_route('robodesk/v1', '/login', array(
         'methods' => 'POST',
