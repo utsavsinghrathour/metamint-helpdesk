@@ -247,7 +247,7 @@ function updateDashboardFilterCounts(currentUserName) {
         el.textContent = count > 99 ? "99+" : String(count);
         el.classList.add("is-visible");
       } else {
-        el.textContent = "0";
+        el.textContent = "";
         el.classList.remove("is-visible");
       }
     }
