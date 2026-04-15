@@ -5,7 +5,7 @@
                 <h3 class="text-lg font-bold text-gray-900" id="ticket-detail-title">
                     <?php _e('Conversation Details', 'robodesk'); ?>
                 </h3>
-                <button onclick="showPage('tickets')" class="text-gray-400 hover:text-gray-600">
+                <button onclick="showPage('tickets', true)" class="text-gray-400 hover:text-gray-600">
                     <i class="fas fa-arrow-left mr-2"></i>
                     <?php _e('Back to Conversations', 'robodesk'); ?>
                 </button>
