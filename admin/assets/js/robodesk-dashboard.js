@@ -647,6 +647,8 @@ function showPage(pageName, fromClick = false) {
   if (pageName !== "ticket-detail") {
     const url = new URL(window.location);
     url.searchParams.set("tab", pageName);
+    // Prevent reload/back from reopening the previous ticket detail.
+    url.searchParams.delete("ticket");
     // Remove paged parameter when changing tabs to start from page 1
     url.searchParams.delete("paged");
     window.history.pushState({}, "", url.toString());
@@ -671,12 +673,7 @@ function showPage(pageName, fromClick = false) {
   if (pageName === "conversation") {
     // Load conversation view
   } else if (pageName === "tickets") {
-    // Load conversations/tickets list - the content is rendered server-side
-    // Just ensure page visibility
-    if (fromClick) {
-      window.location.reload();
-      return;
-    }
+    // Load conversations/tickets list - server-side rendered; no hard reload needed.
   } else if (pageName === "ticket-detail") {
     loadTicketDetail();
   } else if (pageName === "settings") {
@@ -1689,11 +1686,6 @@ jQuery(document).ready(function ($) {
       showToast("Please enter a fetch interval.", "error");
       return;
     }
-    if (!$form.find('select[name="default_agent"]').val()) {
-      showToast("Please select a team for auto-assignment.", "error");
-      return;
-    }
-
     $button.prop("disabled", true).text("Configuring Auto-Fetch Settings...");
 
     $.ajax({
