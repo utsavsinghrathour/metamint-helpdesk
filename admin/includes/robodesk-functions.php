@@ -219,6 +219,147 @@ function robodesk_imap_save_settings()
     }
 }
 
+function robodesk_get_smtp_settings_from_request()
+{
+    $enabled = isset($_POST['robodesk_smtp_enabled']) ? sanitize_text_field($_POST['robodesk_smtp_enabled']) : '0';
+    $encryption = isset($_POST['robodesk_smtp_encryption']) ? sanitize_text_field($_POST['robodesk_smtp_encryption']) : 'tls';
+    $allowed_encryption = ['none', 'ssl', 'tls'];
+
+    if (!in_array($encryption, $allowed_encryption, true)) {
+        $encryption = 'tls';
+    }
+
+    return [
+        'enabled' => $enabled === '1' || $enabled === 'true',
+        'host' => isset($_POST['robodesk_smtp_host']) ? sanitize_text_field($_POST['robodesk_smtp_host']) : '',
+        'port' => isset($_POST['robodesk_smtp_port']) ? absint($_POST['robodesk_smtp_port']) : 587,
+        'username' => isset($_POST['robodesk_smtp_username']) ? sanitize_text_field($_POST['robodesk_smtp_username']) : '',
+        'password' => isset($_POST['robodesk_smtp_password']) ? sanitize_text_field($_POST['robodesk_smtp_password']) : '',
+        'encryption' => $encryption,
+        'from_email' => isset($_POST['robodesk_smtp_from_email']) ? sanitize_email($_POST['robodesk_smtp_from_email']) : '',
+        'from_name' => isset($_POST['robodesk_smtp_from_name']) ? sanitize_text_field($_POST['robodesk_smtp_from_name']) : '',
+    ];
+}
+
+function robodesk_validate_smtp_settings(array $settings)
+{
+    if (empty($settings['enabled'])) {
+        return true;
+    }
+
+    if (empty($settings['host'])) {
+        return 'SMTP host is required';
+    }
+
+    if (empty($settings['port']) || $settings['port'] < 1 || $settings['port'] > 65535) {
+        return 'SMTP port must be between 1 and 65535';
+    }
+
+    if (empty($settings['from_email']) || !is_email($settings['from_email'])) {
+        return 'Valid From Email is required';
+    }
+
+    return true;
+}
+
+function robodesk_configure_phpmailer_for_smtp($phpmailer, array $settings)
+{
+    $phpmailer->isSMTP();
+    $phpmailer->Host = $settings['host'];
+    $phpmailer->Port = (int) $settings['port'];
+    $phpmailer->SMTPAuth = !empty($settings['username']) && !empty($settings['password']);
+
+    if ($phpmailer->SMTPAuth) {
+        $phpmailer->Username = $settings['username'];
+        $phpmailer->Password = $settings['password'];
+    }
+
+    $phpmailer->SMTPSecure = $settings['encryption'] === 'none' ? '' : $settings['encryption'];
+
+    if (!empty($settings['from_email']) && is_email($settings['from_email'])) {
+        $phpmailer->setFrom($settings['from_email'], $settings['from_name'] ?: get_bloginfo('name'), false);
+    }
+}
+
+add_action('wp_ajax_robodesk_smtp_save_settings', 'robodesk_smtp_save_settings');
+function robodesk_smtp_save_settings()
+{
+    if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'robodesk_smtp_settings_action')) {
+        wp_send_json_error(['message' => 'Security check failed']);
+        exit;
+    }
+
+    $settings = robodesk_get_smtp_settings_from_request();
+    $validation = robodesk_validate_smtp_settings($settings);
+
+    if ($validation !== true) {
+        wp_send_json_error(['message' => $validation]);
+        exit;
+    }
+
+    update_option('robodesk_smtp_settings', $settings);
+    wp_send_json_success(['message' => 'SMTP settings saved successfully']);
+}
+
+add_action('wp_ajax_robodesk_smtp_test_connection', 'robodesk_smtp_test_connection');
+function robodesk_smtp_test_connection()
+{
+    if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'robodesk_smtp_settings_action')) {
+        wp_send_json_error(['message' => 'Security check failed']);
+        exit;
+    }
+
+    $settings = robodesk_get_smtp_settings_from_request();
+    $validation = robodesk_validate_smtp_settings($settings);
+
+    if ($validation !== true) {
+        wp_send_json_error(['message' => $validation]);
+        exit;
+    }
+
+    if (empty($settings['enabled'])) {
+        wp_send_json_error(['message' => 'Enable SMTP first to test connection']);
+        exit;
+    }
+
+    if (!class_exists('PHPMailer\\PHPMailer\\PHPMailer')) {
+        require_once ABSPATH . WPINC . '/PHPMailer/PHPMailer.php';
+        require_once ABSPATH . WPINC . '/PHPMailer/SMTP.php';
+        require_once ABSPATH . WPINC . '/PHPMailer/Exception.php';
+    }
+
+    try {
+        $phpmailer = new PHPMailer\PHPMailer\PHPMailer(true);
+        robodesk_configure_phpmailer_for_smtp($phpmailer, $settings);
+
+        if ($phpmailer->smtpConnect()) {
+            $phpmailer->smtpClose();
+            wp_send_json_success(['message' => 'SMTP connection successful']);
+            exit;
+        }
+
+        wp_send_json_error(['message' => 'SMTP connection failed']);
+    } catch (Exception $e) {
+        wp_send_json_error(['message' => 'SMTP connection failed: ' . $e->getMessage()]);
+    }
+}
+
+add_action('phpmailer_init', 'robodesk_apply_smtp_to_phpmailer');
+function robodesk_apply_smtp_to_phpmailer($phpmailer)
+{
+    $settings = get_option('robodesk_smtp_settings', []);
+    if (empty($settings) || empty($settings['enabled'])) {
+        return;
+    }
+
+    $validation = robodesk_validate_smtp_settings($settings);
+    if ($validation !== true) {
+        return;
+    }
+
+    robodesk_configure_phpmailer_for_smtp($phpmailer, $settings);
+}
+
 // email template save function (save new ticket, ticket closed, and auto-reply templates)
 add_action('wp_ajax_robodesk_email_template_save', 'robodesk_email_template_save');
 
@@ -420,7 +561,7 @@ function robodesk_save_basic_settings()
     }
 
     $settings = $_POST['settings'];
-    $valid_settings = ['site_name', 'admin_email', 'theme_color', 'default_ticket_category'];
+    $valid_settings = ['site_name', 'admin_email', 'theme_color', 'default_ticket_category', 'chat_heading', 'welcome_message', 'ticket_intro_message'];
     $image_fields = [
         'popover_icon' => 'robodesk_popover_icon',
         'popover_top_icon' => 'robodesk_popover_top_icon',
@@ -463,6 +604,12 @@ function robodesk_save_basic_settings()
                 $results[$key] = ['status' => 'error', 'message' => 'Invalid ticket category'];
                 continue;
             }
+        } elseif ($key === 'chat_heading') {
+            $sanitized_settings[$key] = sanitize_text_field($settings[$key]);
+        } elseif ($key === 'ticket_intro_message') {
+            $sanitized_settings[$key] = sanitize_textarea_field($settings[$key]);
+        } elseif ($key === 'welcome_message') {
+            $sanitized_settings[$key] = sanitize_textarea_field($settings[$key]);
         }
         $results[$key] = ['status' => 'success', 'message' => ucfirst(str_replace('_', ' ', $key)) . ' saved successfully'];
     }

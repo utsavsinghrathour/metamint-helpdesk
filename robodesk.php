@@ -2,8 +2,12 @@
 
 /**
  * Plugin Name: Robodesk Support Ticket System
+ * Plugin URI: https://example.com/robodesk
  * Description: A support ticket and FAQ system.
  * Version: 1.0.6
+ * Author: Your Name
+ * License: GPL2
+ * Text Domain: robodesk
  */
 
 // Define constants
@@ -54,6 +58,44 @@ function robodesk_deactivate()
     remove_role('robodesk_support_staff');
     remove_role('robodesk_support_customer');
 }
+
+/**
+ * Initialize debug log file
+ * Creates logs directory and debug.log file if they don't exist
+ */
+function robodesk_init_debug_log()
+{
+    $logs_dir = ROBODESK_PLUGIN_PATH . 'logs';
+    $debug_log = $logs_dir . '/debug.log';
+
+    // Check if logs directory exists, create if not
+    if (!is_dir($logs_dir)) {
+        if (!mkdir($logs_dir, 0755, true)) {
+            error_log('Failed to create Robodesk logs directory');
+            return false;
+        }
+    }
+
+    // Check if debug.log file exists, create if not
+    if (!file_exists($debug_log)) {
+        $initial_content = "[DEBUG LOG]\n";
+
+
+
+        if (!file_put_contents($debug_log, $initial_content)) {
+            error_log('Failed to create Robodesk debug.log file');
+            return false;
+        }
+
+        // Set file permissions
+        chmod($debug_log, 0644);
+    }
+
+    return true;
+}
+
+// Call debug log initialization on plugin load
+robodesk_init_debug_log();
 
 // Include necessary files
 // if (is_admin()) {
@@ -136,6 +178,9 @@ function robodesk_enqueue_scripts()
             'robodeskData',
             [
                 'imageUrls' => $image_urls,
+                'chatHeading' => get_option('robodesk_chat_heading', 'Have Questions?'),
+                'welcomeMessage' => get_option('robodesk_welcome_message', 'Have any questions or need a quote? Leave us a message.'),
+                'ticketIntroMessage' => get_option('robodesk_ticket_intro_message', 'If you are interested in working with us, take a step towards discovering exciting opportunities by reaching out to us. We look forward to talking with you soon!'),
             ]
         );
 
