@@ -445,28 +445,45 @@
                                  </div>
                                  <div>
                                      <label class="block text-sm font-medium text-gray-700"><?php _e('Auto-assign to', 'robodesk'); ?></label>
-                                     <select name="default_agent" class="styled-select mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500" required>
+                                     <select name="default_agent" class="styled-select mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
                                          <!-- default options -->
                                          <?php
                                             $default_agent = get_option('robodesk_default_agent');
+                                            ?>
+                                         <option value="" <?php selected((string) $default_agent, ''); ?>><?php _e('Least loaded agent (auto)', 'robodesk'); ?></option>
 
-                                            // Get users by role with display_name only
+                                         <?php
+
+                                            // Get users by role with IDs for stable option values.
                                             $agents = get_users([
                                                 'role__in' => ['robodesk_support_staff', 'robodesk_support_manager', 'author', 'editor', 'administrator'],
-                                                'fields'   => ['display_name'],
+                                                'fields'   => ['ID', 'display_name', 'user_login'],
                                             ]);
-
-                                            // Convert to simple array of display names
-                                            $agent_names = wp_list_pluck($agents, 'display_name');
                                             ?>
 
-                                         <?php foreach ($agent_names as $agent): ?>
-                                             <option value="<?php echo esc_attr($agent); ?>" <?php selected($default_agent, $agent); ?>>
-                                                 <?php echo esc_html($agent); ?>
+                                         <?php foreach ($agents as $agent): ?>
+                                             <?php
+                                                $agent_id = (int) $agent->ID;
+                                                $agent_name = !empty($agent->display_name) ? $agent->display_name : $agent->user_login;
+                                                $is_selected = (string) $default_agent === (string) $agent_id ||
+                                                    (string) $default_agent === (string) $agent_name;
+                                                ?>
+                                             <option value="<?php echo esc_attr($agent_id); ?>" <?php selected($is_selected, true); ?>>
+                                                 <?php echo esc_html($agent_name); ?>
                                              </option>
                                          <?php endforeach; ?>
 
-                                         <?php if (!in_array($default_agent, $agent_names) && !empty($default_agent)): ?>
+                                         <?php
+                                            $default_is_in_agents = false;
+                                            foreach ($agents as $agent) {
+                                                if ((string) $default_agent === (string) $agent->ID || (string) $default_agent === (string) $agent->display_name) {
+                                                    $default_is_in_agents = true;
+                                                    break;
+                                                }
+                                            }
+                                            ?>
+
+                                         <?php if (!$default_is_in_agents && !empty($default_agent)): ?>
                                              <option value="<?php echo esc_attr($default_agent); ?>" selected>
                                                  <?php echo esc_html($default_agent); ?>
                                              </option>
@@ -474,6 +491,7 @@
 
 
                                      </select>
+                                     <p class="mt-1 text-xs text-gray-500"><?php _e('Leave this on "Least loaded agent (auto)" to assign fetched email tickets to the least-loaded agent.', 'robodesk'); ?></p>
                                  </div>
                              </div>
                          </div>

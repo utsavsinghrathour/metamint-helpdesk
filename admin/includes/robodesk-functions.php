@@ -695,21 +695,16 @@ function robodesk_save_ticket_assignment_settings()
     }
 
     // Validate inputs
-    if (!isset($_POST['fetch_interval']) || !isset($_POST['default_agent'])) {
+    if (!isset($_POST['fetch_interval'])) {
         wp_send_json_error(['message' => 'Missing required fields']);
         exit;
     }
 
     $fetch_interval = intval($_POST['fetch_interval']);
-    $default_agent = sanitize_text_field($_POST['default_agent']);
+    $default_agent = isset($_POST['default_agent']) ? sanitize_text_field($_POST['default_agent']) : '';
 
     if ($fetch_interval < 1 || $fetch_interval > 1440) {
         wp_send_json_error(['message' => 'Fetch interval must be between 1 and 1440 minutes']);
-        exit;
-    }
-
-    if (empty($default_agent)) {
-        wp_send_json_error(['message' => 'Please select a team for auto-assignment']);
         exit;
     }
 
@@ -1737,12 +1732,12 @@ function save_robodesk_user_meta_fields($user_id)
     }
 }
 
-// Automatically assign a ticket to a support staff member according to the least assigned tickets use in email and chat for now
-function auto_assign_ticket_to_support_staff()
+// Automatically assign a ticket to support staff. Email fetch can enforce strict default-agent-only assignment.
+function auto_assign_ticket_to_support_staff($prefer_default_agent = false, $strict_default_only = false)
 {
-    // Get the support staff users with their display names
+    // Match eligible users with roles shown in settings "Auto-assign to".
     $support_staff = get_users(array(
-        'role' => 'robodesk_support_staff',
+        'role__in' => array('robodesk_support_staff', 'robodesk_support_manager', 'administrator', 'author', 'editor'),
         'fields' => array('ID', 'display_name', 'user_login')
     ));
 
@@ -1752,6 +1747,32 @@ function auto_assign_ticket_to_support_staff()
     }
 
     rbd_log('Robodesk: Assigning new ticket to a support staff member.');
+
+    // For email-imported tickets, prefer configured default agent when requested.
+    $default_agent = trim((string) get_option('robodesk_default_agent', ''));
+    if ($prefer_default_agent && $default_agent !== '') {
+        foreach ($support_staff as $staff) {
+            $matches_default = ((string) $staff->ID === $default_agent) ||
+                ((string) $staff->display_name === $default_agent) ||
+                ((string) $staff->user_login === $default_agent);
+
+            if ($matches_default) {
+                $assigned_name = !empty($staff->display_name) ? $staff->display_name : $staff->user_login;
+                rbd_log('Robodesk: Assigned to configured default agent: ' . $assigned_name . ' (ID: ' . $staff->ID . ')');
+                return $assigned_name;
+            }
+        }
+
+        if ($strict_default_only) {
+            rbd_log('Robodesk: Default agent setting does not match any eligible support user. Leaving ticket unassigned.');
+            return false;
+        }
+    }
+
+    if ($strict_default_only) {
+        rbd_log('Robodesk: No default agent configured for email fetch. Leaving ticket unassigned.');
+        return false;
+    }
 
     // Get assignment counts for each staff member
     $staff_assignments = array();

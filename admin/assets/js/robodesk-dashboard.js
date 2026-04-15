@@ -1689,11 +1689,6 @@ jQuery(document).ready(function ($) {
       showToast("Please enter a fetch interval.", "error");
       return;
     }
-    if (!$form.find('select[name="default_agent"]').val()) {
-      showToast("Please select a team for auto-assignment.", "error");
-      return;
-    }
-
     $button.prop("disabled", true).text("Configuring Auto-Fetch Settings...");
 
     $.ajax({
