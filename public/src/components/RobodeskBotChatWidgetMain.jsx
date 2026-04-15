@@ -9,6 +9,8 @@ import EmojiPicker from 'emoji-picker-react';
 export default function RobodeskBotChatWidgetMain({ widgetConfig, activeAIMode }) {
     const rootRef = useRef(null);
     const CHAT_KEY = "robodesk_chat_session";
+    const chatHeading = window.robodeskData?.chatHeading || widgetConfig?.chatHeading || 'Have Questions?';
+    const welcomeMessage = window.robodeskData?.welcomeMessage || widgetConfig?.welcomeMessage || 'Have any questions or need a quote? Leave us a message.';
     const [enabled, setEnabled] = useState(true);
     const [AIMode, setAIMode] = useState(activeAIMode || "");
     const [open, setOpen] = useState(false);
@@ -323,10 +325,8 @@ export default function RobodeskBotChatWidgetMain({ widgetConfig, activeAIMode }
 
                     {messages.length === 0 && (
                         <div className='rd-text-center rd-px-20 rd-flex rd-flex-col rd-gap-5 rd-mb-20 home-tab-title'>
-                            <h4 className='heading-4'>Have Questions?</h4>
-                            <h5 className='sub-text rd-mt-0'>
-                                Have any questions or need a quote? Leave us a message.
-                            </h5>
+                            <h4 className='heading-4'>{chatHeading}</h4>
+                            <h5 className='sub-text rd-mt-0'>{welcomeMessage}</h5>
                         </div>
                     )}
 

@@ -339,8 +339,25 @@ function robodesk_my_tickets_shortcode()
 // Shortcode for the frontend dashboard
 add_shortcode('robodesk_frontend_dashboard', 'robodesk_frontend_dashboard_shortcode');
 
+if (!function_exists('robodesk_is_customer_portal_enabled')) {
+    function robodesk_is_customer_portal_enabled()
+    {
+        $settings = get_option('robodesk_advanced_settings', array());
+
+        if (!is_array($settings) || !array_key_exists('enable_customer_portal', $settings)) {
+            return true;
+        }
+
+        return filter_var($settings['enable_customer_portal'], FILTER_VALIDATE_BOOLEAN);
+    }
+}
+
 function robodesk_frontend_dashboard_shortcode()
 {
+    if (!robodesk_is_customer_portal_enabled()) {
+        return '';
+    }
+
     if (is_user_logged_in()) {
         $user_id = get_current_user_id();
         $current_page = get_query_var('robodesk_page');

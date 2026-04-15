@@ -6,7 +6,7 @@
                      <?php _e('Basic Settings', 'robodesk'); ?>
                  </button>
                  <button onclick="showSettingsTab('imap')" class="settings-tab py-4 px-1 border-b-2 font-medium text-sm" data-tab="imap">
-                     <?php _e('IMAP Settings', 'robodesk'); ?>
+                     <?php _e('Mail Settings', 'robodesk'); ?>
                  </button>
                  <button onclick="showSettingsTab('templates')" class="settings-tab py-4 px-1 border-b-2 font-medium text-sm" data-tab="templates">
                      <?php _e('Email Templates', 'robodesk'); ?>
@@ -33,120 +33,157 @@
              <!------------------------------Basic Settings Tab --------------------------------->
 
              <div id="basic-tab" class="settings-tab-content">
-                 <h3 class="text-lg font-medium text-gray-900 mb-6"><?php _e('Basic Settings', 'robodesk'); ?></h3>
                  <form id="robodesk-basic-settings-form" class="space-y-6">
                      <input type="hidden" name="robodesk_basic_settings_nonce" value="<?php echo wp_create_nonce('robodesk_basic_settings_action'); ?>">
-                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
-                         <div>
-                             <label for="site_name" class="block text-sm font-medium text-gray-700"><?php _e('Site Name', 'robodesk'); ?></label>
-                             <input type="text" name="site_name" id="site_name" value="<?php echo esc_attr(get_option('robodesk_site_name', 'Robodesk Support')); ?>" class="styled-input mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
-                         </div>
-                         <div>
-                             <label for="admin_email" class="block text-sm font-medium text-gray-700"><?php _e('Admin Email', 'robodesk'); ?></label>
-                             <input type="email" name="admin_email" id="admin_email" value="<?php echo esc_attr(get_option('robodesk_admin_email', 'admin@example.com')); ?>" class="styled-input mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
-                         </div>
-
-                         <!----------------------------- Image Fields ------------------------------>
-                         <div>
-                             <label for="popover_top_icon" class="block text-sm font-medium text-gray-700"><?php _e('Pop over Top Icon/Image', 'robodesk'); ?></label>
-                             <input type="file" accept="image/*" name="popover_top_icon" id="popover_top_icon" class="styled-input mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
-                             <div class="mt-2 flex items-center gap-2">
-                                 <img id="popover-top-icon-preview" src="<?php echo esc_url(get_option('robodesk_popover_top_icon', '')); ?>" alt="Pop over Top Icon Preview" class="hidden max-w-[150px] h-auto rounded-md">
-                                 <button type="button" onclick="removeImage('popover-top-icon-preview', 'robodesk_popover_top_icon', 'popover_top_icon')" class="text-red-600 hover:text-red-800 text-sm <?php echo get_option('robodesk_popover_top_icon', '') ? '' : 'hidden'; ?>"><?php _e('Remove', 'robodesk'); ?></button>
+                     <div class="space-y-8">
+                         <section class="rounded-xl border border-gray-200 bg-gray-50 p-6">
+                             <div class="mb-5">
+                                 <h4 class="text-base font-semibold text-gray-900"><?php _e('Basic', 'robodesk'); ?></h4>
+                                 <p class="text-sm text-gray-500"><?php _e('Core site details used across Robodesk.', 'robodesk'); ?></p>
                              </div>
-                             <input type="hidden" name="robodesk_popover_top_icon" id="robodesk_popover_top_icon" value="<?php echo esc_attr(get_option('robodesk_popover_top_icon', '')); ?>">
-                         </div>
-                         <div>
-                             <div class="mt-4">
-                                 <label for="theme_color" class="block text-sm font-medium text-gray-700"><?php _e('Theme Color', 'robodesk'); ?></label>
-                                 <input type="color" name="theme_color" id="theme_color" value="<?php echo esc_attr(get_option('robodesk_theme_color', '#3B82F6')); ?>" class="styled-input mt-1 block w-10 h-10 border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
-                                 <div class="mt-2">
-                                     <div id="theme-color-preview" class="hidden w-16 h-8 rounded-md border border-gray-300" style="background-color: <?php echo esc_attr(get_option('robodesk_theme_color', '#3B82F6')); ?>;"></div>
+                             <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
+                                 <div>
+                                     <label for="site_name" class="block text-sm font-medium text-gray-700"><?php _e('Site Name', 'robodesk'); ?></label>
+                                     <input type="text" name="site_name" id="site_name" value="<?php echo esc_attr(get_option('robodesk_site_name', 'Robodesk Support')); ?>" class="styled-input mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                                 </div>
+                                 <div>
+                                     <label for="admin_email" class="block text-sm font-medium text-gray-700"><?php _e('Admin Email', 'robodesk'); ?></label>
+                                     <input type="email" name="admin_email" id="admin_email" value="<?php echo esc_attr(get_option('robodesk_admin_email', 'admin@example.com')); ?>" class="styled-input mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
                                  </div>
                              </div>
-                         </div>
-                         <div>
-                             <label for="popover_icon" class="block text-sm font-medium text-gray-700"><?php _e('Pop over Icon/Image', 'robodesk'); ?></label>
-                             <input type="file" accept="image/*" name="popover_icon" id="popover_icon" class="styled-input mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
-                             <div class="mt-2 flex items-center gap-2">
-                                 <img id="popover-icon-preview" src="<?php echo esc_url(get_option('robodesk_popover_icon', '')); ?>" alt="Pop over Icon Preview" class="hidden max-w-[150px] h-auto rounded-md">
-                                 <button type="button" onclick="removeImage('popover-icon-preview', 'robodesk_popover_icon', 'popover_icon')" class="text-red-600 hover:text-red-800 text-sm <?php echo get_option('robodesk_popover_icon', '') ? '' : 'hidden'; ?>"><?php _e('Remove', 'robodesk'); ?></button>
-                             </div>
-                             <input type="hidden" name="robodesk_popover_icon" id="robodesk_popover_icon" value="<?php echo esc_attr(get_option('robodesk_popover_icon', '')); ?>">
-                         </div>
+                         </section>
 
-                         <div>
-                             <label for="logo" class="block text-sm font-medium text-gray-700"><?php _e('Logo', 'robodesk'); ?></label>
-                             <input type="file" accept="image/*" name="logo" id="logo" class="styled-input mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
-                             <div class="mt-2 flex items-center gap-2">
-                                 <img id="logo-preview" src="<?php echo esc_url(get_option('robodesk_logo', '')); ?>" alt="Logo Preview" class="hidden max-w-[150px] h-auto rounded-md">
-                                 <button type="button" onclick="removeImage('logo-preview', 'robodesk_logo', 'logo')" class="text-red-600 hover:text-red-800 text-sm <?php echo get_option('robodesk_logo', '') ? '' : 'hidden'; ?>"><?php _e('Remove', 'robodesk'); ?></button>
+                         <section class="rounded-xl border border-gray-200 bg-gray-50 p-6">
+                             <div class="mb-5">
+                                 <h4 class="text-base font-semibold text-gray-900"><?php _e('Logos', 'robodesk'); ?></h4>
+                                 <p class="text-sm text-gray-500"><?php _e('Upload the visuals that define the widget and brand colors.', 'robodesk'); ?></p>
                              </div>
-                             <input type="hidden" name="robodesk_logo" id="robodesk_logo" value="<?php echo esc_attr(get_option('robodesk_logo', '')); ?>">
-                         </div>
-                         <div>
-                             <label for="wide_logo" class="block text-sm font-medium text-gray-700"><?php _e('Wide Logo', 'robodesk'); ?></label>
-                             <input type="file" accept="image/*" name="wide_logo" id="wide_logo" class="styled-input mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
-                             <div class="mt-2 flex items-center gap-2">
-                                 <img id="wide-logo-preview" src="<?php echo esc_url(get_option('robodesk_wide_logo', '')); ?>" alt="Wide Logo Preview" class="hidden max-w-[150px] h-auto rounded-md">
-                                 <button type="button" onclick="removeImage('wide-logo-preview', 'robodesk_wide_logo', 'wide_logo')" class="text-red-600 hover:text-red-800 text-sm <?php echo get_option('robodesk_wide_logo', '') ? '' : 'hidden'; ?>"><?php _e('Remove', 'robodesk'); ?></button>
+                             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                 <div>
+                                     <label for="popover_top_icon" class="block text-sm font-medium text-gray-700"><?php _e('Pop over Top Icon/Image', 'robodesk'); ?></label>
+                                     <input type="file" accept="image/*" name="popover_top_icon" id="popover_top_icon" class="styled-input mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                                     <div class="mt-2 flex items-center gap-2">
+                                         <img id="popover-top-icon-preview" src="<?php echo esc_url(get_option('robodesk_popover_top_icon', '')); ?>" alt="Pop over Top Icon Preview" class="hidden max-w-[150px] h-auto rounded-md">
+                                         <button type="button" onclick="removeImage('popover-top-icon-preview', 'robodesk_popover_top_icon', 'popover_top_icon')" class="text-red-600 hover:text-red-800 text-sm <?php echo get_option('robodesk_popover_top_icon', '') ? '' : 'hidden'; ?>"><?php _e('Remove', 'robodesk'); ?></button>
+                                     </div>
+                                     <input type="hidden" name="robodesk_popover_top_icon" id="robodesk_popover_top_icon" value="<?php echo esc_attr(get_option('robodesk_popover_top_icon', '')); ?>">
+                                 </div>
+                                 <div>
+                                     <label for="theme_color" class="block text-sm font-medium text-gray-700"><?php _e('Theme Color', 'robodesk'); ?></label>
+                                     <div class="mt-1 flex items-center gap-3">
+                                         <input type="color" name="theme_color" id="theme_color" value="<?php echo esc_attr(get_option('robodesk_theme_color', '#3B82F6')); ?>" class="styled-input block w-10 h-10 border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                                         <div id="theme-color-preview" class="hidden w-16 h-8 rounded-md border border-gray-300" style="background-color: <?php echo esc_attr(get_option('robodesk_theme_color', '#3B82F6')); ?>;"></div>
+                                     </div>
+                                 </div>
+                                 <div>
+                                     <label for="popover_icon" class="block text-sm font-medium text-gray-700"><?php _e('Pop over Icon/Image', 'robodesk'); ?></label>
+                                     <input type="file" accept="image/*" name="popover_icon" id="popover_icon" class="styled-input mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                                     <div class="mt-2 flex items-center gap-2">
+                                         <img id="popover-icon-preview" src="<?php echo esc_url(get_option('robodesk_popover_icon', '')); ?>" alt="Pop over Icon Preview" class="hidden max-w-[150px] h-auto rounded-md">
+                                         <button type="button" onclick="removeImage('popover-icon-preview', 'robodesk_popover_icon', 'popover_icon')" class="text-red-600 hover:text-red-800 text-sm <?php echo get_option('robodesk_popover_icon', '') ? '' : 'hidden'; ?>"><?php _e('Remove', 'robodesk'); ?></button>
+                                     </div>
+                                     <input type="hidden" name="robodesk_popover_icon" id="robodesk_popover_icon" value="<?php echo esc_attr(get_option('robodesk_popover_icon', '')); ?>">
+                                 </div>
+                                 <div>
+                                     <label for="logo" class="block text-sm font-medium text-gray-700"><?php _e('Logo', 'robodesk'); ?></label>
+                                     <input type="file" accept="image/*" name="logo" id="logo" class="styled-input mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                                     <div class="mt-2 flex items-center gap-2">
+                                         <img id="logo-preview" src="<?php echo esc_url(get_option('robodesk_logo', '')); ?>" alt="Logo Preview" class="hidden max-w-[150px] h-auto rounded-md">
+                                         <button type="button" onclick="removeImage('logo-preview', 'robodesk_logo', 'logo')" class="text-red-600 hover:text-red-800 text-sm <?php echo get_option('robodesk_logo', '') ? '' : 'hidden'; ?>"><?php _e('Remove', 'robodesk'); ?></button>
+                                     </div>
+                                     <input type="hidden" name="robodesk_logo" id="robodesk_logo" value="<?php echo esc_attr(get_option('robodesk_logo', '')); ?>">
+                                 </div>
+                                 <div>
+                                     <label for="wide_logo" class="block text-sm font-medium text-gray-700"><?php _e('Wide Logo', 'robodesk'); ?></label>
+                                     <input type="file" accept="image/*" name="wide_logo" id="wide_logo" class="styled-input mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                                     <div class="mt-2 flex items-center gap-2">
+                                         <img id="wide-logo-preview" src="<?php echo esc_url(get_option('robodesk_wide_logo', '')); ?>" alt="Wide Logo Preview" class="hidden max-w-[150px] h-auto rounded-md">
+                                         <button type="button" onclick="removeImage('wide-logo-preview', 'robodesk_wide_logo', 'wide_logo')" class="text-red-600 hover:text-red-800 text-sm <?php echo get_option('robodesk_wide_logo', '') ? '' : 'hidden'; ?>"><?php _e('Remove', 'robodesk'); ?></button>
+                                     </div>
+                                     <input type="hidden" name="robodesk_wide_logo" id="robodesk_wide_logo" value="<?php echo esc_attr(get_option('robodesk_wide_logo', '')); ?>">
+                                 </div>
                              </div>
-                             <input type="hidden" name="robodesk_wide_logo" id="robodesk_wide_logo" value="<?php echo esc_attr(get_option('robodesk_wide_logo', '')); ?>">
-                         </div>
-                         <!-- adding a notification sound for chat -->
-                         <div>
-                             <label for="notification_sound" class="block text-sm font-medium text-gray-700"><?php _e('Notification Sound', 'robodesk'); ?></label>
-                             <select name="robodesk_notification_sound" id="notification_sound" class="styled-select mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
-                                 <?php
-                                    $audio_files = [
-                                        'Sample 1' => plugin_dir_url(__FILE__) . 'audio/1.mp3',
-                                        'Sample 2' => plugin_dir_url(__FILE__) . 'audio/2.mp3',
-                                        'Sample 3' => plugin_dir_url(__FILE__) . 'audio/3.mp3',
-                                        'Sample 4' => plugin_dir_url(__FILE__) . 'audio/4.mp3',
-                                        'Sample 5' => plugin_dir_url(__FILE__) . 'audio/5.mp3',
-                                        'Sample 6' => plugin_dir_url(__FILE__) . 'audio/6.mp3',
-                                        'Sample 7' => plugin_dir_url(__FILE__) . 'audio/7.mp3',
-                                        'Sample 8' => plugin_dir_url(__FILE__) . 'audio/8.mp3',
-                                        'Sample 9' => plugin_dir_url(__FILE__) . 'audio/9.mp3',
-                                        'Sample 10' => plugin_dir_url(__FILE__) . 'audio/10.mp3',
-                                        'Sample 11' => plugin_dir_url(__FILE__) . 'audio/ding.mp3',
-                                        'Sample 12' => plugin_dir_url(__FILE__) . 'audio/chime.mp3',
-                                        'Sample 13' => plugin_dir_url(__FILE__) . 'audio/notify.mp3',
-                                        'Sample 14' => plugin_dir_url(__FILE__) . 'audio/alert.mp3',
-                                    ];
-                                    $selected_sound = get_option('robodesk_notification_sound', '');
-                                    foreach ($audio_files as $label => $url) {
-                                        echo '<option value="' . esc_url($url) . '" ' . selected($selected_sound, $url, false) . '>' . ucfirst($label) . '</option>';
-                                    }
-                                    ?>
-                             </select>
-                             <div class="mt-2 flex items-center gap-2">
-                                 <audio id="notification-sound-preview" controls class="<?php echo $selected_sound ? '' : 'hidden'; ?>">
-                                     <source src="<?php echo esc_url($selected_sound); ?>" type="audio/mpeg">
-                                     <?php _e('Your browser does not support the audio element.', 'robodesk'); ?>
-                                 </audio>
+                         </section>
 
+                         <section class="rounded-xl border border-gray-200 bg-gray-50 p-6">
+                             <div class="mb-5">
+                                 <h4 class="text-base font-semibold text-gray-900"><?php _e('Defaults', 'robodesk'); ?></h4>
+                                 <p class="text-sm text-gray-500"><?php _e('Set the default category and notification audio.', 'robodesk'); ?></p>
                              </div>
-                             <input type="hidden" name="robodesk_notification_sound" id="robodesk_notification_sound" value="<?php echo esc_attr($selected_sound); ?>">
-                         </div>
-                         <!-- end of notification sound -->
-                         <!-- adding a default category of ticket -->
-                         <div class="mt-4">
-                             <label for="robodesk_default_ticket_category" class="block text-sm font-medium text-gray-700"><?php _e('Default Ticket Category', 'robodesk'); ?></label>
-                             <select name="robodesk_default_ticket_category" id="robodesk_default_ticket_category" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500">
-                                 <option value=""><?php _e('Select a category', 'robodesk'); ?></option>
-                                 <?php
-                                    $selected_category = get_option('robodesk_default_ticket_category', '');
-                                    $categories = get_terms(array(
-                                        'taxonomy'   => 'robodesk_ticket_category',
-                                        'hide_empty' => false,
-                                    ));
-                                    foreach ($categories as $category) {
-                                        echo '<option value="' . esc_attr($category->term_id) . '" ' . selected($selected_category, $category->term_id, false) . '>' . esc_html($category->name) . '</option>';
-                                    }
-                                    ?>
-                             </select>
-                         </div>
+                             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                 <div>
+                                     <label for="robodesk_default_ticket_category" class="block text-sm font-medium text-gray-700"><?php _e('Default Ticket Categories', 'robodesk'); ?></label>
+                                     <select name="robodesk_default_ticket_category" id="robodesk_default_ticket_category" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                                         <option value=""><?php _e('Select a category', 'robodesk'); ?></option>
+                                         <?php
+                                            $selected_category = get_option('robodesk_default_ticket_category', '');
+                                            $categories = get_terms(array(
+                                                'taxonomy'   => 'robodesk_ticket_category',
+                                                'hide_empty' => false,
+                                            ));
+                                            foreach ($categories as $category) {
+                                                echo '<option value="' . esc_attr($category->term_id) . '" ' . selected($selected_category, $category->term_id, false) . '>' . esc_html($category->name) . '</option>';
+                                            }
+                                            ?>
+                                     </select>
+                                 </div>
+                                 <div>
+                                     <label for="notification_sound" class="block text-sm font-medium text-gray-700"><?php _e('Notification Sound', 'robodesk'); ?></label>
+                                     <select name="robodesk_notification_sound" id="notification_sound" class="styled-select mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                                         <?php
+                                            $audio_files = [
+                                                'Sample 1' => plugin_dir_url(__FILE__) . 'audio/1.mp3',
+                                                'Sample 2' => plugin_dir_url(__FILE__) . 'audio/2.mp3',
+                                                'Sample 3' => plugin_dir_url(__FILE__) . 'audio/3.mp3',
+                                                'Sample 4' => plugin_dir_url(__FILE__) . 'audio/4.mp3',
+                                                'Sample 5' => plugin_dir_url(__FILE__) . 'audio/5.mp3',
+                                                'Sample 6' => plugin_dir_url(__FILE__) . 'audio/6.mp3',
+                                                'Sample 7' => plugin_dir_url(__FILE__) . 'audio/7.mp3',
+                                                'Sample 8' => plugin_dir_url(__FILE__) . 'audio/8.mp3',
+                                                'Sample 9' => plugin_dir_url(__FILE__) . 'audio/9.mp3',
+                                                'Sample 10' => plugin_dir_url(__FILE__) . 'audio/10.mp3',
+                                                'Sample 11' => plugin_dir_url(__FILE__) . 'audio/ding.mp3',
+                                                'Sample 12' => plugin_dir_url(__FILE__) . 'audio/chime.mp3',
+                                                'Sample 13' => plugin_dir_url(__FILE__) . 'audio/notify.mp3',
+                                                'Sample 14' => plugin_dir_url(__FILE__) . 'audio/alert.mp3',
+                                            ];
+                                            $selected_sound = get_option('robodesk_notification_sound', '');
+                                            foreach ($audio_files as $label => $url) {
+                                                echo '<option value="' . esc_url($url) . '" ' . selected($selected_sound, $url, false) . '>' . ucfirst($label) . '</option>';
+                                            }
+                                            ?>
+                                     </select>
+                                     <div class="mt-2 flex items-center gap-2">
+                                         <audio id="notification-sound-preview" controls class="<?php echo $selected_sound ? '' : 'hidden'; ?>">
+                                             <source src="<?php echo esc_url($selected_sound); ?>" type="audio/mpeg">
+                                             <?php _e('Your browser does not support the audio element.', 'robodesk'); ?>
+                                         </audio>
+                                     </div>
+                                     <input type="hidden" name="robodesk_notification_sound" id="robodesk_notification_sound" value="<?php echo esc_attr($selected_sound); ?>">
+                                 </div>
+                             </div>
+                         </section>
+
+                         <section class="rounded-xl border border-gray-200 bg-gray-50 p-6">
+                             <div class="mb-5">
+                                 <h4 class="text-base font-semibold text-gray-900"><?php _e('Messages', 'robodesk'); ?></h4>
+                                 <p class="text-sm text-gray-500"><?php _e('Set the chat title and message copy shown across the widget.', 'robodesk'); ?></p>
+                             </div>
+                             <div class="grid grid-cols-1 gap-6">
+                                 <div>
+                                     <label for="chat_heading" class="block text-sm font-medium text-gray-700"><?php _e('Chat Heading', 'robodesk'); ?></label>
+                                     <input type="text" name="chat_heading" id="chat_heading" value="<?php echo esc_attr(get_option('robodesk_chat_heading', 'Have Questions?')); ?>" class="styled-input mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                                 </div>
+                                 <div>
+                                     <label for="welcome_message" class="block text-sm font-medium text-gray-700"><?php _e('Welcome Message for the chat Bot', 'robodesk'); ?></label>
+                                     <textarea name="welcome_message" id="welcome_message" rows="4" class="styled-input mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"><?php echo esc_textarea(get_option('robodesk_welcome_message', 'Have any questions or need a quote? Leave us a message.')); ?></textarea>
+                                 </div>
+                                 <div>
+                                     <label for="ticket_intro_message" class="block text-sm font-medium text-gray-700"><?php _e('Ticket Intro Message', 'robodesk'); ?></label>
+                                     <textarea name="ticket_intro_message" id="ticket_intro_message" rows="4" class="styled-input mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"><?php echo esc_textarea(get_option('robodesk_ticket_intro_message', 'If you are interested in working with us, take a step towards discovering exciting opportunities by reaching out to us. We look forward to talking with you soon!')); ?></textarea>
+                                 </div>
+                             </div>
+                         </section>
                      </div>
                      <hr class="my-6 border-gray-200">
                      <button type="button" id="save-basic-settings" class="mt-6 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">
@@ -172,6 +209,26 @@
                 $username = $settings['username'];
                 $password = $settings['password'];
                 $auth     = isset($settings['auth']) ? $settings['auth'] : true;
+
+                $smtp_settings = get_option('robodesk_smtp_settings', array(
+                    'enabled' => false,
+                    'host' => '',
+                    'port' => 587,
+                    'username' => '',
+                    'password' => '',
+                    'encryption' => 'tls',
+                    'from_email' => get_option('admin_email', ''),
+                    'from_name' => get_bloginfo('name'),
+                ));
+
+                $smtp_enabled = !empty($smtp_settings['enabled']);
+                $smtp_host = isset($smtp_settings['host']) ? $smtp_settings['host'] : '';
+                $smtp_port = isset($smtp_settings['port']) ? (int) $smtp_settings['port'] : 587;
+                $smtp_username = isset($smtp_settings['username']) ? $smtp_settings['username'] : '';
+                $smtp_password = isset($smtp_settings['password']) ? $smtp_settings['password'] : '';
+                $smtp_encryption = isset($smtp_settings['encryption']) ? $smtp_settings['encryption'] : 'tls';
+                $smtp_from_email = isset($smtp_settings['from_email']) ? $smtp_settings['from_email'] : get_option('admin_email', '');
+                $smtp_from_name = isset($smtp_settings['from_name']) ? $smtp_settings['from_name'] : get_bloginfo('name');
 
                 ?>
 
@@ -216,14 +273,86 @@
                      </div>
                      <div class="mt-6 flex gap-4">
                          <button type="button" id="robodesk-imap-test" onclick="testConnection()"
-                             class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">
+                             class="mt-4 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">
                              <?php _e('Test Connection', 'robodesk'); ?>
                          </button>
-                     </div>
-                     <hr class="my-6 border-gray-200">
-                     <div>
-                         <button type="button" id="save-imap-settings" class="mt-6 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">
+
+
+                         <button type="button" id="save-imap-settings" class="mt-4 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">
                              <?php _e('Save Settings', 'robodesk'); ?>
+                         </button>
+
+                     </div>
+
+                 </form>
+
+                 <hr class="my-8 border-gray-200">
+
+                 <h3 class="text-lg font-medium text-gray-900 mb-6"><?php _e('SMTP Settings', 'robodesk'); ?></h3>
+                 <form method="post" action="" id="robodesk-smtp-form" class="space-y-6">
+                     <?php wp_nonce_field('robodesk_smtp_settings_action', 'robodesk_smtp_settings_nonce'); ?>
+
+                     <div class="flex items-center">
+                         <input id="robodesk_smtp_enabled" type="checkbox" <?php checked($smtp_enabled, true); ?> class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                         <label for="robodesk_smtp_enabled" class="ml-2 block text-sm text-gray-900">
+                             <?php _e('Enable SMTP for outgoing emails', 'robodesk'); ?>
+                         </label>
+                     </div>
+
+                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                         <div>
+                             <label for="robodesk_smtp_host" class="block text-sm font-medium text-gray-700"><?php _e('SMTP Host', 'robodesk'); ?></label>
+                             <input type="text" name="robodesk_smtp_host" id="robodesk_smtp_host"
+                                 value="<?php echo esc_attr($smtp_host); ?>"
+                                 class="styled-input mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                         </div>
+                         <div>
+                             <label for="robodesk_smtp_port" class="block text-sm font-medium text-gray-700"><?php _e('SMTP Port', 'robodesk'); ?></label>
+                             <input type="number" name="robodesk_smtp_port" id="robodesk_smtp_port"
+                                 value="<?php echo esc_attr($smtp_port); ?>"
+                                 class="styled-input mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                         </div>
+                         <div>
+                             <label for="robodesk_smtp_username" class="block text-sm font-medium text-gray-700"><?php _e('SMTP Username', 'robodesk'); ?></label>
+                             <input type="text" name="robodesk_smtp_username" id="robodesk_smtp_username"
+                                 value="<?php echo esc_attr($smtp_username); ?>"
+                                 class="styled-input mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                         </div>
+                         <div>
+                             <label for="robodesk_smtp_password" class="block text-sm font-medium text-gray-700"><?php _e('SMTP Password', 'robodesk'); ?></label>
+                             <input type="password" name="robodesk_smtp_password" id="robodesk_smtp_password"
+                                 value="<?php echo esc_attr($smtp_password); ?>"
+                                 class="styled-input mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                         </div>
+                         <div>
+                             <label for="robodesk_smtp_encryption" class="block text-sm font-medium text-gray-700"><?php _e('Encryption', 'robodesk'); ?></label>
+                             <select name="robodesk_smtp_encryption" id="robodesk_smtp_encryption"
+                                 class="styled-select mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                                 <option value="none" <?php selected($smtp_encryption, 'none'); ?>><?php _e('None', 'robodesk'); ?></option>
+                                 <option value="ssl" <?php selected($smtp_encryption, 'ssl'); ?>><?php _e('SSL', 'robodesk'); ?></option>
+                                 <option value="tls" <?php selected($smtp_encryption, 'tls'); ?>><?php _e('TLS', 'robodesk'); ?></option>
+                             </select>
+                         </div>
+                         <div>
+                             <label for="robodesk_smtp_from_email" class="block text-sm font-medium text-gray-700"><?php _e('From Email', 'robodesk'); ?></label>
+                             <input type="email" name="robodesk_smtp_from_email" id="robodesk_smtp_from_email"
+                                 value="<?php echo esc_attr($smtp_from_email); ?>"
+                                 class="styled-input mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                         </div>
+                         <div class="md:col-span-2">
+                             <label for="robodesk_smtp_from_name" class="block text-sm font-medium text-gray-700"><?php _e('From Name', 'robodesk'); ?></label>
+                             <input type="text" name="robodesk_smtp_from_name" id="robodesk_smtp_from_name"
+                                 value="<?php echo esc_attr($smtp_from_name); ?>"
+                                 class="styled-input mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                         </div>
+                     </div>
+
+                     <div class="mt-6 flex gap-4">
+                         <button type="button" id="robodesk-smtp-test" class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">
+                             <?php _e('Test SMTP Connection', 'robodesk'); ?>
+                         </button>
+                         <button type="button" id="save-smtp-settings" class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">
+                             <?php _e('Save SMTP Settings', 'robodesk'); ?>
                          </button>
                      </div>
                  </form>
