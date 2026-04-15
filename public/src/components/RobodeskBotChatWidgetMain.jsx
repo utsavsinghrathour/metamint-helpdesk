@@ -7,6 +7,7 @@ import { FiPaperclip } from 'react-icons/fi';
 import EmojiPicker from 'emoji-picker-react';
 
 export default function RobodeskBotChatWidgetMain({ widgetConfig, activeAIMode }) {
+    console.log('test tse');
     const rootRef = useRef(null);
     const CHAT_KEY = "robodesk_chat_session";
     const [enabled, setEnabled] = useState(true);
@@ -19,6 +20,8 @@ export default function RobodeskBotChatWidgetMain({ widgetConfig, activeAIMode }
     const [input, setInput] = useState("");
     const [loadingText, setLoadingText] = useState("");
     const [isStreaming, setIsStreaming] = useState(false);
+    const [botName, setBotName] = useState("");
+    const [botImage, setBotImage] = useState("");
     const apiProxy = window.location.origin + "/wp-json/robodesk-bot/v1/chat";
     const apiProxyStream = window.location.origin + "/wp-json/robodesk-bot/v1/chat-stream";
 
@@ -96,8 +99,25 @@ export default function RobodeskBotChatWidgetMain({ widgetConfig, activeAIMode }
         }).isRequired,
     };
 
+    const fetchApiKey = async () => {
+        console.log('fetchApiKey');
+        try {
+            const response = await wp.apiFetch({
+                path: `/robodesk-bot/v1/api-key`,
+            });
+            console.log('response', response);
+            // Try both possible key formats your PHP might return
+            setBotName(response.botName || response.bot_name || "");
+            setBotImage(response.botImage || response.bot_image || "");
+        } catch (err) {
+            console.error(err);
+        }
+    };
+
     useEffect(() => {
         sessionStorage.setItem(CHAT_KEY, JSON.stringify(messages));
+        fetchApiKey();
+
     }, [messages]);
 
     // Configuration is now passed via props, no need to read from DOM
@@ -164,115 +184,121 @@ export default function RobodeskBotChatWidgetMain({ widgetConfig, activeAIMode }
     };
 
     const sendMessageStream = async () => {
-    const q = input.trim();
-    if (!q) return;
+        const q = input.trim();
+        if (!q) return;
 
-    setMessages((m) => [...m, { role: "user", text: q }]);
-    setInput("");
-    window.dispatchEvent(new CustomEvent("robodesk:messageSent", { detail: { count: messages.length + 1 } }));
-    setIsStreaming(true);
-    setLoadingText("Thinking...");
+        setMessages((m) => [...m, { role: "user", text: q }]);
+        setInput("");
+        window.dispatchEvent(new CustomEvent("robodesk:messageSent", { detail: { count: messages.length + 1 } }));
+        setIsStreaming(true);
+        setLoadingText("Thinking...");
 
-    const headers = { "Content-Type": "application/json" };
-    if (window.RobodeskBotConfig?.restNonce) {
-        headers["X-WP-Nonce"] = RobodeskBotConfig.restNonce;
-    }
+        const headers = { "Content-Type": "application/json" };
+        if (window.RobodeskBotConfig?.restNonce) {
+            headers["X-WP-Nonce"] = RobodeskBotConfig.restNonce;
+        }
 
-    try {
-        const resp = await fetch(apiProxyStream, {
-            method: "POST",
-            headers,
-            body: JSON.stringify({ query: q }),
-        });
+        try {
+            const resp = await fetch(apiProxyStream, {
+                method: "POST",
+                headers,
+                body: JSON.stringify({ query: q }),
+            });
 
-        if (!resp.body) throw new Error("Streaming not supported");
+            if (!resp.body) throw new Error("Streaming not supported");
 
-        const reader = resp.body.getReader();
-        const decoder = new TextDecoder("utf-8");
+            const reader = resp.body.getReader();
+            const decoder = new TextDecoder("utf-8");
 
-        let buffer = "";
+            let buffer = "";
 
-        while (true) {
-            const { value, done } = await reader.read();
-            if (done) break;
+            while (true) {
+                const { value, done } = await reader.read();
+                if (done) break;
 
-            buffer += decoder.decode(value, { stream: true });
+                buffer += decoder.decode(value, { stream: true });
 
-            const events = buffer.split("\n\n");
-            buffer = events.pop();
+                const events = buffer.split("\n\n");
+                buffer = events.pop();
 
-            for (const ev of events) {
-                const lines = ev.split("\n");
+                for (const ev of events) {
+                    const lines = ev.split("\n");
 
-                let eventName = "";
-                let data = "";
+                    let eventName = "";
+                    let data = "";
 
-                for (const line of lines) {
-                    if (line.startsWith("event:")) {
-                        eventName = line.replace("event:", "").trim();
+                    for (const line of lines) {
+                        if (line.startsWith("event:")) {
+                            eventName = line.replace("event:", "").trim();
+                        }
+                        if (line.startsWith("data:")) {
+                            data += line.replace("data:", "").trim();
+                        }
                     }
-                    if (line.startsWith("data:")) {
-                        data += line.replace("data:", "").trim();
+
+                    if (!data) continue;
+
+                    const parsed = JSON.parse(data);
+
+                    // update loader text
+                    if (
+                        eventName.startsWith("thinking")
+                    ) {
+                        console.log("Received thinking event:", eventName,);
+                        setLoadingText(parsed.message);
                     }
-                }
 
-                if (!data) continue;
+                    // final message
+                    if (eventName === "Final Response:") {
+                        console.log("Received final response event:", parsed,);
+                        let finalText = "";
 
-                const parsed = JSON.parse(data);
+                        if (typeof parsed.message === "string") {
+                            finalText = parsed.message;
+                        } else if (parsed.message && typeof parsed.message === "object") {
+                            // If message is an object, try to get text or response field
+                            finalText = parsed.message?.text;
+                        } else if (parsed.response && typeof parsed.response === "object") {
+                            finalText = parsed.response.text || parsed.response.message || JSON.stringify(parsed.response);
+                        } else if (typeof parsed.response === "string") {
+                            finalText = parsed.response;
+                        } else {
+                            finalText = "";
+                        }
+                        console.log("Final parsed response:", finalText,);
+                        setMessages((m) => [
+                            ...m,
+                            {
+                                role: "assistant",
+                                mode: parsed.mode || "",
+                                message: finalText || "",
+                                data: parsed.response || null,
+                                data: parsed.data || null,
+                                ui: parsed.ui || { suggestions: [], actions: [] },
+                                intent: parsed.intent || "",
+                            },
+                        ]);
 
-                // update loader text
-                if (
-                    eventName.startsWith("thinking")
-                ) {
-                    console.log("Received thinking event:", eventName,);
-                    setLoadingText(parsed.message);
-                }
-
-                // final message
-                if (eventName === "Final Response:") {
-                    console.log("Received final response event:", parsed,); 
-                    let finalText = "";
-
-                    if (typeof parsed.message === "string") {
-                        finalText = parsed.message;
-                    } else if (parsed.message && typeof parsed.message === "object") {
-                        // If message is an object, try to get text or response field
-                        finalText = parsed.message?.text;
-                    } else if (parsed.response && typeof parsed.response === "object") {
-                        finalText = parsed.response.text || parsed.response.message || JSON.stringify(parsed.response);
-                    } else if (typeof parsed.response === "string") {
-                        finalText = parsed.response;
-                    } else {
-                        finalText = "";
+                        setIsStreaming(false);
+                        setLoadingText("");
                     }
-                    console.log("Final parsed response:", finalText,);
-                    setMessages((m) => [
-                        ...m,
-                        {
-                            role: "assistant",
-                            mode: parsed.mode || "",
-                            message: finalText || "",
-                            data: parsed.response || null,
-                            data: parsed.data || null,
-                            ui: parsed.ui || { suggestions: [], actions: [] },
-                            intent: parsed.intent || "",
-                        },
-                    ]);
-
-                    setIsStreaming(false);
-                    setLoadingText("");
                 }
             }
+        } catch (e) {
+            setMessages((m) => [
+                ...m,
+                { role: "assistant", text: e.message },
+            ]);
+            setIsStreaming(false);
+            setLoadingText("");
         }
-    } catch (e) {
-        setMessages((m) => [
-            ...m,
-            { role: "assistant", text: e.message },
-        ]);
-        setIsStreaming(false);
-        setLoadingText("");
-    }
-};
+    };
+
+
+
+
+
+
     return (
         <>
             <div id="robodesk-bot-panel">
@@ -293,11 +319,13 @@ export default function RobodeskBotChatWidgetMain({ widgetConfig, activeAIMode }
                                 className={`chat-message ${m.role === 'user'
                                     ? 'rd-ml-auto sent'
                                     : 'rd-flex rd-gap-8 received'
-                                } ${isSameSender ? 'rd-msg-same-sender' : 'rd-msg-new-sender'} ${m.role === 'user' ? 'rd-msg-user' : 'rd-msg-assistant'}`}
+                                    } ${isSameSender ? 'rd-msg-same-sender' : 'rd-msg-new-sender'} ${m.role === 'user' ? 'rd-msg-user' : 'rd-msg-assistant'}`}
                             >
                                 {/* AI AVATAR */}
                                 {m.role === 'assistant' && (!isSameSender || i === 0) && (
-                                    <div className="rd-ai-avatar">AI</div>
+                                    <div className="rd-ai-avatar">
+                                        {botImage ? <img src={botImage} alt={botName} className="bot-image" /> : botName}
+                                    </div>
                                 )}
 
                                 {/* AI AVATAR SPACER */}
@@ -335,7 +363,9 @@ export default function RobodeskBotChatWidgetMain({ widgetConfig, activeAIMode }
                     {/* STREAMING LOADER */}
                     {isStreaming && (
                         <div className="chat-message rd-flex rd-gap-8 received rd-streaming-loader">
-                            <div className="rd-ai-avatar">AI</div>
+                            <div className="rd-ai-avatar">
+                                {botImage ? <img src={botImage} alt={botName} className="bot-image" /> : botName}
+                            </div>
                             <div className="rd-message-content rd-msg-content-assistant">
                                 <span className="rd-body-text">
                                     {loadingText || "Thinking..."}
@@ -344,7 +374,7 @@ export default function RobodeskBotChatWidgetMain({ widgetConfig, activeAIMode }
                         </div>
                     )}
                 </div>
-                
+
                 {/* INPUT */}
                 <div id="robodesk-bot-input" className="chat-input rd-flex rd-px-18 rd-py-15 rd-border-top-light rd-border-bottom-light rd-bg-white rd-justify-between">
                     <>
