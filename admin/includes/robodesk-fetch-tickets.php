@@ -399,7 +399,7 @@ function robodesk_fetch_emails()
 
             if (!is_wp_error($post_id)) {
                 // Assign the ticket to a support staff member
-                $assignee = auto_assign_ticket_to_support_staff();
+                $assignee = auto_assign_ticket_to_support_staff(true);
 
                 // If an assignee was found, add it as post meta
                 if ($assignee) {
