@@ -214,6 +214,10 @@ const SingleTicket = ({
   handleFocusedTextArea,
   setActiveTab,
 }) => {
+  const ticketIntroMessage =
+    window.robodeskData?.ticketIntroMessage ||
+    'If you are interested in working with us, take a step towards discovering exciting opportunities by reaching out to us. We look forward to talking with you soon!';
+
   const [message, setMessage] = useState('');
   const [showPicker, setShowPicker] = useState(false);
   const [previewImage, setPreviewImage] = useState(null);
@@ -842,9 +846,7 @@ const SingleTicket = ({
         </div>
         <div className='rd-body-text rd-mt-30'>
           <p className='rd-text-center rd-body-text rd-mb-0'>
-            If you are interested in working with us, take a step towards
-            discovering exciting opportunities by reaching out to us. We look
-            forward to talking with you soon!
+            {ticketIntroMessage}
           </p>
         </div>
       </div>
