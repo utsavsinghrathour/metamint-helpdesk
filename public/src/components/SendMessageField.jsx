@@ -8,6 +8,8 @@ const SendMessageField = ({ setShowLogin, setActiveTab, updateSelectedTicket, ha
     const [loggedIn, setLoggedIn] = useState(false);
     const [userId, setUserId] = useState(null);
     const [placeHolderText, setplaceHolderText] = useState('Start a conversation...');
+    const chatHeading = window.robodeskData?.chatHeading || 'Have Questions?';
+    const welcomeMessage = window.robodeskData?.welcomeMessage || 'Have any questions or need a quote? Leave us a message.';
     const { loggedinContext, loggedInUsrId, refreshTickets } = useAppData();
 
 
@@ -95,10 +97,8 @@ const SendMessageField = ({ setShowLogin, setActiveTab, updateSelectedTicket, ha
     return (
         <div className="send-message-field rd-px-18">
             <div className='rd-text-center rd-px-20 rd-flex rd-flex-col rd-gap-5 rd-mb-20 home-tab-title'>
-                <h4 className='heading-4'>Have Questions?</h4>
-                <h5 className='sub-text rd-mt-0'>
-                    Have any questions or need a quote? Leave us a message.
-                </h5>
+                <h4 className='heading-4'>{chatHeading}</h4>
+                <h5 className='sub-text rd-mt-0'>{welcomeMessage}</h5>
             </div>
             <div className="rd-position-relative rd-flex">
                 <textarea

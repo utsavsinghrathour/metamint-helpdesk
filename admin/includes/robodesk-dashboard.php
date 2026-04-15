@@ -45,7 +45,7 @@ function robodesk_dashboard_callback()
 
     // Start output buffering to capture the HTML
     ob_start();
-    ?>
+?>
 
     <div class="bg-gray-100">
         <!-- Navigation -->
@@ -67,7 +67,7 @@ function robodesk_dashboard_callback()
                                 <i class="fas fa-home mr-2"></i>
                                 <?php _e('Dashboard', 'robodesk'); ?>
                             </button>
-                            <button onclick="showPage('tickets')"
+                            <button onclick="showPage('tickets', true)"
                                 class="nav-link inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
                                 data-page="tickets">
                                 <i class="fas fa-ticket-alt mr-2"></i>
@@ -135,27 +135,27 @@ function robodesk_dashboard_callback()
             <!-- Dashboard Page -->
 
             <?php
-            include 'robodesk-dashboard-stats.php';
+            include ROBODESK_PLUGIN_PATH . 'admin/includes/robodesk-dashboard-stats.php';
             ?>
 
             <!---------------------------------- New Ticket Page ---------------------------------->
             <?php
-            include 'robodesk-create-conversation.php';
+            include ROBODESK_PLUGIN_PATH . 'admin/includes/robodesk-create-conversation.php';
             ?>
 
             <!------------------------------------- Tickets Page ------------------------------------->
-        <?php
-        include 'robodesk-conversations.php';
-        ?>
-
-        <!------------------------------- Ticket Detail Page ----------------------->
-        <?php
-        include 'robodesk-conversation-detail.php';
-        ?>
-
-        <!---------------------- Settings Page ---------------------->
             <?php
-            include 'robodesk-settings.php';
+            include ROBODESK_PLUGIN_PATH . 'admin/includes/robodesk-conversations.php';
+            ?>
+
+            <!------------------------------- Ticket Detail Page ----------------------->
+            <?php
+            include ROBODESK_PLUGIN_PATH . 'admin/includes/robodesk-conversation-detail.php';
+            ?>
+
+            <!---------------------- Settings Page ---------------------->
+            <?php
+            include ROBODESK_PLUGIN_PATH . 'admin/includes/robodesk-settings.php';
             ?>
 
             <!---------------------- Addons Page ---------------------->
@@ -182,7 +182,7 @@ function robodesk_dashboard_callback()
 
     </div>
 
-    <?php
+<?php
     // Output the buffered content
     echo ob_get_clean();
 }

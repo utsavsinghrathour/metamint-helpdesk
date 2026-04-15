@@ -1,6 +1,25 @@
 <?php
-require_once ROBODESK_PLUGIN_PATH . 'public/includes/php-jwt/src/JWT.php';
-require_once ROBODESK_PLUGIN_PATH . 'public/includes/php-jwt/src/Key.php';
+$robodesk_jwt_file = ROBODESK_PLUGIN_PATH . 'public/includes/php-jwt/src/JWT.php';
+$robodesk_key_file = ROBODESK_PLUGIN_PATH . 'public/includes/php-jwt/src/Key.php';
+
+if (file_exists($robodesk_jwt_file) && file_exists($robodesk_key_file)) {
+    require_once $robodesk_jwt_file;
+    require_once $robodesk_key_file;
+} else {
+    if (!function_exists('robodesk_missing_jwt_library_notice')) {
+        function robodesk_missing_jwt_library_notice()
+        {
+            if (!current_user_can('manage_options')) {
+                return;
+            }
+
+            echo '<div class="notice notice-error"><p><strong>Robodesk:</strong> JWT library files are missing. Please reinstall the plugin package.</p></div>';
+        }
+    }
+
+    add_action('admin_notices', 'robodesk_missing_jwt_library_notice');
+    return;
+}
 
 
 use \Firebase\JWT\JWT;
@@ -11,6 +30,48 @@ if (!defined('JWT_AUTH_SECRET_KEY')) {
     define('JWT_AUTH_SECRET_KEY', 'robodesk-secret');
 }
 
+/**
+ * Get user profile picture URL
+ * Prioritizes custom wp_user_avatar over Gravatar
+ * 
+ * @param int $user_id User ID
+ * @param array $args Avatar arguments (size, etc)
+ * @return string Avatar URL
+ */
+function robodesk_get_user_avatar_url($user_id, $args = array())
+{
+    $avatar_id = get_user_meta($user_id, 'wp_user_avatar', true);
+
+    // If user has a custom avatar, return its URL
+    if ($avatar_id) {
+        $avatar_url = wp_get_attachment_image_url($avatar_id, 'thumbnail');
+        if ($avatar_url) {
+            return $avatar_url;
+        }
+    }
+
+    // Fall back to WordPress default avatar (Gravatar)
+    return get_avatar_url($user_id, $args);
+}
+
+// Add author_image field to WordPress REST API comments
+add_action('rest_api_init', function () {
+    register_rest_field('comment', 'author_image', array(
+        'get_callback' => function ($comment) {
+            if (is_array($comment)) {
+                $user_id = $comment['user_id'] ?? 0;
+            } else {
+                $user_id = $comment->user_id ?? 0;
+            }
+            return robodesk_get_user_avatar_url($user_id, array('size' => 32));
+        },
+        'schema' => array(
+            'description' => 'URL of the comment author\'s avatar image',
+            'type' => 'string',
+            'context' => array('view', 'edit'),
+        ),
+    ));
+});
 
 // function robodesk_allow_image_in_comments( $allowed_tags ) {
 //     $allowed_tags['img'] = array(
@@ -148,7 +209,7 @@ add_filter('rest_pre_serve_request', function ($value, $result, $request, $serve
 
 /* Public Rest Api registration hooks */
 
-add_action('rest_api_init', callback: function () {
+add_action('rest_api_init', function () {
 
     register_rest_route('robodesk/v1', '/login', array(
         'methods' => 'POST',
@@ -445,7 +506,7 @@ function robodesk_live_conversations($ticket_id, $last_comment_client, $loggedin
                         'id' => (int) $comment->user_id
                     ),
                     'author_name' => $comment->display_name ?: $comment->comment_author,
-                    'author_image' => get_avatar_url($comment->user_id ?: $comment->comment_author_email, array('size' => 32)),
+                    'author_image' => robodesk_get_user_avatar_url($comment->user_id ?: 0, array('size' => 32)),
                     'time_ago' => human_time_diff(strtotime($comment->comment_date), current_time('timestamp')) . ' ago',
                     'author_id' => (int) $comment->user_id,
                     'post_author_id' => (int) $ticket_id ? get_post_field('post_author', $ticket_id) : 0,
@@ -520,7 +581,7 @@ function robodesk_my_own_conversations($ticket_id, $last_my_comment_client)
                         'id' => (int) $comment->user_id
                     ),
                     'author_name' => $comment->display_name ?: $comment->comment_author,
-                    'author_image' => get_avatar_url($comment->user_id ?: $comment->comment_author_email, array('size' => 32)),
+                    'author_image' => robodesk_get_user_avatar_url($comment->user_id ?: 0, array('size' => 32)),
                     'time_ago' => human_time_diff(strtotime($comment->comment_date), current_time('timestamp')) . ' ago',
                     'author_id' => (int) $comment->user_id,
                     'post_author_id' => (int) $ticket_id ? get_post_field('post_author', $ticket_id) : 0,
@@ -575,7 +636,7 @@ function robodesk_get_new_tickets($last_id_client, $user_id)
         // Author details
         $author_id = $conversations->post_author;
         $author_name = get_the_author_meta('display_name', $author_id);
-        $author_image = get_avatar_url($author_id);
+        $author_image = robodesk_get_user_avatar_url($author_id);
 
         // Time ago
         $time_diff = human_time_diff(get_the_time('U', $ticket_id), current_time('timestamp')) . ' ago';
@@ -716,7 +777,7 @@ function robodesk_live_comments($request)
                         'id' => (int) $comment->user_id
                     ),
                     'author_name' => $comment->display_name ?: $comment->comment_author,
-                    'author_image' => get_avatar_url($comment->user_id ?: $comment->comment_author_email, array('size' => 32)),
+                    'author_image' => robodesk_get_user_avatar_url($comment->user_id ?: 0, array('size' => 32)),
                     'time_ago' => human_time_diff(strtotime($comment->comment_date), current_time('timestamp')) . ' ago',
                     'author_id' => (int) $comment->user_id,
                     'post_author_id' => (int) $ticket_id ? get_post_field('post_author', $ticket_id) : 0,
@@ -986,7 +1047,7 @@ function build_ticket_response_data($ticket_id, $user_object, $reply_id = false)
         'ticket_origin' => $ticket_origin,
         'ticket_author' => $user_object->display_name,
         'ticket_author_email' => $user_object->user_email,
-        'ticket_author_image' => get_avatar_url($user_object->ID),
+        'ticket_author_image' => robodesk_get_user_avatar_url($user_object->ID),
         'ticket_time_ago' => $human_readable_time,
         'comment_id' => $reply_id,
     ];
@@ -1060,7 +1121,7 @@ function robodesk_handle_selected_staff(WP_REST_Request $request)
 
     return new WP_REST_Response(array(
         'staff_display_name' => $staff_user->display_name,
-        'staff_user_image' => get_avatar_url($staff_user->ID),
+        'staff_user_image' => robodesk_get_user_avatar_url($staff_user->ID),
         'staff_user_email' => $staff_user->user_email,
         'staff_user_id' => $staff_user->ID,
     ), 200);
@@ -1226,7 +1287,7 @@ function get_tickets_batch_data($ticket_ids, $user_id)
     // Get user data once
     $user_object = get_cached_user_data($user_id);
     $user_name = $user_object ? $user_object->display_name : 'Unknown';
-    $avatar_url = get_avatar_url($user_id);
+    $avatar_url = robodesk_get_user_avatar_url($user_id);
 
     // Build response array
     $formatted_tickets = [];
@@ -1309,7 +1370,7 @@ function robodesk_handle_reply_receive($data)
         'id' => $comment->comment_ID,
         'author' => $comment->comment_author,
         'author_id' => $comment->user_id,
-        'author_image' => get_avatar_url($comment->user_id, ['size' => 96]),
+        'author_image' => robodesk_get_user_avatar_url($comment->user_id, ['size' => 96]),
         'content' => $comment->comment_content,
         'created_at' => $comment->comment_date,
         // 'attachment_id' => $attachment_id,
@@ -1361,7 +1422,7 @@ function robodesk_handle_comments_get($data)
             'id' => $comment->comment_ID,
             'author' => $comment->comment_author,
             'author_id' => $comment->user_id,
-            'author_image' => get_avatar_url($comment->user_id, ['size' => 96]),
+            'author_image' => robodesk_get_user_avatar_url($comment->user_id, ['size' => 96]),
             'content' => $comment->comment_content,
             'created_at' => $comment->comment_date,
         ];

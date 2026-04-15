@@ -4,6 +4,8 @@ function loadDashboardTickets() {
   const current_user_name =
     robodeskCurrentUser?.name || robodeskCurrentUser?.display_name || "";
 
+  updateDashboardFilterCounts(current_user_name);
+
   // Filter dashboard_tickets based on currentDashboardFilter
   switch (currentDashboardFilter) {
     case "my_conversation":
@@ -211,6 +213,42 @@ function loadDashboardTickets() {
         viewTicket(ticketId);
       } else {
         console.error("No ticket ID found for row:", row);
+      }
+    }
+  });
+}
+
+function updateDashboardFilterCounts(currentUserName) {
+  const myCount = dashboard_tickets.filter(
+    (t) => t.assignee === currentUserName && t.status !== "closed",
+  ).length;
+  const unassignedCount = dashboard_tickets.filter(
+    (t) => t.assignee === "N/A" || !t.assignee,
+  ).length;
+  const openCount = dashboard_tickets.filter(
+    (t) => t.status === "open" || t.status === "in-progress",
+  ).length;
+  const chatCount = dashboard_tickets.filter(
+    (t) => t.source === "chat" && t.status !== "closed",
+  ).length;
+
+  const countTargets = {
+    "dashboard-count-my-conversation": myCount,
+    "dashboard-count-unassigned-conversation": unassignedCount,
+    "dashboard-count-open-conversation": openCount,
+    "dashboard-count-chat-conversation": chatCount,
+  };
+
+  Object.entries(countTargets).forEach(([id, value]) => {
+    const el = document.getElementById(id);
+    if (el) {
+      const count = Number(value) || 0;
+      if (count > 0) {
+        el.textContent = count > 99 ? "99+" : String(count);
+        el.classList.add("is-visible");
+      } else {
+        el.textContent = "";
+        el.classList.remove("is-visible");
       }
     }
   });
@@ -601,7 +639,7 @@ function showToast(message, type = "success") {
 }
 
 // Navigation functions
-function showPage(pageName) {
+function showPage(pageName, fromClick = false) {
   // Update the currentPage variable
   currentPage = pageName;
 
@@ -635,6 +673,10 @@ function showPage(pageName) {
   } else if (pageName === "tickets") {
     // Load conversations/tickets list - the content is rendered server-side
     // Just ensure page visibility
+    if (fromClick) {
+      window.location.reload();
+      return;
+    }
   } else if (pageName === "ticket-detail") {
     loadTicketDetail();
   } else if (pageName === "settings") {
@@ -816,7 +858,7 @@ function loadTicketDetail() {
   if (!currentTicket) return;
 
   document.getElementById("ticket-detail-title").textContent =
-    `Ticket #${currentTicket.id} - ${currentTicket.title}`;
+    `Conversation #${currentTicket.id} - ${currentTicket.title}`;
 
   // Load customer information
   const customerInfo = document.getElementById("customer-info");
@@ -1193,6 +1235,95 @@ jQuery(document).ready(function ($) {
   });
 });
 
+// SMTP Save Settings AJAX handler
+jQuery(document).ready(function ($) {
+  $(document).on("click", "#save-smtp-settings", function (e) {
+    e.preventDefault();
+
+    var $form = $("#robodesk-smtp-form");
+    var $saveButton = $(this);
+    $saveButton.prop("disabled", true).text("Saving...");
+
+    $.ajax({
+      url: ajaxurl,
+      type: "POST",
+      data: {
+        action: "robodesk_smtp_save_settings",
+        nonce: $form.find('input[name="robodesk_smtp_settings_nonce"]').val(),
+        robodesk_smtp_enabled: $form
+          .find("#robodesk_smtp_enabled")
+          .is(":checked")
+          ? "1"
+          : "0",
+        robodesk_smtp_host: $form.find("#robodesk_smtp_host").val(),
+        robodesk_smtp_port: $form.find("#robodesk_smtp_port").val(),
+        robodesk_smtp_username: $form.find("#robodesk_smtp_username").val(),
+        robodesk_smtp_password: $form.find("#robodesk_smtp_password").val(),
+        robodesk_smtp_encryption: $form.find("#robodesk_smtp_encryption").val(),
+        robodesk_smtp_from_email: $form.find("#robodesk_smtp_from_email").val(),
+        robodesk_smtp_from_name: $form.find("#robodesk_smtp_from_name").val(),
+      },
+      success: function (response) {
+        if (response.success) {
+          showToast(response.data.message, "success");
+        } else {
+          showToast(response.data.message, "error");
+        }
+      },
+      error: function () {
+        showToast("An error occurred. Please try again.", "error");
+      },
+      complete: function () {
+        $saveButton.prop("disabled", false).text("Save SMTP Settings");
+      },
+    });
+  });
+});
+
+// SMTP Test Connection handler
+jQuery(document).ready(function ($) {
+  $(document).on("click", "#robodesk-smtp-test", function () {
+    var $form = $("#robodesk-smtp-form");
+    var $testButton = $(this);
+
+    $testButton.prop("disabled", true).text("Testing...");
+
+    $.ajax({
+      url: ajaxurl,
+      type: "POST",
+      data: {
+        action: "robodesk_smtp_test_connection",
+        nonce: $form.find('input[name="robodesk_smtp_settings_nonce"]').val(),
+        robodesk_smtp_enabled: $form
+          .find("#robodesk_smtp_enabled")
+          .is(":checked")
+          ? "1"
+          : "0",
+        robodesk_smtp_host: $form.find("#robodesk_smtp_host").val(),
+        robodesk_smtp_port: $form.find("#robodesk_smtp_port").val(),
+        robodesk_smtp_username: $form.find("#robodesk_smtp_username").val(),
+        robodesk_smtp_password: $form.find("#robodesk_smtp_password").val(),
+        robodesk_smtp_encryption: $form.find("#robodesk_smtp_encryption").val(),
+        robodesk_smtp_from_email: $form.find("#robodesk_smtp_from_email").val(),
+        robodesk_smtp_from_name: $form.find("#robodesk_smtp_from_name").val(),
+      },
+      success: function (response) {
+        if (response.success) {
+          showToast(response.data.message, "success");
+        } else {
+          showToast(response.data.message, "error");
+        }
+      },
+      error: function (xhr, status, error) {
+        showToast("AJAX request failed: " + error, "error");
+      },
+      complete: function () {
+        $testButton.prop("disabled", false).text("Test SMTP Connection");
+      },
+    });
+  });
+});
+
 // email template settings AJAX handler
 jQuery(document).ready(function ($) {
   $(document).on("click", "#robodesk-save-templates", function () {
@@ -1403,6 +1534,18 @@ jQuery(document).ready(function ($) {
     formData.append(
       "settings[default_ticket_category]",
       $form.find("#robodesk_default_ticket_category").val(),
+    );
+    formData.append(
+      "settings[chat_heading]",
+      $form.find("#chat_heading").val(),
+    );
+    formData.append(
+      "settings[welcome_message]",
+      $form.find("#welcome_message").val(),
+    );
+    formData.append(
+      "settings[ticket_intro_message]",
+      $form.find("#ticket_intro_message").val(),
     );
 
     // Append media URLs and files
@@ -3216,14 +3359,14 @@ viewTicket = function (ticketId) {
 
 // Override the showPage function to stop refresh when leaving ticket detail
 const originalShowPage = showPage;
-showPage = function (pageName) {
+showPage = function (pageName, fromClick = false) {
   // Stop replies refresh when leaving ticket detail page
   if (pageName !== "ticket-detail") {
     stopRepliesAutoRefresh();
   }
 
   // Call the original function
-  originalShowPage(pageName);
+  originalShowPage(pageName, fromClick);
 
   // Start dashboard refresh when going to dashboard
   if (pageName === "dashboard") {

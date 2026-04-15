@@ -412,21 +412,13 @@
                 <h3 class="text-lg leading-6 font-medium text-gray-900">
                     <?php _e('Conversation Overview', 'robodesk'); ?></h3>
                 <div class="flex space-x-2">
-                    <button onclick="filterDashboardTickets('my_conversation')"
-                        class="dashboard-filter-btn px-3 py-1 text-sm rounded-md border <?php echo $filter === 'my_conversation' ? 'active' : ''; ?>"
-                        data-filter="my_conversation"><?php _e('My Conversations', 'robodesk'); ?></button>
+                    <button onclick="filterDashboardTickets('my_conversation')" class="dashboard-filter-btn px-3 py-1 text-sm rounded-md border <?php echo $filter === 'my_conversation' ? 'active' : ''; ?>" data-filter="my_conversation"><?php _e('My Conversations', 'robodesk'); ?> <span id="dashboard-count-my-conversation" class="dashboard-filter-count-badge" aria-hidden="true"></span></button>
 
-                    <button onclick="filterDashboardTickets('unassigned_conversation')"
-                        class="dashboard-filter-btn px-3 py-1 text-sm rounded-md border <?php echo $filter === 'unassigned_conversation' ? 'active' : ''; ?>"
-                        data-filter="unassigned_conversation"><?php _e('Unassigned Conversations', 'robodesk'); ?></button>
+                    <button onclick="filterDashboardTickets('unassigned_conversation')" class="dashboard-filter-btn px-3 py-1 text-sm rounded-md border <?php echo $filter === 'unassigned_conversation' ? 'active' : ''; ?>" data-filter="unassigned_conversation"><?php _e('Unassigned Conversations', 'robodesk'); ?> <span id="dashboard-count-unassigned-conversation" class="dashboard-filter-count-badge" aria-hidden="true"></span></button>
 
-                    <button onclick="filterDashboardTickets('open_conversation')"
-                        class="dashboard-filter-btn px-3 py-1 text-sm rounded-md border <?php echo $filter === 'open_conversation' ? 'active' : ''; ?>"
-                        data-filter="open_conversation"><?php _e('Open Conversations', 'robodesk'); ?></button>
+                    <button onclick="filterDashboardTickets('open_conversation')" class="dashboard-filter-btn px-3 py-1 text-sm rounded-md border <?php echo $filter === 'open_conversation' ? 'active' : ''; ?>" data-filter="open_conversation"><?php _e('Open Conversations', 'robodesk'); ?> <span id="dashboard-count-open-conversation" class="dashboard-filter-count-badge" aria-hidden="true"></span></button>
 
-                    <button onclick="filterDashboardTickets('chat_conversation')"
-                        class="dashboard-filter-btn px-3 py-1 text-sm rounded-md border <?php echo $filter === 'chat_conversation' ? 'active' : ''; ?>"
-                        data-filter="chat_conversation"><?php _e('Chat Conversations', 'robodesk'); ?></button>
+                    <button onclick="filterDashboardTickets('chat_conversation')" class="dashboard-filter-btn px-3 py-1 text-sm rounded-md border <?php echo $filter === 'chat_conversation' ? 'active' : ''; ?>" data-filter="chat_conversation"><?php _e('Chat Conversations', 'robodesk'); ?> <span id="dashboard-count-chat-conversation" class="dashboard-filter-count-badge" aria-hidden="true"></span></button>
 
                 </div>
             </div>

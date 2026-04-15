@@ -203,6 +203,22 @@ $users =  get_users([
     'fields'   => ['ID', 'display_name'],
 ]);
 
+// Get users for autocomplete in customer/agent filters
+$customer_filter_users = get_users([
+    'fields' => ['display_name', 'user_email', 'user_login'],
+    'number' => 500,
+    'orderby' => 'display_name',
+    'order' => 'ASC',
+]);
+
+$agent_filter_users = get_users([
+    'role__in' => ['robodesk_support_staff', 'robodesk_support_manager', 'author', 'editor', 'administrator'],
+    'fields' => ['display_name', 'user_email', 'user_login'],
+    'number' => 500,
+    'orderby' => 'display_name',
+    'order' => 'ASC',
+]);
+
 // Get priority terms
 $priority_terms = get_terms(array(
     'taxonomy' => 'robodesk_ticket_priority',
@@ -242,6 +258,7 @@ $priority_terms = get_terms(array(
                     <label class="block text-sm font-medium text-gray-700 mb-2">Search by Customer</label>
                     <input type="text"
                         name="customer"
+                        list="robodesk-customer-options"
                         value="<?php echo esc_attr($customer_filter); ?>"
                         placeholder="Customer name..."
                         class="styled-input block w-full px-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500">
@@ -251,6 +268,7 @@ $priority_terms = get_terms(array(
                     <label class="block text-sm font-medium text-gray-700 mb-2">Search by Agent</label>
                     <input type="text"
                         name="agent"
+                        list="robodesk-agent-options"
                         value="<?php echo esc_attr($agent_filter); ?>"
                         placeholder="Agent name..."
                         class="styled-input block w-full px-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500">
@@ -282,6 +300,22 @@ $priority_terms = get_terms(array(
                     <?php endif; ?>
                 </div>
             </form>
+
+            <datalist id="robodesk-customer-options">
+                <?php foreach ($customer_filter_users as $customer_user) : ?>
+                    <?php if (!empty($customer_user->display_name)) : ?>
+                        <option value="<?php echo esc_attr($customer_user->display_name); ?>"><?php echo esc_html($customer_user->user_email); ?></option>
+                    <?php endif; ?>
+                <?php endforeach; ?>
+            </datalist>
+
+            <datalist id="robodesk-agent-options">
+                <?php foreach ($agent_filter_users as $agent_user) : ?>
+                    <?php if (!empty($agent_user->display_name)) : ?>
+                        <option value="<?php echo esc_attr($agent_user->display_name); ?>"><?php echo esc_html($agent_user->user_email); ?></option>
+                    <?php endif; ?>
+                <?php endforeach; ?>
+            </datalist>
         </div>
     </div>
 
@@ -563,43 +597,7 @@ $priority_terms = get_terms(array(
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // Get the filter form
-        const filterForm = document.querySelector('#tickets-page form');
-
-        if (filterForm) {
-            // Get search inputs
-            const searchInput = filterForm.querySelector('input[name="search"]');
-            const customerInput = filterForm.querySelector('input[name="customer"]');
-            const agentInput = filterForm.querySelector('input[name="agent"]');
-
-            let searchTimeout;
-
-            // Function to auto-submit form with debounce
-            function autoSubmitForm() {
-                clearTimeout(searchTimeout);
-                searchTimeout = setTimeout(function() {
-                    filterForm.submit();
-                }, 500); // Wait 500ms after user stops typing
-            }
-
-            // Add event listeners to all search fields
-            if (searchInput) {
-                searchInput.addEventListener('input', autoSubmitForm);
-            }
-
-            if (customerInput) {
-                customerInput.addEventListener('input', autoSubmitForm);
-            }
-
-            if (agentInput) {
-                agentInput.addEventListener('input', autoSubmitForm);
-            }
-
-            // Allow normal form submission - let the server handle filtering
-            filterForm.addEventListener('submit', function(e) {
-                // Allow default form submission to reload with filters
-                // No preventDefault() - let the form submit normally
-            });
-        }
+        // Intentionally no auto-submit search here.
+        // Filtering only runs when user clicks the Filter button.
     });
 </script>
