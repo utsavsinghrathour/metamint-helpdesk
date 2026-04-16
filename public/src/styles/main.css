@@ -9,6 +9,7 @@
   --border-rounded: 50px;
   --border-none: 0;
   --icon-dark: rgba(51, 51, 51, 1);
+  --font-family: "Inter", sans-serif !important;
 }
 
 .robodesk-plugin {
@@ -52,7 +53,7 @@
 }
 
 .robodesk-plugin *:not(i) {
-  font-family: "Inter", sans-serif !important;
+  font-family: var(--font-family);
   scrollbar-width: thin;
   scrollbar-color: var(--robodesk-theme-color) transparent;
 }
@@ -122,8 +123,9 @@ button.no-bg,
 }
 
 .rd-main-header-logo {
-  width: 30px;
+  aspect-ratio: 1/1;
   height: 30px;
+  width: 30px;
 }
 
 .robodesk-plugin .rd-header-logo img:not(.rd-faq-header img),
@@ -462,6 +464,7 @@ button.no-bg,
   font-size: 0.875rem !important;
   line-height: 18px;
   font-weight: 400;
+  letter-spacing: 0px !important;
 }
 
 .rd-border-light {
@@ -491,6 +494,7 @@ button.no-bg,
 }
 .rd-main-content p {
   font-size: 0.8125rem !important;
+  font-weight: 400 !important;
 }
 .color-body-text {
   color: var(--body-text);
