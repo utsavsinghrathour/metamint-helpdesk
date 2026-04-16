@@ -311,7 +311,6 @@ const MessageTabs = ({
                       <option key={priority.term_id}>{priority.name}</option>
                     ))}
                   </select>
-                  <div className='rd-flex rd-justify-between rd-py-10 rd-px-20 rd-gap-10 rd-border-bottom-light rd-pt-0'>
                   <select
                     ref={statusref}
                     id='status-conversation'
@@ -324,8 +323,10 @@ const MessageTabs = ({
                       </option>
                     ))}
                   </select>
+                 
+                  
                 </div>
-                </div>
+               
 
                 
 
@@ -356,7 +357,7 @@ const MessageTabs = ({
                           />
                         ))
                       ) : (
-                        <p className='rd-text-center rd-text-gray rd-m-5 err_msg'>
+                        <p className='rd-text-center rd-text-gray rd-m-5'>
                           No tickets found
                         </p>
                       )}
