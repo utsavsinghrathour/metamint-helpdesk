@@ -2096,8 +2096,8 @@ function robodesk_send_ticket_creation_email($post_id, $post, $update)
 
     $message = '<p>Hello ' . esc_html($first_name) . ',</p>';
     $message .= '<p>Your support ticket #' . (int) $post_id . ' has been created.</p>';
-    $message .= '<p>We will get back to you shortly. If you need to add to your conversation you can do so by clicking the button.</p>';
-    $message .= '<p><a href="' . esc_url($ticket_link) . '" style="display:inline-block;padding:12px 18px;background-color:' . esc_attr($theme_color) . ';color:#ffffff;text-decoration:none;border-radius:6px;font-weight:600;">View your conversation</a></p>';
+    $message .= '<p>We will get back to you shortly. If you need to add to your conversation you can do so by clicking the button.</p> <br>';
+    $message .= '<p><a href="' . esc_url($ticket_link) . '" style="display:inline-block;padding:12px 18px;background-color:' . esc_attr($theme_color) . ';color:#ffffff;text-decoration:none;border-radius:6px;font-weight:600;">View your conversation</a></p> <br>';
     $message .= '<p>If the button above does not work, please use this link: <a href="' . esc_url($ticket_link) . '">' . esc_html($ticket_link) . '</a></p>';
 
     // Send email
