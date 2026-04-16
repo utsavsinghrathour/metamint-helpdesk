@@ -420,7 +420,7 @@ const FAQ = ({
               ))}
             </div>
           ) : filteredFaqs.length === 0 ? (
-            <p className="err_msg rd-text-center">
+            <p className="rd-text-center">
               {searchTerm ? "No FAQs match your search." : "No FAQs found."}
             </p>
           ) : (
