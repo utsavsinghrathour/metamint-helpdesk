@@ -318,7 +318,7 @@ const NoticeTabs = ({
                       Loading notices...
                     </p>
                   ) : notices.length === 0 ? (
-                    <p className='err_msg'>No notices found.</p>
+                    <p className='rd-text-center'>No notices found.</p>
                   ) : (
                     notices.map((notice) => (
                       <NoticeItem
