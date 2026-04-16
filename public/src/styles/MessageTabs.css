@@ -218,6 +218,7 @@
 
 .robodesk-plugin .rd-message-list-header img {
   height: 40px;
+  aspect-ratio: auto;
   /* width: 40px; */
 }
 
