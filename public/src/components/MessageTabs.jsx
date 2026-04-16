@@ -43,12 +43,13 @@ const TicketItem = ({ ticket, onSelect }) => {
           >
             {ticket.title}
           </h5>
-          <div className='rd-text-small rd-mt-5 rd-flex rd-gap-5'>
+          <div className="rd-chat-info">
+            <div className='rd-text-small rd-mt-5 rd-flex rd-gap-5'>
             <span className='rd-flex'>
               {ticket.source} <LuDot /> {ticket.timeAgo}
             </span>
-          </div>
-          <div className='rd-flex rd-align-center rd-gap-10 rd-mt-10'>
+            </div>
+            <div className='rd-flex rd-align-center rd-gap-10 rd-mt-10'>
             <span
               className={`rd-priority rd-fw-medium ${ticket.priority === 'Urgent'
                   ? 'rd-urgent'
@@ -62,6 +63,7 @@ const TicketItem = ({ ticket, onSelect }) => {
             <span className='rd-text-small rd-fw-medium'>
               (#{ticket.ticketNumber})
             </span>
+            </div>
           </div>
         </div>
         <FaChevronRight />
@@ -309,9 +311,7 @@ const MessageTabs = ({
                       <option key={priority.term_id}>{priority.name}</option>
                     ))}
                   </select>
-                </div>
-
-                <div className='rd-flex rd-justify-between rd-py-10 rd-px-20 rd-gap-10 rd-border-bottom-light rd-pt-0'>
+                  <div className='rd-flex rd-justify-between rd-py-10 rd-px-20 rd-gap-10 rd-border-bottom-light rd-pt-0'>
                   <select
                     ref={statusref}
                     id='status-conversation'
@@ -325,6 +325,9 @@ const MessageTabs = ({
                     ))}
                   </select>
                 </div>
+                </div>
+
+                
 
                 {/* Ticket List */}
                 <div
