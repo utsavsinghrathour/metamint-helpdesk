@@ -202,7 +202,7 @@ const SingleQuestionBox = ({
               <img
                 src={image_urls.wide_logo}
                 alt='Plugin Wide Logo'
-                className='rd-h-auto rd-header-logo'
+                className=' rd-header-logo'
                 onError={(e) => {
                   e.target.style.display = 'none';
                 }}
@@ -211,17 +211,17 @@ const SingleQuestionBox = ({
               <img
                 src={image_urls.logo}
                 alt='Plugin Logo'
-                className='rd-h-auto rd-header-logo'
+                className=' rd-header-logo'
                 onError={(e) => {
                   e.target.style.display = 'none';
                 }}
               />
             ) : (
-              <div className='rd-h-auto rd-header-logo default-logo'>
+              <div className=' rd-header-logo default-logo'>
                 <img
                   src={defaultLogo}
                   alt='Default Plugin Logo'
-                  className='rd-h-auto rd-header-logo'
+                  className=' rd-header-logo'
                 />
               </div>
             )}
