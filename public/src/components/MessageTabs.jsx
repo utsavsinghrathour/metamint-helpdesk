@@ -288,7 +288,7 @@ const MessageTabs = ({
                 )}
               </div>
               <div className='rd-message-tab-content'>
-                <div className='rd-mt-10 rd-mb-10'>
+                <div className='rd-p-16'>
                   <h4 className='heading-4 rd-text-center'>Conversations</h4>
                   <div className='rd-body-text rd-mt-8 rd-text-center '>
                     <p>All your conversations are here.</p>
@@ -297,7 +297,7 @@ const MessageTabs = ({
 
                 {/* Search and Priority Filter */}
 
-                <div className='rd-px-18 rd-py-10 rd-flex rd-gap-10 rd-align-center rd-justify-between'>
+                <div className='rd-x-16 rd-py-10 rd-flex rd-gap-10 rd-align-center rd-justify-between'>
                   <input
                     ref={searchKeywordRef}
                     type='text'
@@ -325,7 +325,7 @@ const MessageTabs = ({
                   >
                     {Object.entries(wpAuth?.status).map(([key, label]) => (
                       <option key={key} value={key}>
-                        {label}
+                        {key === 'active-conversations' ? 'Active' : label}
                       </option>
                     ))}
                   </select>
