@@ -182,12 +182,12 @@ const Login = ({
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const popupParam = params.get("rbd_popup");
-    const initiatorParam = params.get("initator");
+    const initiatorParam = params.get("initiator") || params.get("initator");
 
     if (popupParam === "true" && initiatorParam === "robodesk") {
       setCurrentForm("change");
     }
-  }, [currentForm]);
+  }, []);
 
   const handleStateUpdate = (ticket) => {
     updateSelectedTicket(ticket);
