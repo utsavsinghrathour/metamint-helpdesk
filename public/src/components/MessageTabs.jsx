@@ -150,6 +150,12 @@ const MessageTabs = ({
     }
   }, [isLoggedIn, loggedInUsrId, ticketsContext]);
 
+  useEffect(() => {
+    if (selectedNewTicket && selectedNewTicket.id) {
+      setSelectedTicket(selectedNewTicket);
+    }
+  }, [selectedNewTicket]);
+
   const handleLogin = (loginStatus) => {
     setIsLoggedIn(loginStatus);
     if (loginStatus) {
