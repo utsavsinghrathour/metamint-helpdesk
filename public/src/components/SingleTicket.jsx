@@ -829,22 +829,22 @@ const SingleTicket = ({
             <img
               src={image_urls.wide_logo}
               alt='Plugin Wide Logo'
-              className='rd-h-auto rd-header-logo'
+              className=' rd-header-logo'
               onError={(e) => (e.target.style.display = 'none')}
             />
           ) : image_urls.logo && image_urls.logo.trim() !== '' ? (
             <img
               src={image_urls.logo}
               alt='Plugin Logo'
-              className='rd-h-auto rd-header-logo'
+              className=' rd-header-logo'
               onError={(e) => (e.target.style.display = 'none')}
             />
           ) : (
-            <div className='rd-h-auto rd-header-logo default-logo'>
+            <div className=' rd-header-logo default-logo'>
               <img
                 src={defaultLogo}
                 alt='Default Plugin Logo'
-                className='rd-h-auto rd-header-logo'
+                className=' rd-header-logo'
               />
             </div>
           )}
@@ -1010,7 +1010,7 @@ const SingleTicket = ({
               <img
                 src={previewImage}
                 alt='Preview'
-                className='rd-max-w-full rd-h-auto rd-border-radius-md rd-preview-image'
+                className='rd-max-w-full  rd-border-radius-md rd-preview-image'
                 style={{ maxWidth: '80px' }}
               />
               <button
