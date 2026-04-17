@@ -31,6 +31,7 @@ const AppContent = ({ imageUrls = { logo: "" } }) => {
   const [showActiveFeatured, setShowActiveFeatured] = useState(true);
   const [selectedTicket, setSelectedTicket] = useState();
   const [focusedTextArea, setFocusedTextArea] = useState(false);
+  const hasAutoOpenedTicket = useRef(false);
 
   const notificationAudio = useRef(
     new Audio(window.wpAuth?.notificationSound || ""),
@@ -42,25 +43,65 @@ const AppContent = ({ imageUrls = { logo: "" } }) => {
     (ticket) => ticket.notifications === "no",
   );
 
-  const resetPasswordCondition = () => {
+  const isRobodeskPopupIntent = () => {
     const params = new URLSearchParams(window.location.search);
     const popupParam = params.get("rbd_popup");
-    const initiatorParam = params.get("initator");
+    const initiatorParam = params.get("initiator") || params.get("initator");
     return popupParam === "true" && initiatorParam === "robodesk";
   };
 
-  useEffect(() => {
+  const requestedTicketId = useMemo(() => {
+    const deepLinkTicketId = window.robodeskData?.deepLinkTicketId;
+    if (deepLinkTicketId) {
+      return String(deepLinkTicketId);
+    }
+
     const params = new URLSearchParams(window.location.search);
+    return (
+      params.get("ticket_id") ||
+      params.get("ticket") ||
+      params.get("tid") ||
+      ""
+    ).trim();
+  }, []);
 
-    const popupParam = params.get("rbd_popup");
-    const initiatorParam = params.get("initator");
-
-    if (popupParam === "true" && initiatorParam === "robodesk") {
+  useEffect(() => {
+    if (isRobodeskPopupIntent()) {
       setShowActiveFeatured(false);
       setIsOpen(true);
       setActiveTab(1);
     }
   }, []);
+
+  useEffect(() => {
+    if (!requestedTicketId || hasAutoOpenedTicket.current) {
+      return;
+    }
+
+    if (!Array.isArray(ticketsContext) || ticketsContext.length === 0) {
+      return;
+    }
+
+    const normalizedRequestedId = String(requestedTicketId).toLowerCase();
+    const matchedTicket = ticketsContext.find((ticket) => {
+      const byId =
+        String(ticket?.id ?? "").toLowerCase() === normalizedRequestedId;
+      const ticketNumber = String(ticket?.ticketNumber ?? "").toLowerCase();
+      const byTicketNumber = ticketNumber === normalizedRequestedId;
+      const byTicketNumberSuffix =
+        ticketNumber.replace(/^tckt-/, "").trim() === normalizedRequestedId;
+
+      return byId || byTicketNumber || byTicketNumberSuffix;
+    });
+
+    if (matchedTicket) {
+      setSelectedTicket(matchedTicket);
+      setShowActiveFeatured(false);
+      setIsOpen(true);
+      setActiveTab(1);
+      hasAutoOpenedTicket.current = true;
+    }
+  }, [requestedTicketId, ticketsContext]);
 
   const handleSelectedTicketUpdate = (newValue) => {
     setSelectedTicket(newValue);
@@ -148,7 +189,7 @@ const AppContent = ({ imageUrls = { logo: "" } }) => {
         },
         includeCredentials: true,
       });
-       const now = Math.floor(Date.now() / 1000);
+      const now = Math.floor(Date.now() / 1000);
 
       const tokenData = {
         token: response.token,
@@ -160,18 +201,20 @@ const AppContent = ({ imageUrls = { logo: "" } }) => {
       console.log("Generated new token");
       return response.token;
     } catch (err) {
-      console.error(err.message || __("Error generating token", "wordpress-mcp"));
+      console.error(
+        err.message || __("Error generating token", "wordpress-mcp"),
+      );
     }
   };
 
   const handlePopupToggle = async () => {
-    console.log("Toggle Clicked",wpAuth.isLoggedIn, typeof(wpAuth.isLoggedIn));
+    console.log("Toggle Clicked", wpAuth.isLoggedIn, typeof wpAuth.isLoggedIn);
     if (isOpen) {
       setIsOpen(false);
       setShowActiveFeatured(true);
       setSelectedNotice(null);
     } else {
-      if (wpAuth.isLoggedIn === 'true') {
+      if (wpAuth.isLoggedIn === "true") {
         await generateToken(); // Generate token on popup toggle open
       }
       setIsOpen(true);

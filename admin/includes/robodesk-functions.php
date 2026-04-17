@@ -1369,11 +1369,10 @@ function robodesk_handle_close_ticket()
     } else {
         rbd_log("Sending email to: $customer_email");
         $subject = 'Your ticket has been closed';
-        $site_url = get_site_url();
-        $message = 'Hello, your ticket #' . $ticket_id . ' has been closed. If you have any further questions, feel free to reply to this email or visit: ' . $site_url . '?user=' . urlencode($customer_email) . '&rbd_popup=true&initiator=robodesk';
+        $ticket_link = robodesk_build_ticket_deeplink($ticket_id);
+        $message = 'Hello, your ticket #' . $ticket_id . ' has been closed. If you have any further questions, feel free to reply to this email or visit: ' . $ticket_link;
         robodesk_send_email($customer_email, $subject, $message);
     }
-    // isiteurl?&user=$customer_email&rbd_popup=true&initator=robodesk
     wp_send_json_success(['message' => 'Conversation closed successfully']);
 }
 
@@ -2073,8 +2072,7 @@ function robodesk_send_ticket_creation_email($post_id, $post, $update)
 
     // Prepare email content
     $subject = 'Your support ticket has been created.';
-    $site_url = get_site_url();
-    $ticket_link = $site_url . '?user=' . urlencode($customer_email) . '&rbd_popup=true&initiator=robodesk';
+    $ticket_link = robodesk_build_ticket_deeplink($post_id);
     $theme_color = robodesk_get_email_theme_color();
 
     $author = get_userdata($post->post_author);
