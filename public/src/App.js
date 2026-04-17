@@ -7,10 +7,10 @@ import HelpTabs from "./components/HelpTabs.jsx";
 import ActiveFeatured from "./components/ActiveFeatured.jsx";
 import "./styles/main.css";
 import defaultLogo from "./images/robodesk-logo.png";
-import { AppDataProvider, useAppData } from "./utils/AppDataContext";
+import { AppDataProvider, useAppData } from "./utils/AppDataContext.jsx";
 // import useExclusiveServerEvents from './Hooks/useExclusiveServerEvents.js';
 // import useSSE from './Hooks/useSSE.js';
-import { sseManager } from "./Hooks/sseManager";
+import { sseManager } from "./Hooks/sseManager.js";
 
 const AppContent = ({ imageUrls = { logo: "" } }) => {
   const {
@@ -32,6 +32,7 @@ const AppContent = ({ imageUrls = { logo: "" } }) => {
   const [selectedTicket, setSelectedTicket] = useState();
   const [focusedTextArea, setFocusedTextArea] = useState(false);
   const hasAutoOpenedTicket = useRef(false);
+  const hasAttemptedDeepLinkFetch = useRef(false);
 
   const notificationAudio = useRef(
     new Audio(window.wpAuth?.notificationSound || ""),
@@ -102,6 +103,69 @@ const AppContent = ({ imageUrls = { logo: "" } }) => {
       hasAutoOpenedTicket.current = true;
     }
   }, [requestedTicketId, ticketsContext]);
+
+  useEffect(() => {
+    if (!requestedTicketId || hasAutoOpenedTicket.current) {
+      return;
+    }
+
+    if (hasAttemptedDeepLinkFetch.current) {
+      return;
+    }
+
+    if (!loggedInUsrId && wpAuth.isLoggedIn !== "true") {
+      return;
+    }
+
+    hasAttemptedDeepLinkFetch.current = true;
+
+    const mapTicketPayload = (ticket) => ({
+      id: ticket.id,
+      ticketNumber: ticket.ticket_number,
+      title: ticket.ticket_title || ticket.title?.rendered || "",
+      source: ticket.ticket_origin,
+      timeAgo: ticket.ticket_time_ago ? `${ticket.ticket_time_ago} ago` : "",
+      authorImage: ticket.ticket_author_image || null,
+      status: ticket.ticket_status ?? "open",
+      priority: ticket.ticket_priority ?? "Medium",
+      author: ticket.ticket_author,
+      author_id: ticket.author,
+      lastReply: ticket.ticket_last_reply,
+      totalComments: ticket.ticket_total_comments,
+      notifications: ticket.ticket_notifications,
+      comments: ticket.ticket_comments,
+    });
+
+    const fetchRequestedTicket = async () => {
+      try {
+        const response = await fetch(
+          `/wp-json/wp/v2/robodesk_ticket/${encodeURIComponent(
+            requestedTicketId,
+          )}`,
+        );
+
+        if (!response.ok) {
+          return;
+        }
+
+        const ticket = await response.json();
+        if (!ticket?.id) {
+          return;
+        }
+
+        const mappedTicket = mapTicketPayload(ticket);
+        setSelectedTicket(mappedTicket);
+        setShowActiveFeatured(false);
+        setIsOpen(true);
+        setActiveTab(1);
+        hasAutoOpenedTicket.current = true;
+      } catch (error) {
+        console.error("Unable to fetch requested deep-link ticket", error);
+      }
+    };
+
+    fetchRequestedTicket();
+  }, [requestedTicketId, loggedInUsrId]);
 
   const handleSelectedTicketUpdate = (newValue) => {
     setSelectedTicket(newValue);
