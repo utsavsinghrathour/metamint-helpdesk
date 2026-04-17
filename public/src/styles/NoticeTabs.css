@@ -1,7 +1,8 @@
-.rd-single-notice-view .wp-block-image{
-    margin: 15px 0;
+@import url(../../assets/css/variables.css);
+.rd-single-notice-view .wp-block-image {
+  margin: 15px 0;
 }
-.notice-tab-content{
-    min-height: 290px;
-    overflow: auto;
+.notice-tab-content {
+  min-height: 290px;
+  overflow: auto;
 }

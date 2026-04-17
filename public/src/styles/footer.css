@@ -1,3 +1,4 @@
+@import url(../../assets/css/variables.css);
 .robodesk-footer .tab-container {
   border-top: 1px solid var(--border-light-gray);
   border-bottom: 1px solid var(--border-light-gray);
