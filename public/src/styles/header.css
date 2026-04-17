@@ -1,5 +1,7 @@
+@import url(../../assets/css/variables.css);
 .robodesk-plugin .robodesk-header {
-  padding: 15px 20px;
+  /* padding: 15px 20px; */
+  padding: var(--header-padding);
   border-bottom: 1px solid var(--border-light-gray);
   background-color: var(--robodesk-theme-color);
 }
