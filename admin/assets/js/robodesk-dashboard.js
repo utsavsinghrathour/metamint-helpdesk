@@ -673,7 +673,11 @@ function showPage(pageName, fromClick = false) {
   if (pageName === "conversation") {
     // Load conversation view
   } else if (pageName === "tickets") {
-    // Load conversations/tickets list - server-side rendered; no hard reload needed.
+    // Conversations page is server-rendered. Reload when marked stale so new tickets appear.
+    if (shouldRefreshTicketsPage) {
+      reloadConversationsPageIfVisible();
+      return;
+    }
   } else if (pageName === "ticket-detail") {
     loadTicketDetail();
   } else if (pageName === "settings") {
@@ -1714,6 +1718,8 @@ jQuery(document).ready(function ($) {
 
 // Helper function to update dashboard after ticket creation
 function updateDashboardAfterTicketCreation(ticketId) {
+  markConversationsTabStale();
+
   // Update the stat cards by incrementing counts
   const totalElement = document.getElementById("total-tickets");
   const openElement = document.getElementById("open-tickets");
@@ -2794,6 +2800,58 @@ let dashboardRefreshInterval = null;
 let notificationPollInterval = null;
 let notificationCount = 0;
 let notificationItems = [];
+let shouldRefreshTicketsPage = false;
+let lastTicketsPageReloadAt = 0;
+
+function updateDashboardStatsFromTickets(ticketsData) {
+  const allTickets = Array.isArray(ticketsData) ? ticketsData : [];
+  const stats = {
+    total: allTickets.length,
+    open: allTickets.filter((t) => t.status === "open").length,
+    inProgress: allTickets.filter((t) => t.status === "in-progress").length,
+    closed: allTickets.filter((t) => t.status === "closed").length,
+  };
+
+  const statsTargets = {
+    "total-tickets": stats.total,
+    "open-tickets": stats.open,
+    "in-progress-tickets": stats.inProgress,
+    "closed-tickets": stats.closed,
+  };
+
+  Object.entries(statsTargets).forEach(([id, value]) => {
+    const el = document.getElementById(id);
+    if (el) {
+      el.textContent = String(value);
+    }
+  });
+}
+
+function markConversationsTabStale() {
+  shouldRefreshTicketsPage = true;
+  if (currentPage === "tickets") {
+    reloadConversationsPageIfVisible();
+  }
+}
+
+function reloadConversationsPageIfVisible() {
+  if (currentPage !== "tickets") {
+    return;
+  }
+
+  // Guard against rapid repeated reload calls.
+  const now = Date.now();
+  if (now - lastTicketsPageReloadAt < 5000) {
+    return;
+  }
+  lastTicketsPageReloadAt = now;
+  shouldRefreshTicketsPage = false;
+
+  const url = new URL(window.location.href);
+  url.searchParams.set("tab", "tickets");
+  url.searchParams.delete("ticket");
+  window.location.assign(url.toString());
+}
 
 // Function to create a snapshot of tickets for comparison
 function createTicketsSnapshot(tickets) {
@@ -3187,13 +3245,28 @@ function refreshDashboardTicketsData() {
     .then((res) => res.json())
     .then((response) => {
       if (response.success) {
+        const previousTickets = Array.isArray(dashboard_tickets)
+          ? [...dashboard_tickets]
+          : [];
+        const refreshedTickets = Array.isArray(response.data.tickets)
+          ? response.data.tickets
+          : [];
+        const changes = detectTicketChanges(previousTickets, refreshedTickets);
+
         // Update the global dashboard_tickets array with fresh data
         dashboard_tickets.length = 0; // Clear the array
-        Array.prototype.push.apply(dashboard_tickets, response.data.tickets);
+        Array.prototype.push.apply(dashboard_tickets, refreshedTickets);
+
+        // Keep dashboard stat cards in sync with latest ticket data.
+        updateDashboardStatsFromTickets(dashboard_tickets);
+
+        if (changes.new.length > 0) {
+          markConversationsTabStale();
+        }
 
         // Re-render the table with updated data
         loadDashboardTickets();
-        return response.data.tickets || [];
+        return refreshedTickets;
       } else {
         console.error("Failed to refresh dashboard tickets:", response.data);
         return [];
