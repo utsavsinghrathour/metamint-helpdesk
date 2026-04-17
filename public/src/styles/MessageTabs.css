@@ -160,13 +160,16 @@
 
 .robodesk-plugin .rd-message-tab-content input,
 .robodesk-plugin .rd-message-tab-content select {
-  /* min-width: 150px; */
   font-weight: 500 !important;
   font-size: 13px !important;
   line-height: 16px !important;
 }
 .robodesk-plugin .rd-message-tab-content input {
   width: 50%;
+}
+
+.robodesk-plugin .rd-message-tab-content select {
+  width: 25%;
 }
 .robodesk-plugin .rd-message-tab-content input::placeholder {
   color: #84818a !important;
@@ -198,6 +201,14 @@
 
 .robodesk-plugin .rd-message-list-wrap {
   max-width: 95%;
+}
+
+.rd-chat-info {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
 }
 
 .robodesk-plugin .rd-message-image-preview img {

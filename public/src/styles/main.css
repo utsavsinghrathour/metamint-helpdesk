@@ -237,6 +237,10 @@ button.no-bg,
   padding-right: 18px !important;
 }
 
+.rd-p-16 {
+  padding: 16px !important;
+}
+
 .rd-py-10 {
   padding-top: 10px !important;
   padding-bottom: 10px !important;
