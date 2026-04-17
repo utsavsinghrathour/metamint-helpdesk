@@ -166,6 +166,8 @@ function robodesk_enqueue_scripts()
             true
         );
 
+        $deep_link_ticket_id = robodesk_get_requested_ticket_id_from_query();
+
         // Pass image URL (logo only for now)
         $image_urls = [
             'popover_icon' => esc_url(get_option('robodesk_popover_icon', '')),
@@ -181,6 +183,7 @@ function robodesk_enqueue_scripts()
                 'chatHeading' => get_option('robodesk_chat_heading', 'Have Questions?'),
                 'welcomeMessage' => get_option('robodesk_welcome_message', 'Have any questions or need a quote? Leave us a message.'),
                 'ticketIntroMessage' => get_option('robodesk_ticket_intro_message', 'If you are interested in working with us, take a step towards discovering exciting opportunities by reaching out to us. We look forward to talking with you soon!'),
+                'deepLinkTicketId' => $deep_link_ticket_id,
             ]
         );
 
@@ -432,6 +435,87 @@ function robodesk_decrypt($ciphertext, $key)
 {
     list($encrypted_data, $iv) = explode('::', base64_decode($ciphertext), 2);
     return openssl_decrypt($encrypted_data, "AES-256-CBC", $key, $options = 0, $iv);
+}
+
+function robodesk_build_ticket_deeplink($ticket_id)
+{
+    $ticket_id = absint($ticket_id);
+    if ($ticket_id <= 0 || get_post_type($ticket_id) !== 'robodesk_ticket') {
+        return home_url('/');
+    }
+
+    $encrypted_ticket = robodesk_encrypt((string) $ticket_id, 'robodesk');
+
+    return add_query_arg(
+        [
+            'rbd_popup' => 'true',
+            'initiator' => 'robodesk',
+            'rtk' => $encrypted_ticket,
+        ],
+        home_url('/')
+    );
+}
+
+function robodesk_user_can_access_ticket($ticket_id)
+{
+    if (!is_user_logged_in()) {
+        return true;
+    }
+
+    $ticket_id = absint($ticket_id);
+    if ($ticket_id <= 0 || get_post_type($ticket_id) !== 'robodesk_ticket') {
+        return false;
+    }
+
+    $current_user_id = get_current_user_id();
+    $customer_user_id = (int) robodesk_get_ticket_customer_user_id($ticket_id);
+
+    if ($customer_user_id > 0 && $current_user_id === $customer_user_id) {
+        return true;
+    }
+
+    if (current_user_can('manage_options')) {
+        return true;
+    }
+
+    return in_array($current_user_id, robodesk_get_support_user_ids(), true);
+}
+
+function robodesk_get_requested_ticket_id_from_query()
+{
+    $ticket_id = 0;
+
+    if (isset($_GET['rtk'])) {
+        $encrypted_ticket = trim((string) wp_unslash($_GET['rtk']));
+        if ($encrypted_ticket !== '') {
+            $encrypted_ticket = str_replace(' ', '+', $encrypted_ticket);
+            $decrypted_ticket = robodesk_decrypt($encrypted_ticket, 'robodesk');
+            if ($decrypted_ticket !== false) {
+                $ticket_id = absint($decrypted_ticket);
+            }
+        }
+    }
+
+    if ($ticket_id <= 0) {
+        foreach (['ticket_id', 'ticket', 'tid'] as $key) {
+            if (isset($_GET[$key])) {
+                $ticket_id = absint(wp_unslash($_GET[$key]));
+                if ($ticket_id > 0) {
+                    break;
+                }
+            }
+        }
+    }
+
+    if ($ticket_id <= 0 || get_post_type($ticket_id) !== 'robodesk_ticket') {
+        return 0;
+    }
+
+    if (!robodesk_user_can_access_ticket($ticket_id)) {
+        return 0;
+    }
+
+    return $ticket_id;
 }
 
 
@@ -1207,8 +1291,7 @@ function robodesk_send_unseen_reply_email($comment_id)
     $reply_plain = trim(wp_strip_all_tags($comment->comment_content));
     $subject = 'You have a new reply on your conversation:#' . $ticket_id;
 
-    $site_url = get_site_url();
-    $ticket_link = $site_url . '?user=' . urlencode($customer_email) . '&rbd_popup=true&initiator=robodesk';
+    $ticket_link = robodesk_build_ticket_deeplink($ticket_id);
 
     $tracking_token = wp_generate_password(32, false, false);
     update_comment_meta($comment_id, 'rbd_unseen_email_tracking_token', $tracking_token);
@@ -1299,11 +1382,9 @@ function disable_block_for_post_type($use_block_editor, $post)
     if ('robodesk_faq' === $post->post_type) {
         return false;
     }
-    ;
     if ('notice' === $post->post_type) {
         return false;
     }
-    ;
     return $use_block_editor;
 }
 
