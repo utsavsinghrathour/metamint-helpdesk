@@ -167,17 +167,17 @@ const SingleNoticeView = memo(
             <img
               src={logo}
               alt='Plugin Logo'
-              className='rd-h-auto rd-header-logo'
+              className=' rd-header-logo'
               onError={(e) => {
                 e.target.style.display = 'none';
               }}
             />
           ) : (
-            <div className='rd-h-auto rd-header-logo'>
+            <div className=' rd-header-logo'>
               <img
                 src={defaultLogo}
                 alt='Default Plugin Logo'
-                className='rd-h-auto rd-header-logo'
+                className=' rd-header-logo'
               />
             </div>
           )}

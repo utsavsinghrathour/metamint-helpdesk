@@ -151,17 +151,17 @@ const Header = ({ logo, onClose, setActiveTab, setShowLogin, updateSelectedTicke
           <img
             src={logo}
             alt="Plugin Logo"
-            className="rd-h-auto rd-header-logo rd-main-header-logo"
+            className=" rd-header-logo rd-main-header-logo"
             onError={(e) => {
               e.target.style.display = 'none';
             }}
           />
         ) : (
-          <div className="rd-h-auto rd-header-logo default">
+          <div className=" rd-header-logo default">
             <img
               src={defaultLogo}
               alt="Default Plugin Logo"
-              className="rd-h-auto rd-header-logo rd-main-header-logo"
+              className=" rd-header-logo rd-main-header-logo"
             />
           </div>
         )}
