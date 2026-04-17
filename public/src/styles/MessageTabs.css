@@ -1,3 +1,4 @@
+@import url(../../assets/css/variables.css);
 .robodesk-plugin .rd-message-tab .rd-search-header {
   padding: 20px;
 }
@@ -159,12 +160,14 @@
 
 .robodesk-plugin .rd-message-tab-content input,
 .robodesk-plugin .rd-message-tab-content select {
-  min-width: 150px;
+  /* min-width: 150px; */
   font-weight: 500 !important;
   font-size: 13px !important;
   line-height: 16px !important;
 }
-
+.robodesk-plugin .rd-message-tab-content input {
+  width: 50%;
+}
 .robodesk-plugin .rd-message-tab-content input::placeholder {
   color: #84818a !important;
   font-size: 13px !important;

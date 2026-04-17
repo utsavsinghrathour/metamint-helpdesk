@@ -1,3 +1,4 @@
+@import url(../../assets/css/variables.css);
 .send-message-field textarea {
   padding: 10px;
   font-size: 13px;
