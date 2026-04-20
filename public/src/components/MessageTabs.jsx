@@ -22,6 +22,10 @@ const TicketItem = ({ ticket, onSelect }) => {
     setShowNotification(ticket.notifications === 'no' ? true : false);
   }, [ticket]);
 
+  // Get priority colors from wpAuth
+  const priorityColors = window.wpAuth?.priorityColors || {};
+  const priorityColor = priorityColors[ticket.priority] || '#000000';
+
   return (
     <div
       className='rd-hover single-rd-ticket rd-flex rd-align-start rd-gap-8 rd-border-bottom-light rd-cursor-pointer single-rd-active-ticket'
@@ -51,12 +55,8 @@ const TicketItem = ({ ticket, onSelect }) => {
             </div>
             <div className='rd-flex rd-align-center rd-gap-10'>
             <span
-              className={`rd-priority rd-fw-medium ${ticket.priority === 'Urgent'
-                  ? 'rd-urgent'
-                  : ticket.priority === 'Medium'
-                    ? 'rd-medium'
-                    : 'rd-low'
-                }`}
+              className='rd-priority rd-fw-medium'
+              style={{ backgroundColor: priorityColor, color: '#ffffff' }}
             >
               {ticket.priority}
             </span>
