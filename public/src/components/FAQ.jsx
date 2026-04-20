@@ -109,7 +109,7 @@ const FAQDetail = memo(
     return (
       <div className="rd-faq-detail">
         <div className="rd-main-content no-footer">
-          <div className="single-faq-header rd-flex rd-align-center rd-justify-between rd-cursor-pointer rd-border-bottom-light rd-px-20 rd-py-15">
+          <div className="single-faq-header rd-flex rd-align-center rd-justify-between rd-cursor-pointer rd-border-bottom-light rd-p-10 rd-bg-primary ">
             <button
               className="back-button rd-flex rd-items-center rd-bg-transparent rd-border-none icon-dark rd-p-0 rd-m-0"
               onClick={onBack}
