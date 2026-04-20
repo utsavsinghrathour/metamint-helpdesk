@@ -252,7 +252,7 @@ const MessageTabs = ({
             </Suspense>
           ) : (
             <>
-              <div className='rd-px-18 rd-search-header rd-bg-blue rd-flex rd-items-center rd-justify-between rd-flex-col rd-message-list-header'>
+              <div className='rd-search-header rd-bg-blue rd-flex rd-items-center rd-justify-between rd-flex-col rd-message-list-header'>
                 <button
                   className='back-button rd-flex rd-items-center rd-gap-1 rd-border-none rd-bg-transparent rd-m-0 rd-p-0'
                   onClick={handleBackToHome}
