@@ -227,6 +227,9 @@ const SingleNoticeView = memo(
           <h4 className='heading-4 rd-mb-10'>{title}</h4>
           <div className='rd-body-text'>{parsedContent}</div>
         </div>
+        <div className='rd-border-top-light'>
+          <Footer showCopyrightOnly={true} />
+        </div>
       </div>
     );
   }
