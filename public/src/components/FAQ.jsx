@@ -96,6 +96,10 @@ const FAQDetail = memo(
       });
     }, [fullContent]);
 
+    const relatedFaqs = faqs
+      .slice(0, 3)
+      .filter((relatedFaq) => relatedFaq.id !== faq.id);
+
     const handleLike = () => {
       setIsLiked(!isLiked);
       if (isDisliked) setIsDisliked(false);
@@ -211,41 +215,39 @@ const FAQDetail = memo(
                 </div>
               </div>
             </div>
-            <div className="single-faq-other-faq-content rd-my-20 single-content-other-content">
-              <h4 className="heading-4">Didn't get your answer?</h4>
-              <div className="rd-body-text rd-mt-8">
-                <p>Here are some related articles.</p>
+            {relatedFaqs.length > 0 && (
+              <div className="single-faq-other-faq-content rd-my-20 single-content-other-content">
+                <h4 className="heading-4">Didn't get your answer?</h4>
+                <div className="rd-body-text rd-mt-8">
+                  <p>Here are some related articles.</p>
+                </div>
+                <div className="rd-flex rd-flex-col rd-gap-8 rd-mt-20">
+                  {relatedFaqs.map((relatedFaq) => (
+                    <FAQItem
+                      key={relatedFaq.id}
+                      faq={relatedFaq}
+                      onSelect={setSelectedFAQ}
+                    />
+                  ))}
+                </div>
+                <div className="rd-my-30">
+                  <h4 className="heading-4 rd-fw-semi rd-mb-8">
+                    Still have questions?
+                  </h4>
+                  <button
+                    type="button"
+                    className="button no-bg rd-flex rd-align-center rd-gap-10 rd-cursor-pointer"
+                    onClick={() => {
+                      setActiveTab(0);
+                      handleFocusedTextArea(true);
+                    }}
+                  >
+                    Start a conversation
+                    <RiPencilFill />
+                  </button>
+                </div>
               </div>
-              <div className="rd-flex rd-flex-col rd-gap-8 rd-mt-20">
-                {faqs
-                  .slice(0, 3)
-                  .map((relatedFaq) =>
-                    relatedFaq.id !== faq.id ? (
-                      <FAQItem
-                        key={relatedFaq.id}
-                        faq={relatedFaq}
-                        onSelect={setSelectedFAQ}
-                      />
-                    ) : null,
-                  )}
-              </div>
-              <div className="rd-my-30">
-                <h4 className="heading-4 rd-fw-semi rd-mb-8">
-                  Still have questions?
-                </h4>
-                <button
-                  type="button"
-                  className="button no-bg rd-flex rd-align-center rd-gap-10 rd-cursor-pointer"
-                  onClick={() => {
-                    setActiveTab(0);
-                    handleFocusedTextArea(true);
-                  }}
-                >
-                  Start a conversation
-                  <RiPencilFill />
-                </button>
-              </div>
-            </div>
+            )}
           </div>
         </div>
         <div className="rd-border-top-light">
