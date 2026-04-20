@@ -45,7 +45,7 @@ const TicketItem = ({ ticket, onSelect }) => {
           </h5>
           <div className="rd-chat-info">
             <div className='rd-text-small rd-flex rd-gap-5'>
-            <span className='rd-flex'>
+            <span className='rd-flex rd-align-center'>
               {ticket.source} <LuDot /> {ticket.timeAgo}
             </span>
             </div>
