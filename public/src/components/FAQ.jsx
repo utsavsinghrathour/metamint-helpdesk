@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo, memo } from "react";
 import { FaChevronRight, FaChevronLeft, FaSearch } from "react-icons/fa";
+import { RiPencilFill } from "react-icons/ri";
 import parse from "html-react-parser";
 import DOMPurify from "dompurify";
 import he from "he";
@@ -231,12 +232,17 @@ const FAQDetail = memo(
                 <h4 className="heading-4 rd-fw-semi rd-mb-8">
                   Still have questions?
                 </h4>
-                <a
-                  href="#"
-                  onClick={() => (setActiveTab(0), handleFocusedTextArea(true))}
+                <button
+                  type="button"
+                  className="button no-bg rd-flex rd-align-center rd-gap-10 rd-cursor-pointer"
+                  onClick={() => {
+                    setActiveTab(0);
+                    handleFocusedTextArea(true);
+                  }}
                 >
                   Start a conversation
-                </a>
+                  <RiPencilFill />
+                </button>
               </div>
             </div>
           </div>
