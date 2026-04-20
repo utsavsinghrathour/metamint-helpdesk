@@ -297,7 +297,7 @@ const MessageTabs = ({
 
                 {/* Search and Priority Filter */}
 
-                <div className='rd-x-16 rd-py-10 rd-flex rd-gap-10 rd-align-center rd-justify-between'>
+                <div className='rd-p-16 rd-py-10 rd-flex rd-gap-10 rd-align-center rd-justify-between'>
                   <input
                     ref={searchKeywordRef}
                     type='text'
