@@ -413,7 +413,7 @@ const FAQ = ({
             <FaChevronLeft />
           </button>
         </div>
-        <div className="rd-mt-8 rd-mb-8 rd-wiki-wrap">
+        <div className="rd-wiki-wrap">
           {error ? (
             <p className="rd-body-text rd-text-red rd-text-center">
               Error: {error}
