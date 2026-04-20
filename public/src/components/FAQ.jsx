@@ -200,7 +200,8 @@ const FAQDetail = memo(
                   <h5 className="sub-text">
                     {faq?.author?.total_posts} articles
                   </h5>
-                  <h5 className="sub-text">By {faq?.author?.display_name}</h5>
+                  {/* <h5 className="sub-text">By {faq?.author?.display_name}</h5> */}
+                  <span className="rd-text-small">By {faq?.author?.display_name}</span>
                 </div>
                 <div className="rd-author-avatar rd-flex rd-align-center">
                   <img
