@@ -49,7 +49,7 @@ const NoticeItem = memo(({ notice, onSelect }) => {
   // console.log(notice);
   return (
     <div
-      className='rd-notice-item rd-flex rd-gap-15 rd-border-light single-notice-box-field rd-border-radius-md rd-faq-item'
+      className='rd-notice-item rd-flex rd-gap-10 rd-border-light single-notice-box-field rd-border-radius-md rd-faq-item'
       onClick={() => onSelect(notice)}
       style={{ cursor: 'pointer' }}
     >
