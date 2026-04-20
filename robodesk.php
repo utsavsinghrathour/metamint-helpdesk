@@ -188,15 +188,26 @@ function robodesk_enqueue_scripts()
         );
 
         // Existing wp_localize_script for wpAuth
+        // Build priority colors array
+        $priority_terms = get_terms(array(
+            'taxonomy' => 'robodesk_ticket_priority',
+            'hide_empty' => false,
+        ));
+        $priority_colors = [];
+        if ($priority_terms && !is_wp_error($priority_terms)) {
+            foreach ($priority_terms as $term) {
+                $color = get_term_meta($term->term_id, 'priority_color', true);
+                $priority_colors[$term->name] = $color ?: '#000000';
+            }
+        }
+
         wp_localize_script('robodesk-react-script', 'wpAuth', array(
             'isLoggedIn' => is_user_logged_in() ? 'true' : 'false',
             'loggedInUserId' => is_user_logged_in() ? get_current_user_id() : 'false',
 
             'notificationSound' => esc_url(get_option('robodesk_notification_sound', '')),
-            'priorityTerms' => get_terms(array(
-                'taxonomy' => 'robodesk_ticket_priority',
-                'hide_empty' => false,
-            )),
+            'priorityTerms' => $priority_terms,
+            'priorityColors' => $priority_colors,
 
             'status' => [
                 'active-conversations' => 'Active Conversations',
