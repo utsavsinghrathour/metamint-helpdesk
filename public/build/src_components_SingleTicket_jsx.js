@@ -894,23 +894,23 @@ var SingleTicket = function SingleTicket(_ref3) {
         }), image_urls.wide_logo && image_urls.wide_logo.trim() !== '' ? /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_8__.jsx)("img", {
           src: image_urls.wide_logo,
           alt: "Plugin Wide Logo",
-          className: "rd-h-auto rd-header-logo",
+          className: " rd-header-logo",
           onError: function onError(e) {
             return e.target.style.display = 'none';
           }
         }) : image_urls.logo && image_urls.logo.trim() !== '' ? /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_8__.jsx)("img", {
           src: image_urls.logo,
           alt: "Plugin Logo",
-          className: "rd-h-auto rd-header-logo",
+          className: " rd-header-logo",
           onError: function onError(e) {
             return e.target.style.display = 'none';
           }
         }) : /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_8__.jsx)("div", {
-          className: "rd-h-auto rd-header-logo default-logo",
+          className: " rd-header-logo default-logo",
           children: /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_8__.jsx)("img", {
             src: _images_robodesk_logo_png__WEBPACK_IMPORTED_MODULE_2__,
             alt: "Default Plugin Logo",
-            className: "rd-h-auto rd-header-logo"
+            className: " rd-header-logo"
           })
         })]
       }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_8__.jsx)("div", {
@@ -1017,7 +1017,7 @@ var SingleTicket = function SingleTicket(_ref3) {
           children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_8__.jsx)("img", {
             src: previewImage,
             alt: "Preview",
-            className: "rd-max-w-full rd-h-auto rd-border-radius-md rd-preview-image",
+            className: "rd-max-w-full  rd-border-radius-md rd-preview-image",
             style: {
               maxWidth: '80px'
             }
@@ -1110,4 +1110,4 @@ module.exports = __webpack_require__.p + "images/default-avatar.3842d8da.jpg";
 /***/ })
 
 }]);
-//# sourceMappingURL=src_components_SingleTicket_jsx.js.map?ver=48c1d71281a60b82aeb0
+//# sourceMappingURL=src_components_SingleTicket_jsx.js.map?ver=9c131ea53fa70c1c78ea

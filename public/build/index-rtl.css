@@ -18,6 +18,7 @@
   --border-radius-sm: 4px;
   --border-radius-base: 6px;
   --border-radius-md: 8px;
+  --border-radius-medium: 10px;
   --border-radius-lg: 12px;
   --border-radius-xl: 16px;
   --border-radius-xxl: 20px;
@@ -29,7 +30,11 @@
   --font-lg: 18px;
   --font-xl: 20px;
   --font-xxl: 24px;
-  --header-padding: 15px 20px;
+  --font-xxxl: 28px;
+  --header-padding: 10px;
+  --card-padding: 16px 20px;
+  --button-padding: 10px 24px;
+  --base-text-style: 400 var(--font-base) / 18px "Inter", sans-serif;
 }
 
 /*!***************************************************************************************************************************************************************************!*\
@@ -73,43 +78,43 @@
 }
 /* Headings */
 .rd-main-content h1 {
-  font-size: 1.75rem; /* 28px */
+  font-size: var(--font-xxxl); /* 28px */
   font-weight: 600;
   margin-bottom: 0.8rem;
   line-height: 1.3;
 }
 
 .rd-main-content h2 {
-  font-size: 1.5rem; /* 24px */
+  font-size: var(--font-xxl); /* 24px */
   font-weight: 600;
   margin-bottom: 0.625rem;
   line-height: 1.3;
 }
 
 .rd-main-content h3 {
-  font-size: 1.25rem; /* 20px */
+  font-size: var(--font-xl); /* 20px */
   font-weight: 500;
   margin-bottom: 0.8rem;
   line-height: 1.3;
 }
 
 .rd-main-content h4 {
-  font-size: 1.125rem; /* 18px */
+  font-size: var(--font-lg); /* 18px */
   font-weight: 500;
   /* margin-bottom: 0.8rem; */
   line-height: 1.2;
 }
 
 .rd-main-content h5 {
-  font-size: 1rem; /* 16px */
+  font-size: var(--font-md); /* 16px */
   font-weight: 500;
-  margin-bottom: 0.8rem;
+  margin-bottom: 4px;
   line-height: 1.1;
   margin-top: 0;
 }
 
 .rd-main-content h6 {
-  font-size: 0.875rem; /* 14px */
+  font-size: var(--font-base); /* 14px */
   font-weight: 500;
   margin-bottom: 0.8rem;
   line-height: 1.1;
@@ -118,7 +123,7 @@
 /* Lists */
 .rd-main-content ul,
 .rd-main-content ol {
-  font-size: 13px;
+  font-size: var(--font-sm);
   padding-right: 20px !important; /* 20px */
   margin: 0.625rem 0;
 }
@@ -142,7 +147,7 @@
 .robodesk-footer .tab-container {
   border-top: 1px solid var(--border-light-gray);
   border-bottom: 1px solid var(--border-light-gray);
-  padding: 18px 36px;
+  padding: calc(var(--header-padding) + 8px);
 }
 
 .robodesk-footer-text h6 {
@@ -323,7 +328,7 @@
 }
 
 .robodesk-plugin .single-rd-ticket {
-  padding: 16px 20px;
+  padding: var(--card-padding);
 }
 
 .robodesk-plugin .rd-tickets .single-ticket-title {
@@ -734,12 +739,18 @@
 /*!*******************************************************************************************************************************************************************************!*\
   !*** css ./node_modules/css-loader/dist/cjs.js??ruleSet[1].rules[2].use[1]!./node_modules/postcss-loader/dist/cjs.js??ruleSet[1].rules[2].use[2]!./src/styles/NoticeTabs.css ***!
   \*******************************************************************************************************************************************************************************/
+.rd-notice-item .rd-title-text {
+  margin-top: 0;
+}
 .rd-single-notice-view .wp-block-image {
   margin: 15px 0;
 }
 .notice-tab-content {
   min-height: 290px;
   overflow: auto;
+}
+.rd-notice-item.rd-faq-item {
+  padding: var(--header-padding);
 }
 
 /*!************************************************************************************************************************************************************************!*\
@@ -752,7 +763,7 @@
 }
 
 .rd-faq-item {
-  padding: 12px 20px;
+  padding: var(--card-padding);
   cursor: pointer;
 }
 /* .rd-faq-item p{
@@ -811,7 +822,7 @@
 }
 .rd-search-header .back-button {
   position: absolute;
-  right: 18px;
+  /* left: 18px; */
   top: 20px;
 }
 .rd-search-header {
@@ -850,6 +861,9 @@
   overflow: auto;
   min-height: 468px;
   height: 60vh;
+}
+.rd-faq-content .rd-faq-title {
+  margin: 8px 0;
 }
 .rd-wiki-wrap {
   /* max-height: 320px; */
@@ -952,7 +966,7 @@
 
 .robodesk-plugin::-webkit-scrollbar-thumb {
   background-color: #004aff;
-  border-radius: 10px;
+  border-radius: var(--border-radius-medium);
 }
 
 .rd-main-content {
@@ -985,6 +999,9 @@
   scrollbar-color: var(--robodesk-theme-color) transparent;
 }
 
+.robodesk-plugin {
+  font-weight: normal;
+}
 .robodesk-plugin .err_msg {
   color: red !important;
   font-weight: 500 !important;
@@ -1019,7 +1036,7 @@
 button.no-bg,
 .button.no-bg {
   background-color: transparent;
-  border-radius: 10px;
+  border-radius: var(--border-radius-medium);
   color: var(--robodesk-theme-color);
   font-size: 14px;
   line-height: 18px;
@@ -1052,13 +1069,18 @@ button.no-bg,
 
 .rd-main-header-logo {
   aspect-ratio: 1/1;
-  height: 30px;
-  width: 30px;
+  height: 40px;
+  width: auto;
 }
-
+.single-faq-header {
+  background-color: var(--robodesk-theme-color);
+}
+.single-faq-header svg {
+  fill: #fff;
+}
 .robodesk-plugin .rd-header-logo img:not(.rd-faq-header img),
 .robodesk-plugin .default-logo img {
-  height: 30px;
+  height: 40px;
 }
 
 .robodesk-plugin .rd-faq-header img,
@@ -1319,7 +1341,8 @@ button.no-bg,
   cursor: pointer !important;
 }
 
-.rd-bg-blue {
+.rd-bg-blue,
+.rd-bg-primary {
   /* background-color: var(--primary-blue); */
   background-color: var(--robodesk-theme-color);
 }
@@ -1346,7 +1369,7 @@ button.no-bg,
 }
 
 .rd-border-radius-md {
-  border-radius: 10px !important;
+  border-radius: var(--border-radius-medium) !important;
 }
 
 .rd-title-text {
@@ -1357,7 +1380,7 @@ button.no-bg,
 }
 
 .rd-text-small {
-  font-size: 0.625rem !important;
+  font-size: var(--font-xs) !important;
   line-height: 12px;
   font-weight: 400;
   color: var(--body-text);
@@ -1393,9 +1416,7 @@ button.no-bg,
 
 .robodesk-plugin h5.sub-text {
   color: var(--body-text) !important;
-  font-size: 0.875rem !important;
-  line-height: 18px;
-  font-weight: 400;
+  font: var(--base-text-style) !important;
   letter-spacing: 0px !important;
 }
 
@@ -1418,9 +1439,7 @@ button.no-bg,
 .rd-main-content .rd-body-text,
 .rd-main-content .rd-body-text p {
   color: var(--body-text) !important;
-  font-size: 0.8125rem !important;
-  line-height: 18px !important;
-  font-weight: 400;
+  font: var(--base-text-style) !important;
   margin-top: 0;
   transition: font-size 0.5s ease;
 }
@@ -1459,11 +1478,13 @@ button.no-bg,
 .rd-main-content input::-moz-placeholder {
   font-size: 16px !important;
   line-height: 20px !important;
+  font-size: var(--font-base) !important;
 }
 
 .rd-main-content input::placeholder {
   font-size: 16px !important;
   line-height: 20px !important;
+  font-size: var(--font-base) !important;
 }
 .rd-main-content figcaption {
   margin: 10px 0 !important;
@@ -1486,6 +1507,7 @@ button.no-bg,
   height: 30px;
   width: 30px;
   border-radius: 50px;
+  max-width: none;
 }
 
 .rd-popup-top-icon-container img {
@@ -1670,13 +1692,13 @@ button.no-bg,
   margin-bottom: 0 !important;
 }
 .single-content-other-content a {
-  font-size: 14px !important;
+  font-size: var(--font-base) !important;
   text-decoration: none;
   background-color: var(--robodesk-theme-color);
-  padding: 10px 24px;
+  padding: var(--button-padding);
   color: #fff;
   font-weight: 400;
-  border-radius: 20px;
+  border-radius: var(--border-radius-xxl);
   display: flex;
   justify-content: center;
   line-height: 18px !important;

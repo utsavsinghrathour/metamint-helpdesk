@@ -6,7 +6,7 @@
 }
 
 .rd-faq-item {
-  padding: 12px 20px;
+  padding: var(--card-padding);
   cursor: pointer;
 }
 /* .rd-faq-item p{
@@ -65,7 +65,7 @@
 }
 .rd-search-header .back-button {
   position: absolute;
-  left: 18px;
+  /* left: 18px; */
   top: 20px;
 }
 .rd-search-header {
@@ -103,6 +103,9 @@
   overflow: auto;
   min-height: 468px;
   height: 60vh;
+}
+.rd-faq-content .rd-faq-title {
+  margin: 8px 0;
 }
 .rd-wiki-wrap {
   /* max-height: 320px; */

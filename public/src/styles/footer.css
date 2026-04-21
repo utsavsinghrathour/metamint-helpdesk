@@ -2,7 +2,7 @@
 .robodesk-footer .tab-container {
   border-top: 1px solid var(--border-light-gray);
   border-bottom: 1px solid var(--border-light-gray);
-  padding: 18px 36px;
+  padding: calc(var(--header-padding) + 8px);
 }
 
 .robodesk-footer-text h6 {
