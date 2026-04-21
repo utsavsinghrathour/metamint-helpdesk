@@ -239,6 +239,7 @@ const SingleTicket = ({
   const fileInputRef = useRef(null);
   const chatContainerRef = useRef(null);
   const image_urls = window.robodeskData?.imageUrls || {};
+  const customerAvatar = ticket?.authorImage || DefaultAvatar;
   const previousScrollHeight = useRef(0);
   const beep = useRef(new Audio(wpAuth.notificationSound));
   const isAtTop = useRef(false);
@@ -406,15 +407,17 @@ const SingleTicket = ({
       console.log(typeof commentData.author_id, typeof loggedInUserId);
       console.log(String(commentData.author_id) === String(loggedInUserId));
 
+      const isOwnMessage =
+        String(commentData.author_id) === String(loggedInUserId);
+
       const newMessage = {
         id: commentData.id,
         text: commentData.content?.rendered || '',
-        sender:
-          String(commentData.author_id) === String(loggedInUserId)
-            ? 'me'
-            : 'other',
+        sender: isOwnMessage ? 'me' : 'other',
         senderName: commentData.author_name || 'Unknown',
-        image: commentData.author_image || DefaultAvatar,
+        image: isOwnMessage
+          ? customerAvatar
+          : commentData.author_image || DefaultAvatar,
         created_at: commentData.created_at || new Date().toISOString(),
         isAdmin: commentData.author_id !== ticket.author_id,
       };
@@ -444,7 +447,9 @@ const SingleTicket = ({
         sender,
         senderName: comment.author_name || 'Unknown',
         image:
-          comment.author_data?.avatar || comment.author_image || DefaultAvatar,
+          sender === 'me'
+            ? customerAvatar
+            : comment.author_data?.avatar || comment.author_image || DefaultAvatar,
         created_at: comment.date,
         action: comment.comment_action,
         time_ago: comment.time_ago,
@@ -641,7 +646,7 @@ const SingleTicket = ({
         text: message + (imageHTML ? '<br>' + imageHTML : ''),
         sender: 'me',
         senderName: 'Me',
-        image: DefaultAvatar,
+        image: customerAvatar,
         created_at: new Date().toISOString(),
         isSending: true,
         isOptimistic: true, // Mark as optimistic update
@@ -683,7 +688,7 @@ const SingleTicket = ({
           text: result.data.content,
           sender: 'me',
           senderName: result.data.author_name || 'Me',
-          image: result.data.author_image ?? '/default-avatar.jpg',
+          image: customerAvatar,
           created_at: result.data.created_at || tempMessage.created_at,
           isAdmin: result.data.author_id
             ? result.data.author_id !== ticket.author_id
@@ -824,22 +829,22 @@ const SingleTicket = ({
             <img
               src={image_urls.wide_logo}
               alt='Plugin Wide Logo'
-              className='rd-h-auto rd-header-logo'
+              className=' rd-header-logo'
               onError={(e) => (e.target.style.display = 'none')}
             />
           ) : image_urls.logo && image_urls.logo.trim() !== '' ? (
             <img
               src={image_urls.logo}
               alt='Plugin Logo'
-              className='rd-h-auto rd-header-logo'
+              className=' rd-header-logo'
               onError={(e) => (e.target.style.display = 'none')}
             />
           ) : (
-            <div className='rd-h-auto rd-header-logo default-logo'>
+            <div className=' rd-header-logo default-logo'>
               <img
                 src={defaultLogo}
                 alt='Default Plugin Logo'
-                className='rd-h-auto rd-header-logo'
+                className=' rd-header-logo'
               />
             </div>
           )}
@@ -910,7 +915,11 @@ const SingleTicket = ({
                 >
                   {(!isSameSender || index === 0) && (
                     <img
-                      src={msg.image}
+                      src={
+                        msg.sender === 'me' || msg.isSending
+                          ? customerAvatar
+                          : msg.image || DefaultAvatar
+                      }
                       alt={msg.sender === 'me' ? 'You' : msg.senderName}
                       className='rd-rounded-full rd-object-cover'
                       style={{
@@ -1001,7 +1010,7 @@ const SingleTicket = ({
               <img
                 src={previewImage}
                 alt='Preview'
-                className='rd-max-w-full rd-h-auto rd-border-radius-md rd-preview-image'
+                className='rd-max-w-full  rd-border-radius-md rd-preview-image'
                 style={{ maxWidth: '80px' }}
               />
               <button

@@ -1,12 +1,48 @@
-/*!*************************************************************************************************************************************************************************!*\
-  !*** css ./node_modules/css-loader/dist/cjs.js??ruleSet[1].rules[2].use[1]!./node_modules/postcss-loader/dist/cjs.js??ruleSet[1].rules[2].use[2]!./src/styles/main.css ***!
-  \*************************************************************************************************************************************************************************/
+/*!******************************************************************************************************************************************************************************!*\
+  !*** css ./node_modules/css-loader/dist/cjs.js??ruleSet[1].rules[2].use[1]!./node_modules/postcss-loader/dist/cjs.js??ruleSet[1].rules[2].use[2]!./assets/css/variables.css ***!
+  \******************************************************************************************************************************************************************************/
 @import url(https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap);
+/*!**********************************************************************************************************************************************************************************!*\
+  !*** css ./node_modules/css-loader/dist/cjs.js??ruleSet[1].rules[2].use[1]!./node_modules/postcss-loader/dist/cjs.js??ruleSet[1].rules[2].use[2]!./assets/css/variables.css (1) ***!
+  \**********************************************************************************************************************************************************************************/
+:root {
+  /* Global CSS variables */
+  --primary-blue: var(--robodesk-theme-color);
+  --title-color: rgba(51, 51, 51, 1);
+  --body-text: rgba(85, 85, 85, 1);
+  --border-light-gray: rgba(238, 238, 238, 1);
+  --border-rounded: 50px;
+  --border-none: 0;
+  --icon-dark: rgba(51, 51, 51, 1);
+  --font-family: "Inter", sans-serif !important;
+  --border-radius-sm: 4px;
+  --border-radius-base: 6px;
+  --border-radius-md: 8px;
+  --border-radius-medium: 10px;
+  --border-radius-lg: 12px;
+  --border-radius-xl: 16px;
+  --border-radius-xxl: 20px;
+  --border-radius-50: 50%;
+  --font-xs: 10px;
+  --font-sm: 12px;
+  --font-base: 14px;
+  --font-md: 16px;
+  --font-lg: 18px;
+  --font-xl: 20px;
+  --font-xxl: 24px;
+  --font-xxxl: 28px;
+  --header-padding: 10px;
+  --card-padding: 16px 20px;
+  --button-padding: 10px 24px;
+  --base-text-style: 400 var(--font-base) / 18px "Inter", sans-serif;
+}
+
 /*!***************************************************************************************************************************************************************************!*\
   !*** css ./node_modules/css-loader/dist/cjs.js??ruleSet[1].rules[2].use[1]!./node_modules/postcss-loader/dist/cjs.js??ruleSet[1].rules[2].use[2]!./src/styles/header.css ***!
   \***************************************************************************************************************************************************************************/
 .robodesk-plugin .robodesk-header {
-  padding: 15px 20px;
+  /* padding: 15px 20px; */
+  padding: var(--header-padding);
   border-bottom: 1px solid var(--border-light-gray);
   background-color: var(--robodesk-theme-color);
 }
@@ -42,43 +78,43 @@
 }
 /* Headings */
 .rd-main-content h1 {
-  font-size: 1.75rem; /* 28px */
+  font-size: var(--font-xxxl); /* 28px */
   font-weight: 600;
   margin-bottom: 0.8rem;
   line-height: 1.3;
 }
 
 .rd-main-content h2 {
-  font-size: 1.5rem; /* 24px */
+  font-size: var(--font-xxl); /* 24px */
   font-weight: 600;
   margin-bottom: 0.625rem;
   line-height: 1.3;
 }
 
 .rd-main-content h3 {
-  font-size: 1.25rem; /* 20px */
+  font-size: var(--font-xl); /* 20px */
   font-weight: 500;
   margin-bottom: 0.8rem;
   line-height: 1.3;
 }
 
 .rd-main-content h4 {
-  font-size: 1.125rem; /* 18px */
+  font-size: var(--font-lg); /* 18px */
   font-weight: 500;
-  margin-bottom: 0.8rem;
+  /* margin-bottom: 0.8rem; */
   line-height: 1.2;
 }
 
 .rd-main-content h5 {
-  font-size: 1rem; /* 16px */
+  font-size: var(--font-md); /* 16px */
   font-weight: 500;
-  margin-bottom: 0.8rem;
+  margin-bottom: 4px;
   line-height: 1.1;
   margin-top: 0;
 }
 
 .rd-main-content h6 {
-  font-size: 0.875rem; /* 14px */
+  font-size: var(--font-base); /* 14px */
   font-weight: 500;
   margin-bottom: 0.8rem;
   line-height: 1.1;
@@ -87,7 +123,7 @@
 /* Lists */
 .rd-main-content ul,
 .rd-main-content ol {
-  font-size: 13px;
+  font-size: var(--font-sm);
   padding-right: 20px !important; /* 20px */
   margin: 0.625rem 0;
 }
@@ -111,7 +147,7 @@
 .robodesk-footer .tab-container {
   border-top: 1px solid var(--border-light-gray);
   border-bottom: 1px solid var(--border-light-gray);
-  padding: 18px 36px;
+  padding: calc(var(--header-padding) + 8px);
 }
 
 .robodesk-footer-text h6 {
@@ -200,88 +236,90 @@
 /*!**************************************************************************************************************************************************************************************!*\
   !*** css ./node_modules/css-loader/dist/cjs.js??ruleSet[1].rules[2].use[1]!./node_modules/postcss-loader/dist/cjs.js??ruleSet[1].rules[2].use[2]!./src/styles/SingleQuestionBox.css ***!
   \**************************************************************************************************************************************************************************************/
-.single-question-box-field{
-    padding: 12px 20px;
+.single-question-box-field {
+  padding: 12px 20px;
 }
-.single-question-box-field .rd-body-text{
-    margin-top: 3px;
+.single-question-box-field .rd-body-text {
+  margin-top: 3px;
 }
 
 /* Existing styles for list view (assumed to exist) */
 .rd-faq-item {
-    display: flex;
-    align-items: flex-start;
-  }
-  
-  .single-question-box-field {
-    padding: 15px;
-    border-radius: 8px;
-  }
-  
-  .rd-text-blue {
-    color: #004AFF;
-  }
-  
-  .rd-title-text {
-    font-size: 18px;
-    font-weight: 600;
-  }
-  
-  .rd-body-text {
-    font-size: 14px;
-    color: #333;
-  }
-  
-  /* New styles for single question view (identical to FAQDetail) */
-  .rd-single-question-view {
-    max-width: 800px;
-    margin: 0 auto;
-  }
-  
-  .rd-back-button {
-    color: #004AFF;
-  }
-  
-  .rd-expand-button {
-    display: flex;
-    align-items: center;
-  }
-  
-  .rd-expand-icon {
-    transition: opacity 0.3s ease;
-  }
-  
-  .rd-expand-icon.hidden {
-    opacity: 0;
-    position: absolute;
-  }
-  
-  .rd-expand-icon.visible {
-    opacity: 1;
-  }
-  
-  .rd-actions {
-    gap: 20px;
-  }
-  
-  .rd-like,
-  .rd-dislike {
-    cursor: pointer;
-  }
-  
-  .rd-like.liked svg path {
-    fill: #004AFF;
-  }
-    
-  .rd-border-bottom-light {
-    border-bottom: 1px solid #e0e0e0;
-  }
+  display: flex;
+  align-items: flex-start;
+}
+
+.single-question-box-field {
+  padding: 15px;
+  border-radius: 8px;
+}
+
+.rd-text-blue {
+  color: #004aff;
+}
+
+.rd-title-text {
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.rd-body-text {
+  font-size: 14px;
+  color: #333;
+}
+
+/* New styles for single question view (identical to FAQDetail) */
+.rd-single-question-view {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.rd-back-button {
+  color: #004aff;
+}
+
+.rd-expand-button {
+  display: flex;
+  align-items: center;
+}
+
+.rd-expand-icon {
+  transition: opacity 0.3s ease;
+}
+
+.rd-expand-icon.hidden {
+  opacity: 0;
+  position: absolute;
+}
+
+.rd-expand-icon.visible {
+  opacity: 1;
+}
+
+.rd-actions {
+  gap: 20px;
+}
+
+.rd-like,
+.rd-dislike {
+  cursor: pointer;
+}
+
+.rd-like.liked svg path {
+  fill: #004aff;
+}
+
+.rd-border-bottom-light {
+  border-bottom: 1px solid #e0e0e0;
+}
+
 /*!*****************************************************************************************************************************************************************************!*\
   !*** css ./node_modules/css-loader/dist/cjs.js??ruleSet[1].rules[2].use[1]!./node_modules/postcss-loader/dist/cjs.js??ruleSet[1].rules[2].use[2]!./src/styles/HomeTabs.css ***!
   \*****************************************************************************************************************************************************************************/
-.home-tab-title{
-    margin-top: 30px;
+.home-tab-title {
+  /* margin-top: 30px; */
 }
+
 /*!********************************************************************************************************************************************************************************!*\
   !*** css ./node_modules/css-loader/dist/cjs.js??ruleSet[1].rules[2].use[1]!./node_modules/postcss-loader/dist/cjs.js??ruleSet[1].rules[2].use[2]!./src/styles/MessageTabs.css ***!
   \********************************************************************************************************************************************************************************/
@@ -290,7 +328,7 @@
 }
 
 .robodesk-plugin .single-rd-ticket {
-  padding: 16px 20px;
+  padding: var(--card-padding);
 }
 
 .robodesk-plugin .rd-tickets .single-ticket-title {
@@ -455,18 +493,22 @@
 
 .robodesk-plugin .rd-message-tab-content input,
 .robodesk-plugin .rd-message-tab-content select {
-  min-width: 150px;
   font-weight: 500 !important;
   font-size: 13px !important;
   line-height: 16px !important;
 }
+.robodesk-plugin .rd-message-tab-content input {
+  width: 50%;
+}
 
+.robodesk-plugin .rd-message-tab-content select {
+  width: 25%;
+}
 .robodesk-plugin .rd-message-tab-content input::-moz-placeholder {
   color: #84818a !important;
   font-size: 13px !important;
   line-height: 16px !important;
 }
-
 .robodesk-plugin .rd-message-tab-content input::placeholder {
   color: #84818a !important;
   font-size: 13px !important;
@@ -505,6 +547,14 @@
   max-width: 95%;
 }
 
+.rd-chat-info {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+}
+
 .robodesk-plugin .rd-message-image-preview img {
   max-height: 35px;
   max-width: 35px;
@@ -526,6 +576,7 @@
 
 .robodesk-plugin .rd-message-list-header img {
   height: 40px;
+  aspect-ratio: auto;
   /* width: 40px; */
 }
 
@@ -649,51 +700,59 @@
 /*!**************************************************************************************************************************************************************************!*\
   !*** css ./node_modules/css-loader/dist/cjs.js??ruleSet[1].rules[2].use[1]!./node_modules/postcss-loader/dist/cjs.js??ruleSet[1].rules[2].use[2]!./src/styles/Login.css ***!
   \**************************************************************************************************************************************************************************/
-.rd-login-button{
-    /* background-color: var(--primary-blue); */
-    background-color: var(--robodesk-theme-color);
-    font-size: 14px;
-    color: #fff;
-    padding: 12px;
-    border: transparent;
-    margin-top: 25px;
+.rd-login-button {
+  /* background-color: var(--primary-blue); */
+  background-color: var(--robodesk-theme-color);
+  font-size: 14px;
+  color: #fff;
+  padding: 12px;
+  border: transparent;
+  margin-top: 25px;
 }
-.login-container{
-    padding-top: 30px;
-    padding-bottom: 30px;
-    max-height: 400px;
-    overflow: auto;
+.login-container {
+  padding-top: 30px;
+  padding-bottom: 30px;
+  max-height: 400px;
+  overflow: auto;
 }
-.login-container input::-moz-placeholder{
-    font-size: 14px;
+.login-container input::-moz-placeholder {
+  font-size: 14px;
 }
-.login-container input::placeholder{
-    font-size: 14px;
+.login-container input::placeholder {
+  font-size: 14px;
 }
-.login-container button{
-    cursor: pointer;
+.login-container button {
+  cursor: pointer;
 }
-.rd-search-header.login-wrap{
-    padding: 10px;
-    max-height: 60px;
-    min-height: 60px;
-    justify-content: center;
+.rd-search-header.login-wrap {
+  padding: 10px;
+  max-height: 60px;
+  min-height: 60px;
+  justify-content: center;
 }
-.rd-search-header.login-wrap img{
-    /* height: 40px;
+.rd-search-header.login-wrap img {
+  /* height: 40px;
     width: 40px; */
-    max-height: 40px;
+  max-height: 40px;
 }
+
 /*!*******************************************************************************************************************************************************************************!*\
   !*** css ./node_modules/css-loader/dist/cjs.js??ruleSet[1].rules[2].use[1]!./node_modules/postcss-loader/dist/cjs.js??ruleSet[1].rules[2].use[2]!./src/styles/NoticeTabs.css ***!
   \*******************************************************************************************************************************************************************************/
-.rd-single-notice-view .wp-block-image{
-    margin: 15px 0;
+.rd-notice-item .rd-title-text {
+  margin-top: 0;
 }
-.notice-tab-content{
-    min-height: 290px;
-    overflow: auto;
+.rd-single-notice-view .wp-block-image {
+  margin: 15px 0;
 }
+.notice-tab-content {
+  min-height: 290px;
+  overflow: auto;
+}
+.rd-notice-item.rd-faq-item {
+  padding: var(--header-padding);
+}
+
 /*!************************************************************************************************************************************************************************!*\
   !*** css ./node_modules/css-loader/dist/cjs.js??ruleSet[1].rules[2].use[1]!./node_modules/postcss-loader/dist/cjs.js??ruleSet[1].rules[2].use[2]!./src/styles/FAQ.css ***!
   \************************************************************************************************************************************************************************/
@@ -704,21 +763,21 @@
 }
 
 .rd-faq-item {
- padding: 12px 20px;
- cursor: pointer;
+  padding: var(--card-padding);
+  cursor: pointer;
 }
 /* .rd-faq-item p{
     margin-top: 8px;
 } */
-.rd-faq-item .rd-faq-content{
+.rd-faq-item .rd-faq-content {
   max-width: 92%;
 }
-.rd-faq-item:hover{
+.rd-faq-item:hover {
   background-color: #f5f5f5;
 }
-.rd-faq-item svg{
-    height: 15px;
-    width: 15px;
+.rd-faq-item svg {
+  height: 15px;
+  width: 15px;
 }
 .rd-faq-content {
   flex-grow: 1;
@@ -735,7 +794,7 @@
   margin-right: 15px;
 }
 
-.rd-faq-item:last-child:not(.featured-faq .rd-faq-item){
+.rd-faq-item:last-child:not(.featured-faq .rd-faq-item) {
   border-bottom: none;
 }
 /* css for search header */
@@ -747,13 +806,13 @@
   cursor: pointer;
   margin-bottom: 15px;
 }
-.rd-search-header .rd-search-bar input{
+.rd-search-header .rd-search-bar input {
   background-color: #fff !important;
   padding: 14px 15px;
   line-height: 18px;
   font-size: 14px;
 }
-.rd-search-header .rd-search-bar svg{
+.rd-search-header .rd-search-bar svg {
   position: absolute;
   left: 10px;
   height: 16px;
@@ -763,64 +822,68 @@
 }
 .rd-search-header .back-button {
   position: absolute;
-  right: 18px;
+  /* left: 18px; */
   top: 20px;
 }
-.rd-search-header{
+.rd-search-header {
   padding: 18px 18px 12px 18px;
 }
 /* css for search header end */
 
 /* css for single faq */
-.rd-author-avatar img{
+.rd-author-avatar img {
   height: 30px;
   width: 30px;
   -o-object-fit: cover;
      object-fit: cover;
   border-radius: 50%;
 }
-.rd-single-faq-footer{
+.rd-single-faq-footer {
   padding-right: 10px;
   padding-left: 10px;
   margin: 30px 0;
 }
-.rd-faq-actions{
+.rd-faq-actions {
   gap: 40px;
   margin-bottom: 15px;
 }
-.rd-faq-actions svg path{
+.rd-faq-actions svg path {
   fill: #555555;
 }
-.liked svg path{
+.liked svg path {
   fill: var(--primary-blue);
 }
-.disliked svg path{
-  fill: #EF2C3F;
+.disliked svg path {
+  fill: #ef2c3f;
 }
-.single-faq-content{
+.single-faq-content {
   /* max-height: 468px; */
   overflow: auto;
   min-height: 468px;
   height: 60vh;
 }
-.rd-wiki-wrap{
+.rd-faq-content .rd-faq-title {
+  margin: 8px 0;
+}
+.rd-wiki-wrap {
   /* max-height: 320px; */
   max-height: 45vh;
   overflow: auto;
 }
 .single-faq-content .wp-block-image img,
-.rd-notice-item .wp-block-image img{
+.rd-notice-item .wp-block-image img {
   margin: 15px 0;
 }
-.single-faq-content iframe{
+.single-faq-content iframe {
   width: 100%;
   min-height: 250px;
   margin: 15px 0;
 }
-.single-faq-other-faq-content .rd-faq-item{
+.single-faq-other-faq-content .rd-faq-item {
   border: 1px solid var(--border-light-gray);
   border-radius: 15px;
 }
+
 /*!***********************************************************************************************************************************************************************************!*\
   !*** css ./node_modules/css-loader/dist/cjs.js??ruleSet[1].rules[2].use[1]!./node_modules/postcss-loader/dist/cjs.js??ruleSet[1].rules[2].use[2]!./src/styles/ActiveFeatured.css ***!
   \***********************************************************************************************************************************************************************************/
@@ -842,18 +905,18 @@
   border-left: 10px solid transparent;
   border-right: 10px solid transparent;
   border-top: 10px solid #f1f1f1;  */
-    content: "";
-    position: absolute;
-    width: 14px;
-    height: 14px;
-    background: #fff;
-    bottom: -7px;
-    left: 10px;
-    transform: rotate(-45deg);
-    box-shadow: 0 0px 4px rgba(0, 0, 0, 0.3); 
-    /* box-shadow: rgba(35, 47, 53, 0.09) 0px 2px 8px 0px; */
-    z-index: -1;
-  }
+  content: "";
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  background: #fff;
+  bottom: -7px;
+  left: 10px;
+  transform: rotate(-45deg);
+  box-shadow: 0 0px 4px rgba(0, 0, 0, 0.3);
+  /* box-shadow: rgba(35, 47, 53, 0.09) 0px 2px 8px 0px; */
+  z-index: -1;
+}
 
 .rd-notice-title {
   cursor: pointer;
@@ -861,25 +924,24 @@
 }
 
 .rd-notice-title:hover {
-background-color: #fafafa;
+  background-color: #fafafa;
 }
-.rd-active-featured .rd-notice-title:not(:first-child){
+.rd-active-featured .rd-notice-title:not(:first-child) {
   border-top: 1px solid #f0f0f0;
-    /* padding-top: 16px; */
+  /* padding-top: 16px; */
 }
 .featured-notice-icon,
-.featured-notice-icon img
-{
+.featured-notice-icon img {
   width: 32px;
   height: 32px;
   fill: #004aff;
 }
-.rd-close-all-button{
+.rd-close-all-button {
   position: absolute;
-    left: -5px;
-    top: -5px;
+  left: -5px;
+  top: -5px;
 }
-.rd-close-all-button svg{
+.rd-close-all-button svg {
   fill: #fff;
   background: #333;
   border-radius: 50px;
@@ -887,20 +949,10 @@ background-color: #fafafa;
   width: 18px;
   height: 18px;
 }
-/*!*****************************************************************************************************************************************************************************!*\
-  !*** css ./node_modules/css-loader/dist/cjs.js??ruleSet[1].rules[2].use[1]!./node_modules/postcss-loader/dist/cjs.js??ruleSet[1].rules[2].use[2]!./src/styles/main.css (1) ***!
-  \*****************************************************************************************************************************************************************************/
-:root {
-  /* Global CSS variables */
-  --primary-blue: var(--robodesk-theme-color);
-  --title-color: rgba(51, 51, 51, 1);
-  --body-text: rgba(85, 85, 85, 1);
-  --border-light-gray: rgba(238, 238, 238, 1);
-  --border-rounded: 50px;
-  --border-none: 0;
-  --icon-dark: rgba(51, 51, 51, 1);
-}
 
+/*!*************************************************************************************************************************************************************************!*\
+  !*** css ./node_modules/css-loader/dist/cjs.js??ruleSet[1].rules[2].use[1]!./node_modules/postcss-loader/dist/cjs.js??ruleSet[1].rules[2].use[2]!./src/styles/main.css ***!
+  \*************************************************************************************************************************************************************************/
 .robodesk-plugin {
   z-index: 9999999 !important;
   font-size: 16px !important;
@@ -914,7 +966,7 @@ background-color: #fafafa;
 
 .robodesk-plugin::-webkit-scrollbar-thumb {
   background-color: #004aff;
-  border-radius: 10px;
+  border-radius: var(--border-radius-medium);
 }
 
 .rd-main-content {
@@ -942,11 +994,14 @@ background-color: #fafafa;
 }
 
 .robodesk-plugin *:not(i) {
-  font-family: "Inter", sans-serif !important;
+  font-family: var(--font-family);
   scrollbar-width: thin;
   scrollbar-color: var(--robodesk-theme-color) transparent;
 }
 
+.robodesk-plugin {
+  font-weight: normal;
+}
 .robodesk-plugin .err_msg {
   color: red !important;
   font-weight: 500 !important;
@@ -981,7 +1036,7 @@ background-color: #fafafa;
 button.no-bg,
 .button.no-bg {
   background-color: transparent;
-  border-radius: 10px;
+  border-radius: var(--border-radius-medium);
   color: var(--robodesk-theme-color);
   font-size: 14px;
   line-height: 18px;
@@ -1013,13 +1068,19 @@ button.no-bg,
 }
 
 .rd-main-header-logo {
-  width: 30px;
-  height: 30px;
+  aspect-ratio: 1/1;
+  height: 40px;
+  width: auto;
 }
-
+.single-faq-header {
+  background-color: var(--robodesk-theme-color);
+}
+.single-faq-header svg {
+  fill: #fff;
+}
 .robodesk-plugin .rd-header-logo img:not(.rd-faq-header img),
 .robodesk-plugin .default-logo img {
-  height: 30px;
+  height: 40px;
 }
 
 .robodesk-plugin .rd-faq-header img,
@@ -1137,6 +1198,10 @@ button.no-bg,
 .rd-px-18 {
   padding-right: 18px !important;
   padding-left: 18px !important;
+}
+
+.rd-p-16 {
+  padding: 16px !important;
 }
 
 .rd-py-10 {
@@ -1276,7 +1341,8 @@ button.no-bg,
   cursor: pointer !important;
 }
 
-.rd-bg-blue {
+.rd-bg-blue,
+.rd-bg-primary {
   /* background-color: var(--primary-blue); */
   background-color: var(--robodesk-theme-color);
 }
@@ -1303,7 +1369,7 @@ button.no-bg,
 }
 
 .rd-border-radius-md {
-  border-radius: 10px !important;
+  border-radius: var(--border-radius-medium) !important;
 }
 
 .rd-title-text {
@@ -1314,7 +1380,7 @@ button.no-bg,
 }
 
 .rd-text-small {
-  font-size: 0.625rem !important;
+  font-size: var(--font-xs) !important;
   line-height: 12px;
   font-weight: 400;
   color: var(--body-text);
@@ -1350,9 +1416,8 @@ button.no-bg,
 
 .robodesk-plugin h5.sub-text {
   color: var(--body-text) !important;
-  font-size: 0.875rem !important;
-  line-height: 18px;
-  font-weight: 400;
+  font: var(--base-text-style) !important;
+  letter-spacing: 0px !important;
 }
 
 .rd-border-light {
@@ -1374,14 +1439,13 @@ button.no-bg,
 .rd-main-content .rd-body-text,
 .rd-main-content .rd-body-text p {
   color: var(--body-text) !important;
-  font-size: 0.8125rem !important;
-  line-height: 18px !important;
-  font-weight: 400;
+  font: var(--base-text-style) !important;
   margin-top: 0;
   transition: font-size 0.5s ease;
 }
 .rd-main-content p {
   font-size: 0.8125rem !important;
+  font-weight: 400 !important;
 }
 .color-body-text {
   color: var(--body-text);
@@ -1414,11 +1478,13 @@ button.no-bg,
 .rd-main-content input::-moz-placeholder {
   font-size: 16px !important;
   line-height: 20px !important;
+  font-size: var(--font-base) !important;
 }
 
 .rd-main-content input::placeholder {
   font-size: 16px !important;
   line-height: 20px !important;
+  font-size: var(--font-base) !important;
 }
 .rd-main-content figcaption {
   margin: 10px 0 !important;
@@ -1441,6 +1507,7 @@ button.no-bg,
   height: 30px;
   width: 30px;
   border-radius: 50px;
+  max-width: none;
 }
 
 .rd-popup-top-icon-container img {
@@ -1625,13 +1692,13 @@ button.no-bg,
   margin-bottom: 0 !important;
 }
 .single-content-other-content a {
-  font-size: 14px !important;
+  font-size: var(--font-base) !important;
   text-decoration: none;
   background-color: var(--robodesk-theme-color);
-  padding: 10px 24px;
+  padding: var(--button-padding);
   color: #fff;
   font-weight: 400;
-  border-radius: 20px;
+  border-radius: var(--border-radius-xxl);
   display: flex;
   justify-content: center;
   line-height: 18px !important;

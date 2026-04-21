@@ -1,9 +1,10 @@
+@import url(../../assets/css/variables.css);
 .robodesk-plugin .rd-message-tab .rd-search-header {
   padding: 20px;
 }
 
 .robodesk-plugin .single-rd-ticket {
-  padding: 16px 20px;
+  padding: var(--card-padding);
 }
 
 .robodesk-plugin .rd-tickets .single-ticket-title {
@@ -159,12 +160,17 @@
 
 .robodesk-plugin .rd-message-tab-content input,
 .robodesk-plugin .rd-message-tab-content select {
-  min-width: 150px;
   font-weight: 500 !important;
   font-size: 13px !important;
   line-height: 16px !important;
 }
+.robodesk-plugin .rd-message-tab-content input {
+  width: 50%;
+}
 
+.robodesk-plugin .rd-message-tab-content select {
+  width: 25%;
+}
 .robodesk-plugin .rd-message-tab-content input::placeholder {
   color: #84818a !important;
   font-size: 13px !important;
@@ -197,6 +203,14 @@
   max-width: 95%;
 }
 
+.rd-chat-info {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+}
+
 .robodesk-plugin .rd-message-image-preview img {
   max-height: 35px;
   max-width: 35px;
@@ -218,6 +232,7 @@
 
 .robodesk-plugin .rd-message-list-header img {
   height: 40px;
+  aspect-ratio: auto;
   /* width: 40px; */
 }
 

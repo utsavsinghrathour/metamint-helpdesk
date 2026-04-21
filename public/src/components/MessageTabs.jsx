@@ -43,12 +43,13 @@ const TicketItem = ({ ticket, onSelect }) => {
           >
             {ticket.title}
           </h5>
-          <div className='rd-text-small rd-mt-5 rd-flex rd-gap-5'>
+          <div className="rd-chat-info">
+            <div className='rd-text-small rd-flex rd-gap-5'>
             <span className='rd-flex'>
               {ticket.source} <LuDot /> {ticket.timeAgo}
             </span>
-          </div>
-          <div className='rd-flex rd-align-center rd-gap-10 rd-mt-10'>
+            </div>
+            <div className='rd-flex rd-align-center rd-gap-10'>
             <span
               className={`rd-priority rd-fw-medium ${ticket.priority === 'Urgent'
                   ? 'rd-urgent'
@@ -62,6 +63,7 @@ const TicketItem = ({ ticket, onSelect }) => {
             <span className='rd-text-small rd-fw-medium'>
               (#{ticket.ticketNumber})
             </span>
+            </div>
           </div>
         </div>
         <FaChevronRight />
@@ -147,6 +149,12 @@ const MessageTabs = ({
       setLoading(false);
     }
   }, [isLoggedIn, loggedInUsrId, ticketsContext]);
+
+  useEffect(() => {
+    if (selectedNewTicket && selectedNewTicket.id) {
+      setSelectedTicket(selectedNewTicket);
+    }
+  }, [selectedNewTicket]);
 
   const handleLogin = (loginStatus) => {
     setIsLoggedIn(loginStatus);
@@ -255,7 +263,7 @@ const MessageTabs = ({
                   <img
                     src={image_urls.wide_logo}
                     alt='Plugin Wide Logo'
-                    className='rd-h-auto rd-header-logo rd-m-auto'
+                    className='rd-header-logo rd-m-auto'
                     onError={(e) => {
                       e.target.style.display = 'none';
                     }}
@@ -264,23 +272,23 @@ const MessageTabs = ({
                   <img
                     src={image_urls.logo}
                     alt='Plugin Logo'
-                    className='rd-h-auto rd-header-logo rd-m-auto'
+                    className=' rd-header-logo rd-m-auto'
                     onError={(e) => {
                       e.target.style.display = 'none';
                     }}
                   />
                 ) : (
-                  <div className='rd-h-auto rd-header-logo default-logo'>
+                  <div className=' rd-header-logo default-logo'>
                     <img
                       src={defaultLogo}
                       alt='Default Plugin Logo'
-                      className='rd-h-auto rd-header-logo rd-m-auto'
+                      className=' rd-header-logo rd-m-auto'
                     />
                   </div>
                 )}
               </div>
               <div className='rd-message-tab-content'>
-                <div className='rd-mt-10 rd-mb-10'>
+                <div className='rd-p-16'>
                   <h4 className='heading-4 rd-text-center'>Conversations</h4>
                   <div className='rd-body-text rd-mt-8 rd-text-center '>
                     <p>All your conversations are here.</p>
@@ -289,7 +297,7 @@ const MessageTabs = ({
 
                 {/* Search and Priority Filter */}
 
-                <div className='rd-px-18 rd-py-10 rd-flex rd-gap-10 rd-align-center rd-justify-between'>
+                <div className='rd-x-16 rd-py-10 rd-flex rd-gap-10 rd-align-center rd-justify-between'>
                   <input
                     ref={searchKeywordRef}
                     type='text'
@@ -309,9 +317,6 @@ const MessageTabs = ({
                       <option key={priority.term_id}>{priority.name}</option>
                     ))}
                   </select>
-                </div>
-
-                <div className='rd-flex rd-justify-between rd-py-10 rd-px-20 rd-gap-10 rd-border-bottom-light rd-pt-0'>
                   <select
                     ref={statusref}
                     id='status-conversation'
@@ -320,11 +325,16 @@ const MessageTabs = ({
                   >
                     {Object.entries(wpAuth?.status).map(([key, label]) => (
                       <option key={key} value={key}>
-                        {label}
+                        {key === 'active-conversations' ? 'Active' : label}
                       </option>
                     ))}
                   </select>
+                 
+                  
                 </div>
+               
+
+                
 
                 {/* Ticket List */}
                 <div
@@ -353,7 +363,7 @@ const MessageTabs = ({
                           />
                         ))
                       ) : (
-                        <p className='rd-text-center rd-text-gray rd-m-5 err_msg'>
+                        <p className='rd-text-center rd-text-gray rd-m-5'>
                           No tickets found
                         </p>
                       )}

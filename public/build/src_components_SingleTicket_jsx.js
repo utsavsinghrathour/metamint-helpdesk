@@ -280,6 +280,10 @@ var SingleTicket = function SingleTicket(_ref3) {
   var fileInputRef = (0,react__WEBPACK_IMPORTED_MODULE_0__.useRef)(null);
   var chatContainerRef = (0,react__WEBPACK_IMPORTED_MODULE_0__.useRef)(null);
   var image_urls = ((_window$robodeskData2 = window.robodeskData) === null || _window$robodeskData2 === void 0 ? void 0 : _window$robodeskData2.imageUrls) || {};
+<<<<<<< HEAD
+=======
+  var customerAvatar = (ticket === null || ticket === void 0 ? void 0 : ticket.authorImage) || _images_default_avatar_jpg__WEBPACK_IMPORTED_MODULE_6__;
+>>>>>>> 19fe10c2752e44f07960760235c8866d0113bf23
   var previousScrollHeight = (0,react__WEBPACK_IMPORTED_MODULE_0__.useRef)(0);
   var beep = (0,react__WEBPACK_IMPORTED_MODULE_0__.useRef)(new Audio(wpAuth.notificationSound));
   var isAtTop = (0,react__WEBPACK_IMPORTED_MODULE_0__.useRef)(false);
@@ -476,12 +480,22 @@ var SingleTicket = function SingleTicket(_ref3) {
       console.log('The actual authorid is', loggedInUserId);
       console.log(_typeof(commentData.author_id), _typeof(loggedInUserId));
       console.log(String(commentData.author_id) === String(loggedInUserId));
+<<<<<<< HEAD
       var newMessage = {
         id: commentData.id,
         text: ((_commentData$content = commentData.content) === null || _commentData$content === void 0 ? void 0 : _commentData$content.rendered) || '',
         sender: String(commentData.author_id) === String(loggedInUserId) ? 'me' : 'other',
         senderName: commentData.author_name || 'Unknown',
         image: commentData.author_image || _images_default_avatar_jpg__WEBPACK_IMPORTED_MODULE_6__,
+=======
+      var isOwnMessage = String(commentData.author_id) === String(loggedInUserId);
+      var newMessage = {
+        id: commentData.id,
+        text: ((_commentData$content = commentData.content) === null || _commentData$content === void 0 ? void 0 : _commentData$content.rendered) || '',
+        sender: isOwnMessage ? 'me' : 'other',
+        senderName: commentData.author_name || 'Unknown',
+        image: isOwnMessage ? customerAvatar : commentData.author_image || _images_default_avatar_jpg__WEBPACK_IMPORTED_MODULE_6__,
+>>>>>>> 19fe10c2752e44f07960760235c8866d0113bf23
         created_at: commentData.created_at || new Date().toISOString(),
         isAdmin: commentData.author_id !== ticket.author_id
       };
@@ -507,7 +521,11 @@ var SingleTicket = function SingleTicket(_ref3) {
         text: ((_comment$content = comment.content) === null || _comment$content === void 0 ? void 0 : _comment$content.rendered) || ((_comment$content2 = comment.content) === null || _comment$content2 === void 0 ? void 0 : _comment$content2.plain) || '',
         sender: sender,
         senderName: comment.author_name || 'Unknown',
+<<<<<<< HEAD
         image: ((_comment$author_data2 = comment.author_data) === null || _comment$author_data2 === void 0 ? void 0 : _comment$author_data2.avatar) || comment.author_image || _images_default_avatar_jpg__WEBPACK_IMPORTED_MODULE_6__,
+=======
+        image: sender === 'me' ? customerAvatar : ((_comment$author_data2 = comment.author_data) === null || _comment$author_data2 === void 0 ? void 0 : _comment$author_data2.avatar) || comment.author_image || _images_default_avatar_jpg__WEBPACK_IMPORTED_MODULE_6__,
+>>>>>>> 19fe10c2752e44f07960760235c8866d0113bf23
         created_at: comment.date,
         action: comment.comment_action,
         time_ago: comment.time_ago
@@ -694,7 +712,11 @@ var SingleTicket = function SingleTicket(_ref3) {
   }, [url]);
   var handleSend = /*#__PURE__*/function () {
     var _ref6 = _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee3() {
+<<<<<<< HEAD
       var imageHTML, tempMessage, controller, timeoutId, _result$data$author_i, result, newMessage, _t3;
+=======
+      var imageHTML, tempMessage, controller, timeoutId, result, newMessage, _t3;
+>>>>>>> 19fe10c2752e44f07960760235c8866d0113bf23
       return _regenerator().w(function (_context3) {
         while (1) switch (_context3.n) {
           case 0:
@@ -708,7 +730,11 @@ var SingleTicket = function SingleTicket(_ref3) {
               text: message + (imageHTML ? '<br>' + imageHTML : ''),
               sender: 'me',
               senderName: 'Me',
+<<<<<<< HEAD
               image: _images_default_avatar_jpg__WEBPACK_IMPORTED_MODULE_6__,
+=======
+              image: customerAvatar,
+>>>>>>> 19fe10c2752e44f07960760235c8866d0113bf23
               created_at: new Date().toISOString(),
               isSending: true,
               isOptimistic: true
@@ -745,7 +771,11 @@ var SingleTicket = function SingleTicket(_ref3) {
               text: result.data.content,
               sender: 'me',
               senderName: result.data.author_name || 'Me',
+<<<<<<< HEAD
               image: (_result$data$author_i = result.data.author_image) !== null && _result$data$author_i !== void 0 ? _result$data$author_i : '/default-avatar.jpg',
+=======
+              image: customerAvatar,
+>>>>>>> 19fe10c2752e44f07960760235c8866d0113bf23
               created_at: result.data.created_at || tempMessage.created_at,
               isAdmin: result.data.author_id ? result.data.author_id !== ticket.author_id : false
             }, previewImage && {
@@ -892,23 +922,39 @@ var SingleTicket = function SingleTicket(_ref3) {
         }), image_urls.wide_logo && image_urls.wide_logo.trim() !== '' ? /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_8__.jsx)("img", {
           src: image_urls.wide_logo,
           alt: "Plugin Wide Logo",
+<<<<<<< HEAD
           className: "rd-h-auto rd-header-logo",
+=======
+          className: " rd-header-logo",
+>>>>>>> 19fe10c2752e44f07960760235c8866d0113bf23
           onError: function onError(e) {
             return e.target.style.display = 'none';
           }
         }) : image_urls.logo && image_urls.logo.trim() !== '' ? /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_8__.jsx)("img", {
           src: image_urls.logo,
           alt: "Plugin Logo",
+<<<<<<< HEAD
           className: "rd-h-auto rd-header-logo",
+=======
+          className: " rd-header-logo",
+>>>>>>> 19fe10c2752e44f07960760235c8866d0113bf23
           onError: function onError(e) {
             return e.target.style.display = 'none';
           }
         }) : /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_8__.jsx)("div", {
+<<<<<<< HEAD
           className: "rd-h-auto rd-header-logo default-logo",
           children: /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_8__.jsx)("img", {
             src: _images_robodesk_logo_png__WEBPACK_IMPORTED_MODULE_2__,
             alt: "Default Plugin Logo",
             className: "rd-h-auto rd-header-logo"
+=======
+          className: " rd-header-logo default-logo",
+          children: /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_8__.jsx)("img", {
+            src: _images_robodesk_logo_png__WEBPACK_IMPORTED_MODULE_2__,
+            alt: "Default Plugin Logo",
+            className: " rd-header-logo"
+>>>>>>> 19fe10c2752e44f07960760235c8866d0113bf23
           })
         })]
       }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_8__.jsx)("div", {
@@ -955,7 +1001,11 @@ var SingleTicket = function SingleTicket(_ref3) {
               marginTop: index === 0 || !isSameSender ? '12px' : '4px'
             },
             children: [(!isSameSender || index === 0) && /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_8__.jsx)("img", {
+<<<<<<< HEAD
               src: msg.image,
+=======
+              src: msg.sender === 'me' || msg.isSending ? customerAvatar : msg.image || _images_default_avatar_jpg__WEBPACK_IMPORTED_MODULE_6__,
+>>>>>>> 19fe10c2752e44f07960760235c8866d0113bf23
               alt: msg.sender === 'me' ? 'You' : msg.senderName,
               className: "rd-rounded-full rd-object-cover",
               style: {
@@ -1015,7 +1065,11 @@ var SingleTicket = function SingleTicket(_ref3) {
           children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_8__.jsx)("img", {
             src: previewImage,
             alt: "Preview",
+<<<<<<< HEAD
             className: "rd-max-w-full rd-h-auto rd-border-radius-md rd-preview-image",
+=======
+            className: "rd-max-w-full  rd-border-radius-md rd-preview-image",
+>>>>>>> 19fe10c2752e44f07960760235c8866d0113bf23
             style: {
               maxWidth: '80px'
             }
@@ -1108,4 +1162,8 @@ module.exports = __webpack_require__.p + "images/default-avatar.3842d8da.jpg";
 /***/ })
 
 }]);
+<<<<<<< HEAD
 //# sourceMappingURL=src_components_SingleTicket_jsx.js.map?ver=53f40f88bd14e55c7cc7
+=======
+//# sourceMappingURL=src_components_SingleTicket_jsx.js.map?ver=9c131ea53fa70c1c78ea
+>>>>>>> 19fe10c2752e44f07960760235c8866d0113bf23

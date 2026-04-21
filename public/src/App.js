@@ -7,10 +7,10 @@ import HelpTabs from "./components/HelpTabs.jsx";
 import ActiveFeatured from "./components/ActiveFeatured.jsx";
 import "./styles/main.css";
 import defaultLogo from "./images/robodesk-logo.png";
-import { AppDataProvider, useAppData } from "./utils/AppDataContext";
+import { AppDataProvider, useAppData } from "./utils/AppDataContext.jsx";
 // import useExclusiveServerEvents from './Hooks/useExclusiveServerEvents.js';
 // import useSSE from './Hooks/useSSE.js';
-import { sseManager } from "./Hooks/sseManager";
+import { sseManager } from "./Hooks/sseManager.js";
 
 const AppContent = ({ imageUrls = { logo: "" } }) => {
   const {
@@ -31,6 +31,8 @@ const AppContent = ({ imageUrls = { logo: "" } }) => {
   const [showActiveFeatured, setShowActiveFeatured] = useState(true);
   const [selectedTicket, setSelectedTicket] = useState();
   const [focusedTextArea, setFocusedTextArea] = useState(false);
+  const hasAutoOpenedTicket = useRef(false);
+  const hasAttemptedDeepLinkFetch = useRef(false);
 
   const notificationAudio = useRef(
     new Audio(window.wpAuth?.notificationSound || ""),
@@ -42,25 +44,128 @@ const AppContent = ({ imageUrls = { logo: "" } }) => {
     (ticket) => ticket.notifications === "no",
   );
 
-  const resetPasswordCondition = () => {
+  const isRobodeskPopupIntent = () => {
     const params = new URLSearchParams(window.location.search);
     const popupParam = params.get("rbd_popup");
-    const initiatorParam = params.get("initator");
+    const initiatorParam = params.get("initiator") || params.get("initator");
     return popupParam === "true" && initiatorParam === "robodesk";
   };
 
-  useEffect(() => {
+  const requestedTicketId = useMemo(() => {
+    const deepLinkTicketId = window.robodeskData?.deepLinkTicketId;
+    if (deepLinkTicketId) {
+      return String(deepLinkTicketId);
+    }
+
     const params = new URLSearchParams(window.location.search);
+    return (
+      params.get("ticket_id") ||
+      params.get("ticket") ||
+      params.get("tid") ||
+      ""
+    ).trim();
+  }, []);
 
-    const popupParam = params.get("rbd_popup");
-    const initiatorParam = params.get("initator");
-
-    if (popupParam === "true" && initiatorParam === "robodesk") {
+  useEffect(() => {
+    if (isRobodeskPopupIntent()) {
       setShowActiveFeatured(false);
       setIsOpen(true);
       setActiveTab(1);
     }
   }, []);
+
+  useEffect(() => {
+    if (!requestedTicketId || hasAutoOpenedTicket.current) {
+      return;
+    }
+
+    if (!Array.isArray(ticketsContext) || ticketsContext.length === 0) {
+      return;
+    }
+
+    const normalizedRequestedId = String(requestedTicketId).toLowerCase();
+    const matchedTicket = ticketsContext.find((ticket) => {
+      const byId =
+        String(ticket?.id ?? "").toLowerCase() === normalizedRequestedId;
+      const ticketNumber = String(ticket?.ticketNumber ?? "").toLowerCase();
+      const byTicketNumber = ticketNumber === normalizedRequestedId;
+      const byTicketNumberSuffix =
+        ticketNumber.replace(/^tckt-/, "").trim() === normalizedRequestedId;
+
+      return byId || byTicketNumber || byTicketNumberSuffix;
+    });
+
+    if (matchedTicket) {
+      setSelectedTicket(matchedTicket);
+      setShowActiveFeatured(false);
+      setIsOpen(true);
+      setActiveTab(1);
+      hasAutoOpenedTicket.current = true;
+    }
+  }, [requestedTicketId, ticketsContext]);
+
+  useEffect(() => {
+    if (!requestedTicketId || hasAutoOpenedTicket.current) {
+      return;
+    }
+
+    if (hasAttemptedDeepLinkFetch.current) {
+      return;
+    }
+
+    if (!loggedInUsrId && wpAuth.isLoggedIn !== "true") {
+      return;
+    }
+
+    hasAttemptedDeepLinkFetch.current = true;
+
+    const mapTicketPayload = (ticket) => ({
+      id: ticket.id,
+      ticketNumber: ticket.ticket_number,
+      title: ticket.ticket_title || ticket.title?.rendered || "",
+      source: ticket.ticket_origin,
+      timeAgo: ticket.ticket_time_ago ? `${ticket.ticket_time_ago} ago` : "",
+      authorImage: ticket.ticket_author_image || null,
+      status: ticket.ticket_status ?? "open",
+      priority: ticket.ticket_priority ?? "Medium",
+      author: ticket.ticket_author,
+      author_id: ticket.author,
+      lastReply: ticket.ticket_last_reply,
+      totalComments: ticket.ticket_total_comments,
+      notifications: ticket.ticket_notifications,
+      comments: ticket.ticket_comments,
+    });
+
+    const fetchRequestedTicket = async () => {
+      try {
+        const response = await fetch(
+          `/wp-json/wp/v2/robodesk_ticket/${encodeURIComponent(
+            requestedTicketId,
+          )}`,
+        );
+
+        if (!response.ok) {
+          return;
+        }
+
+        const ticket = await response.json();
+        if (!ticket?.id) {
+          return;
+        }
+
+        const mappedTicket = mapTicketPayload(ticket);
+        setSelectedTicket(mappedTicket);
+        setShowActiveFeatured(false);
+        setIsOpen(true);
+        setActiveTab(1);
+        hasAutoOpenedTicket.current = true;
+      } catch (error) {
+        console.error("Unable to fetch requested deep-link ticket", error);
+      }
+    };
+
+    fetchRequestedTicket();
+  }, [requestedTicketId, loggedInUsrId]);
 
   const handleSelectedTicketUpdate = (newValue) => {
     setSelectedTicket(newValue);
@@ -148,7 +253,7 @@ const AppContent = ({ imageUrls = { logo: "" } }) => {
         },
         includeCredentials: true,
       });
-       const now = Math.floor(Date.now() / 1000);
+      const now = Math.floor(Date.now() / 1000);
 
       const tokenData = {
         token: response.token,
@@ -160,18 +265,20 @@ const AppContent = ({ imageUrls = { logo: "" } }) => {
       console.log("Generated new token");
       return response.token;
     } catch (err) {
-      console.error(err.message || __("Error generating token", "wordpress-mcp"));
+      console.error(
+        err.message || __("Error generating token", "wordpress-mcp"),
+      );
     }
   };
 
   const handlePopupToggle = async () => {
-    console.log("Toggle Clicked",wpAuth.isLoggedIn, typeof(wpAuth.isLoggedIn));
+    console.log("Toggle Clicked", wpAuth.isLoggedIn, typeof wpAuth.isLoggedIn);
     if (isOpen) {
       setIsOpen(false);
       setShowActiveFeatured(true);
       setSelectedNotice(null);
     } else {
-      if (wpAuth.isLoggedIn === 'true') {
+      if (wpAuth.isLoggedIn === "true") {
         await generateToken(); // Generate token on popup toggle open
       }
       setIsOpen(true);

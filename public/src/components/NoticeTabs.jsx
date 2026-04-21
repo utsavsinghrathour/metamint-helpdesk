@@ -167,17 +167,17 @@ const SingleNoticeView = memo(
             <img
               src={logo}
               alt='Plugin Logo'
-              className='rd-h-auto rd-header-logo'
+              className=' rd-header-logo'
               onError={(e) => {
                 e.target.style.display = 'none';
               }}
             />
           ) : (
-            <div className='rd-h-auto rd-header-logo'>
+            <div className=' rd-header-logo'>
               <img
                 src={defaultLogo}
                 alt='Default Plugin Logo'
-                className='rd-h-auto rd-header-logo'
+                className=' rd-header-logo'
               />
             </div>
           )}
@@ -318,7 +318,7 @@ const NoticeTabs = ({
                       Loading notices...
                     </p>
                   ) : notices.length === 0 ? (
-                    <p className='err_msg'>No notices found.</p>
+                    <p className='rd-text-center'>No notices found.</p>
                   ) : (
                     notices.map((notice) => (
                       <NoticeItem
