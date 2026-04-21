@@ -668,11 +668,331 @@ function robodesk_get_ticket_source($ticket_id)
     if (strpos($origin, 'admin') !== false) {
         return 'admin';
     }
+    if (strpos($origin, 'web') !== false || strpos($origin, 'form') !== false) {
+        return 'web';
+    }
     if (strpos($origin, 'chat') !== false) {
         return 'chat';
     }
 
     return 'chat';
+}
+
+function robodesk_get_request_header_values($request = null)
+{
+    $headers = array();
+
+    if ($request instanceof WP_REST_Request) {
+        foreach ($request->get_headers() as $header_name => $header_value) {
+            $headers[strtolower((string) $header_name)] = is_array($header_value) ? implode(', ', $header_value) : (string) $header_value;
+        }
+    }
+
+    $server_header_map = array(
+        'HTTP_CF_CONNECTING_IP' => 'cf-connecting-ip',
+        'HTTP_X_FORWARDED_FOR' => 'x-forwarded-for',
+        'HTTP_X_REAL_IP' => 'x-real-ip',
+        'HTTP_X_CLIENT_IP' => 'x-client-ip',
+        'HTTP_CF_IPCOUNTRY' => 'cf-ipcountry',
+        'HTTP_X_VERCEL_IP_COUNTRY' => 'x-vercel-ip-country',
+        'HTTP_CLOUDFRONT_VIEWER_COUNTRY' => 'cloudfront-viewer-country',
+        'HTTP_USER_AGENT' => 'user-agent',
+        'HTTP_X_MAILER' => 'x-mailer',
+        'REMOTE_ADDR' => 'remote-addr',
+    );
+
+    foreach ($server_header_map as $server_key => $header_key) {
+        if (!empty($_SERVER[$server_key])) {
+            $headers[$header_key] = (string) $_SERVER[$server_key];
+        }
+    }
+
+    return $headers;
+}
+
+function robodesk_get_first_ip_from_value($value)
+{
+    $candidates = preg_split('/\s*,\s*/', (string) $value);
+    if (!is_array($candidates)) {
+        $candidates = array($value);
+    }
+
+    foreach ($candidates as $candidate) {
+        $candidate = trim((string) $candidate, " \t\n\r\0\x0B[]");
+        if ($candidate !== '' && robodesk_is_public_ip($candidate)) {
+            return $candidate;
+        }
+    }
+
+    return '';
+}
+
+function robodesk_is_public_ip($ip)
+{
+    $ip = trim((string) $ip);
+    if ($ip === '' || !filter_var($ip, FILTER_VALIDATE_IP)) {
+        return false;
+    }
+
+    return filter_var(
+        $ip,
+        FILTER_VALIDATE_IP,
+        FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE
+    ) !== false;
+}
+
+function robodesk_parse_browser_label($value)
+{
+    $value = trim((string) $value);
+    if ($value === '') {
+        return '';
+    }
+
+    $rules = array(
+        array('label' => 'Edge', 'regex' => '/\b(?:edg|edge)\/([0-9\.]+)/i'),
+        array('label' => 'Opera', 'regex' => '/\b(?:opr|opera)\/([0-9\.]+)/i'),
+        array('label' => 'Chrome', 'regex' => '/\b(?:chrome|crios)\/([0-9\.]+)/i'),
+        array('label' => 'Firefox', 'regex' => '/\b(?:firefox|fxios)\/([0-9\.]+)/i'),
+        array('label' => 'Safari', 'regex' => '/\bversion\/([0-9\.]+).*\bsafari\//i'),
+        array('label' => 'Internet Explorer', 'regex' => '/\bmsie\s([0-9\.]+)/i'),
+        array('label' => 'Internet Explorer', 'regex' => '/\brv:([0-9\.]+)\) like gecko/i'),
+    );
+
+    foreach ($rules as $rule) {
+        if (preg_match($rule['regex'], $value, $matches)) {
+            $version = isset($matches[1]) ? trim((string) $matches[1]) : '';
+            return $version !== '' ? $rule['label'] . ' ' . $version : $rule['label'];
+        }
+    }
+
+    return $value;
+}
+
+function robodesk_lookup_country_by_ip($ip)
+{
+    $ip = trim((string) $ip);
+    if ($ip === '' || !robodesk_is_public_ip($ip)) {
+        return '';
+    }
+
+    $cache_key = 'robodesk_country_' . md5($ip);
+    $cached_country = get_transient($cache_key);
+    if ($cached_country !== false) {
+        return (string) $cached_country;
+    }
+
+    $response = wp_remote_get(
+        'https://ipapi.co/' . rawurlencode($ip) . '/country_name/',
+        array(
+            'timeout' => 2,
+            'redirection' => 1,
+            'user-agent' => 'Robodesk/' . (defined('ROBODESK_VERSION') ? ROBODESK_VERSION : '1.0.6'),
+        )
+    );
+
+    if (is_wp_error($response)) {
+        return '';
+    }
+
+    $country = trim((string) wp_remote_retrieve_body($response));
+    if ($country !== '') {
+        set_transient($cache_key, $country, DAY_IN_SECONDS);
+    }
+
+    return $country;
+}
+
+function robodesk_collect_source_context($request = null, $overrides = array())
+{
+    $headers = robodesk_get_request_header_values($request);
+    foreach ($overrides as $key => $value) {
+        if ($value !== null && $value !== '') {
+            $headers[strtolower((string) $key)] = (string) $value;
+        }
+    }
+
+    $ip = '';
+    foreach (array('cf-connecting-ip', 'x-forwarded-for', 'x-real-ip', 'x-client-ip', 'remote-addr') as $header_key) {
+        if (empty($headers[$header_key])) {
+            continue;
+        }
+
+        $candidate_ip = robodesk_get_first_ip_from_value($headers[$header_key]);
+        if ($candidate_ip !== '') {
+            $ip = $candidate_ip;
+            break;
+        }
+    }
+
+    if ($ip === '' && !empty($headers['forwarded'])) {
+        if (preg_match_all('/for=(?:"?\[?)([a-f0-9:\.]+)(?:\]?"?)/i', (string) $headers['forwarded'], $matches)) {
+            foreach ($matches[1] as $candidate_ip) {
+                $candidate_ip = trim((string) $candidate_ip, " \t\n\r\0\x0B[]\"");
+                if (robodesk_is_public_ip($candidate_ip)) {
+                    $ip = $candidate_ip;
+                    break;
+                }
+            }
+        }
+    }
+
+    $country = '';
+    foreach (array('cf-ipcountry', 'x-vercel-ip-country', 'cloudfront-viewer-country', 'x-country-code') as $header_key) {
+        if (!empty($headers[$header_key])) {
+            $country = strtoupper(trim((string) $headers[$header_key]));
+            break;
+        }
+    }
+
+    if ($country === '' && $ip !== '') {
+        $country = robodesk_lookup_country_by_ip($ip);
+    }
+
+    $browser_source = '';
+    foreach (array('user-agent', 'x-mailer') as $header_key) {
+        if (!empty($headers[$header_key])) {
+            $browser_source = (string) $headers[$header_key];
+            break;
+        }
+    }
+
+    return array(
+        'ip' => $ip,
+        'country' => $country,
+        'browser' => robodesk_parse_browser_label($browser_source),
+    );
+}
+
+function robodesk_collect_email_source_context($raw_headers)
+{
+    $headers = array();
+    $lines = preg_split('/\r\n|\r|\n/', (string) $raw_headers);
+    if (!is_array($lines)) {
+        $lines = array();
+    }
+
+    foreach ($lines as $line) {
+        if (strpos($line, ':') === false) {
+            continue;
+        }
+
+        list($name, $value) = explode(':', $line, 2);
+        $name = strtolower(trim((string) $name));
+        $value = trim((string) $value);
+        if ($name === '') {
+            continue;
+        }
+
+        if (!isset($headers[$name])) {
+            $headers[$name] = $value;
+        } else {
+            $headers[$name] .= ', ' . $value;
+        }
+    }
+
+    $ip_candidates = array();
+    foreach (array('x-originating-ip', 'x-client-ip', 'x-forwarded-for') as $header_key) {
+        if (!empty($headers[$header_key])) {
+            $ip_candidates[] = $headers[$header_key];
+        }
+    }
+
+    if (!empty($headers['received'])) {
+        $ip_candidates[] = $headers['received'];
+    }
+
+    $ip = '';
+    foreach ($ip_candidates as $candidate_value) {
+        if (preg_match_all('/\b(?:\d{1,3}\.){3}\d{1,3}\b/', (string) $candidate_value, $matches)) {
+            foreach ($matches[0] as $candidate_ip) {
+                if (filter_var($candidate_ip, FILTER_VALIDATE_IP)) {
+                    $ip = $candidate_ip;
+                    break 2;
+                }
+            }
+        }
+    }
+
+    $browser_source = '';
+    foreach (array('user-agent', 'x-mailer') as $header_key) {
+        if (!empty($headers[$header_key])) {
+            $browser_source = (string) $headers[$header_key];
+            break;
+        }
+    }
+
+    $country = '';
+    if (!empty($headers['x-originating-country'])) {
+        $country = strtoupper(trim((string) $headers['x-originating-country']));
+    } elseif (!empty($headers['x-country-code'])) {
+        $country = strtoupper(trim((string) $headers['x-country-code']));
+    }
+
+    if ($country === '' && $ip !== '') {
+        $country = robodesk_lookup_country_by_ip($ip);
+    }
+
+    return array(
+        'ip' => $ip,
+        'country' => $country,
+        'browser' => robodesk_parse_browser_label($browser_source),
+    );
+}
+
+function robodesk_store_ticket_source_meta($ticket_id, $context, $comment_id = 0)
+{
+    $ticket_id = (int) $ticket_id;
+    if ($ticket_id <= 0 || !is_array($context)) {
+        return array();
+    }
+
+    $meta_map = array(
+        'ip' => '_robodesk_source_ip',
+        'country' => '_robodesk_source_country',
+        'browser' => '_robodesk_source_browser',
+    );
+
+    $stored = array();
+    foreach ($meta_map as $context_key => $meta_key) {
+        $value = isset($context[$context_key]) ? trim((string) $context[$context_key]) : '';
+        if ($value === '') {
+            continue;
+        }
+
+        update_post_meta($ticket_id, $meta_key, $value);
+        if ((int) $comment_id > 0) {
+            update_comment_meta((int) $comment_id, $meta_key, $value);
+        }
+        $stored[$context_key] = $value;
+    }
+
+    return $stored;
+}
+
+function robodesk_get_ticket_source_meta($ticket_id)
+{
+    $ticket_id = (int) $ticket_id;
+    if ($ticket_id <= 0) {
+        return array(
+            'ip' => '',
+            'country' => '',
+            'browser' => '',
+        );
+    }
+
+    $ip = trim((string) get_post_meta($ticket_id, '_robodesk_source_ip', true));
+    if ($ip !== '' && !robodesk_is_public_ip($ip)) {
+        $ip = '';
+    }
+
+    $country = trim((string) get_post_meta($ticket_id, '_robodesk_source_country', true));
+    $browser = trim((string) get_post_meta($ticket_id, '_robodesk_source_browser', true));
+
+    return array(
+        'ip' => $ip,
+        'country' => $country,
+        'browser' => $browser,
+    );
 }
 
 function robodesk_get_author_type($user_id)
@@ -1604,10 +1924,30 @@ function robodesk_comment_creation_on_insert($comment_ID, $comment_object)
         update_post_meta($ticketId, 'rbd_all_seen', 'no');
     }
 
+    if ($author_type === 'customer' && $ticketId) {
+        $context = robodesk_collect_source_context();
+
+        $comment_context = array(
+            'ip' => (string) get_comment_meta($comment_ID, '_robodesk_source_ip', true),
+            'country' => (string) get_comment_meta($comment_ID, '_robodesk_source_country', true),
+            'browser' => (string) get_comment_meta($comment_ID, '_robodesk_source_browser', true),
+        );
+
+        foreach ($comment_context as $context_key => $context_value) {
+            if ($context_value !== '') {
+                $context[$context_key] = $context_value;
+            }
+        }
+
+        robodesk_store_ticket_source_meta($ticketId, $context, $comment_ID);
+    }
+
     $comment_source = get_comment_meta($comment_ID, 'comment_source', true);
     if ($comment_source === '') {
-        if ($comment_object->user_id === 0 && robodesk_get_ticket_source($ticketId) === 'email') {
+        if ($author_type === 'customer' && $comment_object->user_id === 0 && robodesk_get_ticket_source($ticketId) === 'email') {
             $comment_source = 'email';
+        } elseif ($author_type === 'customer') {
+            $comment_source = is_admin() ? 'admin' : 'web';
         } else {
             $comment_source = is_admin() ? 'admin' : robodesk_get_ticket_source($ticketId);
         }

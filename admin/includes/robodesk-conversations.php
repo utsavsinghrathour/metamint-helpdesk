@@ -129,6 +129,7 @@ if ($query->have_posts()) {
                 'id' => $ticket_terms[0]->term_id,
             ];
         }
+        $ticket_source_meta = function_exists('robodesk_get_ticket_source_meta') ? robodesk_get_ticket_source_meta($ticket_id) : array('ip' => '', 'country' => '', 'browser' => '');
 
         // Simulate replies field using comments
         $replies = get_comments(array('post_id' => $ticket_id));
@@ -153,6 +154,9 @@ if ($query->have_posts()) {
             'email' => get_the_author_meta('email'),
             'author_id' => get_the_author_meta('ID'),
             'source' => $ticket_origin,
+            'source_ip' => $ticket_source_meta['ip'],
+            'source_country' => $ticket_source_meta['country'],
+            'source_browser' => $ticket_source_meta['browser'],
             'status' => $ticket_status,
             'priority' => $ticket_priority,
             'created' => $created_at,
