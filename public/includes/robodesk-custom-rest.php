@@ -1,4 +1,7 @@
 <?php
+if (!defined('ABSPATH')) {
+    exit; // Exit if accessed directly
+}
 $robodesk_jwt_file = ROBODESK_PLUGIN_PATH . 'public/includes/php-jwt/src/JWT.php';
 $robodesk_key_file = ROBODESK_PLUGIN_PATH . 'public/includes/php-jwt/src/Key.php';
 

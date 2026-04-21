@@ -1,5 +1,7 @@
 <?php
-
+if (!defined('ABSPATH')) {
+    exit; // Exit if accessed directly
+}
 // Change Ticket Status
 add_action('wp_ajax_robodesk_change_ticket_status', 'robodesk_change_ticket_status_callback');
 function robodesk_change_ticket_status_callback()

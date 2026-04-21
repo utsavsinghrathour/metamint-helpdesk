@@ -1,5 +1,8 @@
 <?php
 // In public/includes/robodesk-shortcodes.php
+if (!defined('ABSPATH')) {
+    exit; // Exit if accessed directly
+}
 
 
 add_shortcode('robodesk_ticket_form', 'robodesk_ticket_form_shortcode');

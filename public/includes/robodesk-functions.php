@@ -1,5 +1,7 @@
 <?php
-
+if (!defined('ABSPATH')) {
+    exit; // Exit if accessed directly
+}
 // Woocommerce modifications
 if (in_array('woocommerce/woocommerce.php', apply_filters('active_plugins', get_option('active_plugins')))) {
     require_once ROBODESK_PLUGIN_PATH . 'public/includes/robodesk-woocommerce.php';
