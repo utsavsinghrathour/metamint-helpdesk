@@ -3,6 +3,9 @@
 /**
  * Template for displaying single robodesk_ticket posts
  */
+if (!defined('ABSPATH')) {
+    exit; // Exit if accessed directly
+}
 
 get_header(); ?>
 
