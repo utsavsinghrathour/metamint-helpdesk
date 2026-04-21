@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo, memo } from "react";
 import { FaChevronRight, FaChevronLeft, FaSearch } from "react-icons/fa";
+import { RiPencilFill } from "react-icons/ri";
 import parse from "html-react-parser";
 import DOMPurify from "dompurify";
 import he from "he";
@@ -95,6 +96,10 @@ const FAQDetail = memo(
       });
     }, [fullContent]);
 
+    const relatedFaqs = faqs
+      .slice(0, 3)
+      .filter((relatedFaq) => relatedFaq.id !== faq.id);
+
     const handleLike = () => {
       setIsLiked(!isLiked);
       if (isDisliked) setIsDisliked(false);
@@ -108,7 +113,7 @@ const FAQDetail = memo(
     return (
       <div className="rd-faq-detail">
         <div className="rd-main-content no-footer">
-          <div className="single-faq-header rd-flex rd-align-center rd-justify-between rd-cursor-pointer rd-border-bottom-light rd-px-20 rd-py-15">
+          <div className="single-faq-header rd-flex rd-align-center rd-justify-between rd-cursor-pointer rd-border-bottom-light rd-p-10 rd-bg-primary ">
             <button
               className="back-button rd-flex rd-items-center rd-bg-transparent rd-border-none icon-dark rd-p-0 rd-m-0"
               onClick={onBack}
@@ -199,7 +204,8 @@ const FAQDetail = memo(
                   <h5 className="sub-text">
                     {faq?.author?.total_posts} articles
                   </h5>
-                  <h5 className="sub-text">By {faq?.author?.display_name}</h5>
+                  {/* <h5 className="sub-text">By {faq?.author?.display_name}</h5> */}
+                  <span className="rd-text-small">By {faq?.author?.display_name}</span>
                 </div>
                 <div className="rd-author-avatar rd-flex rd-align-center">
                   <img
@@ -209,36 +215,39 @@ const FAQDetail = memo(
                 </div>
               </div>
             </div>
-            <div className="single-faq-other-faq-content rd-my-20 single-content-other-content">
-              <h4 className="heading-4">Didn't get your answer?</h4>
-              <div className="rd-body-text rd-mt-8">
-                <p>Here are some related articles.</p>
+            {relatedFaqs.length > 0 && (
+              <div className="single-faq-other-faq-content rd-my-20 single-content-other-content">
+                <h4 className="heading-4">Didn't get your answer?</h4>
+                <div className="rd-body-text rd-mt-8">
+                  <p>Here are some related articles.</p>
+                </div>
+                <div className="rd-flex rd-flex-col rd-gap-8 rd-mt-20">
+                  {relatedFaqs.map((relatedFaq) => (
+                    <FAQItem
+                      key={relatedFaq.id}
+                      faq={relatedFaq}
+                      onSelect={setSelectedFAQ}
+                    />
+                  ))}
+                </div>
+                <div className="rd-my-30">
+                  <h4 className="heading-4 rd-fw-semi rd-mb-8">
+                    Still have questions?
+                  </h4>
+                  <button
+                    type="button"
+                    className="button no-bg rd-flex rd-align-center rd-gap-10 rd-cursor-pointer"
+                    onClick={() => {
+                      setActiveTab(0);
+                      handleFocusedTextArea(true);
+                    }}
+                  >
+                    Start a conversation
+                    <RiPencilFill />
+                  </button>
+                </div>
               </div>
-              <div className="rd-flex rd-flex-col rd-gap-8 rd-mt-20">
-                {faqs
-                  .slice(0, 3)
-                  .map((relatedFaq) =>
-                    relatedFaq.id !== faq.id ? (
-                      <FAQItem
-                        key={relatedFaq.id}
-                        faq={relatedFaq}
-                        onSelect={setSelectedFAQ}
-                      />
-                    ) : null,
-                  )}
-              </div>
-              <div className="rd-my-30">
-                <h4 className="heading-4 rd-fw-semi rd-mb-8">
-                  Still have questions?
-                </h4>
-                <a
-                  href="#"
-                  onClick={() => (setActiveTab(0), handleFocusedTextArea(true))}
-                >
-                  Start a conversation
-                </a>
-              </div>
-            </div>
+            )}
           </div>
         </div>
         <div className="rd-border-top-light">
@@ -385,7 +394,7 @@ const FAQ = ({
   return (
     <div className="rd-faq-container">
       <div className="rd-main-content">
-        <div className="rd-px-18 rd-search-header rd-bg-blue rd-flex rd-items-center rd-justify-between rd-flex-col">
+        <div className="rd-p-10 rd-search-header rd-bg-blue rd-flex rd-items-center rd-justify-between rd-flex-col">
           <h5 className="heading-5 rd-text-white rd-text-center">Search</h5>
           <div className="rd-mt-20 rd-search-bar rd-flex rd-items-center rd-bg-white rd-rounded rd-position-relative searh-bar">
             <input
@@ -404,7 +413,7 @@ const FAQ = ({
             <FaChevronLeft />
           </button>
         </div>
-        <div className="rd-mt-8 rd-mb-8 rd-wiki-wrap">
+        <div className="rd-wiki-wrap">
           {error ? (
             <p className="rd-body-text rd-text-red rd-text-center">
               Error: {error}

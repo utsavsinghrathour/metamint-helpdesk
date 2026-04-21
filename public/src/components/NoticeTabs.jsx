@@ -49,7 +49,7 @@ const NoticeItem = memo(({ notice, onSelect }) => {
   // console.log(notice);
   return (
     <div
-      className='rd-notice-item rd-flex rd-gap-15 rd-border-light single-notice-box-field rd-border-radius-md rd-faq-item'
+      className='rd-notice-item rd-flex rd-gap-10 rd-border-light single-notice-box-field rd-border-radius-md rd-faq-item'
       onClick={() => onSelect(notice)}
       style={{ cursor: 'pointer' }}
     >
@@ -227,6 +227,9 @@ const SingleNoticeView = memo(
           <h4 className='heading-4 rd-mb-10'>{title}</h4>
           <div className='rd-body-text'>{parsedContent}</div>
         </div>
+        <div className='rd-border-top-light'>
+          <Footer showCopyrightOnly={true} />
+        </div>
       </div>
     );
   }
@@ -303,7 +306,7 @@ const NoticeTabs = ({
               {showHeaderFooter && (
                 <>
                   <Header logo={logo} onClose={() => setIsOpen(false)} />
-                  <div className='rd-text-center rd-px-20 rd-flex rd-flex-col rd-gap-5 rd-mb-20 notice-tab-title home-tab-title'>
+                  <div className='rd-text-center rd-p-16 rd-flex rd-flex-col rd-gap-5 rd-mb-20 notice-tab-title home-tab-title'>
                     <h4 className='heading-4'>Notices</h4>
                     <h5 className='sub-text'>
                       Stay updated with our latest announcements.

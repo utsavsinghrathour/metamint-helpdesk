@@ -1515,6 +1515,256 @@ jQuery(document).ready(function ($) {
     });
   });
 
+  const logoCropConfigs = {
+    logo: {
+      optionKey: "robodesk_logo",
+      hidden: "#robodesk_logo",
+      preview: "#logo-preview",
+      input: 'input[name="logo"]',
+      width: 150,
+      height: 150,
+      label: "Logo",
+    },
+    wide_logo: {
+      optionKey: "robodesk_wide_logo",
+      hidden: "#robodesk_wide_logo",
+      preview: "#wide-logo-preview",
+      input: 'input[name="wide_logo"]',
+      width: 600,
+      height: 200,
+      label: "Wide Logo",
+    },
+  };
+
+  const buildLogoCropSelectOptions = function (targetWidth, targetHeight) {
+    return function (attachment, controller) {
+      const realWidth = attachment.get("width");
+      const realHeight = attachment.get("height");
+
+      if (!realWidth || !realHeight) {
+        return {
+          handles: true,
+          keys: true,
+          instance: true,
+          persistent: true,
+          imageWidth: targetWidth,
+          imageHeight: targetHeight,
+          minWidth: targetWidth,
+          minHeight: targetHeight,
+          aspectRatio: `${targetWidth}:${targetHeight}`,
+          x1: 0,
+          y1: 0,
+          x2: targetWidth,
+          y2: targetHeight,
+        };
+      }
+
+      const requiredRatio = targetWidth / targetHeight;
+      const realRatio = realWidth / realHeight;
+      let xInit = targetWidth;
+      let yInit = targetHeight;
+
+      if (realRatio > requiredRatio) {
+        yInit = realHeight;
+        xInit = yInit * requiredRatio;
+      } else {
+        xInit = realWidth;
+        yInit = xInit / requiredRatio;
+      }
+
+      const x1 = Math.max(0, Math.round((realWidth - xInit) / 2));
+      const y1 = Math.max(0, Math.round((realHeight - yInit) / 2));
+
+      controller.set("canSkipCrop", false);
+
+      return {
+        handles: true,
+        keys: true,
+        instance: true,
+        persistent: true,
+        imageWidth: realWidth,
+        imageHeight: realHeight,
+        minWidth: Math.min(targetWidth, realWidth),
+        minHeight: Math.min(targetHeight, realHeight),
+        aspectRatio: `${targetWidth}:${targetHeight}`,
+        x1: x1,
+        y1: y1,
+        x2: Math.min(realWidth, Math.round(xInit + x1)),
+        y2: Math.min(realHeight, Math.round(yInit + y1)),
+      };
+    };
+  };
+
+  const getLogoCropController = function (width, height) {
+    return wp.media.controller.Cropper.extend({
+      doCrop: function (attachment) {
+        const cropDetails = attachment.get("cropDetails");
+        cropDetails.dst_width = width;
+        cropDetails.dst_height = height;
+
+        return wp.ajax.post("crop-image", {
+          nonce: attachment.get("nonces").edit,
+          id: attachment.get("id"),
+          cropDetails: cropDetails,
+        });
+      },
+    });
+  };
+
+  const saveCroppedLogo = function (optionKey, croppedUrl, nonce) {
+    return $.ajax({
+      url: ajaxurl,
+      type: "POST",
+      data: {
+        action: "robodesk_save_cropped_logo",
+        nonce: nonce,
+        option_key: optionKey,
+        cropped_url: croppedUrl,
+      },
+    });
+  };
+
+  const openLogoCropper = function (attachmentId, cropConfig, nonce) {
+    return new Promise(function (resolve) {
+      if (
+        typeof wp === "undefined" ||
+        !wp.media ||
+        !wp.media.controller ||
+        !window.Backbone ||
+        !attachmentId
+      ) {
+        resolve();
+        return;
+      }
+
+      const attachment = wp.media.attachment(attachmentId);
+      attachment
+        .fetch()
+        .done(function () {
+          const CropController = getLogoCropController(
+            cropConfig.width,
+            cropConfig.height,
+          );
+
+          const frame = wp.media({
+            state: "cropper",
+            button: {
+              text: `Crop ${cropConfig.label}`,
+              close: false,
+            },
+            states: [
+              new CropController({
+                imgSelectOptions: buildLogoCropSelectOptions(
+                  cropConfig.width,
+                  cropConfig.height,
+                ),
+              }),
+            ],
+          });
+
+          frame._selection = {
+            single: attachment,
+          };
+          frame
+            .state("cropper")
+            .set("selection", new Backbone.Collection([attachment]));
+
+          frame.on("cropped", function (croppedImage) {
+            const croppedUrl =
+              croppedImage && croppedImage.url ? croppedImage.url : "";
+            if (!croppedUrl) {
+              showToast(`Cropped ${cropConfig.label} URL is missing.`, "error");
+              frame.close();
+              resolve();
+              return;
+            }
+
+            saveCroppedLogo(cropConfig.optionKey, croppedUrl, nonce)
+              .done(function (saveResponse) {
+                if (saveResponse && saveResponse.success) {
+                  $(cropConfig.hidden).val(croppedUrl);
+                  $(cropConfig.preview)
+                    .removeClass("hidden")
+                    .attr("src", croppedUrl);
+                  $(cropConfig.preview).next("button").removeClass("hidden");
+                  $(cropConfig.input).val("");
+                } else {
+                  const message =
+                    (saveResponse &&
+                      saveResponse.data &&
+                      saveResponse.data.message) ||
+                    `Failed to save cropped ${cropConfig.label}.`;
+                  showToast(message, "error");
+                }
+              })
+              .fail(function () {
+                showToast(
+                  `Failed to save cropped ${cropConfig.label}.`,
+                  "error",
+                );
+              })
+              .always(function () {
+                frame.close();
+                resolve();
+              });
+          });
+
+          frame.on("content:error:crop", function () {
+            showToast(`Cropping failed for ${cropConfig.label}.`, "error");
+            frame.close();
+            resolve();
+          });
+
+          frame.on("close", function () {
+            resolve();
+          });
+
+          frame.open();
+        })
+        .fail(function () {
+          showToast(
+            `Could not load ${cropConfig.label} for cropping.`,
+            "error",
+          );
+          resolve();
+        });
+    });
+  };
+
+  const maybeOpenLogoCropper = function (uploadedAttachments, nonce) {
+    if (!uploadedAttachments || typeof uploadedAttachments !== "object") {
+      return;
+    }
+
+    const cropQueue = [];
+    if (uploadedAttachments.logo) {
+      cropQueue.push({
+        id: uploadedAttachments.logo,
+        config: logoCropConfigs.logo,
+      });
+    }
+    if (uploadedAttachments.wide_logo) {
+      cropQueue.push({
+        id: uploadedAttachments.wide_logo,
+        config: logoCropConfigs.wide_logo,
+      });
+    }
+
+    const runQueue = function (index) {
+      if (index >= cropQueue.length) {
+        return;
+      }
+
+      openLogoCropper(cropQueue[index].id, cropQueue[index].config, nonce).then(
+        function () {
+          runQueue(index + 1);
+        },
+      );
+    };
+
+    runQueue(0);
+  };
+
   // Handle form submission for basic settings
   $(document).on("click", "#save-basic-settings", function () {
     const $form = $("#robodesk-basic-settings-form");
@@ -1612,6 +1862,12 @@ jQuery(document).ready(function ($) {
               .removeClass("hidden")
               .css("background-color", response.data.settings.theme_color);
           }
+
+          maybeOpenLogoCropper(
+            response.data.uploaded_attachments,
+            $form.find('input[name="robodesk_basic_settings_nonce"]').val(),
+          );
+
           showToast(response.data.message, "success");
         } else {
           showToast(response.data.message, "error");
