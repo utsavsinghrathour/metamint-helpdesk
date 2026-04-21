@@ -97432,8 +97432,13 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _components_ActiveFeatured_jsx__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./components/ActiveFeatured.jsx */ "./src/components/ActiveFeatured.jsx");
 /* harmony import */ var _styles_main_css__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ./styles/main.css */ "./src/styles/main.css");
 /* harmony import */ var _images_robodesk_logo_png__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ./images/robodesk-logo.png */ "./src/images/robodesk-logo.png");
+<<<<<<< HEAD
 /* harmony import */ var _utils_AppDataContext__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! ./utils/AppDataContext */ "./src/utils/AppDataContext.jsx");
 /* harmony import */ var _Hooks_sseManager__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! ./Hooks/sseManager */ "./src/Hooks/sseManager.js");
+=======
+/* harmony import */ var _utils_AppDataContext_jsx__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! ./utils/AppDataContext.jsx */ "./src/utils/AppDataContext.jsx");
+/* harmony import */ var _Hooks_sseManager_js__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! ./Hooks/sseManager.js */ "./src/Hooks/sseManager.js");
+>>>>>>> 19fe10c2752e44f07960760235c8866d0113bf23
 /* harmony import */ var react_jsx_runtime__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__(/*! react/jsx-runtime */ "react/jsx-runtime");
 /* harmony import */ var react_jsx_runtime__WEBPACK_IMPORTED_MODULE_11___default = /*#__PURE__*/__webpack_require__.n(react_jsx_runtime__WEBPACK_IMPORTED_MODULE_11__);
 function ownKeys(e, r) { var t = Object.keys(e); if (Object.getOwnPropertySymbols) { var o = Object.getOwnPropertySymbols(e); r && (o = o.filter(function (r) { return Object.getOwnPropertyDescriptor(e, r).enumerable; })), t.push.apply(t, o); } return t; }
@@ -97441,11 +97446,18 @@ function _objectSpread(e) { for (var r = 1; r < arguments.length; r++) { var t =
 function _defineProperty(e, r, t) { return (r = _toPropertyKey(r)) in e ? Object.defineProperty(e, r, { value: t, enumerable: !0, configurable: !0, writable: !0 }) : e[r] = t, e; }
 function _toPropertyKey(t) { var i = _toPrimitive(t, "string"); return "symbol" == _typeof(i) ? i : i + ""; }
 function _toPrimitive(t, r) { if ("object" != _typeof(t) || !t) return t; var e = t[Symbol.toPrimitive]; if (void 0 !== e) { var i = e.call(t, r || "default"); if ("object" != _typeof(i)) return i; throw new TypeError("@@toPrimitive must return a primitive value."); } return ("string" === r ? String : Number)(t); }
+<<<<<<< HEAD
+=======
+function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (o) { return typeof o; } : function (o) { return o && "function" == typeof Symbol && o.constructor === Symbol && o !== Symbol.prototype ? "symbol" : typeof o; }, _typeof(o); }
+>>>>>>> 19fe10c2752e44f07960760235c8866d0113bf23
 function _regenerator() { /*! regenerator-runtime -- Copyright (c) 2014-present, Facebook, Inc. -- license (MIT): https://github.com/babel/babel/blob/main/packages/babel-helpers/LICENSE */ var e, t, r = "function" == typeof Symbol ? Symbol : {}, n = r.iterator || "@@iterator", o = r.toStringTag || "@@toStringTag"; function i(r, n, o, i) { var c = n && n.prototype instanceof Generator ? n : Generator, u = Object.create(c.prototype); return _regeneratorDefine2(u, "_invoke", function (r, n, o) { var i, c, u, f = 0, p = o || [], y = !1, G = { p: 0, n: 0, v: e, a: d, f: d.bind(e, 4), d: function d(t, r) { return i = t, c = 0, u = e, G.n = r, a; } }; function d(r, n) { for (c = r, u = n, t = 0; !y && f && !o && t < p.length; t++) { var o, i = p[t], d = G.p, l = i[2]; r > 3 ? (o = l === n) && (u = i[(c = i[4]) ? 5 : (c = 3, 3)], i[4] = i[5] = e) : i[0] <= d && ((o = r < 2 && d < i[1]) ? (c = 0, G.v = n, G.n = i[1]) : d < l && (o = r < 3 || i[0] > n || n > l) && (i[4] = r, i[5] = n, G.n = l, c = 0)); } if (o || r > 1) return a; throw y = !0, n; } return function (o, p, l) { if (f > 1) throw TypeError("Generator is already running"); for (y && 1 === p && d(p, l), c = p, u = l; (t = c < 2 ? e : u) || !y;) { i || (c ? c < 3 ? (c > 1 && (G.n = -1), d(c, u)) : G.n = u : G.v = u); try { if (f = 2, i) { if (c || (o = "next"), t = i[o]) { if (!(t = t.call(i, u))) throw TypeError("iterator result is not an object"); if (!t.done) return t; u = t.value, c < 2 && (c = 0); } else 1 === c && (t = i["return"]) && t.call(i), c < 2 && (u = TypeError("The iterator does not provide a '" + o + "' method"), c = 1); i = e; } else if ((t = (y = G.n < 0) ? u : r.call(n, G)) !== a) break; } catch (t) { i = e, c = 1, u = t; } finally { f = 1; } } return { value: t, done: y }; }; }(r, o, i), !0), u; } var a = {}; function Generator() {} function GeneratorFunction() {} function GeneratorFunctionPrototype() {} t = Object.getPrototypeOf; var c = [][n] ? t(t([][n]())) : (_regeneratorDefine2(t = {}, n, function () { return this; }), t), u = GeneratorFunctionPrototype.prototype = Generator.prototype = Object.create(c); function f(e) { return Object.setPrototypeOf ? Object.setPrototypeOf(e, GeneratorFunctionPrototype) : (e.__proto__ = GeneratorFunctionPrototype, _regeneratorDefine2(e, o, "GeneratorFunction")), e.prototype = Object.create(u), e; } return GeneratorFunction.prototype = GeneratorFunctionPrototype, _regeneratorDefine2(u, "constructor", GeneratorFunctionPrototype), _regeneratorDefine2(GeneratorFunctionPrototype, "constructor", GeneratorFunction), GeneratorFunction.displayName = "GeneratorFunction", _regeneratorDefine2(GeneratorFunctionPrototype, o, "GeneratorFunction"), _regeneratorDefine2(u), _regeneratorDefine2(u, o, "Generator"), _regeneratorDefine2(u, n, function () { return this; }), _regeneratorDefine2(u, "toString", function () { return "[object Generator]"; }), (_regenerator = function _regenerator() { return { w: i, m: f }; })(); }
 function _regeneratorDefine2(e, r, n, t) { var i = Object.defineProperty; try { i({}, "", {}); } catch (e) { i = 0; } _regeneratorDefine2 = function _regeneratorDefine(e, r, n, t) { if (r) i ? i(e, r, { value: n, enumerable: !t, configurable: !t, writable: !t }) : e[r] = n;else { var o = function o(r, n) { _regeneratorDefine2(e, r, function (e) { return this._invoke(r, n, e); }); }; o("next", 0), o("throw", 1), o("return", 2); } }, _regeneratorDefine2(e, r, n, t); }
 function asyncGeneratorStep(n, t, e, r, o, a, c) { try { var i = n[a](c), u = i.value; } catch (n) { return void e(n); } i.done ? t(u) : Promise.resolve(u).then(r, o); }
 function _asyncToGenerator(n) { return function () { var t = this, e = arguments; return new Promise(function (r, o) { var a = n.apply(t, e); function _next(n) { asyncGeneratorStep(a, r, o, _next, _throw, "next", n); } function _throw(n) { asyncGeneratorStep(a, r, o, _next, _throw, "throw", n); } _next(void 0); }); }; }
+<<<<<<< HEAD
 function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (o) { return typeof o; } : function (o) { return o && "function" == typeof Symbol && o.constructor === Symbol && o !== Symbol.prototype ? "symbol" : typeof o; }, _typeof(o); }
+=======
+>>>>>>> 19fe10c2752e44f07960760235c8866d0113bf23
 function _slicedToArray(r, e) { return _arrayWithHoles(r) || _iterableToArrayLimit(r, e) || _unsupportedIterableToArray(r, e) || _nonIterableRest(); }
 function _nonIterableRest() { throw new TypeError("Invalid attempt to destructure non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
 function _unsupportedIterableToArray(r, a) { if (r) { if ("string" == typeof r) return _arrayLikeToArray(r, a); var t = {}.toString.call(r).slice(8, -1); return "Object" === t && r.constructor && (t = r.constructor.name), "Map" === t || "Set" === t ? Array.from(r) : "Arguments" === t || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(t) ? _arrayLikeToArray(r, a) : void 0; } }
@@ -97472,7 +97484,11 @@ var AppContent = function AppContent(_ref) {
     imageUrls = _ref$imageUrls === void 0 ? {
       logo: ""
     } : _ref$imageUrls;
+<<<<<<< HEAD
   var _useAppData = (0,_utils_AppDataContext__WEBPACK_IMPORTED_MODULE_9__.useAppData)(),
+=======
+  var _useAppData = (0,_utils_AppDataContext_jsx__WEBPACK_IMPORTED_MODULE_9__.useAppData)(),
+>>>>>>> 19fe10c2752e44f07960760235c8866d0113bf23
     loadingContext = _useAppData.loadingContext,
     ticketsContext = _useAppData.ticketsContext,
     loggedinContext = _useAppData.loggedinContext,
@@ -97509,6 +97525,11 @@ var AppContent = function AppContent(_ref) {
     _useState12 = _slicedToArray(_useState11, 2),
     focusedTextArea = _useState12[0],
     setFocusedTextArea = _useState12[1];
+<<<<<<< HEAD
+=======
+  var hasAutoOpenedTicket = (0,react__WEBPACK_IMPORTED_MODULE_0__.useRef)(false);
+  var hasAttemptedDeepLinkFetch = (0,react__WEBPACK_IMPORTED_MODULE_0__.useRef)(false);
+>>>>>>> 19fe10c2752e44f07960760235c8866d0113bf23
   var notificationAudio = (0,react__WEBPACK_IMPORTED_MODULE_0__.useRef)(new Audio(((_window$wpAuth = window.wpAuth) === null || _window$wpAuth === void 0 ? void 0 : _window$wpAuth.notificationSound) || ""));
   var handleFocusedTextArea = function handleFocusedTextArea(focus) {
     return setFocusedTextArea(focus);
@@ -97516,6 +97537,7 @@ var AppContent = function AppContent(_ref) {
   var hasNotificationOff = ticketsContext === null || ticketsContext === void 0 ? void 0 : ticketsContext.some(function (ticket) {
     return ticket.notifications === "no";
   });
+<<<<<<< HEAD
   var resetPasswordCondition = function resetPasswordCondition() {
     var params = new URLSearchParams(window.location.search);
     var popupParam = params.get("rbd_popup");
@@ -97527,11 +97549,137 @@ var AppContent = function AppContent(_ref) {
     var popupParam = params.get("rbd_popup");
     var initiatorParam = params.get("initator");
     if (popupParam === "true" && initiatorParam === "robodesk") {
+=======
+  var isRobodeskPopupIntent = function isRobodeskPopupIntent() {
+    var params = new URLSearchParams(window.location.search);
+    var popupParam = params.get("rbd_popup");
+    var initiatorParam = params.get("initiator") || params.get("initator");
+    return popupParam === "true" && initiatorParam === "robodesk";
+  };
+  var requestedTicketId = (0,react__WEBPACK_IMPORTED_MODULE_0__.useMemo)(function () {
+    var _window$robodeskData;
+    var deepLinkTicketId = (_window$robodeskData = window.robodeskData) === null || _window$robodeskData === void 0 ? void 0 : _window$robodeskData.deepLinkTicketId;
+    if (deepLinkTicketId) {
+      return String(deepLinkTicketId);
+    }
+    var params = new URLSearchParams(window.location.search);
+    return (params.get("ticket_id") || params.get("ticket") || params.get("tid") || "").trim();
+  }, []);
+  (0,react__WEBPACK_IMPORTED_MODULE_0__.useEffect)(function () {
+    if (isRobodeskPopupIntent()) {
+>>>>>>> 19fe10c2752e44f07960760235c8866d0113bf23
       setShowActiveFeatured(false);
       setIsOpen(true);
       setActiveTab(1);
     }
   }, []);
+<<<<<<< HEAD
+=======
+  (0,react__WEBPACK_IMPORTED_MODULE_0__.useEffect)(function () {
+    if (!requestedTicketId || hasAutoOpenedTicket.current) {
+      return;
+    }
+    if (!Array.isArray(ticketsContext) || ticketsContext.length === 0) {
+      return;
+    }
+    var normalizedRequestedId = String(requestedTicketId).toLowerCase();
+    var matchedTicket = ticketsContext.find(function (ticket) {
+      var _ticket$id, _ticket$ticketNumber;
+      var byId = String((_ticket$id = ticket === null || ticket === void 0 ? void 0 : ticket.id) !== null && _ticket$id !== void 0 ? _ticket$id : "").toLowerCase() === normalizedRequestedId;
+      var ticketNumber = String((_ticket$ticketNumber = ticket === null || ticket === void 0 ? void 0 : ticket.ticketNumber) !== null && _ticket$ticketNumber !== void 0 ? _ticket$ticketNumber : "").toLowerCase();
+      var byTicketNumber = ticketNumber === normalizedRequestedId;
+      var byTicketNumberSuffix = ticketNumber.replace(/^tckt-/, "").trim() === normalizedRequestedId;
+      return byId || byTicketNumber || byTicketNumberSuffix;
+    });
+    if (matchedTicket) {
+      setSelectedTicket(matchedTicket);
+      setShowActiveFeatured(false);
+      setIsOpen(true);
+      setActiveTab(1);
+      hasAutoOpenedTicket.current = true;
+    }
+  }, [requestedTicketId, ticketsContext]);
+  (0,react__WEBPACK_IMPORTED_MODULE_0__.useEffect)(function () {
+    if (!requestedTicketId || hasAutoOpenedTicket.current) {
+      return;
+    }
+    if (hasAttemptedDeepLinkFetch.current) {
+      return;
+    }
+    if (!loggedInUsrId && wpAuth.isLoggedIn !== "true") {
+      return;
+    }
+    hasAttemptedDeepLinkFetch.current = true;
+    var mapTicketPayload = function mapTicketPayload(ticket) {
+      var _ticket$title, _ticket$ticket_status, _ticket$ticket_priori;
+      return {
+        id: ticket.id,
+        ticketNumber: ticket.ticket_number,
+        title: ticket.ticket_title || ((_ticket$title = ticket.title) === null || _ticket$title === void 0 ? void 0 : _ticket$title.rendered) || "",
+        source: ticket.ticket_origin,
+        timeAgo: ticket.ticket_time_ago ? "".concat(ticket.ticket_time_ago, " ago") : "",
+        authorImage: ticket.ticket_author_image || null,
+        status: (_ticket$ticket_status = ticket.ticket_status) !== null && _ticket$ticket_status !== void 0 ? _ticket$ticket_status : "open",
+        priority: (_ticket$ticket_priori = ticket.ticket_priority) !== null && _ticket$ticket_priori !== void 0 ? _ticket$ticket_priori : "Medium",
+        author: ticket.ticket_author,
+        author_id: ticket.author,
+        lastReply: ticket.ticket_last_reply,
+        totalComments: ticket.ticket_total_comments,
+        notifications: ticket.ticket_notifications,
+        comments: ticket.ticket_comments
+      };
+    };
+    var fetchRequestedTicket = /*#__PURE__*/function () {
+      var _ref2 = _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee() {
+        var response, ticket, mappedTicket, _t;
+        return _regenerator().w(function (_context) {
+          while (1) switch (_context.n) {
+            case 0:
+              _context.p = 0;
+              _context.n = 1;
+              return fetch("/wp-json/wp/v2/robodesk_ticket/".concat(encodeURIComponent(requestedTicketId)));
+            case 1:
+              response = _context.v;
+              if (response.ok) {
+                _context.n = 2;
+                break;
+              }
+              return _context.a(2);
+            case 2:
+              _context.n = 3;
+              return response.json();
+            case 3:
+              ticket = _context.v;
+              if (ticket !== null && ticket !== void 0 && ticket.id) {
+                _context.n = 4;
+                break;
+              }
+              return _context.a(2);
+            case 4:
+              mappedTicket = mapTicketPayload(ticket);
+              setSelectedTicket(mappedTicket);
+              setShowActiveFeatured(false);
+              setIsOpen(true);
+              setActiveTab(1);
+              hasAutoOpenedTicket.current = true;
+              _context.n = 6;
+              break;
+            case 5:
+              _context.p = 5;
+              _t = _context.v;
+              console.error("Unable to fetch requested deep-link ticket", _t);
+            case 6:
+              return _context.a(2);
+          }
+        }, _callee, null, [[0, 5]]);
+      }));
+      return function fetchRequestedTicket() {
+        return _ref2.apply(this, arguments);
+      };
+    }();
+    fetchRequestedTicket();
+  }, [requestedTicketId, loggedInUsrId]);
+>>>>>>> 19fe10c2752e44f07960760235c8866d0113bf23
   var handleSelectedTicketUpdate = function handleSelectedTicketUpdate(newValue) {
     setSelectedTicket(newValue);
   };
@@ -97550,12 +97698,21 @@ var AppContent = function AppContent(_ref) {
   (0,react__WEBPACK_IMPORTED_MODULE_0__.useEffect)(function () {
     if (!url && !loggedinContext && !loggedInUsrId) return;
     // console.info('I am executed first');
+<<<<<<< HEAD
     _Hooks_sseManager__WEBPACK_IMPORTED_MODULE_10__.sseManager.connect(url);
     var unsubscribeNewTicket = _Hooks_sseManager__WEBPACK_IMPORTED_MODULE_10__.sseManager.on("new_ticket", function (data) {
       //   console.log('Executed From new Ticket');
       updateTicket(data);
     });
     var unsubscribeNotification = _Hooks_sseManager__WEBPACK_IMPORTED_MODULE_10__.sseManager.on("new_notification", function (data) {
+=======
+    _Hooks_sseManager_js__WEBPACK_IMPORTED_MODULE_10__.sseManager.connect(url);
+    var unsubscribeNewTicket = _Hooks_sseManager_js__WEBPACK_IMPORTED_MODULE_10__.sseManager.on("new_ticket", function (data) {
+      //   console.log('Executed From new Ticket');
+      updateTicket(data);
+    });
+    var unsubscribeNotification = _Hooks_sseManager_js__WEBPACK_IMPORTED_MODULE_10__.sseManager.on("new_notification", function (data) {
+>>>>>>> 19fe10c2752e44f07960760235c8866d0113bf23
       var ids = Array.isArray(data) ? data.map(function (item) {
         return _typeof(item) === "object" ? item.id : item;
       }) : [];
@@ -97584,6 +97741,7 @@ var AppContent = function AppContent(_ref) {
     setIsOpen(true);
   };
   var generateToken = /*#__PURE__*/function () {
+<<<<<<< HEAD
     var _ref2 = _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee() {
       var duration, STORAGE_KEY, stored, parsed, _now, response, now, tokenData, _t;
       return _regenerator().w(function (_context) {
@@ -97595,12 +97753,26 @@ var AppContent = function AppContent(_ref) {
             stored = localStorage.getItem(STORAGE_KEY);
             if (!stored) {
               _context.n = 3;
+=======
+    var _ref3 = _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee2() {
+      var duration, STORAGE_KEY, stored, parsed, _now, response, now, tokenData, _t2;
+      return _regenerator().w(function (_context2) {
+        while (1) switch (_context2.n) {
+          case 0:
+            duration = 1 * 24 * 60 * 60; // Default to 1 day
+            STORAGE_KEY = "mcp_jwt_token";
+            _context2.p = 1;
+            stored = localStorage.getItem(STORAGE_KEY);
+            if (!stored) {
+              _context2.n = 3;
+>>>>>>> 19fe10c2752e44f07960760235c8866d0113bf23
               break;
             }
             parsed = JSON.parse(stored);
             _now = Math.floor(Date.now() / 1000); // current time in seconds
             // 2. Check if token is still valid
             if (!(parsed.token && parsed.expiry && parsed.expiry > _now)) {
+<<<<<<< HEAD
               _context.n = 2;
               break;
             }
@@ -97610,6 +97782,17 @@ var AppContent = function AppContent(_ref) {
             console.log("Token expired, generating new one...");
           case 3:
             _context.n = 4;
+=======
+              _context2.n = 2;
+              break;
+            }
+            console.log("Using available token");
+            return _context2.a(2, parsed.token);
+          case 2:
+            console.log("Token expired, generating new one...");
+          case 3:
+            _context2.n = 4;
+>>>>>>> 19fe10c2752e44f07960760235c8866d0113bf23
             return _wordpress_api_fetch__WEBPACK_IMPORTED_MODULE_1___default()({
               path: "/jwt-auth/v1/token",
               method: "POST",
@@ -97619,7 +97802,11 @@ var AppContent = function AppContent(_ref) {
               includeCredentials: true
             });
           case 4:
+<<<<<<< HEAD
             response = _context.v;
+=======
+            response = _context2.v;
+>>>>>>> 19fe10c2752e44f07960760235c8866d0113bf23
             now = Math.floor(Date.now() / 1000);
             tokenData = {
               token: response.token,
@@ -97627,6 +97814,7 @@ var AppContent = function AppContent(_ref) {
             }; // 4. Store token + expiry
             localStorage.setItem(STORAGE_KEY, JSON.stringify(tokenData));
             console.log("Generated new token");
+<<<<<<< HEAD
             return _context.a(2, response.token);
           case 5:
             _context.p = 5;
@@ -97649,11 +97837,36 @@ var AppContent = function AppContent(_ref) {
             console.log("Toggle Clicked", wpAuth.isLoggedIn, _typeof(wpAuth.isLoggedIn));
             if (!isOpen) {
               _context2.n = 1;
+=======
+            return _context2.a(2, response.token);
+          case 5:
+            _context2.p = 5;
+            _t2 = _context2.v;
+            console.error(_t2.message || __("Error generating token", "wordpress-mcp"));
+          case 6:
+            return _context2.a(2);
+        }
+      }, _callee2, null, [[1, 5]]);
+    }));
+    return function generateToken() {
+      return _ref3.apply(this, arguments);
+    };
+  }();
+  var handlePopupToggle = /*#__PURE__*/function () {
+    var _ref4 = _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee3() {
+      return _regenerator().w(function (_context3) {
+        while (1) switch (_context3.n) {
+          case 0:
+            console.log("Toggle Clicked", wpAuth.isLoggedIn, _typeof(wpAuth.isLoggedIn));
+            if (!isOpen) {
+              _context3.n = 1;
+>>>>>>> 19fe10c2752e44f07960760235c8866d0113bf23
               break;
             }
             setIsOpen(false);
             setShowActiveFeatured(true);
             setSelectedNotice(null);
+<<<<<<< HEAD
             _context2.n = 3;
             break;
           case 1:
@@ -97662,17 +97875,36 @@ var AppContent = function AppContent(_ref) {
               break;
             }
             _context2.n = 2;
+=======
+            _context3.n = 3;
+            break;
+          case 1:
+            if (!(wpAuth.isLoggedIn === "true")) {
+              _context3.n = 2;
+              break;
+            }
+            _context3.n = 2;
+>>>>>>> 19fe10c2752e44f07960760235c8866d0113bf23
             return generateToken();
           case 2:
             setIsOpen(true);
             setShowActiveFeatured(false);
           case 3:
+<<<<<<< HEAD
             return _context2.a(2);
         }
       }, _callee2);
     }));
     return function handlePopupToggle() {
       return _ref3.apply(this, arguments);
+=======
+            return _context3.a(2);
+        }
+      }, _callee3);
+    }));
+    return function handlePopupToggle() {
+      return _ref4.apply(this, arguments);
+>>>>>>> 19fe10c2752e44f07960760235c8866d0113bf23
     };
   }();
   var handleClose = function handleClose() {
@@ -97782,7 +98014,11 @@ var AppContent = function AppContent(_ref) {
   });
 };
 var App = function App(props) {
+<<<<<<< HEAD
   return /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_11__.jsx)(_utils_AppDataContext__WEBPACK_IMPORTED_MODULE_9__.AppDataProvider, {
+=======
+  return /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_11__.jsx)(_utils_AppDataContext_jsx__WEBPACK_IMPORTED_MODULE_9__.AppDataProvider, {
+>>>>>>> 19fe10c2752e44f07960760235c8866d0113bf23
     children: /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_11__.jsx)(AppContent, _objectSpread({}, props))
   });
 };
@@ -98489,23 +98725,39 @@ var FAQDetail = /*#__PURE__*/(0,react__WEBPACK_IMPORTED_MODULE_0__.memo)(functio
         }), image_urls.wide_logo && image_urls.wide_logo.trim() !== "" ? /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_9__.jsx)("img", {
           src: image_urls.wide_logo,
           alt: "Plugin Wide Logo",
+<<<<<<< HEAD
           className: "rd-h-auto rd-header-logo",
+=======
+          className: "rd-header-logo",
+>>>>>>> 19fe10c2752e44f07960760235c8866d0113bf23
           onError: function onError(e) {
             e.target.style.display = "none";
           }
         }) : image_urls.logo && image_urls.logo.trim() !== "" ? /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_9__.jsx)("img", {
           src: image_urls.logo,
           alt: "Plugin Logo",
+<<<<<<< HEAD
           className: "rd-h-auto rd-header-logo",
+=======
+          className: "rd-header-logo",
+>>>>>>> 19fe10c2752e44f07960760235c8866d0113bf23
           onError: function onError(e) {
             e.target.style.display = "none";
           }
         }) : /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_9__.jsx)("div", {
+<<<<<<< HEAD
           className: "rd-h-auto rd-header-logo default-logo",
           children: /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_9__.jsx)("img", {
             src: _images_robodesk_logo_png__WEBPACK_IMPORTED_MODULE_8__,
             alt: "Default Plugin Logo",
             className: "rd-h-auto rd-header-logo"
+=======
+          className: "rd-header-logo default-logo",
+          children: /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_9__.jsx)("img", {
+            src: _images_robodesk_logo_png__WEBPACK_IMPORTED_MODULE_8__,
+            alt: "Default Plugin Logo",
+            className: "rd-header-logo"
+>>>>>>> 19fe10c2752e44f07960760235c8866d0113bf23
           })
         }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_9__.jsxs)("button", {
           className: "expand-popup rd-bg-transparent rd-border-none rd-cursor-pointer rd-p-0 ".concat(isExpanded ? "expanded" : ""),
@@ -98820,7 +99072,11 @@ var FAQ = function FAQ(_ref3) {
             }, i);
           })]
         }) : filteredFaqs.length === 0 ? /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_9__.jsx)("p", {
+<<<<<<< HEAD
           className: "err_msg rd-text-center",
+=======
+          className: "rd-text-center",
+>>>>>>> 19fe10c2752e44f07960760235c8866d0113bf23
           children: searchTerm ? "No FAQs match your search." : "No FAQs found."
         }) : filteredFaqs.map(function (faq) {
           return /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_9__.jsx)(FAQItem, {
@@ -99413,16 +99669,28 @@ var Header = function Header(_ref) {
       children: [logo && logo.trim() !== '' ? /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_5__.jsx)("img", {
         src: logo,
         alt: "Plugin Logo",
+<<<<<<< HEAD
         className: "rd-h-auto rd-header-logo rd-main-header-logo",
+=======
+        className: " rd-header-logo rd-main-header-logo",
+>>>>>>> 19fe10c2752e44f07960760235c8866d0113bf23
         onError: function onError(e) {
           e.target.style.display = 'none';
         }
       }) : /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_5__.jsx)("div", {
+<<<<<<< HEAD
         className: "rd-h-auto rd-header-logo default",
         children: /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_5__.jsx)("img", {
           src: _images_robodesk_logo_png__WEBPACK_IMPORTED_MODULE_1__,
           alt: "Default Plugin Logo",
           className: "rd-h-auto rd-header-logo rd-main-header-logo"
+=======
+        className: " rd-header-logo default",
+        children: /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_5__.jsx)("img", {
+          src: _images_robodesk_logo_png__WEBPACK_IMPORTED_MODULE_1__,
+          alt: "Default Plugin Logo",
+          className: " rd-header-logo rd-main-header-logo"
+>>>>>>> 19fe10c2752e44f07960760235c8866d0113bf23
         })
       }), talkToHuman && messageCount > 0 && /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_5__.jsx)("button", {
         className: "rd-m-5",
@@ -99661,23 +99929,39 @@ var Header = function Header(_ref) {
       }), image_urls.wide_logo && image_urls.wide_logo.trim() !== "" ? /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_7__.jsx)("img", {
         src: image_urls.wide_logo,
         alt: "Plugin Wide Logo",
+<<<<<<< HEAD
         className: "rd-h-auto rd-header-logo",
+=======
+        className: " rd-header-logo",
+>>>>>>> 19fe10c2752e44f07960760235c8866d0113bf23
         onError: function onError(e) {
           e.target.style.display = "none";
         }
       }) : image_urls.logo && image_urls.logo.trim() !== "" ? /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_7__.jsx)("img", {
         src: image_urls.logo,
         alt: "Plugin Logo",
+<<<<<<< HEAD
         className: "rd-h-auto rd-header-logo",
+=======
+        className: " rd-header-logo",
+>>>>>>> 19fe10c2752e44f07960760235c8866d0113bf23
         onError: function onError(e) {
           e.target.style.display = "none";
         }
       }) : /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_7__.jsx)("div", {
+<<<<<<< HEAD
         className: "rd-h-auto rd-header-logo default-logo",
         children: /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_7__.jsx)("img", {
           src: defaultLogo,
           alt: "Default Plugin Logo",
           className: "rd-h-auto rd-header-logo"
+=======
+        className: " rd-header-logo default-logo",
+        children: /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_7__.jsx)("img", {
+          src: defaultLogo,
+          alt: "Default Plugin Logo",
+          className: " rd-header-logo"
+>>>>>>> 19fe10c2752e44f07960760235c8866d0113bf23
         })
       })]
     })
@@ -99828,11 +100112,19 @@ var Login = function Login(_ref4) {
   (0,react__WEBPACK_IMPORTED_MODULE_1__.useEffect)(function () {
     var params = new URLSearchParams(window.location.search);
     var popupParam = params.get("rbd_popup");
+<<<<<<< HEAD
     var initiatorParam = params.get("initator");
     if (popupParam === "true" && initiatorParam === "robodesk") {
       setCurrentForm("change");
     }
   }, [currentForm]);
+=======
+    var initiatorParam = params.get("initiator") || params.get("initator");
+    if (popupParam === "true" && initiatorParam === "robodesk") {
+      setCurrentForm("change");
+    }
+  }, []);
+>>>>>>> 19fe10c2752e44f07960760235c8866d0113bf23
   var handleStateUpdate = function handleStateUpdate(ticket) {
     updateSelectedTicket(ticket);
     setActiveTab(1);
@@ -100228,6 +100520,7 @@ var TicketItem = function TicketItem(_ref) {
         children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_8__.jsx)("h5", {
           className: "sub-text rd-title-color ".concat(showNotification ? 'rd-title-with-dot' : ''),
           children: ticket.title
+<<<<<<< HEAD
         }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_8__.jsx)("div", {
           className: "rd-text-small rd-mt-5 rd-flex rd-gap-5",
           children: /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_8__.jsxs)("span", {
@@ -100242,6 +100535,25 @@ var TicketItem = function TicketItem(_ref) {
           }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_8__.jsxs)("span", {
             className: "rd-text-small rd-fw-medium",
             children: ["(#", ticket.ticketNumber, ")"]
+=======
+        }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_8__.jsxs)("div", {
+          className: "rd-chat-info",
+          children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_8__.jsx)("div", {
+            className: "rd-text-small rd-flex rd-gap-5",
+            children: /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_8__.jsxs)("span", {
+              className: "rd-flex",
+              children: [ticket.source, " ", /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_8__.jsx)(react_icons_lu__WEBPACK_IMPORTED_MODULE_9__.LuDot, {}), " ", ticket.timeAgo]
+            })
+          }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_8__.jsxs)("div", {
+            className: "rd-flex rd-align-center rd-gap-10",
+            children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_8__.jsx)("span", {
+              className: "rd-priority rd-fw-medium ".concat(ticket.priority === 'Urgent' ? 'rd-urgent' : ticket.priority === 'Medium' ? 'rd-medium' : 'rd-low'),
+              children: ticket.priority
+            }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_8__.jsxs)("span", {
+              className: "rd-text-small rd-fw-medium",
+              children: ["(#", ticket.ticketNumber, ")"]
+            })]
+>>>>>>> 19fe10c2752e44f07960760235c8866d0113bf23
           })]
         })]
       }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_8__.jsx)(react_icons_fa__WEBPACK_IMPORTED_MODULE_10__.FaChevronRight, {})]
@@ -100332,6 +100644,14 @@ var MessageTabs = function MessageTabs(_ref2) {
       setLoading(false);
     }
   }, [isLoggedIn, loggedInUsrId, ticketsContext]);
+<<<<<<< HEAD
+=======
+  (0,react__WEBPACK_IMPORTED_MODULE_0__.useEffect)(function () {
+    if (selectedNewTicket && selectedNewTicket.id) {
+      setSelectedTicket(selectedNewTicket);
+    }
+  }, [selectedNewTicket]);
+>>>>>>> 19fe10c2752e44f07960760235c8866d0113bf23
   var handleLogin = function handleLogin(loginStatus) {
     setIsLoggedIn(loginStatus);
     if (loginStatus) {
@@ -100435,29 +100755,49 @@ var MessageTabs = function MessageTabs(_ref2) {
           }), image_urls.wide_logo && image_urls.wide_logo.trim() !== '' ? /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_8__.jsx)("img", {
             src: image_urls.wide_logo,
             alt: "Plugin Wide Logo",
+<<<<<<< HEAD
             className: "rd-h-auto rd-header-logo rd-m-auto",
+=======
+            className: "rd-header-logo rd-m-auto",
+>>>>>>> 19fe10c2752e44f07960760235c8866d0113bf23
             onError: function onError(e) {
               e.target.style.display = 'none';
             }
           }) : image_urls.logo && image_urls.logo.trim() !== '' ? /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_8__.jsx)("img", {
             src: image_urls.logo,
             alt: "Plugin Logo",
+<<<<<<< HEAD
             className: "rd-h-auto rd-header-logo rd-m-auto",
+=======
+            className: " rd-header-logo rd-m-auto",
+>>>>>>> 19fe10c2752e44f07960760235c8866d0113bf23
             onError: function onError(e) {
               e.target.style.display = 'none';
             }
           }) : /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_8__.jsx)("div", {
+<<<<<<< HEAD
             className: "rd-h-auto rd-header-logo default-logo",
             children: /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_8__.jsx)("img", {
               src: _images_robodesk_logo_png__WEBPACK_IMPORTED_MODULE_6__,
               alt: "Default Plugin Logo",
               className: "rd-h-auto rd-header-logo rd-m-auto"
+=======
+            className: " rd-header-logo default-logo",
+            children: /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_8__.jsx)("img", {
+              src: _images_robodesk_logo_png__WEBPACK_IMPORTED_MODULE_6__,
+              alt: "Default Plugin Logo",
+              className: " rd-header-logo rd-m-auto"
+>>>>>>> 19fe10c2752e44f07960760235c8866d0113bf23
             })
           })]
         }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_8__.jsxs)("div", {
           className: "rd-message-tab-content",
           children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_8__.jsxs)("div", {
+<<<<<<< HEAD
             className: "rd-mt-10 rd-mb-10",
+=======
+            className: "rd-p-16",
+>>>>>>> 19fe10c2752e44f07960760235c8866d0113bf23
             children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_8__.jsx)("h4", {
               className: "heading-4 rd-text-center",
               children: "Conversations"
@@ -100468,7 +100808,11 @@ var MessageTabs = function MessageTabs(_ref2) {
               })
             })]
           }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_8__.jsxs)("div", {
+<<<<<<< HEAD
             className: "rd-px-18 rd-py-10 rd-flex rd-gap-10 rd-align-center rd-justify-between",
+=======
+            className: "rd-x-16 rd-py-10 rd-flex rd-gap-10 rd-align-center rd-justify-between",
+>>>>>>> 19fe10c2752e44f07960760235c8866d0113bf23
             children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_8__.jsx)("input", {
               ref: searchKeywordRef,
               type: "text",
@@ -100493,10 +100837,14 @@ var MessageTabs = function MessageTabs(_ref2) {
                   children: priority.name
                 }, priority.term_id);
               })]
+<<<<<<< HEAD
             })]
           }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_8__.jsx)("div", {
             className: "rd-flex rd-justify-between rd-py-10 rd-px-20 rd-gap-10 rd-border-bottom-light rd-pt-0",
             children: /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_8__.jsx)("select", {
+=======
+            }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_8__.jsx)("select", {
+>>>>>>> 19fe10c2752e44f07960760235c8866d0113bf23
               ref: statusref,
               id: "status-conversation",
               onChange: function onChange(e) {
@@ -100509,10 +100857,17 @@ var MessageTabs = function MessageTabs(_ref2) {
                   label = _ref5[1];
                 return /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_8__.jsx)("option", {
                   value: key,
+<<<<<<< HEAD
                   children: label
                 }, key);
               })
             })
+=======
+                  children: key === 'active-conversations' ? 'Active' : label
+                }, key);
+              })
+            })]
+>>>>>>> 19fe10c2752e44f07960760235c8866d0113bf23
           }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_8__.jsxs)("div", {
             className: "rd-messge-wrapper",
             ref: messageWrapperRef,
@@ -100535,7 +100890,11 @@ var MessageTabs = function MessageTabs(_ref2) {
                     setActiveTab: setActiveTab
                   }, ticket.id);
                 }) : /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_8__.jsx)("p", {
+<<<<<<< HEAD
                   className: "rd-text-center rd-text-gray rd-m-5 err_msg",
+=======
+                  className: "rd-text-center rd-text-gray rd-m-5",
+>>>>>>> 19fe10c2752e44f07960760235c8866d0113bf23
                   children: "No tickets found"
                 })
               })
@@ -100783,16 +101142,28 @@ var SingleNoticeView = /*#__PURE__*/(0,react__WEBPACK_IMPORTED_MODULE_0__.memo)(
       }), logo && logo.trim() !== '' ? /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_8__.jsx)("img", {
         src: logo,
         alt: "Plugin Logo",
+<<<<<<< HEAD
         className: "rd-h-auto rd-header-logo",
+=======
+        className: " rd-header-logo",
+>>>>>>> 19fe10c2752e44f07960760235c8866d0113bf23
         onError: function onError(e) {
           e.target.style.display = 'none';
         }
       }) : /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_8__.jsx)("div", {
+<<<<<<< HEAD
         className: "rd-h-auto rd-header-logo",
         children: /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_8__.jsx)("img", {
           src: _images_robodesk_logo_png__WEBPACK_IMPORTED_MODULE_6__,
           alt: "Default Plugin Logo",
           className: "rd-h-auto rd-header-logo"
+=======
+        className: " rd-header-logo",
+        children: /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_8__.jsx)("img", {
+          src: _images_robodesk_logo_png__WEBPACK_IMPORTED_MODULE_6__,
+          alt: "Default Plugin Logo",
+          className: " rd-header-logo"
+>>>>>>> 19fe10c2752e44f07960760235c8866d0113bf23
         })
       }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_8__.jsxs)("button", {
         className: "expand-popup rd-bg-transparent rd-border-none rd-cursor-pointer rd-p-0 ".concat(isExpanded ? 'expanded' : ''),
@@ -100945,7 +101316,11 @@ var NoticeTabs = function NoticeTabs(_ref3) {
                 className: "rd-body-text rd-text-center",
                 children: "Loading notices..."
               }) : notices.length === 0 ? /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_8__.jsx)("p", {
+<<<<<<< HEAD
                 className: "err_msg",
+=======
+                className: "rd-text-center",
+>>>>>>> 19fe10c2752e44f07960760235c8866d0113bf23
                 children: "No notices found."
               }) : notices.map(function (notice) {
                 return /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_8__.jsx)(NoticeItem, {
@@ -102108,23 +102483,39 @@ var SingleQuestionBox = function SingleQuestionBox(_ref) {
         }), image_urls.wide_logo && image_urls.wide_logo.trim() !== '' ? /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_8__.jsx)("img", {
           src: image_urls.wide_logo,
           alt: "Plugin Wide Logo",
+<<<<<<< HEAD
           className: "rd-h-auto rd-header-logo",
+=======
+          className: " rd-header-logo",
+>>>>>>> 19fe10c2752e44f07960760235c8866d0113bf23
           onError: function onError(e) {
             e.target.style.display = 'none';
           }
         }) : image_urls.logo && image_urls.logo.trim() !== '' ? /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_8__.jsx)("img", {
           src: image_urls.logo,
           alt: "Plugin Logo",
+<<<<<<< HEAD
           className: "rd-h-auto rd-header-logo",
+=======
+          className: " rd-header-logo",
+>>>>>>> 19fe10c2752e44f07960760235c8866d0113bf23
           onError: function onError(e) {
             e.target.style.display = 'none';
           }
         }) : /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_8__.jsx)("div", {
+<<<<<<< HEAD
           className: "rd-h-auto rd-header-logo default-logo",
           children: /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_8__.jsx)("img", {
             src: _images_robodesk_logo_png__WEBPACK_IMPORTED_MODULE_7__,
             alt: "Default Plugin Logo",
             className: "rd-h-auto rd-header-logo"
+=======
+          className: " rd-header-logo default-logo",
+          children: /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_8__.jsx)("img", {
+            src: _images_robodesk_logo_png__WEBPACK_IMPORTED_MODULE_7__,
+            alt: "Default Plugin Logo",
+            className: " rd-header-logo"
+>>>>>>> 19fe10c2752e44f07960760235c8866d0113bf23
           })
         }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_8__.jsxs)("button", {
           className: "expand-popup rd-bg-transparent rd-border-none rd-cursor-pointer rd-p-0 ".concat(isExpanded ? 'expanded' : ''),
@@ -103445,7 +103836,11 @@ module.exports = window["ReactJSXRuntime"];
 /******/ 		// This function allow to reference async chunks
 /******/ 		__webpack_require__.u = (chunkId) => {
 /******/ 			// return url for filenames based on template
+<<<<<<< HEAD
 /******/ 			return "" + chunkId + ".js?ver=" + {"vendors-node_modules_react-icons_fa6_index_mjs-node_modules_react-icons_fi_index_mjs":"b3ef992922fc66fc90c2","src_components_SingleTicket_jsx":"53f40f88bd14e55c7cc7"}[chunkId] + "";
+=======
+/******/ 			return "" + chunkId + ".js?ver=" + {"vendors-node_modules_react-icons_fa6_index_mjs-node_modules_react-icons_fi_index_mjs":"b3ef992922fc66fc90c2","src_components_SingleTicket_jsx":"9c131ea53fa70c1c78ea"}[chunkId] + "";
+>>>>>>> 19fe10c2752e44f07960760235c8866d0113bf23
 /******/ 		};
 /******/ 	})();
 /******/ 	
