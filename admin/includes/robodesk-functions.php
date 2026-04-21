@@ -982,6 +982,8 @@ function robodesk_get_ticket_detail()
         ];
     }
 
+    $ticket_source_meta = function_exists('robodesk_get_ticket_source_meta') ? robodesk_get_ticket_source_meta($ticket_id) : array('ip' => '', 'country' => '', 'browser' => '');
+
     $replies = get_comments(['post_id' => $ticket_id]);
     $formatted_replies = array_map(function ($reply) {
         $comment_meta = get_comment_meta($reply->comment_ID);
@@ -1007,6 +1009,9 @@ function robodesk_get_ticket_detail()
         'author_id' => $author ? (int) $author->ID : 0,
         'category' => $ticket_category,
         'source' => $ticket_origin,
+        'source_ip' => $ticket_source_meta['ip'],
+        'source_country' => $ticket_source_meta['country'],
+        'source_browser' => $ticket_source_meta['browser'],
         'status' => $ticket_status,
         'author_image' => function_exists('robodesk_get_avatar_url') ? robodesk_get_avatar_url((int) $post->post_author, 32) : get_avatar_url($post->post_author, ['size' => 32]),
         'created' => get_the_date('Y-m-d H:i:s', $ticket_id),
@@ -2193,6 +2198,8 @@ function robodesk_refresh_dashboard_tickets()
                 ];
             }
 
+            $ticket_source_meta = function_exists('robodesk_get_ticket_source_meta') ? robodesk_get_ticket_source_meta($ticket_id) : array('ip' => '', 'country' => '', 'browser' => '');
+
             // Fetch replies using comments
             $replies = get_comments(['post_id' => $ticket_id]);
             $replies_count = count($replies);
@@ -2220,6 +2227,9 @@ function robodesk_refresh_dashboard_tickets()
                 'author_id' => get_the_author_meta('ID'),
                 'category' => $ticket_category,
                 'source' => $ticket_origin,
+                'source_ip' => $ticket_source_meta['ip'],
+                'source_country' => $ticket_source_meta['country'],
+                'source_browser' => $ticket_source_meta['browser'],
                 'status' => $ticket_status,
                 'author_image' => $author_image,
                 'created' => $created_at,
