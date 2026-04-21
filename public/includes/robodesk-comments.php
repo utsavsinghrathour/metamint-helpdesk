@@ -3,6 +3,9 @@
 /**
  * Modifications Related to comments hooks, functions etc
  */
+if (!defined('ABSPATH')) {
+    exit; // Exit if accessed directly
+}
 
 add_filter('comment_form_defaults', 'robodesk_add_tinymce_to_comments');
 

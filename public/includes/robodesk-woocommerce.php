@@ -1,4 +1,5 @@
-<?php 
+<?php
+
 /**
  * Hooks and modifications related to woocommerce are added here
  */
@@ -27,6 +28,9 @@
 
 
 // Add Support menu item to My Account page
+if (!defined('ABSPATH')) {
+    exit; // Exit if accessed directly
+}
 
 function robodesk_add_custom_menu_item_to_my_account($items)
 {
@@ -57,7 +61,7 @@ function robodesk_handle_support_redirect()
     global $wp_query;
 
     if (isset($wp_query->query_vars['robodesk-support']) && !is_admin()) {
-        wp_redirect(site_url('/dashboard/'));
+        wp_safe_redirect(site_url('/dashboard/'));
         exit;
     }
 }
@@ -72,6 +76,3 @@ function robodesk_flush_rewrite_rules()
     flush_rewrite_rules();
 }
 register_activation_hook(__FILE__, 'robodesk_flush_rewrite_rules');
-
-
-

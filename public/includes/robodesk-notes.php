@@ -1,6 +1,8 @@
 <?php
 // In public/includes/robodesk-notes.php
-
+if (!defined('ABSPATH')) {
+    exit; // Exit if accessed directly
+}
 // This file handles adding notes to tickets.
 
 add_action('wp_ajax_robodesk_add_note', 'robodesk_add_note_callback');
