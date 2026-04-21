@@ -1,4 +1,7 @@
 <?php
+if (!defined('ABSPATH')) {
+    exit; // Exit if accessed directly
+}
 // Get filter parameters from URL
 $search_term = isset($_GET['search']) ? sanitize_text_field($_GET['search']) : '';
 $customer_filter = isset($_GET['customer']) ? sanitize_text_field($_GET['customer']) : '';

@@ -1,4 +1,7 @@
 <?php
+if (!defined('ABSPATH')) {
+    exit; // Exit if accessed directly
+}
 // Register FAQ Post Type and Taxonomy
 add_action('init', 'robodesk_register_faq_post_type');
 function robodesk_register_faq_post_type()
@@ -116,11 +119,11 @@ function robodesk_render_featured_metabox($post)
 
     // Output the checkbox
 ?>
-<label for="robodesk_featured">
-    <input type="checkbox" id="robodesk_featured" name="robodesk_featured" value="true"
-        <?php checked($featured, 'true'); ?> />
-    <?php _e('Mark as featured', 'robodesk-support-ticket'); ?>
-</label>
+    <label for="robodesk_featured">
+        <input type="checkbox" id="robodesk_featured" name="robodesk_featured" value="true"
+            <?php checked($featured, 'true'); ?> />
+        <?php _e('Mark as featured', 'robodesk-support-ticket'); ?>
+    </label>
 <?php
 }
 
@@ -194,7 +197,7 @@ add_filter('rest_prepare_robodesk_faq', function ($response, $post, $request) {
         'display_name' => get_the_author_meta('display_name', $author_id),
         'gravatar_url' => get_avatar_url($author_id, array('size' => 96)),
         'total_posts' => count_user_posts($author_id, 'robodesk_faq')
-        
+
     );
 
     $response->data['author_info'] = $author_info;
