@@ -284,6 +284,9 @@ if (isset($_GET['page']) && $_GET['page'] === 'robodesk-dashboard') {
 }
 function robodesk_enqueue_tailwind_and_styles()
 {
+    // Needed for the native WordPress crop modal.
+    wp_enqueue_media();
+
     // Load Tailwind CDN browser runtime thats why wp_enqueue_script is used not style
     wp_enqueue_script(
         'tailwind-browser-cdn',

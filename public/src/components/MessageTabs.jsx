@@ -22,6 +22,10 @@ const TicketItem = ({ ticket, onSelect }) => {
     setShowNotification(ticket.notifications === 'no' ? true : false);
   }, [ticket]);
 
+  // Get priority colors from wpAuth
+  const priorityColors = window.wpAuth?.priorityColors || {};
+  const priorityColor = priorityColors[ticket.priority] || '#000000';
+
   return (
     <div
       className='rd-hover single-rd-ticket rd-flex rd-align-start rd-gap-8 rd-border-bottom-light rd-cursor-pointer single-rd-active-ticket'
@@ -45,18 +49,14 @@ const TicketItem = ({ ticket, onSelect }) => {
           </h5>
           <div className="rd-chat-info">
             <div className='rd-text-small rd-flex rd-gap-5'>
-            <span className='rd-flex'>
+            <span className='rd-flex rd-align-center'>
               {ticket.source} <LuDot /> {ticket.timeAgo}
             </span>
             </div>
             <div className='rd-flex rd-align-center rd-gap-10'>
             <span
-              className={`rd-priority rd-fw-medium ${ticket.priority === 'Urgent'
-                  ? 'rd-urgent'
-                  : ticket.priority === 'Medium'
-                    ? 'rd-medium'
-                    : 'rd-low'
-                }`}
+              className='rd-priority rd-fw-medium'
+              style={{ backgroundColor: priorityColor, color: '#ffffff' }}
             >
               {ticket.priority}
             </span>
@@ -252,7 +252,7 @@ const MessageTabs = ({
             </Suspense>
           ) : (
             <>
-              <div className='rd-px-18 rd-search-header rd-bg-blue rd-flex rd-items-center rd-justify-between rd-flex-col rd-message-list-header'>
+              <div className='rd-search-header rd-bg-blue rd-flex rd-items-center rd-justify-between rd-flex-col rd-message-list-header'>
                 <button
                   className='back-button rd-flex rd-items-center rd-gap-1 rd-border-none rd-bg-transparent rd-m-0 rd-p-0'
                   onClick={handleBackToHome}
@@ -297,7 +297,7 @@ const MessageTabs = ({
 
                 {/* Search and Priority Filter */}
 
-                <div className='rd-x-16 rd-py-10 rd-flex rd-gap-10 rd-align-center rd-justify-between'>
+                <div className='rd-p-16 rd-py-10 rd-flex rd-gap-10 rd-align-center rd-justify-between'>
                   <input
                     ref={searchKeywordRef}
                     type='text'

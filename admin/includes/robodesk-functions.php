@@ -572,6 +572,7 @@ function robodesk_save_basic_settings()
     $sanitized_settings = [];
     $results = [];
     $urls = [];
+    $uploaded_attachments = [];
 
     // Process basic settings
     foreach ($valid_settings as $key) {
@@ -644,6 +645,7 @@ function robodesk_save_basic_settings()
             $image_url = wp_get_attachment_url($attachment_id);
             if ($image_url) {
                 $urls[$option_key] = $image_url;
+                $uploaded_attachments[$file_key] = absint($attachment_id);
                 $results[$file_key] = ['status' => 'success', 'message' => ucfirst(str_replace('_', ' ', $file_key)) . ' uploaded successfully'];
             } else {
                 $results[$file_key] = ['status' => 'error', 'message' => 'Failed to retrieve URL for ' . str_replace('_', ' ', $file_key)];
@@ -676,10 +678,35 @@ function robodesk_save_basic_settings()
     }, true);
 
     if ($all_success) {
-        wp_send_json_success(['message' => 'Basic settings saved successfully', 'urls' => $urls, 'settings' => $sanitized_settings, 'details' => $results]);
+        wp_send_json_success(['message' => 'Basic settings saved successfully', 'urls' => $urls, 'settings' => $sanitized_settings, 'details' => $results, 'uploaded_attachments' => $uploaded_attachments]);
     } else {
-        wp_send_json_error(['message' => 'Some settings failed to save', 'urls' => $urls, 'settings' => $sanitized_settings, 'details' => $results]);
+        wp_send_json_error(['message' => 'Some settings failed to save', 'urls' => $urls, 'settings' => $sanitized_settings, 'details' => $results, 'uploaded_attachments' => $uploaded_attachments]);
     }
+}
+
+add_action('wp_ajax_robodesk_save_cropped_logo', 'robodesk_save_cropped_logo');
+function robodesk_save_cropped_logo()
+{
+    if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'robodesk_basic_settings_action')) {
+        wp_send_json_error(['message' => 'Security check failed']);
+        exit;
+    }
+
+    $option_key = isset($_POST['option_key']) ? sanitize_key($_POST['option_key']) : '';
+    $cropped_url = isset($_POST['cropped_url']) ? esc_url_raw($_POST['cropped_url']) : '';
+
+    if (!in_array($option_key, ['robodesk_logo', 'robodesk_wide_logo'], true)) {
+        wp_send_json_error(['message' => 'Invalid option key']);
+        exit;
+    }
+
+    if ($cropped_url === '') {
+        wp_send_json_error(['message' => 'Cropped URL is required']);
+        exit;
+    }
+
+    update_option($option_key, $cropped_url);
+    wp_send_json_success(['message' => 'Cropped image saved successfully', 'option_key' => $option_key, 'url' => $cropped_url]);
 }
 
 
