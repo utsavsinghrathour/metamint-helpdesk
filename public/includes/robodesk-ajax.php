@@ -481,6 +481,7 @@ function robodesk_login_action_callback()
     }
     wp_send_json_error([
         'message' => sprintf(
+            /* translators: %s: WordPress user creation error message. */
             __('Failed to create account: %s', 'robodesk'),
             $user_id->get_error_message()
         )
@@ -538,6 +539,7 @@ function robodesk_register_user()
     }
     wp_send_json_error([
         'message' => sprintf(
+            /* translators: %s: WordPress user creation error message. */
             __('Failed to create account: %s', 'robodesk'),
             $user_id->get_error_message()
         )
