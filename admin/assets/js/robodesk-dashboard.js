@@ -886,6 +886,18 @@ function loadTicketDetail() {
         <span id="ticket-source" class="inline-block px-2 py-1 bg-blue-100 text-blue-700 rounded"><strong>${currentTicket.source.toUpperCase()}</strong></span>
       </div>
       <div>
+        <strong class="text-gray-700">Source IP:</strong>
+        <span class="text-gray-900">${escapeHTML(currentTicket.source_ip || "N/A")}</span>
+      </div>
+      <div>
+        <strong class="text-gray-700">Country:</strong>
+        <span class="text-gray-900">${escapeHTML(currentTicket.source_country || "N/A")}</span>
+      </div>
+      <div>
+        <strong class="text-gray-700">Browser:</strong>
+        <span class="text-gray-900">${escapeHTML(currentTicket.source_browser || "N/A")}</span>
+      </div>
+      <div>
         <strong class="text-gray-700">Department:</strong>
         <select id="ticket-category-select" class="ml-2 px-2 py-1 border border-gray-300 rounded text-sm bg-white focus:ring focus:ring-blue-200">
           ${createCategoryOptions()}

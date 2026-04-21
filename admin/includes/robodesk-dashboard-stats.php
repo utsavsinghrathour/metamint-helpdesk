@@ -185,6 +185,7 @@
                         'id' => $ticket_terms[0]->term_id,
                     ];
                 }
+                $ticket_source_meta = function_exists('robodesk_get_ticket_source_meta') ? robodesk_get_ticket_source_meta($ticket_id) : array('ip' => '', 'country' => '', 'browser' => '');
 
                 // Fetch replies using comments
                 $replies = get_comments(['post_id' => $ticket_id]);
@@ -207,6 +208,9 @@
                     'author_id' => get_the_author_meta('ID'),
                     'category' => $ticket_category,
                     'source' => $ticket_origin,
+                    'source_ip' => $ticket_source_meta['ip'],
+                    'source_country' => $ticket_source_meta['country'],
+                    'source_browser' => $ticket_source_meta['browser'],
                     'status' => $ticket_status,
                     'author_image' => $author_image,
                     'created' => $created_at,

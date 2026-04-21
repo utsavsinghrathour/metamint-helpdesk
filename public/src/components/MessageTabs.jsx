@@ -25,6 +25,7 @@ const TicketItem = ({ ticket, onSelect }) => {
   // Get priority colors from wpAuth
   const priorityColors = window.wpAuth?.priorityColors || {};
   const priorityColor = priorityColors[ticket.priority] || '#000000';
+  const displayTicketNumber = String(ticket.ticketNumber || '').replace(/^TCKT/i, 'CONV');
 
   return (
     <div
@@ -61,7 +62,7 @@ const TicketItem = ({ ticket, onSelect }) => {
               {ticket.priority}
             </span>
             <span className='rd-text-small rd-fw-medium'>
-              (#{ticket.ticketNumber})
+              (#{displayTicketNumber})
             </span>
             </div>
           </div>
