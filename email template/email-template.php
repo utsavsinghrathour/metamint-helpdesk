@@ -1,4 +1,7 @@
 <?php
+if (!defined('ABSPATH')) {
+    exit; // Exit if accessed directly
+}
 $site_name = isset($site_name) ? (string) $site_name : get_bloginfo('name');
 $site_url = isset($site_url) ? (string) $site_url : get_home_url();
 $year = isset($year) ? (string) $year : date_i18n('Y');

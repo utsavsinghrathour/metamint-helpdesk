@@ -1,3 +1,8 @@
+<?php
+if (!defined('ABSPATH')) {
+    exit; // Exit if accessed directly
+}
+?>
 <div id="new-ticket-page" class="page-content hidden">
     <div class="bg-white shadow rounded-lg">
         <div class="px-4 py-5 sm:p-6">
