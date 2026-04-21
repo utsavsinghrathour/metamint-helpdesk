@@ -164,6 +164,9 @@ function robodesk_fetch_emails()
                 continue;
             }
 
+            $raw_headers = imap_fetchheader($email, $email_number) ?: '';
+            $email_source_context = robodesk_collect_email_source_context($raw_headers);
+
             $message_id = $headerInfo->message_id ?? '';
             if (empty($message_id)) {
                 error_log('Email #' . $email_number . ' has no message ID, skipping');
@@ -288,6 +291,10 @@ function robodesk_fetch_emails()
                             add_comment_meta($comment_id, 'email_message_id', $message_id, true);
                             add_comment_meta($comment_id, 'comment_source', 'email', true);
                             add_comment_meta($comment_id, 'author_type', 'customer', true);
+                            add_comment_meta($comment_id, '_robodesk_source_ip', $email_source_context['ip'], true);
+                            add_comment_meta($comment_id, '_robodesk_source_country', $email_source_context['country'], true);
+                            add_comment_meta($comment_id, '_robodesk_source_browser', $email_source_context['browser'], true);
+                            robodesk_store_ticket_source_meta($original_post_id, $email_source_context, $comment_id);
                             error_log('Successfully added comment ID: ' . $comment_id);
                             $reply_count++;
                         } else {
@@ -462,6 +469,7 @@ function robodesk_fetch_emails()
             update_post_meta($post_id, '_robodesk_ticket_status', 'open');
             add_post_meta($post_id, 'email_message_id', $message_id);
             add_post_meta($post_id, 'email_from', $from);
+            robodesk_store_ticket_source_meta($post_id, $email_source_context);
 
             robodesk_notify_ticket_created($post_id, 'email');
 
