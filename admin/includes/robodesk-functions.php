@@ -1,4 +1,7 @@
 <?php
+if (!defined('ABSPATH')) {
+    exit; // Exit if accessed directly
+}
 
 if (!function_exists('robodesk_get_debug_log_path')) {
     function robodesk_get_debug_log_path()

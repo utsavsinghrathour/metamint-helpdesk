@@ -1,5 +1,7 @@
 <?php
-
+if (!defined('ABSPATH')) {
+    exit; // Exit if accessed directly
+}
 
 // Register Ticket Post Type and Taxonomies
 add_action('init', 'robodesk_register_ticket_post_type');

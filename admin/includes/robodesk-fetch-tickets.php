@@ -1,5 +1,8 @@
 <?php
 // robodesk-email-to-ticket
+if (!defined('ABSPATH')) {
+    exit; // Exit if accessed directly
+}
 
 // Function to display the email to ticket
 function robodesk_fetch_emails_callback()

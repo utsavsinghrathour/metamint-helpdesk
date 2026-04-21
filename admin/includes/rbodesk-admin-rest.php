@@ -2,7 +2,9 @@
 
 
 // http: //localhost:10135/wp-json/robodesk/v1/adminstream/2166/2704/142
-
+if (!defined('ABSPATH')) {
+    exit; // Exit if accessed directly
+}
 
 add_action('rest_api_init',  function () {
     register_rest_route('robodesk/v1', '/adminstream/(?P<post_id>\d+)(?:/(?P<last_comment_id>\d+))?(?:/(?P<user_id>\d+))?', array(
