@@ -338,6 +338,7 @@ const AppContent = ({ imageUrls = { logo: "" } }) => {
           selectedNotice={selectedNotice}
           setShowActiveFeatured={setShowActiveFeatured}
           logo={imageUrls.logo}
+          wideLogo={imageUrls.wide_logo}
         />
       ),
     },

@@ -671,7 +671,7 @@ function robodesk_get_ticket_source($ticket_id)
     if (strpos($origin, 'admin') !== false) {
         return 'admin';
     }
-    if (strpos($origin, 'web') !== false || strpos($origin, 'form') !== false) {
+    if (strpos($origin, 'web') !== false) {
         return 'web';
     }
     if (strpos($origin, 'chat') !== false) {
