@@ -11,7 +11,7 @@ if (!defined('ABSPATH')) {
                 <h3 class="text-lg font-bold text-gray-900" id="ticket-detail-title">
                     <?php esc_html_e('Conversation Details', 'robodesk'); ?>
                 </h3>
-                <button type="button" onclick="showPage('tickets', true)" class="text-gray-400 hover:text-gray-600">
+                <button type="button" onclick="showPage('tickets', true)" class="mt-2 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
                     <i class="fas fa-arrow-left mr-2"></i>
                     <?php esc_html_e('Back to Conversations', 'robodesk'); ?>
                 </button>
