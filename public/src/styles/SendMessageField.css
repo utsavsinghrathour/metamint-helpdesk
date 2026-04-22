@@ -1,0 +1,29 @@
+@import url(../../assets/css/variables.css);
+.send-message-field textarea {
+  padding: 10px;
+  font-size: 13px;
+  resize: none;
+}
+.send-message-field textarea::placeholder {
+  /* color: var(--primary-blue); */
+  color: var(--robodesk-theme-color);
+  font-size: 13px;
+  font-weight: 400;
+}
+.send-message-field textarea:focus {
+  height: 60px;
+  border-radius: 5px;
+}
+.send-message-field button {
+  position: absolute;
+  top: 10px;
+  right: 20px;
+}
+.send-message-field button svg {
+  height: 16px;
+  width: 16px;
+}
+
+.send-message-field button svg path {
+  fill: var(--robodesk-theme-color);
+}
