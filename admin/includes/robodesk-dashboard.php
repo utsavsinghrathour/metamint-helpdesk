@@ -90,7 +90,7 @@ function robodesk_dashboard_callback()
                                     class="nav-link inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
                                     data-page="addons">
                                     <i class="fas fa-puzzle-piece mr-2"></i>
-                                    <?php _e('Addons', 'robodesk-addon'); ?>
+                                    <?php _e('Addons', 'robodesk'); ?>
                                 </button>
                             <?php endif; ?>
                         </div>

@@ -504,7 +504,7 @@ function robodesk_fetch_emails()
 function robodesk_imap_settings_callback()
 {
     if (!current_user_can('manage_options')) {
-        wp_die(__('You do not have sufficient permissions to access this page.'));
+        wp_die(__('You do not have sufficient permissions to access this page.', 'robodesk'));
     }
 
     // Handle form submission for saving settings
