@@ -3,10 +3,10 @@ if (!defined('ABSPATH')) {
     exit; // Exit if accessed directly
 }
 // Get filter parameters from URL
-$search_term = isset($_GET['search']) ? sanitize_text_field($_GET['search']) : '';
-$customer_filter = isset($_GET['customer']) ? sanitize_text_field($_GET['customer']) : '';
-$agent_filter = isset($_GET['agent']) ? sanitize_text_field($_GET['agent']) : '';
-$status_filter = isset($_GET['status']) ? sanitize_text_field($_GET['status']) : 'all';
+$search_term = isset($_GET['search']) ? sanitize_text_field(wp_unslash($_GET['search'])) : '';
+$customer_filter = isset($_GET['customer']) ? sanitize_text_field(wp_unslash($_GET['customer'])) : '';
+$agent_filter = isset($_GET['agent']) ? sanitize_text_field(wp_unslash($_GET['agent'])) : '';
+$status_filter = isset($_GET['status']) ? sanitize_text_field(wp_unslash($_GET['status'])) : 'all';
 
 // Get the current page number from URL parameter
 $current_page = isset($_GET['paged']) ? max(1, intval($_GET['paged'])) : 1;
@@ -181,7 +181,7 @@ if ($query->have_posts()) {
 wp_reset_postdata();
 
 // Function to generate pagination URL with current filters
-function get_pagination_url($page)
+function rbd_get_pagination_url($page)
 {
     $current_url = admin_url('admin.php');
     $params = $_GET;
@@ -193,7 +193,7 @@ function get_pagination_url($page)
 }
 
 // Function to build filter URL
-function get_filter_url($new_params = array())
+function rbd_get_filter_url($new_params = array())
 {
     $current_url = admin_url('admin.php');
     $params = $_GET;
@@ -363,7 +363,7 @@ $priority_terms = get_terms(array(
                         <?php endif; ?>
                     </div>
                 </div>
-                <span class="text-sm text-blue-600"><?php echo $total_posts; ?> result<?php echo $total_posts !== 1 ? 's' : ''; ?> found</span>
+                <span class="text-sm text-blue-600"><?php echo esc_html((string) $total_posts); ?> result<?php echo $total_posts !== 1 ? 's' : ''; ?> found</span>
             </div>
         </div>
     <?php endif; ?>
@@ -432,8 +432,8 @@ $priority_terms = get_terms(array(
                 <!-- JavaScript for tickets (now only for viewing, not filtering) -->
                 <script>
                     const tickets = <?php echo wp_json_encode($tickets); ?>;
-                    const ajaxUrl = '<?php echo admin_url('admin-ajax.php'); ?>';
-                    const bulkActionNonce = '<?php echo wp_create_nonce('robodesk_bulk_action'); ?>';
+                    const ajaxUrl = '<?php echo esc_url(admin_url('admin-ajax.php')); ?>';
+                    const bulkActionNonce = '<?php echo esc_attr(wp_create_nonce('robodesk_bulk_action')); ?>';
                 </script>
                 <?php if (!empty($tickets)) : ?>
                     <?php foreach ($tickets as $ticket) : ?>
@@ -451,21 +451,26 @@ $priority_terms = get_terms(array(
                                 <div class="text-sm font-medium text-gray-900"><?php echo esc_html($ticket['customer']); ?></div>
                                 <div class="text-sm text-gray-500 truncate max-w-xs"><?php echo esc_html($ticket['email']); ?></div>
                             </td>
-                            <td class="px-6 py-4 whitespace-nowrap cursor-pointer" onclick="viewTicket(<?php echo esc_js($ticket['id']); ?>)">
-                                <span class="status-badge <?php echo esc_attr(get_status_class($ticket['status'])); ?>">
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="status-badge <?php echo esc_attr(rbd_get_status_class($ticket['status'])); ?> editable-status"
+                                    onclick="event.stopPropagation(); editStatus(<?php echo esc_js($ticket['id']); ?>, this)">
                                     <?php echo esc_html(str_replace('-', ' ', $ticket['status'])); ?>
                                 </span>
                             </td>
-                            <td class="px-6 py-4 whitespace-nowrap cursor-pointer" onclick="viewTicket(<?php echo esc_js($ticket['id']); ?>)">
-                                <span class="status-badge" style="background-color:<?php echo esc_attr(get_priority_class($ticket['priority'])); ?>">
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="status-badge editable-priority" style="background-color:<?php echo esc_attr(rbd_get_priority_class($ticket['priority'])); ?>"
+                                    onclick="event.stopPropagation(); editPriority(<?php echo esc_js($ticket['id']); ?>, this)">
                                     <?php echo esc_html($ticket['priority']); ?>
                                 </span>
                             </td>
-                            <td class="px-6 py-4 whitespace-nowrap cursor-pointer" onclick="viewTicket(<?php echo esc_js($ticket['id']); ?>)">
-                                <?php echo esc_html($ticket['assignee']); ?>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="text-sm font-medium text-gray-900 editable-assignee"
+                                    onclick="event.stopPropagation(); editAssignee(<?php echo esc_js($ticket['id']); ?>, this)">
+                                    <?php echo esc_html($ticket['assignee']); ?>
+                                </span>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 cursor-pointer" onclick="viewTicket(<?php echo esc_js($ticket['id']); ?>)">
-                                <?php echo esc_html(format_date($ticket['updated'])); ?>
+                                <?php echo esc_html(rbd_format_date($ticket['updated'])); ?>
                             </td>
                         </tr>
                     <?php endforeach; ?>
@@ -493,7 +498,7 @@ $priority_terms = get_terms(array(
                 <div class="flex-1 flex justify-between sm:hidden">
                     <!-- Mobile pagination -->
                     <?php if ($current_page > 1) : ?>
-                        <a href="<?php echo esc_url(get_pagination_url($current_page - 1)); ?>"
+                        <a href="<?php echo esc_url(rbd_get_pagination_url($current_page - 1)); ?>"
                             class="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
                             Previous
                         </a>
@@ -504,7 +509,7 @@ $priority_terms = get_terms(array(
                     <?php endif; ?>
 
                     <?php if ($current_page < $total_pages) : ?>
-                        <a href="<?php echo esc_url(get_pagination_url($current_page + 1)); ?>"
+                        <a href="<?php echo esc_url(rbd_get_pagination_url($current_page + 1)); ?>"
                             class="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
                             Next
                         </a>
@@ -518,9 +523,9 @@ $priority_terms = get_terms(array(
                 <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
                     <div>
                         <p class="text-sm text-gray-700">
-                            Showing <span class="font-medium"><?php echo (($current_page - 1) * $posts_per_page) + 1; ?></span>
-                            to <span class="font-medium"><?php echo min($current_page * $posts_per_page, $total_posts); ?></span>
-                            of <span class="font-medium"><?php echo $total_posts; ?></span> results
+                            Showing <span class="font-medium"><?php echo esc_html((string) (($current_page - 1) * $posts_per_page) + 1); ?></span>
+                            to <span class="font-medium"><?php echo esc_html((string) min($current_page * $posts_per_page, $total_posts)); ?></span>
+                            of <span class="font-medium"><?php echo esc_html((string) $total_posts); ?></span> results
                         </p>
                     </div>
 
@@ -528,7 +533,7 @@ $priority_terms = get_terms(array(
                         <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
                             <!-- Previous Page Link -->
                             <?php if ($current_page > 1) : ?>
-                                <a href="<?php echo esc_url(get_pagination_url($current_page - 1)); ?>"
+                                <a href="<?php echo esc_url(rbd_get_pagination_url($current_page - 1)); ?>"
                                     class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
                                     <span class="sr-only">Previous</span>
                                     <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
@@ -551,7 +556,7 @@ $priority_terms = get_terms(array(
 
                             // Show first page if we're not close to it
                             if ($start_page > 1) : ?>
-                                <a href="<?php echo esc_url(get_pagination_url(1)); ?>"
+                                <a href="<?php echo esc_url(rbd_get_pagination_url(1)); ?>"
                                     class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">
                                     1
                                 </a>
@@ -563,12 +568,12 @@ $priority_terms = get_terms(array(
                             <?php for ($i = $start_page; $i <= $end_page; $i++) : ?>
                                 <?php if ($i == $current_page) : ?>
                                     <span class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-blue-50 text-sm font-medium text-blue-600">
-                                        <?php echo $i; ?>
+                                        <?php echo esc_html((string) $i); ?>
                                     </span>
                                 <?php else : ?>
-                                    <a href="<?php echo esc_url(get_pagination_url($i)); ?>"
+                                    <a href="<?php echo esc_url(rbd_get_pagination_url($i)); ?>"
                                         class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">
-                                        <?php echo $i; ?>
+                                        <?php echo esc_html((string) $i); ?>
                                     </a>
                                 <?php endif; ?>
                             <?php endfor; ?>
@@ -578,15 +583,15 @@ $priority_terms = get_terms(array(
                                 <?php if ($end_page < $total_pages - 1) : ?>
                                     <span class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700">...</span>
                                 <?php endif; ?>
-                                <a href="<?php echo esc_url(get_pagination_url($total_pages)); ?>"
+                                <a href="<?php echo esc_url(rbd_get_pagination_url($total_pages)); ?>"
                                     class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">
-                                    <?php echo $total_pages; ?>
+                                    <?php echo esc_html((string) $total_pages); ?>
                                 </a>
                             <?php endif; ?>
 
                             <!-- Next Page Link -->
                             <?php if ($current_page < $total_pages) : ?>
-                                <a href="<?php echo esc_url(get_pagination_url($current_page + 1)); ?>"
+                                <a href="<?php echo esc_url(rbd_get_pagination_url($current_page + 1)); ?>"
                                     class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
                                     <span class="sr-only">Next</span>
                                     <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
