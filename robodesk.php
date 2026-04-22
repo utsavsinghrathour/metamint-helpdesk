@@ -1476,7 +1476,11 @@ function robodesk_output_unseen_reply_tracking_pixel()
         header('Content-Type: image/gif');
     }
 
-    echo base64_decode('R0lGODlhAQABAPAAAAAAAAAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw==');
+    $pixel = base64_decode('R0lGODlhAQABAPAAAAAAAAAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw==');
+
+    // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Binary GIF output, safe and intentional
+    echo $pixel;
+
     wp_die();
 }
 
