@@ -206,14 +206,6 @@ function loadDashboardTickets() {
 
   // Add event delegation for row clicks
   tableBody.addEventListener("click", function (event) {
-    if (
-      event.target.closest(
-        ".editable-status, .editable-priority, .editable-assignee, .inline-ticket-editor",
-      )
-    ) {
-      return;
-    }
-
     const row = event.target.closest("tr.table-row");
     if (row) {
       const ticketId = parseInt(row.dataset.ticketid, 10);
@@ -295,318 +287,72 @@ function updateTableHeader(showAssigneeColumn) {
     .join("");
 }
 
-function getDashboardTicketById(ticketId) {
-  if (
-    typeof dashboard_tickets === "undefined" ||
-    !Array.isArray(dashboard_tickets)
-  ) {
-    return null;
-  }
-
-  return dashboard_tickets.find((t) => Number(t.id) === Number(ticketId));
-}
-
-function isDashboardTicketsTableElement(element) {
-  return Boolean(element && element.closest("#dashboard-tickets-table"));
-}
-
-function createInlineSelect(options, selectedValue, className) {
-  const select = document.createElement("select");
-  select.className = `${className} inline-ticket-editor`;
-
-  // Keep row-level click handlers from opening ticket while user is editing.
-  ["click", "mousedown", "mouseup", "pointerdown", "pointerup"].forEach(
-    (eventName) => {
-      select.addEventListener(eventName, (event) => event.stopPropagation());
-    },
-  );
-
-  options.forEach((option) => {
-    const opt = document.createElement("option");
-    opt.value = option.value;
-    opt.textContent = option.label;
-    if (String(option.value) === String(selectedValue)) {
-      opt.selected = true;
-    }
-    select.appendChild(opt);
-  });
-
-  return select;
-}
-
-function getDashboardPriorityOptions() {
-  const prioritySelect = document.getElementById("ticket-priority-select");
-  if (prioritySelect && prioritySelect.options.length > 0) {
-    return Array.from(prioritySelect.options).map((option) => ({
-      value: option.value,
-      label: option.textContent.trim(),
-    }));
-  }
-
-  if (typeof robodeskPriorityColors !== "undefined") {
-    return Object.keys(robodeskPriorityColors).map((priority) => ({
-      value: priority,
-      label: priority,
-    }));
-  }
-
-  return [];
-}
-
-function getDashboardAssigneeOptions() {
-  const assigneeSelect = document.getElementById("ticket-assignee-select");
-  if (!assigneeSelect || assigneeSelect.options.length === 0) {
-    return [];
-  }
-
-  return Array.from(assigneeSelect.options).map((option) => ({
-    value: option.value,
-    label: option.textContent.trim(),
-  }));
-}
-
-function editStatus(ticketId, element) {
-  const ticket = getDashboardTicketById(ticketId);
-  const currentStatus = ticket?.status || element.textContent.trim();
-  const statusOptions = [
-    { value: "open", label: "Open" },
-    { value: "in-progress", label: "In Progress" },
-    { value: "closed", label: "Closed" },
-  ];
-
-  const select = createInlineSelect(
-    statusOptions,
-    currentStatus,
-    "styled-select w-full border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 rounded-md text-sm",
-  );
-
-  const restore = () => {
-    if (select.parentNode) {
-      select.replaceWith(element);
-    }
-  };
-
-  element.replaceWith(select);
-  select.focus();
-
-  let submitted = false;
-  select.addEventListener("change", () => {
-    const newStatus = select.value;
-    if (!newStatus || newStatus === currentStatus) {
-      restore();
-      return;
-    }
-
-    submitted = true;
-    select.disabled = true;
-    updateTicketStatus(ticketId, newStatus).then((result) => {
-      if (result && result.success) {
-        if (isDashboardTicketsTableElement(element)) {
-          loadDashboardTickets();
-          return;
-        }
-
-        const updatedStatus = result.data?.status || newStatus;
-        const updatedSpan = document.createElement("span");
-        updatedSpan.className = `status-badge ${getStatusClass(updatedStatus)} editable-status`;
-        updatedSpan.textContent = updatedStatus.replace("-", " ");
-        updatedSpan.onclick = (event) => {
-          event.stopPropagation();
-          editStatus(ticketId, updatedSpan);
-        };
-
-        if (select.parentNode) {
-          select.replaceWith(updatedSpan);
-        }
-      } else {
-        restore();
-      }
-    });
-  });
-
-  select.addEventListener("keydown", (e) => {
-    if (e.key === "Escape") {
-      e.preventDefault();
-      restore();
-    }
-  });
-
-  select.addEventListener("blur", () => {
-    if (!submitted) {
-      restore();
-    }
-  });
-}
-
-function editPriority(ticketId, element) {
-  const ticket = getDashboardTicketById(ticketId);
-  const currentPriority = ticket?.priority || element.textContent.trim();
-  const priorityOptions = getDashboardPriorityOptions();
-
-  if (priorityOptions.length === 0) {
-    showToast("No priority options found", "error");
-    return;
-  }
-
-  const select = createInlineSelect(
-    priorityOptions,
-    currentPriority,
-    "styled-select w-full border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 rounded-md text-sm",
-  );
-
-  const restore = () => {
-    if (select.parentNode) {
-      select.replaceWith(element);
-    }
-  };
-
-  element.replaceWith(select);
-  select.focus();
-
-  let submitted = false;
-  select.addEventListener("change", () => {
-    const newPriority = select.value;
-    if (!newPriority || newPriority === currentPriority) {
-      restore();
-      return;
-    }
-
-    submitted = true;
-    select.disabled = true;
-    updateTicketPriority(ticketId, newPriority).then((result) => {
-      if (result && result.success) {
-        if (isDashboardTicketsTableElement(element)) {
-          loadDashboardTickets();
-          return;
-        }
-
-        const updatedPriority = result.data?.priority || newPriority;
-        const updatedSpan = document.createElement("span");
-        updatedSpan.className = `status-badge ${getPriorityClass(updatedPriority)} editable-priority`;
-        if (
-          typeof robodeskPriorityColors !== "undefined" &&
-          robodeskPriorityColors[updatedPriority]
-        ) {
-          updatedSpan.style.backgroundColor =
-            robodeskPriorityColors[updatedPriority];
-        }
-        updatedSpan.textContent = updatedPriority;
-        updatedSpan.onclick = (event) => {
-          event.stopPropagation();
-          editPriority(ticketId, updatedSpan);
-        };
-
-        if (select.parentNode) {
-          select.replaceWith(updatedSpan);
-        }
-      } else {
-        restore();
-      }
-    });
-  });
-
-  select.addEventListener("keydown", (e) => {
-    if (e.key === "Escape") {
-      e.preventDefault();
-      restore();
-    }
-  });
-
-  select.addEventListener("blur", () => {
-    if (!submitted) {
-      restore();
-    }
-  });
-}
-
+// Optional: Add function to handle assignee editing if it doesn't exist
 function editAssignee(ticketId, element) {
-  const ticket = getDashboardTicketById(ticketId);
-  const assigneeOptions = getDashboardAssigneeOptions();
+  const currentAssignee = element.textContent.trim();
 
-  if (assigneeOptions.length === 0) {
-    showToast("No assignee options found", "error");
-    return;
-  }
+  // Create a simple input for editing
+  const input = document.createElement("input");
+  input.type = "text";
+  input.value = currentAssignee === "Unassigned" ? "" : currentAssignee;
+  input.className =
+    "w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500";
 
-  const currentAssigneeValue =
-    ticket?.assignee_id ||
-    assigneeOptions.find((option) => option.label === ticket?.assignee)
-      ?.value ||
-    assigneeOptions.find(
-      (option) => option.label === element.textContent.trim(),
-    )?.value;
+  // Replace the span with input
+  element.replaceWith(input);
+  input.focus();
+  input.select();
 
-  const select = createInlineSelect(
-    assigneeOptions,
-    currentAssigneeValue,
-    "styled-select w-full border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 rounded-md text-sm",
-  );
+  // Handle save on Enter or blur
+  const saveAssignee = () => {
+    const newAssignee = input.value.trim() || "Unassigned";
 
-  const restore = () => {
-    if (select.parentNode) {
-      select.replaceWith(element);
+    // Create new span element
+    const newSpan = document.createElement("span");
+    newSpan.className = "text-sm font-medium text-gray-900 editable-assignee";
+    newSpan.textContent = newAssignee;
+    newSpan.onclick = (e) => {
+      e.stopPropagation();
+      editAssignee(ticketId, newSpan);
+    };
+
+    // Replace input with span
+    input.replaceWith(newSpan);
+
+    // Update the ticket data
+    const ticket = dashboard_tickets.find((t) => t.id === ticketId);
+    if (ticket) {
+      ticket.assignee = newAssignee;
     }
+
+    // Here you would typically send an AJAX request to update the assignee on the server
+    showToast(`Updated ticket ${ticketId} assignee to: ${newAssignee}`);
+
+    // You can add your server update logic here
+    // updateTicketAssignee(ticketId, newAssignee);
   };
 
-  element.replaceWith(select);
-  select.focus();
-
-  let submitted = false;
-  select.addEventListener("change", () => {
-    const newAssigneeId = select.value;
-    if (
-      !newAssigneeId ||
-      String(newAssigneeId) === String(currentAssigneeValue)
-    ) {
-      restore();
-      return;
-    }
-
-    submitted = true;
-    select.disabled = true;
-    updateTicketAssignee(ticketId, newAssigneeId).then((result) => {
-      if (result && result.success) {
-        if (isDashboardTicketsTableElement(element)) {
-          loadDashboardTickets();
-          return;
-        }
-
-        const updatedAssignee =
-          result.data?.assignee ||
-          assigneeOptions.find(
-            (option) => String(option.value) === String(newAssigneeId),
-          )?.label ||
-          element.textContent.trim();
-        const updatedSpan = document.createElement("span");
-        updatedSpan.className =
-          "text-sm font-medium text-gray-900 editable-assignee";
-        updatedSpan.textContent = updatedAssignee;
-        updatedSpan.onclick = (event) => {
-          event.stopPropagation();
-          editAssignee(ticketId, updatedSpan);
-        };
-
-        if (select.parentNode) {
-          select.replaceWith(updatedSpan);
-        }
-      } else {
-        restore();
-      }
-    });
-  });
-
-  select.addEventListener("keydown", (e) => {
-    if (e.key === "Escape") {
+  // Save on Enter
+  input.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") {
       e.preventDefault();
-      restore();
+      saveAssignee();
+    } else if (e.key === "Escape") {
+      // Cancel editing
+      const cancelSpan = document.createElement("span");
+      cancelSpan.className =
+        "text-sm font-medium text-gray-900 editable-assignee";
+      cancelSpan.textContent = currentAssignee;
+      cancelSpan.onclick = (e) => {
+        e.stopPropagation();
+        editAssignee(ticketId, cancelSpan);
+      };
+      input.replaceWith(cancelSpan);
     }
   });
 
-  select.addEventListener("blur", () => {
-    if (!submitted) {
-      restore();
-    }
-  });
+  // Save on blur
+  input.addEventListener("blur", saveAssignee);
 }
 
 // Call when DOM is ready
@@ -638,28 +384,6 @@ function timeSince(date) {
     const day = Math.floor(secondsPast / 86400);
     return `${day} day${day > 1 ? "s" : ""} ago`;
   }
-}
-
-function timeSinceCompact(date) {
-  const now = new Date();
-  const secondsPast = Math.max(
-    0,
-    Math.floor((now.getTime() - date.getTime()) / 1000),
-  );
-
-  if (secondsPast < 60) {
-    return `${String(secondsPast).padStart(2, "0")} sec`;
-  }
-
-  if (secondsPast < 3600) {
-    return `${Math.floor(secondsPast / 60)} min`;
-  }
-
-  if (secondsPast < 86400) {
-    return `${Math.floor(secondsPast / 3600)} hr`;
-  }
-
-  return `${Math.floor(secondsPast / 86400)} day`;
 }
 
 // Helper function to format date (if not already defined)
@@ -2390,11 +2114,9 @@ jQuery(document).ready(function ($) {
 
 // Update ticket status function
 function updateTicketStatus(ticketId, newStatus) {
-  if (!ticketId || !newStatus) {
-    return Promise.resolve({ success: false });
-  }
+  if (!ticketId || !newStatus) return;
 
-  return fetch(robodeskAjax.ajax_url, {
+  fetch(robodeskAjax.ajax_url, {
     method: "POST",
     headers: {
       "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
@@ -2414,26 +2136,13 @@ function updateTicketStatus(ticketId, newStatus) {
             response.data?.message || "Failed to update status",
             "error",
           );
-          return { success: false, data: response.data };
+          return;
         }
 
         // console.log(response);
 
         const updatedStatus = response.data.status;
         const updatedTime = response.data.updated;
-
-        if (
-          typeof dashboard_tickets !== "undefined" &&
-          Array.isArray(dashboard_tickets)
-        ) {
-          const dashboardTicketIndex = dashboard_tickets.findIndex(
-            (t) => Number(t.id) === Number(ticketId),
-          );
-          if (dashboardTicketIndex !== -1) {
-            dashboard_tickets[dashboardTicketIndex].status = updatedStatus;
-            dashboard_tickets[dashboardTicketIndex].updated = updatedTime;
-          }
-        }
 
         if (typeof tickets !== "undefined" && Array.isArray(tickets)) {
           const ticketIndex = tickets.findIndex((t) => t.id === ticketId);
@@ -2443,34 +2152,32 @@ function updateTicketStatus(ticketId, newStatus) {
           }
         }
 
-        if (currentTicket && currentTicket.id === ticketId) {
+        if (
+          typeof currentTicket !== "undefined" &&
+          currentTicket.id === ticketId
+        ) {
           currentTicket.status = updatedStatus;
           currentTicket.updated = updatedTime;
         }
 
         showToast(`Ticket status updated to ${updatedStatus}`);
         // updateDashboardStats();
-        return { success: true, data: response.data };
       } catch (error) {
         console.error("Error inside .then:", error);
         showToast("Error updating ticket status", "error");
-        return { success: false, error };
       }
     })
     .catch((err) => {
       console.error("AJAX catch error:", err);
       showToast("Error updating ticket status", "error");
-      return { success: false, error: err };
     });
 }
 
 // for ticket priority update
 function updateTicketPriority(ticketId, newPriority) {
-  if (!ticketId || !newPriority) {
-    return Promise.resolve({ success: false });
-  }
+  if (!ticketId || !newPriority) return;
 
-  return fetch(robodeskAjax.ajax_url, {
+  fetch(robodeskAjax.ajax_url, {
     method: "POST",
     headers: {
       "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
@@ -2488,25 +2195,10 @@ function updateTicketPriority(ticketId, newPriority) {
         const updatedPriority = response.data.priority;
         const updatedTime = response.data.updated;
 
-        if (
-          typeof dashboard_tickets !== "undefined" &&
-          Array.isArray(dashboard_tickets)
-        ) {
-          const dashboardTicketIndex = dashboard_tickets.findIndex(
-            (t) => Number(t.id) === Number(ticketId),
-          );
-          if (dashboardTicketIndex !== -1) {
-            dashboard_tickets[dashboardTicketIndex].priority = updatedPriority;
-            dashboard_tickets[dashboardTicketIndex].updated = updatedTime;
-          }
-        }
-
-        if (typeof tickets !== "undefined" && Array.isArray(tickets)) {
-          const ticketIndex = tickets.findIndex((t) => t.id === ticketId);
-          if (ticketIndex !== -1) {
-            tickets[ticketIndex].priority = updatedPriority;
-            tickets[ticketIndex].updated = updatedTime;
-          }
+        const ticketIndex = tickets.findIndex((t) => t.id === ticketId);
+        if (ticketIndex !== -1) {
+          tickets[ticketIndex].priority = updatedPriority;
+          tickets[ticketIndex].updated = updatedTime;
         }
 
         if (currentTicket && currentTicket.id === ticketId) {
@@ -2515,19 +2207,13 @@ function updateTicketPriority(ticketId, newPriority) {
         }
 
         showToast(`Ticket priority updated to ${updatedPriority}`);
-        return { success: true, data: response.data };
       } else {
-        showToast(
-          response.data?.message || "Failed to update priority",
-          "error",
-        );
-        return { success: false, data: response.data };
+        showToast("Failed to update priority", "error");
       }
     })
     .catch((error) => {
       console.error(error);
       showToast("Error updating ticket priority", "error");
-      return { success: false, error };
     });
 }
 
@@ -2535,11 +2221,9 @@ function updateTicketPriority(ticketId, newPriority) {
 // This function updates the assignee of a ticket via AJAX
 // It expects ticketId and newAssignee to be provided
 function updateTicketAssignee(ticketId, newAssignee) {
-  if (!ticketId || !newAssignee) {
-    return Promise.resolve({ success: false });
-  }
+  if (!ticketId || !newAssignee) return;
 
-  return fetch(robodeskAjax.ajax_url, {
+  fetch(robodeskAjax.ajax_url, {
     method: "POST",
     headers: {
       "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
@@ -2558,28 +2242,11 @@ function updateTicketAssignee(ticketId, newAssignee) {
         const updatedAssigneeId = response.data.assignee_id || 0;
         const updatedTime = response.data.updated;
 
-        if (
-          typeof dashboard_tickets !== "undefined" &&
-          Array.isArray(dashboard_tickets)
-        ) {
-          const dashboardTicketIndex = dashboard_tickets.findIndex(
-            (t) => Number(t.id) === Number(ticketId),
-          );
-          if (dashboardTicketIndex !== -1) {
-            dashboard_tickets[dashboardTicketIndex].assignee = updatedAssignee;
-            dashboard_tickets[dashboardTicketIndex].assignee_id =
-              updatedAssigneeId;
-            dashboard_tickets[dashboardTicketIndex].updated = updatedTime;
-          }
-        }
-
-        if (typeof tickets !== "undefined" && Array.isArray(tickets)) {
-          const ticketIndex = tickets.findIndex((t) => t.id === ticketId);
-          if (ticketIndex !== -1) {
-            tickets[ticketIndex].assignee = updatedAssignee;
-            tickets[ticketIndex].assignee_id = updatedAssigneeId;
-            tickets[ticketIndex].updated = updatedTime;
-          }
+        const ticketIndex = tickets.findIndex((t) => t.id === ticketId);
+        if (ticketIndex !== -1) {
+          tickets[ticketIndex].assignee = updatedAssignee;
+          tickets[ticketIndex].assignee_id = updatedAssigneeId;
+          tickets[ticketIndex].updated = updatedTime;
         }
 
         if (currentTicket && currentTicket.id === ticketId) {
@@ -2589,19 +2256,16 @@ function updateTicketAssignee(ticketId, newAssignee) {
         }
 
         showToast(`Ticket assigned to ${updatedAssignee}`);
-        return { success: true, data: response.data };
       } else {
         showToast(
           response.data?.message || "Failed to update assignee",
           "error",
         );
-        return { success: false, data: response.data };
       }
     })
     .catch((error) => {
       console.error(error);
       showToast("Error updating ticket assignee", "error");
-      return { success: false, error };
     });
 }
 //
@@ -3663,7 +3327,7 @@ function renderNotificationList() {
 
   listContainer.innerHTML = sortedItems
     .map((item, index) => {
-      const timeAgo = timeSinceCompact(new Date(item.timestamp));
+      const timeAgo = timeSince(new Date(item.timestamp));
       let icon = "fa-bell";
       let iconColor = "text-blue-500";
       const ticketData = Array.isArray(dashboard_tickets)
@@ -3700,16 +3364,12 @@ function renderNotificationList() {
             <i class="fas ${icon} ${iconColor}"></i>
           </div>
           <div class="flex-1 min-w-0">
-            <div class="flex items-center justify-between gap-3">
-              <p class="text-sm font-medium text-gray-900 truncate">${escapeHTML(item.title)}</p>
-              <p class="text-xs text-gray-500 whitespace-nowrap inline-flex items-center gap-1">
-                <i class="far fa-user-circle text-gray-400"></i>
-                <span>${escapeHTML(assigneeValue)}</span>
-              </p>
-            </div>
-            <div class="flex items-center justify-between gap-3 mt-1">
-              <p class="text-xs text-gray-500 truncate">${escapeHTML(item.message || sourceValue)}</p>
-              <p class="text-xs text-gray-400 whitespace-nowrap"><i class="far fa-clock"></i> ${timeAgo}</p>
+            <p class="text-sm font-medium text-gray-900">${escapeHTML(item.title)}</p>
+            <p class="text-xs text-gray-500 mt-1">${escapeHTML(item.message)}</p>
+            <div class="text-xs text-gray-400 mt-2 space-y-1">
+              <p><strong>Source:</strong> ${escapeHTML(sourceValue)}</p>
+              <p><strong>Assigned:</strong> ${escapeHTML(assigneeValue)}</p>
+              <p><i class="far fa-clock"></i> ${timeAgo}</p>
             </div>
           </div>
         </div>
