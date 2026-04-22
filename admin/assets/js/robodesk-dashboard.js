@@ -640,6 +640,28 @@ function timeSince(date) {
   }
 }
 
+function timeSinceCompact(date) {
+  const now = new Date();
+  const secondsPast = Math.max(
+    0,
+    Math.floor((now.getTime() - date.getTime()) / 1000),
+  );
+
+  if (secondsPast < 60) {
+    return `${String(secondsPast).padStart(2, "0")} sec`;
+  }
+
+  if (secondsPast < 3600) {
+    return `${Math.floor(secondsPast / 60)} min`;
+  }
+
+  if (secondsPast < 86400) {
+    return `${Math.floor(secondsPast / 3600)} hr`;
+  }
+
+  return `${Math.floor(secondsPast / 86400)} day`;
+}
+
 // Helper function to format date (if not already defined)
 function formatDate(dateString) {
   const date = new Date(dateString);
@@ -3641,7 +3663,7 @@ function renderNotificationList() {
 
   listContainer.innerHTML = sortedItems
     .map((item, index) => {
-      const timeAgo = timeSince(new Date(item.timestamp));
+      const timeAgo = timeSinceCompact(new Date(item.timestamp));
       let icon = "fa-bell";
       let iconColor = "text-blue-500";
       const ticketData = Array.isArray(dashboard_tickets)
@@ -3678,12 +3700,16 @@ function renderNotificationList() {
             <i class="fas ${icon} ${iconColor}"></i>
           </div>
           <div class="flex-1 min-w-0">
-            <p class="text-sm font-medium text-gray-900">${escapeHTML(item.title)}</p>
-            <p class="text-xs text-gray-500 mt-1">${escapeHTML(item.message)}</p>
-            <div class="text-xs text-gray-400 mt-2 space-y-1">
-              <p><strong>Source:</strong> ${escapeHTML(sourceValue)}</p>
-              <p><strong>Assigned:</strong> ${escapeHTML(assigneeValue)}</p>
-              <p><i class="far fa-clock"></i> ${timeAgo}</p>
+            <div class="flex items-center justify-between gap-3">
+              <p class="text-sm font-medium text-gray-900 truncate">${escapeHTML(item.title)}</p>
+              <p class="text-xs text-gray-500 whitespace-nowrap inline-flex items-center gap-1">
+                <i class="far fa-user-circle text-gray-400"></i>
+                <span>${escapeHTML(assigneeValue)}</span>
+              </p>
+            </div>
+            <div class="flex items-center justify-between gap-3 mt-1">
+              <p class="text-xs text-gray-500 truncate">${escapeHTML(item.message || sourceValue)}</p>
+              <p class="text-xs text-gray-400 whitespace-nowrap"><i class="far fa-clock"></i> ${timeAgo}</p>
             </div>
           </div>
         </div>
