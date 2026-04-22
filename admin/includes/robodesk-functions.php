@@ -106,8 +106,8 @@ if (!function_exists('robodesk_debug_log_page_callback')) {
 
         if ($debug_log_exists) {
             echo '<p>';
-            /* translators: 1: file size, 2: last modified date */
             printf(
+                /* translators: 1: file size, 2: last modified date */
                 esc_html__('Size: %1$s | Last updated: %2$s', 'robodesk'),
                 esc_html(size_format($debug_log_size)),
                 esc_html(date_i18n(get_option('date_format') . ' ' . get_option('time_format'), $debug_log_modified))
