@@ -324,12 +324,12 @@ function robodesk_my_tickets_shortcode()
     <?php
     $big = 999999999; // Need an unlikely integer
     $pagination = paginate_links(array(
-        'base' => str_replace($big, '%#%', esc_url(get_pagenum_link($big))),
-        'format' => '?paged=%#%',
-        'current' => max(1, $paged),
-        'total' => $query->max_num_pages,
-        'prev_text' => __('« Previous'),
-        'next_text' => __('Next »'),
+        'base'      => str_replace($big, '%#%', esc_url(get_pagenum_link($big))),
+        'format'    => '?paged=%#%',
+        'current'   => max(1, $paged),
+        'total'     => $query->max_num_pages,
+        'prev_text' => __('« Previous', 'robodesk'),
+        'next_text' => __('Next »', 'robodesk'),
     ));
 
     if ($pagination) {
