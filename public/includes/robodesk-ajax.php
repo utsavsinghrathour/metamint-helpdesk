@@ -127,8 +127,6 @@ function handle_robodesk_ticket_submission()
             wp_set_object_terms($post_id, 31, 'robodesk_ticket_priority');
         }
 
-        update_post_meta($post_id, 'robodesk_ticket_origin', 'web');
-
 
 
         $origin =  create_term_if_not_exists();
@@ -153,7 +151,7 @@ function handle_robodesk_ticket_submission()
         ));
 
         if (!is_wp_error($comment_id)) {
-            add_comment_meta($comment_id, 'comment_source', 'web', true);
+            add_comment_meta($comment_id, 'comment_source', 'chat', true);
             add_comment_meta($comment_id, 'author_type', robodesk_get_author_type($user_id), true);
             add_comment_meta($comment_id, 'rbd_suppress_notification', 1, true);
         }
@@ -162,7 +160,7 @@ function handle_robodesk_ticket_submission()
 
         wp_set_object_terms($post_id, (int) $origin['term_id'], 'robodesk_ticket_origin');
 
-        robodesk_notify_ticket_created($post_id, 'web');
+        robodesk_notify_ticket_created($post_id, 'chat');
 
         wp_send_json_success(array('message' => 'Ticket created successfully!'));
     }
@@ -481,7 +479,6 @@ function robodesk_login_action_callback()
     }
     wp_send_json_error([
         'message' => sprintf(
-            /* translators: %s: WordPress user creation error message. */
             __('Failed to create account: %s', 'robodesk'),
             $user_id->get_error_message()
         )
@@ -539,7 +536,6 @@ function robodesk_register_user()
     }
     wp_send_json_error([
         'message' => sprintf(
-            /* translators: %s: WordPress user creation error message. */
             __('Failed to create account: %s', 'robodesk'),
             $user_id->get_error_message()
         )
