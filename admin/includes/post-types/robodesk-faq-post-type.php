@@ -7,30 +7,30 @@ add_action('init', 'robodesk_register_faq_post_type');
 function robodesk_register_faq_post_type()
 {
     $faq_labels = array(
-        'name'                  => _x('FAQs', 'post type general name', 'robodesk-support-ticket'),
-        'singular_name'         => _x('FAQ', 'post type singular name', 'robodesk-support-ticket'),
-        'menu_name'             => __('FAQs', 'robodesk-support-ticket'),
-        'name_admin_bar'        => __('FAQ', 'robodesk-support-ticket'),
-        'add_new'               => __('Add New', 'robodesk-support-ticket'),
-        'add_new_item'          => __('Add New FAQ', 'robodesk-support-ticket'),
-        'new_item'              => __('New FAQ', 'robodesk-support-ticket'),
-        'edit_item'             => __('Edit FAQ', 'robodesk-support-ticket'),
-        'view_item'             => __('View FAQ', 'robodesk-support-ticket'),
-        'all_items'             => __('All FAQs', 'robodesk-support-ticket'),
-        'search_items'          => __('Search FAQs', 'robodesk-support-ticket'),
-        'parent_item_colon'     => __('Parent FAQs:', 'robodesk-support-ticket'),
-        'not_found'             => __('No FAQs found.', 'robodesk-support-ticket'),
-        'not_found_in_trash'    => __('No FAQs found in Trash.', 'robodesk-support-ticket'),
-        'featured_image'        => __('FAQ Featured Image', 'robodesk-support-ticket'),
-        'set_featured_image'    => __('Set featured image', 'robodesk-support-ticket'),
-        'remove_featured_image' => __('Remove featured image', 'robodesk-support-ticket'),
-        'use_featured_image'    => __('Use as featured image', 'robodesk-support-ticket'),
-        'archives'              => __('FAQ Archives', 'robodesk-support-ticket'),
-        'insert_into_item'      => __('Insert into FAQ', 'robodesk-support-ticket'),
-        'uploaded_to_this_item' => __('Uploaded to this FAQ', 'robodesk-support-ticket'),
-        'filter_items_list'     => __('Filter FAQs list', 'robodesk-support-ticket'),
-        'items_list_navigation' => __('FAQs list navigation', 'robodesk-support-ticket'),
-        'items_list'            => __('FAQs list', 'robodesk-support-ticket'),
+        'name'                  => _x('FAQs', 'post type general name', 'robodesk'),
+        'singular_name'         => _x('FAQ', 'post type singular name', 'robodesk'),
+        'menu_name'             => __('FAQs', 'robodesk'),
+        'name_admin_bar'        => __('FAQ', 'robodesk'),
+        'add_new'               => __('Add New', 'robodesk'),
+        'add_new_item'          => __('Add New FAQ', 'robodesk'),
+        'new_item'              => __('New FAQ', 'robodesk'),
+        'edit_item'             => __('Edit FAQ', 'robodesk'),
+        'view_item'             => __('View FAQ', 'robodesk'),
+        'all_items'             => __('All FAQs', 'robodesk'),
+        'search_items'          => __('Search FAQs', 'robodesk'),
+        'parent_item_colon'     => __('Parent FAQs:', 'robodesk'),
+        'not_found'             => __('No FAQs found.', 'robodesk'),
+        'not_found_in_trash'    => __('No FAQs found in Trash.', 'robodesk'),
+        'featured_image'        => __('FAQ Featured Image', 'robodesk'),
+        'set_featured_image'    => __('Set featured image', 'robodesk'),
+        'remove_featured_image' => __('Remove featured image', 'robodesk'),
+        'use_featured_image'    => __('Use as featured image', 'robodesk'),
+        'archives'              => __('FAQ Archives', 'robodesk'),
+        'insert_into_item'      => __('Insert into FAQ', 'robodesk'),
+        'uploaded_to_this_item' => __('Uploaded to this FAQ', 'robodesk'),
+        'filter_items_list'     => __('Filter FAQs list', 'robodesk'),
+        'items_list_navigation' => __('FAQs list navigation', 'robodesk'),
+        'items_list'            => __('FAQs list', 'robodesk'),
     );
 
     $faq_args = array(
@@ -55,21 +55,21 @@ function robodesk_register_faq_post_type()
 
     // FAQ Category Taxonomy
     $faq_category_labels = array(
-        'name'                       => _x('FAQ Categories', 'taxonomy general name', 'robodesk-support-ticket'),
-        'singular_name'              => _x('FAQ Category', 'taxonomy singular name', 'robodesk-support-ticket'),
-        'search_items'               => __('Search FAQ Categories', 'robodesk-support-ticket'),
-        'all_items'                  => __('All FAQ Categories', 'robodesk-support-ticket'),
-        'parent_item'                => __('Parent FAQ Category', 'robodesk-support-ticket'),
-        'parent_item_colon'          => __('Parent FAQ Category:', 'robodesk-support-ticket'),
-        'edit_item'                  => __('Edit FAQ Category', 'robodesk-support-ticket'),
-        'update_item'                => __('Update FAQ Category', 'robodesk-support-ticket'),
-        'add_new_item'               => __('Add New FAQ Category', 'robodesk-support-ticket'),
-        'new_item_name'              => __('New FAQ Category Name', 'robodesk-support-ticket'),
-        'separate_items_with_commas' => __('Separate FAQ Categories with commas', 'robodesk-support-ticket'),
-        'add_or_remove_items'        => __('Add or remove FAQ Categories', 'robodesk-support-ticket'),
-        'choose_from_most_used'      => __('Choose from the most used FAQ Categories', 'robodesk-support-ticket'),
-        'not_found'                  => __('No FAQ Categories found.', 'robodesk-support-ticket'),
-        'menu_name'                  => __('FAQ Categories', 'robodesk-support-ticket'),
+        'name'                       => _x('FAQ Categories', 'taxonomy general name', 'robodesk'),
+        'singular_name'              => _x('FAQ Category', 'taxonomy singular name', 'robodesk'),
+        'search_items'               => __('Search FAQ Categories', 'robodesk'),
+        'all_items'                  => __('All FAQ Categories', 'robodesk'),
+        'parent_item'                => __('Parent FAQ Category', 'robodesk'),
+        'parent_item_colon'          => __('Parent FAQ Category:', 'robodesk'),
+        'edit_item'                  => __('Edit FAQ Category', 'robodesk'),
+        'update_item'                => __('Update FAQ Category', 'robodesk'),
+        'add_new_item'               => __('Add New FAQ Category', 'robodesk'),
+        'new_item_name'              => __('New FAQ Category Name', 'robodesk'),
+        'separate_items_with_commas' => __('Separate FAQ Categories with commas', 'robodesk'),
+        'add_or_remove_items'        => __('Add or remove FAQ Categories', 'robodesk'),
+        'choose_from_most_used'      => __('Choose from the most used FAQ Categories', 'robodesk'),
+        'not_found'                  => __('No FAQ Categories found.', 'robodesk'),
+        'menu_name'                  => __('FAQ Categories', 'robodesk'),
     );
 
     $faq_category_args = array(
@@ -100,7 +100,7 @@ function robodesk_add_featured_metabox()
 {
     add_meta_box(
         'robodesk_featured_metabox',
-        __('Featured?', 'robodesk-support-ticket'),
+        __('Featured?', 'robodesk'),
         'robodesk_render_featured_metabox',
         'robodesk_faq',
         'side',
@@ -122,7 +122,7 @@ function robodesk_render_featured_metabox($post)
     <label for="robodesk_featured">
         <input type="checkbox" id="robodesk_featured" name="robodesk_featured" value="true"
             <?php checked($featured, 'true'); ?> />
-        <?php _e('Mark as featured', 'robodesk-support-ticket'); ?>
+        <?php _e('Mark as featured', 'robodesk'); ?>
     </label>
 <?php
 }
