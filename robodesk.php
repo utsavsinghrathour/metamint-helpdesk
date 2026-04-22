@@ -2,7 +2,7 @@
 
 /**
  * Plugin Name: Robodesk Support Ticket System
- * Plugin URI: https://example.com/robodesk
+ * Plugin URI: https://robodesk.io
  * Description: A support ticket and FAQ system.
  * Version: 1.0.6
  * Author: Your Name
