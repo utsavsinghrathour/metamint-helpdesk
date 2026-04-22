@@ -213,7 +213,6 @@ function loadDashboardTickets() {
     ) {
       return;
     }
-
     const row = event.target.closest("tr.table-row");
     if (row) {
       const ticketId = parseInt(row.dataset.ticketid, 10);
@@ -640,28 +639,6 @@ function timeSince(date) {
   }
 }
 
-function timeSinceCompact(date) {
-  const now = new Date();
-  const secondsPast = Math.max(
-    0,
-    Math.floor((now.getTime() - date.getTime()) / 1000),
-  );
-
-  if (secondsPast < 60) {
-    return `${String(secondsPast).padStart(2, "0")} sec`;
-  }
-
-  if (secondsPast < 3600) {
-    return `${Math.floor(secondsPast / 60)} min`;
-  }
-
-  if (secondsPast < 86400) {
-    return `${Math.floor(secondsPast / 3600)} hr`;
-  }
-
-  return `${Math.floor(secondsPast / 86400)} day`;
-}
-
 // Helper function to format date (if not already defined)
 function formatDate(dateString) {
   const date = new Date(dateString);
@@ -912,6 +889,28 @@ function showToast(message, type = "success") {
   setTimeout(() => {
     toast.classList.add("hidden");
   }, 3000);
+}
+
+function timeSinceCompact(date) {
+  const now = new Date();
+  const secondsPast = Math.max(
+    0,
+    Math.floor((now.getTime() - date.getTime()) / 1000),
+  );
+
+  if (secondsPast < 60) {
+    return `${String(secondsPast).padStart(2, "0")} sec`;
+  }
+
+  if (secondsPast < 3600) {
+    return `${Math.floor(secondsPast / 60)} min`;
+  }
+
+  if (secondsPast < 86400) {
+    return `${Math.floor(secondsPast / 3600)} hr`;
+  }
+
+  return `${Math.floor(secondsPast / 86400)} day`;
 }
 
 // Navigation functions

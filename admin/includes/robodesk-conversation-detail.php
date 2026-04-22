@@ -9,7 +9,7 @@ if (!defined('ABSPATH')) {
         <div class="px-4 py-5 sm:p-6">
             <div class="flex justify-between items-center mb-6">
                 <h3 class="text-lg font-bold text-gray-900" id="ticket-detail-title">
-                    <?php esc_html_e('Conversation Details', 'robodesk'); ?>
+                    <?php _e('Conversation Details', 'robodesk'); ?>
                 </h3>
                 <button type="button" onclick="showPage('tickets', true)" class="mt-2 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
                     <i class="fas fa-arrow-left mr-2"></i>
@@ -22,26 +22,26 @@ if (!defined('ABSPATH')) {
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
                 <!-- Customer Info -->
                 <div class="bg-gray-50 p-4 rounded-lg">
-                    <h4 class="font-medium text-gray-900 mb-3"><?php esc_html_e('Customer Information', 'robodesk'); ?></h4>
+                    <h4 class="font-medium text-gray-900 mb-3"><?php _e('Customer Information', 'robodesk'); ?></h4>
                     <div id="customer-info" class="space-y-2">
                         <!-- Customer info will be populated by JavaScript -->
                     </div>
                     <div class="mt-4">
                         <button onclick="showCustomerTickets()"
                             class="text-blue-600 hover:text-blue-800 text-sm font-medium">
-                            <?php esc_html_e('View All Customer Conversations', 'robodesk'); ?>
+                            <?php _e('View All Customer Conversations', 'robodesk'); ?>
                         </button>
                     </div>
                 </div>
 
                 <!-- Ticket Status & Priority -->
                 <div class="bg-gray-50 p-4 rounded-lg">
-                    <h4 class="font-medium text-gray-900 mb-3"><?php esc_html_e('Conversation Status', 'robodesk'); ?></h4>
+                    <h4 class="font-medium text-gray-900 mb-3"><?php _e('Conversation Status', 'robodesk'); ?></h4>
 
                     <div class="space-y-4">
                         <div>
                             <label
-                                class="block text-sm font-medium text-gray-700 mb-1"><?php esc_html_e('Status', 'robodesk'); ?></label>
+                                class="block text-sm font-medium text-gray-700 mb-1"><?php _e('Status', 'robodesk'); ?></label>
                             <select onchange="updateTicketStatus(currentTicket.id, this.value)"
                                 class="styled-select block w-full border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 rounded-md"
                                 id="ticket-status-select">
@@ -55,7 +55,7 @@ if (!defined('ABSPATH')) {
                         </div>
                         <div>
                             <label
-                                class="block text-sm font-medium text-gray-700 mb-1"><?php esc_html_e('Priority', 'robodesk'); ?></label>
+                                class="block text-sm font-medium text-gray-700 mb-1"><?php _e('Priority', 'robodesk'); ?></label>
                             <select onchange="updateTicketPriority(currentTicket.id, this.value)"
                                 class="styled-select block w-full border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 rounded-md"
                                 id="ticket-priority-select">
@@ -76,7 +76,7 @@ if (!defined('ABSPATH')) {
                         </div>
                         <div>
                             <label
-                                class="block text-sm font-medium text-gray-700 mb-1"><?php esc_html_e('Assignee', 'robodesk'); ?></label>
+                                class="block text-sm font-medium text-gray-700 mb-1"><?php _e('Assignee', 'robodesk'); ?></label>
                             <select onchange="updateTicketAssignee(currentTicket.id, this.value)"
                                 class="styled-select block w-full border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 rounded-md"
                                 id="ticket-assignee-select">
@@ -132,7 +132,7 @@ if (!defined('ABSPATH')) {
                 ?>
 
                 <div class="bg-gray-50 p-4 rounded-lg">
-                    <h4 class="font-medium text-gray-900 mb-3"><?php esc_html_e('Conversation Details', 'robodesk'); ?></h4>
+                    <h4 class="font-medium text-gray-900 mb-3"><?php _e('Conversation Details', 'robodesk'); ?></h4>
                     <div id="ticket-meta-info" class="space-y-2">
                         <!-- Ticket meta info will be populated by JavaScript -->
                     </div>
@@ -152,7 +152,7 @@ if (!defined('ABSPATH')) {
                 <div class="relative top-20 mx-auto p-5 border w-11/12 md:w-3/4 lg:w-1/2 shadow-lg rounded-md bg-white">
                     <div class="flex justify-between items-center mb-4">
                         <h3 class="text-lg font-bold text-gray-900" id="customer-tickets-title">
-                            <?php esc_html_e('Customer Conversations', 'robodesk'); ?>
+                            <?php _e('Customer Conversations', 'robodesk'); ?>
                         </h3>
                         <button onclick="hideCustomerTickets()" class="text-gray-400 hover:text-gray-600">
                             <i class="fas fa-times"></i>
@@ -172,11 +172,11 @@ if (!defined('ABSPATH')) {
                 <nav class="-mb-px flex space-x-8">
                     <button onclick="showTicketTab('replies')"
                         class="ticket-tab py-2 px-1 border-b-2 font-medium text-sm" data-tab="replies">
-                        <?php esc_html_e('Replies', 'robodesk'); ?> (<span id="replies-count">0</span>)
+                        <?php _e('Replies', 'robodesk'); ?> (<span id="replies-count">0</span>)
                     </button>
                     <button onclick="showTicketTab('notes')" class="ticket-tab py-2 px-1 border-b-2 font-medium text-sm"
                         data-tab="notes">
-                        <?php esc_html_e('Internal Notes', 'robodesk'); ?> (<span id="notes-count">0</span>)
+                        <?php _e('Internal Notes', 'robodesk'); ?> (<span id="notes-count">0</span>)
                     </button>
                 </nav>
             </div>
@@ -185,16 +185,16 @@ if (!defined('ABSPATH')) {
             <div class="mt-6">
                 <div id="replies-tab" class="ticket-tab-content">
                     <div id="replies-list" class="space-y-4 max-h-96 overflow-y-auto mb-4"
-                        data-audio="<?php echo esc_attr(get_option('robodesk_notification_sound')); ?>">
+                        data-audio="<?php echo get_option('robodesk_notification_sound'); ?>">
                         <!-- Replies will be populated by JavaScript -->
                     </div>
                     <!-- We are here and there -->
                     <div>
                         <div class="add-label-wrapper d-flex justify-content-between align-items-center">
                             <label
-                                class="block text-sm font-medium text-gray-700 mb-2"><?php esc_html_e('Add Reply', 'robodesk'); ?></label>
+                                class="block text-sm font-medium text-gray-700 mb-2"><?php _e('Add Reply', 'robodesk'); ?></label>
                             <button onclick="showVariablesPopup()" class="text-xs text-blue-600 hover:text-blue-800 font-medium">
-                                <i class="fas fa-lightbulb mr-1"></i><?php esc_html_e('Insert Variables', 'robodesk'); ?>
+                                <i class="fas fa-lightbulb mr-1"></i><?php _e('Insert Variables', 'robodesk'); ?>
                             </button>
                             <?php do_action('robodesk_before_reply_editor'); ?>
                         </div>
@@ -212,7 +212,7 @@ if (!defined('ABSPATH')) {
                         </div>
                         <div id="new-reply" class="editor-content placeholder" contenteditable="true"
                             style="min-height: 100px; border: 1px solid #d1d5db; border-radius: 0.375rem; padding: 0.5rem;"
-                            data-placeholder="<?php esc_html_e('Type your reply here...', 'robodesk'); ?>"
+                            data-placeholder="<?php _e('Type your reply here...', 'robodesk'); ?>"
                             aria-label="Reply input">
                         </div>
                         <?php
@@ -228,11 +228,11 @@ if (!defined('ABSPATH')) {
                         ?>
                         <button id="send-reply-btn" onclick="addReply()"
                             class="mt-2 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-                            <?php esc_html_e('Send Reply', 'robodesk'); ?>
+                            <?php _e('Send Reply', 'robodesk'); ?>
                         </button>
 
                         <button onclick="closeTicket()"
-                            class="mt-2 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 float-right"><?php esc_html_e('Close Conversation', 'robodesk'); ?></button>
+                            class="mt-2 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 float-right"><?php _e('Close Conversation', 'robodesk'); ?></button>
                     </div>
                 </div>
 
@@ -243,9 +243,9 @@ if (!defined('ABSPATH')) {
                     <div>
                         <div class="add-label-wrapper d-flex justify-content-between align-items-center">
                             <label
-                                class="block text-sm font-medium text-gray-700 mb-2"><?php esc_html_e('Add Internal Note', 'robodesk'); ?></label>
+                                class="block text-sm font-medium text-gray-700 mb-2"><?php _e('Add Internal Note', 'robodesk'); ?></label>
                             <button onclick="showVariablesPopup()" class="text-xs text-blue-600 hover:text-blue-800 font-medium">
-                                <i class="fas fa-lightbulb mr-1"></i><?php esc_html_e('Insert Variables', 'robodesk'); ?>
+                                <i class="fas fa-lightbulb mr-1"></i><?php _e('Insert Variables', 'robodesk'); ?>
                             </button>
                         </div>
                         <div class="editor-toolbar mb-2">
@@ -262,10 +262,10 @@ if (!defined('ABSPATH')) {
                         </div>
                         <div id="new-note" class="editor-content placeholder" contenteditable="true"
                             style="min-height: 100px; border: 1px solid #d1d5db; border-radius: 0.375rem; padding: 0.5rem;"
-                            data-placeholder="<?php esc_html_e('Type your internal note here...', 'robodesk'); ?>"></div>
+                            data-placeholder="<?php _e('Type your internal note here...', 'robodesk'); ?>"></div>
                         <button onclick="addNote()"
                             class="mt-2 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-yellow-600 hover:bg-yellow-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500">
-                            <?php esc_html_e('Add Note', 'robodesk'); ?>
+                            <?php _e('Add Note', 'robodesk'); ?>
                         </button>
 
                     </div>
@@ -288,7 +288,7 @@ if (!defined('ABSPATH')) {
                     max-width: 400px;
                 ">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-                        <h3 style="margin: 0; font-size: 1.125rem; font-weight: 600;"><?php esc_html_e('Template Variables', 'robodesk'); ?></h3>
+                        <h3 style="margin: 0; font-size: 1.125rem; font-weight: 600;"><?php _e('Template Variables', 'robodesk'); ?></h3>
                         <button onclick="hideVariablesPopup()" style="
                             background: none;
                             border: none;
