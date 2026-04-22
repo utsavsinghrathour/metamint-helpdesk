@@ -1,11 +1,18 @@
 @import url(../../assets/css/variables.css);
-.robodesk-plugin .robodesk-header {
+.robodesk-plugin .robodesk-header,
+.rd-notice-header,
+.rd-faq-header {
   /* padding: 15px 20px; */
   padding: var(--header-padding);
   border-bottom: 1px solid var(--border-light-gray);
   background-color: var(--robodesk-theme-color);
 }
-.robodesk-plugin .robodesk-header .icon-dark svg {
+.robodesk-plugin .robodesk-header .icon-dark svg,
+.rd-notice-header .icon-dark svg,
+.rd-notice-header button svg path,
+.rd-faq-header .icon-dark svg,
+.rd-faq-header button svg,
+.rd-faq-header button svg path {
   fill: #fff !important;
 }
 .robodesk-plugin {
