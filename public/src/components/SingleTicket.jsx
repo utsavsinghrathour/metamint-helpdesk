@@ -817,39 +817,39 @@ const SingleTicket = ({
 
   return (
     <div className='rd-single-ticket rd-flex rd-flex-col rd-h-full'>
-      <div className='single-ticket-header rd-flex-col rd-flex rd-align-center rd-justify-between rd-border-bottom-light rd-px-18 rd-py-15'>
-        <div className='rd-flex rd-align-center'>
-          <button
-            className='icon-dark back-button rd-flex rd-items-center rd-bg-transparent rd-border-none rd-p-0 rd-m-0 rd-back-arrow-position'
-            onClick={onBack}
-          >
-            <FaChevronLeft />
-          </button>
-          {image_urls.wide_logo && image_urls.wide_logo.trim() !== '' ? (
+      <div className='single-ticket-header rd-search-header rd-bg-blue rd-flex rd-items-center rd-justify-between rd-flex-col rd-message-list-header'>
+        <button
+          className='back-button rd-flex rd-items-center rd-gap-1 rd-border-none rd-bg-transparent rd-m-0 rd-p-0'
+          onClick={onBack}
+        >
+          <FaChevronLeft />
+        </button>
+        {image_urls.wide_logo && image_urls.wide_logo.trim() !== '' ? (
+          <img
+            src={image_urls.wide_logo}
+            alt='Plugin Wide Logo'
+            className='rd-header-logo rd-m-auto'
+            onError={(e) => (e.target.style.display = 'none')}
+          />
+        ) : image_urls.logo && image_urls.logo.trim() !== '' ? (
+          <img
+            src={image_urls.logo}
+            alt='Plugin Logo'
+            className='rd-header-logo rd-m-auto'
+            onError={(e) => (e.target.style.display = 'none')}
+          />
+        ) : (
+          <div className='rd-header-logo default-logo'>
             <img
-              src={image_urls.wide_logo}
-              alt='Plugin Wide Logo'
-              className=' rd-header-logo'
-              onError={(e) => (e.target.style.display = 'none')}
+              src={defaultLogo}
+              alt='Default Plugin Logo'
+              className='rd-header-logo rd-m-auto'
             />
-          ) : image_urls.logo && image_urls.logo.trim() !== '' ? (
-            <img
-              src={image_urls.logo}
-              alt='Plugin Logo'
-              className=' rd-header-logo'
-              onError={(e) => (e.target.style.display = 'none')}
-            />
-          ) : (
-            <div className=' rd-header-logo default-logo'>
-              <img
-                src={defaultLogo}
-                alt='Default Plugin Logo'
-                className=' rd-header-logo'
-              />
-            </div>
-          )}
-        </div>
-        <div className='rd-body-text rd-mt-30'>
+          </div>
+        )}
+      </div>
+      <div className='rd-px-18 rd-py-15 rd-border-bottom-light'>
+        <div className='rd-body-text'>
           <p className='rd-text-center rd-body-text rd-mb-0'>
             {ticketIntroMessage}
           </p>

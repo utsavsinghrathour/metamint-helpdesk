@@ -76,7 +76,7 @@ const NoticeItem = memo(({ notice, onSelect }) => {
 });
 
 const SingleNoticeView = memo(
-  ({ notice, onBack, isExpanded, setIsExpanded, logo }) => {
+  ({ notice, onBack, isExpanded, setIsExpanded, logo, wideLogo }) => {
     const [content, setContent] = useState(null);
 
     useEffect(() => {
@@ -156,28 +156,37 @@ const SingleNoticeView = memo(
 
     return (
       <div className='rd-single-notice-view rd-main-content no-footer'>
-        <div className='rd-px-20 rd-notice-header rd-flex rd-align-center rd-justify-between rd-cursor-pointer rd-border-bottom-light rd-py-15'>
+        <div className='robodesk-header rd-notice-header rd-flex rd-align-center rd-justify-between'>
           <button
-            className='rd-back-button rd-flex rd-items-center rd-bg-transparent rd-border-none icon-dark rd-text-blue rd-p-0 rd-m-0 rd-cursor-pointer'
+            className='rd-back-button rd-flex rd-items-center rd-bg-transparent rd-border-none icon-dark rd-p-0 rd-m-0 rd-cursor-pointer'
             onClick={onBack}
           >
             <FaChevronLeft />
           </button>
-          {logo && logo.trim() !== '' ? (
+          {wideLogo && wideLogo.trim() !== '' ? (
+            <img
+              src={wideLogo}
+              alt='Plugin Logo'
+              className='rd-header-logo rd-notice-wide-logo'
+              onError={(e) => {
+                e.target.style.display = 'none';
+              }}
+            />
+          ) : logo && logo.trim() !== '' ? (
             <img
               src={logo}
               alt='Plugin Logo'
-              className=' rd-header-logo'
+              className='rd-header-logo rd-notice-wide-logo'
               onError={(e) => {
                 e.target.style.display = 'none';
               }}
             />
           ) : (
-            <div className=' rd-header-logo'>
+            <div className='rd-header-logo default-logo'>
               <img
                 src={defaultLogo}
                 alt='Default Plugin Logo'
-                className=' rd-header-logo'
+                className='rd-header-logo rd-notice-wide-logo'
               />
             </div>
           )}
@@ -244,6 +253,7 @@ const NoticeTabs = ({
   selectedNotice: initialSelectedNotice,
   setShowActiveFeatured,
   logo,
+  wideLogo,
 }) => {
   const [selectedNotice, setSelectedNotice] = useState(initialSelectedNotice);
   const [showHeaderFooter, setShowHeaderFooter] = useState(true);
@@ -299,6 +309,7 @@ const NoticeTabs = ({
             isExpanded={isExpanded}
             setIsExpanded={setIsExpanded}
             logo={logo}
+            wideLogo={wideLogo}
           />
         ) : (
           <>
