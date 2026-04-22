@@ -106,16 +106,23 @@ if (!function_exists('robodesk_debug_log_page_callback')) {
 
         if ($debug_log_exists) {
             echo '<p>';
+            /* translators: 1: file size, 2: last modified date */
             printf(
                 esc_html__('Size: %1$s | Last updated: %2$s', 'robodesk'),
                 esc_html(size_format($debug_log_size)),
                 esc_html(date_i18n(get_option('date_format') . ' ' . get_option('time_format'), $debug_log_modified))
             );
             echo '</p>';
+
             echo '<p><a href="' . esc_url($debug_log_download_url) . '" class="button button-primary">' . esc_html__('Download Full Log', 'robodesk') . '</a></p>';
-            echo '<textarea readonly style="width:100%;min-height:520px;font-family:monospace;line-height:1.4;">' . esc_textarea(implode("\n", $debug_log_lines)) . '</textarea>';
+
+            echo '<textarea readonly style="width:100%;min-height:520px;font-family:monospace;line-height:1.4;">'
+                . esc_textarea(implode("\n", $debug_log_lines)) .
+                '</textarea>';
         } else {
-            echo '<div class="notice notice-error"><p>' . esc_html__('Debug log file was not found or is not readable at logs/debug.log.', 'robodesk') . '</p></div>';
+            echo '<div class="notice notice-error"><p>'
+                . esc_html__('Debug log file was not found or is not readable at logs/debug.log.', 'robodesk') .
+                '</p></div>';
         }
 
         echo '</div>';
