@@ -1474,13 +1474,9 @@ function robodesk_custom_lost_password(WP_REST_Request $request)
     }
 
     return new WP_REST_Response(array(
-        'message' => 'A password reset link has been sent to your email address.'
+        'message' => __('A password reset link has been sent to your email address.', 'robodesk')
     ), 200);
 }
-
-
-
-
 
 
 add_filter('retrieve_password_message', 'robodesk_add_param_to_reset_link', 10, 4);
@@ -1501,10 +1497,12 @@ function robodesk_add_param_to_reset_link($message, $key, $user_login, $user_dat
 
         $site_name = wp_specialchars_decode(get_option('blogname'), ENT_QUOTES);
 
-        $message = sprintf(__('Someone has requested a password reset for the following account on %s:'), $site_name) . "\r\n\r\n";
-        $message .= sprintf(__('Username: %s'), $user_login) . "\r\n\r\n";
-        $message .= __("If this was a mistake, just ignore this email and nothing will happen.") . "\r\n\r\n";
-        $message .= __("To reset your password, visit the following address:") . "\r\n\r\n";
+        /* translators: %s: site name */
+        $message = sprintf(__('Someone has requested a password reset for the following account on %s:', 'robodesk'), $site_name) . "\r\n\r\n";
+        /* translators: %s: username */
+        $message .= sprintf(__('Username: %s', 'robodesk'), $user_login) . "\r\n\r\n";
+        $message .= __('If this was a mistake, just ignore this email and nothing will happen.', 'robodesk') . "\r\n\r\n";
+        $message .= __('To reset your password, visit the following address:', 'robodesk') . "\r\n\r\n";
         $message .= $custom_reset_url . "\r\n\r\n";
     }
 
