@@ -24,7 +24,13 @@
 .page-content {
   animation: fadeIn 0.3s ease-in-out;
 }
-
+.sticky-sidebar {
+  position: sticky;
+  top: 80px;
+  height: max-content; /* Keeps the element from being naturally tall */
+  align-self: start;
+  z-index: 10;
+}
 @keyframes fadeIn {
   from {
     opacity: 0;

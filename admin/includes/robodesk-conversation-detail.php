@@ -11,7 +11,8 @@ if (!defined('ABSPATH')) {
                 <h3 class="text-lg font-bold text-gray-900" id="ticket-detail-title">
                     <?php _e('Conversation Details', 'robodesk'); ?>
                 </h3>
-                <button type="button" onclick="showPage('tickets', true)" class="mt-2 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                <button type="button" onclick="showPage('tickets', true)"
+                    class="mt-2 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
                     <i class="fas fa-arrow-left mr-2"></i>
                     <?php esc_html_e('Back to Conversations', 'robodesk'); ?>
                 </button>
@@ -111,7 +112,7 @@ if (!defined('ABSPATH')) {
                 <!-- Ticket Details -->
                 <?php
                 // In your PHP file (where you're already outputting the script)
-
+                
                 // Get ticket categories
                 $terms = get_terms(array(
                     'taxonomy' => 'robodesk_ticket_category',
@@ -193,7 +194,8 @@ if (!defined('ABSPATH')) {
                         <div class="add-label-wrapper d-flex justify-content-between align-items-center">
                             <label
                                 class="block text-sm font-medium text-gray-700 mb-2"><?php _e('Add Reply', 'robodesk'); ?></label>
-                            <button onclick="showVariablesPopup()" class="text-xs text-blue-600 hover:text-blue-800 font-medium">
+                            <button onclick="showVariablesPopup()"
+                                class="text-xs text-blue-600 hover:text-blue-800 font-medium">
                                 <i class="fas fa-lightbulb mr-1"></i><?php _e('Insert Variables', 'robodesk'); ?>
                             </button>
                             <?php do_action('robodesk_before_reply_editor'); ?>
@@ -218,7 +220,7 @@ if (!defined('ABSPATH')) {
                         <?php
                         /**
                          * Fires after the reply editor.
-                         * 
+                         *
                          * This hook allows you to add custom fields, text, or any content
                          * after the reply editor div.
                          *
@@ -244,7 +246,8 @@ if (!defined('ABSPATH')) {
                         <div class="add-label-wrapper d-flex justify-content-between align-items-center">
                             <label
                                 class="block text-sm font-medium text-gray-700 mb-2"><?php _e('Add Internal Note', 'robodesk'); ?></label>
-                            <button onclick="showVariablesPopup()" class="text-xs text-blue-600 hover:text-blue-800 font-medium">
+                            <button onclick="showVariablesPopup()"
+                                class="text-xs text-blue-600 hover:text-blue-800 font-medium">
                                 <i class="fas fa-lightbulb mr-1"></i><?php _e('Insert Variables', 'robodesk'); ?>
                             </button>
                         </div>
@@ -273,50 +276,52 @@ if (!defined('ABSPATH')) {
 
                 <!-- Variables Popup Modal -->
                 <div id="variables-popup" style="
-                    display: none;
-                    position: fixed;
-                    top: 50%;
-                    left: 50%;
-                    transform: translate(-50%, -50%);
-                    background: white;
-                    border: 1px solid #e5e7eb;
-                    border-radius: 0.5rem;
-                    padding: 1.5rem;
-                    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1), 0 0 0 1px rgba(0, 0, 0, 0.1);
-                    z-index: 1000;
-                    width: 90%;
-                    max-width: 400px;
-                ">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-                        <h3 style="margin: 0; font-size: 1.125rem; font-weight: 600;"><?php _e('Template Variables', 'robodesk'); ?></h3>
+display: none;
+position: fixed;
+top: 50%;
+left: 50%;
+transform: translate(-50%, -50%);
+background: white;
+border: 1px solid #e5e7eb;
+border-radius: 0.5rem;
+padding: 1.5rem;
+box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1), 0 0 0 1px rgba(0, 0, 0, 0.1);
+z-index: 1000;
+width: 90%;
+max-width: 400px;
+">
+                    <div
+                        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                        <h3 style="margin: 0; font-size: 1.125rem; font-weight: 600;">
+                            <?php _e('Template Variables', 'robodesk'); ?></h3>
                         <button onclick="hideVariablesPopup()" style="
-                            background: none;
-                            border: none;
-                            font-size: 1.5rem;
-                            cursor: pointer;
-                            color: #6b7280;
-                            padding: 0;
-                            width: 24px;
-                            height: 24px;
-                            display: flex;
-                            align-items: center;
-                            justify-content: center;
-                        ">×</button>
+background: none;
+border: none;
+font-size: 1.5rem;
+cursor: pointer;
+color: #6b7280;
+padding: 0;
+width: 24px;
+height: 24px;
+display: flex;
+align-items: center;
+justify-content: center;
+">×</button>
                     </div>
                     <div id="variables-list" style="display: grid; gap: 0.75rem;"></div>
                 </div>
 
                 <!-- Backdrop -->
                 <div id="variables-backdrop" onclick="hideVariablesPopup()" style="
-                    display: none;
-                    position: fixed;
-                    top: 0;
-                    left: 0;
-                    right: 0;
-                    bottom: 0;
-                    background: rgba(0, 0, 0, 0.5);
-                    z-index: 999;
-                "></div>
+display: none;
+position: fixed;
+top: 0;
+left: 0;
+right: 0;
+bottom: 0;
+background: rgba(0, 0, 0, 0.5);
+z-index: 999;
+"></div>
             </div>
         </div>
     </div>
@@ -363,35 +368,35 @@ if (!defined('ABSPATH')) {
 
         // Create variable objects
         const variables = [{
-                var: 'fname',
-                label: 'First Name',
-                value: fname
-            },
-            {
-                var: 'lname',
-                label: 'Last Name',
-                value: lname
-            },
-            {
-                var: 'email',
-                label: 'Email',
-                value: email
-            },
-            {
-                var: 'ticket_id',
-                label: 'Ticket ID',
-                value: ticketId
-            },
-            {
-                var: 'ticket_status',
-                label: 'Ticket Status',
-                value: ticketStatus
-            },
-            {
-                var: 'ticket_title',
-                label: 'Ticket Title',
-                value: ticketTitle
-            }
+            var: 'fname',
+            label: 'First Name',
+            value: fname
+        },
+        {
+            var: 'lname',
+            label: 'Last Name',
+            value: lname
+        },
+        {
+            var: 'email',
+            label: 'Email',
+            value: email
+        },
+        {
+            var: 'ticket_id',
+            label: 'Ticket ID',
+            value: ticketId
+        },
+        {
+            var: 'ticket_status',
+            label: 'Ticket Status',
+            value: ticketStatus
+        },
+        {
+            var: 'ticket_title',
+            label: 'Ticket Title',
+            value: ticketTitle
+        }
         ];
 
         // Store resolved values so click handlers can insert the actual text value.
@@ -408,24 +413,24 @@ if (!defined('ABSPATH')) {
             const displayValue = variable.value || '(empty)';
             const card = document.createElement('div');
             card.innerHTML = `
-            <div style="
-                padding: 0.75rem;
-                background: #f9fafb;
-                border: 1px solid #e5e7eb;
-                border-radius: 0.375rem;
-                cursor: pointer;
-                transition: all 0.2s;
-            " onmouseover="this.style.background='#f3f4f6'; this.style.borderColor='#d1d5db';" 
-               onmouseout="this.style.background='#f9fafb'; this.style.borderColor='#e5e7eb';"
-               onclick="insertVariable('${variable.var}')">
-                <div style="font-weight: 500; font-size: 0.875rem; color: #111827; margin-bottom: 0.25rem;">
-                    {{${variable.var}}}
-                </div>
-                <div style="font-size: 0.75rem; color: #6b7280;">
-                    Value: ${displayValue}
-                </div>
-            </div>
-        `;
+<div style="
+padding: 0.75rem;
+background: #f9fafb;
+border: 1px solid #e5e7eb;
+border-radius: 0.375rem;
+cursor: pointer;
+transition: all 0.2s;
+" onmouseover="this.style.background='#f3f4f6'; this.style.borderColor='#d1d5db';"
+onmouseout="this.style.background='#f9fafb'; this.style.borderColor='#e5e7eb';"
+onclick="insertVariable('${variable.var}')">
+<div style="font-weight: 500; font-size: 0.875rem; color: #111827; margin-bottom: 0.25rem;">
+{{${variable.var}}}
+</div>
+<div style="font-size: 0.75rem; color: #6b7280;">
+Value: ${displayValue}
+</div>
+</div>
+`;
             variablesList.appendChild(card);
         });
     }
