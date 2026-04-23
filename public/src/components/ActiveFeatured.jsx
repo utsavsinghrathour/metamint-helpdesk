@@ -81,7 +81,7 @@ const ActiveFeatured = ({ onNoticeSelect }) => {
               {notices.map((notice) => (
                 <h5
                   key={notice.id}
-                  className='rd-notice-title sub-text rd-cursor-pointer rd-p-20 rd-flex rd-align-center rd-gap-10'
+                  className='rd-notice-title sub-text rd-cursor-pointer rd-p-10 rd-flex rd-align-center rd-gap-10'
                   onClick={() => handleNoticeClick(notice)}
                 >
                   <div className='featured-notice-icon'>
