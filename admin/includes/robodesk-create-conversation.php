@@ -20,7 +20,7 @@ if (!defined('ABSPATH')) {
                         <input type="text" id="customer-name" name="customer_name" required autocomplete="off"
                             class="styled-input block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
                         <div id="customer-name-suggestions"
-                            class="bg-white border border-gray-300 mt-1 hidden absolute z-10 w-full max-h-40 overflow-auto rounded-md shadow">
+                            class="bg-white border border-gray-300 mt-1 hidden relative z-10 w-full max-h-40 overflow-auto rounded-md shadow">
                         </div>
                     </div>
 
