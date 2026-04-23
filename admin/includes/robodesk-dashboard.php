@@ -184,5 +184,5 @@ function robodesk_dashboard_callback()
 
 <?php
     // Output the buffered content
-    echo wp_kses_post(ob_get_clean());
+    echo (ob_get_clean());
 }
