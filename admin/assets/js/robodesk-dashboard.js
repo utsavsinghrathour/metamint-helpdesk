@@ -1071,33 +1071,43 @@ document.querySelectorAll(".nav-link").forEach((link) => {
 
 // Function to create category dropdown options
 function createCategoryOptions() {
-  let options = `<option value="${currentTicket.category.id}" selected>${currentTicket.category.name}</option>`;
+  const currentCategoryId =
+    currentTicket?.category?.id || currentTicket?.category?.term_id || "";
+  const currentCategoryName = currentTicket?.category?.name || "";
+  const optionSet = new Map();
 
-  // If we have a default category object, show it first
-  if (robodeskDefaultCategoryObj) {
-    options += `<option value="${robodeskDefaultCategoryObj.term_id}" selected>${robodeskDefaultCategoryObj.name}</option>`;
+  if (currentCategoryId) {
+    optionSet.set(String(currentCategoryId), {
+      value: String(currentCategoryId),
+      label: currentCategoryName,
+      selected: true,
+    });
   }
 
-  // Add all other categories
+  if (robodeskDefaultCategoryObj) {
+    optionSet.set(String(robodeskDefaultCategoryObj.term_id), {
+      value: String(robodeskDefaultCategoryObj.term_id),
+      label: robodeskDefaultCategoryObj.name,
+      selected:
+        String(currentCategoryId) ===
+        String(robodeskDefaultCategoryObj.term_id),
+    });
+  }
+
   robodeskTicketCategories.forEach((category) => {
-    // Skip if this is already added as default
-    if (
-      robodeskDefaultCategoryObj &&
-      currentTicket.category.id === robodeskDefaultCategoryObj.term_id
-    ) {
-      return;
-    }
-    options += `<option value="${category.term_id}">${category.name}</option>`;
-    //remove the 1st option
-    if (category.term_id === currentTicket.category.id) {
-      options = options.replace(
-        `<option value="${category.term_id}">${category.name}</option>`,
-        "",
-      );
-    }
+    optionSet.set(String(category.term_id), {
+      value: String(category.term_id),
+      label: category.name,
+      selected: String(category.term_id) === String(currentCategoryId),
+    });
   });
 
-  return options;
+  return Array.from(optionSet.values())
+    .map(
+      (option) =>
+        `<option value="${option.value}"${option.selected ? " selected" : ""}>${option.label}</option>`,
+    )
+    .join("");
 }
 
 // Function to update ticket category via AJAX (CORRECTED VERSION)
@@ -1146,82 +1156,90 @@ function loadTicketDetail() {
 
   // Load customer information
   const customerInfo = document.getElementById("customer-info");
-  customerInfo.innerHTML = `
-        <div class="text-sm">
-            <div class="font-medium text-gray-900">${currentTicket.customer}</div>
-            <div class="text-gray-500">${currentTicket.email}</div>
+  if (customerInfo) {
+    customerInfo.innerHTML = `
+      <div class="flex items-center gap-4 mb-6">
+        <div class="author-image-wrapper">
+          <span class="author-image w-12 h-12 rounded-full bg-gray-100 border border-gray-200 overflow-hidden flex items-center justify-center">
+            <img id="author-image" src="${currentTicket.author_image || ""}" alt="Author Image" class="w-10 h-10 rounded-full border border-gray-300 shadow-sm">
+          </span>
         </div>
+        <div class="w-full min-w-0">
+          <span class="lg:w-full w-100 flex justify-between items-start gap-3">
+            <div class="min-w-0">
+              <h3 class="font-bold text-gray-900 leading-tight truncate">${escapeHTML(currentTicket.customer || "")}</h3>
+              <p class="text-sm text-gray-500 truncate">${escapeHTML(currentTicket.email || "")}</p>
+            </div>
+            <span class="icon-tickets shrink-0 mt-1">
+              <a href="#" onclick="showCustomerTickets(); return false;" class="robodesk-popover-trigger text-gray-500 hover:text-blue-700" data-popover-text="View all conversations" aria-label="View all conversations">
+                <i class="fas fa-ticket mr-2"></i>
+              </a>
+            </span>
+          </span>
+        </div>
+      </div>
     `;
+    bindPopoverTriggers(customerInfo);
+  }
 
-  // Load ticket meta information with category dropdown
+  // Load ticket meta information
   const ticketMetaInfo = document.getElementById("ticket-meta-info");
 
   const sourceIpRow = isEmptyOrNA(currentTicket.source_ip)
     ? ""
     : `
-      <div>
-        <strong class="text-gray-700">Source IP:</strong>
-        <span class="text-gray-900">${escapeHTML(currentTicket.source_ip)}</span>
+      <div class="flex justify-between items-center">
+        <span class="text-gray-500">IP Address:</span>
+        <span class="text-gray-900 font-mono">${escapeHTML(currentTicket.source_ip)}</span>
       </div>
     `;
 
   const countryRow = isEmptyOrNA(currentTicket.source_country)
     ? ""
     : `
-      <div>
-        <strong class="text-gray-700">Country:</strong>
-        <span class="text-gray-900">${escapeHTML(
-          currentTicket.source_country,
-        )}</span>
+      <div class="flex justify-between items-center">
+        <span class="text-gray-500">Location:</span>
+        <span class="text-gray-900">${escapeHTML(currentTicket.source_country)}</span>
       </div>
     `;
 
   const browserRow = isEmptyOrNA(currentTicket.source_browser)
     ? ""
     : `
-      <div>
-        <strong class="text-gray-700">Browser:</strong>
-        <span class="text-gray-900">${escapeHTML(
-          currentTicket.source_browser,
-        )}</span>
+      <div class="flex justify-between items-center">
+        <span class="text-gray-500">Browser:</span>
+        <span class="text-gray-900">${escapeHTML(currentTicket.source_browser)}</span>
       </div>
     `;
 
-  ticketMetaInfo.innerHTML = `
-    <div class="text-sm space-y-4 bg-gray-50 p-2 rounded-lg shadow-sm">
-      <div class="flex items-center space-x-2">
-        <strong class="text-gray-700">Author Image:</strong>
-        <img id="author-image" src="${
-          currentTicket.author_image
-        }" alt="Author Image" class="w-10 h-10 rounded-full border border-gray-300 shadow-sm">
+  if (ticketMetaInfo) {
+    ticketMetaInfo.innerHTML = `
+      <div class="space-y-4 pt-6 border-t border-gray-100 text-sm">
+        <div class="flex justify-between items-center">
+          <span class="text-gray-500">Origin:</span>
+          <span id="ticket-source" class="bg-blue-100 text-blue-700 px-2 py-0.5 rounded text-xs font-bold uppercase">${escapeHTML(
+            String(currentTicket.source || "").toUpperCase(),
+          )}</span>
+        </div>
+        ${sourceIpRow}
+        ${countryRow}
+        ${browserRow}
       </div>
-      <div>
-        <strong class="text-gray-700">Origin:</strong>
-        <span id="ticket-source" class="inline-block px-2 py-1 bg-blue-100 text-blue-700 rounded"><strong>${currentTicket.source.toUpperCase()}</strong></span>
-      </div>
-      ${sourceIpRow}
-      ${countryRow}
-      ${browserRow}
-      <div>
-        <strong class="text-gray-700">Department:</strong>
-        <select id="ticket-category-select" class="ml-2 px-2 py-1 border border-gray-300 rounded text-sm bg-white focus:ring focus:ring-blue-200">
-          ${createCategoryOptions()}
-        </select>
-      </div>
-    </div>
-  `;
-
-  // Set the current category if ticket has one
-  if (currentTicket.category && currentTicket.category.term_id) {
-    document.getElementById("ticket-category-select").value =
-      currentTicket.category.term_id;
+    `;
   }
 
-  // Add event listener for category change
-  document
-    .getElementById("ticket-category-select")
-    .addEventListener("change", function (e) {
+  const categorySelect = document.getElementById("ticket-category-select");
+  if (categorySelect) {
+    categorySelect.innerHTML = createCategoryOptions();
+    const selectedCategoryId =
+      currentTicket.category?.id || currentTicket.category?.term_id || "";
+    if (selectedCategoryId) {
+      categorySelect.value = String(selectedCategoryId);
+    }
+
+    categorySelect.onchange = function (e) {
       const newCategoryId = e.target.value;
+      if (!newCategoryId) return;
       updateTicketCategory(currentTicket.id, newCategoryId);
 
       // Update the current ticket object
@@ -1231,20 +1249,30 @@ function loadTicketDetail() {
       if (selectedCategory) {
         currentTicket.category = selectedCategory;
       }
-    });
+    };
+  }
 
   // Set current values in other dropdowns
-  document.getElementById("ticket-status-select").value = currentTicket.status;
-  document.getElementById("ticket-priority-select").value =
-    currentTicket.priority;
+  const statusSelect = document.getElementById("ticket-status-select");
+  if (statusSelect) {
+    statusSelect.value = currentTicket.status;
+  }
+
+  const prioritySelect = document.getElementById("ticket-priority-select");
+  if (prioritySelect) {
+    prioritySelect.value = currentTicket.priority;
+  }
+
   const assigneeSelect = document.getElementById("ticket-assignee-select");
-  assigneeSelect.value = currentTicket.assignee_id || currentTicket.assignee;
-  if (!assigneeSelect.value && currentTicket.assignee) {
-    const matchingOption = Array.from(assigneeSelect.options).find(
-      (option) => option.textContent.trim() === currentTicket.assignee,
-    );
-    if (matchingOption) {
-      assigneeSelect.value = matchingOption.value;
+  if (assigneeSelect) {
+    assigneeSelect.value = currentTicket.assignee_id || currentTicket.assignee;
+    if (!assigneeSelect.value && currentTicket.assignee) {
+      const matchingOption = Array.from(assigneeSelect.options).find(
+        (option) => option.textContent.trim() === currentTicket.assignee,
+      );
+      if (matchingOption) {
+        assigneeSelect.value = matchingOption.value;
+      }
     }
   }
 
@@ -1256,6 +1284,59 @@ function loadTicketDetail() {
 
   loadReplies();
   loadNotes();
+}
+
+function bindPopoverTriggers(scope) {
+  if (!scope || !scope.querySelectorAll) return;
+
+  const triggers = scope.querySelectorAll(".robodesk-popover-trigger");
+  triggers.forEach((trigger) => {
+    if (trigger.dataset.popoverBound === "1") return;
+    trigger.dataset.popoverBound = "1";
+
+    let activePopover = null;
+
+    trigger.addEventListener("mouseenter", function () {
+      const text = this.getAttribute("data-popover-text");
+      if (!text) return;
+
+      if (activePopover) {
+        activePopover.remove();
+      }
+
+      const popover = document.createElement("div");
+      popover.className = "rb-popover";
+      popover.innerHTML = `<div class="arrow"></div><div class="popover-body">${text}</div>`;
+      document.body.appendChild(popover);
+      activePopover = popover;
+
+      const rect = this.getBoundingClientRect();
+      const top = rect.top + window.scrollY - popover.offsetHeight - 8;
+      const left =
+        rect.left + window.scrollX + rect.width / 2 - popover.offsetWidth / 2;
+
+      popover.style.top = `${top}px`;
+      popover.style.left = `${left}px`;
+
+      requestAnimationFrame(() => {
+        popover.classList.add("show");
+      });
+    });
+
+    trigger.addEventListener("mouseleave", function () {
+      if (!activePopover) return;
+
+      activePopover.classList.remove("show");
+      const popoverToRemove = activePopover;
+      activePopover = null;
+
+      setTimeout(() => {
+        if (popoverToRemove.parentNode) {
+          popoverToRemove.parentNode.removeChild(popoverToRemove);
+        }
+      }, 150);
+    });
+  });
 }
 
 // Customer tickets functions
