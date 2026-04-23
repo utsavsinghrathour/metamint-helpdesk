@@ -23,7 +23,8 @@ if (!defined('ABSPATH')) {
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
                 <!-- Customer Info -->
                 <div class="bg-gray-50 p-4 rounded-lg">
-                    <h4 class="font-medium text-gray-900 mb-3"><?php esc_html_e('Customer Information', 'robodesk'); ?></h4>
+                    <h4 class="font-medium text-gray-900 mb-3"><?php esc_html_e('Customer Information', 'robodesk'); ?>
+                    </h4>
                     <div id="customer-info" class="space-y-2">
                         <!-- Customer info will be populated by JavaScript -->
                     </div>
@@ -37,7 +38,8 @@ if (!defined('ABSPATH')) {
 
                 <!-- Ticket Status & Priority -->
                 <div class="bg-gray-50 p-4 rounded-lg">
-                    <h4 class="font-medium text-gray-900 mb-3"><?php esc_html_e('Conversation Status', 'robodesk'); ?></h4>
+                    <h4 class="font-medium text-gray-900 mb-3"><?php esc_html_e('Conversation Status', 'robodesk'); ?>
+                    </h4>
 
                     <div class="space-y-4">
                         <div>
@@ -112,7 +114,7 @@ if (!defined('ABSPATH')) {
                 <!-- Ticket Details -->
                 <?php
                 // In your PHP file (where you're already outputting the script)
-
+                
                 // Get ticket categories
                 $terms = get_terms(array(
                     'taxonomy' => 'robodesk_ticket_category',
@@ -133,7 +135,8 @@ if (!defined('ABSPATH')) {
                 ?>
 
                 <div class="bg-gray-50 p-4 rounded-lg">
-                    <h4 class="font-medium text-gray-900 mb-3"><?php esc_html_e('Conversation Details', 'robodesk'); ?></h4>
+                    <h4 class="font-medium text-gray-900 mb-3"><?php esc_html_e('Conversation Details', 'robodesk'); ?>
+                    </h4>
                     <div id="ticket-meta-info" class="space-y-2">
                         <!-- Ticket meta info will be populated by JavaScript -->
                     </div>
@@ -196,7 +199,8 @@ if (!defined('ABSPATH')) {
                                 class="block text-sm font-medium text-gray-700 mb-2"><?php esc_html_e('Add Reply', 'robodesk'); ?></label>
                             <button onclick="showVariablesPopup()"
                                 class="text-xs text-blue-600 hover:text-blue-800 font-medium">
-                                <i class="fas fa-lightbulb mr-1"></i><?php esc_html_e('Insert Variables', 'robodesk'); ?>
+                                <i
+                                    class="fas fa-lightbulb mr-1"></i><?php esc_html_e('Insert Variables', 'robodesk'); ?>
                             </button>
                             <?php do_action('robodesk_before_reply_editor'); ?>
                         </div>
@@ -248,7 +252,8 @@ if (!defined('ABSPATH')) {
                                 class="block text-sm font-medium text-gray-700 mb-2"><?php esc_html_e('Add Internal Note', 'robodesk'); ?></label>
                             <button onclick="showVariablesPopup()"
                                 class="text-xs text-blue-600 hover:text-blue-800 font-medium">
-                                <i class="fas fa-lightbulb mr-1"></i><?php esc_html_e('Insert Variables', 'robodesk'); ?>
+                                <i
+                                    class="fas fa-lightbulb mr-1"></i><?php esc_html_e('Insert Variables', 'robodesk'); ?>
                             </button>
                         </div>
                         <div class="editor-toolbar mb-2">
@@ -265,7 +270,8 @@ if (!defined('ABSPATH')) {
                         </div>
                         <div id="new-note" class="editor-content placeholder" contenteditable="true"
                             style="min-height: 100px; border: 1px solid #d1d5db; border-radius: 0.375rem; padding: 0.5rem;"
-                            data-placeholder="<?php esc_html_e('Type your internal note here...', 'robodesk'); ?>"></div>
+                            data-placeholder="<?php esc_html_e('Type your internal note here...', 'robodesk'); ?>">
+                        </div>
                         <button onclick="addNote()"
                             class="mt-2 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-yellow-600 hover:bg-yellow-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500">
                             <?php esc_html_e('Add Note', 'robodesk'); ?>
@@ -293,7 +299,8 @@ max-width: 400px;
                     <div
                         style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
                         <h3 style="margin: 0; font-size: 1.125rem; font-weight: 600;">
-                            <?php esc_html_e('Template Variables', 'robodesk'); ?></h3>
+                            <?php esc_html_e('Template Variables', 'robodesk'); ?>
+                        </h3>
                         <button onclick="hideVariablesPopup()" style="
 background: none;
 border: none;
@@ -368,35 +375,35 @@ z-index: 999;
 
         // Create variable objects
         const variables = [{
-                var: 'fname',
-                label: 'First Name',
-                value: fname
-            },
-            {
-                var: 'lname',
-                label: 'Last Name',
-                value: lname
-            },
-            {
-                var: 'email',
-                label: 'Email',
-                value: email
-            },
-            {
-                var: 'ticket_id',
-                label: 'Ticket ID',
-                value: ticketId
-            },
-            {
-                var: 'ticket_status',
-                label: 'Ticket Status',
-                value: ticketStatus
-            },
-            {
-                var: 'ticket_title',
-                label: 'Ticket Title',
-                value: ticketTitle
-            }
+            var: 'fname',
+            label: 'First Name',
+            value: fname
+        },
+        {
+            var: 'lname',
+            label: 'Last Name',
+            value: lname
+        },
+        {
+            var: 'email',
+            label: 'Email',
+            value: email
+        },
+        {
+            var: 'ticket_id',
+            label: 'Ticket ID',
+            value: ticketId
+        },
+        {
+            var: 'ticket_status',
+            label: 'Ticket Status',
+            value: ticketStatus
+        },
+        {
+            var: 'ticket_title',
+            label: 'Ticket Title',
+            value: ticketTitle
+        }
         ];
 
         // Store resolved values so click handlers can insert the actual text value.
