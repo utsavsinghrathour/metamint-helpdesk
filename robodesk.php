@@ -5,7 +5,8 @@
  * Plugin URI: https://robodesk.io
  * Description: A support ticket and FAQ system.
  * Version: 1.0.6
- * Author: Your Name
+ * Author: Code Pixelz Media
+ * Author URI: https://codepixelzmedia.com
  * License: GPL2
  * Text Domain: robodesk
  */
@@ -74,7 +75,7 @@ function robodesk_init_debug_log()
     // Check if logs directory exists, create if not
     if (!is_dir($logs_dir)) {
         if (!mkdir($logs_dir, 0755, true)) {
-            error_log('Failed to create Robodesk logs directory');
+            rbd_log('Failed to create Robodesk logs directory');
             return false;
         }
     }
@@ -86,7 +87,7 @@ function robodesk_init_debug_log()
 
 
         if (!file_put_contents($debug_log, $initial_content)) {
-            error_log('Failed to create Robodesk debug.log file');
+            rbd_log('Failed to create Robodesk debug.log file');
             return false;
         }
 
@@ -545,7 +546,7 @@ function rbd_log($message)
         $message = print_r($message, true);
     }
 
-    error_log(wp_date('[Y-m-d H:i:s] ') . $message . PHP_EOL, 3, $log_file);
+    rbd_log(wp_date('[Y-m-d H:i:s] ') . $message . PHP_EOL, 3, $log_file);
 }
 
 function robodesk_get_support_user_ids()
@@ -1737,11 +1738,11 @@ function robodesk_create_support_page()
     $support_page = get_page_by_title('Robodesk Support');
 
 
-    error_log('Robodesk activation hook triggered');
+    rbd_log('Robodesk activation hook triggered');
 
 
     if (!$support_page) {
-        error_log('Creating Robodesk Support page');
+        rbd_log('Creating Robodesk Support page');
 
 
         $page_data = array(
@@ -1761,7 +1762,7 @@ function robodesk_create_support_page()
             update_post_meta($page_id, 'page_state', '--support dashboard');
         }
     } else {
-        error_log('Robodesk Support page already exists with ID: ' . $support_page->ID);
+        rbd_log('Robodesk Support page already exists with ID: ' . $support_page->ID);
     }
 }
 
@@ -1777,14 +1778,14 @@ function robodesk_delete_support_page()
 
     if ($page_id) {
         wp_delete_post($page_id, true);
-        error_log('Deleted Robodesk Support page with ID: ' . $page_id);
+        rbd_log('Deleted Robodesk Support page with ID: ' . $page_id);
     } else {
         // As fallback, try to find the page by title
         $support_page = get_page_by_title('Robodesk Support');
         if ($support_page) {
             wp_delete_post($support_page->ID, true);
         } else {
-            error_log('No Robodesk Support page found to delete');
+            rbd_log('No Robodesk Support page found to delete');
         }
     }
 
