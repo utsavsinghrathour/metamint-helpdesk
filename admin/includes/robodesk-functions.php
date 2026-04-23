@@ -813,7 +813,7 @@ function robodesk_create_ticket()
     // Find or create a user based on email
     $user = get_user_by('email', $customer_email);
     if (!$user) {
-        error_log('User not found, creating new user with email: ' . $customer_email);
+        rbd_log('User not found, creating new user with email: ' . $customer_email);
 
         // Check if role exists
         $roles = wp_roles();
@@ -836,17 +836,17 @@ function robodesk_create_ticket()
         ]);
 
         if (is_wp_error($user_id)) {
-            error_log('Failed to create user: ' . $user_id->get_error_message());
+            rbd_log('Failed to create user: ' . $user_id->get_error_message());
             wp_send_json_error(['message' => 'Failed to create user: ' . $user_id->get_error_message()]);
             wp_die();
         }
 
-        error_log('Created new user with ID: ' . $user_id);
+        rbd_log('Created new user with ID: ' . $user_id);
         update_user_meta($user_id, 'nickname', $customer_name);
         wp_send_new_user_notifications($user_id, 'user');
     } else {
         $user_id = $user->ID;
-        error_log('Using existing user with ID: ' . $user_id);
+        rbd_log('Using existing user with ID: ' . $user_id);
     }
 
     // Normalize assignee for display name + ID
@@ -898,7 +898,7 @@ function robodesk_create_ticket()
         ]);
 
         if ($comment_id === false || is_wp_error($comment_id)) {
-            error_log('Failed to add comment to ticket: ' . (is_wp_error($comment_id) ? $comment_id->get_error_message() : 'Unknown error'));
+            rbd_log('Failed to add comment to ticket: ' . (is_wp_error($comment_id) ? $comment_id->get_error_message() : 'Unknown error'));
             wp_send_json_error(['message' => 'Failed to add comment to ticket']);
             wp_die();
         } else {
@@ -909,7 +909,7 @@ function robodesk_create_ticket()
     }
 
     if (is_wp_error($ticket_id)) {
-        error_log('Failed to create ticket: ' . $ticket_id->get_error_message());
+        rbd_log('Failed to create ticket: ' . $ticket_id->get_error_message());
         wp_send_json_error(['message' => 'Failed to create ticket: ' . $ticket_id->get_error_message()]);
         wp_die();
     }
@@ -918,16 +918,16 @@ function robodesk_create_ticket()
     $priority_term = term_exists($ticket_priority, 'robodesk_ticket_priority');
     if (!$priority_term) {
         $priority_term = wp_insert_term($ticket_priority, 'robodesk_ticket_priority');
-        error_log('Created new priority term: ' . $ticket_priority);
+        rbd_log('Created new priority term: ' . $ticket_priority);
     }
     if (!is_wp_error($priority_term)) {
         $priority_term_id = is_array($priority_term) ? $priority_term['term_id'] : $priority_term;
         $result = wp_set_post_terms($ticket_id, [$priority_term_id], 'robodesk_ticket_priority', false);
         if (is_wp_error($result)) {
-            error_log('Failed to set priority term: ' . $result->get_error_message());
+            rbd_log('Failed to set priority term: ' . $result->get_error_message());
         }
     } else {
-        error_log('Failed to create priority term: ' . $priority_term->get_error_message());
+        rbd_log('Failed to create priority term: ' . $priority_term->get_error_message());
     }
 
 
