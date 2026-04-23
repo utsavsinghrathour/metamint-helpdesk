@@ -787,17 +787,15 @@ add_filter('use_block_editor_for_post_type', function ($use_block_editor, $post_
 
 function robodesk_user_data_to_session_storage()
 {
+    $user_data = [
+        'isLoggedIn'     => is_user_logged_in(),
+        'loggedInUserId' => is_user_logged_in() ? get_current_user_id() : '',
+    ];
 ?>
     <script type="text/javascript">
-        // Check if sessionStorage is available
         if (typeof(Storage) !== "undefined") {
-            var userData = {
-                isLoggedIn: <?php echo is_user_logged_in() ? 'true' : 'false'; ?>,
-                loggedInUserId: "<?php echo is_user_logged_in() ? get_current_user_id() : ''; ?>"
-            };
-
+            var userData = <?php echo wp_json_encode($user_data); ?>;
             sessionStorage.setItem('wpUserData', JSON.stringify(userData));
-
         }
     </script>
 <?php
