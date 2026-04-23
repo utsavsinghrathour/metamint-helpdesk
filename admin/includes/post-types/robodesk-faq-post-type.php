@@ -122,7 +122,7 @@ function robodesk_render_featured_metabox($post)
     <label for="robodesk_featured">
         <input type="checkbox" id="robodesk_featured" name="robodesk_featured" value="true"
             <?php checked($featured, 'true'); ?> />
-        <?php _e('Mark as featured', 'robodesk'); ?>
+        <?php esc_html_e('Mark as featured', 'robodesk'); ?>
     </label>
 <?php
 }
