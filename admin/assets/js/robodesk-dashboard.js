@@ -1133,6 +1133,14 @@ function updateTicketCategory(ticketId, categoryId) {
 function loadTicketDetail() {
   if (!currentTicket) return;
 
+  const isEmptyOrNA = (value) => {
+    if (value === null || value === undefined) return true;
+    const s = String(value).trim();
+    if (s === "") return true;
+    const lower = s.toLowerCase();
+    return lower === "n/a" || lower === "na";
+  };
+
   document.getElementById("ticket-detail-title").textContent =
     `Conversation #${currentTicket.id} - ${currentTicket.title}`;
 
@@ -1148,6 +1156,37 @@ function loadTicketDetail() {
   // Load ticket meta information with category dropdown
   const ticketMetaInfo = document.getElementById("ticket-meta-info");
 
+  const sourceIpRow = isEmptyOrNA(currentTicket.source_ip)
+    ? ""
+    : `
+      <div>
+        <strong class="text-gray-700">Source IP:</strong>
+        <span class="text-gray-900">${escapeHTML(currentTicket.source_ip)}</span>
+      </div>
+    `;
+
+  const countryRow = isEmptyOrNA(currentTicket.source_country)
+    ? ""
+    : `
+      <div>
+        <strong class="text-gray-700">Country:</strong>
+        <span class="text-gray-900">${escapeHTML(
+          currentTicket.source_country,
+        )}</span>
+      </div>
+    `;
+
+  const browserRow = isEmptyOrNA(currentTicket.source_browser)
+    ? ""
+    : `
+      <div>
+        <strong class="text-gray-700">Browser:</strong>
+        <span class="text-gray-900">${escapeHTML(
+          currentTicket.source_browser,
+        )}</span>
+      </div>
+    `;
+
   ticketMetaInfo.innerHTML = `
     <div class="text-sm space-y-4 bg-gray-50 p-2 rounded-lg shadow-sm">
       <div class="flex items-center space-x-2">
@@ -1160,18 +1199,9 @@ function loadTicketDetail() {
         <strong class="text-gray-700">Origin:</strong>
         <span id="ticket-source" class="inline-block px-2 py-1 bg-blue-100 text-blue-700 rounded"><strong>${currentTicket.source.toUpperCase()}</strong></span>
       </div>
-      <div>
-        <strong class="text-gray-700">Source IP:</strong>
-        <span class="text-gray-900">${escapeHTML(currentTicket.source_ip || "N/A")}</span>
-      </div>
-      <div>
-        <strong class="text-gray-700">Country:</strong>
-        <span class="text-gray-900">${escapeHTML(currentTicket.source_country || "N/A")}</span>
-      </div>
-      <div>
-        <strong class="text-gray-700">Browser:</strong>
-        <span class="text-gray-900">${escapeHTML(currentTicket.source_browser || "N/A")}</span>
-      </div>
+      ${sourceIpRow}
+      ${countryRow}
+      ${browserRow}
       <div>
         <strong class="text-gray-700">Department:</strong>
         <select id="ticket-category-select" class="ml-2 px-2 py-1 border border-gray-300 rounded text-sm bg-white focus:ring focus:ring-blue-200">

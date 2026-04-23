@@ -365,8 +365,7 @@ $priority_terms = get_terms(array(
                         <?php endif; ?>
                     </div>
                 </div>
-                <span class="text-sm text-blue-600"><?php echo $total_posts; ?>
-                    result<?php echo $total_posts !== 1 ? 's' : ''; ?> found</span>
+                <span class="text-sm text-blue-600"><?php echo esc_html($total_posts); ?> result<?php echo $total_posts !== 1 ? 's' : ''; ?> found</span>
             </div>
         </div>
     <?php endif; ?>
@@ -446,8 +445,8 @@ $priority_terms = get_terms(array(
                 <!-- JavaScript for tickets (now only for viewing, not filtering) -->
                 <script>
                     const tickets = <?php echo wp_json_encode($tickets); ?>;
-                    const ajaxUrl = '<?php echo admin_url('admin-ajax.php'); ?>';
-                    const bulkActionNonce = '<?php echo wp_create_nonce('robodesk_bulk_action'); ?>';
+                    const ajaxUrl = '<?php echo esc_url(admin_url('admin-ajax.php')); ?>';
+                    const bulkActionNonce = '<?php echo esc_js(wp_create_nonce('robodesk_bulk_action')); ?>';
                 </script>
                 <?php if (!empty($tickets)): ?>
                     <?php foreach ($tickets as $ticket): ?>
@@ -547,11 +546,11 @@ $priority_terms = get_terms(array(
                 <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
                     <div>
                         <p class="text-sm text-gray-700">
-                            Showing <span
-                                class="font-medium"><?php echo (($current_page - 1) * $posts_per_page) + 1; ?></span>
-                            to <span
-                                class="font-medium"><?php echo min($current_page * $posts_per_page, $total_posts); ?></span>
-                            of <span class="font-medium"><?php echo $total_posts; ?></span> results
+                            Showing <span class="font-medium">
+                                <?php echo esc_html((($current_page - 1) * $posts_per_page) + 1); ?>
+                            </span>
+                            to <span class="font-medium"><?php echo esc_html(min($current_page * $posts_per_page, $total_posts)); ?></span>
+                            of <span class="font-medium"><?php echo esc_html($total_posts); ?></span> results
                         </p>
                     </div>
 
@@ -599,16 +598,15 @@ $priority_terms = get_terms(array(
                                 <?php endif; ?>
                             <?php endif; ?>
 
-                            <?php for ($i = $start_page; $i <= $end_page; $i++): ?>
-                                <?php if ($i == $current_page): ?>
-                                    <span
-                                        class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-blue-50 text-sm font-medium text-blue-600">
-                                        <?php echo $i; ?>
+                            <?php for ($i = $start_page; $i <= $end_page; $i++) : ?>
+                                <?php if ($i == $current_page) : ?>
+                                    <span class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-blue-50 text-sm font-medium text-blue-600">
+                                        <?php echo esc_html($i); ?>
                                     </span>
                                 <?php else: ?>
                                     <a href="<?php echo esc_url(get_pagination_url($i)); ?>"
                                         class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">
-                                        <?php echo $i; ?>
+                                        <?php echo esc_html($i); ?>
                                     </a>
                                 <?php endif; ?>
                             <?php endfor; ?>
@@ -619,9 +617,9 @@ $priority_terms = get_terms(array(
                                     <span
                                         class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700">...</span>
                                 <?php endif; ?>
-                                <a href="<?php echo esc_url(get_pagination_url($total_pages)); ?>"
+                                <a href="<?php echo esc_url(get_pagination_url(absint($total_pages))); ?>"
                                     class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">
-                                    <?php echo $total_pages; ?>
+                                    <?php echo esc_html($total_pages); ?>
                                 </a>
                             <?php endif; ?>
 

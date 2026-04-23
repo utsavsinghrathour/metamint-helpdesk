@@ -22,7 +22,7 @@ function robodesk_add_tinymce_to_comments($defaults)
         $value = get_post_meta(sanitize_text_field($_GET['tid']), '_robodesk_ticket_status', true);
 ?>
         <div class="robodesk-status-selector">
-            <label for="robodesk_ticket_status_comment"><?php _e('Select Status *', 'robodesk') ?></label>
+            <label for="robodesk_ticket_status_comment"><?php esc_html_e('Select Status *', 'robodesk') ?></label>
             <select name="robodesk_ticket_status_comment" id="robodesk_ticket_status_comment" required>
                 <option value="open" <?php selected($value, 'new'); ?>>New</option>
                 <option value="open" <?php selected($value, 'open'); ?>>Open</option>
