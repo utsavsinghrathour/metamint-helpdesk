@@ -8,30 +8,30 @@ add_action('init', 'robodesk_register_ticket_post_type');
 function robodesk_register_ticket_post_type()
 {
     $ticket_labels = array(
-        'name'                  => _x('Robodesk Tickets', 'post type general name', 'robodesk-support-ticket'),
-        'singular_name'         => _x('Robodesk Ticket', 'post type singular name', 'robodesk-support-ticket'),
-        'menu_name'             => __('Tickets', 'robodesk-support-ticket'),
-        'name_admin_bar'        => __('Ticket', 'robodesk-support-ticket'),
-        'add_new'               => __('Add New', 'robodesk-support-ticket'),
-        'add_new_item'          => __('Add New Ticket', 'robodesk-support-ticket'),
-        'new_item'              => __('New Ticket', 'robodesk-support-ticket'),
-        'edit_item'             => __('Edit Ticket', 'robodesk-support-ticket'),
-        'view_item'             => __('View Ticket', 'robodesk-support-ticket'),
-        'all_items'             => __('All Tickets', 'robodesk-support-ticket'),
-        'search_items'          => __('Search Tickets', 'robodesk-support-ticket'),
-        'parent_item_colon'     => __('Parent Tickets:', 'robodesk-support-ticket'),
-        'not_found'             => __('No tickets found.', 'robodesk-support-ticket'),
-        'not_found_in_trash'    => __('No tickets found in Trash.', 'robodesk-support-ticket'),
-        'featured_image'        => __('Ticket Featured Image', 'robodesk-support-ticket'),
-        'set_featured_image'    => __('Set featured image', 'robodesk-support-ticket'),
-        'remove_featured_image' => __('Remove featured image', 'robodesk-support-ticket'),
-        'use_featured_image'    => __('Use as featured image', 'robodesk-support-ticket'),
-        'archives'              => __('Ticket Archives', 'robodesk-support-ticket'),
-        'insert_into_item'      => __('Insert into Ticket', 'robodesk-support-ticket'),
-        'uploaded_to_this_item' => __('Uploaded to this Ticket', 'robodesk-support-ticket'),
-        'filter_items_list'     => __('Filter Tickets list', 'robodesk-support-ticket'),
-        'items_list_navigation' => __('Tickets list navigation', 'robodesk-support-ticket'),
-        'items_list'            => __('Tickets list', 'robodesk-support-ticket'),
+        'name'                  => _x('Robodesk Tickets', 'post type general name', 'robodesk'),
+        'singular_name'         => _x('Robodesk Ticket', 'post type singular name', 'robodesk'),
+        'menu_name'             => __('Tickets', 'robodesk'),
+        'name_admin_bar'        => __('Ticket', 'robodesk'),
+        'add_new'               => __('Add New', 'robodesk'),
+        'add_new_item'          => __('Add New Ticket', 'robodesk'),
+        'new_item'              => __('New Ticket', 'robodesk'),
+        'edit_item'             => __('Edit Ticket', 'robodesk'),
+        'view_item'             => __('View Ticket', 'robodesk'),
+        'all_items'             => __('All Tickets', 'robodesk'),
+        'search_items'          => __('Search Tickets', 'robodesk'),
+        'parent_item_colon'     => __('Parent Tickets:', 'robodesk'),
+        'not_found'             => __('No tickets found.', 'robodesk'),
+        'not_found_in_trash'    => __('No tickets found in Trash.', 'robodesk'),
+        'featured_image'        => __('Ticket Featured Image', 'robodesk'),
+        'set_featured_image'    => __('Set featured image', 'robodesk'),
+        'remove_featured_image' => __('Remove featured image', 'robodesk'),
+        'use_featured_image'    => __('Use as featured image', 'robodesk'),
+        'archives'              => __('Ticket Archives', 'robodesk'),
+        'insert_into_item'      => __('Insert into Ticket', 'robodesk'),
+        'uploaded_to_this_item' => __('Uploaded to this Ticket', 'robodesk'),
+        'filter_items_list'     => __('Filter Tickets list', 'robodesk'),
+        'items_list_navigation' => __('Tickets list navigation', 'robodesk'),
+        'items_list'            => __('Tickets list', 'robodesk'),
     );
 
 
@@ -67,17 +67,17 @@ function robodesk_register_ticket_post_type()
 
     // Ticket Origin Taxonomy
     $ticket_origin_labels = array(
-        'name'              => _x('Ticket Origins', 'taxonomy general name', 'robodesk-support-ticket'),
-        'singular_name'     => _x('Ticket Origin', 'taxonomy singular name', 'robodesk-support-ticket'),
-        'search_items'      => __('Search Ticket Origins', 'robodesk-support-ticket'),
-        'all_items'         => __('All Ticket Origins', 'robodesk-support-ticket'),
-        'parent_item'       => __('Parent Ticket Origin', 'robodesk-support-ticket'),
-        'parent_item_colon' => __('Parent Ticket Origin:', 'robodesk-support-ticket'),
-        'edit_item'         => __('Edit Ticket Origin', 'robodesk-support-ticket'),
-        'update_item'       => __('Update Ticket Origin', 'robodesk-support-ticket'),
-        'add_new_item'      => __('Add New Ticket Origin', 'robodesk-support-ticket'),
-        'new_item_name'     => __('New Ticket Origin Name', 'robodesk-support-ticket'),
-        'menu_name'         => __('Ticket Origins', 'robodesk-support-ticket'),
+        'name'              => _x('Ticket Origins', 'taxonomy general name', 'robodesk'),
+        'singular_name'     => _x('Ticket Origin', 'taxonomy singular name', 'robodesk'),
+        'search_items'      => __('Search Ticket Origins', 'robodesk'),
+        'all_items'         => __('All Ticket Origins', 'robodesk'),
+        'parent_item'       => __('Parent Ticket Origin', 'robodesk'),
+        'parent_item_colon' => __('Parent Ticket Origin:', 'robodesk'),
+        'edit_item'         => __('Edit Ticket Origin', 'robodesk'),
+        'update_item'       => __('Update Ticket Origin', 'robodesk'),
+        'add_new_item'      => __('Add New Ticket Origin', 'robodesk'),
+        'new_item_name'     => __('New Ticket Origin Name', 'robodesk'),
+        'menu_name'         => __('Ticket Origins', 'robodesk'),
     );
 
     $ticket_origin_args = array(
@@ -93,17 +93,17 @@ function robodesk_register_ticket_post_type()
 
     // Ticket Priority Taxonomy
     $ticket_priority_labels = array(
-        'name'              => _x('Ticket Priorities', 'taxonomy general name', 'robodesk-support-ticket'),
-        'singular_name'     => _x('Ticket Priority', 'taxonomy singular name', 'robodesk-support-ticket'),
-        'search_items'      => __('Search Ticket Priorities', 'robodesk-support-ticket'),
-        'all_items'         => __('All Ticket Priorities', 'robodesk-support-ticket'),
-        'parent_item'       => __('Parent Ticket Priority', 'robodesk-support-ticket'),
-        'parent_item_colon' => __('Parent Ticket Priority:', 'robodesk-support-ticket'),
-        'edit_item'         => __('Edit Ticket Priority', 'robodesk-support-ticket'),
-        'update_item'       => __('Update Ticket Priority', 'robodesk-support-ticket'),
-        'add_new_item'      => __('Add New Ticket Priority', 'robodesk-support-ticket'),
-        'new_item_name'     => __('New Ticket Priority Name', 'robodesk-support-ticket'),
-        'menu_name'         => __('Ticket Priorities', 'robodesk-support-ticket'),
+        'name'              => _x('Ticket Priorities', 'taxonomy general name', 'robodesk'),
+        'singular_name'     => _x('Ticket Priority', 'taxonomy singular name', 'robodesk'),
+        'search_items'      => __('Search Ticket Priorities', 'robodesk'),
+        'all_items'         => __('All Ticket Priorities', 'robodesk'),
+        'parent_item'       => __('Parent Ticket Priority', 'robodesk'),
+        'parent_item_colon' => __('Parent Ticket Priority:', 'robodesk'),
+        'edit_item'         => __('Edit Ticket Priority', 'robodesk'),
+        'update_item'       => __('Update Ticket Priority', 'robodesk'),
+        'add_new_item'      => __('Add New Ticket Priority', 'robodesk'),
+        'new_item_name'     => __('New Ticket Priority Name', 'robodesk'),
+        'menu_name'         => __('Ticket Priorities', 'robodesk'),
     );
 
     $ticket_priority_args = array(
@@ -121,17 +121,17 @@ function robodesk_register_ticket_post_type()
 
     // Ticket Category Taxonomy
     $ticket_category_labels = [
-        'name'              => _x('Categories', 'taxonomy general name'),
-        'singular_name'     => _x('Category', 'taxonomy singular name'),
-        'search_items'      => __('Search Categories'),
-        'all_items'         => __('All Categories'),
-        'parent_item'       => __('Parent Category'),
-        'parent_item_colon' => __('Parent Category:'),
-        'edit_item'         => __('Edit Category'),
-        'update_item'       => __('Update Category'),
-        'add_new_item'      => __('Add New Category'),
-        'new_item_name'     => __('New Category Name'),
-        'menu_name'         => __('Category'),
+        'name'              => _x('Categories', 'taxonomy general name', 'robodesk'),
+        'singular_name'     => _x('Category', 'taxonomy singular name', 'robodesk'),
+        'search_items'      => __('Search Categories', 'robodesk'),
+        'all_items'         => __('All Categories', 'robodesk'),
+        'parent_item'       => __('Parent Category', 'robodesk'),
+        'parent_item_colon' => __('Parent Category:', 'robodesk'),
+        'edit_item'         => __('Edit Category', 'robodesk'),
+        'update_item'       => __('Update Category', 'robodesk'),
+        'add_new_item'      => __('Add New Category', 'robodesk'),
+        'new_item_name'     => __('New Category Name', 'robodesk'),
+        'menu_name'         => __('Category', 'robodesk'),
     ];
 
 
@@ -787,17 +787,15 @@ add_filter('use_block_editor_for_post_type', function ($use_block_editor, $post_
 
 function robodesk_user_data_to_session_storage()
 {
+    $user_data = [
+        'isLoggedIn'     => is_user_logged_in(),
+        'loggedInUserId' => is_user_logged_in() ? get_current_user_id() : '',
+    ];
 ?>
     <script type="text/javascript">
-        // Check if sessionStorage is available
         if (typeof(Storage) !== "undefined") {
-            var userData = {
-                isLoggedIn: <?php echo is_user_logged_in() ? 'true' : 'false'; ?>,
-                loggedInUserId: "<?php echo is_user_logged_in() ? get_current_user_id() : ''; ?>"
-            };
-
+            var userData = <?php echo wp_json_encode($user_data); ?>;
             sessionStorage.setItem('wpUserData', JSON.stringify(userData));
-
         }
     </script>
 <?php

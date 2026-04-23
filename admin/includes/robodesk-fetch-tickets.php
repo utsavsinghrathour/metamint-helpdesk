@@ -504,7 +504,7 @@ function robodesk_fetch_emails()
 function robodesk_imap_settings_callback()
 {
     if (!current_user_can('manage_options')) {
-        wp_die(__('You do not have sufficient permissions to access this page.'));
+        wp_die(esc_html__('You do not have sufficient permissions to access this page.', 'robodesk'));
     }
 
     // Handle form submission for saving settings
@@ -536,7 +536,10 @@ function robodesk_imap_settings_callback()
             echo '<div class="updated"><p>IMAP connection successful!</p></div>';
             imap_close($mailbox);
         } else {
-            echo '<div class="error"><p>IMAP connection failed: ' . imap_last_error() . '</p></div>';
+            echo '<div class="error"><p>' .
+                esc_html__('IMAP connection failed: ', 'robodesk') .
+                esc_html(imap_last_error()) .
+                '</p></div>';
         }
     }
 

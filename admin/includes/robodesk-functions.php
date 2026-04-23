@@ -62,14 +62,14 @@ if (!function_exists('robodesk_download_debug_log')) {
     function robodesk_download_debug_log()
     {
         if (!current_user_can('manage_options')) {
-            wp_die(__('You do not have sufficient permissions to access this file.', 'robodesk'));
+            wp_die(esc_html__('You do not have sufficient permissions to access this file.', 'robodesk'));
         }
 
         check_admin_referer('robodesk_download_debug_log', 'robodesk_debug_log_nonce');
 
         $log_path = robodesk_get_debug_log_path();
         if (!file_exists($log_path) || !is_readable($log_path)) {
-            wp_die(__('Debug log file is not available.', 'robodesk'));
+            wp_die(esc_html__('Debug log file is not available.', 'robodesk'));
         }
 
         nocache_headers();
@@ -87,7 +87,7 @@ if (!function_exists('robodesk_debug_log_page_callback')) {
     function robodesk_debug_log_page_callback()
     {
         if (!current_user_can('manage_options')) {
-            wp_die(__('You do not have sufficient permissions to access this page.', 'robodesk'));
+            wp_die(esc_html__('You do not have sufficient permissions to access this page.', 'robodesk'));
         }
 
         $debug_log_path = robodesk_get_debug_log_path();
@@ -107,15 +107,22 @@ if (!function_exists('robodesk_debug_log_page_callback')) {
         if ($debug_log_exists) {
             echo '<p>';
             printf(
+                /* translators: 1: file size, 2: last modified date */
                 esc_html__('Size: %1$s | Last updated: %2$s', 'robodesk'),
                 esc_html(size_format($debug_log_size)),
                 esc_html(date_i18n(get_option('date_format') . ' ' . get_option('time_format'), $debug_log_modified))
             );
             echo '</p>';
+
             echo '<p><a href="' . esc_url($debug_log_download_url) . '" class="button button-primary">' . esc_html__('Download Full Log', 'robodesk') . '</a></p>';
-            echo '<textarea readonly style="width:100%;min-height:520px;font-family:monospace;line-height:1.4;">' . esc_textarea(implode("\n", $debug_log_lines)) . '</textarea>';
+
+            echo '<textarea readonly style="width:100%;min-height:520px;font-family:monospace;line-height:1.4;">'
+                . esc_textarea(implode("\n", $debug_log_lines)) .
+                '</textarea>';
         } else {
-            echo '<div class="notice notice-error"><p>' . esc_html__('Debug log file was not found or is not readable at logs/debug.log.', 'robodesk') . '</p></div>';
+            echo '<div class="notice notice-error"><p>'
+                . esc_html__('Debug log file was not found or is not readable at logs/debug.log.', 'robodesk') .
+                '</p></div>';
         }
 
         echo '</div>';
@@ -1729,13 +1736,13 @@ add_action('edit_user_profile_update', 'save_robodesk_user_meta_fields');
 function add_robodesk_user_meta_fields($user)
 {
 ?>
-    <h3><?php _e('Robodesk Support Department', 'robodesk'); ?></h3>
+    <h3><?php esc_html_e('Robodesk Support Department', 'robodesk'); ?></h3>
     <table class="form-table">
         <tr>
-            <th><label for="robodesk_user_department"><?php _e('Department', 'robodesk'); ?></label></th>
+            <th><label for="robodesk_user_department"><?php esc_html_e('Department', 'robodesk'); ?></label></th>
             <td>
                 <select name="robodesk_user_department" id="robodesk_user_department">
-                    <option value=""><?php _e('Select Department', 'robodesk'); ?></option>
+                    <option value=""><?php esc_html_e('Select Department', 'robodesk'); ?></option>
                     <?php
                     $departments = get_terms(array(
                         'taxonomy' => 'robodesk_ticket_category',
@@ -1743,12 +1750,13 @@ function add_robodesk_user_meta_fields($user)
                     ));
                     $user_department = get_user_meta($user->ID, 'robodesk_user_department', true);
                     foreach ($departments as $department) {
-                        $selected = ($user_department == $department->term_id) ? 'selected' : '';
-                        echo '<option value="' . esc_attr($department->term_id) . '" ' . $selected . '>' . esc_html($department->name) . '</option>';
+                        echo '<option value="' . esc_attr($department->term_id) . '" ' .
+                            selected($user_department, $department->term_id, false) .
+                            '>' . esc_html($department->name) . '</option>';
                     }
                     ?>
                 </select>
-                <p class="description"><?php _e('Select the department this user belongs to.', 'robodesk'); ?></p>
+                <p class="description"><?php esc_html_e('Select the department this user belongs to.', 'robodesk'); ?></p>
             </td>
         </tr>
     </table>
