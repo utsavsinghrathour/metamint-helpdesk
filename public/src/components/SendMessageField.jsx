@@ -95,7 +95,7 @@ const SendMessageField = ({ setShowLogin, setActiveTab, updateSelectedTicket, ha
     };
 
     return (
-        <div className="send-message-field rd-px-18">
+        <div className="send-message-field rd-px-16">
             <div className='rd-text-center rd-px-20 rd-flex rd-flex-col rd-gap-5 rd-mb-20 home-tab-title'>
                 <h4 className='heading-4'>{chatHeading}</h4>
                 <h5 className='sub-text rd-mt-0'>{welcomeMessage}</h5>
