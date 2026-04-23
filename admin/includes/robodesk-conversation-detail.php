@@ -80,11 +80,16 @@ foreach ($terms as $term) {
                                     <?php do_action('robodesk_before_reply_editor'); ?>
                                 </div>
                                 <div class="editor-toolbar mb-2">
-                                    <button type="button" onclick="formatText('bold', 'new-reply')" class="editor-btn"><i class="fas fa-bold"></i></button>
-                                    <button type="button" onclick="formatText('italic', 'new-reply')" class="editor-btn"><i class="fas fa-italic"></i></button>
-                                    <button type="button" onclick="formatText('underline', 'new-reply')" class="editor-btn"><i class="fas fa-underline"></i></button>
-                                    <button type="button" onclick="formatText('insertUnorderedList', 'new-reply')" class="editor-btn"><i class="fas fa-list-ul"></i></button>
-                                    <button type="button" onclick="formatText('insertOrderedList', 'new-reply')" class="editor-btn"><i class="fas fa-list-ol"></i></button>
+                                    <button type="button" onclick="formatText('bold', 'new-reply')"
+                                        class="editor-btn"><i class="fas fa-bold"></i></button>
+                                    <button type="button" onclick="formatText('italic', 'new-reply')"
+                                        class="editor-btn"><i class="fas fa-italic"></i></button>
+                                    <button type="button" onclick="formatText('underline', 'new-reply')"
+                                        class="editor-btn"><i class="fas fa-underline"></i></button>
+                                    <button type="button" onclick="formatText('insertUnorderedList', 'new-reply')"
+                                        class="editor-btn"><i class="fas fa-list-ul"></i></button>
+                                    <button type="button" onclick="formatText('insertOrderedList', 'new-reply')"
+                                        class="editor-btn"><i class="fas fa-list-ol"></i></button>
                                 </div>
                                 <div id="new-reply" class="editor-content placeholder" contenteditable="true"
                                     style="min-height: 100px; border: 1px solid #d1d5db; border-radius: 0.375rem; padding: 0.5rem;"
@@ -97,7 +102,8 @@ foreach ($terms as $term) {
                                 </button>
 
                                 <button onclick="closeTicket()"
-                                    class="mt-2 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 float-right" type="button">
+                                    class="mt-2 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 float-right"
+                                    type="button">
                                     <?php esc_html_e('Close Conversation', 'robodesk'); ?>
                                 </button>
                             </div>
@@ -119,68 +125,87 @@ foreach ($terms as $term) {
                                     </button>
                                 </div>
                                 <div class="editor-toolbar mb-2">
-                                    <button type="button" onclick="formatText('bold', 'new-note')" class="editor-btn"><i class="fas fa-bold"></i></button>
-                                    <button type="button" onclick="formatText('italic', 'new-note')" class="editor-btn"><i class="fas fa-italic"></i></button>
-                                    <button type="button" onclick="formatText('underline', 'new-note')" class="editor-btn"><i class="fas fa-underline"></i></button>
-                                    <button type="button" onclick="formatText('insertUnorderedList', 'new-note')" class="editor-btn"><i class="fas fa-list-ul"></i></button>
-                                    <button type="button" onclick="formatText('insertOrderedList', 'new-note')" class="editor-btn"><i class="fas fa-list-ol"></i></button>
+                                    <button type="button" onclick="formatText('bold', 'new-note')" class="editor-btn"><i
+                                            class="fas fa-bold"></i></button>
+                                    <button type="button" onclick="formatText('italic', 'new-note')"
+                                        class="editor-btn"><i class="fas fa-italic"></i></button>
+                                    <button type="button" onclick="formatText('underline', 'new-note')"
+                                        class="editor-btn"><i class="fas fa-underline"></i></button>
+                                    <button type="button" onclick="formatText('insertUnorderedList', 'new-note')"
+                                        class="editor-btn"><i class="fas fa-list-ul"></i></button>
+                                    <button type="button" onclick="formatText('insertOrderedList', 'new-note')"
+                                        class="editor-btn"><i class="fas fa-list-ol"></i></button>
                                 </div>
                                 <div id="new-note" class="editor-content placeholder" contenteditable="true"
                                     style="min-height: 100px; border: 1px solid #d1d5db; border-radius: 0.375rem; padding: 0.5rem;"
-                                    data-placeholder="<?php esc_html_e('Type your internal note here...', 'robodesk'); ?>"></div>
+                                    data-placeholder="<?php esc_html_e('Type your internal note here...', 'robodesk'); ?>">
+                                </div>
                                 <button onclick="addNote()"
-                                    class="mt-2 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-yellow-600 hover:bg-yellow-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500" type="button">
+                                    class="mt-2 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-yellow-600 hover:bg-yellow-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500"
+                                    type="button">
                                     <?php esc_html_e('Add Note', 'robodesk'); ?>
                                 </button>
                             </div>
                         </div>
 
-                        <div id="variables-popup" style="display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; border: 1px solid #e5e7eb; border-radius: 0.5rem; padding: 1.5rem; box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1), 0 0 0 1px rgba(0, 0, 0, 0.1); z-index: 1000; width: 90%; max-width: 400px;">
-                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                        <div id="variables-popup"
+                            style="display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; border: 1px solid #e5e7eb; border-radius: 0.5rem; padding: 1.5rem; box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1), 0 0 0 1px rgba(0, 0, 0, 0.1); z-index: 1000; width: 90%; max-width: 400px;">
+                            <div
+                                style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
                                 <h3 style="margin: 0; font-size: 1.125rem; font-weight: 600;">
                                     <?php esc_html_e('Template Variables', 'robodesk'); ?>
                                 </h3>
-                                <button onclick="hideVariablesPopup()" style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #6b7280; padding: 0; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center;" type="button">×</button>
+                                <button onclick="hideVariablesPopup()"
+                                    style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #6b7280; padding: 0; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center;"
+                                    type="button">×</button>
                             </div>
                             <div id="variables-list" style="display: grid; gap: 0.75rem;"></div>
                         </div>
 
-                        <div id="variables-backdrop" onclick="hideVariablesPopup()" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.5); z-index: 999;"></div>
+                        <div id="variables-backdrop" onclick="hideVariablesPopup()"
+                            style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.5); z-index: 999;">
+                        </div>
                     </div>
                 </div>
 
                 <div class="lg:col-span-1 sticky-sidebar">
                     <div class="space-y-6 px-6">
                         <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-                            <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-4"><?php esc_html_e('Conversation Status', 'robodesk'); ?></h2>
+                            <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-4">
+                                <?php esc_html_e('Conversation Status', 'robodesk'); ?></h2>
 
                             <div class="space-y-4">
                                 <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1" for="ticket-status-select"><?php esc_html_e('Status', 'robodesk'); ?></label>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1"
+                                        for="ticket-status-select"><?php esc_html_e('Status', 'robodesk'); ?></label>
                                     <select onchange="updateTicketStatus(currentTicket.id, this.value)"
                                         class="w-full border border-gray-300 rounded-md p-2 text-sm focus:ring-blue-500 focus:border-blue-500"
                                         id="ticket-status-select">
                                         <?php foreach ($statuses as $status): ?>
-                                            <option value="<?php echo esc_attr($status); ?>"><?php echo esc_html(ucfirst(str_replace('-', ' ', $status))); ?></option>
+                                            <option value="<?php echo esc_attr($status); ?>">
+                                                <?php echo esc_html(ucfirst(str_replace('-', ' ', $status))); ?></option>
                                         <?php endforeach; ?>
                                     </select>
                                 </div>
 
                                 <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1" for="ticket-priority-select"><?php esc_html_e('Priority', 'robodesk'); ?></label>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1"
+                                        for="ticket-priority-select"><?php esc_html_e('Priority', 'robodesk'); ?></label>
                                     <select onchange="updateTicketPriority(currentTicket.id, this.value)"
                                         class="w-full border border-gray-300 rounded-md p-2 text-sm focus:ring-blue-500 focus:border-blue-500"
                                         id="ticket-priority-select">
                                         <?php if (!is_wp_error($priorities)): ?>
                                             <?php foreach ($priorities as $priority): ?>
-                                                <option value="<?php echo esc_attr($priority->name); ?>"><?php echo esc_html($priority->name); ?></option>
+                                                <option value="<?php echo esc_attr($priority->name); ?>">
+                                                    <?php echo esc_html($priority->name); ?></option>
                                             <?php endforeach; ?>
                                         <?php endif; ?>
                                     </select>
                                 </div>
 
                                 <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1" for="ticket-assignee-select"><?php esc_html_e('Assignee', 'robodesk'); ?></label>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1"
+                                        for="ticket-assignee-select"><?php esc_html_e('Assignee', 'robodesk'); ?></label>
                                     <select onchange="updateTicketAssignee(currentTicket.id, this.value)"
                                         class="w-full border border-gray-300 rounded-md p-2 text-sm focus:ring-blue-500 focus:border-blue-500"
                                         id="ticket-assignee-select">
@@ -197,7 +222,8 @@ foreach ($terms as $term) {
                                 </div>
 
                                 <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1" for="ticket-category-select"><?php esc_html_e('Department', 'robodesk'); ?></label>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1"
+                                        for="ticket-category-select"><?php esc_html_e('Department', 'robodesk'); ?></label>
                                     <select id="ticket-category-select"
                                         class="w-full border border-gray-300 rounded-md p-2 text-sm focus:ring-blue-500 focus:border-blue-500">
                                         <?php if (!empty($terms)): ?>
@@ -207,7 +233,8 @@ foreach ($terms as $term) {
                                                 </option>
                                             <?php endforeach; ?>
                                         <?php else: ?>
-                                            <option value=""><?php esc_html_e('No departments found', 'robodesk'); ?></option>
+                                            <option value=""><?php esc_html_e('No departments found', 'robodesk'); ?>
+                                            </option>
                                         <?php endif; ?>
                                     </select>
                                 </div>
@@ -216,7 +243,8 @@ foreach ($terms as $term) {
 
                         <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
                             <div class="flex items-center justify-between mb-6">
-                                <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wider"><?php esc_html_e('Conversation Details', 'robodesk'); ?></h2>
+                                <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wider">
+                                    <?php esc_html_e('Conversation Details', 'robodesk'); ?></h2>
                             </div>
 
                             <div id="customer-info" class="space-y-2 mb-4">
@@ -231,7 +259,8 @@ foreach ($terms as $term) {
                 </div>
             </div>
 
-            <div id="customer-tickets-modal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+            <div id="customer-tickets-modal"
+                class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
                 <div class="relative top-20 mx-auto p-5 border w-11/12 md:w-3/4 lg:w-1/2 shadow-lg rounded-md bg-white">
                     <div class="flex justify-between items-center mb-4">
                         <h3 class="text-lg font-bold text-gray-900" id="customer-tickets-title">
@@ -384,11 +413,11 @@ foreach ($terms as $term) {
         selection.addRange(range);
     }
 
-    document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('DOMContentLoaded', function () {
         const popoverTriggers = document.querySelectorAll('.robodesk-popover-trigger');
         let activePopover = null;
         popoverTriggers.forEach(trigger => {
-            trigger.addEventListener('mouseenter', function() {
+            trigger.addEventListener('mouseenter', function () {
                 const text = this.getAttribute('data-popover-text');
                 if (!text) return;
                 if (activePopover) {
@@ -411,7 +440,7 @@ foreach ($terms as $term) {
                 });
             });
 
-            trigger.addEventListener('mouseleave', function() {
+            trigger.addEventListener('mouseleave', function () {
                 if (activePopover) {
                     activePopover.classList.remove('show');
                     const popoverToRemove = activePopover;
