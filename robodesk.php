@@ -546,7 +546,7 @@ function rbd_log($message)
         $message = print_r($message, true);
     }
 
-    rbd_log(wp_date('[Y-m-d H:i:s] ') . $message . PHP_EOL, 3, $log_file);
+    error_log(wp_date('[Y-m-d H:i:s] ') . $message . PHP_EOL, 3, $log_file);
 }
 
 function robodesk_get_support_user_ids()
