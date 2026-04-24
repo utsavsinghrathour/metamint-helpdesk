@@ -757,8 +757,21 @@ function robodesk_save_ticket_assignment_settings()
 add_action('wp_ajax_robodesk_create_ticket', 'robodesk_create_ticket');
 function robodesk_create_ticket()
 {
-    // Verify nonce
-    if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'robodesk_create_ticket_action')) {
+    // Verify nonce (accept legacy and refactored keys/action names for compatibility)
+    $nonce = '';
+    if (isset($_POST['nonce'])) {
+        $nonce = sanitize_text_field(wp_unslash($_POST['nonce']));
+    } elseif (isset($_POST['robodesk_create_ticket_nonce'])) {
+        $nonce = sanitize_text_field(wp_unslash($_POST['robodesk_create_ticket_nonce']));
+    }
+
+    $valid_nonce = false;
+    if ($nonce !== '') {
+        $valid_nonce = wp_verify_nonce($nonce, 'robodesk_create_ticket_action') ||
+            wp_verify_nonce($nonce, 'rbodesk_create_ticket_action');
+    }
+
+    if (!$valid_nonce) {
         wp_send_json_error(['message' => 'Security check failed']);
         wp_die();
     }

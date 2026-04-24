@@ -9,6 +9,8 @@ if (!defined('ABSPATH')) {
             <h3 class="text-lg font-bold text-gray-900 mb-6"><?php esc_html_e('Create New Conversation', 'robodesk'); ?></h3>
 
             <form id="robodesk-new-ticket-form" class="space-y-6">
+                <input type="hidden" name="nonce"
+                    value="<?php echo esc_attr(wp_create_nonce('robodesk_create_ticket_action')); ?>">
                 <input type="hidden" name="robodesk_create_ticket_nonce"
                     value="<?php echo esc_attr(wp_create_nonce('robodesk_create_ticket_action')); ?>">
                 <input type="hidden" name="ticket_source" value="Form"> <!-- Added for robodesk_ticket_origin -->

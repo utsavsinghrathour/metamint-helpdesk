@@ -913,6 +913,53 @@ function timeSinceCompact(date) {
   return `${Math.floor(secondsPast / 86400)} day`;
 }
 
+function resetEditorContent(editorId) {
+  const editor = document.getElementById(editorId);
+  if (!editor) return;
+
+  editor.innerHTML = "";
+  editor.classList.add("placeholder");
+}
+
+function resetNewConversationForm() {
+  const form = document.getElementById("robodesk-new-ticket-form");
+  if (form) {
+    form.reset();
+  }
+
+  resetEditorContent("ticket-description");
+
+  const createButton = document.getElementById("robodesk-create-ticket");
+  if (createButton) {
+    createButton.disabled = false;
+    createButton.textContent = "Create Conversation";
+  }
+
+  const nameSuggestions = document.getElementById("customer-name-suggestions");
+  const emailSuggestions = document.getElementById(
+    "customer-email-suggestions",
+  );
+  if (nameSuggestions) {
+    nameSuggestions.classList.add("hidden");
+    nameSuggestions.innerHTML = "";
+  }
+  if (emailSuggestions) {
+    emailSuggestions.classList.add("hidden");
+    emailSuggestions.innerHTML = "";
+  }
+}
+
+function resetTicketComposeEditors() {
+  resetEditorContent("new-reply");
+  resetEditorContent("new-note");
+
+  const sendReplyButton = document.getElementById("send-reply-btn");
+  if (sendReplyButton) {
+    sendReplyButton.disabled = false;
+    sendReplyButton.textContent = "Send Reply";
+  }
+}
+
 // Navigation functions
 function showPage(pageName, fromClick = false) {
   // Update the currentPage variable
@@ -947,6 +994,8 @@ function showPage(pageName, fromClick = false) {
   }
   if (pageName === "conversation") {
     // Load conversation view
+  } else if (pageName === "new-ticket") {
+    resetNewConversationForm();
   } else if (pageName === "tickets") {
     // Conversations page is server-rendered. Reload when marked stale so new tickets appear.
     if (shouldRefreshTicketsPage) {
@@ -954,6 +1003,7 @@ function showPage(pageName, fromClick = false) {
       return;
     }
   } else if (pageName === "ticket-detail") {
+    resetTicketComposeEditors();
     loadTicketDetail();
   } else if (pageName === "settings") {
     showSettingsTab("basic");
@@ -1034,6 +1084,7 @@ function navigateToTicket(ticketId) {
     history.pushState({ ticketId }, "", url);
   }
 
+  resetTicketComposeEditors();
   showPage("ticket-detail");
   loadTicketDetail();
   showTicketTab("replies");
@@ -2431,20 +2482,25 @@ jQuery(document).ready(function ($) {
     const $form = $(this);
     const $button = $form.find("#robodesk-create-ticket");
     const formData = new FormData();
+    const createTicketNonce =
+      $form.find('input[name="robodesk_create_ticket_nonce"]').val() ||
+      $form.find('input[name="nonce"]').val() ||
+      robodeskAjax?.nonces?.create_ticket ||
+      "";
+    const descriptionElement = document.getElementById("ticket-description");
+    const descriptionHtml = descriptionElement?.innerHTML || "";
+    const descriptionText = (descriptionElement?.textContent || "").trim();
 
     // Append ticket data
     formData.append("action", "robodesk_create_ticket");
-    formData.append(
-      "nonce",
-      $form.find('input[name="robodesk_create_ticket_nonce"]').val(),
-    );
+    formData.append("nonce", createTicketNonce);
     formData.append("customer_name", $("#customer-name").val());
     formData.append("customer_email", $("#customer-email").val());
     formData.append("ticket_title", $("#ticket-title").val());
     formData.append("ticket_priority", $("#ticket-priority").val());
     formData.append("ticket_category", $("#ticket-category").val());
     formData.append("ticket_assignee", $("#ticket-assignee").val());
-    formData.append("ticket_description", $("#ticket-description").html());
+    formData.append("ticket_description", descriptionText || descriptionHtml);
     formData.append(
       "ticket_source",
       $form.find('input[name="ticket_source"]').val(),
@@ -2793,7 +2849,7 @@ function addReply() {
         const ticketIndex = tickets.findIndex((t) => t.id === currentTicket.id);
         if (ticketIndex !== -1) tickets[ticketIndex] = currentTicket;
 
-        replyBox.innerHTML = "";
+        resetEditorContent("new-reply");
         document.getElementById("replies-count").textContent =
           currentTicket.replies.length;
 
@@ -2960,7 +3016,7 @@ function closeTicket() {
           }
 
           // Clear the reply box
-          replyBox.innerHTML = "";
+          resetEditorContent("new-reply");
 
           // Reload the replies to show the close message and any final reply
           loadReplies();
