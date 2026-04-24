@@ -543,7 +543,7 @@ $priority_terms = get_terms(array(
                             <td class="px-6 py-4 whitespace-nowrap cursor-pointer"
                                 onclick="viewTicket(<?php echo esc_js($ticket['id']); ?>)">
                                 <div class="text-sm font-medium text-gray-900">#<?php echo esc_html($ticket['id']); ?></div>
-                                <div class="text-sm text-gray-500 truncate max-w-xs"><?php echo esc_html($ticket['title']); ?>
+                                <div class="text-sm text-gray-500 truncate max-w-xs"><?php echo esc_html(substr($ticket['title'], 0, 25) . (strlen($ticket['title']) > 50 ? '...' : '')); ?>
                                 </div>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap cursor-pointer"
