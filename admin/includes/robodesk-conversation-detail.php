@@ -175,7 +175,7 @@ foreach ($terms as $term) {
                                 <?php esc_html_e('Conversation Status', 'robodesk'); ?></h2>
 
                             <div class="space-y-4">
-                                <div>
+                                <div class="add-label-wrapper gap-2">
                                     <label class="block text-sm font-medium text-gray-700 mb-1"
                                         for="ticket-status-select"><?php esc_html_e('Status', 'robodesk'); ?></label>
                                     <select onchange="updateTicketStatus(currentTicket.id, this.value)"
@@ -188,7 +188,7 @@ foreach ($terms as $term) {
                                     </select>
                                 </div>
 
-                                <div>
+                                <div class="add-label-wrapper gap-2">
                                     <label class="block text-sm font-medium text-gray-700 mb-1"
                                         for="ticket-priority-select"><?php esc_html_e('Priority', 'robodesk'); ?></label>
                                     <select onchange="updateTicketPriority(currentTicket.id, this.value)"
@@ -203,7 +203,7 @@ foreach ($terms as $term) {
                                     </select>
                                 </div>
 
-                                <div>
+                                <div class="add-label-wrapper gap-2">
                                     <label class="block text-sm font-medium text-gray-700 mb-1"
                                         for="ticket-assignee-select"><?php esc_html_e('Assignee', 'robodesk'); ?></label>
                                     <select onchange="updateTicketAssignee(currentTicket.id, this.value)"
@@ -221,7 +221,7 @@ foreach ($terms as $term) {
                                     </select>
                                 </div>
 
-                                <div>
+                                <div class="add-label-wrapper gap-2">
                                     <label class="block text-sm font-medium text-gray-700 mb-1"
                                         for="ticket-category-select"><?php esc_html_e('Department', 'robodesk'); ?></label>
                                     <select id="ticket-category-select"
@@ -413,11 +413,11 @@ foreach ($terms as $term) {
         selection.addRange(range);
     }
 
-    document.addEventListener('DOMContentLoaded', function () {
+    document.addEventListener('DOMContentLoaded', function() {
         const popoverTriggers = document.querySelectorAll('.robodesk-popover-trigger');
         let activePopover = null;
         popoverTriggers.forEach(trigger => {
-            trigger.addEventListener('mouseenter', function () {
+            trigger.addEventListener('mouseenter', function() {
                 const text = this.getAttribute('data-popover-text');
                 if (!text) return;
                 if (activePopover) {
@@ -440,7 +440,7 @@ foreach ($terms as $term) {
                 });
             });
 
-            trigger.addEventListener('mouseleave', function () {
+            trigger.addEventListener('mouseleave', function() {
                 if (activePopover) {
                     activePopover.classList.remove('show');
                     const popoverToRemove = activePopover;
