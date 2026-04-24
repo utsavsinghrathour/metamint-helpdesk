@@ -3287,7 +3287,7 @@ function renderReplies(replies) {
       const actionClass = isAction ? "reply-action bg-blue-200" : "";
 
       return `
-        <div data-cid="${reply.id}" class="p-4 rounded-lg replys reply-${
+        <div data-cid="${reply.id}" class="p-3 rounded-lg replys reply-${
           reply.type
         } ${actionClass}" id="reply-${index}">
           <div class="flex justify-between items-center mb-2">
