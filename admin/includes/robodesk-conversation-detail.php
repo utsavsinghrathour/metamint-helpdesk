@@ -64,7 +64,7 @@ foreach ($terms as $term) {
 
                     <div class="mt-6">
                         <div id="replies-tab" class="ticket-tab-content">
-                            <div id="replies-list" class="space-y-4 mb-4"
+                            <div id="replies-list" class="space-y-3 mb-4"
                                 data-audio="<?php echo esc_attr(get_option('robodesk_notification_sound')); ?>">
                                 <!-- Replies will be populated by JavaScript -->
                             </div>
