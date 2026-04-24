@@ -4,8 +4,35 @@ if (!defined('ABSPATH')) {
 }
 // Get filter parameters from URL
 $search_term = isset($_GET['search']) ? sanitize_text_field($_GET['search']) : '';
-$customer_filter = isset($_GET['customer']) ? sanitize_text_field($_GET['customer']) : '';
-$agent_filter = isset($_GET['agent']) ? sanitize_text_field($_GET['agent']) : '';
+
+if (!function_exists('robodesk_parse_multi_filter_values')) {
+    function robodesk_parse_multi_filter_values($raw)
+    {
+        $values = is_array($raw) ? $raw : [$raw];
+        $normalized = [];
+
+        foreach ($values as $value) {
+            if (!is_scalar($value)) {
+                continue;
+            }
+
+            foreach (explode(',', (string) $value) as $piece) {
+                $sanitized = sanitize_text_field($piece);
+                if ($sanitized !== '') {
+                    $normalized[] = $sanitized;
+                }
+            }
+        }
+
+        $normalized = array_values(array_unique($normalized));
+        return $normalized;
+    }
+}
+
+$customer_filters = isset($_GET['customer']) ? robodesk_parse_multi_filter_values($_GET['customer']) : [];
+$agent_filters = isset($_GET['agent']) ? robodesk_parse_multi_filter_values($_GET['agent']) : [];
+$customer_filter = !empty($customer_filters) ? implode(', ', $customer_filters) : '';
+$agent_filter = !empty($agent_filters) ? implode(', ', $agent_filters) : '';
 $status_filter = isset($_GET['status']) ? sanitize_text_field($_GET['status']) : 'all';
 
 // Get the current page number from URL parameter
@@ -51,13 +78,25 @@ if ($status_filter === 'all') {
     );
 }
 
-// Add meta query for agent filter
-if (!empty($agent_filter)) {
-    $meta_query[] = array(
-        'key' => 'ticket_assignee',
-        'value' => $agent_filter,
-        'compare' => 'LIKE'
-    );
+// Add meta query for agent filter(s)
+if (!empty($agent_filters)) {
+    if (count($agent_filters) === 1) {
+        $meta_query[] = array(
+            'key' => 'ticket_assignee',
+            'value' => $agent_filters[0],
+            'compare' => 'LIKE'
+        );
+    } else {
+        $agent_meta_query = array('relation' => 'OR');
+        foreach ($agent_filters as $agent_value) {
+            $agent_meta_query[] = array(
+                'key' => 'ticket_assignee',
+                'value' => $agent_value,
+                'compare' => 'LIKE'
+            );
+        }
+        $meta_query[] = $agent_meta_query;
+    }
 }
 
 // Set the meta_query with AND relation if there are multiple conditions
@@ -78,19 +117,27 @@ if (!empty($search_term)) {
     }
 }
 
-// Add author filter for customer search
-if (!empty($customer_filter)) {
-    // Search for users by display name or email
-    $user_query = new WP_User_Query(array(
-        'search' => '*' . $customer_filter . '*',
-        'search_columns' => array('display_name', 'user_email', 'user_login'),
-        'fields' => 'ID'
-    ));
+// Add author filter(s) for customer search
+if (!empty($customer_filters)) {
+    $customer_user_ids = [];
 
-    $user_ids = $user_query->get_results();
+    foreach ($customer_filters as $customer_value) {
+        $user_query = new WP_User_Query(array(
+            'search' => '*' . $customer_value . '*',
+            'search_columns' => array('display_name', 'user_email', 'user_login'),
+            'fields' => 'ID'
+        ));
 
-    if (!empty($user_ids)) {
-        $args['author__in'] = $user_ids;
+        $found_ids = $user_query->get_results();
+        if (!empty($found_ids)) {
+            $customer_user_ids = array_merge($customer_user_ids, $found_ids);
+        }
+    }
+
+    $customer_user_ids = array_values(array_unique(array_map('intval', $customer_user_ids)));
+
+    if (!empty($customer_user_ids)) {
+        $args['author__in'] = $customer_user_ids;
     } else {
         // If no users found, set impossible condition to return no results
         $args['author__in'] = array(0);
@@ -233,6 +280,30 @@ $agent_filter_users = get_users([
     'order' => 'ASC',
 ]);
 
+$customer_filter_options = [];
+foreach ($customer_filter_users as $customer_user) {
+    if (empty($customer_user->display_name)) {
+        continue;
+    }
+
+    $customer_filter_options[] = [
+        'value' => $customer_user->display_name,
+        'email' => (string) $customer_user->user_email,
+    ];
+}
+
+$agent_filter_options = [];
+foreach ($agent_filter_users as $agent_user) {
+    if (empty($agent_user->display_name)) {
+        continue;
+    }
+
+    $agent_filter_options[] = [
+        'value' => $agent_user->display_name,
+        'email' => (string) $agent_user->user_email,
+    ];
+}
+
 // Get priority terms
 $priority_terms = get_terms(array(
     'taxonomy' => 'robodesk_ticket_priority',
@@ -269,16 +340,38 @@ $priority_terms = get_terms(array(
 
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">Search by Customer</label>
-                    <input type="text" name="customer" list="robodesk-customer-options"
-                        value="<?php echo esc_attr($customer_filter); ?>" placeholder="Customer name..."
-                        class="styled-input block w-full px-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500">
+                    <div class="relative" id="robodesk-customer-filter-wrapper">
+                        <div id="robodesk-customer-tags"
+                            class="flex flex-wrap items-center gap-2 w-full min-h-[42px] px-3 py-2 border border-gray-300 rounded-md bg-white focus-within:ring-1 focus-within:ring-blue-500 focus-within:border-blue-500">
+                            <input type="text" id="robodesk-customer-filter-input" placeholder="Type customer name and press Enter"
+                                class="styled-input flex-1 min-w-[150px] px-1 py-1 border-0 bg-transparent placeholder-gray-500 focus:outline-none focus:ring-0 focus:border-0">
+                        </div>
+                        <div id="robodesk-customer-suggestions"
+                            class="hidden absolute z-20 mt-1 w-full max-h-48 overflow-y-auto bg-white border border-gray-300 rounded-md shadow"></div>
+                        <div id="robodesk-customer-hidden-inputs">
+                            <?php foreach ($customer_filters as $customer_value): ?>
+                                <input type="hidden" name="customer[]" value="<?php echo esc_attr($customer_value); ?>">
+                            <?php endforeach; ?>
+                        </div>
+                    </div>
                 </div>
 
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">Search by Agent</label>
-                    <input type="text" name="agent" list="robodesk-agent-options"
-                        value="<?php echo esc_attr($agent_filter); ?>" placeholder="Agent name..."
-                        class="styled-input block w-full px-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500">
+                    <div class="relative" id="robodesk-agent-filter-wrapper">
+                        <div id="robodesk-agent-tags"
+                            class="flex flex-wrap items-center gap-2 w-full min-h-[42px] px-3 py-2 border border-gray-300 rounded-md bg-white focus-within:ring-1 focus-within:ring-blue-500 focus-within:border-blue-500">
+                            <input type="text" id="robodesk-agent-filter-input" placeholder="Type agent name and press Enter"
+                                class="styled-input flex-1 min-w-[150px] px-1 py-1 border-0 bg-transparent placeholder-gray-500 focus:outline-none focus:ring-0 focus:border-0">
+                        </div>
+                        <div id="robodesk-agent-suggestions"
+                            class="hidden absolute z-20 mt-1 w-full max-h-48 overflow-y-auto bg-white border border-gray-300 rounded-md shadow"></div>
+                        <div id="robodesk-agent-hidden-inputs">
+                            <?php foreach ($agent_filters as $agent_value): ?>
+                                <input type="hidden" name="agent[]" value="<?php echo esc_attr($agent_value); ?>">
+                            <?php endforeach; ?>
+                        </div>
+                    </div>
                 </div>
 
                 <div>
@@ -311,25 +404,15 @@ $priority_terms = get_terms(array(
                 </div>
             </form>
 
-            <datalist id="robodesk-customer-options">
-                <?php foreach ($customer_filter_users as $customer_user): ?>
-                    <?php if (!empty($customer_user->display_name)): ?>
-                        <option value="<?php echo esc_attr($customer_user->display_name); ?>">
-                            <?php echo esc_html($customer_user->user_email); ?></option>
-                    <?php endif; ?>
-                <?php endforeach; ?>
-            </datalist>
-
-            <datalist id="robodesk-agent-options">
-                <?php foreach ($agent_filter_users as $agent_user): ?>
-                    <?php if (!empty($agent_user->display_name)): ?>
-                        <option value="<?php echo esc_attr($agent_user->display_name); ?>">
-                            <?php echo esc_html($agent_user->user_email); ?></option>
-                    <?php endif; ?>
-                <?php endforeach; ?>
-            </datalist>
         </div>
     </div>
+
+    <script>
+        const robodeskConversationCustomerOptions = <?php echo wp_json_encode($customer_filter_options); ?>;
+        const robodeskConversationAgentOptions = <?php echo wp_json_encode($agent_filter_options); ?>;
+        const robodeskSelectedCustomers = <?php echo wp_json_encode($customer_filters); ?>;
+        const robodeskSelectedAgents = <?php echo wp_json_encode($agent_filters); ?>;
+    </script>
 
     <!-- Filter Results Summary -->
     <?php if (!empty($search_term) || !empty($customer_filter) || !empty($agent_filter) || $status_filter !== 'all'): ?>
@@ -345,18 +428,18 @@ $priority_terms = get_terms(array(
                                 Search: "<?php echo esc_html($search_term); ?>"
                             </span>
                         <?php endif; ?>
-                        <?php if (!empty($customer_filter)): ?>
+                        <?php foreach ($customer_filters as $customer_value): ?>
                             <span
                                 class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                                Customer: "<?php echo esc_html($customer_filter); ?>"
+                                Customer: "<?php echo esc_html($customer_value); ?>"
                             </span>
-                        <?php endif; ?>
-                        <?php if (!empty($agent_filter)): ?>
+                        <?php endforeach; ?>
+                        <?php foreach ($agent_filters as $agent_value): ?>
                             <span
                                 class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                                Agent: "<?php echo esc_html($agent_filter); ?>"
+                                Agent: "<?php echo esc_html($agent_value); ?>"
                             </span>
-                        <?php endif; ?>
+                        <?php endforeach; ?>
                         <?php if ($status_filter !== 'all'): ?>
                             <span
                                 class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
@@ -422,10 +505,10 @@ $priority_terms = get_terms(array(
             <thead class="bg-gray-50">
                 <tr>
                     <?php if (!empty($tickets)): ?>
-                    <th class="px-3 py-3 text-left">
-                        <input type="checkbox" id="select-all-tickets"
-                            class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
-                    </th>
+                        <th class="px-3 py-3 text-left">
+                            <input type="checkbox" id="select-all-tickets"
+                                class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                        </th>
                     <?php endif; ?>
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Conversation</th>
@@ -472,20 +555,31 @@ $priority_terms = get_terms(array(
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap cursor-pointer"
                                 onclick="viewTicket(<?php echo esc_js($ticket['id']); ?>)">
-                                <span class="status-badge <?php echo esc_attr(get_status_class($ticket['status'])); ?>">
+                                <span class="status-badge <?php echo esc_attr(get_status_class($ticket['status'])); ?> editable-status inline-flex items-center gap-1 cursor-pointer hover:opacity-90"
+                                    title="Click to edit status"
+                                    onclick="event.stopPropagation(); editStatus(<?php echo esc_js($ticket['id']); ?>, this)">
                                     <?php echo esc_html(str_replace('-', ' ', $ticket['status'])); ?>
+                                    <i class="fas fa-chevron-down text-[10px] opacity-70"></i>
                                 </span>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap cursor-pointer"
                                 onclick="viewTicket(<?php echo esc_js($ticket['id']); ?>)">
-                                <span class="status-badge"
-                                    style="background-color:<?php echo esc_attr(get_priority_class($ticket['priority'])); ?>">
+                                <span class="status-badge editable-priority inline-flex items-center gap-1 cursor-pointer hover:opacity-90"
+                                    style="background-color:<?php echo esc_attr(get_priority_class($ticket['priority'])); ?>"
+                                    title="Click to edit priority"
+                                    onclick="event.stopPropagation(); editPriority(<?php echo esc_js($ticket['id']); ?>, this)">
                                     <?php echo esc_html($ticket['priority']); ?>
+                                    <i class="fas fa-chevron-down text-[10px] opacity-70"></i>
                                 </span>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap cursor-pointer"
                                 onclick="viewTicket(<?php echo esc_js($ticket['id']); ?>)">
-                                <?php echo esc_html($ticket['assignee']); ?>
+                                <span class="text-sm font-medium text-gray-900 editable-assignee inline-flex items-center gap-1 cursor-pointer hover:text-blue-700"
+                                    title="Click to edit assignee"
+                                    onclick="event.stopPropagation(); editAssignee(<?php echo esc_js($ticket['id']); ?>, this)">
+                                    <?php echo esc_html($ticket['assignee']); ?>
+                                    <i class="fas fa-chevron-down text-[10px] opacity-70"></i>
+                                </span>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 cursor-pointer"
                                 onclick="viewTicket(<?php echo esc_js($ticket['id']); ?>)">
@@ -499,8 +593,8 @@ $priority_terms = get_terms(array(
                             <?php if (!empty($search_term) || !empty($customer_filter) || !empty($agent_filter) || $status_filter !== 'all'): ?>
                                 No conversations found matching your filters. <a
                                     href="<?php echo esc_url(admin_url('admin.php?' . http_build_query(array_filter($_GET, function ($key) {
-                                        return !in_array($key, ['search', 'customer', 'agent', 'status', 'paged']);
-                                    }, ARRAY_FILTER_USE_KEY)))); ?>"
+                                                return !in_array($key, ['search', 'customer', 'agent', 'status', 'paged']);
+                                            }, ARRAY_FILTER_USE_KEY)))); ?>"
                                     class="text-blue-600 hover:text-blue-800">Clear filters</a> to see all conversations.
                             <?php else: ?>
                                 No Conversations found.
@@ -656,7 +750,7 @@ $priority_terms = get_terms(array(
 </div>
 
 <script>
-    document.addEventListener('DOMContentLoaded', function () {
+    document.addEventListener('DOMContentLoaded', function() {
         // Intentionally no auto-submit search here.
         // Filtering only runs when user clicks the Filter button.
     });

@@ -162,38 +162,44 @@ function loadDashboardTickets() {
               <td class="px-6 py-4 whitespace-nowrap">
                 <span class="status-badge ${getStatusClass(
                   ticket.status,
-                )} editable-status"
+                )} editable-status inline-flex items-center gap-1 cursor-pointer hover:opacity-90"
+                  title="Click to choose"
                   onclick="event.stopPropagation(); editStatus(${
                     ticket.id
                   }, this)">
                   ${escapeHTML(ticket.status.replace("-", " "))}
+                  <i class="fas fa-chevron-down text-[10px] opacity-70"></i>
                 </span>
               </td>
               <td class="px-6 py-4 whitespace-nowrap">
                 <span class="status-badge ${getPriorityClass(
                   ticket.priority,
-                )} editable-priority"
+                )} editable-priority inline-flex items-center gap-1 cursor-pointer hover:opacity-90"
                   style="background-color: ${
                     typeof robodeskPriorityColors !== "undefined" &&
                     robodeskPriorityColors[ticket.priority]
                       ? robodeskPriorityColors[ticket.priority]
                       : ""
                   }"
+                  title="Click to choose"
                   onclick="event.stopPropagation(); editPriority(${
                     ticket.id
                   }, this)">
                   ${escapeHTML(ticket.priority)}
+                  <i class="fas fa-chevron-down text-[10px] opacity-70"></i>
                 </span>
               </td>
               ${
                 showAssigneeColumn
                   ? `
               <td class="px-6 py-4 whitespace-nowrap">
-                <span class="text-sm font-medium text-gray-900 editable-assignee"
+                <span class="text-sm font-medium text-gray-900 editable-assignee inline-flex items-center gap-1 cursor-pointer hover:text-blue-700"
+                  title="Click to choose"
                   onclick="event.stopPropagation(); editAssignee(${
                     ticket.id
                   }, this)">
                   ${escapeHTML(ticket.assignee || "Unassigned")}
+                  <i class="fas fa-chevron-down text-[10px] opacity-70"></i>
                 </span>
               </td>
               `
@@ -296,13 +302,22 @@ function updateTableHeader(showAssigneeColumn) {
 
 function getDashboardTicketById(ticketId) {
   if (
-    typeof dashboard_tickets === "undefined" ||
-    !Array.isArray(dashboard_tickets)
+    typeof dashboard_tickets !== "undefined" &&
+    Array.isArray(dashboard_tickets)
   ) {
-    return null;
+    const dashboardTicket = dashboard_tickets.find(
+      (t) => Number(t.id) === Number(ticketId),
+    );
+    if (dashboardTicket) {
+      return dashboardTicket;
+    }
   }
 
-  return dashboard_tickets.find((t) => Number(t.id) === Number(ticketId));
+  if (typeof tickets !== "undefined" && Array.isArray(tickets)) {
+    return tickets.find((t) => Number(t.id) === Number(ticketId)) || null;
+  }
+
+  return null;
 }
 
 function isDashboardTicketsTableElement(element) {
@@ -331,6 +346,168 @@ function createInlineSelect(options, selectedValue, className) {
   });
 
   return select;
+}
+
+function createInlineDropdown(options, selectedValue, className) {
+  const container = document.createElement("div");
+  container.className = "relative inline-ticket-editor";
+
+  const trigger = document.createElement("button");
+  trigger.type = "button";
+  trigger.className = `${className} w-full flex items-center justify-between gap-2`;
+
+  const label = document.createElement("span");
+  label.className = "truncate";
+
+  const icon = document.createElement("i");
+  icon.className = "fas fa-chevron-down text-[10px] opacity-70 shrink-0";
+
+  const menu = document.createElement("div");
+  menu.className =
+    "fixed bg-white border border-gray-300 rounded-md shadow-lg z-[9999] max-h-56 overflow-y-auto overflow-x-hidden";
+  menu.style.display = "none";
+  menu.style.boxSizing = "border-box";
+
+  const getSelectedLabel = (value) => {
+    const selected = options.find((opt) => String(opt.value) === String(value));
+    return selected ? selected.label : String(value || "");
+  };
+
+  let onSelect = () => {};
+  let onCancel = () => {};
+
+  const close = () => {
+    menu.style.display = "none";
+  };
+
+  const updateMenuPosition = () => {
+    const rect = container.getBoundingClientRect();
+    const viewportWidth =
+      window.innerWidth || document.documentElement.clientWidth;
+    const viewportHeight =
+      window.innerHeight || document.documentElement.clientHeight;
+    const menuWidth = Math.max(1, Math.round(rect.width));
+    const estimatedHeight = Math.min(options.length * 36, 224);
+
+    let left = rect.left;
+    if (left + menuWidth > viewportWidth - 8) {
+      left = Math.max(8, viewportWidth - menuWidth - 8);
+    }
+
+    const spaceBelow = viewportHeight - rect.bottom;
+    const showAbove =
+      spaceBelow < Math.min(estimatedHeight, 140) && rect.top > estimatedHeight;
+    const top = showAbove
+      ? Math.max(8, rect.top - estimatedHeight - 6)
+      : rect.bottom + 6;
+
+    menu.style.width = `${menuWidth}px`;
+    menu.style.left = `${Math.round(left)}px`;
+    menu.style.top = `${Math.round(top)}px`;
+  };
+
+  const open = () => {
+    updateMenuPosition();
+    menu.style.display = "block";
+  };
+
+  const outsideHandler = (event) => {
+    if (!container.contains(event.target) && !menu.contains(event.target)) {
+      onCancel();
+    }
+  };
+
+  const scrollOrResizeHandler = () => {
+    if (menu.style.display !== "none") {
+      updateMenuPosition();
+    }
+  };
+
+  const escapeHandler = (event) => {
+    if (event.key === "Escape") {
+      event.preventDefault();
+      onCancel();
+    }
+  };
+
+  const setLabel = (value) => {
+    label.textContent = getSelectedLabel(value);
+  };
+
+  setLabel(selectedValue);
+
+  options.forEach((option) => {
+    const item = document.createElement("button");
+    item.type = "button";
+    item.className =
+      "w-full text-left px-3 py-2 text-sm whitespace-nowrap hover:bg-blue-50 border-b last:border-b-0";
+    if (String(option.value) === String(selectedValue)) {
+      item.classList.add("bg-blue-50");
+    }
+    item.textContent = option.label;
+    item.addEventListener("click", (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      onSelect(option.value);
+    });
+    menu.appendChild(item);
+  });
+
+  trigger.appendChild(label);
+  trigger.appendChild(icon);
+  container.appendChild(trigger);
+  document.body.appendChild(menu);
+
+  trigger.addEventListener("click", (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    if (menu.style.display === "none") {
+      open();
+    } else {
+      close();
+    }
+  });
+
+  container.addEventListener("click", (event) => {
+    event.stopPropagation();
+  });
+
+  document.addEventListener("mousedown", outsideHandler);
+  document.addEventListener("keydown", escapeHandler);
+  window.addEventListener("scroll", scrollOrResizeHandler, true);
+  window.addEventListener("resize", scrollOrResizeHandler);
+
+  return {
+    container,
+    open,
+    close,
+    setLabel,
+    setDisabled: (disabled) => {
+      trigger.disabled = disabled;
+      Array.from(menu.querySelectorAll("button")).forEach((btn) => {
+        btn.disabled = disabled;
+      });
+    },
+    onSelect: (callback) => {
+      onSelect = callback;
+    },
+    onCancel: (callback) => {
+      onCancel = callback;
+    },
+    destroy: () => {
+      document.removeEventListener("mousedown", outsideHandler);
+      document.removeEventListener("keydown", escapeHandler);
+      window.removeEventListener("scroll", scrollOrResizeHandler, true);
+      window.removeEventListener("resize", scrollOrResizeHandler);
+      if (menu.parentNode) {
+        menu.parentNode.removeChild(menu);
+      }
+    },
+    focus: () => {
+      trigger.focus();
+      open();
+    },
+  };
 }
 
 function getDashboardPriorityOptions() {
@@ -373,67 +550,63 @@ function editStatus(ticketId, element) {
     { value: "closed", label: "Closed" },
   ];
 
-  const select = createInlineSelect(
+  const dropdown = createInlineDropdown(
     statusOptions,
     currentStatus,
-    "styled-select w-full border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 rounded-md text-sm",
+    "border border-gray-300 bg-white rounded-md text-sm px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500",
   );
 
   const restore = () => {
-    if (select.parentNode) {
-      select.replaceWith(element);
+    dropdown.destroy();
+    if (dropdown.container.parentNode) {
+      dropdown.container.replaceWith(element);
     }
   };
 
-  element.replaceWith(select);
-  select.focus();
+  element.replaceWith(dropdown.container);
+  dropdown.focus();
 
   let submitted = false;
-  select.addEventListener("change", () => {
-    const newStatus = select.value;
+  dropdown.onCancel(() => {
+    if (!submitted) {
+      restore();
+    }
+  });
+
+  dropdown.onSelect((newStatus) => {
     if (!newStatus || newStatus === currentStatus) {
       restore();
       return;
     }
 
     submitted = true;
-    select.disabled = true;
+    dropdown.setDisabled(true);
     updateTicketStatus(ticketId, newStatus).then((result) => {
       if (result && result.success) {
         if (isDashboardTicketsTableElement(element)) {
+          dropdown.destroy();
           loadDashboardTickets();
           return;
         }
 
         const updatedStatus = result.data?.status || newStatus;
         const updatedSpan = document.createElement("span");
-        updatedSpan.className = `status-badge ${getStatusClass(updatedStatus)} editable-status`;
-        updatedSpan.textContent = updatedStatus.replace("-", " ");
+        updatedSpan.className = `status-badge ${getStatusClass(updatedStatus)} editable-status inline-flex items-center gap-1 cursor-pointer hover:opacity-90`;
+        updatedSpan.title = "Click to choose";
+        updatedSpan.innerHTML = `${escapeHTML(updatedStatus.replace("-", " "))}<i class="fas fa-chevron-down text-[10px] opacity-70"></i>`;
         updatedSpan.onclick = (event) => {
           event.stopPropagation();
           editStatus(ticketId, updatedSpan);
         };
 
-        if (select.parentNode) {
-          select.replaceWith(updatedSpan);
+        if (dropdown.container.parentNode) {
+          dropdown.destroy();
+          dropdown.container.replaceWith(updatedSpan);
         }
       } else {
         restore();
       }
     });
-  });
-
-  select.addEventListener("keydown", (e) => {
-    if (e.key === "Escape") {
-      e.preventDefault();
-      restore();
-    }
-  });
-
-  select.addEventListener("blur", () => {
-    if (!submitted) {
-      restore();
-    }
   });
 }
 
@@ -447,41 +620,49 @@ function editPriority(ticketId, element) {
     return;
   }
 
-  const select = createInlineSelect(
+  const dropdown = createInlineDropdown(
     priorityOptions,
     currentPriority,
-    "styled-select w-full border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 rounded-md text-sm",
+    "border border-gray-300 bg-white rounded-md text-sm px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500",
   );
 
   const restore = () => {
-    if (select.parentNode) {
-      select.replaceWith(element);
+    dropdown.destroy();
+    if (dropdown.container.parentNode) {
+      dropdown.container.replaceWith(element);
     }
   };
 
-  element.replaceWith(select);
-  select.focus();
+  element.replaceWith(dropdown.container);
+  dropdown.focus();
 
   let submitted = false;
-  select.addEventListener("change", () => {
-    const newPriority = select.value;
+  dropdown.onCancel(() => {
+    if (!submitted) {
+      restore();
+    }
+  });
+
+  dropdown.onSelect((newPriority) => {
     if (!newPriority || newPriority === currentPriority) {
       restore();
       return;
     }
 
     submitted = true;
-    select.disabled = true;
+    dropdown.setDisabled(true);
     updateTicketPriority(ticketId, newPriority).then((result) => {
       if (result && result.success) {
         if (isDashboardTicketsTableElement(element)) {
+          dropdown.destroy();
           loadDashboardTickets();
           return;
         }
 
         const updatedPriority = result.data?.priority || newPriority;
         const updatedSpan = document.createElement("span");
-        updatedSpan.className = `status-badge ${getPriorityClass(updatedPriority)} editable-priority`;
+        updatedSpan.className = `status-badge ${getPriorityClass(updatedPriority)} editable-priority inline-flex items-center gap-1 cursor-pointer hover:opacity-90`;
+        updatedSpan.title = "Click to choose";
         if (
           typeof robodeskPriorityColors !== "undefined" &&
           robodeskPriorityColors[updatedPriority]
@@ -489,32 +670,20 @@ function editPriority(ticketId, element) {
           updatedSpan.style.backgroundColor =
             robodeskPriorityColors[updatedPriority];
         }
-        updatedSpan.textContent = updatedPriority;
+        updatedSpan.innerHTML = `${escapeHTML(updatedPriority)}<i class="fas fa-chevron-down text-[10px] opacity-70"></i>`;
         updatedSpan.onclick = (event) => {
           event.stopPropagation();
           editPriority(ticketId, updatedSpan);
         };
 
-        if (select.parentNode) {
-          select.replaceWith(updatedSpan);
+        if (dropdown.container.parentNode) {
+          dropdown.destroy();
+          dropdown.container.replaceWith(updatedSpan);
         }
       } else {
         restore();
       }
     });
-  });
-
-  select.addEventListener("keydown", (e) => {
-    if (e.key === "Escape") {
-      e.preventDefault();
-      restore();
-    }
-  });
-
-  select.addEventListener("blur", () => {
-    if (!submitted) {
-      restore();
-    }
   });
 }
 
@@ -535,24 +704,30 @@ function editAssignee(ticketId, element) {
       (option) => option.label === element.textContent.trim(),
     )?.value;
 
-  const select = createInlineSelect(
+  const dropdown = createInlineDropdown(
     assigneeOptions,
     currentAssigneeValue,
-    "styled-select w-full border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 rounded-md text-sm",
+    "border border-gray-300 bg-white rounded-md text-sm px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500",
   );
 
   const restore = () => {
-    if (select.parentNode) {
-      select.replaceWith(element);
+    dropdown.destroy();
+    if (dropdown.container.parentNode) {
+      dropdown.container.replaceWith(element);
     }
   };
 
-  element.replaceWith(select);
-  select.focus();
+  element.replaceWith(dropdown.container);
+  dropdown.focus();
 
   let submitted = false;
-  select.addEventListener("change", () => {
-    const newAssigneeId = select.value;
+  dropdown.onCancel(() => {
+    if (!submitted) {
+      restore();
+    }
+  });
+
+  dropdown.onSelect((newAssigneeId) => {
     if (
       !newAssigneeId ||
       String(newAssigneeId) === String(currentAssigneeValue)
@@ -562,10 +737,11 @@ function editAssignee(ticketId, element) {
     }
 
     submitted = true;
-    select.disabled = true;
+    dropdown.setDisabled(true);
     updateTicketAssignee(ticketId, newAssigneeId).then((result) => {
       if (result && result.success) {
         if (isDashboardTicketsTableElement(element)) {
+          dropdown.destroy();
           loadDashboardTickets();
           return;
         }
@@ -578,33 +754,22 @@ function editAssignee(ticketId, element) {
           element.textContent.trim();
         const updatedSpan = document.createElement("span");
         updatedSpan.className =
-          "text-sm font-medium text-gray-900 editable-assignee";
-        updatedSpan.textContent = updatedAssignee;
+          "text-sm font-medium text-gray-900 editable-assignee inline-flex items-center gap-1 cursor-pointer hover:text-blue-700";
+        updatedSpan.title = "Click to choose";
+        updatedSpan.innerHTML = `${escapeHTML(updatedAssignee)}<i class="fas fa-chevron-down text-[10px] opacity-70"></i>`;
         updatedSpan.onclick = (event) => {
           event.stopPropagation();
           editAssignee(ticketId, updatedSpan);
         };
 
-        if (select.parentNode) {
-          select.replaceWith(updatedSpan);
+        if (dropdown.container.parentNode) {
+          dropdown.destroy();
+          dropdown.container.replaceWith(updatedSpan);
         }
       } else {
         restore();
       }
     });
-  });
-
-  select.addEventListener("keydown", (e) => {
-    if (e.key === "Escape") {
-      e.preventDefault();
-      restore();
-    }
-  });
-
-  select.addEventListener("blur", () => {
-    if (!submitted) {
-      restore();
-    }
   });
 }
 
@@ -959,6 +1124,203 @@ function resetTicketComposeEditors() {
     sendReplyButton.textContent = "Send Reply";
   }
 }
+
+function initConversationMultiFilter(config) {
+  const wrapper = document.getElementById(config.wrapperId);
+  const input = document.getElementById(config.inputId);
+  const tags = document.getElementById(config.tagsId);
+  const suggestions = document.getElementById(config.suggestionsId);
+  const hiddenInputs = document.getElementById(config.hiddenInputsId);
+
+  if (!wrapper || !input || !tags || !suggestions || !hiddenInputs) {
+    return;
+  }
+
+  const options = Array.isArray(config.options) ? config.options : [];
+  const initialValues = Array.isArray(config.selected) ? config.selected : [];
+  let selectedValues = [];
+
+  const normalizeValue = (value) => String(value || "").trim();
+  const normalizeKey = (value) => normalizeValue(value).toLowerCase();
+
+  const hasValue = (value) => {
+    const key = normalizeKey(value);
+    return selectedValues.some((entry) => normalizeKey(entry) === key);
+  };
+
+  const render = () => {
+    const chipNodes = tags.querySelectorAll("[data-rbd-chip='1']");
+    chipNodes.forEach((node) => node.remove());
+    hiddenInputs.innerHTML = "";
+
+    selectedValues.forEach((value) => {
+      const chip = document.createElement("span");
+      chip.setAttribute("data-rbd-chip", "1");
+      chip.className =
+        "inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800";
+      chip.textContent = value;
+
+      const removeButton = document.createElement("button");
+      removeButton.type = "button";
+      removeButton.className = "ml-2 text-blue-700 hover:text-blue-900";
+      removeButton.innerHTML = "&times;";
+      removeButton.setAttribute("aria-label", `Remove ${value}`);
+      removeButton.addEventListener("click", () => {
+        selectedValues = selectedValues.filter(
+          (entry) => normalizeKey(entry) !== normalizeKey(value),
+        );
+        render();
+      });
+
+      chip.appendChild(removeButton);
+      tags.appendChild(chip);
+
+      const hidden = document.createElement("input");
+      hidden.type = "hidden";
+      hidden.name = `${config.fieldName}[]`;
+      hidden.value = value;
+      hiddenInputs.appendChild(hidden);
+
+      tags.insertBefore(chip, input);
+    });
+  };
+
+  const addValue = (rawValue) => {
+    const value = normalizeValue(rawValue);
+    if (!value || hasValue(value)) {
+      return;
+    }
+
+    selectedValues.push(value);
+    input.value = "";
+    suggestions.classList.add("hidden");
+    render();
+  };
+
+  const showSuggestions = () => {
+    const query = normalizeKey(input.value);
+    if (!query) {
+      suggestions.classList.add("hidden");
+      suggestions.innerHTML = "";
+      return;
+    }
+
+    const matches = options
+      .filter((option) => {
+        const value = normalizeValue(option?.value);
+        const email = normalizeValue(option?.email);
+        const optionKey = normalizeKey(value);
+        return (
+          !hasValue(value) &&
+          (optionKey.includes(query) || normalizeKey(email).includes(query))
+        );
+      })
+      .slice(0, 8);
+
+    if (matches.length === 0) {
+      suggestions.classList.add("hidden");
+      suggestions.innerHTML = "";
+      return;
+    }
+
+    suggestions.innerHTML = "";
+    matches.forEach((match) => {
+      const row = document.createElement("button");
+      row.type = "button";
+      row.className =
+        "w-full text-left px-3 py-2 text-sm hover:bg-blue-50 border-b last:border-b-0";
+      row.innerHTML = `<div class="font-medium text-gray-900">${escapeHTML(match.value || "")}</div><div class="text-xs text-gray-500">${escapeHTML(match.email || "")}</div>`;
+      row.addEventListener("click", () => addValue(match.value || ""));
+      suggestions.appendChild(row);
+    });
+
+    suggestions.classList.remove("hidden");
+  };
+
+  input.addEventListener("input", showSuggestions);
+  input.addEventListener("keydown", (event) => {
+    if (event.key === "Enter" || event.key === ",") {
+      event.preventDefault();
+      addValue(input.value);
+      return;
+    }
+
+    if (event.key === "Backspace" && normalizeValue(input.value) === "") {
+      selectedValues.pop();
+      render();
+    }
+  });
+
+  wrapper.addEventListener("click", () => input.focus());
+
+  document.addEventListener("click", (event) => {
+    if (!wrapper.contains(event.target)) {
+      suggestions.classList.add("hidden");
+    }
+  });
+
+  initialValues.forEach((value) => addValue(value));
+  render();
+
+  return {
+    commitInputValue: () => addValue(input.value),
+  };
+}
+
+function initConversationMultiFilters() {
+  const hasCustomerUI = document.getElementById(
+    "robodesk-customer-filter-wrapper",
+  );
+  const hasAgentUI = document.getElementById("robodesk-agent-filter-wrapper");
+  if (!hasCustomerUI || !hasAgentUI) {
+    return;
+  }
+
+  const customerFilter = initConversationMultiFilter({
+    wrapperId: "robodesk-customer-filter-wrapper",
+    inputId: "robodesk-customer-filter-input",
+    tagsId: "robodesk-customer-tags",
+    suggestionsId: "robodesk-customer-suggestions",
+    hiddenInputsId: "robodesk-customer-hidden-inputs",
+    fieldName: "customer",
+    options:
+      typeof robodeskConversationCustomerOptions !== "undefined"
+        ? robodeskConversationCustomerOptions
+        : [],
+    selected:
+      typeof robodeskSelectedCustomers !== "undefined"
+        ? robodeskSelectedCustomers
+        : [],
+  });
+
+  const agentFilter = initConversationMultiFilter({
+    wrapperId: "robodesk-agent-filter-wrapper",
+    inputId: "robodesk-agent-filter-input",
+    tagsId: "robodesk-agent-tags",
+    suggestionsId: "robodesk-agent-suggestions",
+    hiddenInputsId: "robodesk-agent-hidden-inputs",
+    fieldName: "agent",
+    options:
+      typeof robodeskConversationAgentOptions !== "undefined"
+        ? robodeskConversationAgentOptions
+        : [],
+    selected:
+      typeof robodeskSelectedAgents !== "undefined"
+        ? robodeskSelectedAgents
+        : [],
+  });
+
+  const form = hasCustomerUI.closest("form");
+  if (form && form.dataset.robodeskConversationFiltersBound !== "1") {
+    form.dataset.robodeskConversationFiltersBound = "1";
+    form.addEventListener("submit", () => {
+      customerFilter?.commitInputValue();
+      agentFilter?.commitInputValue();
+    });
+  }
+}
+
+document.addEventListener("DOMContentLoaded", initConversationMultiFilters);
 
 // Navigation functions
 function showPage(pageName, fromClick = false) {
