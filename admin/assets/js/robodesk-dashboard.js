@@ -111,7 +111,7 @@ function loadDashboardTickets() {
                   ticket.id
                 } <span class="${getBlinkingClass(ticket)}"></span></div>
                 <div class="text-sm text-gray-500 truncate max-w-xs">${escapeHTML(
-                  ticket.title,
+                  ticket.title.slice(0, 20),
                 )}</div>
               </td>
               <td class="px-6 py-4 whitespace-nowrap">
@@ -1822,7 +1822,8 @@ function loadCustomerTicketsList(ticketList) {
             <div class="flex justify-between items-center">
                 <div>
                     <div class="font-medium text-sm">#${ticket.id} - ${
-                      ticket.title
+                      ticket.title.slice(0, 50) +
+                      (ticket.title.length > 50 ? "..." : "")
                     }</div>
                     <div class="text-xs text-gray-500">${formatDate(
                       ticket.created,
