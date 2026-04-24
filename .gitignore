@@ -5,5 +5,3 @@ logs
 build/
 logs/debug.log
 *.zip
-*.php
-*.js

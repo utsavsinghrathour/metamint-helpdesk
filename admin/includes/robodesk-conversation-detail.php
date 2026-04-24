@@ -418,11 +418,11 @@ foreach ($terms as $term) {
         selection.addRange(range);
     }
 
-    document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('DOMContentLoaded', function () {
         const popoverTriggers = document.querySelectorAll('.robodesk-popover-trigger');
         let activePopover = null;
         popoverTriggers.forEach(trigger => {
-            trigger.addEventListener('mouseenter', function() {
+            trigger.addEventListener('mouseenter', function () {
                 const text = this.getAttribute('data-popover-text');
                 if (!text) return;
                 if (activePopover) {
@@ -445,7 +445,7 @@ foreach ($terms as $term) {
                 });
             });
 
-            trigger.addEventListener('mouseleave', function() {
+            trigger.addEventListener('mouseleave', function () {
                 if (activePopover) {
                     activePopover.classList.remove('show');
                     const popoverToRemove = activePopover;
