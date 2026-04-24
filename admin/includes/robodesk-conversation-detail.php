@@ -35,19 +35,20 @@ foreach ($terms as $term) {
 <div id="ticket-detail-page" class="page-content hidden">
     <div class="bg-white shadow rounded-lg">
         <div class="converstaion-wrapper">
-            <div class="flex justify-between items-center mb-6 px-6 py-4 border-b border-gray-200">
-                <h3 class="text-lg font-bold text-gray-900" id="ticket-detail-title">
-                    <?php esc_html_e('Conversation Details', 'robodesk'); ?>
-                </h3>
-                <button type="button" onclick="showPage('tickets', true)"
-                    class="mt-2 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-                    <i class="fas fa-arrow-left mr-2"></i>
-                    <?php esc_html_e('Back to Conversations', 'robodesk'); ?>
-                </button>
-            </div>
+
 
             <div class="grid grid-cols-1 lg:grid-cols-3 pb-6">
                 <div class="lg:col-span-2 space-y-6 px-6">
+                    <div class="mb-6 justify-between flex items-start py-6 border-b border-gray-200">
+                        <h3 class="text-lg font-bold text-gray-900 ticket-title-80" id="ticket-detail-title">
+                            <?php esc_html_e('Conversation Details', 'robodesk'); ?>
+                        </h3>
+                        <button type="button" onclick="showPage('tickets', true)"
+                            class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                            <i class="fas fa-arrow-left mr-2"></i>
+                            <?php esc_html_e('Back', 'robodesk'); ?>
+                        </button>
+                    </div>
                     <div class="border-b border-gray-200">
                         <nav class="-mb-px flex space-x-8">
                             <button onclick="showTicketTab('replies')"
@@ -169,10 +170,11 @@ foreach ($terms as $term) {
                 </div>
 
                 <div class="lg:col-span-1 sticky-sidebar">
-                    <div class="space-y-6 px-6">
+                    <div class="space-y-6 px-6 py-6">
                         <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
                             <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-4">
-                                <?php esc_html_e('Conversation Status', 'robodesk'); ?></h2>
+                                <?php esc_html_e('Conversation Status', 'robodesk'); ?>
+                            </h2>
 
                             <div class="space-y-4">
                                 <div class="add-label-wrapper gap-2">
@@ -183,7 +185,8 @@ foreach ($terms as $term) {
                                         id="ticket-status-select">
                                         <?php foreach ($statuses as $status): ?>
                                             <option value="<?php echo esc_attr($status); ?>">
-                                                <?php echo esc_html(ucfirst(str_replace('-', ' ', $status))); ?></option>
+                                                <?php echo esc_html(ucfirst(str_replace('-', ' ', $status))); ?>
+                                            </option>
                                         <?php endforeach; ?>
                                     </select>
                                 </div>
@@ -197,7 +200,8 @@ foreach ($terms as $term) {
                                         <?php if (!is_wp_error($priorities)): ?>
                                             <?php foreach ($priorities as $priority): ?>
                                                 <option value="<?php echo esc_attr($priority->name); ?>">
-                                                    <?php echo esc_html($priority->name); ?></option>
+                                                    <?php echo esc_html($priority->name); ?>
+                                                </option>
                                             <?php endforeach; ?>
                                         <?php endif; ?>
                                     </select>
@@ -244,14 +248,15 @@ foreach ($terms as $term) {
                         <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
                             <div class="flex items-center justify-between mb-6">
                                 <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wider">
-                                    <?php esc_html_e('Conversation Details', 'robodesk'); ?></h2>
+                                    <?php esc_html_e('Conversation Details', 'robodesk'); ?>
+                                </h2>
                             </div>
 
                             <div id="customer-info" class="space-y-2 mb-4">
                                 <!-- Customer info will be populated by JavaScript -->
                             </div>
 
-                            <div id="ticket-meta-info" class="space-y-2 pt-4 border-t border-gray-100 text-sm">
+                            <div id="ticket-meta-info" class="space-y-2 pt-4 border-gray-100 text-sm">
                                 <!-- Ticket meta info will be populated by JavaScript -->
                             </div>
                         </div>
