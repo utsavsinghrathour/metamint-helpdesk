@@ -8,7 +8,7 @@ if (! defined('ABSPATH')) {
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
         <div class="bg-white overflow-hidden shadow rounded-lg">
             <div class="p-5">
-                <div class="flex items-center">
+                <div class="flex ">
                     <div class="flex-shrink-0">
                         <i class="fas fa-chart-bar text-gray-400 text-xl"></i>
                     </div>
@@ -28,7 +28,7 @@ if (! defined('ABSPATH')) {
 
         <div class="bg-white overflow-hidden shadow rounded-lg">
             <div class="p-5">
-                <div class="flex items-center">
+                <div class="flex ">
                     <div class="flex-shrink-0">
                         <i class="fas fa-exclamation-circle text-red-400 text-xl"></i>
                     </div>
@@ -61,7 +61,7 @@ if (! defined('ABSPATH')) {
 
         <div class="bg-white overflow-hidden shadow rounded-lg">
             <div class="p-5">
-                <div class="flex items-center">
+                <div class="flex ">
                     <div class="flex-shrink-0">
                         <i class="fas fa-clock text-yellow-400 text-xl"></i>
                     </div>
@@ -94,7 +94,7 @@ if (! defined('ABSPATH')) {
 
         <div class="bg-white overflow-hidden shadow rounded-lg">
             <div class="p-5">
-                <div class="flex items-center">
+                <div class="flex">
                     <div class="flex-shrink-0">
                         <i class="fas fa-check-circle text-green-400 text-xl"></i>
                     </div>
