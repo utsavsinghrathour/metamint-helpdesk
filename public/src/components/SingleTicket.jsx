@@ -921,13 +921,7 @@ const SingleTicket = ({
                           : msg.image || DefaultAvatar
                       }
                       alt={msg.sender === 'me' ? 'You' : msg.senderName}
-                      className='rd-rounded-full rd-object-cover'
-                      style={{
-                        height: '30px',
-                        width: '30px',
-                        borderRadius: '50px',
-                        aspectRatio: '1',
-                      }}
+                      className='rd-rounded-full rd-object-cover rd-single-message-avatar'
                     />
                   )}
                   {isSameSender && index !== 0 && (
