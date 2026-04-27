@@ -776,3 +776,10 @@ button.no-bg,
   height: auto;
   max-height: 400px;
 }
+
+.rd-bot-image, .rd-single-message-avatar{
+    height: 30px;
+    width: 30px;
+    border-radius: 50px;
+    aspect-ratio: 1
+}

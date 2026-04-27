@@ -326,7 +326,7 @@ export default function RobodeskBotChatWidgetMain({ widgetConfig, activeAIMode }
                                 {/* AI AVATAR */}
                                 {m.role === 'assistant' && (!isSameSender || i === 0) && (
                                     <div className="rd-ai-avatar">
-                                        {botImage ? <img src={botImage} alt={botName} className="bot-image" /> : botName}
+                                        {botImage ? <img src={botImage} alt={botName} className="rd-bot-image rd-rounded-full rd-object-cover" /> : botName}
                                     </div>
                                 )}
 
