@@ -100,7 +100,7 @@ const SendMessageField = ({ setShowLogin, setActiveTab, updateSelectedTicket, ha
                 <h4 className='heading-4'>{chatHeading}</h4>
                 <h5 className='sub-text rd-mt-0'>{welcomeMessage}</h5>
             </div>
-            <div className="rd-position-relative rd-flex rd-px-20 ">
+            <div className="rd-position-relative rd-flex rd-px-18 ">
                 <textarea
                     className="rd-w-full rd-border-blue rd-border-radius-md"
                     placeholder={placeHolderText}
