@@ -14,6 +14,11 @@
 if (!defined('ABSPATH')) {
     exit; // Exit if accessed directly
 }
+
+if (function_exists('ini_set')) {
+    @ini_set('display_errors', '0');
+    @ini_set('display_startup_errors', '0');
+}
 // Define constants
 define('ROBODESK_PLUGIN_PATH', plugin_dir_path(__FILE__));
 define('ROBODESK_PLUGIN_URL', plugin_dir_url(__FILE__));
@@ -188,6 +193,7 @@ function robodesk_enqueue_scripts()
                 'welcomeMessage' => get_option('robodesk_welcome_message', 'Have any questions or need a quote? Leave us a message.'),
                 'ticketIntroMessage' => get_option('robodesk_ticket_intro_message', 'If you are interested in working with us, take a step towards discovering exciting opportunities by reaching out to us. We look forward to talking with you soon!'),
                 'deepLinkTicketId' => $deep_link_ticket_id,
+                'currentUserAvatar' => is_user_logged_in() ? esc_url(robodesk_get_avatar_url(get_current_user_id(), 32)) : '',
             ]
         );
 
