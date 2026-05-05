@@ -1012,6 +1012,35 @@ function robodesk_get_ticket_detail()
         $comment_meta = get_comment_meta($reply->comment_ID);
         $author_type = isset($comment_meta['author_type']) ? $comment_meta['author_type'][0] : 'agent';
 
+        // Determine if this reply should be considered a bot response.
+        $is_bot = false;
+        if (isset($comment_meta['is_bot_response']) && $comment_meta['is_bot_response'][0] === '1') {
+            $is_bot = true;
+        }
+
+        // Legacy heuristic: comments with user_id 0 and chat source are likely bot replies
+        if (!$is_bot && intval($reply->user_id) === 0) {
+            if (isset($comment_meta['comment_source']) && $comment_meta['comment_source'][0] === 'chat') {
+                $is_bot = true;
+            }
+        }
+
+        // Determine author image: for bot use configured bot image, otherwise prefer support profile avatar helper
+        $author_image = '';
+        if ($is_bot) {
+            $author_image = esc_url(get_option('robodesk_bot_profile_image', '')) ?: '';
+        }
+
+        if (empty($author_image)) {
+            if (function_exists('robodesk_get_comment_avatar')) {
+                $author_image = robodesk_get_comment_avatar($reply->user_id ?: 0, 32);
+            } elseif (function_exists('robodesk_get_avatar_url')) {
+                $author_image = robodesk_get_avatar_url($reply->user_id ?: 0, 32);
+            } else {
+                $author_image = get_avatar_url($reply->comment_author_email ?: '', array('size' => 32));
+            }
+        }
+
         return [
             'id' => $reply->comment_ID,
             'author' => $reply->comment_author,
@@ -1021,6 +1050,8 @@ function robodesk_get_ticket_detail()
             'timestamp' => $reply->comment_date,
             'type' => $author_type,
             'author_type' => $author_type,
+            'is_bot_response' => $is_bot,
+            'author_image' => $author_image,
         ];
     }, $replies);
 
