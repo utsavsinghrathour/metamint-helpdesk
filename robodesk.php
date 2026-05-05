@@ -194,6 +194,9 @@ function robodesk_enqueue_scripts()
                 'ticketIntroMessage' => get_option('robodesk_ticket_intro_message', 'If you are interested in working with us, take a step towards discovering exciting opportunities by reaching out to us. We look forward to talking with you soon!'),
                 'deepLinkTicketId' => $deep_link_ticket_id,
                 'currentUserAvatar' => is_user_logged_in() ? esc_url(robodesk_get_avatar_url(get_current_user_id(), 32)) : '',
+                // Bot configuration for avatar/title used in ticket/chat rendering
+                'robodesk_bot_profile_image' => esc_url(get_option('robodesk_bot_profile_image', '')),
+                'robodesk_bot_title_name' => get_option('robodesk_bot_title_name', ''),
             ]
         );
 
@@ -1869,7 +1872,11 @@ add_filter('rest_prepare_comment', function ($response, $comment, $request) {
         $data['time_ago'] = $human_readable_time;
 
         $author_name = $comment->comment_author;
-        $author_avatar = get_avatar_url($comment->comment_author_email);
+        if (function_exists('robodesk_get_comment_avatar')) {
+            $author_avatar = robodesk_get_comment_avatar($author_id, 32);
+        } else {
+            $author_avatar = get_avatar_url($comment->comment_author_email);
+        }
 
         $data['ticket_id'] = $comment->comment_post_ID;
 

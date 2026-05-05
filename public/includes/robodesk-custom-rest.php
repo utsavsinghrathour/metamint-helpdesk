@@ -57,20 +57,74 @@ function robodesk_get_user_avatar_url($user_id, $args = array())
     return get_avatar_url($user_id, $args);
 }
 
+/**
+ * Preferred avatar getter for comments and tickets.
+ * This will use `robodesk_get_avatar_url` if available (which checks support profile image meta),
+ * otherwise falls back to `robodesk_get_user_avatar_url`.
+ */
+function robodesk_get_comment_avatar($user_id, $size = 32)
+{
+    $user_id = intval($user_id);
+    if ($user_id <= 0) {
+        return '';
+    }
+
+    if (function_exists('robodesk_get_avatar_url')) {
+        return robodesk_get_avatar_url($user_id, $size);
+    }
+
+    return robodesk_get_user_avatar_url($user_id, array('size' => $size));
+}
+
 // Add author_image field to WordPress REST API comments
 add_action('rest_api_init', function () {
     register_rest_field('comment', 'author_image', array(
         'get_callback' => function ($comment) {
             if (is_array($comment)) {
-                $user_id = $comment['user_id'] ?? 0;
+                $user_id = isset($comment['user_id']) ? intval($comment['user_id']) : 0;
+                $author_email = $comment['author_email'] ?? '';
             } else {
-                $user_id = $comment->user_id ?? 0;
+                $user_id = isset($comment->user_id) ? intval($comment->user_id) : 0;
+                $author_email = $comment->comment_author_email ?? '';
             }
-            return robodesk_get_user_avatar_url($user_id, array('size' => 32));
+
+            if (function_exists('robodesk_get_comment_avatar')) {
+                $avatar = robodesk_get_comment_avatar($user_id, 32);
+                if (!empty($avatar)) {
+                    return $avatar;
+                }
+            }
+
+            if (!empty($author_email)) {
+                return get_avatar_url($author_email, array('size' => 32));
+            }
+
+            return '';
         },
         'schema' => array(
             'description' => 'URL of the comment author\'s avatar image',
             'type' => 'string',
+            'context' => array('view', 'edit'),
+        ),
+    ));
+
+    // Expose whether this comment is a bot response so client can render appropriate avatar
+    register_rest_field('comment', 'is_bot_response', array(
+        'get_callback' => function ($comment) {
+            if (is_array($comment)) {
+                $comment_id = $comment['id'] ?? 0;
+            } else {
+                $comment_id = $comment->comment_ID ?? 0;
+            }
+            $val = get_comment_meta($comment_id, 'is_bot_response', true);
+            if ($val === '1' || $val === 1 || $val === true) {
+                return true;
+            }
+            return false;
+        },
+        'schema' => array(
+            'description' => 'Flag indicating this reply came from the bot',
+            'type' => 'boolean',
             'context' => array('view', 'edit'),
         ),
     ));
@@ -509,7 +563,7 @@ function robodesk_live_conversations($ticket_id, $last_comment_client, $loggedin
                         'id' => (int) $comment->user_id
                     ),
                     'author_name' => $comment->display_name ?: $comment->comment_author,
-                    'author_image' => robodesk_get_user_avatar_url($comment->user_id ?: 0, array('size' => 32)),
+                    'author_image' => robodesk_get_comment_avatar($comment->user_id ?: 0, 32),
                     'time_ago' => human_time_diff(strtotime($comment->comment_date), current_time('timestamp')) . ' ago',
                     'author_id' => (int) $comment->user_id,
                     'post_author_id' => (int) $ticket_id ? get_post_field('post_author', $ticket_id) : 0,
@@ -584,7 +638,7 @@ function robodesk_my_own_conversations($ticket_id, $last_my_comment_client)
                         'id' => (int) $comment->user_id
                     ),
                     'author_name' => $comment->display_name ?: $comment->comment_author,
-                    'author_image' => robodesk_get_user_avatar_url($comment->user_id ?: 0, array('size' => 32)),
+                    'author_image' => robodesk_get_comment_avatar($comment->user_id ?: 0, 32),
                     'time_ago' => human_time_diff(strtotime($comment->comment_date), current_time('timestamp')) . ' ago',
                     'author_id' => (int) $comment->user_id,
                     'post_author_id' => (int) $ticket_id ? get_post_field('post_author', $ticket_id) : 0,
@@ -639,7 +693,7 @@ function robodesk_get_new_tickets($last_id_client, $user_id)
         // Author details
         $author_id = $conversations->post_author;
         $author_name = get_the_author_meta('display_name', $author_id);
-        $author_image = robodesk_get_user_avatar_url($author_id);
+        $author_image = robodesk_get_comment_avatar($author_id, 32);
 
         // Time ago
         $time_diff = human_time_diff(get_the_time('U', $ticket_id), current_time('timestamp')) . ' ago';
@@ -780,7 +834,7 @@ function robodesk_live_comments($request)
                         'id' => (int) $comment->user_id
                     ),
                     'author_name' => $comment->display_name ?: $comment->comment_author,
-                    'author_image' => robodesk_get_user_avatar_url($comment->user_id ?: 0, array('size' => 32)),
+                    'author_image' => robodesk_get_comment_avatar($comment->user_id ?: 0, 32),
                     'time_ago' => human_time_diff(strtotime($comment->comment_date), current_time('timestamp')) . ' ago',
                     'author_id' => (int) $comment->user_id,
                     'post_author_id' => (int) $ticket_id ? get_post_field('post_author', $ticket_id) : 0,
@@ -1050,7 +1104,7 @@ function build_ticket_response_data($ticket_id, $user_object, $reply_id = false)
         'ticket_origin' => $ticket_origin,
         'ticket_author' => $user_object->display_name,
         'ticket_author_email' => $user_object->user_email,
-        'ticket_author_image' => robodesk_get_user_avatar_url($user_object->ID),
+        'ticket_author_image' => robodesk_get_comment_avatar($user_object->ID, 96),
         'ticket_time_ago' => $human_readable_time,
         'comment_id' => $reply_id,
     ];
@@ -1124,7 +1178,7 @@ function robodesk_handle_selected_staff(WP_REST_Request $request)
 
     return new WP_REST_Response(array(
         'staff_display_name' => $staff_user->display_name,
-        'staff_user_image' => robodesk_get_user_avatar_url($staff_user->ID),
+        'staff_user_image' => robodesk_get_comment_avatar($staff_user->ID, 96),
         'staff_user_email' => $staff_user->user_email,
         'staff_user_id' => $staff_user->ID,
     ), 200);
@@ -1290,7 +1344,7 @@ function get_tickets_batch_data($ticket_ids, $user_id)
     // Get user data once
     $user_object = get_cached_user_data($user_id);
     $user_name = $user_object ? $user_object->display_name : 'Unknown';
-    $avatar_url = robodesk_get_user_avatar_url($user_id);
+    $avatar_url = robodesk_get_comment_avatar($user_id, 32);
 
     // Build response array
     $formatted_tickets = [];
@@ -1322,6 +1376,7 @@ function robodesk_handle_reply_receive($data)
     $ticket_id = sanitize_text_field($data['data']['ticket_id'] ?? '');
     $user_id = sanitize_text_field($data['data']['user_id'] ?? '');
     $reply = sanitize_textarea_field($data['data']['message'] ?? '');
+    $is_bot_response = isset($data['data']['is_bot_response']) ? (bool) $data['data']['is_bot_response'] : false;
 
     if (empty($ticket_id)) {
         return new WP_Error(
@@ -1362,6 +1417,7 @@ function robodesk_handle_reply_receive($data)
 
     add_comment_meta($comment_id, 'comment_source', 'chat', true);
     add_comment_meta($comment_id, 'author_type', robodesk_get_author_type($user_id), true);
+    add_comment_meta($comment_id, 'is_bot_response', $is_bot_response ? '1' : '0', true);
 
     // Trigger action for integrations (Slack, Discord, etc.)
     do_action('robodesk_after_reply_added', $ticket_id, $comment_id, $reply, $user_object);
@@ -1373,7 +1429,7 @@ function robodesk_handle_reply_receive($data)
         'id' => $comment->comment_ID,
         'author' => $comment->comment_author,
         'author_id' => $comment->user_id,
-        'author_image' => robodesk_get_user_avatar_url($comment->user_id, ['size' => 96]),
+        'author_image' => robodesk_get_comment_avatar($comment->user_id, 96),
         'content' => $comment->comment_content,
         'created_at' => $comment->comment_date,
         // 'attachment_id' => $attachment_id,
@@ -1425,7 +1481,7 @@ function robodesk_handle_comments_get($data)
             'id' => $comment->comment_ID,
             'author' => $comment->comment_author,
             'author_id' => $comment->user_id,
-            'author_image' => robodesk_get_user_avatar_url($comment->user_id, ['size' => 96]),
+            'author_image' => robodesk_get_comment_avatar($comment->user_id, 96),
             'content' => $comment->comment_content,
             'created_at' => $comment->comment_date,
         ];
