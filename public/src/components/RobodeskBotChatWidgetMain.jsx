@@ -5,6 +5,7 @@ import { FaRegFaceSmileBeam } from 'react-icons/fa6';
 import { PiPaperPlaneRightFill } from 'react-icons/pi';
 import { FiPaperclip } from 'react-icons/fi';
 import EmojiPicker from 'emoji-picker-react';
+import DefaultAvatar from '../images/default-avatar.jpg';
 
 export default function RobodeskBotChatWidgetMain({ widgetConfig, activeAIMode }) {
     console.log('test tse');
@@ -12,6 +13,16 @@ export default function RobodeskBotChatWidgetMain({ widgetConfig, activeAIMode }
     const CHAT_KEY = "robodesk_chat_session";
     const chatHeading = window.robodeskData?.chatHeading || widgetConfig?.chatHeading || 'Have Questions?';
     const welcomeMessage = window.robodeskData?.welcomeMessage || widgetConfig?.welcomeMessage || 'Have any questions or need a quote? Leave us a message.';
+    const resolvedBotName =
+        window.robodeskData?.robodesk_bot_title_name ||
+        widgetConfig?.botTitleName ||
+        widgetConfig?.bot_title_name ||
+        '';
+    const resolvedBotImage =
+        window.robodeskData?.robodesk_bot_profile_image ||
+        widgetConfig?.botProfileImage ||
+        widgetConfig?.bot_profile_image ||
+        '';
     const [enabled, setEnabled] = useState(true);
     const [AIMode, setAIMode] = useState(activeAIMode || "");
     const [open, setOpen] = useState(false);
@@ -22,8 +33,8 @@ export default function RobodeskBotChatWidgetMain({ widgetConfig, activeAIMode }
     const [input, setInput] = useState("");
     const [loadingText, setLoadingText] = useState("");
     const [isStreaming, setIsStreaming] = useState(false);
-    const [botName, setBotName] = useState("");
-    const [botImage, setBotImage] = useState("");
+    const [botName, setBotName] = useState(resolvedBotName);
+    const [botImage, setBotImage] = useState(resolvedBotImage);
     const apiProxy = window.location.origin + "/wp-json/robodesk-bot/v1/chat";
     const apiProxyStream = window.location.origin + "/wp-json/robodesk-bot/v1/chat-stream";
 
@@ -32,9 +43,9 @@ export default function RobodeskBotChatWidgetMain({ widgetConfig, activeAIMode }
      */
     function AssistantMessage({ msg }) {
         return (
-            <div className="ai-block chat-container">
+            <div className="ai-block">
                 {/* MAIN MESSAGE TEXT */}
-                {msg.message && <div className="ai-text rd-body-text"><p>{msg.message}</p></div>}
+                {msg.message && <div className="ai-text rd-body-text single-message"><p>{msg.message}</p></div>}
 
                 {/* INTENT PILL */}
                 {msg.intent && (
@@ -109,12 +120,17 @@ export default function RobodeskBotChatWidgetMain({ widgetConfig, activeAIMode }
             });
             console.log('response', response);
             // Try both possible key formats your PHP might return
-            setBotName(response.botName || response.bot_name || "");
-            setBotImage(response.botImage || response.bot_image || "");
+            setBotName(response.botName || response.bot_name || resolvedBotName || "");
+            setBotImage(response.botImage || response.bot_image || resolvedBotImage || "");
         } catch (err) {
             console.error(err);
+            setBotName((current) => current || resolvedBotName || 'Bot');
+            setBotImage((current) => current || resolvedBotImage || '');
         }
     };
+
+    const getBotDisplayImage = () => botImage || resolvedBotImage || '';
+    const getBotDisplayName = () => botName || resolvedBotName || 'Bot';
 
     useEffect(() => {
         sessionStorage.setItem(CHAT_KEY, JSON.stringify(messages));
@@ -318,33 +334,65 @@ export default function RobodeskBotChatWidgetMain({ widgetConfig, activeAIMode }
                         return (
                             <div
                                 key={i}
-                                className={`chat-message ${m.role === 'user'
+                                className={`chat-message rd-flex rd-items-start ${m.role === 'user'
                                     ? 'rd-ml-auto sent'
                                     : 'rd-flex rd-gap-8 received'
                                     } ${isSameSender ? 'rd-msg-same-sender' : 'rd-msg-new-sender'} ${m.role === 'user' ? 'rd-msg-user' : 'rd-msg-assistant'}`}
+                                style={{
+                                    maxWidth: '70%',
+                                    marginBottom: isSameSender ? '4px' : '12px',
+                                    marginTop: i === 0 || !isSameSender ? '12px' : '4px',
+                                }}
                             >
                                 {/* AI AVATAR */}
                                 {m.role === 'assistant' && (!isSameSender || i === 0) && (
-                                    <div className="rd-ai-avatar">
-                                        {botImage ? <img src={botImage} alt={botName} className="rd-bot-image rd-rounded-full rd-object-cover" /> : botName}
-                                    </div>
+                                    getBotDisplayImage() ? (
+                                        <img
+                                            src={getBotDisplayImage()}
+                                            alt={getBotDisplayName()}
+                                            className="rd-bot-image rd-rounded-full rd-object-cover rd-single-message-avatar"
+                                            onError={(e) => {
+                                                e.target.onerror = null;
+                                                e.target.src = DefaultAvatar;
+                                            }}
+                                        />
+                                    ) : (
+                                        <div className="rd-bot-image rd-rounded-full rd-object-cover rd-single-message-avatar">
+                                            {getBotDisplayName().trim().charAt(0).toUpperCase()}
+                                        </div>
+                                    )
                                 )}
 
                                 {/* AI AVATAR SPACER */}
                                 {m.role === 'assistant' && isSameSender && i !== 0 && (
-                                    <div className="rd-ai-avatar-spacer" />
+                                    <div style={{ width: '30px', height: '30px' }} />
                                 )}
 
                                 <div
-                                    className={`rd-message-content ${m.role === 'user' ? 'rd-msg-content-user' : 'rd-msg-content-assistant'} ${m.thinking ? 'rd-msg-content-thinking' : ''}`}
+                                    className="message-content"
+                                    style={{
+                                        backgroundColor: m.role === 'user' ? '#007BFF' : '#FFFFFF',
+                                        color: m.role === 'user' ? '#FFFFFF' : '#000000',
+                                        border: m.role === 'assistant' ? '1px solid #E0E0E0' : 'none',
+                                        borderRadius: '10px',
+                                        padding: '8px 12px',
+                                        maxWidth: '100%',
+                                    }}
                                 >
                                     {m.role === 'assistant' ? (
                                         <AssistantMessage msg={m} />
                                     ) : (
-                                        <span className="rd-body-text"><p>{m.text}</p></span>
+                                        <span className="rd-body-text single-message"><p>{m.text}</p></span>
                                     )}
                                     {!m.thinking && (
-                                        <div className={`rd-text-small rd-text-gray rd-msg-timestamp ${m.role === 'user' ? 'rd-msg-timestamp-user' : 'rd-msg-timestamp-assistant'}`}>
+                                        <div
+                                            className="rd-text-small rd-text-gray"
+                                            style={{
+                                                marginTop: '4px',
+                                                textAlign: m.role === 'user' ? 'right' : 'left',
+                                                fontSize: '10px',
+                                            }}
+                                        >
                                             {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                         </div>
                                     )}
@@ -362,12 +410,10 @@ export default function RobodeskBotChatWidgetMain({ widgetConfig, activeAIMode }
 
                     {/* STREAMING LOADER */}
                     {isStreaming && (
-                        <div className="chat-message rd-flex rd-gap-8 received rd-streaming-loader">
-                            <div className="rd-ai-avatar">
-                                {botImage ? <img src={botImage} alt={botName} className="bot-image" /> : botName}
-                            </div>
-                            <div className="rd-message-content rd-msg-content-assistant">
-                                <span className="rd-body-text">
+                        <div className="chat-message rd-flex rd-items-start rd-gap-8 received rd-streaming-loader" style={{ maxWidth: '70%' }}>
+                            {getBotDisplayImage() ? <img src={getBotDisplayImage()} alt={getBotDisplayName()} className="rd-single-message-avatar" onError={(e) => { e.target.onerror = null; e.target.src = DefaultAvatar; }} /> : <div className="rd-bot-image rd-single-message-avatar">{getBotDisplayName().trim().charAt(0).toUpperCase()}</div>}
+                            <div className="message-content" style={{ border: '1px solid #E0E0E0', borderRadius: '10px', padding: '8px 12px' }}>
+                                <span className="rd-body-text single-message">
                                     {loadingText || "Thinking..."}
                                 </span>
                             </div>
