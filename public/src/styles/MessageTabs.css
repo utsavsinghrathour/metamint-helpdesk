@@ -60,6 +60,7 @@
 .robodesk-plugin .chat-message.sent {
   margin-left: auto;
   gap: 10px;
+  flex-direction: row-reverse;
 }
 
 .robodesk-plugin .chat-message .message-content {

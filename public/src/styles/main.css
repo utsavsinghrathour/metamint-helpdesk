@@ -777,9 +777,11 @@ button.no-bg,
   max-height: 400px;
 }
 
-.rd-bot-image, .rd-single-message-avatar{
-    height: 30px;
-    width: 30px;
-    border-radius: 50px;
-    aspect-ratio: 1
+.rd-bot-image,
+.rd-single-message-avatar {
+  align-items: center;
+  height: 30px;
+  width: 30px;
+  border-radius: 50px;
+  aspect-ratio: 1;
 }
