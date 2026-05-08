@@ -282,7 +282,6 @@ const Login = ({
           ? error.message
           : "Oops! That’s not the right password.",
       });
-      setShowLogin(false);
     } finally {
       setIsSubmitting(false);
     }
