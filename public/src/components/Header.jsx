@@ -114,7 +114,7 @@ const Header = ({ logo, onClose, setActiveTab, setShowLogin, updateSelectedTicke
           if (message.role === 'user') {
             sendReply(newTicket.id, loggedInUsrId, message.text);
           } else if (message.role === 'assistant') {
-            sendReply(newTicket.id, selectedStaff, message.message);
+            sendReply(newTicket.id, selectedStaff, message.message, false, true);
           }
         });
       }

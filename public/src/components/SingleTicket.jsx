@@ -310,7 +310,7 @@ const SingleTicket = ({
       setError(null);
 
       const response = await fetch(
-        `/wp-json/wp/v2/comments?post=${ticket.id}&per_page=${perPage}&offset=${fetchOffset}&order=asc&comment_type=ticket_replies&_fields=id,content,date,author_data,time_ago,author_name,author_image,comment_action`,
+        `/wp-json/wp/v2/comments?post=${ticket.id}&per_page=${perPage}&offset=${fetchOffset}&order=asc&comment_type=ticket_replies&_fields=id,content,date,author_data,time_ago,author_name,author_image,comment_action,is_bot_response`,
         { signal: controller.signal }
       );
 
@@ -417,7 +417,8 @@ const SingleTicket = ({
         senderName: commentData.author_name || 'Unknown',
         image: isOwnMessage
           ? customerAvatar
-          : commentData.author_image || DefaultAvatar,
+          : commentData.author_data?.avatar || commentData.author_image || DefaultAvatar,
+        isBot: commentData.is_bot_response === true || commentData.is_bot_response === '1',
         created_at: commentData.created_at || new Date().toISOString(),
         isAdmin: commentData.author_id !== ticket.author_id,
       };
@@ -438,9 +439,14 @@ const SingleTicket = ({
 
   const formatTicketComments = (comments) => {
     const formattedComments = comments.map((comment) => {
-      const authorId = comment.author_data?.id;
+      const authorId = comment.author_data?.id || comment.author || 0;
       const sender =
         String(authorId) === String(loggedInUserId) ? 'me' : 'other';
+      const isBotFlag =
+        comment.is_bot_response === true ||
+        comment.is_bot_response === '1' ||
+        Number(authorId) === 0;
+
       return {
         id: comment.id,
         text: comment.content?.rendered || comment.content?.plain || '',
@@ -450,6 +456,8 @@ const SingleTicket = ({
           sender === 'me'
             ? customerAvatar
             : comment.author_data?.avatar || comment.author_image || DefaultAvatar,
+        isBot: isBotFlag,
+        author_id: authorId,
         created_at: comment.date,
         action: comment.comment_action,
         time_ago: comment.time_ago,
@@ -914,15 +922,76 @@ const SingleTicket = ({
                   }}
                 >
                   {(!isSameSender || index === 0) && (
-                    <img
-                      src={
-                        msg.sender === 'me' || msg.isSending
-                          ? customerAvatar
-                          : msg.image || DefaultAvatar
+                    (() => {
+                      // Bot avatar handling: prefer configured bot profile image, then initials, then default avatar
+                      const botProfileImage = window.robodeskData?.robodesk_bot_profile_image || '';
+                      const botTitleName = window.robodeskData?.robodesk_bot_title_name || '';
+                      const isBot = !!msg.isBot;
+
+                      if (msg.sender === 'me' || msg.isSending) {
+                        return (
+                          <img
+                            src={customerAvatar}
+                            alt={'You'}
+                            className='rd-rounded-full rd-object-cover rd-single-message-avatar'
+                          />
+                        );
                       }
-                      alt={msg.sender === 'me' ? 'You' : msg.senderName}
-                      className='rd-rounded-full rd-object-cover rd-single-message-avatar'
-                    />
+
+                      if (isBot) {
+                        if (botProfileImage && botProfileImage.trim() !== '') {
+                          return (
+                            <img
+                              src={botProfileImage}
+                              alt={botTitleName || 'Bot'}
+                              className='rd-rounded-full rd-object-cover rd-single-message-avatar'
+                              onError={(e) => {
+                                e.target.onerror = null;
+                                e.target.src = DefaultAvatar;
+                              }}
+                            />
+                          );
+                        }
+
+                        if (botTitleName && botTitleName.trim() !== '') {
+                          const initial = botTitleName.trim().charAt(0).toUpperCase();
+                          return (
+                            <div
+                              className='rd-rounded-full rd-flex rd-items-center rd-justify-center rd-single-message-avatar'
+                              style={{
+                                width: '30px',
+                                height: '30px',
+                                borderRadius: '50%',
+                                backgroundColor: '#EDF2F7',
+                                color: '#111827',
+                                fontWeight: 600,
+                                flexShrink: 0,
+                              }}
+                            >
+                              {initial}
+                            </div>
+                          );
+                        }
+
+                        // fallback to default avatar
+                        return (
+                          <img
+                            src={DefaultAvatar}
+                            alt={'Bot'}
+                            className='rd-rounded-full rd-object-cover rd-single-message-avatar'
+                          />
+                        );
+                      }
+
+                      // regular non-bot other user
+                      return (
+                        <img
+                          src={msg.image || DefaultAvatar}
+                          alt={msg.senderName}
+                          className='rd-rounded-full rd-object-cover rd-single-message-avatar'
+                        />
+                      );
+                    })()
                   )}
                   {isSameSender && index !== 0 && (
                     <div style={{ width: '30px', height: '30px' }} />

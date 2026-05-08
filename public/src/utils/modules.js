@@ -22,7 +22,7 @@ export const createTicket = async (userId, title, message = "") => {
     });
 
     const responseData = await response.json();
-    
+
     // console.log('This is the response from createTicket', responseData);
     return responseData;
   } catch (error) {
@@ -32,7 +32,7 @@ export const createTicket = async (userId, title, message = "") => {
 };
 
 //get all messages
-export const  getMessages = async (ticketId, userId) => {
+export const getMessages = async (ticketId, userId) => {
   const webhookUrl = "/wp-json/chat/v1/tickets/";
 
   const messageData = {
@@ -112,23 +112,26 @@ export const useCachedFetch = (url) => {
   return { data, error, loading };
 };
 
-
 //send messages
-export async function sendReply(ticketId, loggedInUserId, message ,img=false) {
-
-
+export async function sendReply(
+  ticketId,
+  loggedInUserId,
+  message,
+  img = false,
+  isBotResponse = false,
+) {
   const payload = {
     event: "replies.receive",
     data: {
       ticket_id: ticketId,
       user_id: loggedInUserId,
       message: message,
-      image:img 
+      image: img,
+      is_bot_response: isBotResponse,
     },
   };
 
-
-// console.log('From modules', payload);
+  // console.log('From modules', payload);
   try {
     const response = await fetch("/wp-json/chat/v1/tickets", {
       method: "POST",
@@ -175,13 +178,12 @@ export async function registerUser(email) {
   }
 }
 
-
-//Login user 
-export async function loginUser( email, password ) {
+//Login user
+export async function loginUser(email, password) {
   try {
     const payload = {
       email: email,
-      password: password
+      password: password,
     };
     const response = await fetch("/wp-json/robodesk/v1/login", {
       method: "POST",
@@ -199,40 +201,39 @@ export async function loginUser( email, password ) {
     console.error("Error sending reply:", error.message);
     throw error;
   }
-}   
+}
 
 //get all tickets
 export async function getAllTickets(userId) {
   try {
     const payload = {
-      event: 'tickets.get',
+      event: "tickets.get",
       data: {
-        uid: userId
-      }
+        uid: userId,
+      },
     };
-    const response = await fetch('/wp-json/chat/v1/tickets', {
-      method: 'POST',
+    const response = await fetch("/wp-json/chat/v1/tickets", {
+      method: "POST",
       headers: {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
       },
       body: JSON.stringify(payload),
     });
-    
+
     const result = await response.json();
-    
+
     if (!response.ok) {
-      throw new Error(result.message || 'Failed to fetch tickets');
+      throw new Error(result.message || "Failed to fetch tickets");
     }
-    
+
     // Check if the response has the expected structure
-    if (result.status === 'success' && Array.isArray(result.data)) {
+    if (result.status === "success" && Array.isArray(result.data)) {
       return result.data; // Return the formatted tickets array
     } else {
-      throw new Error(result.message || 'Invalid response format');
+      throw new Error(result.message || "Invalid response format");
     }
   } catch (error) {
-    console.error('Error fetching tickets:', error.message);
+    console.error("Error fetching tickets:", error.message);
     throw error;
   }
 }
-

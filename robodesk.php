@@ -14,6 +14,11 @@
 if (!defined('ABSPATH')) {
     exit; // Exit if accessed directly
 }
+
+if (function_exists('ini_set')) {
+    @ini_set('display_errors', '0');
+    @ini_set('display_startup_errors', '0');
+}
 // Define constants
 define('ROBODESK_PLUGIN_PATH', plugin_dir_path(__FILE__));
 define('ROBODESK_PLUGIN_URL', plugin_dir_url(__FILE__));
@@ -188,6 +193,10 @@ function robodesk_enqueue_scripts()
                 'welcomeMessage' => get_option('robodesk_welcome_message', 'Have any questions or need a quote? Leave us a message.'),
                 'ticketIntroMessage' => get_option('robodesk_ticket_intro_message', 'If you are interested in working with us, take a step towards discovering exciting opportunities by reaching out to us. We look forward to talking with you soon!'),
                 'deepLinkTicketId' => $deep_link_ticket_id,
+                'currentUserAvatar' => is_user_logged_in() ? esc_url(robodesk_get_avatar_url(get_current_user_id(), 32)) : '',
+                // Bot configuration for avatar/title used in ticket/chat rendering
+                'robodesk_bot_profile_image' => esc_url(get_option('robodesk_bot_profile_image', '')),
+                'robodesk_bot_title_name' => get_option('robodesk_bot_title_name', ''),
             ]
         );
 
@@ -1863,7 +1872,11 @@ add_filter('rest_prepare_comment', function ($response, $comment, $request) {
         $data['time_ago'] = $human_readable_time;
 
         $author_name = $comment->comment_author;
-        $author_avatar = get_avatar_url($comment->comment_author_email);
+        if (function_exists('robodesk_get_comment_avatar')) {
+            $author_avatar = robodesk_get_comment_avatar($author_id, 32);
+        } else {
+            $author_avatar = get_avatar_url($comment->comment_author_email);
+        }
 
         $data['ticket_id'] = $comment->comment_post_ID;
 

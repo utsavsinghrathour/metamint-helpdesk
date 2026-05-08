@@ -1,5 +1,6 @@
 import "../styles/Login.css";
 import { useEffect, useState } from "react";
+import { FaChevronLeft } from "react-icons/fa";
 import { loginUser, registerUser, createTicket } from "../utils/modules";
 import { useAppData } from "../utils/AppDataContext";
 import defaultLogo from "../images/robodesk-logo.png";
@@ -8,56 +9,42 @@ import ChangePassword from "./ChangePassword";
 
 // Header Component
 const Header = ({ setActiveTab, image_urls, defaultLogo }) => (
-  <div className="rd-px-18 rd-search-header rd-bg-blue rd-flex rd-items-center rd-justify-between rd-flex-col login-wrap">
-    <div className="rd-flex rd-items-center rd-w-full rd-justify-center">
-      <button
-        type="button"
-        className="rd-bg-transparent rd-text-white rd-p-0 rd-m-0 back-button rd-flex rd-items-center"
-        aria-label="Go back to home"
-        onClick={() => setActiveTab(0)}
-      >
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          width="20"
-          height="20"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        >
-          <path d="M15 18l-6-6 6-6" />
-        </svg>
-      </button>
-      {image_urls.wide_logo && image_urls.wide_logo.trim() !== "" ? (
+  <div className="rd-search-header rd-bg-blue rd-flex rd-items-center rd-justify-between rd-flex-col rd-message-list-header">
+    <button
+      type="button"
+      className="back-button rd-flex rd-items-center rd-gap-1 rd-border-none rd-bg-transparent rd-m-0 rd-p-0"
+      aria-label="Go back to home"
+      onClick={() => setActiveTab(0)}
+    >
+      <FaChevronLeft />
+    </button>
+    {image_urls.wide_logo && image_urls.wide_logo.trim() !== "" ? (
+      <img
+        src={image_urls.wide_logo}
+        alt="Plugin Wide Logo"
+        className="rd-header-logo rd-m-auto"
+        onError={(e) => {
+          e.target.style.display = "none";
+        }}
+      />
+    ) : image_urls.logo && image_urls.logo.trim() !== "" ? (
+      <img
+        src={image_urls.logo}
+        alt="Plugin Logo"
+        className="rd-header-logo rd-m-auto"
+        onError={(e) => {
+          e.target.style.display = "none";
+        }}
+      />
+    ) : (
+      <div className="rd-header-logo default-logo">
         <img
-          src={image_urls.wide_logo}
-          alt="Plugin Wide Logo"
-          className=" rd-header-logo"
-          onError={(e) => {
-            e.target.style.display = "none";
-          }}
+          src={defaultLogo}
+          alt="Default Plugin Logo"
+          className="rd-header-logo rd-m-auto"
         />
-      ) : image_urls.logo && image_urls.logo.trim() !== "" ? (
-        <img
-          src={image_urls.logo}
-          alt="Plugin Logo"
-          className=" rd-header-logo"
-          onError={(e) => {
-            e.target.style.display = "none";
-          }}
-        />
-      ) : (
-        <div className=" rd-header-logo default-logo">
-          <img
-            src={defaultLogo}
-            alt="Default Plugin Logo"
-            className=" rd-header-logo"
-          />
-        </div>
-      )}
-    </div>
+      </div>
+    )}
   </div>
 );
 
