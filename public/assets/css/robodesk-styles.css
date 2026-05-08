@@ -2,6 +2,7 @@
 :root {
   --rd-primary-color: #007cba;
 }
+
 .robodesk-container {
   /* A general container for consistent spacing */
   max-width: 1360px;
@@ -84,6 +85,7 @@
 /* Frontend Dashboard */
 .robodesk-frontend-dashboard {
   display: flex;
+  font-family: var(--font-family);
   padding: 0;
 }
 .robodesk-dashboard-content #credential-form {
@@ -261,7 +263,7 @@
   display: inline-flex;
   padding: 0.25rem 0.75rem;
   font-size: 0.75rem;
-  font-weight: 600;
+  font-weight: 400;
   border-radius: 9999px;
   line-height: 1;
 }
