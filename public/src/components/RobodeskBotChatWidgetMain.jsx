@@ -116,7 +116,7 @@ export default function RobodeskBotChatWidgetMain({ widgetConfig, activeAIMode }
         console.log('fetchApiKey');
         try {
             const response = await wp.apiFetch({
-                path: `/robodesk-bot/v1/api-key`,
+                path: `/robodesk-bot/v1/widget-config`,
             });
             console.log('response', response);
             // Try both possible key formats your PHP might return
