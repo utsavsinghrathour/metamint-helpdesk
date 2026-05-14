@@ -36,13 +36,13 @@ const Header = ({ logo, onClose, setActiveTab, setShowLogin, updateSelectedTicke
     try {
       const response = await fetch("/wp-json/robodesk/selected/staff");
       const data = await response.json();
-      console.log('API Response:', response.status, data);
+      // console.log('API Response:', response.status, data);
 
       if (response.ok && data?.staff_user_id) {
-        console.log('Setting staff ID:', data.staff_user_id);
+        // console.log('Setting staff ID:', data.staff_user_id);
         setSelectedStaff(data.staff_user_id);
       } else {
-        console.log('No default staff configured or error:', data);
+        // console.log('No default staff configured or error:', data);
         setSelectedStaff(null);
       }
     } catch (error) {

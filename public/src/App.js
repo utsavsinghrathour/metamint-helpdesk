@@ -136,6 +136,19 @@ const AppContent = ({ imageUrls = { logo: "" } }) => {
       comments: ticket.ticket_comments,
     });
 
+    // guard: only fetch when requestedTicketId looks like a positive integer
+    const shouldFetchRequestedTicket = (() => {
+      if (!requestedTicketId) return false;
+      // allow numeric ids or tckt-style values; ensure not '0' or '0'-like
+      if (/^\d+$/.test(String(requestedTicketId).trim())) {
+        return Number(requestedTicketId) > 0;
+      }
+      // for ticket numbers (like TCKT-123), permit non-numeric and let server handle
+      return true;
+    })();
+
+    if (!shouldFetchRequestedTicket) return;
+
     const fetchRequestedTicket = async () => {
       try {
         const response = await fetch(

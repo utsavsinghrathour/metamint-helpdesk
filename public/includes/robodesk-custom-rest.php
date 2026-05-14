@@ -1158,7 +1158,30 @@ function robodesk_handle_tickets(WP_REST_Request $request)
 
 function robodesk_handle_selected_staff(WP_REST_Request $request)
 {
-    $selected_staff_id = get_option('robodesk_default_staff', '');
+    // Prefer the modern option key; fallback to legacy one for compatibility
+    $selected_staff_id = get_option('robodesk_default_agent', '');
+    if (empty($selected_staff_id)) {
+        $selected_staff_id = get_option('robodesk_default_staff', '');
+    }
+
+    // If still empty, attempt to select the least-loaded support staff dynamically
+    if (empty($selected_staff_id)) {
+        $assigned_name = null;
+        if (function_exists('auto_assign_ticket_to_support_staff')) {
+            // This returns a display name for the chosen staff member
+            $assigned_name = auto_assign_ticket_to_support_staff(false, false);
+        }
+
+        if (!empty($assigned_name)) {
+            $found = get_user_by('display_name', $assigned_name);
+            if (!$found) {
+                $found = get_user_by('login', $assigned_name);
+            }
+            if ($found) {
+                $selected_staff_id = $found->ID;
+            }
+        }
+    }
 
     // Check if staff ID is set
     if (empty($selected_staff_id)) {
