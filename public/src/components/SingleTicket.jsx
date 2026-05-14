@@ -419,6 +419,7 @@ const SingleTicket = ({
           ? customerAvatar
           : commentData.author_data?.avatar || commentData.author_image || DefaultAvatar,
         isBot: commentData.is_bot_response === true || commentData.is_bot_response === '1',
+        author_id: commentData.author_id || commentData.author_data?.id || 0,
         created_at: commentData.created_at || new Date().toISOString(),
         isAdmin: commentData.author_id !== ticket.author_id,
       };
@@ -904,7 +905,11 @@ const SingleTicket = ({
           <>
             {chatMessages.map((msg, index) => {
               const prevMsg = index > 0 ? chatMessages[index - 1] : null;
-              const isSameSender = prevMsg && prevMsg.sender === msg.sender;
+              const isSameSender =
+                !!prevMsg &&
+                prevMsg.sender === msg.sender &&
+                !!prevMsg.isBot === !!msg.isBot &&
+                String(prevMsg.author_id || '') === String(msg.author_id || '');
               const marginBottom = isSameSender ? '4px' : '12px';
 
               return (
