@@ -98,6 +98,7 @@ class Robodesk_rest_cache
         global $wpdb;
         $route_key = str_replace('/', '_', $route);
         $prefix = '_transient_' . $this->prefix . $route_key . '_';
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
         $wpdb->query($wpdb->prepare("DELETE FROM {$wpdb->options} WHERE option_name LIKE %s", $prefix . '%'));
     }
 

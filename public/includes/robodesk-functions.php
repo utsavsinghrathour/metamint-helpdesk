@@ -1,9 +1,10 @@
 <?php
+// phpcs:disable WordPress.DB.SlowDBQuery
 if (!defined('ABSPATH')) {
     exit; // Exit if accessed directly
 }
 // Woocommerce modifications
-if (in_array('woocommerce/woocommerce.php', apply_filters('active_plugins', get_option('active_plugins')))) {
+if (in_array('woocommerce/woocommerce.php', (array) get_option('active_plugins', array()))) {
     require_once ROBODESK_PLUGIN_PATH . 'public/includes/robodesk-woocommerce.php';
 }
 // for comments
@@ -106,7 +107,8 @@ function robodesk_maybe_create_ticket_notes_table()
     $table_name = $wpdb->prefix . 'robodesk_ticket_notes';
 
 
-    if ($wpdb->get_var("SHOW TABLES LIKE '{$table_name}'") !== $table_name) {
+    // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+    if ($wpdb->get_var($wpdb->prepare("SHOW TABLES LIKE %s", $wpdb->esc_like($table_name))) !== $table_name) {
         $charset_collate = $wpdb->get_charset_collate();
 
         $sql = "CREATE TABLE $table_name (
@@ -163,7 +165,8 @@ function robodesk_credentials_page()
     global $wpdb;
     $credentials_table = $wpdb->prefix . 'robodesk_credentials';
     $user_id = get_current_user_id();
-    $credentials = $wpdb->get_results("SELECT * FROM $credentials_table WHERE user_id = $user_id ORDER BY name ASC");
+    // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter
+    $credentials = $wpdb->get_results($wpdb->prepare("SELECT * FROM {$credentials_table} WHERE user_id = %d ORDER BY name ASC", $user_id));
 
     ob_start();
 ?>
@@ -244,6 +247,7 @@ function robodesk_credentials_page()
  * Displaying a table to show open tickets after my-account page 
  */
 add_action('woocommerce_after_my_account', 'add_custom_table_to_my_account');
+// phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedFunctionFound
 function add_custom_table_to_my_account()
 {
 
@@ -325,11 +329,11 @@ function add_custom_table_to_my_account()
 
                                 <p class="ticket-date"><?php echo get_the_date('dS M Y'); ?></p>
                             </td>
-                            <td><?php echo  $comment_count; ?></td>
-                            <td><?php echo $human_readable_time ? $human_readable_time . ' ago' : '-' ?><p class="ticket-comment-by">By, <?php echo $comment_author; ?></p>
+                            <td><?php echo esc_html($comment_count); ?></td>
+                            <td><?php echo esc_html($human_readable_time ? $human_readable_time . ' ago' : '-'); ?><p class="ticket-comment-by">By, <?php echo esc_html($comment_author); ?></p>
                             </td>
-                            <td><span class="robodesk-status-pill <?php echo strtolower($status); ?>"> <?php echo esc_html(ucwords($status)); ?></span></td>
-                            <td><span data-color="<?php echo esc_attr($priority_color); ?>" class="robodesk-priority-pill <?php echo strtolower($priority_name); ?>" style="background:<?php echo esc_attr($priority_color) ?>"><?php echo esc_html($priority_name); ?></span></td>
+                            <td><span class="robodesk-status-pill <?php echo esc_attr(strtolower($status)); ?>"> <?php echo esc_html(ucwords($status)); ?></span></td>
+                            <td><span data-color="<?php echo esc_attr($priority_color); ?>" class="robodesk-priority-pill <?php echo esc_attr(strtolower($priority_name)); ?>" style="background:<?php echo esc_attr($priority_color); ?>"><?php echo esc_html($priority_name); ?></span></td>
                         </tr>
                     <?php endwhile;
                     wp_reset_postdata();
@@ -351,11 +355,13 @@ function robodesk_get_user_notifications($user_id, $limit = 20)
     $table_name = $wpdb->prefix . 'robodesk_notifications';
 
     // Check if table exists to avoid errors on fresh installs before init hook runs
-    if ($wpdb->get_var("SHOW TABLES LIKE '$table_name'") != $table_name) {
+    // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+    if ($wpdb->get_var($wpdb->prepare("SHOW TABLES LIKE %s", $wpdb->esc_like($table_name))) != $table_name) {
         return array();
     }
 
-    $notifications = $wpdb->get_results($wpdb->prepare("SELECT * FROM $table_name WHERE user_id = %d ORDER BY notification_date DESC LIMIT %d", $user_id, $limit));
+    // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter
+    $notifications = $wpdb->get_results($wpdb->prepare("SELECT * FROM {$table_name} WHERE user_id = %d ORDER BY notification_date DESC LIMIT %d", $user_id, $limit));
 
     return $notifications;
 }
@@ -365,14 +371,18 @@ function robodesk_get_notification_count($user_id)
     global $wpdb;
     $table_name = $wpdb->prefix . 'robodesk_notifications';
 
-    if ($wpdb->get_var("SHOW TABLES LIKE '$table_name'") != $table_name) {
+    // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+    if ($wpdb->get_var($wpdb->prepare("SHOW TABLES LIKE %s", $wpdb->esc_like($table_name))) != $table_name) {
         return 0;
     }
 
+    // phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter
+    // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
     return (int) $wpdb->get_var(
         $wpdb->prepare(
-            "SELECT COUNT(*) FROM $table_name WHERE user_id = %d AND read_at IS NULL",
+            "SELECT COUNT(*) FROM {$table_name} WHERE user_id = %d AND read_at IS NULL",
             $user_id
         )
     );
+    // phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter
 }
