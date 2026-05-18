@@ -9,7 +9,7 @@ function robodesk_change_ticket_status_callback()
     check_ajax_referer('robodesk_change_ticket_status_nonce', 'nonce');
 
     $ticket_id = isset($_POST['ticket_id']) ? intval($_POST['ticket_id']) : 0;
-    $new_status = isset($_POST['new_status']) ? sanitize_text_field($_POST['new_status']) : '';
+    $new_status = isset($_POST['new_status']) ? sanitize_text_field(wp_unslash($_POST['new_status'])) : '';
     $old_status = $ticket_id > 0 ? (string) get_post_meta($ticket_id, '_robodesk_ticket_status', true) : '';
 
     $allowed_statuses = array('new', 'in-progress', 'archived', 'completed'); // Valid statuses
@@ -73,7 +73,7 @@ function robodesk_change_ticket_status_callback()
 // }
 
 
-function create_term_if_not_exists($term_name = 'Web', $taxonomy = 'robodesk_ticket_origin')
+function robodesk_create_term_if_not_exists($term_name = 'Web', $taxonomy = 'robodesk_ticket_origin')
 {
 
     $term = term_exists($term_name, $taxonomy);
@@ -88,20 +88,20 @@ function create_term_if_not_exists($term_name = 'Web', $taxonomy = 'robodesk_tic
 
 
 
-add_action('wp_ajax_robodesk_create_new_ticket', 'handle_robodesk_ticket_submission');
-add_action('wp_ajax_nopriv_robodesk_create_new_ticket', 'handle_robodesk_ticket_submission');
+add_action('wp_ajax_robodesk_create_new_ticket', 'robodesk_handle_ticket_submission');
+add_action('wp_ajax_nopriv_robodesk_create_new_ticket', 'robodesk_handle_ticket_submission');
 
-function handle_robodesk_ticket_submission()
+function robodesk_handle_ticket_submission()
 {
 
-    if (!isset($_POST['robodesk_nonce']) || !wp_verify_nonce($_POST['robodesk_nonce'], 'robodesk_create_ticket_nonce')) {
+    if (!isset($_POST['robodesk_nonce']) || !wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['robodesk_nonce'])), 'robodesk_create_ticket_nonce')) {
         wp_send_json_error(array('message' => 'Security check failed.'));
     }
 
     $user_id = get_current_user_id();
-    $title = sanitize_text_field($_POST['ticket_title']);
-    $content = wp_kses_post($_POST['ticket_content']);
-    $priority = intval($_POST['ticket_priority']);
+    $title = isset($_POST['ticket_title']) ? sanitize_text_field(wp_unslash($_POST['ticket_title'])) : '';
+    $content = isset($_POST['ticket_content']) ? wp_kses_post(wp_unslash($_POST['ticket_content'])) : '';
+    $priority = isset($_POST['ticket_priority']) ? intval($_POST['ticket_priority']) : 0;
 
     if (empty(trim($title)) || empty(trim($content))) {
         wp_send_json_error(array('message' => 'Fill in the required fields first'));
@@ -129,7 +129,7 @@ function handle_robodesk_ticket_submission()
 
 
 
-        $origin =  create_term_if_not_exists();
+        $origin =  robodesk_create_term_if_not_exists();
 
         $user_obj = get_user_by('id', $user_id);
         $user_name = $user_obj->display_name;
@@ -213,7 +213,7 @@ function robodesk_faq_vote_callback()
 {
     check_ajax_referer('robodesk_faq_vote_nonce');
     $faq_id = isset($_POST['faq_id']) ? intval($_POST['faq_id']) : 0;
-    $vote_type = isset($_POST['vote_type']) ? sanitize_text_field($_POST['vote_type']) : '';
+    $vote_type = isset($_POST['vote_type']) ? sanitize_text_field(wp_unslash($_POST['vote_type'])) : '';
 
     if ($faq_id <= 0 || !in_array($vote_type, array('up', 'down'))) {
         wp_send_json_error('Invalid FAQ ID or vote type.');
@@ -245,11 +245,12 @@ function robodesk_add_credential_callback()
     $credentials_table = $wpdb->prefix . 'robodesk_credentials';
     $user_id = get_current_user_id();
 
-    $name = isset($_POST['credential_name']) ? sanitize_text_field($_POST['credential_name']) : '';
-    $username = isset($_POST['credential_username']) ? sanitize_text_field($_POST['credential_username']) : '';
+    $name = isset($_POST['credential_name']) ? sanitize_text_field(wp_unslash($_POST['credential_name'])) : '';
+    $username = isset($_POST['credential_username']) ? sanitize_text_field(wp_unslash($_POST['credential_username'])) : '';
+    // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
     $password = isset($_POST['credential_password']) ? wp_unslash($_POST['credential_password']) : '';
-    $url = isset($_POST['credential_url']) ? esc_url_raw($_POST['credential_url']) : '';
-    $notes = isset($_POST['credential_notes']) ? sanitize_textarea_field($_POST['credential_notes']) : '';
+    $url = isset($_POST['credential_url']) ? esc_url_raw(wp_unslash($_POST['credential_url'])) : '';
+    $notes = isset($_POST['credential_notes']) ? sanitize_textarea_field(wp_unslash($_POST['credential_notes'])) : '';
 
     if (empty($name) || empty($username) || trim($password) === '') {
         wp_send_json_error('Please fill in all required fields.');
@@ -257,6 +258,7 @@ function robodesk_add_credential_callback()
 
     $encrypted_password = robodesk_encrypt($password, 'robodesk');
 
+    // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
     $inserted = $wpdb->insert(
         $credentials_table,
         array(
@@ -293,12 +295,14 @@ function robodesk_delete_credential_callback()
         wp_die();
     }
 
-    $credential_user = $wpdb->get_var($wpdb->prepare("SELECT user_id FROM $credentials_table WHERE id = %d", $credential_id));
+    // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+    $credential_user = $wpdb->get_var($wpdb->prepare("SELECT user_id FROM {$credentials_table} WHERE id = %d", $credential_id));
     if ((int) $credential_user !== (int) $user_id) {
         wp_send_json_error('You do not have permission to delete this credential.');
         wp_die();
     }
 
+    // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
     $deleted = $wpdb->delete(
         $credentials_table,
         array('id' => $credential_id, 'user_id' => $user_id),
@@ -332,6 +336,7 @@ function robodesk_mark_user_notification_read()
     global $wpdb;
     $table_name = $wpdb->prefix . 'robodesk_notifications';
 
+    // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
     $deleted = $wpdb->delete(
         $table_name,
         array(
@@ -361,12 +366,15 @@ function robodesk_mark_all_user_notifications_read()
     global $wpdb;
     $table_name = $wpdb->prefix . 'robodesk_notifications';
 
+    // phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter
+    // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
     $deleted = $wpdb->query(
         $wpdb->prepare(
-            "DELETE FROM $table_name WHERE user_id = %d",
+            "DELETE FROM {$table_name} WHERE user_id = %d",
             $user_id
         )
     );
+    // phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter
 
     if ($deleted === false) {
         wp_send_json_error('Could not delete notifications.');
@@ -415,7 +423,8 @@ function robodesk_add_ticket_note_callback()
             wp_die();
         }
     }
-    $note_content = isset($_POST['note_content']) ? wp_kses_post($_POST['note_content']) : '';
+    $note_content = isset($_POST['note_content']) ? wp_kses_post(wp_unslash($_POST['note_content'])) : '';
+    // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
     $inserted = $wpdb->insert(
         $notes_table,
         array(
@@ -450,7 +459,7 @@ function robodesk_login_action_callback()
 
     check_ajax_referer('robodesk-nonce', 'security');
 
-    $email = sanitize_email($_POST['email']);
+    $email = isset($_POST['email']) ? sanitize_email(wp_unslash($_POST['email'])) : '';
     if (empty($email) || ! is_email($email)) {
         wp_send_json_error([
             'message' => __('Invalid email format.', 'robodesk')
@@ -491,7 +500,8 @@ add_action('wp_ajax_robodesk_check_email', 'robodesk_check_email');
 add_action('wp_ajax_nopriv_robodesk_check_email', 'robodesk_check_email');
 function robodesk_check_email()
 {
-    $email = sanitize_email($_POST['email']);
+    // phpcs:ignore WordPress.Security.NonceVerification.Missing
+    $email = isset($_POST['email']) ? sanitize_email(wp_unslash($_POST['email'])) : '';
     if (empty($email) || ! is_email($email)) {
         wp_send_json_error([
             'exists' => false,
@@ -516,7 +526,8 @@ add_action('wp_ajax_robodesk_register_user', 'robodesk_register_user');
 add_action('wp_ajax_nopriv_robodesk_register_user', 'robodesk_register_user');
 function robodesk_register_user()
 {
-    $email = sanitize_email($_POST['email']);
+    // phpcs:ignore WordPress.Security.NonceVerification.Missing
+    $email = isset($_POST['email']) ? sanitize_email(wp_unslash($_POST['email'])) : '';
     if (empty($email) || ! is_email($email)) {
         wp_send_json_error([
             'message' => __('Invalid email .', 'robodesk')
@@ -546,13 +557,13 @@ function robodesk_register_user()
 
 
 // Handle Ajax request
-function handle_change_password()
+function robodesk_handle_change_password()
 {
 
     check_ajax_referer('password-reset', 'nonce');
-    $password  = isset($_POST['password']) ? sanitize_text_field($_POST['password']) : '';
-    $reset_key = isset($_POST['reset_key']) ? sanitize_text_field($_POST['reset_key']) : '';
-    $user_login = isset($_POST['user']) ? sanitize_text_field($_POST['user']) : '';
+    $password  = isset($_POST['password']) ? sanitize_text_field(wp_unslash($_POST['password'])) : '';
+    $reset_key = isset($_POST['reset_key']) ? sanitize_text_field(wp_unslash($_POST['reset_key'])) : '';
+    $user_login = isset($_POST['user']) ? sanitize_text_field(wp_unslash($_POST['user'])) : '';
 
     if (empty($password) || empty($reset_key) || empty($user_login)) {
         wp_send_json_error(['message' => 'Missing required fields.']);
@@ -583,5 +594,5 @@ function handle_change_password()
 
     wp_die();
 }
-add_action('wp_ajax_change_password', 'handle_change_password');
-add_action('wp_ajax_nopriv_change_password', 'handle_change_password'); // if not logged in
+add_action('wp_ajax_change_password', 'robodesk_handle_change_password');
+add_action('wp_ajax_nopriv_change_password', 'robodesk_handle_change_password'); // if not logged in

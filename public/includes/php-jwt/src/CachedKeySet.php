@@ -181,11 +181,11 @@ class CachedKeySet implements ArrayAccess
             if ($jwksResponse->getStatusCode() !== 200) {
                 throw new UnexpectedValueException(
                     \sprintf('HTTP Error: %d %s for URI "%s"',
-                        $jwksResponse->getStatusCode(),
-                        $jwksResponse->getReasonPhrase(),
-                        $this->jwksUri,
+                        (int) $jwksResponse->getStatusCode(),
+                        esc_html((string) $jwksResponse->getReasonPhrase()),
+                        esc_url_raw((string) $this->jwksUri)
                     ),
-                    $jwksResponse->getStatusCode()
+                    (int) $jwksResponse->getStatusCode()
                 );
             }
             $this->keySet = $this->formatJwksForCache((string) $jwksResponse->getBody());
