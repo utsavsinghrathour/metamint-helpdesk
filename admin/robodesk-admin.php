@@ -344,6 +344,7 @@ function robodesk_enqueue_tailwind_and_styles()
             'email_template' => wp_create_nonce('robodesk_email_template_action'),
             'advanced_settings' => wp_create_nonce('robodesk_advanced_settings_action'),
             'basic_settings' => wp_create_nonce('robodesk_basic_settings_action'),
+            'user_lookup' => wp_create_nonce('robodesk_user_lookup_action'),
             'fetch_emails' => wp_create_nonce('robodesk_fetch_emails_action'),
             'ticket_assignment' => wp_create_nonce('robodesk_ticket_assignment_action'),
             'create_ticket' => wp_create_nonce('robodesk_create_ticket_action'),
