@@ -1,4 +1,5 @@
 <?php
+// phpcs:disable WordPress.DB.SlowDBQuery
 if (!defined('ABSPATH')) {
     exit; // Exit if accessed directly
 }
@@ -24,15 +25,18 @@ if (!function_exists('robodesk_read_debug_log_tail')) {
             return [];
         }
 
-        $fp = fopen($log_path, 'rb');
-        if ($fp === false) {
-            return [];
+        global $wp_filesystem;
+        if (empty($wp_filesystem)) {
+            require_once ABSPATH . '/wp-admin/includes/file.php';
+            WP_Filesystem();
         }
 
         $offset = max(0, $size - (int) $max_bytes);
-        fseek($fp, $offset);
-        $content = stream_get_contents($fp);
-        fclose($fp);
+        $full_content = $wp_filesystem->get_contents($log_path);
+        if ($full_content === false) {
+            return [];
+        }
+        $content = $offset > 0 ? substr($full_content, $offset) : $full_content;
 
         if ($content === false || $content === '') {
             return [];
@@ -77,7 +81,13 @@ if (!function_exists('robodesk_download_debug_log')) {
         header('Content-Disposition: attachment; filename="robodesk-debug.log"');
         header('Content-Length: ' . filesize($log_path));
 
-        readfile($log_path);
+        global $wp_filesystem;
+        if (empty($wp_filesystem)) {
+            require_once ABSPATH . '/wp-admin/includes/file.php';
+            WP_Filesystem();
+        }
+        // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- raw log file download, output sent as text/plain attachment
+        echo $wp_filesystem->get_contents($log_path);
         exit;
     }
 }
@@ -135,7 +145,7 @@ add_action('wp_ajax_robodesk_imap_test_connection', 'robodesk_imap_test_connecti
 function robodesk_imap_test_connection()
 {
     // Verify nonce
-    if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'robodesk_imap_settings_action')) {
+    if (!isset($_POST['nonce']) || !wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['nonce'])), 'robodesk_imap_settings_action')) {
         wp_send_json_error(['message' => 'Security check failed']);
         exit;
     }
@@ -152,10 +162,10 @@ function robodesk_imap_test_connection()
         exit;
     }
 
-    $auth_type = ($_POST['robodesk_imap_auth'] == '1') ? 'ssl' : 'tls';
-    $hostname = '{' . sanitize_text_field($_POST['robodesk_imap_hostname']) . ':' . intval($_POST['robodesk_imap_port']) . '/imap/' . $auth_type . '/novalidate-cert}INBOX';
-    $username = sanitize_text_field($_POST['robodesk_imap_username']);
-    $password = $_POST['robodesk_imap_password'];
+    $auth_type = (isset($_POST['robodesk_imap_auth']) && sanitize_text_field(wp_unslash($_POST['robodesk_imap_auth'])) == '1') ? 'ssl' : 'tls';
+    $hostname = '{' . sanitize_text_field(wp_unslash($_POST['robodesk_imap_hostname'])) . ':' . intval($_POST['robodesk_imap_port']) . '/imap/' . $auth_type . '/novalidate-cert}INBOX';
+    $username = sanitize_text_field(wp_unslash($_POST['robodesk_imap_username']));
+    $password = sanitize_text_field(wp_unslash($_POST['robodesk_imap_password']));
 
     // Clear previous errors
     imap_errors();
@@ -180,7 +190,7 @@ add_action('wp_ajax_robodesk_imap_save_settings', 'robodesk_imap_save_settings')
 function robodesk_imap_save_settings()
 {
     // Verify nonce
-    if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'robodesk_imap_settings_action')) {
+    if (!isset($_POST['nonce']) || !wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['nonce'])), 'robodesk_imap_settings_action')) {
         wp_send_json_error(['message' => 'Security check failed']);
         exit;
     }
@@ -197,10 +207,10 @@ function robodesk_imap_save_settings()
         exit;
     }
 
-    $auth_type = ($_POST['robodesk_imap_auth'] == '1') ? 'ssl' : 'tls';
-    $hostname = '{' . sanitize_text_field($_POST['robodesk_imap_hostname']) . ':' . intval($_POST['robodesk_imap_port']) . '/imap/' . $auth_type . '/novalidate-cert}INBOX';
-    $username = sanitize_text_field($_POST['robodesk_imap_username']);
-    $password = $_POST['robodesk_imap_password'];
+    $auth_type = (isset($_POST['robodesk_imap_auth']) && sanitize_text_field(wp_unslash($_POST['robodesk_imap_auth'])) == '1') ? 'ssl' : 'tls';
+    $hostname = '{' . sanitize_text_field(wp_unslash($_POST['robodesk_imap_hostname'])) . ':' . intval($_POST['robodesk_imap_port']) . '/imap/' . $auth_type . '/novalidate-cert}INBOX';
+    $username = sanitize_text_field(wp_unslash($_POST['robodesk_imap_username']));
+    $password = sanitize_text_field(wp_unslash($_POST['robodesk_imap_password']));
 
     // Clear previous errors
     imap_errors();
@@ -211,11 +221,11 @@ function robodesk_imap_save_settings()
         $message = 'IMAP connection settings saved successfully!';
         // Save settings to the database
         $settings = array(
-            'hostname' => sanitize_text_field($_POST['robodesk_imap_hostname']),
+            'hostname' => sanitize_text_field(wp_unslash($_POST['robodesk_imap_hostname'])),
             'port' => intval($_POST['robodesk_imap_port']),
-            'username' => sanitize_email($_POST['robodesk_imap_username']),
-            'password' => sanitize_text_field($_POST['robodesk_imap_password']),
-            'auth' => sanitize_text_field($_POST['robodesk_imap_auth']),
+            'username' => sanitize_email(wp_unslash($_POST['robodesk_imap_username'])),
+            'password' => sanitize_text_field(wp_unslash($_POST['robodesk_imap_password'])),
+            'auth' => isset($_POST['robodesk_imap_auth']) ? sanitize_text_field(wp_unslash($_POST['robodesk_imap_auth'])) : '',
 
         );
 
@@ -231,8 +241,10 @@ function robodesk_imap_save_settings()
 
 function robodesk_get_smtp_settings_from_request()
 {
-    $enabled = isset($_POST['robodesk_smtp_enabled']) ? sanitize_text_field($_POST['robodesk_smtp_enabled']) : '0';
-    $encryption = isset($_POST['robodesk_smtp_encryption']) ? sanitize_text_field($_POST['robodesk_smtp_encryption']) : 'tls';
+    // phpcs:ignore WordPress.Security.NonceVerification.Missing
+    $enabled = isset($_POST['robodesk_smtp_enabled']) ? sanitize_text_field(wp_unslash($_POST['robodesk_smtp_enabled'])) : '0';
+    // phpcs:ignore WordPress.Security.NonceVerification.Missing
+    $encryption = isset($_POST['robodesk_smtp_encryption']) ? sanitize_text_field(wp_unslash($_POST['robodesk_smtp_encryption'])) : 'tls';
     $allowed_encryption = ['none', 'ssl', 'tls'];
 
     if (!in_array($encryption, $allowed_encryption, true)) {
@@ -241,13 +253,19 @@ function robodesk_get_smtp_settings_from_request()
 
     return [
         'enabled' => $enabled === '1' || $enabled === 'true',
-        'host' => isset($_POST['robodesk_smtp_host']) ? sanitize_text_field($_POST['robodesk_smtp_host']) : '',
-        'port' => isset($_POST['robodesk_smtp_port']) ? absint($_POST['robodesk_smtp_port']) : 587,
-        'username' => isset($_POST['robodesk_smtp_username']) ? sanitize_text_field($_POST['robodesk_smtp_username']) : '',
-        'password' => isset($_POST['robodesk_smtp_password']) ? sanitize_text_field($_POST['robodesk_smtp_password']) : '',
+        // phpcs:ignore WordPress.Security.NonceVerification.Missing
+        'host' => isset($_POST['robodesk_smtp_host']) ? sanitize_text_field(wp_unslash($_POST['robodesk_smtp_host'])) : '',
+        // phpcs:ignore WordPress.Security.NonceVerification.Missing
+        'port' => isset($_POST['robodesk_smtp_port']) ? absint(wp_unslash($_POST['robodesk_smtp_port'])) : 587,
+        // phpcs:ignore WordPress.Security.NonceVerification.Missing
+        'username' => isset($_POST['robodesk_smtp_username']) ? sanitize_text_field(wp_unslash($_POST['robodesk_smtp_username'])) : '',
+        // phpcs:ignore WordPress.Security.NonceVerification.Missing
+        'password' => isset($_POST['robodesk_smtp_password']) ? sanitize_text_field(wp_unslash($_POST['robodesk_smtp_password'])) : '',
         'encryption' => $encryption,
-        'from_email' => isset($_POST['robodesk_smtp_from_email']) ? sanitize_email($_POST['robodesk_smtp_from_email']) : '',
-        'from_name' => isset($_POST['robodesk_smtp_from_name']) ? sanitize_text_field($_POST['robodesk_smtp_from_name']) : '',
+        // phpcs:ignore WordPress.Security.NonceVerification.Missing
+        'from_email' => isset($_POST['robodesk_smtp_from_email']) ? sanitize_email(wp_unslash($_POST['robodesk_smtp_from_email'])) : '',
+        // phpcs:ignore WordPress.Security.NonceVerification.Missing
+        'from_name' => isset($_POST['robodesk_smtp_from_name']) ? sanitize_text_field(wp_unslash($_POST['robodesk_smtp_from_name'])) : '',
     ];
 }
 
@@ -294,7 +312,7 @@ function robodesk_configure_phpmailer_for_smtp($phpmailer, array $settings)
 add_action('wp_ajax_robodesk_smtp_save_settings', 'robodesk_smtp_save_settings');
 function robodesk_smtp_save_settings()
 {
-    if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'robodesk_smtp_settings_action')) {
+    if (!isset($_POST['nonce']) || !wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['nonce'])), 'robodesk_smtp_settings_action')) {
         wp_send_json_error(['message' => 'Security check failed']);
         exit;
     }
@@ -314,7 +332,7 @@ function robodesk_smtp_save_settings()
 add_action('wp_ajax_robodesk_smtp_test_connection', 'robodesk_smtp_test_connection');
 function robodesk_smtp_test_connection()
 {
-    if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'robodesk_smtp_settings_action')) {
+    if (!isset($_POST['nonce']) || !wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['nonce'])), 'robodesk_smtp_settings_action')) {
         wp_send_json_error(['message' => 'Security check failed']);
         exit;
     }
@@ -376,7 +394,7 @@ add_action('wp_ajax_robodesk_email_template_save', 'robodesk_email_template_save
 function robodesk_email_template_save()
 {
     // Verify nonce
-    if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'robodesk_email_template_action')) {
+    if (!isset($_POST['nonce']) || !wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['nonce'])), 'robodesk_email_template_action')) {
         wp_send_json_error(['message' => 'Security check failed']);
         exit;
     }
@@ -403,7 +421,9 @@ function robodesk_email_template_save()
     // Define expected template keys
     $valid_templates = ['new-ticket', 'ticket-closed', 'auto-reply'];
 
-    foreach ($_POST['templates'] as $template_name => $template_content) {
+    // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- sanitized per-key inside the loop below
+    $raw_templates = wp_unslash($_POST['templates']);
+    foreach ($raw_templates as $template_name => $template_content) {
         // Validate template name
         if (!in_array($template_name, $valid_templates)) {
             $results[$template_name] = ['status' => 'error', 'message' => 'Invalid template name'];
@@ -479,7 +499,7 @@ add_action('wp_ajax_robodesk_save_advanced_settings', 'robodesk_save_advanced_se
 function robodesk_save_advanced_settings()
 {
     // Verify nonce
-    if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'robodesk_advanced_settings_action')) {
+    if (!isset($_POST['nonce']) || !wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['nonce'])), 'robodesk_advanced_settings_action')) {
         wp_send_json_error(['message' => 'Security check failed']);
         exit;
     }
@@ -490,7 +510,8 @@ function robodesk_save_advanced_settings()
         exit;
     }
 
-    $settings = $_POST['settings'];
+    // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- sanitized per-key inside the loop below
+    $settings = wp_unslash($_POST['settings']);
 
     // Define expected settings keys
     $valid_settings = [
@@ -552,7 +573,7 @@ add_action('wp_ajax_robodesk_save_basic_settings', 'robodesk_save_basic_settings
 function robodesk_save_basic_settings()
 {
     // Verify nonce
-    if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'robodesk_basic_settings_action')) {
+    if (!isset($_POST['nonce']) || !wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['nonce'])), 'robodesk_basic_settings_action')) {
         wp_send_json_error(['message' => 'Security check failed']);
         exit;
     }
@@ -570,7 +591,8 @@ function robodesk_save_basic_settings()
         require_once(ABSPATH . 'wp-admin/includes/image.php');
     }
 
-    $settings = $_POST['settings'];
+    // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- sanitized per-key in loop below
+    $settings = wp_unslash($_POST['settings']);
     $valid_settings = ['site_name', 'admin_email', 'theme_color', 'default_ticket_category', 'chat_heading', 'welcome_message', 'ticket_intro_message'];
     $image_fields = [
         'popover_icon' => 'robodesk_popover_icon',
@@ -627,10 +649,11 @@ function robodesk_save_basic_settings()
 
     // Process image uploads
     foreach ($image_fields as $file_key => $option_key) {
-        $existing_url = isset($_POST[$option_key]) ? esc_url_raw($_POST[$option_key]) : get_option($option_key, '');
+        $existing_url = isset($_POST[$option_key]) ? esc_url_raw(wp_unslash($_POST[$option_key])) : get_option($option_key, '');
         $urls[$option_key] = $existing_url;
 
         if (!empty($_FILES[$file_key]['name'])) {
+            // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- type checked against allowlist below
             $file = $_FILES[$file_key];
             $allowed_types = ['image/jpeg', 'image/png', 'image/gif'];
             if (!in_array($file['type'], $allowed_types)) {
@@ -666,7 +689,7 @@ function robodesk_save_basic_settings()
     }
 
     // Process notification sound from dropdown
-    $notification_sound = isset($_POST['robodesk_notification_sound']) ? esc_url_raw($_POST['robodesk_notification_sound']) : '';
+    $notification_sound = isset($_POST['robodesk_notification_sound']) ? esc_url_raw(wp_unslash($_POST['robodesk_notification_sound'])) : '';
     $urls['robodesk_notification_sound'] = $notification_sound;
     if ($notification_sound) {
         $results['robodesk_notification_sound'] = ['status' => 'success', 'message' => 'Notification sound updated successfully'];
@@ -697,13 +720,13 @@ function robodesk_save_basic_settings()
 add_action('wp_ajax_robodesk_save_cropped_logo', 'robodesk_save_cropped_logo');
 function robodesk_save_cropped_logo()
 {
-    if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'robodesk_basic_settings_action')) {
+    if (!isset($_POST['nonce']) || !wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['nonce'])), 'robodesk_basic_settings_action')) {
         wp_send_json_error(['message' => 'Security check failed']);
         exit;
     }
 
     $option_key = isset($_POST['option_key']) ? sanitize_key($_POST['option_key']) : '';
-    $cropped_url = isset($_POST['cropped_url']) ? esc_url_raw($_POST['cropped_url']) : '';
+    $cropped_url = isset($_POST['cropped_url']) ? esc_url_raw(wp_unslash($_POST['cropped_url'])) : '';
 
     if (!in_array($option_key, ['robodesk_logo', 'robodesk_wide_logo'], true)) {
         wp_send_json_error(['message' => 'Invalid option key']);
@@ -726,7 +749,7 @@ add_action('wp_ajax_robodesk_save_ticket_assignment_settings', 'robodesk_save_ti
 function robodesk_save_ticket_assignment_settings()
 {
     // Verify nonce
-    if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'robodesk_ticket_assignment_action')) {
+    if (!isset($_POST['nonce']) || !wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['nonce'])), 'robodesk_ticket_assignment_action')) {
         wp_send_json_error(['message' => 'Security check failed']);
         exit;
     }
@@ -738,7 +761,7 @@ function robodesk_save_ticket_assignment_settings()
     }
 
     $fetch_interval = intval($_POST['fetch_interval']);
-    $default_agent = isset($_POST['default_agent']) ? sanitize_text_field($_POST['default_agent']) : '';
+    $default_agent = isset($_POST['default_agent']) ? sanitize_text_field(wp_unslash($_POST['default_agent'])) : '';
 
     if ($fetch_interval < 1 || $fetch_interval > 1440) {
         wp_send_json_error(['message' => 'Fetch interval must be between 1 and 1440 minutes']);
@@ -777,13 +800,13 @@ function robodesk_create_ticket()
     }
 
     // Validate inputs
-    $customer_name = isset($_POST['customer_name']) ? sanitize_text_field($_POST['customer_name']) : '';
-    $customer_email = isset($_POST['customer_email']) ? sanitize_email($_POST['customer_email']) : '';
-    $ticket_title = isset($_POST['ticket_title']) ? sanitize_text_field($_POST['ticket_title']) : '';
-    $ticket_priority = isset($_POST['ticket_priority']) ? sanitize_text_field($_POST['ticket_priority']) : '';
-    $ticket_category = isset($_POST['ticket_category']) ? sanitize_text_field($_POST['ticket_category']) : '';
-    $ticket_assignee = isset($_POST['ticket_assignee']) ? sanitize_text_field($_POST['ticket_assignee']) : '';
-    $ticket_description = isset($_POST['ticket_description']) ? sanitize_textarea_field($_POST['ticket_description']) : '';
+    $customer_name = isset($_POST['customer_name']) ? sanitize_text_field(wp_unslash($_POST['customer_name'])) : '';
+    $customer_email = isset($_POST['customer_email']) ? sanitize_email(wp_unslash($_POST['customer_email'])) : '';
+    $ticket_title = isset($_POST['ticket_title']) ? sanitize_text_field(wp_unslash($_POST['ticket_title'])) : '';
+    $ticket_priority = isset($_POST['ticket_priority']) ? sanitize_text_field(wp_unslash($_POST['ticket_priority'])) : '';
+    $ticket_category = isset($_POST['ticket_category']) ? sanitize_text_field(wp_unslash($_POST['ticket_category'])) : '';
+    $ticket_assignee = isset($_POST['ticket_assignee']) ? sanitize_text_field(wp_unslash($_POST['ticket_assignee'])) : '';
+    $ticket_description = isset($_POST['ticket_description']) ? sanitize_textarea_field(wp_unslash($_POST['ticket_description'])) : '';
     // $ticket_source = isset($_POST['ticket_source']) ? sanitize_text_field($_POST['ticket_source']) : 'Form';
 
     // Validate required fields
@@ -962,7 +985,7 @@ function robodesk_create_ticket()
 add_action('wp_ajax_get_ticket_detail', 'robodesk_get_ticket_detail');
 function robodesk_get_ticket_detail()
 {
-    if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'robodesk_get_ticket_detail_action')) {
+    if (!isset($_POST['nonce']) || !wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['nonce'])), 'robodesk_get_ticket_detail_action')) {
         wp_send_json_error(['message' => 'Security check failed']);
     }
 
@@ -1086,8 +1109,14 @@ add_action('wp_ajax_nopriv_robodesk_user_lookup', 'robodesk_user_lookup');
 
 function robodesk_user_lookup()
 {
-    $type = sanitize_text_field($_POST['type']);
-    $value = sanitize_text_field($_POST['value']);
+    check_ajax_referer('robodesk_user_lookup_action', 'nonce');
+
+    if (!isset($_POST['type'], $_POST['value'])) {
+        wp_send_json_error(['message' => 'Missing required fields']);
+        return;
+    }
+    $type = sanitize_text_field(wp_unslash($_POST['type']));
+    $value = sanitize_text_field(wp_unslash($_POST['value']));
 
     $args = [
         'number' => 5,
@@ -1119,7 +1148,7 @@ function robodesk_update_ticket_status()
     check_ajax_referer('robodesk_ticket_status_action', 'security'); // ✅ must match your localized name
 
     $ticket_id = intval($_POST['ticket_id'] ?? 0);
-    $new_status = sanitize_text_field($_POST['status'] ?? '');
+    $new_status = sanitize_text_field(wp_unslash($_POST['status'] ?? ''));
     $old_status = $ticket_id > 0 ? (string) get_post_meta($ticket_id, '_robodesk_ticket_status', true) : '';
 
     if (!$ticket_id || !$new_status) {
@@ -1178,7 +1207,7 @@ function robodesk_update_ticket_priority()
     check_ajax_referer('robodesk_ticket_priority_action', 'security');
 
     $ticket_id = intval($_POST['ticket_id'] ?? 0);
-    $new_priority = sanitize_text_field($_POST['priority'] ?? '');
+    $new_priority = sanitize_text_field(wp_unslash($_POST['priority'] ?? ''));
 
     if (!$ticket_id || !$new_priority) {
         wp_send_json_error(['message' => 'Invalid input']);
@@ -1247,7 +1276,7 @@ function robodesk_update_ticket_assignee()
     check_ajax_referer('robodesk_ticket_assignment_action', 'security');
 
     $ticket_id = intval($_POST['ticket_id'] ?? 0);
-    $new_assignee = sanitize_text_field($_POST['assignee'] ?? '');
+    $new_assignee = sanitize_text_field(wp_unslash($_POST['assignee'] ?? ''));
 
     if (!$ticket_id || !$new_assignee) {
         wp_send_json_error(['message' => 'Invalid input']);
@@ -1326,12 +1355,12 @@ add_action('wp_ajax_add_ticket_reply', 'robodesk_handle_add_ticket_reply');
 function robodesk_handle_add_ticket_reply()
 {
     // Verify nonce for security
-    if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'robodesk_add_ticket_reply_action')) {
+    if (!isset($_POST['nonce']) || !wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['nonce'])), 'robodesk_add_ticket_reply_action')) {
         wp_send_json_error(['message' => 'Nonce verification failed']);
     }
 
     $ticket_id = isset($_POST['ticket_id']) ? intval($_POST['ticket_id']) : 0;
-    $reply = isset($_POST['reply']) ? wp_kses_post($_POST['reply']) : '';
+    $reply = isset($_POST['reply']) ? wp_kses_post(wp_unslash($_POST['reply'])) : '';
 
     if (!$ticket_id || empty($reply)) {
         wp_send_json_error(['message' => 'Invalid data']);
@@ -1377,7 +1406,7 @@ add_action('wp_ajax_close_ticket', 'robodesk_handle_close_ticket');
 function robodesk_handle_close_ticket()
 {
     // Verify nonce for security
-    if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'robodesk_close_ticket_action')) {
+    if (!isset($_POST['nonce']) || !wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['nonce'])), 'robodesk_close_ticket_action')) {
         wp_send_json_error(['message' => 'Nonce verification failed']);
     }
 
@@ -1402,7 +1431,7 @@ function robodesk_handle_close_ticket()
     }
 
     // Add a reply comment if reply content is provided
-    $reply = isset($_POST['reply']) ? wp_kses_post($_POST['reply']) : '';
+    $reply = isset($_POST['reply']) ? wp_kses_post(wp_unslash($_POST['reply'])) : '';
 
     if (!empty($reply)) {
         $comment_id = wp_insert_comment([
@@ -1472,7 +1501,7 @@ add_action('wp_ajax_get_ticket_replies', 'robodesk_handle_get_ticket_replies');
 function robodesk_handle_get_ticket_replies()
 {
     // Verify nonce
-    if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'robodesk_get_ticket_replies_action')) {
+    if (!isset($_POST['nonce']) || !wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['nonce'])), 'robodesk_get_ticket_replies_action')) {
         wp_send_json_error(['message' => 'Nonce verification failed']);
     }
 
@@ -1557,12 +1586,12 @@ add_action('wp_ajax_add_ticket_note', 'robodesk_handle_add_ticket_note');
 function robodesk_handle_add_ticket_note()
 {
     // Verify nonce for security
-    if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'robodesk_add_ticket_note_action')) {
+    if (!isset($_POST['nonce']) || !wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['nonce'])), 'robodesk_add_ticket_note_action')) {
         wp_send_json_error(['message' => 'Nonce verification failed']);
     }
 
     $ticket_id = isset($_POST['ticket_id']) ? intval($_POST['ticket_id']) : 0;
-    $note = isset($_POST['note']) ? wp_kses_post($_POST['note']) : '';
+    $note = isset($_POST['note']) ? wp_kses_post(wp_unslash($_POST['note'])) : '';
 
     if (!$ticket_id || empty($note)) {
         wp_send_json_error(['message' => 'Invalid data']);
@@ -1602,7 +1631,7 @@ add_action('wp_ajax_get_ticket_notes', 'robodesk_handle_get_ticket_notes');
 function robodesk_handle_get_ticket_notes()
 {
     // Verify nonce
-    if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'robodesk_get_ticket_notes_action')) {
+    if (!isset($_POST['nonce']) || !wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['nonce'])), 'robodesk_get_ticket_notes_action')) {
         wp_send_json_error(['message' => 'Nonce verification failed']);
     }
 
@@ -1694,10 +1723,11 @@ function robodesk_fetch_emails_handler()
 
 add_action('wp_ajax_update_ticket_category', 'handle_update_ticket_category');
 
+// phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedFunctionFound
 function handle_update_ticket_category()
 {
     // Verify nonce
-    if (!wp_verify_nonce($_POST['nonce'], 'robodesk_update_ticket_category_action')) {
+    if (!isset($_POST['nonce']) || !wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['nonce'])), 'robodesk_update_ticket_category_action')) {
         wp_die('Security check failed');
     }
 
@@ -1713,8 +1743,8 @@ function handle_update_ticket_category()
         return;
     }
 
-    $ticket_id = intval($_POST['ticket_id']);
-    $category_id = intval($_POST['category_id']);
+    $ticket_id = isset($_POST['ticket_id']) ? intval($_POST['ticket_id']) : 0;
+    $category_id = isset($_POST['category_id']) ? intval($_POST['category_id']) : 0;
 
     // Validate inputs
     if (!$ticket_id || !$category_id) {
@@ -1744,6 +1774,7 @@ function handle_update_ticket_category()
 
 // Set default taxonomy term for robodesk_ticket_category when a ticket is created
 add_action('save_post', 'set_default_taxonomy_term', 10, 3);
+// phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedFunctionFound
 function set_default_taxonomy_term($post_id, $post, $update)
 {
     // Check if this is the correct post type
@@ -1777,6 +1808,7 @@ add_action('edit_user_profile', 'add_robodesk_user_meta_fields');
 add_action('personal_options_update', 'save_robodesk_user_meta_fields');
 add_action('edit_user_profile_update', 'save_robodesk_user_meta_fields');
 
+// phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedFunctionFound
 function add_robodesk_user_meta_fields($user)
 {
 ?>
@@ -1807,18 +1839,24 @@ function add_robodesk_user_meta_fields($user)
 <?php
 }
 
+// phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedFunctionFound
 function save_robodesk_user_meta_fields($user_id)
 {
     if (!current_user_can('edit_user', $user_id)) {
         return false;
     }
 
+    if (!isset($_POST['_wpnonce']) || !wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['_wpnonce'])), 'update-user_' . $user_id)) {
+        return false;
+    }
+
     if (isset($_POST['robodesk_user_department'])) {
-        update_user_meta($user_id, 'robodesk_user_department', sanitize_text_field($_POST['robodesk_user_department']));
+        update_user_meta($user_id, 'robodesk_user_department', sanitize_text_field(wp_unslash($_POST['robodesk_user_department'])));
     }
 }
 
 // Automatically assign a ticket to support staff. Email fetch can enforce strict default-agent-only assignment.
+// phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedFunctionFound
 function auto_assign_ticket_to_support_staff($prefer_default_agent = false, $strict_default_only = false)
 {
     // Match eligible users with roles shown in settings "Auto-assign to".
@@ -1912,7 +1950,7 @@ add_action('wp_ajax_robodesk_bulk_action', 'robodesk_handle_bulk_action');
 function robodesk_handle_bulk_action()
 {
     // Verify nonce for security
-    if (!wp_verify_nonce($_POST['nonce'], 'robodesk_bulk_action')) {
+    if (!isset($_POST['nonce']) || !wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['nonce'])), 'robodesk_bulk_action')) {
         wp_send_json_error(array('message' => 'Security verification failed.'));
     }
 
@@ -1922,8 +1960,8 @@ function robodesk_handle_bulk_action()
     }
 
     // Get the posted data
-    $bulk_action = isset($_POST['bulk_action']) ? sanitize_text_field($_POST['bulk_action']) : '';
-    $ticket_ids_json = isset($_POST['ticket_ids']) ? $_POST['ticket_ids'] : '';
+    $bulk_action = isset($_POST['bulk_action']) ? sanitize_text_field(wp_unslash($_POST['bulk_action'])) : '';
+    $ticket_ids_json = isset($_POST['ticket_ids']) ? sanitize_text_field(wp_unslash($_POST['ticket_ids'])) : '';
 
     // Decode ticket IDs
     $ticket_ids = json_decode($ticket_ids_json, true);
@@ -2195,7 +2233,7 @@ add_action('wp_ajax_robodesk_refresh_dashboard_tickets', 'robodesk_refresh_dashb
 function robodesk_refresh_dashboard_tickets()
 {
     // Verify nonce for security
-    if (!wp_verify_nonce($_POST['nonce'], 'robodesk_refresh_dashboard_tickets_action')) {
+    if (!isset($_POST['nonce']) || !wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['nonce'])), 'robodesk_refresh_dashboard_tickets_action')) {
         wp_send_json_error(array('message' => 'Security verification failed.'));
     }
 
@@ -2309,7 +2347,7 @@ function robodesk_refresh_dashboard_tickets()
 add_action('wp_ajax_robodesk_get_notifications', 'robodesk_get_notifications');
 function robodesk_get_notifications()
 {
-    if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'robodesk_notifications_action')) {
+    if (!isset($_POST['nonce']) || !wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['nonce'])), 'robodesk_notifications_action')) {
         wp_send_json_error(['message' => 'Security verification failed.']);
     }
 
@@ -2321,10 +2359,12 @@ function robodesk_get_notifications()
     global $wpdb;
     $table_name = $wpdb->prefix . 'robodesk_notifications';
 
+    // phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter
+    // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
     $rows = $wpdb->get_results(
         $wpdb->prepare(
             "SELECT id, ticket_id, comment_id, type, source, message, created_at
-             FROM $table_name
+             FROM {$table_name}
              WHERE recipient_user_id = %d AND read_at IS NULL
              ORDER BY created_at DESC
              LIMIT 50",
@@ -2332,6 +2372,7 @@ function robodesk_get_notifications()
         ),
         ARRAY_A
     );
+    // phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter
 
     $items = [];
     foreach ($rows as $row) {
@@ -2340,6 +2381,7 @@ function robodesk_get_notifications()
         if ($ticket_id > 0) {
             $current_assignee_id = (int) get_post_meta($ticket_id, 'ticket_assignee_id', true);
             if ($current_assignee_id > 0 && $current_assignee_id !== $user_id) {
+                // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, PluginCheck.Security.DirectDB.UnescapedDBParameter
                 $wpdb->delete(
                     $table_name,
                     ['id' => (int) $row['id'], 'recipient_user_id' => $user_id],
@@ -2373,7 +2415,7 @@ function robodesk_get_notifications()
 add_action('wp_ajax_robodesk_mark_notification_read', 'robodesk_mark_notification_read');
 function robodesk_mark_notification_read()
 {
-    if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'robodesk_notifications_action')) {
+    if (!isset($_POST['nonce']) || !wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['nonce'])), 'robodesk_notifications_action')) {
         wp_send_json_error(['message' => 'Security verification failed.']);
     }
 
@@ -2390,14 +2432,17 @@ function robodesk_mark_notification_read()
     global $wpdb;
     $table_name = $wpdb->prefix . 'robodesk_notifications';
 
+    // phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter
+    // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
     $row = $wpdb->get_row(
         $wpdb->prepare(
-            "SELECT id, ticket_id FROM $table_name WHERE id = %d AND recipient_user_id = %d LIMIT 1",
+            "SELECT id, ticket_id FROM {$table_name} WHERE id = %d AND recipient_user_id = %d LIMIT 1",
             $notification_id,
             $user_id
         ),
         ARRAY_A
     );
+    // phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter
 
     if (!$row) {
         wp_send_json_error(['message' => 'Notification not found.']);
@@ -2411,6 +2456,7 @@ function robodesk_mark_notification_read()
         }
     }
 
+    // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, PluginCheck.Security.DirectDB.UnescapedDBParameter
     $deleted = $wpdb->delete(
         $table_name,
         ['id' => $notification_id, 'recipient_user_id' => $user_id],
@@ -2431,7 +2477,7 @@ function robodesk_mark_notification_read()
 add_action('wp_ajax_robodesk_clear_notifications', 'robodesk_clear_notifications');
 function robodesk_clear_notifications()
 {
-    if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'robodesk_notifications_action')) {
+    if (!isset($_POST['nonce']) || !wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['nonce'])), 'robodesk_notifications_action')) {
         wp_send_json_error(['message' => 'Security verification failed.']);
     }
 
@@ -2443,12 +2489,15 @@ function robodesk_clear_notifications()
     global $wpdb;
     $table_name = $wpdb->prefix . 'robodesk_notifications';
 
+    // phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter
+    // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
     $deleted = $wpdb->query(
         $wpdb->prepare(
-            "DELETE FROM $table_name WHERE recipient_user_id = %d AND read_at IS NULL",
+            "DELETE FROM {$table_name} WHERE recipient_user_id = %d AND read_at IS NULL",
             $user_id
         )
     );
+    // phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter
 
     if ($deleted === false) {
         wp_send_json_error(['message' => 'Failed to clear notifications.']);

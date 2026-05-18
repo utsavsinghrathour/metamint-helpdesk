@@ -18,14 +18,14 @@ get_header(); ?>
                     <div class="entry-meta">
                         <span class="ticket-status">Status: <?php echo esc_html(get_post_meta(get_the_ID(), '_robodesk_ticket_status', true)); ?></span> |
                         <span class="ticket-priority">Priority: <?php
-                                                                $priority_terms = wp_get_object_terms(get_the_ID(), 'robodesk_ticket_priority');
-                                                                $priority = !empty($priority_terms) && !is_wp_error($priority_terms) ? $priority_terms[0]->name : 'N/A';
-                                                                echo esc_html($priority);
+                                                                $robodesk_priority_terms = wp_get_object_terms(get_the_ID(), 'robodesk_ticket_priority');
+                                                                $robodesk_priority = !empty($robodesk_priority_terms) && !is_wp_error($robodesk_priority_terms) ? $robodesk_priority_terms[0]->name : 'N/A';
+                                                                echo esc_html($robodesk_priority);
                                                                 ?></span> |
                         <span class="ticket-origin">Origin: <?php
-                                                            $origin_terms = wp_get_object_terms(get_the_ID(), 'robodesk_ticket_origin');
-                                                            $origin = !empty($origin_terms) && !is_wp_error($origin_terms) ? $origin_terms[0]->name : 'N/A';
-                                                            echo esc_html($origin);
+                                                            $robodesk_origin_terms = wp_get_object_terms(get_the_ID(), 'robodesk_ticket_origin');
+                                                            $robodesk_origin = !empty($robodesk_origin_terms) && !is_wp_error($robodesk_origin_terms) ? $robodesk_origin_terms[0]->name : 'N/A';
+                                                            echo esc_html($robodesk_origin);
                                                             ?></span> |
                         <span class="ticket-date">Date: <?php the_date(); ?></span>
                     </div>

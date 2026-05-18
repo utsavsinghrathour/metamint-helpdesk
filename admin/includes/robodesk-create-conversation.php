@@ -55,12 +55,12 @@ if (!defined('ABSPATH')) {
                             class="styled-select block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
                             <option value=""><?php esc_html_e('Select Priority', 'robodesk'); ?></option>
                             <?php
-                            $ticket_priorities = get_terms([
+                            $robodesk_ticket_priorities = get_terms([
                                 'taxonomy' => 'robodesk_ticket_priority',
                                 'hide_empty' => false,
                             ]);
-                            foreach ($ticket_priorities as $ticket_priority) {
-                                echo '<option value="' . esc_attr($ticket_priority->name) . '">' . esc_html($ticket_priority->name) . '</option>';
+                            foreach ($robodesk_ticket_priorities as $robodesk_ticket_priority) {
+                                echo '<option value="' . esc_attr($robodesk_ticket_priority->name) . '">' . esc_html($robodesk_ticket_priority->name) . '</option>';
                             }
                             ?>
                         </select>
@@ -72,22 +72,22 @@ if (!defined('ABSPATH')) {
                             class="styled-select block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
                             <option value=""><?php esc_html_e('Select Department', 'robodesk'); ?></option>
                             <?php
-                            $default_category_id = get_option('robodesk_default_ticket_category', '');
-                            if (!empty($default_category_id)) {
-                                $default_category = get_term($default_category_id, 'robodesk_ticket_category');
-                                if ($default_category && !is_wp_error($default_category)) {
-                                    echo '<option value="' . esc_attr($default_category->term_id) . '" selected>' . esc_html($default_category->name) . '</option>';
+                            $robodesk_default_category_id = get_option('robodesk_default_ticket_category', '');
+                            if (!empty($robodesk_default_category_id)) {
+                                $robodesk_default_category = get_term($robodesk_default_category_id, 'robodesk_ticket_category');
+                                if ($robodesk_default_category && !is_wp_error($robodesk_default_category)) {
+                                    echo '<option value="' . esc_attr($robodesk_default_category->term_id) . '" selected>' . esc_html($robodesk_default_category->name) . '</option>';
                                 }
                             }
                             ?>
                             <?php
-                            $categories = get_terms([
+                            $robodesk_categories = get_terms([
                                 'taxonomy' => 'robodesk_ticket_category',
                                 'hide_empty' => false,
                             ]);
 
-                            foreach ($categories as $category) {
-                                echo '<option value="' . esc_attr($category->term_id) . '">' . esc_html($category->name) . '</option>';
+                            foreach ($robodesk_categories as $robodesk_category) {
+                                echo '<option value="' . esc_attr($robodesk_category->term_id) . '">' . esc_html($robodesk_category->name) . '</option>';
                             }
                             ?>
                         </select>
@@ -99,28 +99,25 @@ if (!defined('ABSPATH')) {
                         <select id="ticket-assignee" name="ticket_assignee" required
                             class="styled-select block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
                             <?php
-                            $default_agent = get_option('robodesk_default_agent');
+                            $robodesk_default_agent = get_option('robodesk_default_agent');
                             ?>
-                            <?php
-                            $default_agent = get_option('robodesk_default_agent');
-                            ?>
-                            <option value="" <?php echo empty($default_agent) ? 'selected' : ''; ?>>
+                            <option value="" <?php echo empty($robodesk_default_agent) ? 'selected' : ''; ?>>
                                 <?php esc_html_e('Select Agent', 'robodesk'); ?>
                             </option>
                             <?php
-                            $agents = get_users([
+                            $robodesk_agents = get_users([
                                 'role__in' => ['robodesk_support_staff', 'robodesk_support_manager', 'author', 'editor', 'administrator'],
                                 'fields' => ['ID', 'display_name'],
                             ]);
                             ?>
-                            <?php foreach ($agents as $agent): ?>
+                            <?php foreach ($robodesk_agents as $robodesk_agent): ?>
                                 <?php
-                                $agent_value = (int) $agent->ID;
-                                $is_selected = (string) $default_agent === (string) $agent_value ||
-                                    (string) $default_agent === (string) $agent->display_name;
+                                $robodesk_agent_value = (int) $robodesk_agent->ID;
+                                $robodesk_is_selected = (string) $robodesk_default_agent === (string) $robodesk_agent_value ||
+                                    (string) $robodesk_default_agent === (string) $robodesk_agent->display_name;
                                 ?>
-                                <option value="<?php echo esc_attr($agent_value); ?>" <?php selected($is_selected, true); ?>>
-                                    <?php echo esc_html($agent->display_name); ?>
+                                <option value="<?php echo esc_attr($robodesk_agent_value); ?>" <?php selected($robodesk_is_selected, true); ?>>
+                                    <?php echo esc_html($robodesk_agent->display_name); ?>
                                 </option>
                             <?php endforeach; ?>
                         </select>

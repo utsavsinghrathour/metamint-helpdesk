@@ -1,4 +1,5 @@
 <?php
+// phpcs:disable WordPress.DB.SlowDBQuery
 if (!defined('ABSPATH')) {
     exit; // Exit if accessed directly
 }
@@ -137,7 +138,7 @@ function robodesk_save_featured_metabox($post_id)
     }
 
     // Verify the nonce
-    if (!wp_verify_nonce($_POST['robodesk_featured_metabox_nonce'], 'robodesk_featured_metabox')) {
+    if (!wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['robodesk_featured_metabox_nonce'])), 'robodesk_featured_metabox')) {
         return;
     }
 
@@ -167,6 +168,7 @@ add_filter('rest_robodesk_faq_query', 'robodesk_filter_faqs_by_featured', 10, 2)
 function robodesk_filter_faqs_by_featured($args, $request)
 {
 
+    // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query
     if (isset($request['featured']) && $request['featured'] === 'true') {
         $args['meta_query'] = array(
             array(

@@ -24,10 +24,10 @@
                  </button>
                  <?php
                     // Allow addons to add their settings tabs
-                    $addon_tabs = apply_filters('robodesk_settings_tabs', array());
-                    foreach ($addon_tabs as $tab_key => $tab_label) {
-                        echo '<button onclick="showSettingsTab(\'' . esc_js($tab_key) . '\')" class="settings-tab py-4 px-1 border-b-2 font-medium text-sm" data-tab="' . esc_attr($tab_key) . '">';
-                        echo $tab_label;
+                    $robodesk_addon_tabs = apply_filters('robodesk_settings_tabs', array());
+                    foreach ($robodesk_addon_tabs as $robodesk_tab_key => $robodesk_tab_label) {
+                        echo '<button onclick="showSettingsTab(\'' . esc_js($robodesk_tab_key) . '\')" class="settings-tab py-4 px-1 border-b-2 font-medium text-sm" data-tab="' . esc_attr($robodesk_tab_key) . '">';
+                        echo wp_kses_post($robodesk_tab_label);
                         echo '</button>';
                     }
                     ?>

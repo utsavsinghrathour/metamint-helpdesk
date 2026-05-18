@@ -173,7 +173,7 @@ function robodesk_status_meta_box_callback($post)
 add_action('save_post', 'robodesk_save_status_meta_box_data');
 function robodesk_save_status_meta_box_data($post_id)
 {
-    if (! isset($_POST['robodesk_ticket_status_nonce']) || ! wp_verify_nonce($_POST['robodesk_ticket_status_nonce'], 'robodesk_ticket_status_nonce')) {
+    if (! isset($_POST['robodesk_ticket_status_nonce']) || ! wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['robodesk_ticket_status_nonce'])), 'robodesk_ticket_status_nonce')) {
         return;
     }
 
@@ -192,22 +192,22 @@ function robodesk_save_status_meta_box_data($post_id)
     }
 
     if (isset($_POST['robodesk_ticket_status'])) {
-        update_post_meta($post_id, '_robodesk_ticket_status', sanitize_text_field($_POST['robodesk_ticket_status']));
+        update_post_meta($post_id, '_robodesk_ticket_status', sanitize_text_field(wp_unslash($_POST['robodesk_ticket_status'])));
     }
 }
 
 //Adding Ticket Status on  admin_column
-add_filter('manage_robodesk_ticket_posts_columns', 'add_robodesk_ticket_status_column');
+add_filter('manage_robodesk_ticket_posts_columns', 'robodesk_add_ticket_status_column');
 
-function add_robodesk_ticket_status_column($columns)
+function robodesk_add_ticket_status_column($columns)
 {
     $columns['_robodesk_ticket_status'] = 'Ticket Status';
     return $columns;
 }
 
-add_action('manage_robodesk_ticket_posts_custom_column', 'fill_robodesk_ticket_status_column', 10, 2);
+add_action('manage_robodesk_ticket_posts_custom_column', 'robodesk_fill_ticket_status_column', 10, 2);
 
-function fill_robodesk_ticket_status_column($column, $post_id)
+function robodesk_fill_ticket_status_column($column, $post_id)
 {
     if ($column == '_robodesk_ticket_status') {
         $status = get_post_meta($post_id, '_robodesk_ticket_status', true);
@@ -215,17 +215,17 @@ function fill_robodesk_ticket_status_column($column, $post_id)
     }
 }
 
-add_filter('manage_edit-robodesk_ticket_sortable_columns', 'make_robodesk_ticket_status_column_sortable');
+add_filter('manage_edit-robodesk_ticket_sortable_columns', 'robodesk_make_ticket_status_column_sortable');
 
-function make_robodesk_ticket_status_column_sortable($columns)
+function robodesk_make_ticket_status_column_sortable($columns)
 {
     $columns['_robodesk_ticket_status'] = '_robodesk_ticket_status';
     return $columns;
 }
 
-add_action('pre_get_posts', 'sort_robodesk_ticket_status_column');
+add_action('pre_get_posts', 'robodesk_sort_ticket_status_column');
 
-function sort_robodesk_ticket_status_column($query)
+function robodesk_sort_ticket_status_column($query)
 {
     if (!is_admin() || !$query->is_main_query()) {
         return;
@@ -240,7 +240,7 @@ function sort_robodesk_ticket_status_column($query)
 // Add this code to your theme's functions.php file or a custom plugin
 
 // Step 1: Register the term meta for 'robodesk_ticket_priority'
-function register_ticket_priority_color_meta()
+function robodesk_register_ticket_priority_color_meta()
 {
     register_term_meta('robodesk_ticket_priority', 'priority_color', array(
         'type' => 'string',
@@ -249,10 +249,10 @@ function register_ticket_priority_color_meta()
         'show_in_rest' => true, // Optional: Expose in REST API
     ));
 }
-add_action('init', 'register_ticket_priority_color_meta');
+add_action('init', 'robodesk_register_ticket_priority_color_meta');
 
 // Step 2a: Add color picker field to "Add New Term" form
-function add_color_picker_to_new_term($taxonomy)
+function robodesk_add_color_picker_to_new_term($taxonomy)
 {
     if ($taxonomy === 'robodesk_ticket_priority') {
     ?>
@@ -264,10 +264,10 @@ function add_color_picker_to_new_term($taxonomy)
     <?php
     }
 }
-add_action('robodesk_ticket_priority_add_form_fields', 'add_color_picker_to_new_term', 10, 1);
+add_action('robodesk_ticket_priority_add_form_fields', 'robodesk_add_color_picker_to_new_term', 10, 1);
 
 // Step 2b: Add color picker field to "Edit Term" form
-function add_color_picker_to_edit_term($term)
+function robodesk_add_color_picker_to_edit_term($term)
 {
     $color = get_term_meta($term->term_id, 'priority_color', true);
     $color = !empty($color) ? $color : '#ffffff'; // Default to white if no color is set
@@ -283,10 +283,10 @@ function add_color_picker_to_edit_term($term)
     </tr>
 <?php
 }
-add_action('robodesk_ticket_priority_edit_form_fields', 'add_color_picker_to_edit_term', 10, 1);
+add_action('robodesk_ticket_priority_edit_form_fields', 'robodesk_add_color_picker_to_edit_term', 10, 1);
 
 // Step 3: Enqueue WordPress color picker scripts and styles
-function enqueue_color_picker_scripts($taxonomy)
+function robodesk_enqueue_color_picker_scripts($taxonomy)
 {
     // Only load on the edit tags screen for 'robodesk_ticket_priority'
     $screen = get_current_screen();
@@ -294,12 +294,12 @@ function enqueue_color_picker_scripts($taxonomy)
         wp_enqueue_style('wp-color-picker');
         wp_enqueue_script('wp-color-picker');
 
-        add_action('admin_footer', 'initialize_color_picker');
+        add_action('admin_footer', 'robodesk_initialize_color_picker');
     }
 }
-add_action('admin_enqueue_scripts', 'enqueue_color_picker_scripts');
+add_action('admin_enqueue_scripts', 'robodesk_enqueue_color_picker_scripts');
 
-function initialize_color_picker()
+function robodesk_initialize_color_picker()
 {
 ?>
     <script type="text/javascript">
@@ -311,10 +311,12 @@ function initialize_color_picker()
 }
 
 // Step 4: Save the color value when the term is created or updated
-function save_priority_color_meta($term_id)
+function robodesk_save_priority_color_meta($term_id)
 {
+    // phpcs:ignore WordPress.Security.NonceVerification.Missing
     if (isset($_POST['priority_color'])) {
-        $color = sanitize_hex_color($_POST['priority_color']); // Sanitize the hex color
+        // phpcs:ignore WordPress.Security.NonceVerification.Missing
+        $color = sanitize_hex_color(wp_unslash($_POST['priority_color'])); // Sanitize the hex color
         if ($color) {
             update_term_meta($term_id, 'priority_color', $color);
         } else {
@@ -322,8 +324,8 @@ function save_priority_color_meta($term_id)
         }
     }
 }
-add_action('created_robodesk_ticket_priority', 'save_priority_color_meta');
-add_action('edited_robodesk_ticket_priority', 'save_priority_color_meta');
+add_action('created_robodesk_ticket_priority', 'robodesk_save_priority_color_meta');
+add_action('edited_robodesk_ticket_priority', 'robodesk_save_priority_color_meta');
 
 
 function robodesk_get_formatted_comments($post_id)
@@ -418,12 +420,12 @@ add_filter('rest_robodesk_ticket_query', function ($args, $request) {
 
 add_filter(
     'rest_prepare_robodesk_ticket',
-    'customize_robodesk_ticket_response',
+    'robodesk_customize_ticket_response',
     10,
     3
 );
 
-function customize_robodesk_ticket_response($response, $post, $request)
+function robodesk_customize_ticket_response($response, $post, $request)
 {
     // Grab the array we're going to work on
     $data = $response->get_data();
@@ -807,19 +809,27 @@ function robodesk_is_ticket_kses_context()
 {
     $possible_post_ids = [];
 
+    // phpcs:ignore WordPress.Security.NonceVerification.Missing
     if (isset($_POST['ticket_id'])) {
+        // phpcs:ignore WordPress.Security.NonceVerification.Missing
         $possible_post_ids[] = absint($_POST['ticket_id']);
     }
 
+    // phpcs:ignore WordPress.Security.NonceVerification.Missing
     if (isset($_POST['comment_post_ID'])) {
+        // phpcs:ignore WordPress.Security.NonceVerification.Missing
         $possible_post_ids[] = absint($_POST['comment_post_ID']);
     }
 
+    // phpcs:ignore WordPress.Security.NonceVerification.Recommended
     if (isset($_REQUEST['post_id'])) {
+        // phpcs:ignore WordPress.Security.NonceVerification.Recommended
         $possible_post_ids[] = absint($_REQUEST['post_id']);
     }
 
+    // phpcs:ignore WordPress.Security.NonceVerification.Recommended
     if (isset($_REQUEST['ticket_id'])) {
+        // phpcs:ignore WordPress.Security.NonceVerification.Recommended
         $possible_post_ids[] = absint($_REQUEST['ticket_id']);
     }
 
