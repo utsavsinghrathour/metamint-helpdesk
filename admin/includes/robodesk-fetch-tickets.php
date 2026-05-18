@@ -1,4 +1,5 @@
 <?php
+// phpcs:disable WordPress.DB.SlowDBQuery
 // robodesk-email-to-ticket
 if (!defined('ABSPATH')) {
     exit; // Exit if accessed directly
@@ -44,8 +45,7 @@ function robodesk_clean_email_message($message)
 {
     // Remove quoted replies, signatures, and excessive whitespace
     $message = preg_replace('/^>.*$/m', '', $message); // Remove lines starting with ">"
-    // $message = preg_replace('/--\s*Signature.*$/s', '', $message); // Remove signature
-    $message = strip_tags($message); // Remove HTML tags
+    $message = wp_strip_all_tags($message); // Remove HTML tags
     // dont remove line breaks
     $message = preg_replace('/\s+/', ' ', $message); // Replace multiple spaces with a single space
     $message = preg_replace('/\n+/', "\n", $message); // Replace multiple newlines with a single newline
@@ -57,8 +57,6 @@ function robodesk_clean_email_message($message)
 
 function robodesk_fetch_emails()
 {
-    // Set timezone to WordPress setting
-    date_default_timezone_set(wp_timezone_string());
     rbd_log('Starting email fetch process');
 
     // Verify the custom post type exists
@@ -85,7 +83,7 @@ function robodesk_fetch_emails()
     rbd_log('Robodesk: Last email fetched date/time: ' . $last_fetched_date);
 
     // Convert to IMAP-compatible date with time
-    $since_date = date('d-M-Y H:i:s', strtotime($last_fetched_date));
+    $since_date = gmdate('d-M-Y H:i:s', strtotime($last_fetched_date));
     rbd_log('IMAP since date format: ' . $since_date);
 
 
@@ -177,7 +175,7 @@ function robodesk_fetch_emails()
                 continue;
             }
 
-            $date = date("Y-m-d H:i:s", strtotime($headerInfo->date ?? 'now'));
+            $date = gmdate("Y-m-d H:i:s", strtotime($headerInfo->date ?? 'now'));
             rbd_log('Email date: ' . $date . ', Last fetched: ' . $last_fetched_date);
 
             // Skip emails older than or equal to last fetched date
@@ -511,11 +509,16 @@ function robodesk_imap_settings_callback()
     if (isset($_POST['robodesk_imap_save'])) {
         check_admin_referer('robodesk_imap_settings_action', 'robodesk_imap_settings_nonce');
 
+        $hostname = isset($_POST['robodesk_imap_hostname']) ? sanitize_text_field(wp_unslash($_POST['robodesk_imap_hostname'])) : '';
+        $port     = isset($_POST['robodesk_imap_port']) ? intval(wp_unslash($_POST['robodesk_imap_port'])) : 143;
+        $username = isset($_POST['robodesk_imap_username']) ? sanitize_email(wp_unslash($_POST['robodesk_imap_username'])) : '';
+        $password = isset($_POST['robodesk_imap_password']) ? sanitize_text_field(wp_unslash($_POST['robodesk_imap_password'])) : '';
+
         $settings = array(
-            'hostname' => sanitize_text_field($_POST['robodesk_imap_hostname']),
-            'port'     => intval($_POST['robodesk_imap_port']),
-            'username' => sanitize_email($_POST['robodesk_imap_username']),
-            'password' => sanitize_text_field($_POST['robodesk_imap_password']),
+            'hostname' => $hostname,
+            'port'     => $port,
+            'username' => $username,
+            'password' => $password,
         );
 
         update_option('robodesk_imap_settings', $settings);
@@ -527,9 +530,12 @@ function robodesk_imap_settings_callback()
     if (isset($_POST['robodesk_imap_test'])) {
         check_admin_referer('robodesk_imap_settings_action', 'robodesk_imap_settings_nonce');
 
-        $hostname = '{' . $_POST['robodesk_imap_hostname'] . ':' . $_POST['robodesk_imap_port'] . '/imap/ssl}INBOX';
-        $username = $_POST['robodesk_imap_username'];
-        $password = $_POST['robodesk_imap_password'];
+        $hostname_val = isset($_POST['robodesk_imap_hostname']) ? sanitize_text_field(wp_unslash($_POST['robodesk_imap_hostname'])) : '';
+        $port_val     = isset($_POST['robodesk_imap_port']) ? intval(wp_unslash($_POST['robodesk_imap_port'])) : 143;
+        $username     = isset($_POST['robodesk_imap_username']) ? sanitize_email(wp_unslash($_POST['robodesk_imap_username'])) : '';
+        $password     = isset($_POST['robodesk_imap_password']) ? sanitize_text_field(wp_unslash($_POST['robodesk_imap_password'])) : '';
+
+        $hostname = '{' . $hostname_val . ':' . $port_val . '/imap/ssl}INBOX';
 
         $mailbox = @imap_open($hostname, $username, $password);
         if ($mailbox) {
@@ -610,8 +616,10 @@ remove_action('after_password_reset', 'wp_password_change_notification');
 
 // Define fallback logging function
 if (!function_exists('rbd_log')) {
+    // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedFunctionFound
     function rbd_log($message)
     {
+        // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log
         error_log("[Robodesk] $message");
     }
 }

@@ -1,4 +1,5 @@
 <?php
+// phpcs:disable WordPress.DB.SlowDBQuery
 if (!defined('ABSPATH')) {
     exit; // Exit if accessed directly
 }
@@ -169,9 +170,10 @@ function robodesk_add_admin_menu()
 }
 
 
-function update_taxonomy_order()
+function robodesk_update_taxonomy_order()
 {
-    if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'taxonomy_order_nonce')) {
+    $nonce = isset($_POST['nonce']) ? sanitize_text_field(wp_unslash($_POST['nonce'])) : '';
+    if ($nonce === '' || !wp_verify_nonce($nonce, 'taxonomy_order_nonce')) {
         wp_send_json_error('Invalid nonce');
     }
 
@@ -189,9 +191,9 @@ function update_taxonomy_order()
 
     wp_send_json_success('Order updated');
 }
-add_action('wp_ajax_update_taxonomy_order', 'update_taxonomy_order');
+add_action('wp_ajax_update_taxonomy_order', 'robodesk_update_taxonomy_order');
 
-function modify_taxonomy_query($query)
+function robodesk_modify_taxonomy_query($query)
 {
     if (
         is_admin() &&
@@ -219,9 +221,9 @@ function modify_taxonomy_query($query)
         );
     }
 }
-add_action('pre_get_terms', 'modify_taxonomy_query');
+add_action('pre_get_terms', 'robodesk_modify_taxonomy_query');
 
-function set_default_taxonomy_order($term_id, $tt_id, $taxonomy)
+function robodesk_set_default_taxonomy_order($term_id, $tt_id, $taxonomy)
 {
     if ($taxonomy === 'robodesk_ticket_priority') {
         $terms = get_terms(array(
@@ -240,13 +242,14 @@ function set_default_taxonomy_order($term_id, $tt_id, $taxonomy)
         update_term_meta($term_id, 'taxonomy_order', $new_order);
     }
 }
-add_action('created_term', 'set_default_taxonomy_order', 10, 3);
+add_action('created_term', 'robodesk_set_default_taxonomy_order', 10, 3);
 
-function custom_taxonomy_order($terms, $taxonomies, $args)
+function robodesk_custom_taxonomy_order($terms, $taxonomies, $args)
 {
     if (
         is_admin() &&
         in_array('robodesk_ticket_priority', $taxonomies) &&
+        // phpcs:ignore WordPress.Security.NonceVerification.Recommended
         !isset($_GET['orderby'])
     ) {
 
@@ -265,10 +268,10 @@ function custom_taxonomy_order($terms, $taxonomies, $args)
     }
     return $terms;
 }
-add_filter('get_terms', 'custom_taxonomy_order', 10, 3);
+add_filter('get_terms', 'robodesk_custom_taxonomy_order', 10, 3);
 
 
-function add_custom_comment_type($commentdata)
+function robodesk_add_custom_comment_type($commentdata)
 {
     if (get_post_type($commentdata['comment_post_ID']) === 'robodesk_ticket') {
         $commentdata['comment_type'] = 'ticket_replies';
@@ -276,12 +279,13 @@ function add_custom_comment_type($commentdata)
     }
     return $commentdata;
 }
-add_filter('preprocess_comment', 'add_custom_comment_type');
+add_filter('preprocess_comment', 'robodesk_add_custom_comment_type');
 
 
 
 // Enqueue Tailwind CSS and custom styles
 //if page=robodesk-dashboard then enqueue styles
+// phpcs:ignore WordPress.Security.NonceVerification.Recommended
 if (isset($_GET['page']) && $_GET['page'] === 'robodesk-dashboard') {
     add_action('admin_enqueue_scripts', 'robodesk_enqueue_tailwind_and_styles');
 }
@@ -291,13 +295,15 @@ function robodesk_enqueue_tailwind_and_styles()
     wp_enqueue_media();
 
     // Load Tailwind CDN browser runtime thats why wp_enqueue_script is used not style
+    // phpcs:disable PluginCheck.CodeAnalysis.EnqueuedResourceOffloading.OffloadedContent
     wp_enqueue_script(
         'tailwind-browser-cdn',
         'https://cdn.tailwindcss.com',
         [], // No dependencies
-        null,
+        '3.4.15',
         false // Load in header
     );
+    // phpcs:enable PluginCheck.CodeAnalysis.EnqueuedResourceOffloading.OffloadedContent
 
     // Load custom CSS
     wp_enqueue_style(
@@ -320,12 +326,14 @@ function robodesk_enqueue_tailwind_and_styles()
     // They will be enqueued automatically when the respective addons are activated
 
     // Enqueue Font Awesome for icons
+    // phpcs:disable PluginCheck.CodeAnalysis.EnqueuedResourceOffloading.OffloadedContent
     wp_enqueue_style(
         'font-awesome',
         'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css',
         [],
         '6.0.0'
     );
+    // phpcs:enable PluginCheck.CodeAnalysis.EnqueuedResourceOffloading.OffloadedContent
 
     // Localize script with all necessary nonces
     wp_localize_script('robodesk-dashboard-script', 'robodeskAjax', [

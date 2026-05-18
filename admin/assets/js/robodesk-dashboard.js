@@ -988,7 +988,9 @@ document.addEventListener("DOMContentLoaded", function () {
     return; // Exit early, viewTicket will be called by another listener
   }
 
+  const tab = params.get("tab") || "dashboard";
   showPage(tab);
+
   // Note: loadDashboardTickets() will be called by showPage() if tab is 'dashboard'
   // setupEventListeners();
 });

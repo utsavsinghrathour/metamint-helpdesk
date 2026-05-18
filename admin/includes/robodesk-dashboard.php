@@ -43,8 +43,7 @@ function robodesk_dashboard_callback()
     // var_dump($current_user_id); // Debugging line to check current user ID and name
     // var_dump($current_user_name); // Debugging line to check current user name
 
-    // Start output buffering to capture the HTML
-    ob_start();
+    // No output buffering needed
 ?>
 
     <div class="bg-gray-100">
@@ -183,6 +182,4 @@ function robodesk_dashboard_callback()
     </div>
 
 <?php
-    // Output the buffered content
-    echo (ob_get_clean());
 }

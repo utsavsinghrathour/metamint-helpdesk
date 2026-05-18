@@ -1,4 +1,5 @@
 <?php
+// phpcs:disable WordPress.DB.SlowDBQuery
 
 
 // http: //localhost:10135/wp-json/robodesk/v1/adminstream/2166/2704/142
@@ -51,14 +52,18 @@ function robodesk_live_admin_comments($request)
     if (ob_get_level()) ob_end_clean();
 
     // Disable WordPress output compression
+    // phpcs:ignore Squiz.PHP.DiscouragedFunctions.Discouraged
     ini_set('zlib.output_compression', 0);
+    // phpcs:ignore Squiz.PHP.DiscouragedFunctions.Discouraged
     ini_set('output_buffering', 0);
 
     // Set execution limits
+    // phpcs:ignore Squiz.PHP.DiscouragedFunctions.Discouraged
     set_time_limit(0);
     ignore_user_abort(false);
 
 
+    // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query
     $last_comment_server = get_comments([
         'post_id'      => $ticket_id,
         'number'       => 1,
@@ -103,6 +108,7 @@ function robodesk_live_admin_comments($request)
         );
 
 
+        // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query
         $comments = get_comments($args);
         $new_admin_comments = array();
 

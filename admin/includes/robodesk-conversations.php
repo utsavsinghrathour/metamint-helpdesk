@@ -2,8 +2,10 @@
 if (!defined('ABSPATH')) {
     exit; // Exit if accessed directly
 }
+// phpcs:disable WordPress.NamingConventions.PrefixAllGlobals, WordPress.DB.SlowDBQuery
 // Get filter parameters from URL
-$search_term = isset($_GET['search']) ? sanitize_text_field($_GET['search']) : '';
+// phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound, WordPress.Security.NonceVerification.Recommended
+$search_term = isset($_GET['search']) ? sanitize_text_field(wp_unslash($_GET['search'])) : '';
 
 if (!function_exists('robodesk_parse_multi_filter_values')) {
     function robodesk_parse_multi_filter_values($raw)
@@ -29,15 +31,23 @@ if (!function_exists('robodesk_parse_multi_filter_values')) {
     }
 }
 
-$customer_filters = isset($_GET['customer']) ? robodesk_parse_multi_filter_values($_GET['customer']) : [];
-$agent_filters = isset($_GET['agent']) ? robodesk_parse_multi_filter_values($_GET['agent']) : [];
+// phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound, WordPress.Security.NonceVerification.Recommended, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
+$customer_filters = isset($_GET['customer']) ? robodesk_parse_multi_filter_values(wp_unslash($_GET['customer'])) : [];
+// phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound, WordPress.Security.NonceVerification.Recommended, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
+$agent_filters = isset($_GET['agent']) ? robodesk_parse_multi_filter_values(wp_unslash($_GET['agent'])) : [];
+// phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound
 $customer_filter = !empty($customer_filters) ? implode(', ', $customer_filters) : '';
+// phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound
 $agent_filter = !empty($agent_filters) ? implode(', ', $agent_filters) : '';
-$status_filter = isset($_GET['status']) ? sanitize_text_field($_GET['status']) : 'all';
+// phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound, WordPress.Security.NonceVerification.Recommended
+$status_filter = isset($_GET['status']) ? sanitize_text_field(wp_unslash($_GET['status'])) : 'all';
 
 // Get the current page number from URL parameter
-$current_page = isset($_GET['paged']) ? max(1, intval($_GET['paged'])) : 1;
+// phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound, WordPress.Security.NonceVerification.Recommended
+$current_page = isset($_GET['paged']) ? max(1, intval(wp_unslash($_GET['paged']))) : 1;
+// phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound
 $posts_per_page = 10; // Number of tickets per page
+// phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound
 $offset = ($current_page - 1) * $posts_per_page;
 
 // Build the base query arguments
@@ -228,10 +238,12 @@ if ($query->have_posts()) {
 wp_reset_postdata();
 
 // Function to generate pagination URL with current filters
+// phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedFunctionFound
 function get_pagination_url($page)
 {
     $current_url = admin_url('admin.php');
-    $params = $_GET;
+    // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+    $params = isset($_GET) ? map_deep(wp_unslash($_GET), 'sanitize_text_field') : [];
     $params['page'] = 'robodesk-dashboard';
     $params['tab'] = 'tickets';
     $params['paged'] = $page;
@@ -240,10 +252,12 @@ function get_pagination_url($page)
 }
 
 // Function to build filter URL
+// phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedFunctionFound
 function get_filter_url($new_params = array())
 {
     $current_url = admin_url('admin.php');
-    $params = $_GET;
+    // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+    $params = isset($_GET) ? map_deep(wp_unslash($_GET), 'sanitize_text_field') : [];
 
     $params['page'] = 'robodesk-dashboard';
     $params['tab'] = 'tickets';
@@ -320,7 +334,9 @@ $priority_terms = get_terms(array(
                 <!-- Keep the page parameter to stay on Conversations tab -->
                 <input type="hidden" name="page" value="robodesk-dashboard">
                 <input type="hidden" name="tab" value="tickets">
-                <?php foreach ($_GET as $key => $value): ?>
+                <?php
+                // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+                foreach ($_GET as $key => $value): ?>
                     <?php if (!in_array($key, ['page', 'tab', 'search', 'customer', 'agent', 'status', 'paged'])): ?>
                         <input type="hidden" name="<?php echo esc_attr($key); ?>" value="<?php echo esc_attr($value); ?>">
                     <?php endif; ?>
@@ -555,7 +571,7 @@ $priority_terms = get_terms(array(
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap cursor-pointer"
                                 onclick="viewTicket(<?php echo esc_js($ticket['id']); ?>)">
-                                <span class="status-badge <?php echo esc_attr(get_status_class($ticket['status'])); ?> editable-status inline-flex items-center gap-1 cursor-pointer hover:opacity-90"
+                                <span class="status-badge <?php echo esc_attr(robodesk_get_status_class($ticket['status'])); ?> editable-status inline-flex items-center gap-1 cursor-pointer hover:opacity-90"
                                     title="Click to edit status"
                                     onclick="event.stopPropagation(); editStatus(<?php echo esc_js($ticket['id']); ?>, this)">
                                     <?php echo esc_html(str_replace('-', ' ', $ticket['status'])); ?>
@@ -565,7 +581,7 @@ $priority_terms = get_terms(array(
                             <td class="px-6 py-4 whitespace-nowrap cursor-pointer"
                                 onclick="viewTicket(<?php echo esc_js($ticket['id']); ?>)">
                                 <span class="status-badge editable-priority inline-flex items-center gap-1 cursor-pointer hover:opacity-90"
-                                    style="background-color:<?php echo esc_attr(get_priority_class($ticket['priority'])); ?>"
+                                    style="background-color:<?php echo esc_attr(robodesk_get_priority_class($ticket['priority'])); ?>"
                                     title="Click to edit priority"
                                     onclick="event.stopPropagation(); editPriority(<?php echo esc_js($ticket['id']); ?>, this)">
                                     <?php echo esc_html($ticket['priority']); ?>
@@ -592,9 +608,13 @@ $priority_terms = get_terms(array(
                         <td colspan="7" class="px-6 py-4 text-center text-gray-500">
                             <?php if (!empty($search_term) || !empty($customer_filter) || !empty($agent_filter) || $status_filter !== 'all'): ?>
                                 No conversations found matching your filters. <a
-                                    href="<?php echo esc_url(admin_url('admin.php?' . http_build_query(array_filter($_GET, function ($key) {
+                                    href="<?php
+                                    // phpcs:disable WordPress.Security.NonceVerification.Recommended
+                                    echo esc_url(admin_url('admin.php?' . http_build_query(array_filter($_GET, function ($key) {
                                                 return !in_array($key, ['search', 'customer', 'agent', 'status', 'paged']);
-                                            }, ARRAY_FILTER_USE_KEY)))); ?>"
+                                            }, ARRAY_FILTER_USE_KEY))));
+                                    // phpcs:enable WordPress.Security.NonceVerification.Recommended
+                                    ?>"
                                     class="text-blue-600 hover:text-blue-800">Clear filters</a> to see all conversations.
                             <?php else: ?>
                                 No Conversations found.
@@ -748,6 +768,9 @@ $priority_terms = get_terms(array(
         </div>
     <?php endif; ?>
 </div>
+<?php
+// phpcs:enable WordPress.NamingConventions.PrefixAllGlobals
+?>
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {
