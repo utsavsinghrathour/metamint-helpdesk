@@ -13,6 +13,26 @@ import DefaultAvatar from '../images/default-avatar.jpg';
 
 import { sseManager } from '../Hooks/sseManager';
 
+// Helper to escape HTML in plain text
+const escapeHtml = (unsafe) =>
+  String(unsafe)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+
+// Normalize message text: if it already contains HTML tags, return as-is;
+// otherwise escape and convert newlines to <br /> so they render correctly.
+const normalizeMessageText = (text) => {
+  if (!text && text !== 0) return '';
+  const str = String(text);
+  // crude check for HTML tags
+  const hasHtml = /<[^>]+>/.test(str);
+  if (hasHtml) return str;
+  return escapeHtml(str).replace(/\r\n|\r|\n/g, '<br />');
+};
+
 // Skeleton Loader Component for Conversations
 const ConversationSkeleton = ({ count = 6 }) => {
   const skeletonMessages = Array.from({ length: count }, (_, i) => {
@@ -412,7 +432,7 @@ const SingleTicket = ({
 
       const newMessage = {
         id: commentData.id,
-        text: commentData.content?.rendered || '',
+        text: normalizeMessageText(commentData.content?.rendered || ''),
         sender: isOwnMessage ? 'me' : 'other',
         senderName: commentData.author_name || 'Unknown',
         image: isOwnMessage
@@ -450,7 +470,9 @@ const SingleTicket = ({
 
       return {
         id: comment.id,
-        text: comment.content?.rendered || comment.content?.plain || '',
+        text: normalizeMessageText(
+          comment.content?.rendered || comment.content?.plain || ''
+        ),
         sender,
         senderName: comment.author_name || 'Unknown',
         image:
@@ -652,7 +674,7 @@ const SingleTicket = ({
         : false;
       const tempMessage = {
         id: `temp-${Date.now()}`,
-        text: message + (imageHTML ? '<br>' + imageHTML : ''),
+        text: normalizeMessageText(message) + (imageHTML ? '<br>' + imageHTML : ''),
         sender: 'me',
         senderName: 'Me',
         image: customerAvatar,
@@ -694,7 +716,7 @@ const SingleTicket = ({
 
         const newMessage = {
           id: result.data.id || tempMessage.id,
-          text: result.data.content,
+          text: normalizeMessageText(result.data.content || ''),
           sender: 'me',
           senderName: result.data.author_name || 'Me',
           image: customerAvatar,
@@ -1032,7 +1054,7 @@ const SingleTicket = ({
                       <span
                         className='rd-body-text single-message'
                         style={{ opacity: msg.isPending ? 0.7 : 1 }}
-                        dangerouslySetInnerHTML={{ __html: msg.text }}
+                        dangerouslySetInnerHTML={{ __html: normalizeMessageText(msg.text) }}
                       />
                     ) : (
                       <>
@@ -1045,7 +1067,7 @@ const SingleTicket = ({
                             ]
                               .filter(Boolean)
                               .join(' ')}
-                            dangerouslySetInnerHTML={{ __html: msg.text }}
+                            dangerouslySetInnerHTML={{ __html: normalizeMessageText(msg.text) }}
                           />
                         )}
                       </>
