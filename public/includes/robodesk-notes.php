@@ -10,8 +10,8 @@ function robodesk_add_note_callback()
 {
     check_ajax_referer('robodesk_add_note_nonce', 'nonce');
 
-    $ticket_id = (int)$_POST['ticket_id'];
-    $note_content = sanitize_textarea_field($_POST['note_content']);
+    $ticket_id = isset($_POST['ticket_id']) ? (int) $_POST['ticket_id'] : 0;
+    $note_content = isset($_POST['note_content']) ? sanitize_textarea_field(wp_unslash($_POST['note_content'])) : '';
 
     if (!current_user_can('edit_post', $ticket_id) && !current_user_can('read_post', $ticket_id)) {
         wp_send_json_error(array('message' => 'You are not authorized to add notes to this ticket.'));
@@ -58,7 +58,7 @@ function robodesk_display_notes($ticket_id)
         echo '<ul>';
         foreach ($comments as $comment) {
             echo '<li>';
-            echo '<p><strong>' . esc_html($comment->comment_author) . '</strong> on ' . mysql2date(get_option('date_format'), $comment->comment_date) . ':</p>';
+            echo '<p><strong>' . esc_html($comment->comment_author) . '</strong> on ' . esc_html(mysql2date(get_option('date_format'), $comment->comment_date)) . ':</p>';
             echo '<p>' . esc_html($comment->comment_content) . '</p>';
             echo '</li>';
         }
@@ -86,7 +86,7 @@ function robodesk_note_form_shortcode($atts)
         <textarea id="robodesk_note_content" rows="4" cols="50"></textarea><br>
         <input type="hidden" id="robodesk_note_ticket_id" value="<?php echo esc_attr($ticket_id); ?>">
         <button id="robodesk_add_note_button">Add Note</button>
-        <input type="hidden" id="robodesk_add_note_nonce" value="<?php echo wp_create_nonce('robodesk_add_note_nonce'); ?>">
+        <input type="hidden" id="robodesk_add_note_nonce" value="<?php echo esc_attr(wp_create_nonce('robodesk_add_note_nonce')); ?>">
     </div>
 <?php
     return ob_get_clean();

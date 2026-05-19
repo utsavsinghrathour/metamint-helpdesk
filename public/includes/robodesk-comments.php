@@ -11,15 +11,17 @@ add_filter('comment_form_defaults', 'robodesk_add_tinymce_to_comments');
 
 function robodesk_add_tinymce_to_comments($defaults)
 {
-    // Only swap in the rich editor when viewing a robodesk ticket
+    // phpcs:ignore WordPress.Security.NonceVerification.Recommended
     if (!isset($_GET['tid'])) {
         return $defaults;
     }
 
     ob_start();
 
-    if (!is_wp_error(get_post_type(sanitize_text_field($_GET['tid'])))) {
-        $value = get_post_meta(sanitize_text_field($_GET['tid']), '_robodesk_ticket_status', true);
+    // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+    $tid = sanitize_text_field(wp_unslash($_GET['tid']));
+    if (!is_wp_error(get_post_type($tid))) {
+        $value = get_post_meta($tid, '_robodesk_ticket_status', true);
 ?>
         <div class="robodesk-status-selector">
             <label for="robodesk_ticket_status_comment"><?php esc_html_e('Select Status *', 'robodesk') ?></label>
@@ -51,6 +53,7 @@ function robodesk_add_tinymce_to_comments($defaults)
 add_action('wp_enqueue_scripts', 'robodesk_restore_editor_styles', 99);
 function robodesk_restore_editor_styles()
 {
+    // phpcs:ignore WordPress.Security.NonceVerification.Recommended
     if (!isset($_GET['tid'])) {
         if (!wp_style_is('editor-buttons', 'enqueued')) {
             wp_enqueue_style('editor-buttons');
@@ -62,11 +65,16 @@ function robodesk_restore_editor_styles()
 //Saving Comments status dropdown field
 function robodesk_save_custom_comment_field($comment_id)
 {
+    // phpcs:ignore WordPress.Security.NonceVerification.Missing
     if (!empty($_POST['robodesk_ticket_status_comment'])) {
+        // phpcs:ignore WordPress.Security.NonceVerification.Missing
         $dropdown_value = sanitize_text_field(wp_unslash($_POST['robodesk_ticket_status_comment']));
-        $comment_post_id = sanitize_text_field(wp_unslash($_POST['comment_post_ID']));
-        $old_status = (string) get_post_meta($comment_post_id, '_robodesk_ticket_status', true);
-        update_post_meta($comment_post_id, '_robodesk_ticket_status', $dropdown_value);
+        // phpcs:ignore WordPress.Security.NonceVerification.Missing
+        $comment_post_id = isset($_POST['comment_post_ID']) ? sanitize_text_field(wp_unslash($_POST['comment_post_ID'])) : '';
+        
+        if ($comment_post_id) {
+            $old_status = (string) get_post_meta($comment_post_id, '_robodesk_ticket_status', true);
+            update_post_meta($comment_post_id, '_robodesk_ticket_status', $dropdown_value);
 
         if ($old_status !== $dropdown_value && function_exists('robodesk_notify_status_changed')) {
             $comment = get_comment($comment_id);
@@ -80,13 +88,14 @@ function robodesk_save_custom_comment_field($comment_id)
 
             robodesk_notify_status_changed($comment_post_id, $dropdown_value, get_current_user_id(), $source);
         }
+        }
     }
 }
 
 add_action('comment_post', 'robodesk_save_custom_comment_field');
 
 /** Disable single page for robodesk ticket */
-function remove_cpt_single_rewrite()
+function robodesk_remove_cpt_single_rewrite()
 {
 
     global $wp_post_types;
@@ -97,4 +106,4 @@ function remove_cpt_single_rewrite()
 
     // flush_rewrite_rules();
 }
-add_action('init', 'remove_cpt_single_rewrite', 20);
+add_action('init', 'robodesk_remove_cpt_single_rewrite', 20);

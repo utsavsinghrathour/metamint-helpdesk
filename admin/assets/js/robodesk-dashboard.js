@@ -889,13 +889,16 @@ document.addEventListener("DOMContentLoaded", function () {
   );
 
   function fetchSuggestions(type, value, callback) {
-    fetch(ajaxurl, {
+    const url = typeof robodeskAjax !== "undefined" ? robodeskAjax.ajaxurl : ajaxurl;
+    const nonce = typeof robodeskAjax !== "undefined" && robodeskAjax.nonces ? robodeskAjax.nonces.user_lookup : "";
+    fetch(url, {
       method: "POST",
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
       body: new URLSearchParams({
         action: "robodesk_user_lookup",
         type: type,
         value: value,
+        nonce: nonce,
       }),
     })
       .then((res) => res.json())
@@ -988,7 +991,9 @@ document.addEventListener("DOMContentLoaded", function () {
     return; // Exit early, viewTicket will be called by another listener
   }
 
+  const tab = params.get("tab") || "dashboard";
   showPage(tab);
+
   // Note: loadDashboardTickets() will be called by showPage() if tab is 'dashboard'
   // setupEventListeners();
 });

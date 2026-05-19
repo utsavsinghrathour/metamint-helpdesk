@@ -2,12 +2,12 @@
 if (!defined('ABSPATH')) {
     exit; // Exit if accessed directly
 }
-$site_name = isset($site_name) ? (string) $site_name : get_bloginfo('name');
-$site_url = isset($site_url) ? (string) $site_url : get_home_url();
-$year = isset($year) ? (string) $year : date_i18n('Y');
-$email_subject = isset($email_subject) ? (string) $email_subject : '';
-$email_content = isset($email_content) ? (string) $email_content : '';
-$logo_url = isset($logo_url) ? (string) $logo_url : '';
+$robodesk_site_name = isset($robodesk_site_name) ? (string) $robodesk_site_name : get_bloginfo('name');
+$robodesk_site_url = isset($robodesk_site_url) ? (string) $robodesk_site_url : get_home_url();
+$robodesk_year = isset($robodesk_year) ? (string) $robodesk_year : date_i18n('Y');
+$robodesk_email_subject = isset($robodesk_email_subject) ? (string) $robodesk_email_subject : '';
+$robodesk_email_content = isset($robodesk_email_content) ? (string) $robodesk_email_content : '';
+$robodesk_logo_url = isset($robodesk_logo_url) ? (string) $robodesk_logo_url : '';
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -16,7 +16,7 @@ $logo_url = isset($logo_url) ? (string) $logo_url : '';
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-    <title><?php echo esc_html($email_subject ?: $site_name); ?></title>
+    <title><?php echo esc_html($robodesk_email_subject ?: $robodesk_site_name); ?></title>
     <style type="text/css">
         body {
             margin: 0;
@@ -119,36 +119,36 @@ $logo_url = isset($logo_url) ? (string) $logo_url : '';
                 <table role="presentation" class="container" width="650" cellpadding="0" cellspacing="0" border="0">
                     <tr>
                         <td class="header">
-                            <?php if ($logo_url !== ''): ?>
-                                <a href="<?php echo esc_url($site_url); ?>" target="_blank" rel="noopener noreferrer">
-                                    <img src="<?php echo esc_url($logo_url); ?>" alt="<?php echo esc_attr($site_name); ?>" />
+                            <?php if ($robodesk_logo_url !== ''): ?>
+                                <a href="<?php echo esc_url($robodesk_site_url); ?>" target="_blank" rel="noopener noreferrer">
+                                    <img src="<?php echo esc_url($robodesk_logo_url); ?>" alt="<?php echo esc_attr($robodesk_site_name); ?>" />
                                 </a>
                             <?php else: ?>
-                                <h1 class="subject"><?php echo esc_html($site_name); ?></h1>
+                                <h1 class="subject"><?php echo esc_html($robodesk_site_name); ?></h1>
                             <?php endif; ?>
                         </td>
                     </tr>
 
-                    <?php if ($email_subject !== ''): ?>
+                    <?php if ($robodesk_email_subject !== ''): ?>
                         <tr>
                             <td style="padding: 24px 30px 0;">
-                                <h2 class="subject"><?php echo esc_html($email_subject); ?></h2>
+                                <h2 class="subject"><?php echo esc_html($robodesk_email_subject); ?></h2>
                             </td>
                         </tr>
                     <?php endif; ?>
 
                     <tr>
                         <td class="content">
-                            <?php echo $email_content; ?>
+                            <?php echo wp_kses_post($robodesk_email_content); ?>
                         </td>
                     </tr>
 
                     <tr>
                         <td class="footer">
                             <div>
-                                <a href="<?php echo esc_url($site_url); ?>" target="_blank" rel="noopener noreferrer"><?php echo esc_html($site_name); ?></a>
+                                <a href="<?php echo esc_url($robodesk_site_url); ?>" target="_blank" rel="noopener noreferrer"><?php echo esc_html($robodesk_site_name); ?></a>
                             </div>
-                            <div>&copy; <?php echo esc_html($year); ?> <?php echo esc_html($site_name); ?>. All rights reserved.</div>
+                            <div>&copy; <?php echo esc_html($robodesk_year); ?> <?php echo esc_html($robodesk_site_name); ?>. All rights reserved.</div>
                         </td>
                     </tr>
                 </table>

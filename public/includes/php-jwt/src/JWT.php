@@ -154,7 +154,7 @@ class JWT
         // token can actually be used. If it's not yet that time, abort.
         if (isset($payload->nbf) && floor($payload->nbf) > ($timestamp + static::$leeway)) {
             $ex = new BeforeValidException(
-                'Cannot handle token with nbf prior to ' . \date(DateTime::ISO8601, (int) floor($payload->nbf))
+                'Cannot handle token with nbf prior to ' . \gmdate(DateTime::ISO8601, (int) floor($payload->nbf))
             );
             $ex->setPayload($payload);
             throw $ex;
@@ -165,7 +165,7 @@ class JWT
         // correctly used the nbf claim).
         if (!isset($payload->nbf) && isset($payload->iat) && floor($payload->iat) > ($timestamp + static::$leeway)) {
             $ex = new BeforeValidException(
-                'Cannot handle token with iat prior to ' . \date(DateTime::ISO8601, (int) floor($payload->iat))
+                'Cannot handle token with iat prior to ' . \gmdate(DateTime::ISO8601, (int) floor($payload->iat))
             );
             $ex->setPayload($payload);
             throw $ex;
@@ -280,7 +280,8 @@ class JWT
                     }
                     return sodium_crypto_sign_detached($msg, $key);
                 } catch (Exception $e) {
-                    throw new DomainException($e->getMessage(), 0, $e);
+                    // phpcs:ignore WordPress.Security.EscapeOutput.ExceptionNotEscaped
+                    throw new DomainException(esc_html($e->getMessage()), 0, $e);
                 }
         }
 
@@ -322,7 +323,7 @@ class JWT
                 }
                 // returns 1 on success, 0 on failure, -1 on error.
                 throw new DomainException(
-                    'OpenSSL error: ' . \openssl_error_string()
+                    'OpenSSL error: ' . esc_html(\openssl_error_string())
                 );
             case 'sodium_crypto':
                 if (!\function_exists('sodium_crypto_sign_verify_detached')) {
@@ -343,7 +344,8 @@ class JWT
                     }
                     return sodium_crypto_sign_verify_detached($signature, $msg, $key);
                 } catch (Exception $e) {
-                    throw new DomainException($e->getMessage(), 0, $e);
+                    // phpcs:ignore WordPress.Security.EscapeOutput.ExceptionNotEscaped
+                    throw new DomainException(esc_html($e->getMessage()), 0, $e);
                 }
             case 'hash_hmac':
             default:
@@ -521,8 +523,8 @@ class JWT
         ];
         throw new DomainException(
             isset($messages[$errno])
-            ? $messages[$errno]
-            : 'Unknown JSON error: ' . $errno
+            ? esc_html($messages[$errno])
+            : 'Unknown JSON error: ' . (int) $errno
         );
     }
 
