@@ -65,7 +65,7 @@ jobs:
           zip -r "robodesk.zip" . -x ".git/*" ".github/*" "*.zip" "**/node_modules/*" \
           "composer.json" "composer.lock" "package.json" "**/package.json" "**/package-lock.json" \
           "plugin-zip.js" "stylelint.config.mjs" ".php-cs-fixer.dist.php" "eslint.config.mjs" \
-          ".stylelintignore" ".gitignore" ".husky/*" "**/.babelrc" "public/src/**"
+          ".stylelintignore" ".gitignore" ".husky/*" "**/.babelrc" "public/src/**" ".DS_Store"
 
       - name: Create and push tag
         run: |
