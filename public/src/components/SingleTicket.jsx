@@ -921,7 +921,7 @@ const SingleTicket = ({
                       : 'rd-flex rd-gap-8 received'
                   }`}
                   style={{
-                    maxWidth: '70%',
+                    maxWidth: '80%',
                     marginBottom,
                     marginTop: index === 0 || !isSameSender ? '12px' : '4px',
                   }}
@@ -999,7 +999,13 @@ const SingleTicket = ({
                     })()
                   )}
                   {isSameSender && index !== 0 && (
-                    <div style={{ width: '30px', height: '30px' }} />
+                    <div
+                      style={{
+                        width: '30px',
+                        height: '30px',
+                        flexShrink: 0,
+                      }}
+                    />
                   )}
                   <div
                     className='message-content'
@@ -1018,6 +1024,7 @@ const SingleTicket = ({
                           : 'none',
                       borderRadius: '10px',
                       padding: '8px 12px',
+                      width: '80%',
                       maxWidth: '100%',
                     }}
                   >
@@ -1116,7 +1123,7 @@ const SingleTicket = ({
                   <FaRegFaceSmileBeam className='icon-dark' size={20} />
                 </button>
                 {showPicker && (
-                  <div className='rd-position-absolute rd-bottom-0 rd-right-0 rd-top-0 emoji-picker-wrap'>
+                  <div className='rd-position-absolute rd-bottom-0 rd-right-0 emoji-picker-wrap'>
                     <EmojiPicker onEmojiClick={handleEmojiClick} />
                   </div>
                 )}
