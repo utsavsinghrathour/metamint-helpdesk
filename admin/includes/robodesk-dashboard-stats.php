@@ -1,4 +1,5 @@
 <?php
+// phpcs:disable WordPress.DB.SlowDBQuery
 if (! defined('ABSPATH')) {
     exit; // Exit if accessed directly
 }
@@ -17,8 +18,8 @@ if (! defined('ABSPATH')) {
                             <dt class="text-sm font-medium text-gray-500 truncate">
                                 <?php esc_html_e('Total Conversations', 'robodesk'); ?></dt>
                             <dd class="text-lg font-medium text-gray-900" id="total-tickets"><?php
-                                                                                                $total_tickets = wp_count_posts('robodesk_ticket')->publish;
-                                                                                                echo esc_html($total_tickets);
+                                                                                                $robodesk_total_tickets = wp_count_posts('robodesk_ticket')->publish;
+                                                                                                echo esc_html($robodesk_total_tickets);
                                                                                                 ?></dd>
                         </dl>
                     </div>
@@ -37,7 +38,8 @@ if (! defined('ABSPATH')) {
                             <dt class="text-sm font-medium text-gray-500 truncate">
                                 <?php esc_html_e('Open Conversations', 'robodesk'); ?></dt>
                             <dd class="text-lg font-medium text-gray-900" id="open-tickets"><?php
-                                                                                            $args = array(
+                                                                                            // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query
+                                                                                            $robodesk_args = array(
                                                                                                 'post_type' => 'robodesk_ticket',
                                                                                                 'post_status' => 'publish', // Adjust if you need other statuses like 'draft'
                                                                                                 'meta_query' => array(
@@ -49,9 +51,9 @@ if (! defined('ABSPATH')) {
                                                                                                 ),
                                                                                                 'posts_per_page' => -1, // Retrieve all matching posts
                                                                                             );
-                                                                                            $query = new WP_Query($args);
-                                                                                            $open_tickets = $query->found_posts;
-                                                                                            echo esc_html($open_tickets);
+                                                                                            $robodesk_query = new WP_Query($robodesk_args);
+                                                                                            $robodesk_open_tickets = $robodesk_query->found_posts;
+                                                                                            echo esc_html($robodesk_open_tickets);
                                                                                             ?></dd>
                         </dl>
                     </div>
@@ -70,7 +72,8 @@ if (! defined('ABSPATH')) {
                             <dt class="text-sm font-medium text-gray-500 truncate">
                                 <?php esc_html_e('In Progress', 'robodesk'); ?></dt>
                             <dd class="text-lg font-medium text-gray-900" id="in-progress-tickets"><?php
-                                                                                                    $args = array(
+                                                                                                    // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query
+                                                                                                    $robodesk_args = array(
                                                                                                         'post_type' => 'robodesk_ticket',
                                                                                                         'post_status' => 'publish', // Adjust if you need other statuses like 'draft'
                                                                                                         'meta_query' => array(
@@ -82,9 +85,9 @@ if (! defined('ABSPATH')) {
                                                                                                         ),
                                                                                                         'posts_per_page' => -1, // Retrieve all matching posts
                                                                                                     );
-                                                                                                    $query = new WP_Query($args);
-                                                                                                    $in_progress_tickets = $query->found_posts;
-                                                                                                    echo esc_html($in_progress_tickets);
+                                                                                                    $robodesk_query = new WP_Query($robodesk_args);
+                                                                                                    $robodesk_in_progress_tickets = $robodesk_query->found_posts;
+                                                                                                    echo esc_html($robodesk_in_progress_tickets);
                                                                                                     ?></dd>
                         </dl>
                     </div>
@@ -103,7 +106,8 @@ if (! defined('ABSPATH')) {
                             <dt class="text-sm font-medium text-gray-500 truncate"><?php esc_html_e('Closed', 'robodesk'); ?>
                             </dt>
                             <dd class="text-lg font-medium text-gray-900" id="closed-tickets"><?php
-                                                                                                $args = array(
+                                                                                                // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query
+                                                                                                $robodesk_args = array(
                                                                                                     'post_type' => 'robodesk_ticket',
                                                                                                     'post_status' => 'publish', // Adjust if you need other statuses like 'draft'
                                                                                                     'meta_query' => array(
@@ -115,9 +119,9 @@ if (! defined('ABSPATH')) {
                                                                                                     ),
                                                                                                     'posts_per_page' => -1, // Retrieve all matching posts
                                                                                                 );
-                                                                                                $query = new WP_Query($args);
-                                                                                                $closed_tickets = $query->found_posts;
-                                                                                                echo esc_html($closed_tickets);
+                                                                                                $robodesk_query = new WP_Query($robodesk_args);
+                                                                                                $robodesk_closed_tickets = $robodesk_query->found_posts;
+                                                                                                echo esc_html($robodesk_closed_tickets);
                                                                                                 ?></dd>
                         </dl>
                     </div>
@@ -130,7 +134,99 @@ if (! defined('ABSPATH')) {
     <?php
     // Function to load tickets based on filter
 
-    function load_dashboard_tickets($filter = 'my_conversation')
+    // Helper functions moved outside to prevent re-declaration errors and scope issues
+    if (!function_exists('robodesk_get_status_class')) {
+        function robodesk_get_status_class($status)
+        {
+            $classes = [
+                'open' => 'status-open',
+                'in-progress' => 'status-in-progress',
+                'closed' => 'status-closed',
+            ];
+            return $classes[$status] ?? 'status-default';
+        }
+    }
+
+    if (!function_exists('robodesk_get_priority_class')) {
+        function robodesk_get_priority_class($priority)
+        {
+            $term = get_term_by('name', $priority, 'robodesk_ticket_priority');
+
+            if ($term) {
+                // Get the custom class from term meta
+                $custom_class = get_term_meta($term->term_id, 'priority_color', true);
+                if (!empty($custom_class)) {
+                    return $custom_class;
+                }
+            }
+            return 'priority-default';
+        }
+    }
+
+    if (!function_exists('robodesk_format_date')) {
+        function robodesk_format_date($date)
+        {
+            return wp_date('M j, Y H:i', strtotime($date));
+        }
+    }
+
+    if (!function_exists('robodesk_get_blinking_class')) {
+        function robodesk_get_blinking_class($ticket)
+        {
+            // Only for chat tickets with open/in-progress status
+            if (
+                empty($ticket['source']) || strtolower($ticket['source']) !== 'chat' ||
+                empty($ticket['status']) || !in_array($ticket['status'], ['open', 'in-progress'])
+            ) {
+                return '';
+            }
+
+            $replies = isset($ticket['replies']) && is_array($ticket['replies']) ? $ticket['replies'] : [];
+            $last_reply = !empty($replies) ? end($replies) : null;
+
+            // If no replies, just green
+            if (!$last_reply) {
+                return 'blinking-green';
+            }
+
+            // Only consider if last reply is from customer
+            $is_customer = false;
+            if (isset($last_reply['type']) && $last_reply['type'] === 'customer') {
+                $is_customer = true;
+            } elseif (isset($last_reply['author_type']) && $last_reply['author_type'] === 'customer') {
+                $is_customer = true;
+            }
+            if (!$is_customer) {
+                return 'blinking-green';
+            }
+
+            // Calculate minutes since last reply
+            $last_reply_time = null;
+            if (!empty($last_reply['timestamp'])) {
+                $last_reply_time = strtotime($last_reply['timestamp']);
+            } elseif (!empty($last_reply['date'])) {
+                $last_reply_time = strtotime($last_reply['date']);
+            } elseif (!empty($ticket['updated'])) {
+                $last_reply_time = strtotime($ticket['updated']);
+            }
+            if (!$last_reply_time) {
+                return 'blinking-green';
+            }
+
+            $now = time();
+            $diff_minutes = ($now - $last_reply_time) / 60;
+
+            if ($diff_minutes <= 30) {
+                return 'blinking-red';
+            } elseif ($diff_minutes > 3 && $diff_minutes <= 10) {
+                return 'blinking-yellow';
+            } else {
+                return 'blinking-green';
+            }
+        }
+    }
+
+    function robodesk_load_dashboard_tickets($filter = 'my_conversation')
     {
         // Sanitize filter input
         $filter = in_array($filter, ['my_conversation', 'unassigned_conversation', 'open_conversation', 'chat_conversation'])
@@ -257,41 +353,7 @@ if (! defined('ABSPATH')) {
             return strtotime($b['updated']) - strtotime($a['updated']);
         });
 
-        // Helper functions
-        if (!function_exists('get_status_class')) {
-            function get_status_class($status)
-            {
-                $classes = [
-                    'open' => 'status-open',
-                    'in-progress' => 'status-in-progress',
-                    'closed' => 'status-closed',
-                ];
-                return $classes[$status] ?? 'status-default';
-            }
-        }
 
-        if (!function_exists('get_priority_class')) {
-            function get_priority_class($priority)
-            {
-
-                //  $classes = [
-                //     'low' => 'priority-low',
-                //     'medium' => 'priority-medium',
-                //     'high' => 'priority-high',
-                // ];
-                // return $classes[strtolower($priority)] ?? 'priority-default';
-                // Get the term by name from robodesk_ticket_priority taxonomy
-                $term = get_term_by('name', $priority, 'robodesk_ticket_priority');
-
-                if ($term) {
-                    // Get the custom class from term meta
-                    $custom_class = get_term_meta($term->term_id, 'priority_color', true);
-                    if (!empty($custom_class)) {
-                        return $custom_class;
-                    }
-                }
-            }
-        }
 
         // Create priority colors object for JavaScript
         $priority_colors = [];
@@ -313,68 +375,6 @@ if (! defined('ABSPATH')) {
         echo '<script>
                         const robodeskPriorityColors = ' . wp_json_encode($priority_colors) . ';
                     </script>';
-
-        if (!function_exists('format_date')) {
-            function format_date($date)
-            {
-                return wp_date('M j, Y H:i', strtotime($date));
-            }
-        }
-
-
-        function get_blinking_class($ticket)
-        {
-            // Only for chat tickets with open/in-progress status
-            if (
-                empty($dashboard_tickets['source']) || strtolower($dashboard_tickets['source']) !== 'chat' ||
-                empty($dashboard_tickets['status']) || !in_array($dashboard_tickets['status'], ['open', 'in-progress'])
-            ) {
-                return '';
-            }
-
-            $replies = isset($dashboard_tickets['replies']) && is_array($dashboard_tickets['replies']) ? $dashboard_tickets['replies'] : [];
-            $last_reply = !empty($replies) ? end($replies) : null;
-
-            // If no replies, just green
-            if (!$last_reply) {
-                return 'blinking-green';
-            }
-
-            // Only consider if last reply is from customer
-            $is_customer = false;
-            if (isset($last_reply['type']) && $last_reply['type'] === 'customer') {
-                $is_customer = true;
-            } elseif (isset($last_reply['author_type']) && $last_reply['author_type'] === 'customer') {
-                $is_customer = true;
-            }
-            if (!$is_customer) {
-                return 'blinking-green';
-            }
-
-            // Calculate minutes since last reply
-            $last_reply_time = null;
-            if (!empty($last_reply['timestamp'])) {
-                $last_reply_time = strtotime($last_reply['timestamp']);
-            } elseif (!empty($last_reply['date'])) {
-                $last_reply_time = strtotime($last_reply['date']);
-            } elseif (!empty($dashboard_tickets['updated'])) {
-                $last_reply_time = strtotime($dashboard_tickets['updated']);
-            }
-            if (!$last_reply_time) {
-                return 'blinking-green';
-            }
-
-            $now = time();
-            $diff_minutes = ($now - $last_reply_time) / 60;
-
-            if ($diff_minutes <= 30) {
-                return 'blinking-red';
-            } elseif ($diff_minutes > 3 && $diff_minutes <= 10) {
-                return 'blinking-yellow';
-            } else {
-                return 'blinking-green';
-            }
-        }
 
         // Generate table HTML
         ob_start();
@@ -419,9 +419,9 @@ if (! defined('ABSPATH')) {
             'robodesk_filter'
         )
     ) {
-        $filter = sanitize_text_field(wp_unslash($_GET['filter']));
+        $robodesk_filter = sanitize_text_field(wp_unslash($_GET['filter']));
     } else {
-        $filter = 'my_conversation';
+        $robodesk_filter = 'my_conversation';
     }
     ?>
 
@@ -431,17 +431,17 @@ if (! defined('ABSPATH')) {
                 <h3 class="text-lg leading-6 font-medium text-gray-900">
                     <?php esc_html_e('Conversation Overview', 'robodesk'); ?></h3>
                 <div class="flex space-x-2">
-                    <button onclick="filterDashboardTickets('my_conversation')" class="dashboard-filter-btn px-3 py-1 text-sm rounded-md border <?php echo $filter === 'my_conversation' ? 'active' : ''; ?>" data-filter="my_conversation"><?php esc_html_e('My Conversations', 'robodesk'); ?> <span id="dashboard-count-my-conversation" class="dashboard-filter-count-badge" aria-hidden="true"></span></button>
+                    <button onclick="filterDashboardTickets('my_conversation')" class="dashboard-filter-btn px-3 py-1 text-sm rounded-md border <?php echo $robodesk_filter === 'my_conversation' ? 'active' : ''; ?>" data-filter="my_conversation"><?php esc_html_e('My Conversations', 'robodesk'); ?> <span id="dashboard-count-my-conversation" class="dashboard-filter-count-badge" aria-hidden="true"></span></button>
 
-                    <button onclick="filterDashboardTickets('unassigned_conversation')" class="dashboard-filter-btn px-3 py-1 text-sm rounded-md border <?php echo $filter === 'unassigned_conversation' ? 'active' : ''; ?>" data-filter="unassigned_conversation"><?php esc_html_e('Unassigned Conversations', 'robodesk'); ?> <span id="dashboard-count-unassigned-conversation" class="dashboard-filter-count-badge" aria-hidden="true"></span></button>
+                    <button onclick="filterDashboardTickets('unassigned_conversation')" class="dashboard-filter-btn px-3 py-1 text-sm rounded-md border <?php echo $robodesk_filter === 'unassigned_conversation' ? 'active' : ''; ?>" data-filter="unassigned_conversation"><?php esc_html_e('Unassigned Conversations', 'robodesk'); ?> <span id="dashboard-count-unassigned-conversation" class="dashboard-filter-count-badge" aria-hidden="true"></span></button>
 
-                    <button onclick="filterDashboardTickets('open_conversation')" class="dashboard-filter-btn px-3 py-1 text-sm rounded-md border <?php echo $filter === 'open_conversation' ? 'active' : ''; ?>" data-filter="open_conversation"><?php esc_html_e('Open Conversations', 'robodesk'); ?> <span id="dashboard-count-open-conversation" class="dashboard-filter-count-badge" aria-hidden="true"></span></button>
+                    <button onclick="filterDashboardTickets('open_conversation')" class="dashboard-filter-btn px-3 py-1 text-sm rounded-md border <?php echo $robodesk_filter === 'open_conversation' ? 'active' : ''; ?>" data-filter="open_conversation"><?php esc_html_e('Open Conversations', 'robodesk'); ?> <span id="dashboard-count-open-conversation" class="dashboard-filter-count-badge" aria-hidden="true"></span></button>
 
-                    <button onclick="filterDashboardTickets('chat_conversation')" class="dashboard-filter-btn px-3 py-1 text-sm rounded-md border <?php echo $filter === 'chat_conversation' ? 'active' : ''; ?>" data-filter="chat_conversation"><?php esc_html_e('Chat Conversations', 'robodesk'); ?> <span id="dashboard-count-chat-conversation" class="dashboard-filter-count-badge" aria-hidden="true"></span></button>
+                    <button onclick="filterDashboardTickets('chat_conversation')" class="dashboard-filter-btn px-3 py-1 text-sm rounded-md border <?php echo $robodesk_filter === 'chat_conversation' ? 'active' : ''; ?>" data-filter="chat_conversation"><?php esc_html_e('Chat Conversations', 'robodesk'); ?> <span id="dashboard-count-chat-conversation" class="dashboard-filter-count-badge" aria-hidden="true"></span></button>
 
                 </div>
             </div>
-            <?php echo load_dashboard_tickets($filter); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped 
+            <?php echo robodesk_load_dashboard_tickets($robodesk_filter); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped 
             ?>
         </div>
     </div>

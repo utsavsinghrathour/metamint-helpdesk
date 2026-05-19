@@ -3,30 +3,30 @@ if (!defined('ABSPATH')) {
     exit; // Exit if accessed directly
 }
 
-$statuses = array('open', 'in-progress', 'closed');
-$priorities = get_terms([
+$robodesk_statuses = array('open', 'in-progress', 'closed');
+$robodesk_priorities = get_terms([
     'taxonomy' => 'robodesk_ticket_priority',
     'hide_empty' => false,
 ]);
-$default_agent = get_option('robodesk_default_agent');
-$agents = get_users([
+$robodesk_default_agent = get_option('robodesk_default_agent');
+$robodesk_agents = get_users([
     'role__in' => ['robodesk_support_staff', 'robodesk_support_manager', 'author', 'editor', 'administrator'],
     'fields' => ['ID', 'display_name'],
 ]);
 
-$terms = get_terms([
+$robodesk_terms = get_terms([
     'taxonomy' => 'robodesk_ticket_category',
     'hide_empty' => false,
 ]);
-if (is_wp_error($terms) || !is_array($terms)) {
-    $terms = [];
+if (is_wp_error($robodesk_terms) || !is_array($robodesk_terms)) {
+    $robodesk_terms = [];
 }
 
-$default_category = get_option('robodesk_default_ticket_category', 'General');
-$default_category_obj = null;
-foreach ($terms as $term) {
-    if ($term->name === $default_category || $term->slug === $default_category) {
-        $default_category_obj = $term;
+$robodesk_default_category = get_option('robodesk_default_ticket_category', 'General');
+$robodesk_default_category_obj = null;
+foreach ($robodesk_terms as $term) {
+    if ($term->name === $robodesk_default_category || $term->slug === $robodesk_default_category) {
+        $robodesk_default_category_obj = $term;
         break;
     }
 }
@@ -183,7 +183,7 @@ foreach ($terms as $term) {
                                     <select onchange="updateTicketStatus(currentTicket.id, this.value)"
                                         class="w-full border border-gray-300 rounded-md p-2 text-sm focus:ring-blue-500 focus:border-blue-500"
                                         id="ticket-status-select">
-                                        <?php foreach ($statuses as $status): ?>
+                                        <?php foreach ($robodesk_statuses as $status): ?>
                                             <option value="<?php echo esc_attr($status); ?>">
                                                 <?php echo esc_html(ucfirst(str_replace('-', ' ', $status))); ?>
                                             </option>
@@ -197,10 +197,10 @@ foreach ($terms as $term) {
                                     <select onchange="updateTicketPriority(currentTicket.id, this.value)"
                                         class="w-full border border-gray-300 rounded-md p-2 text-sm focus:ring-blue-500 focus:border-blue-500"
                                         id="ticket-priority-select">
-                                        <?php if (!is_wp_error($priorities)): ?>
-                                            <?php foreach ($priorities as $priority): ?>
-                                                <option value="<?php echo esc_attr($priority->name); ?>">
-                                                    <?php echo esc_html($priority->name); ?>
+                                        <?php if (!is_wp_error($robodesk_priorities)): ?>
+                                            <?php foreach ($robodesk_priorities as $robodesk_priority): ?>
+                                                <option value="<?php echo esc_attr($robodesk_priority->name); ?>">
+                                                    <?php echo esc_html($robodesk_priority->name); ?>
                                                 </option>
                                             <?php endforeach; ?>
                                         <?php endif; ?>
@@ -213,13 +213,13 @@ foreach ($terms as $term) {
                                     <select onchange="updateTicketAssignee(currentTicket.id, this.value)"
                                         class="w-full border border-gray-300 rounded-md p-2 text-sm focus:ring-blue-500 focus:border-blue-500"
                                         id="ticket-assignee-select">
-                                        <?php foreach ($agents as $agent): ?>
+                                        <?php foreach ($robodesk_agents as $robodesk_agent): ?>
                                             <?php
-                                            $agent_value = (int) $agent->ID;
-                                            $is_selected = (string) $default_agent === (string) $agent_value || (string) $default_agent === (string) $agent->display_name;
+                                            $robodesk_agent_value = (int) $robodesk_agent->ID;
+                                            $robodesk_is_selected = (string) $robodesk_default_agent === (string) $robodesk_agent_value || (string) $robodesk_default_agent === (string) $robodesk_agent->display_name;
                                             ?>
-                                            <option value="<?php echo esc_attr($agent_value); ?>" <?php selected($is_selected, true); ?>>
-                                                <?php echo esc_html($agent->display_name); ?>
+                                            <option value="<?php echo esc_attr($robodesk_agent_value); ?>" <?php selected($robodesk_is_selected, true); ?>>
+                                                <?php echo esc_html($robodesk_agent->display_name); ?>
                                             </option>
                                         <?php endforeach; ?>
                                     </select>
@@ -230,9 +230,9 @@ foreach ($terms as $term) {
                                         for="ticket-category-select"><?php esc_html_e('Department', 'robodesk'); ?></label>
                                     <select id="ticket-category-select"
                                         class="w-full border border-gray-300 rounded-md p-2 text-sm focus:ring-blue-500 focus:border-blue-500">
-                                        <?php if (!empty($terms)): ?>
-                                            <?php foreach ($terms as $term): ?>
-                                                <option value="<?php echo esc_attr($term->term_id); ?>" <?php selected((string) ($default_category_obj ? $default_category_obj->term_id : ''), (string) $term->term_id); ?>>
+                                        <?php if (!empty($robodesk_terms)): ?>
+                                            <?php foreach ($robodesk_terms as $term): ?>
+                                                <option value="<?php echo esc_attr($term->term_id); ?>" <?php selected((string) ($robodesk_default_category_obj ? $robodesk_default_category_obj->term_id : ''), (string) $term->term_id); ?>>
                                                     <?php echo esc_html($term->name); ?>
                                                 </option>
                                             <?php endforeach; ?>
@@ -285,9 +285,9 @@ foreach ($terms as $term) {
             </div>
 
             <script>
-                const robodeskTicketCategories = <?php echo wp_json_encode($terms); ?>;
-                const robodeskDefaultCategory = <?php echo wp_json_encode($default_category); ?>;
-                const robodeskDefaultCategoryObj = <?php echo wp_json_encode($default_category_obj); ?>;
+                const robodeskTicketCategories = <?php echo wp_json_encode($robodesk_terms); ?>;
+                const robodeskDefaultCategory = <?php echo wp_json_encode($robodesk_default_category); ?>;
+                const robodeskDefaultCategoryObj = <?php echo wp_json_encode($robodesk_default_category_obj); ?>;
             </script>
         </div>
     </div>

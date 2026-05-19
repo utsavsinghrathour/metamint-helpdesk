@@ -1,4 +1,5 @@
 <?php
+// phpcs:disable WordPress.DB.SlowDBQuery
 if (!defined('ABSPATH')) {
     exit; // Exit if accessed directly
 }
@@ -270,13 +271,13 @@ add_action('rest_api_init', function () {
 
     register_rest_route('robodesk/v1', '/login', array(
         'methods' => 'POST',
-        'callback' => 'secure_login_endpoint',
+        'callback' => 'robodesk_secure_login_endpoint',
         'permission_callback' => '__return_true', // Public access for login
     ));
 
     register_rest_route('custom/v1', '/protected', array(
         'methods' => 'GET',
-        'callback' => 'protected_endpoint',
+        'callback' => 'robodesk_protected_endpoint',
         'permission_callback' => 'robodesk_validate_token',
     ));
 
@@ -375,6 +376,7 @@ function robodesk_stream($request)
     header('Access-Control-Allow-Headers: Cache-Control');
     header('X-Accel-Buffering: no');
 
+    // phpcs:ignore Squiz.PHP.DiscouragedFunctions.Discouraged
     set_time_limit(0);
 
     session_write_close();
@@ -382,9 +384,12 @@ function robodesk_stream($request)
     if (ob_get_level())
         ob_end_clean();
 
+    // phpcs:ignore Squiz.PHP.DiscouragedFunctions.Discouraged
     ini_set('zlib.output_compression', 0);
+    // phpcs:ignore Squiz.PHP.DiscouragedFunctions.Discouraged
     ini_set('output_buffering', 0);
 
+    // phpcs:ignore Squiz.PHP.DiscouragedFunctions.Discouraged
     set_time_limit(0);
     ignore_user_abort(false);
 
@@ -476,6 +481,7 @@ function robodesk_stream($request)
 function robodesk_get_new_notifications($user_id)
 {
     // Get all tickets newer than last_id_client
+    // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query
     $notifications_data = get_posts(array(
         'post_type' => 'robodesk_ticket',
         'post_status' => 'publish',
@@ -504,6 +510,7 @@ function robodesk_live_conversations($ticket_id, $last_comment_client, $loggedin
     if (get_post_type($ticket_id) !== 'robodesk_ticket')
         return [];
 
+    // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query
     $last_comment_server = get_comments([
         'post_id' => $ticket_id,
         'number' => 1,
@@ -545,6 +552,7 @@ function robodesk_live_conversations($ticket_id, $last_comment_client, $loggedin
         );
 
 
+        // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query
         $comments = get_comments($args);
         foreach ($comments as $comment) {
             $user = get_userdata($comment->user_id);
@@ -583,6 +591,7 @@ function robodesk_my_own_conversations($ticket_id, $last_my_comment_client)
         return [];
 
     //get comment of the server which is not created by admin
+    // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query
     $last_my_comment_server = get_comments([
         'post_id' => $ticket_id,
         'number' => 1,
@@ -624,6 +633,7 @@ function robodesk_my_own_conversations($ticket_id, $last_my_comment_client)
             'comment__not_in' => array($last_my_comment_client)
         );
 
+        // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query
         $comments = get_comments($args);
         foreach ($comments as $comment) {
             $user = get_userdata($comment->user_id);
@@ -754,15 +764,19 @@ function robodesk_live_comments($request)
         ob_end_clean();
 
     // Disable WordPress output compression
+    // phpcs:ignore Squiz.PHP.DiscouragedFunctions.Discouraged
     ini_set('zlib.output_compression', 0);
+    // phpcs:ignore Squiz.PHP.DiscouragedFunctions.Discouraged
     ini_set('output_buffering', 0);
 
     // Set execution limits
+    // phpcs:ignore Squiz.PHP.DiscouragedFunctions.Discouraged
     set_time_limit(0);
     ignore_user_abort(false);
 
     $ticket_status = get_post_meta($ticket_id, '_robodesk_ticket_status', true);
 
+    // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query
     $last_comment_server = get_comments([
         'post_id' => $ticket_id,
         'number' => 1,
@@ -814,6 +828,7 @@ function robodesk_live_comments($request)
         );
 
 
+        // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query
         $comments = get_comments($args);
         $new_admin_comments = array();
 
@@ -880,7 +895,7 @@ function robodesk_live_comments($request)
 }
 
 
-function secure_login_endpoint(WP_REST_Request $request)
+function robodesk_secure_login_endpoint(WP_REST_Request $request)
 {
 
     $emailAddr = sanitize_email($request->get_param('email'));
@@ -991,7 +1006,7 @@ function robodesk_validate_token(WP_REST_Request $request)
     }
 }
 
-function protected_endpoint(WP_REST_Request $request)
+function robodesk_protected_endpoint(WP_REST_Request $request)
 {
     $user = wp_get_current_user();
     return array(
@@ -1083,7 +1098,7 @@ function robodesk_user_signup(WP_REST_Request $request)
     ), 201);
 }
 //build arrays of ticket data to return in rest response
-function build_ticket_response_data($ticket_id, $user_object, $reply_id = false)
+function robodesk_build_ticket_response_data($ticket_id, $user_object, $reply_id = false)
 {
     $ticket_number = 'TCKT-' . str_pad($ticket_id, 3, '0', STR_PAD_LEFT);
 
@@ -1261,7 +1276,7 @@ function robodesk_handle_ticket_creation($data)
     wp_set_object_terms($ticket, (int) $term_id, $taxonomy);
 
     // Get user data once and cache it
-    $user_object = get_cached_user_data($author);
+    $user_object = robodesk_get_cached_user_data($author);
     if (!$user_object) {
         return new WP_Error('user_not_found', 'User not found', array('status' => 404));
     }
@@ -1292,7 +1307,7 @@ function robodesk_handle_ticket_creation($data)
 
     $reply_id = !is_wp_error($comment_id) ? $comment_id : false;
 
-    $response_data = build_ticket_response_data($ticket, $user_object, $reply_id);
+    $response_data = robodesk_build_ticket_response_data($ticket, $user_object, $reply_id);
 
     robodesk_notify_ticket_created($ticket, 'chat');
 
@@ -1330,7 +1345,7 @@ function robodesk_handle_tickets_get($data)
 
     // Batch load all required data
     $ticket_ids = $ticket_query->posts;
-    $tickets_data = get_tickets_batch_data($ticket_ids, $user_id);
+    $tickets_data = robodesk_get_tickets_batch_data($ticket_ids, $user_id);
 
     return rest_ensure_response([
         'status' => 'success',
@@ -1341,7 +1356,7 @@ function robodesk_handle_tickets_get($data)
 
 
 //get all tickets data by using ticket id and user id 
-function get_tickets_batch_data($ticket_ids, $user_id)
+function robodesk_get_tickets_batch_data($ticket_ids, $user_id)
 {
     // Batch load all posts
     $posts = get_posts([
@@ -1365,7 +1380,7 @@ function get_tickets_batch_data($ticket_ids, $user_id)
 
 
     // Get user data once
-    $user_object = get_cached_user_data($user_id);
+    $user_object = robodesk_get_cached_user_data($user_id);
     $user_name = $user_object ? $user_object->display_name : 'Unknown';
     $avatar_url = robodesk_get_comment_avatar($user_id, 32);
 
@@ -1418,7 +1433,7 @@ function robodesk_handle_reply_receive($data)
         );
     }
 
-    $user_object = get_cached_user_data($user_id);
+    $user_object = robodesk_get_cached_user_data($user_id);
     if (!$user_object) {
         return new WP_Error('user_not_found', 'User not found', array('status' => 404));
     }
@@ -1517,7 +1532,7 @@ function robodesk_handle_comments_get($data)
     ]);
 }
 
-function get_cached_user_data($user_id)
+function robodesk_get_cached_user_data($user_id)
 {
     static $user_cache = [];
 

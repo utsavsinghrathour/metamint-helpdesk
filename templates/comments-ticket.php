@@ -28,8 +28,8 @@ if (post_password_required()) {
                             </div>
                             <div class="comment-metadata">
                                 <?php
-                                printf('<time>%s</time>', get_comment_date('Y-m-d H:i:s'));
-                                echo ' (' . human_time_diff(get_comment_time('U'), current_time('timestamp')) . ')';
+                                printf('<time>%s</time>', esc_html(get_comment_date('Y-m-d H:i:s')));
+                                echo esc_html(' (' . human_time_diff(get_comment_time('U'), current_time('timestamp')) . ')');
                                 ?>
                             </div>
 

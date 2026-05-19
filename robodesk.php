@@ -11,12 +11,15 @@
  * Text Domain: robodesk
  */
 
+// phpcs:disable WordPress.DB.SlowDBQuery
 if (!defined('ABSPATH')) {
     exit; // Exit if accessed directly
 }
 
 if (function_exists('ini_set')) {
+    // phpcs:ignore Squiz.PHP.DiscouragedFunctions.Discouraged
     @ini_set('display_errors', '0');
+    // phpcs:ignore Squiz.PHP.DiscouragedFunctions.Discouraged
     @ini_set('display_startup_errors', '0');
 }
 // Define constants
@@ -79,6 +82,7 @@ function robodesk_init_debug_log()
 
     // Check if logs directory exists, create if not
     if (!is_dir($logs_dir)) {
+        // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_mkdir
         if (!mkdir($logs_dir, 0755, true)) {
             rbd_log('Failed to create Robodesk logs directory');
             return false;
@@ -97,6 +101,7 @@ function robodesk_init_debug_log()
         }
 
         // Set file permissions
+        // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_chmod
         chmod($debug_log, 0644);
     }
 
@@ -255,6 +260,10 @@ function robodesk_add_plugin()
 add_action('wp_footer', 'robodesk_add_plugin');
 function robodesk_handle_settings_save()
 {
+    if (!isset($_POST['_wpnonce']) || !wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['_wpnonce'])), 'robodesk_save_settings')) {
+        return;
+    }
+
     // Handle logo upload
     if (!empty($_FILES['logo']['name'])) {
         $upload = wp_handle_upload($_FILES['logo'], ['test_form' => false]);
@@ -303,7 +312,12 @@ function robodesk_enqueue_admin_scripts($hook)
 {
     global $post;
     wp_enqueue_script('jquery');
-    if (!empty($_GET) && isset($_GET['taxonomy']) && $_GET['taxonomy'] == 'robodesk_ticket_priority' && $_GET['post_type'] == 'robodesk_ticket') {
+    // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+    $taxonomy = isset($_GET['taxonomy']) ? sanitize_text_field(wp_unslash($_GET['taxonomy'])) : '';
+    // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+    $post_type = isset($_GET['post_type']) ? sanitize_text_field(wp_unslash($_GET['post_type'])) : '';
+
+    if ($taxonomy === 'robodesk_ticket_priority' && $post_type === 'robodesk_ticket') {
         wp_enqueue_script('jquery-ui-sortable');
         wp_enqueue_script('custom-taxonomy-order', ROBODESK_PLUGIN_URL . 'admin/assets/js/custom-taxonomy-order.js', array('jquery', 'jquery-ui-sortable'), time(), true);
         wp_localize_script('custom-taxonomy-order', 'taxonomyOrderData', array(
@@ -509,8 +523,11 @@ function robodesk_get_requested_ticket_id_from_query()
 {
     $ticket_id = 0;
 
+    // phpcs:ignore WordPress.Security.NonceVerification.Recommended
     if (isset($_GET['rtk'])) {
-        $encrypted_ticket = trim((string) wp_unslash($_GET['rtk']));
+        // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+        $encrypted_ticket = sanitize_text_field(wp_unslash($_GET['rtk']));
+        $encrypted_ticket = trim((string) $encrypted_ticket);
         if ($encrypted_ticket !== '') {
             $encrypted_ticket = str_replace(' ', '+', $encrypted_ticket);
             $decrypted_ticket = robodesk_decrypt($encrypted_ticket, 'robodesk');
@@ -522,7 +539,9 @@ function robodesk_get_requested_ticket_id_from_query()
 
     if ($ticket_id <= 0) {
         foreach (['ticket_id', 'ticket', 'tid'] as $key) {
+            // phpcs:ignore WordPress.Security.NonceVerification.Recommended
             if (isset($_GET[$key])) {
+                // phpcs:ignore WordPress.Security.NonceVerification.Recommended
                 $ticket_id = absint(wp_unslash($_GET[$key]));
                 if ($ticket_id > 0) {
                     break;
@@ -543,18 +562,22 @@ function robodesk_get_requested_ticket_id_from_query()
 }
 
 
+// phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedFunctionFound
 function rbd_log($message)
 {
     $log_file = plugin_dir_path(__FILE__) . 'logs/debug.log';
 
     if (!file_exists(dirname($log_file))) {
+        // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_mkdir
         mkdir(dirname($log_file), 0755, true);
     }
 
     if (is_array($message) || is_object($message)) {
+        // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_print_r
         $message = print_r($message, true);
     }
 
+    // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log
     error_log(wp_date('[Y-m-d H:i:s] ') . $message . PHP_EOL, 3, $log_file);
 }
 
@@ -716,7 +739,7 @@ function robodesk_get_request_header_values($request = null)
 
     foreach ($server_header_map as $server_key => $header_key) {
         if (!empty($_SERVER[$server_key])) {
-            $headers[$header_key] = (string) $_SERVER[$server_key];
+            $headers[$header_key] = sanitize_text_field(wp_unslash((string) $_SERVER[$server_key]));
         }
     }
 
@@ -1187,6 +1210,7 @@ function robodesk_create_notification($recipient_user_id, $ticket_id, $comment_i
         $normalized_source = 'chat';
     }
 
+    // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery
     $wpdb->insert(
         $table_name,
         [
@@ -1399,6 +1423,8 @@ function robodesk_notify_comment_created($comment_id)
             global $wpdb;
             $table_name = $wpdb->prefix . 'robodesk_notifications';
 
+            // phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter
+            // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
             $existing = $wpdb->get_row(
                 $wpdb->prepare(
                     "SELECT id, message FROM $table_name
@@ -1413,6 +1439,7 @@ function robodesk_notify_comment_created($comment_id)
                 ),
                 ARRAY_A
             );
+            // phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter
 
             if ($existing) {
                 $count = 1;
@@ -1422,6 +1449,7 @@ function robodesk_notify_comment_created($comment_id)
                 $count += 1;
                 $new_message = $count . ' new replies';
 
+                // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
                 $wpdb->update(
                     $table_name,
                     [
@@ -1498,8 +1526,10 @@ add_action('wp_ajax_robodesk_track_unseen_reply_email_read', 'robodesk_track_uns
 add_action('wp_ajax_nopriv_robodesk_track_unseen_reply_email_read', 'robodesk_track_unseen_reply_email_read');
 function robodesk_track_unseen_reply_email_read()
 {
+    // phpcs:ignore WordPress.Security.NonceVerification.Recommended
     $comment_id = isset($_GET['comment_id']) ? absint(wp_unslash($_GET['comment_id'])) : 0;
-    $token = isset($_GET['token']) ? (string) wp_unslash($_GET['token']) : '';
+    // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+    $token = isset($_GET['token']) ? sanitize_text_field(wp_unslash($_GET['token'])) : '';
     $token = preg_replace('/[^a-zA-Z0-9]/', '', $token);
 
     if ($comment_id <= 0 || $token === '') {
@@ -1722,10 +1752,10 @@ function robodesk_send_unseen_reply_email($comment_id)
 }
 
 if (is_admin()) {
-    add_filter('use_block_editor_for_post', 'disable_block_for_post_type', 10, 2);
+    add_filter('use_block_editor_for_post', 'robodesk_disable_block_for_post_type', 10, 2);
 }
 
-function disable_block_for_post_type($use_block_editor, $post)
+function robodesk_disable_block_for_post_type($use_block_editor, $post)
 {
     if ('robodesk_faq' === $post->post_type) {
         return false;
@@ -1744,7 +1774,13 @@ function disable_block_for_post_type($use_block_editor, $post)
 function robodesk_create_support_page()
 {
 
-    $support_page = get_page_by_title('Robodesk Support');
+    $support_pages = get_posts(array(
+        'post_type' => 'page',
+        'title' => 'Robodesk Support',
+        'post_status' => 'any',
+        'numberposts' => 1,
+    ));
+    $support_page = !empty($support_pages) ? $support_pages[0] : null;
 
 
     rbd_log('Robodesk activation hook triggered');
@@ -1789,8 +1825,13 @@ function robodesk_delete_support_page()
         wp_delete_post($page_id, true);
         rbd_log('Deleted Robodesk Support page with ID: ' . $page_id);
     } else {
-        // As fallback, try to find the page by title
-        $support_page = get_page_by_title('Robodesk Support');
+        $support_pages = get_posts(array(
+            'post_type' => 'page',
+            'title' => 'Robodesk Support',
+            'post_status' => 'any',
+            'numberposts' => 1,
+        ));
+        $support_page = !empty($support_pages) ? $support_pages[0] : null;
         if ($support_page) {
             wp_delete_post($support_page->ID, true);
         } else {
@@ -1821,7 +1862,7 @@ register_deactivation_hook(__FILE__, 'robodesk_delete_support_page');
 function robodesk_enqueue_custom_styles()
 {
     // Enqueue your main stylesheet first
-    wp_enqueue_style('robodesk-style', get_stylesheet_uri());
+    wp_enqueue_style('robodesk-style', get_stylesheet_uri(), array(), '1.0.0');
 
     // Get the theme color from the options
     $theme_color = get_option('robodesk_theme_color', '#0073aa'); // fallback to default
@@ -1839,8 +1880,8 @@ add_action('wp_enqueue_scripts', 'robodesk_enqueue_custom_styles');
 
 
 
-add_filter('rest_comment_query', 'include_ticket_replies_in_rest_comments', 10, 2);
-function include_ticket_replies_in_rest_comments($args, $request)
+add_filter('rest_comment_query', 'robodesk_include_ticket_replies_in_rest_comments', 10, 2);
+function robodesk_include_ticket_replies_in_rest_comments($args, $request)
 {
 
     $args['type__in'] = array('ticket_replies');
@@ -1979,10 +2020,10 @@ function robodesk_comment_creation_on_insert($comment_ID, $comment_object)
 }
 
 
-function disable_jquery_migrate_logging($scripts)
+function robodesk_disable_jquery_migrate_logging($scripts)
 {
     if (!is_admin() && isset($scripts->registered['jquery-migrate'])) {
         $scripts->registered['jquery-migrate']->src = '';
     }
 }
-add_action('wp_default_scripts', 'disable_jquery_migrate_logging');
+add_action('wp_default_scripts', 'robodesk_disable_jquery_migrate_logging');
