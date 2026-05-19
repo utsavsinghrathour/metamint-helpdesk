@@ -521,7 +521,10 @@ button.no-bg,
 .rd-resize-none {
   resize: none !important;
 }
-
+.rd-conversation-fixed-bottm {
+  position: fixed;
+  bottom: 25px;
+}
 .rd-main-content input::placeholder {
   font-size: 16px !important;
   line-height: 20px !important;

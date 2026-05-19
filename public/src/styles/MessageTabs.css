@@ -116,6 +116,7 @@
 
 .robodesk-plugin .emoji-picker-wrap {
   height: fit-content;
+  bottom: 100% !important;
 }
 
 .robodesk-plugin .remove-preview {
