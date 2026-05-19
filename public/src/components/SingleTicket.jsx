@@ -1116,7 +1116,7 @@ const SingleTicket = ({
                   <FaRegFaceSmileBeam className='icon-dark' size={20} />
                 </button>
                 {showPicker && (
-                  <div className='rd-position-absolute rd-bottom-0 rd-right-0 rd-top-0 emoji-picker-wrap'>
+                  <div className='rd-position-absolute rd-bottom-0 rd-right-0 emoji-picker-wrap'>
                     <EmojiPicker onEmojiClick={handleEmojiClick} />
                   </div>
                 )}
