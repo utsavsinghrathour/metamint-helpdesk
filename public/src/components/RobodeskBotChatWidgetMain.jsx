@@ -365,7 +365,7 @@ export default function RobodeskBotChatWidgetMain({ widgetConfig, activeAIMode }
 
                                 {/* AI AVATAR SPACER */}
                                 {m.role === 'assistant' && isSameSender && i !== 0 && (
-                                    <div style={{ width: '30px', height: '30px' }} />
+                                    <div style={{ width: '30px', height: '30px', flexShrink: 0 }} />
                                 )}
 
                                 <div
@@ -376,6 +376,7 @@ export default function RobodeskBotChatWidgetMain({ widgetConfig, activeAIMode }
                                         border: m.role === 'assistant' ? '1px solid #E0E0E0' : 'none',
                                         borderRadius: '10px',
                                         padding: '8px 12px',
+                                        width: '80%',
                                         maxWidth: '100%',
                                     }}
                                 >
