@@ -230,7 +230,7 @@ const FAQDetail = memo(
                     />
                   ))}
                 </div>
-                <div className="rd-my-30">
+                <div className="rd-my-30 rd-conversation-fixed-bottm">
                   <h4 className="heading-4 rd-fw-semi rd-mb-8">
                     Still have questions?
                   </h4>
