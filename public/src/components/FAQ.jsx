@@ -415,12 +415,12 @@ const FAQ = ({
         </div>
         <div className="rd-wiki-wrap">
           {error ? (
-            <p className="rd-body-text rd-text-red rd-text-center">
+            <p className="rd-body-text rd-text-red rd-text-center rd-p-16">
               Error: {error}
             </p>
           ) : isLoading ? (
             <div className="rd-skeleton">
-              <p className="rd-body-text rd-text rd-text-center">Loading...</p>
+              <p className="rd-body-text rd-text rd-text-center rd-p-16">Loading...</p>
               {[...Array(10)].map((_, i) => (
                 <div
                   key={i}
@@ -429,7 +429,7 @@ const FAQ = ({
               ))}
             </div>
           ) : filteredFaqs.length === 0 ? (
-            <p className="rd-text-center">
+            <p className="rd-text-center rd-p-16">
               {searchTerm ? "No FAQs match your search." : "No FAQs found."}
             </p>
           ) : (
