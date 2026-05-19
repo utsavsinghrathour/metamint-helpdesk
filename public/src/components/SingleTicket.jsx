@@ -921,7 +921,7 @@ const SingleTicket = ({
                       : 'rd-flex rd-gap-8 received'
                   }`}
                   style={{
-                    maxWidth: '70%',
+                    maxWidth: '80%',
                     marginBottom,
                     marginTop: index === 0 || !isSameSender ? '12px' : '4px',
                   }}
@@ -999,7 +999,13 @@ const SingleTicket = ({
                     })()
                   )}
                   {isSameSender && index !== 0 && (
-                    <div style={{ width: '30px', height: '30px' }} />
+                    <div
+                      style={{
+                        width: '30px',
+                        height: '30px',
+                        flexShrink: 0,
+                      }}
+                    />
                   )}
                   <div
                     className='message-content'
@@ -1018,6 +1024,7 @@ const SingleTicket = ({
                           : 'none',
                       borderRadius: '10px',
                       padding: '8px 12px',
+                      width: '80%',
                       maxWidth: '100%',
                     }}
                   >
