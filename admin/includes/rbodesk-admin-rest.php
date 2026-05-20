@@ -116,11 +116,17 @@ function robodesk_live_admin_comments($request)
             // Determine user type
             $user = get_userdata($comment->user_id);
             $type = 'customer';
+            $role = 'Customer';
+            $is_bot_response = function_exists('robodesk_is_bot_comment') ? robodesk_is_bot_comment($comment->comment_ID) : false;
 
-            if ($user) {
+            if ($is_bot_response) {
+                $type = 'agent';
+                $role = 'AI BOT';
+            } elseif ($user) {
                 $roles = $user->roles;
                 if (in_array('administrator', $roles) || in_array('robodesk_agent', $roles)) {
                     $type = 'agent';
+                    $role = 'Agent';
                 }
             }
 
@@ -128,14 +134,17 @@ function robodesk_live_admin_comments($request)
             $is_action = get_comment_meta($comment->comment_ID, 'is_action', true);
             $comment_meta = [
                 'is_action' => $is_action ? true : false,
+                'is_bot_response' => $is_bot_response,
             ];
 
             $new_admin_comments[] = [
                 'id'        => $comment->comment_ID,
-                'author'    => $comment->comment_author,
+                'author'    => $is_bot_response && function_exists('robodesk_get_bot_display_name') ? robodesk_get_bot_display_name() : $comment->comment_author,
                 'message'   => $comment->comment_content,
                 'timestamp' => $comment->comment_date,
                 'type'      => $type,
+                'role'      => $role,
+                'is_bot_response' => $is_bot_response,
                 'comment_meta' => $comment_meta,
             ];
         }

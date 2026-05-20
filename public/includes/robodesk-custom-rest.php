@@ -89,6 +89,11 @@ add_action('rest_api_init', function () {
                 $author_email = $comment->comment_author_email ?? '';
             }
 
+            $comment_id = is_array($comment) ? ($comment['id'] ?? 0) : ($comment->comment_ID ?? 0);
+            if ($comment_id && function_exists('robodesk_is_bot_comment') && robodesk_is_bot_comment($comment_id)) {
+                return function_exists('robodesk_get_bot_avatar_url') ? robodesk_get_bot_avatar_url(32) : get_avatar_url('', array('size' => 32, 'default' => 'mystery', 'force_default' => true));
+            }
+
             if (function_exists('robodesk_get_comment_avatar')) {
                 $avatar = robodesk_get_comment_avatar($user_id, 32);
                 if (!empty($avatar)) {
@@ -570,8 +575,9 @@ function robodesk_live_conversations($ticket_id, $last_comment_client, $loggedin
                     'author_data' => array(
                         'id' => (int) $comment->user_id
                     ),
-                    'author_name' => $comment->display_name ?: $comment->comment_author,
-                    'author_image' => robodesk_get_comment_avatar($comment->user_id ?: 0, 32),
+                    'author_name' => function_exists('robodesk_get_ticket_comment_author_name') ? robodesk_get_ticket_comment_author_name($comment) : ($comment->display_name ?: $comment->comment_author),
+                    'author_image' => function_exists('robodesk_get_ticket_comment_avatar_url') ? robodesk_get_ticket_comment_avatar_url($comment, 32) : robodesk_get_comment_avatar($comment->user_id ?: 0, 32),
+                    'is_bot_response' => function_exists('robodesk_is_bot_comment') ? robodesk_is_bot_comment($comment->comment_ID) : false,
                     'time_ago' => human_time_diff(strtotime($comment->comment_date), current_time('timestamp')) . ' ago',
                     'author_id' => (int) $comment->user_id,
                     'post_author_id' => (int) $ticket_id ? get_post_field('post_author', $ticket_id) : 0,
@@ -647,8 +653,9 @@ function robodesk_my_own_conversations($ticket_id, $last_my_comment_client)
                     'author_data' => array(
                         'id' => (int) $comment->user_id
                     ),
-                    'author_name' => $comment->display_name ?: $comment->comment_author,
-                    'author_image' => robodesk_get_comment_avatar($comment->user_id ?: 0, 32),
+                    'author_name' => function_exists('robodesk_get_ticket_comment_author_name') ? robodesk_get_ticket_comment_author_name($comment) : ($comment->display_name ?: $comment->comment_author),
+                    'author_image' => function_exists('robodesk_get_ticket_comment_avatar_url') ? robodesk_get_ticket_comment_avatar_url($comment, 32) : robodesk_get_comment_avatar($comment->user_id ?: 0, 32),
+                    'is_bot_response' => function_exists('robodesk_is_bot_comment') ? robodesk_is_bot_comment($comment->comment_ID) : false,
                     'time_ago' => human_time_diff(strtotime($comment->comment_date), current_time('timestamp')) . ' ago',
                     'author_id' => (int) $comment->user_id,
                     'post_author_id' => (int) $ticket_id ? get_post_field('post_author', $ticket_id) : 0,
@@ -848,8 +855,9 @@ function robodesk_live_comments($request)
                     'author_data' => array(
                         'id' => (int) $comment->user_id
                     ),
-                    'author_name' => $comment->display_name ?: $comment->comment_author,
-                    'author_image' => robodesk_get_comment_avatar($comment->user_id ?: 0, 32),
+                    'author_name' => function_exists('robodesk_get_ticket_comment_author_name') ? robodesk_get_ticket_comment_author_name($comment) : ($comment->display_name ?: $comment->comment_author),
+                    'author_image' => function_exists('robodesk_get_ticket_comment_avatar_url') ? robodesk_get_ticket_comment_avatar_url($comment, 32) : robodesk_get_comment_avatar($comment->user_id ?: 0, 32),
+                    'is_bot_response' => function_exists('robodesk_is_bot_comment') ? robodesk_is_bot_comment($comment->comment_ID) : false,
                     'time_ago' => human_time_diff(strtotime($comment->comment_date), current_time('timestamp')) . ' ago',
                     'author_id' => (int) $comment->user_id,
                     'post_author_id' => (int) $ticket_id ? get_post_field('post_author', $ticket_id) : 0,
@@ -1302,6 +1310,7 @@ function robodesk_handle_ticket_creation($data)
     if (!is_wp_error($comment_id)) {
         add_comment_meta($comment_id, 'comment_source', 'chat', true);
         add_comment_meta($comment_id, 'author_type', robodesk_get_author_type($author), true);
+        add_comment_meta($comment_id, 'is_bot_response', '0', true);
         add_comment_meta($comment_id, 'rbd_suppress_notification', 1, true);
     }
 
@@ -1465,11 +1474,12 @@ function robodesk_handle_reply_receive($data)
     $comment = get_comment($comment_id);
     $response_data = [
         'id' => $comment->comment_ID,
-        'author' => $comment->comment_author,
+        'author' => function_exists('robodesk_get_ticket_comment_author_name') ? robodesk_get_ticket_comment_author_name($comment) : $comment->comment_author,
         'author_id' => $comment->user_id,
-        'author_image' => robodesk_get_comment_avatar($comment->user_id, 96),
+        'author_image' => function_exists('robodesk_get_ticket_comment_avatar_url') ? robodesk_get_ticket_comment_avatar_url($comment, 96) : robodesk_get_comment_avatar($comment->user_id, 96),
         'content' => $comment->comment_content,
         'created_at' => $comment->comment_date,
+        'is_bot_response' => $is_bot_response,
         // 'attachment_id' => $attachment_id,
         // 'attachment_url' => $attachment_url
     ];
@@ -1517,11 +1527,12 @@ function robodesk_handle_comments_get($data)
     $formatted_comments = array_map(function ($comment) {
         return [
             'id' => $comment->comment_ID,
-            'author' => $comment->comment_author,
+            'author' => function_exists('robodesk_get_ticket_comment_author_name') ? robodesk_get_ticket_comment_author_name($comment) : $comment->comment_author,
             'author_id' => $comment->user_id,
-            'author_image' => robodesk_get_comment_avatar($comment->user_id, 96),
+            'author_image' => function_exists('robodesk_get_ticket_comment_avatar_url') ? robodesk_get_ticket_comment_avatar_url($comment, 96) : robodesk_get_comment_avatar($comment->user_id, 96),
             'content' => $comment->comment_content,
             'created_at' => $comment->comment_date,
+            'is_bot_response' => function_exists('robodesk_is_bot_comment') ? robodesk_is_bot_comment($comment->comment_ID) : false,
         ];
     }, $comments);
 
