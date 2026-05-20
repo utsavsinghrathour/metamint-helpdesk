@@ -260,6 +260,8 @@ const SingleTicket = ({
   const chatContainerRef = useRef(null);
   const image_urls = window.robodeskData?.imageUrls || {};
   const customerAvatar = ticket?.authorImage || DefaultAvatar;
+  const configuredBotAvatar = window.robodeskData?.robodesk_bot_profile_image || '';
+  const configuredBotName = window.robodeskData?.robodesk_bot_title_name || 'Bot';
   const previousScrollHeight = useRef(0);
   const beep = useRef(new Audio(wpAuth.notificationSound));
   const isAtTop = useRef(false);
@@ -427,18 +429,25 @@ const SingleTicket = ({
       console.log(typeof commentData.author_id, typeof loggedInUserId);
       console.log(String(commentData.author_id) === String(loggedInUserId));
 
+      const isBotMessage =
+        commentData.is_bot_response === true || commentData.is_bot_response === '1';
       const isOwnMessage =
+        !isBotMessage &&
         String(commentData.author_id) === String(loggedInUserId);
 
       const newMessage = {
         id: commentData.id,
         text: normalizeMessageText(commentData.content?.rendered || ''),
         sender: isOwnMessage ? 'me' : 'other',
-        senderName: commentData.author_name || 'Unknown',
-        image: isOwnMessage
+        senderName: isBotMessage
+          ? commentData.author_name || configuredBotName
+          : commentData.author_name || 'Unknown',
+        image: isBotMessage
+          ? configuredBotAvatar || commentData.author_image || DefaultAvatar
+          : isOwnMessage
           ? customerAvatar
           : commentData.author_data?.avatar || commentData.author_image || DefaultAvatar,
-        isBot: commentData.is_bot_response === true || commentData.is_bot_response === '1',
+        isBot: isBotMessage,
         author_id: commentData.author_id || commentData.author_data?.id || 0,
         created_at: commentData.created_at || new Date().toISOString(),
         isAdmin: commentData.author_id !== ticket.author_id,
@@ -461,12 +470,14 @@ const SingleTicket = ({
   const formatTicketComments = (comments) => {
     const formattedComments = comments.map((comment) => {
       const authorId = comment.author_data?.id || comment.author || 0;
-      const sender =
-        String(authorId) === String(loggedInUserId) ? 'me' : 'other';
       const isBotFlag =
         comment.is_bot_response === true ||
         comment.is_bot_response === '1' ||
         Number(authorId) === 0;
+      const sender =
+        !isBotFlag && String(authorId) === String(loggedInUserId)
+          ? 'me'
+          : 'other';
 
       return {
         id: comment.id,
@@ -474,11 +485,14 @@ const SingleTicket = ({
           comment.content?.rendered || comment.content?.plain || ''
         ),
         sender,
-        senderName: comment.author_name || 'Unknown',
-        image:
-          sender === 'me'
-            ? customerAvatar
-            : comment.author_data?.avatar || comment.author_image || DefaultAvatar,
+        senderName: isBotFlag
+          ? comment.author_name || configuredBotName
+          : comment.author_name || 'Unknown',
+        image: isBotFlag
+          ? configuredBotAvatar || comment.author_image || DefaultAvatar
+          : sender === 'me'
+          ? customerAvatar
+          : comment.author_data?.avatar || comment.author_image || DefaultAvatar,
         isBot: isBotFlag,
         author_id: authorId,
         created_at: comment.date,
@@ -705,6 +719,7 @@ const SingleTicket = ({
           loggedInUserId,
           message,
           previewImage,
+          false,
           controller.signal
         );
 
@@ -950,61 +965,30 @@ const SingleTicket = ({
                 >
                   {(!isSameSender || index === 0) && (
                     (() => {
-                      // Bot avatar handling: prefer configured bot profile image, then initials, then default avatar
-                      const botProfileImage = window.robodeskData?.robodesk_bot_profile_image || '';
-                      const botTitleName = window.robodeskData?.robodesk_bot_title_name || '';
+                      // Bot avatar handling: prefer configured bot profile image, then the server-provided Gravatar fallback.
+                      const botProfileImage = configuredBotAvatar || msg.image || '';
+                      const botTitleName = configuredBotName || msg.senderName || 'Bot';
                       const isBot = !!msg.isBot;
+
+                      if (isBot) {
+                        return (
+                          <img
+                            src={botProfileImage || DefaultAvatar}
+                            alt={botTitleName || 'Bot'}
+                            className='rd-rounded-full rd-object-cover rd-single-message-avatar'
+                            onError={(e) => {
+                              e.target.onerror = null;
+                              e.target.src = DefaultAvatar;
+                            }}
+                          />
+                        );
+                      }
 
                       if (msg.sender === 'me' || msg.isSending) {
                         return (
                           <img
                             src={customerAvatar}
                             alt={'You'}
-                            className='rd-rounded-full rd-object-cover rd-single-message-avatar'
-                          />
-                        );
-                      }
-
-                      if (isBot) {
-                        if (botProfileImage && botProfileImage.trim() !== '') {
-                          return (
-                            <img
-                              src={botProfileImage}
-                              alt={botTitleName || 'Bot'}
-                              className='rd-rounded-full rd-object-cover rd-single-message-avatar'
-                              onError={(e) => {
-                                e.target.onerror = null;
-                                e.target.src = DefaultAvatar;
-                              }}
-                            />
-                          );
-                        }
-
-                        if (botTitleName && botTitleName.trim() !== '') {
-                          const initial = botTitleName.trim().charAt(0).toUpperCase();
-                          return (
-                            <div
-                              className='rd-rounded-full rd-flex rd-items-center rd-justify-center rd-single-message-avatar'
-                              style={{
-                                width: '30px',
-                                height: '30px',
-                                borderRadius: '50%',
-                                backgroundColor: '#EDF2F7',
-                                color: '#111827',
-                                fontWeight: 600,
-                                flexShrink: 0,
-                              }}
-                            >
-                              {initial}
-                            </div>
-                          );
-                        }
-
-                        // fallback to default avatar
-                        return (
-                          <img
-                            src={DefaultAvatar}
-                            alt={'Bot'}
                             className='rd-rounded-full rd-object-cover rd-single-message-avatar'
                           />
                         );

@@ -1034,8 +1034,9 @@ function robodesk_get_ticket_source_meta($ticket_id)
 function robodesk_get_author_type($user_id)
 {
     $user_id = (int) $user_id;
+    // Bot messages are stored with user ID 0 or less
     if ($user_id <= 0) {
-        return 'customer';
+        return 'bot';
     }
 
     $user = get_userdata($user_id);
@@ -1121,6 +1122,92 @@ function robodesk_get_avatar_url($user_id, $size = 96)
     }
 
     return get_avatar_url($user_id, array('size' => (int) $size));
+}
+
+function robodesk_get_default_avatar_url($size = 96)
+{
+    return get_avatar_url('', array(
+        'size' => (int) $size,
+        'default' => 'mystery',
+        'force_default' => true,
+    ));
+}
+
+function robodesk_get_bot_display_name()
+{
+    $bot_name = trim((string) get_option('robodesk_bot_title_name', ''));
+
+    return $bot_name !== '' ? $bot_name : __('Bot', 'robodesk');
+}
+
+function robodesk_get_bot_avatar_url($size = 96)
+{
+    $bot_image = trim((string) get_option('robodesk_bot_profile_image', ''));
+
+    return $bot_image !== '' ? esc_url($bot_image) : robodesk_get_default_avatar_url($size);
+}
+
+function robodesk_is_bot_comment($comment_id)
+{
+    $comment_id = (int) $comment_id;
+    $val = get_comment_meta($comment_id, 'is_bot_response', true);
+    if ($val === '0' || $val === 0 || $val === false) {
+        return false;
+    }
+    if ($val === '' || $val === null) {
+        $comment_source = get_comment_meta($comment_id, 'comment_source', true);
+        $author_type = get_comment_meta($comment_id, 'author_type', true);
+        $comment = get_comment($comment_id);
+        if ($comment) {
+            $comment_text = trim(preg_replace('/\s+/', ' ', wp_strip_all_tags((string) $comment->comment_content)));
+            $ticket_text = trim(preg_replace('/\s+/', ' ', wp_strip_all_tags((string) get_post_field('post_content', $comment->comment_post_ID))));
+            $ticket_title = trim(preg_replace('/\s+/', ' ', wp_strip_all_tags((string) get_the_title($comment->comment_post_ID))));
+            if (
+                $comment_text !== '' &&
+                (
+                    strcasecmp($comment_text, $ticket_title) === 0 ||
+                    ($ticket_text !== '' && stripos($ticket_text, $comment_text) !== false)
+                )
+            ) {
+                return false;
+            }
+        }
+
+        return $comment_source === 'chat' && in_array($author_type, array('agent', 'bot'), true);
+    }
+
+    return $val === '1' || $val === 1 || $val === true;
+}
+
+function robodesk_get_ticket_comment_author_name($comment)
+{
+    if ($comment && robodesk_is_bot_comment($comment->comment_ID)) {
+        return robodesk_get_bot_display_name();
+    }
+
+    return $comment->display_name ?: $comment->comment_author;
+}
+
+function robodesk_get_ticket_comment_avatar_url($comment, $size = 96)
+{
+    if ($comment && robodesk_is_bot_comment($comment->comment_ID)) {
+        return robodesk_get_bot_avatar_url($size);
+    }
+
+    $user_id = $comment ? (int) $comment->user_id : 0;
+    if ($user_id > 0 && function_exists('robodesk_get_avatar_url')) {
+        $avatar_url = robodesk_get_avatar_url($user_id, $size);
+        if ($avatar_url) {
+            return $avatar_url;
+        }
+    }
+
+    $author_email = $comment ? $comment->comment_author_email : '';
+    if ($author_email) {
+        return get_avatar_url($author_email, array('size' => (int) $size));
+    }
+
+    return robodesk_get_default_avatar_url($size);
 }
 
 function robodesk_create_notification($recipient_user_id, $ticket_id, $comment_id, $type, $source, $message)
