@@ -341,10 +341,15 @@ function robodesk_get_formatted_comments($post_id)
 
     $formatted_comments = array_map(function ($comment) {
         $author_id = (int) $comment->user_id;
-        $author_name = $comment->comment_author;
-        $author_avatar = function_exists('robodesk_get_avatar_url')
-            ? robodesk_get_avatar_url($author_id, 32)
-            : get_avatar_url($comment->comment_author_email, ['size' => 32]);
+        $is_bot_response = function_exists('robodesk_is_bot_comment') ? robodesk_is_bot_comment($comment->comment_ID) : false;
+        $author_name = function_exists('robodesk_get_ticket_comment_author_name')
+            ? robodesk_get_ticket_comment_author_name($comment)
+            : $comment->comment_author;
+        $author_avatar = function_exists('robodesk_get_ticket_comment_avatar_url')
+            ? robodesk_get_ticket_comment_avatar_url($comment, 32)
+            : (function_exists('robodesk_get_avatar_url')
+                ? robodesk_get_avatar_url($author_id, 32)
+                : get_avatar_url($comment->comment_author_email, ['size' => 32]));
 
         $rendered_content = wpautop($comment->comment_content);
         $plain_content = wp_strip_all_tags($rendered_content);
@@ -361,6 +366,7 @@ function robodesk_get_formatted_comments($post_id)
             'author' => $author_id,
             'author_name' => $author_name,
             'author_image' => $author_avatar,
+            'is_bot_response' => $is_bot_response,
             'date' => $comment->comment_date,
             'date_gmt' => $comment->comment_date_gmt,
             'content' => [

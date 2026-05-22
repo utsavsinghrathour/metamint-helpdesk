@@ -1,11 +1,13 @@
 import "../styles/Login.css";
 import { useEffect, useState } from "react";
 import { FaChevronLeft } from "react-icons/fa";
-import { loginUser, registerUser, createTicket } from "../utils/modules";
+import { loginUser, registerUser, createTicket, sendReply } from "../utils/modules";
 import { useAppData } from "../utils/AppDataContext";
 import defaultLogo from "../images/robodesk-logo.png";
 import ForgotPassword from "./ForgotPassword";
 import ChangePassword from "./ChangePassword";
+
+const CHAT_KEY = "robodesk_chat_session";
 
 // Header Component
 const Header = ({ setActiveTab, image_urls, defaultLogo }) => (
@@ -161,6 +163,7 @@ const Login = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
   const [showPasswordField, setShowPasswordField] = useState(false);
+  const [defaultStaffId, setDefaultStaffId] = useState(null);
 
   const [currentForm, setCurrentForm] = useState("login");
 
@@ -181,6 +184,25 @@ const Login = ({
     ) {
       setCurrentForm("change");
     }
+  }, []);
+
+  useEffect(() => {
+    const fetchDefaultStaff = async () => {
+      try {
+        const response = await fetch("/wp-json/robodesk/selected/staff");
+        const data = await response.json();
+
+        if (response.ok && data?.staff_user_id) {
+          setDefaultStaffId(data.staff_user_id);
+        } else {
+          setDefaultStaffId(null);
+        }
+      } catch (error) {
+        setDefaultStaffId(null);
+      }
+    };
+
+    fetchDefaultStaff();
   }, []);
 
   const handleStateUpdate = (ticket) => {
@@ -296,16 +318,42 @@ const Login = ({
   };
 
   const handleTempTicketCreation = async (userId) => {
-    // alert('From temp ticket non logged in usr', userId);
-    const ticketTitle = localStorage.getItem("temp_ticket_title");
-    console.log("the ticket temp title is thsi");
+    const savedConversation = sessionStorage.getItem(CHAT_KEY);
+    const conversationMessages = savedConversation
+      ? JSON.parse(savedConversation)
+      : [];
+
+    const transcriptMessages = Array.isArray(conversationMessages)
+      ? conversationMessages.filter(
+          (message) =>
+            (message.role === "user" || message.role === "assistant") &&
+            !message.thinking,
+        )
+      : [];
+
+    const userMessages = transcriptMessages.filter(
+      (message) => message.role === "user",
+    );
+
+    const fallbackTitle = localStorage.getItem("temp_ticket_title");
+    const ticketTitle = userMessages[0]?.text || fallbackTitle;
+    const ticketDescription = transcriptMessages.length
+      ? transcriptMessages
+          .map((message) => {
+            const label = message.role === "assistant" ? "AI BOT" : "Customer";
+            const body = message.text || message.message || "";
+            return `${label}: ${body}`.trim();
+          })
+          .join("\n\n")
+      : ticketTitle;
+
     if (!ticketTitle) return;
 
     try {
       const ticketResponse = await createTicket(
         userId,
         ticketTitle,
-        ticketTitle,
+        ticketDescription,
       );
 
       const newTicket = {
@@ -321,6 +369,29 @@ const Login = ({
       };
       refreshTickets();
       handleStateUpdate(newTicket);
+
+      if (transcriptMessages.length > 1) {
+        for (const message of transcriptMessages.slice(1)) {
+          const messageText = message.text || message.message || "";
+          if (!messageText.trim()) {
+            continue;
+          }
+
+          if (message.role === "user") {
+            await sendReply(newTicket.id, userId, messageText);
+          } else if (message.role === "assistant") {
+            await sendReply(
+              newTicket.id,
+              defaultStaffId || userId,
+              messageText,
+              false,
+              true,
+            );
+          }
+        }
+      }
+
+      sessionStorage.removeItem(CHAT_KEY);
       return ticketResponse;
     } catch (ticketError) {
       console.error("Ticket creation error:", ticketError);
