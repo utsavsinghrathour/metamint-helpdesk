@@ -88,10 +88,6 @@ const MessageTabs = ({
   const [currentTab, setCurrentTab] = useState('active-conversations');
   const [priorityFilter, setPriorityFilter] = useState('all');
 
-  const searchKeywordRef = useRef();
-  const prioRityRef = useRef();
-  const statusref = useRef();
-
   const [loading, setLoading] = useState(true);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [loggedInuserId, setloggedInuserId] = useState(null);
@@ -189,12 +185,8 @@ const MessageTabs = ({
     }
   };
 
-  function handleSearch() {
-    const keyWord = searchKeywordRef.current.value;
-    const status = statusref.current.value;
-    const priority = prioRityRef.current.value;
-
-    refreshTickets(keyWord, priority, status);
+  function handleSearch(nextKeyword, nextPriority, nextStatus) {
+    refreshTickets(nextKeyword, nextPriority, nextStatus);
   }
 
   const filteredTickets =
@@ -300,28 +292,45 @@ const MessageTabs = ({
 
                 <div className='rd-p-16 rd-py-10 rd-flex rd-gap-10 rd-align-center rd-justify-between'>
                   <input
-                    ref={searchKeywordRef}
                     type='text'
                     id='keyword-search'
-                    onChange={(e) => handleSearch()}
+                    value={searchTerm}
+                    onChange={(e) => {
+                      const nextKeyword = e.target.value;
+                      setSearchTerm(nextKeyword);
+                      handleSearch(nextKeyword, priorityFilter, currentTab);
+                    }}
                     placeholder='Search for conversation'
                     className='rd-border-light rd-border-radius-md rd-p-10 rd-color-gray rd-fw-medium flex-2'
                   />
                   <select
-                    ref={prioRityRef}
                     id='priority-filter'
-                    onChange={(e) => handleSearch()}
+                    value={priorityFilter}
+                    onChange={(e) => {
+                      const nextPriority = e.target.value;
+                      setPriorityFilter(nextPriority);
+                      handleSearch(searchTerm, nextPriority, currentTab);
+                    }}
                     className='rd-border-light rd-p-10 rd-body-text rd-border-radius-md rd-color-gray rd-fw-medium flex-1'
                   >
                     <option value='all'>All</option>
                     {wpAuth?.priorityTerms?.map((priority) => (
-                      <option key={priority.term_id}>{priority.name}</option>
+                      <option
+                        key={priority.term_id}
+                        value={priority.slug || priority.name?.toLowerCase()}
+                      >
+                        {priority.name}
+                      </option>
                     ))}
                   </select>
                   <select
-                    ref={statusref}
                     id='status-conversation'
-                    onChange={(e) => handleSearch()}
+                    value={currentTab}
+                    onChange={(e) => {
+                      const nextStatus = e.target.value;
+                      setCurrentTab(nextStatus);
+                      handleSearch(searchTerm, priorityFilter, nextStatus);
+                    }}
                     className='rd-p-10 rd-py-5 rd-border-light rd-border-radius-md rd-body-text ticket-tab rd-color-gray rd-fw-medium'
                   >
                     {Object.entries(wpAuth?.status).map(([key, label]) => (

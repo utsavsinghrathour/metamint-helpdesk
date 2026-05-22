@@ -168,10 +168,17 @@ const Login = ({
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
+    const resetKey = params.get("key");
+    const resetUser = params.get("user");
     const popupParam = params.get("rbd_popup");
     const initiatorParam = params.get("initiator") || params.get("initator");
 
-    if (popupParam === "true" && initiatorParam === "robodesk") {
+    if (
+      popupParam === "true" &&
+      initiatorParam === "robodesk" &&
+      resetKey &&
+      resetUser
+    ) {
       setCurrentForm("change");
     }
   }, []);

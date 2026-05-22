@@ -145,21 +145,29 @@ export const AppDataProvider = ({ children }) => {
       const totalTickets = response.headers.get('X-WP-Total');
       updatePaginationDetails(totalTickets, totalPages, page);
       const tickets = await response.json();
-      const mappedTickets = tickets.map((ticket) => ({
-        id: ticket.id,
-        ticketNumber: ticket.ticket_number,
-        title: ticket.ticket_title,
-        source: ticket.ticket_origin,
-        timeAgo: ticket.ticket_time_ago + ' ago',
-        authorImage: ticket.ticket_author_image ?? Author1,
-        status: ticket.ticket_status ?? 'New',
-        priority: ticket.ticket_priority ?? 'Medium',
-        author: ticket.ticket_author,
-        lastReply: ticket.ticket_last_reply,
-        totalComments: ticket.ticket_total_comments,
-        notifications: ticket.ticket_notifications,
-        comments: ticket.ticket_comments,
-      }));
+      const mappedTickets = tickets.map((ticket) => {
+        const resolvedPriority =
+          ticket.ticket_priority ??
+          ticket.priority ??
+          ticket._embedded?.['wp:term']?.[0]?.[0]?.name ??
+          'N/A';
+
+        return {
+          id: ticket.id,
+          ticketNumber: ticket.ticket_number,
+          title: ticket.ticket_title,
+          source: ticket.ticket_origin,
+          timeAgo: ticket.ticket_time_ago + ' ago',
+          authorImage: ticket.ticket_author_image ?? Author1,
+          status: ticket.ticket_status ?? 'New',
+          priority: resolvedPriority,
+          author: ticket.ticket_author,
+          lastReply: ticket.ticket_last_reply,
+          totalComments: ticket.ticket_total_comments,
+          notifications: ticket.ticket_notifications,
+          comments: ticket.ticket_comments,
+        };
+      });
 
       setData((prev) => ({
         ...prev,

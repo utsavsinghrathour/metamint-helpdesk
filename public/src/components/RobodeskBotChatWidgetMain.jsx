@@ -7,6 +7,22 @@ import { FiPaperclip } from 'react-icons/fi';
 import EmojiPicker from 'emoji-picker-react';
 import DefaultAvatar from '../images/default-avatar.jpg';
 
+const escapeHtml = (unsafe) =>
+    String(unsafe)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+
+const normalizeMessageText = (text) => {
+    if (!text && text !== 0) return '';
+    const str = String(text);
+    const hasHtml = /<[^>]+>/.test(str);
+    if (hasHtml) return str;
+    return escapeHtml(str).replace(/\r\n|\r|\n/g, '<br />');
+};
+
 export default function RobodeskBotChatWidgetMain({ widgetConfig, activeAIMode }) {
     console.log('test tse');
     const rootRef = useRef(null);
@@ -45,7 +61,12 @@ export default function RobodeskBotChatWidgetMain({ widgetConfig, activeAIMode }
         return (
             <div className="ai-block">
                 {/* MAIN MESSAGE TEXT */}
-                {msg.message && <div className="ai-text rd-body-text single-message"><p>{msg.message}</p></div>}
+                {msg.message && (
+                    <div
+                        className="ai-text rd-body-text single-message"
+                        dangerouslySetInnerHTML={{ __html: normalizeMessageText(msg.message) }}
+                    />
+                )}
 
                 {/* INTENT PILL */}
                 {msg.intent && (
@@ -383,7 +404,10 @@ export default function RobodeskBotChatWidgetMain({ widgetConfig, activeAIMode }
                                     {m.role === 'assistant' ? (
                                         <AssistantMessage msg={m} />
                                     ) : (
-                                        <span className="rd-body-text single-message"><p>{m.text}</p></span>
+                                        <span
+                                            className="rd-body-text single-message"
+                                            dangerouslySetInnerHTML={{ __html: normalizeMessageText(m.text) }}
+                                        />
                                     )}
                                     {!m.thinking && (
                                         <div

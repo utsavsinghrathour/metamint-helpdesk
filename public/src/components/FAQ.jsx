@@ -395,7 +395,7 @@ const FAQ = ({
     <div className="rd-faq-container">
       <div className="rd-main-content">
         <div className="rd-p-10 rd-search-header rd-bg-blue rd-flex rd-items-center rd-justify-between rd-flex-col">
-          <h5 className="heading-5 rd-text-white rd-text-center">Search</h5>
+          <h5 className="heading-5 rd-text-white rd-text-center rd-p-16">Search</h5>
           <div className="rd-mt-20 rd-search-bar rd-flex rd-items-center rd-bg-white rd-rounded rd-position-relative searh-bar">
             <input
               type="text"

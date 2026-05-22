@@ -574,6 +574,7 @@ function robodesk_handle_tickets_webhook(WP_REST_Request $request)
             if (!is_wp_error($comment_id)) {
                 add_comment_meta($comment_id, 'comment_source', 'chat', true);
                 add_comment_meta($comment_id, 'author_type', robodesk_get_author_type($author), true);
+                add_comment_meta($comment_id, 'is_bot_response', '0', true);
                 add_comment_meta($comment_id, 'rbd_suppress_notification', 1, true);
             }
 
@@ -663,6 +664,7 @@ function robodesk_handle_tickets_webhook(WP_REST_Request $request)
         $user_id   = sanitize_text_field($data['data']['user_id'] ?? '');
         $reply     = sanitize_textarea_field($data['data']['message'] ?? '');
         $base64_image = $data['data']['image'] ?? '';
+        $is_bot_response = isset($data['data']['is_bot_response']) ? (bool) $data['data']['is_bot_response'] : false;
         $user_object =  get_user_by('id', $user_id);
         $user_name = $user_object->display_name;
         $email_address = $user_object->user_email;
@@ -708,6 +710,7 @@ function robodesk_handle_tickets_webhook(WP_REST_Request $request)
         if ($comment_id) {
             add_comment_meta($comment_id, 'comment_source', 'chat', true);
             add_comment_meta($comment_id, 'author_type', robodesk_get_author_type($user_id), true);
+            add_comment_meta($comment_id, 'is_bot_response', $is_bot_response ? '1' : '0', true);
             // Trigger action for integrations (Slack, Discord, etc.)
             do_action('robodesk_after_reply_added', $ticket_id, $comment_id, $reply, $user_object);
 
@@ -716,11 +719,12 @@ function robodesk_handle_tickets_webhook(WP_REST_Request $request)
             $comment = get_comment($comment_id);
             $data = [
                 'id' => $comment->comment_ID,
-                'author' => $comment->comment_author, // Display name
+                'author' => function_exists('robodesk_get_ticket_comment_author_name') ? robodesk_get_ticket_comment_author_name($comment) : $comment->comment_author, // Display name
                 'author_id' => $comment->user_id,    // User ID
-                'author_image' => function_exists('robodesk_get_avatar_url') ? robodesk_get_avatar_url((int) $comment->user_id, 96) : get_avatar_url($comment->user_id, ['size' => 96]),
+                'author_image' => function_exists('robodesk_get_ticket_comment_avatar_url') ? robodesk_get_ticket_comment_avatar_url($comment, 96) : (function_exists('robodesk_get_avatar_url') ? robodesk_get_avatar_url((int) $comment->user_id, 96) : get_avatar_url($comment->user_id, ['size' => 96])),
                 'content' => $comment->comment_content,
                 'created_at' => $comment->comment_date,
+                'is_bot_response' => $is_bot_response,
 
             ];
             rbd_log(sprintf(
@@ -755,14 +759,15 @@ function robodesk_handle_tickets_webhook(WP_REST_Request $request)
         }
         $formatted_comments = [];
         foreach ($comments as $comment) {
-            $author_image = function_exists('robodesk_get_avatar_url') ? robodesk_get_avatar_url((int) $comment->user_id, 96) : get_avatar_url($comment->user_id, ['size' => 96]);
+            $author_image = function_exists('robodesk_get_ticket_comment_avatar_url') ? robodesk_get_ticket_comment_avatar_url($comment, 96) : (function_exists('robodesk_get_avatar_url') ? robodesk_get_avatar_url((int) $comment->user_id, 96) : get_avatar_url($comment->user_id, ['size' => 96]));
             $formatted_comments[] = [
                 'id' => $comment->comment_ID,
-                'author' => $comment->comment_author,
+                'author' => function_exists('robodesk_get_ticket_comment_author_name') ? robodesk_get_ticket_comment_author_name($comment) : $comment->comment_author,
                 'author_id' => $comment->user_id,
                 'author_image' => $author_image,
                 'content' => $comment->comment_content,
                 'created_at' => $comment->comment_date,
+                'is_bot_response' => function_exists('robodesk_is_bot_comment') ? robodesk_is_bot_comment($comment->comment_ID) : false,
             ];
         }
         return rest_ensure_response(array(

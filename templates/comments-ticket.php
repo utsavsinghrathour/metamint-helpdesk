@@ -22,9 +22,16 @@ if (post_password_required()) {
                     <div class="comment-body">
                         <div class="comment-meta">
                             <div class="comment-author vcard">
-                                <?php echo get_avatar($comment, 50); // Add avatar here 
+                                <?php
+                                $robodesk_comment_avatar = function_exists('robodesk_get_ticket_comment_avatar_url')
+                                    ? robodesk_get_ticket_comment_avatar_url($comment, 50)
+                                    : get_avatar_url($comment, array('size' => 50));
+                                $robodesk_comment_author = function_exists('robodesk_get_ticket_comment_author_name')
+                                    ? robodesk_get_ticket_comment_author_name($comment)
+                                    : get_comment_author();
                                 ?>
-                                <?php printf('<cite>%s</cite>', get_comment_author_link()); ?>
+                                <img alt="<?php echo esc_attr($robodesk_comment_author); ?>" src="<?php echo esc_url($robodesk_comment_avatar); ?>" class="avatar avatar-50 photo" height="50" width="50" />
+                                <?php printf('<cite>%s</cite>', esc_html($robodesk_comment_author)); ?>
                             </div>
                             <div class="comment-metadata">
                                 <?php
