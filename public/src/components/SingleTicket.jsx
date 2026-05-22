@@ -33,6 +33,11 @@ const normalizeMessageText = (text) => {
   return escapeHtml(str).replace(/\r\n|\r|\n/g, '<br />');
 };
 
+const getMessageSortId = (message) => {
+  const numericId = Number(message?.id);
+  return Number.isFinite(numericId) ? numericId : 0;
+};
+
 // Skeleton Loader Component for Conversations
 const ConversationSkeleton = ({ count = 6 }) => {
   const skeletonMessages = Array.from({ length: count }, (_, i) => {
@@ -459,7 +464,7 @@ const SingleTicket = ({
 
       // Update cache with new messages
       const sorted = uniqueMessages.sort(
-        (a, b) => new Date(a.created_at) - new Date(b.created_at)
+        (a, b) => getMessageSortId(a) - getMessageSortId(b)
       );
       setCachedMessages(ticket.id, sorted);
 
@@ -472,8 +477,7 @@ const SingleTicket = ({
       const authorId = comment.author_data?.id || comment.author || 0;
       const isBotFlag =
         comment.is_bot_response === true ||
-        comment.is_bot_response === '1' ||
-        Number(authorId) === 0;
+        comment.is_bot_response === '1';
       const sender =
         !isBotFlag && String(authorId) === String(loggedInUserId)
           ? 'me'
@@ -502,7 +506,7 @@ const SingleTicket = ({
     });
 
     return formattedComments.sort(
-      (a, b) => new Date(a.created_at) - new Date(b.created_at)
+      (a, b) => getMessageSortId(a) - getMessageSortId(b)
     );
   };
 
