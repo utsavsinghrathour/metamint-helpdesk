@@ -3290,6 +3290,13 @@ function renderReplies(replies) {
       // Add special style if reply.comment_meta?.is_action is true
       const isAction = reply.comment_meta?.is_action === true; // Use optional chaining for safety
       const actionClass = isAction ? "reply-action bg-blue-200" : "";
+      const replyRole =
+        reply.role ||
+        (reply.is_bot_response || reply.comment_meta?.is_bot_response
+          ? "AI BOT"
+          : reply.type === "customer"
+            ? "Customer"
+            : "Agent");
 
       return `
         <div data-cid="${reply.id}" class="p-3 rounded-lg replys reply-${
@@ -3298,7 +3305,7 @@ function renderReplies(replies) {
           <div class="flex justify-between items-center mb-2">
             <span class="font-medium text-sm text-gray-900">${escapeHTML(
               reply.author,
-            )} (${reply.role || (reply.type === "customer" ? "Customer" : "Agent")})</span>
+            )} (${escapeHTML(replyRole)})</span>
             <span class="text-xs text-gray-500">${formatDate(
               reply.timestamp,
             )}</span>
@@ -3794,6 +3801,13 @@ jQuery(document).ready(function ($) {
         let index = 12;
         const isAction = comment.comment_meta?.is_action === true;
         const actionClass = isAction ? "reply-action bg-blue-200" : "";
+        const commentRole =
+          comment.role ||
+          (comment.is_bot_response || comment.comment_meta?.is_bot_response
+            ? "AI BOT"
+            : comment.type === "customer"
+              ? "Customer"
+              : userRole.toUpperCase());
         const content = `
                       <div
                         data-cid="${comment.id}"
@@ -3804,11 +3818,7 @@ jQuery(document).ready(function ($) {
                       >
                         <div class="flex justify-between items-center mb-2">
                           <span class="font-medium text-sm text-gray-900">
-                            ${escapeHTML(comment.author)} (${
-                              comment.type === "customer"
-                                ? "Customer"
-                                : userRole.toUpperCase()
-                            })
+                            ${escapeHTML(comment.author)} (${escapeHTML(commentRole)})
                           </span>
                           <span class="text-xs text-gray-500">
                             ${formatDate(comment.timestamp)}

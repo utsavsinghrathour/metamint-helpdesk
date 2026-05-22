@@ -119,6 +119,7 @@ export async function sendReply(
   message,
   img = false,
   isBotResponse = false,
+  signal = undefined,
 ) {
   const payload = {
     event: "replies.receive",
@@ -139,6 +140,7 @@ export async function sendReply(
         "Content-Type": "application/json",
       },
       body: JSON.stringify(payload),
+      signal,
     });
 
     const result = await response.json();
