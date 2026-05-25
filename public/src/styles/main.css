@@ -116,6 +116,7 @@ button.no-bg,
 .rd-header-logo {
   max-width: 100px;
   object-fit: contain;
+  margin: auto;
 }
 
 .rd-main-header-logo {
@@ -681,6 +682,20 @@ button.no-bg,
   opacity: 0;
   height: 0;
   width: 0;
+}
+
+.robodesk-popup .rd-main-content {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+}
+
+.robodesk-popup .rd-single-ticket {
+  height: 100%;
+}
+
+.robodesk-popup .chat-input {
+  margin-top: auto;
 }
 
 /* popup expaned contract closed css end */

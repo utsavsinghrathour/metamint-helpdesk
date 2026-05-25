@@ -1042,8 +1042,9 @@ const SingleTicket = ({
                           : "none",
                       borderRadius: "10px",
                       padding: "8px 12px",
-                      width: "80%",
+                      // width: "80%",
                       maxWidth: "100%",
+                      minWidth: "auto",
                     }}
                   >
                     {msg.isSending || msg.isPending ? (
