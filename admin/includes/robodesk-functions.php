@@ -1362,7 +1362,12 @@ function robodesk_handle_add_ticket_reply()
     $ticket_id = isset($_POST['ticket_id']) ? intval($_POST['ticket_id']) : 0;
     $reply = isset($_POST['reply']) ? wp_kses_post(wp_unslash($_POST['reply'])) : '';
 
-    if (!$ticket_id || empty($reply)) {
+    // Normalize and strip HTML to detect visible text; handle non-breaking and zero-width spaces
+    $decoded = html_entity_decode($reply, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+    // Replace NBSP (U+00A0) and common zero-width chars with regular space
+    $decoded = preg_replace('/[\x{00A0}\x{200B}\x{200C}\x{FEFF}]+/u', ' ', $decoded);
+    $reply_text_only = trim(wp_strip_all_tags($decoded));
+    if (!$ticket_id || $reply_text_only === '') {
         wp_send_json_error(['message' => 'Invalid data']);
     }
 
