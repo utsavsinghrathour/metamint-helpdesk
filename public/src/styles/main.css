@@ -121,7 +121,7 @@ button.no-bg,
 
 .rd-main-header-logo {
   aspect-ratio: 1/1;
-  height: 40px;
+  height: 40px !important;
   width: auto;
 }
 
@@ -849,7 +849,7 @@ button.no-bg,
 .rd-bot-image,
 .rd-single-message-avatar {
   align-items: center;
-  height: 30px;
+  height: 30px !important;
   width: 30px;
   border-radius: 50px;
   aspect-ratio: 1;
