@@ -133,6 +133,11 @@ button.no-bg,
   fill: #fff;
 }
 
+.single-faq-header .expand-popup svg path,
+.single-faq-header .back-button svg path {
+  fill: #fff;
+}
+
 .robodesk-plugin .rd-header-logo img:not(.rd-faq-header img),
 .robodesk-plugin .default-logo img {
   height: 40px;
