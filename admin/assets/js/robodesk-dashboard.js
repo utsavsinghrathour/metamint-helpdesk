@@ -889,8 +889,12 @@ document.addEventListener("DOMContentLoaded", function () {
   );
 
   function fetchSuggestions(type, value, callback) {
-    const url = typeof robodeskAjax !== "undefined" ? robodeskAjax.ajaxurl : ajaxurl;
-    const nonce = typeof robodeskAjax !== "undefined" && robodeskAjax.nonces ? robodeskAjax.nonces.user_lookup : "";
+    const url =
+      typeof robodeskAjax !== "undefined" ? robodeskAjax.ajaxurl : ajaxurl;
+    const nonce =
+      typeof robodeskAjax !== "undefined" && robodeskAjax.nonces
+        ? robodeskAjax.nonces.user_lookup
+        : "";
     fetch(url, {
       method: "POST",
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
@@ -3175,10 +3179,29 @@ function addReply() {
   if (isReplySending) return; // Prevent double send
   const userRole = robodeskCurrentUser?.role;
   const replyBox = document.getElementById("new-reply");
-  const replyText = replyBox.innerHTML.trim();
-  const resolvedReplyText = resolveTemplateVariables(replyText, currentTicket);
+  const replyHtml = replyBox ? replyBox.innerHTML : "";
+  // Use textContent to detect actual visible text, normalize NBSP and trim
+  const replyTextual = replyBox
+    ? (replyBox.textContent || replyBox.innerText || "")
+        .replace(/\u00A0/g, " ")
+        .trim()
+    : "";
+  const resolvedReplyText = resolveTemplateVariables(replyHtml, currentTicket);
   const sendBtn = document.getElementById("send-reply-btn");
-  if (!resolvedReplyText || !currentTicket) return;
+
+  // Prevent sending empty or whitespace-only replies (including NBSP and zero-width spaces)
+  const normalizedVisible = (replyTextual || "")
+    .replace(/[\u00A0\u200B\u200C\uFEFF]/g, " ")
+    .trim();
+  const resolvedPlain = (resolvedReplyText || "")
+    .replace(/&nbsp;|\u00A0|\u200B|\u200C|\uFEFF/g, " ")
+    .replace(/<[^>]*>/g, "")
+    .trim();
+  if (
+    (!normalizedVisible || normalizedVisible === "") &&
+    (!resolvedPlain || resolvedPlain === "")
+  )
+    return;
 
   isReplySending = true;
   if (sendBtn) {
