@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, memo } from "react";
+import { useState, useEffect, useMemo, useRef, memo } from "react";
 import { FaChevronRight, FaChevronLeft, FaSearch } from "react-icons/fa";
 import { RiPencilFill } from "react-icons/ri";
 import parse from "html-react-parser";
@@ -46,6 +46,7 @@ const FAQDetail = memo(
     const [isDisliked, setIsDisliked] = useState(false);
     const [fullContent, setFullContent] = useState(null);
     const [authorNames, setAuthorNames] = useState([]);
+    const contentRef = useRef(null);
     const image_urls = window.robodeskData?.imageUrls || {};
 
     useEffect(() => {
@@ -63,6 +64,13 @@ const FAQDetail = memo(
       };
       fetchFAQDetails();
     }, [faq.id, faq.content, faq.author]);
+
+    useEffect(() => {
+      contentRef.current?.scrollTo?.({ top: 0, behavior: "auto" });
+      if (contentRef.current) {
+        contentRef.current.scrollTop = 0;
+      }
+    }, [faq.id]);
 
     const parsedContent = useMemo(() => {
       if (!fullContent) return null;
@@ -189,7 +197,7 @@ const FAQDetail = memo(
               </svg>
             </button>
           </div>
-          <div className="rd-px-20 rd-py-15 single-faq-content">
+          <div ref={contentRef} className="rd-px-20 rd-py-15 single-faq-content">
             <div>
               <h4 className="rd-faq-title heading-4">{faq.question}</h4>
               {parsedContent ? (
