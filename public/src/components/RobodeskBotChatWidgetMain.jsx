@@ -205,7 +205,7 @@ export default function RobodeskBotChatWidgetMain({
     // add thinking placeholder
     setMessages((m) => [
       ...m,
-      { role: "assistant", text: "Thinking...", thinking: true },
+      { role: "assistant", text: "...", thinking: true },
     ]);
 
     const headers = { "Content-Type": "application/json" };
