@@ -1,36 +1,36 @@
-import { useState, useRef, useEffect, useMemo } from 'react';
-import { FaChevronLeft } from 'react-icons/fa';
-import { FaRegFaceSmileBeam } from 'react-icons/fa6';
-import { PiPaperPlaneRightFill } from 'react-icons/pi';
-import { FiPaperclip } from 'react-icons/fi';
-import { IoClose } from 'react-icons/io5';
-import EmojiPicker from 'emoji-picker-react';
-import defaultLogo from '../images/robodesk-logo.png';
-import '../styles/MessageTabs.css';
-import { sendReply } from '../utils/modules';
-import { useAppData } from '../utils/AppDataContext';
-import DefaultAvatar from '../images/default-avatar.jpg';
+import { useState, useRef, useEffect, useMemo } from "react";
+import { FaChevronLeft } from "react-icons/fa";
+import { FaRegFaceSmileBeam } from "react-icons/fa6";
+import { PiPaperPlaneRightFill } from "react-icons/pi";
+import { FiPaperclip } from "react-icons/fi";
+import { IoClose } from "react-icons/io5";
+import EmojiPicker from "emoji-picker-react";
+import defaultLogo from "../images/robodesk-logo.png";
+import "../styles/MessageTabs.css";
+import { sendReply } from "../utils/modules";
+import { useAppData } from "../utils/AppDataContext";
+import DefaultAvatar from "../images/default-avatar.jpg";
 
-import { sseManager } from '../Hooks/sseManager';
+import { sseManager } from "../Hooks/sseManager";
 
 // Helper to escape HTML in plain text
 const escapeHtml = (unsafe) =>
   String(unsafe)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#039;');
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
 
 // Normalize message text: if it already contains HTML tags, return as-is;
 // otherwise escape and convert newlines to <br /> so they render correctly.
 const normalizeMessageText = (text) => {
-  if (!text && text !== 0) return '';
+  if (!text && text !== 0) return "";
   const str = String(text);
   // crude check for HTML tags
   const hasHtml = /<[^>]+>/.test(str);
   if (hasHtml) return str;
-  return escapeHtml(str).replace(/\r\n|\r|\n/g, '<br />');
+  return escapeHtml(str).replace(/\r\n|\r|\n/g, "<br />");
 };
 
 const getMessageSortId = (message) => {
@@ -43,117 +43,117 @@ const ConversationSkeleton = ({ count = 6 }) => {
   const skeletonMessages = Array.from({ length: count }, (_, i) => {
     // Create more realistic message patterns
     const patterns = [
-      { sender: 'other', lines: 2, width: '60%' },
-      { sender: 'me', lines: 1, width: '45%' },
-      { sender: 'me', lines: 2, width: '55%' },
-      { sender: 'other', lines: 3, width: '65%' },
-      { sender: 'other', lines: 1, width: '40%' },
-      { sender: 'me', lines: 2, width: '50%' },
+      { sender: "other", lines: 2, width: "60%" },
+      { sender: "me", lines: 1, width: "45%" },
+      { sender: "me", lines: 2, width: "55%" },
+      { sender: "other", lines: 3, width: "65%" },
+      { sender: "other", lines: 1, width: "40%" },
+      { sender: "me", lines: 2, width: "50%" },
     ];
     return patterns[i % patterns.length];
   });
 
   return (
-    <div className='rd-skeleton-container' style={{ width: '100%' }}>
+    <div className="rd-skeleton-container" style={{ width: "100%" }}>
       {skeletonMessages.map((msg, index) => {
         const prevMsg = index > 0 ? skeletonMessages[index - 1] : null;
         const isSameSender = prevMsg && prevMsg.sender === msg.sender;
-        const marginBottom = isSameSender ? '4px' : '12px';
+        const marginBottom = isSameSender ? "4px" : "12px";
 
         return (
           <div
             key={index}
             className={`chat-message rd-flex rd-items-start ${
-              msg.sender === 'me'
-                ? 'rd-justify-end'
-                : 'rd-justify-start rd-gap-8'
+              msg.sender === "me"
+                ? "rd-justify-end"
+                : "rd-justify-start rd-gap-8"
             }`}
             style={{
-              maxWidth: '100%',
+              maxWidth: "100%",
               marginBottom,
-              marginTop: index === 0 || !isSameSender ? '12px' : '4px',
-              width: '100%',
-              display: 'flex',
+              marginTop: index === 0 || !isSameSender ? "12px" : "4px",
+              width: "100%",
+              display: "flex",
             }}
           >
-            {msg.sender === 'other' && (!isSameSender || index === 0) && (
+            {msg.sender === "other" && (!isSameSender || index === 0) && (
               <div
-                className='rd-skeleton-avatar '
+                className="rd-skeleton-avatar "
                 style={{
-                  width: '30px',
-                  height: '30px',
-                  borderRadius: '50px',
-                  backgroundColor: '#e5e7eb',
+                  width: "30px",
+                  height: "30px",
+                  borderRadius: "50px",
+                  backgroundColor: "#e5e7eb",
                   flexShrink: 0,
-                  animation: 'shimmer 2s infinite',
+                  animation: "shimmer 2s infinite",
                 }}
               />
             )}
-            {msg.sender === 'other' && isSameSender && index !== 0 && (
-              <div style={{ width: '30px', height: '30px' }} />
+            {msg.sender === "other" && isSameSender && index !== 0 && (
+              <div style={{ width: "30px", height: "30px" }} />
             )}
             <div
-              className='message-content rd-skeleton-bubble'
+              className="message-content rd-skeleton-bubble"
               style={{
-                backgroundColor: msg.sender === 'me' ? '#007BFF' : '#FFFFFF',
-                border: msg.sender === 'other' ? '1px solid #E0E0E0' : 'none',
-                borderRadius: '10px',
-                padding: '8px 12px',
+                backgroundColor: msg.sender === "me" ? "#007BFF" : "#FFFFFF",
+                border: msg.sender === "other" ? "1px solid #E0E0E0" : "none",
+                borderRadius: "10px",
+                padding: "8px 12px",
                 width: msg.width,
-                position: 'relative',
-                overflow: 'hidden',
-                maxWidth: '70%',
+                position: "relative",
+                overflow: "hidden",
+                maxWidth: "70%",
               }}
             >
               {Array.from({ length: msg.lines }, (_, lineIndex) => (
                 <div
                   key={lineIndex}
-                  className='rd-skeleton-line'
+                  className="rd-skeleton-line"
                   style={{
-                    height: '14px',
+                    height: "14px",
                     backgroundColor:
-                      msg.sender === 'me'
-                        ? 'rgba(255, 255, 255, 0.3)'
-                        : '#e5e7eb',
-                    borderRadius: '4px',
-                    marginBottom: lineIndex < msg.lines - 1 ? '6px' : '0',
-                    width: lineIndex === msg.lines - 1 ? '60%' : '100%',
+                      msg.sender === "me"
+                        ? "rgba(255, 255, 255, 0.3)"
+                        : "#e5e7eb",
+                    borderRadius: "4px",
+                    marginBottom: lineIndex < msg.lines - 1 ? "6px" : "0",
+                    width: lineIndex === msg.lines - 1 ? "60%" : "100%",
                   }}
                 />
               ))}
               <div
-                className='rd-skeleton-time'
+                className="rd-skeleton-time"
                 style={{
-                  height: '10px',
-                  width: '35px',
+                  height: "10px",
+                  width: "35px",
                   backgroundColor:
-                    msg.sender === 'me'
-                      ? 'rgba(255, 255, 255, 0.2)'
-                      : '#d1d5db',
-                  borderRadius: '3px',
-                  marginTop: '8px',
-                  marginLeft: msg.sender === 'me' ? 'auto' : '0',
+                    msg.sender === "me"
+                      ? "rgba(255, 255, 255, 0.2)"
+                      : "#d1d5db",
+                  borderRadius: "3px",
+                  marginTop: "8px",
+                  marginLeft: msg.sender === "me" ? "auto" : "0",
                 }}
               />
               <div
                 style={{
-                  position: 'absolute',
+                  position: "absolute",
                   top: 0,
-                  left: '-100%',
-                  width: '100%',
-                  height: '100%',
+                  left: "-100%",
+                  width: "100%",
+                  height: "100%",
                   background:
-                    msg.sender === 'me'
-                      ? 'linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent)'
-                      : 'linear-gradient(90deg, transparent, rgba(255,255,255,0.5), transparent)',
-                  animation: 'shimmerMove 2s infinite',
+                    msg.sender === "me"
+                      ? "linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent)"
+                      : "linear-gradient(90deg, transparent, rgba(255,255,255,0.5), transparent)",
+                  animation: "shimmerMove 2s infinite",
                 }}
               />
             </div>
           </div>
         );
       })}
-      <style jsx='true'>{`
+      <style jsx="true">{`
         @keyframes shimmer {
           0%,
           100% {
@@ -199,10 +199,10 @@ const ConversationSkeleton = ({ count = 6 }) => {
 const TicketClosed = ({ handleFocusedTextArea, setActiveTab }) => {
   return (
     <div>
-      <h5 className='rd-fw-semi rd-mb-5 rd-body-text'>Still have questions?</h5>
+      <h5 className="rd-fw-semi rd-mb-5 rd-body-text">Still have questions?</h5>
       <a
-        href='#'
-        className='rd-title-text'
+        href="#"
+        className="rd-title-text"
         onClick={(e) => (
           e.preventDefault(), setActiveTab(0), handleFocusedTextArea(true)
         )}
@@ -241,9 +241,9 @@ const SingleTicket = ({
 }) => {
   const ticketIntroMessage =
     window.robodeskData?.ticketIntroMessage ||
-    'If you are interested in working with us, take a step towards discovering exciting opportunities by reaching out to us. We look forward to talking with you soon!';
+    "If you are interested in working with us, take a step towards discovering exciting opportunities by reaching out to us. We look forward to talking with you soon!";
 
-  const [message, setMessage] = useState('');
+  const [message, setMessage] = useState("");
   const [showPicker, setShowPicker] = useState(false);
   const [previewImage, setPreviewImage] = useState(null);
   const [chatMessages, setChatMessages] = useState(() => {
@@ -265,8 +265,10 @@ const SingleTicket = ({
   const chatContainerRef = useRef(null);
   const image_urls = window.robodeskData?.imageUrls || {};
   const customerAvatar = ticket?.authorImage || DefaultAvatar;
-  const configuredBotAvatar = window.robodeskData?.robodesk_bot_profile_image || '';
-  const configuredBotName = window.robodeskData?.robodesk_bot_title_name || 'Bot';
+  const configuredBotAvatar =
+    window.robodeskData?.robodesk_bot_profile_image || "";
+  const configuredBotName =
+    window.robodeskData?.robodesk_bot_title_name || "Bot";
   const previousScrollHeight = useRef(0);
   const beep = useRef(new Audio(wpAuth.notificationSound));
   const isAtTop = useRef(false);
@@ -302,7 +304,7 @@ const SingleTicket = ({
 
   useEffect(() => {
     if (ticket.notifications) {
-      updateTicketNotifications(ticket.id, 'yes');
+      updateTicketNotifications(ticket.id, "yes");
     }
   }, []);
 
@@ -393,7 +395,7 @@ const SingleTicket = ({
     } catch (err) {
       clearTimeout(timeoutId);
 
-      if (err.name === 'AbortError') {
+      if (err.name === "AbortError") {
         // console.log('Request timed out, using cached data if available');
         // If we have cached data, use it
         const cached = getCachedMessages(ticket.id);
@@ -401,11 +403,11 @@ const SingleTicket = ({
           setChatMessages(cached);
           setError(null);
         } else {
-          setError('Connection is slow. Messages may take time to load.');
+          setError("Connection is slow. Messages may take time to load.");
         }
       } else {
-        console.error('Failed to fetch comments:', err);
-        setError('Failed to load messages. Please try again.');
+        console.error("Failed to fetch comments:", err);
+        setError("Failed to load messages. Please try again.");
       }
 
       if (!initialLoadComplete) {
@@ -418,7 +420,7 @@ const SingleTicket = ({
   };
 
   const handleNewComment = (commentData, play = true) => {
-    updateTicketNotifications(ticket.id, 'yes');
+    updateTicketNotifications(ticket.id, "yes");
     setChatMessages((prev) => {
       const messageExists = prev.some((msg) => msg.id === commentData.id);
 
@@ -429,29 +431,32 @@ const SingleTicket = ({
         beep.current.play();
       }
 
-      console.log('The author id is ', commentData.author_id);
-      console.log('The actual authorid is', loggedInUserId);
+      console.log("The author id is ", commentData.author_id);
+      console.log("The actual authorid is", loggedInUserId);
       console.log(typeof commentData.author_id, typeof loggedInUserId);
       console.log(String(commentData.author_id) === String(loggedInUserId));
 
       const isBotMessage =
-        commentData.is_bot_response === true || commentData.is_bot_response === '1';
+        commentData.is_bot_response === true ||
+        commentData.is_bot_response === "1";
       const isOwnMessage =
         !isBotMessage &&
         String(commentData.author_id) === String(loggedInUserId);
 
       const newMessage = {
         id: commentData.id,
-        text: normalizeMessageText(commentData.content?.rendered || ''),
-        sender: isOwnMessage ? 'me' : 'other',
+        text: normalizeMessageText(commentData.content?.rendered || ""),
+        sender: isOwnMessage ? "me" : "other",
         senderName: isBotMessage
           ? commentData.author_name || configuredBotName
-          : commentData.author_name || 'Unknown',
+          : commentData.author_name || "Unknown",
         image: isBotMessage
           ? configuredBotAvatar || commentData.author_image || DefaultAvatar
           : isOwnMessage
           ? customerAvatar
-          : commentData.author_data?.avatar || commentData.author_image || DefaultAvatar,
+          : commentData.author_data?.avatar ||
+            commentData.author_image ||
+            DefaultAvatar,
         isBot: isBotMessage,
         author_id: commentData.author_id || commentData.author_data?.id || 0,
         created_at: commentData.created_at || new Date().toISOString(),
@@ -476,27 +481,28 @@ const SingleTicket = ({
     const formattedComments = comments.map((comment) => {
       const authorId = comment.author_data?.id || comment.author || 0;
       const isBotFlag =
-        comment.is_bot_response === true ||
-        comment.is_bot_response === '1';
+        comment.is_bot_response === true || comment.is_bot_response === "1";
       const sender =
         !isBotFlag && String(authorId) === String(loggedInUserId)
-          ? 'me'
-          : 'other';
+          ? "me"
+          : "other";
 
       return {
         id: comment.id,
         text: normalizeMessageText(
-          comment.content?.rendered || comment.content?.plain || ''
+          comment.content?.rendered || comment.content?.plain || ""
         ),
         sender,
         senderName: isBotFlag
           ? comment.author_name || configuredBotName
-          : comment.author_name || 'Unknown',
+          : comment.author_name || "Unknown",
         image: isBotFlag
           ? configuredBotAvatar || comment.author_image || DefaultAvatar
-          : sender === 'me'
+          : sender === "me"
           ? customerAvatar
-          : comment.author_data?.avatar || comment.author_image || DefaultAvatar,
+          : comment.author_data?.avatar ||
+            comment.author_image ||
+            DefaultAvatar,
         isBot: isBotFlag,
         author_id: authorId,
         created_at: comment.date,
@@ -544,9 +550,9 @@ const SingleTicket = ({
         clearTimeout(timeoutId);
 
         if (!response.ok) {
-          throw new Error('Failed to fetch total comments');
+          throw new Error("Failed to fetch total comments");
         }
-        const total = parseInt(response.headers.get('X-WP-Total'), 10) || 0;
+        const total = parseInt(response.headers.get("X-WP-Total"), 10) || 0;
         setTotalComments(total);
 
         // If there are no comments at all, just set empty state
@@ -564,14 +570,14 @@ const SingleTicket = ({
         // Fetch comments whether we have cache or not
         await fetchComments(initialOffset, false);
       } catch (err) {
-        if (err.name === 'AbortError') {
+        if (err.name === "AbortError") {
           if (!cached || cached.length === 0) {
-            setError('Connection is slow. Messages may take time to load.');
+            setError("Connection is slow. Messages may take time to load.");
           }
         } else {
-          console.error('Failed to fetch initial comments:', err);
+          console.error("Failed to fetch initial comments:", err);
           if (!cached || cached.length === 0) {
-            setError('Failed to load messages. Please try again.');
+            setError("Failed to load messages. Please try again.");
           }
         }
         setLoading(false);
@@ -587,7 +593,7 @@ const SingleTicket = ({
   useEffect(() => {
     const textarea = textareaRef.current;
     if (textarea) {
-      textarea.style.height = 'auto';
+      textarea.style.height = "auto";
       textarea.style.height = `${textarea.scrollHeight}px`;
     }
   }, [message]);
@@ -607,8 +613,8 @@ const SingleTicket = ({
       }
     };
 
-    chatContainer.addEventListener('scroll', handleScroll);
-    return () => chatContainer.removeEventListener('scroll', handleScroll);
+    chatContainer.addEventListener("scroll", handleScroll);
+    return () => chatContainer.removeEventListener("scroll", handleScroll);
   }, [offset, isFetching]);
 
   // Scroll to bottom only for new messages, not pagination
@@ -655,21 +661,21 @@ const SingleTicket = ({
   useEffect(() => {
     sseManager.connect(url);
 
-    const unsubscribeNewComment = sseManager.on('new_comment', (data) => {
+    const unsubscribeNewComment = sseManager.on("new_comment", (data) => {
       const commentData = data;
       handleNewComment(commentData);
     });
 
-    const unsubscribeTicketOpen = sseManager.on('ticket_open', (data) => {
+    const unsubscribeTicketOpen = sseManager.on("ticket_open", (data) => {
       setTicketClosed(false);
     });
 
-    const unsubscribeTicketClosed = sseManager.on('ticket_closed', (data) => {
+    const unsubscribeTicketClosed = sseManager.on("ticket_closed", (data) => {
       setTicketClosed(true);
     });
 
     const unsubscribeNewMineTicket = sseManager.on(
-      'new_mine_comment',
+      "new_mine_comment",
       (data) => {
         handleNewComment(data, false);
       }
@@ -692,9 +698,10 @@ const SingleTicket = ({
         : false;
       const tempMessage = {
         id: `temp-${Date.now()}`,
-        text: normalizeMessageText(message) + (imageHTML ? '<br>' + imageHTML : ''),
-        sender: 'me',
-        senderName: 'Me',
+        text:
+          normalizeMessageText(message) + (imageHTML ? "<br>" + imageHTML : ""),
+        sender: "me",
+        senderName: "Me",
         image: customerAvatar,
         created_at: new Date().toISOString(),
         isSending: true,
@@ -710,7 +717,7 @@ const SingleTicket = ({
         return updated;
       });
 
-      setMessage('');
+      setMessage("");
       setPreviewImage(null);
 
       // Send with timeout
@@ -730,14 +737,14 @@ const SingleTicket = ({
         clearTimeout(timeoutId);
 
         if (!result.data || !result.data.content) {
-          throw new Error('Invalid response from server: missing content');
+          throw new Error("Invalid response from server: missing content");
         }
 
         const newMessage = {
           id: result.data.id || tempMessage.id,
-          text: normalizeMessageText(result.data.content || ''),
-          sender: 'me',
-          senderName: result.data.author_name || 'Me',
+          text: normalizeMessageText(result.data.content || ""),
+          sender: "me",
+          senderName: result.data.author_name || "Me",
           image: customerAvatar,
           created_at: result.data.created_at || tempMessage.created_at,
           isAdmin: result.data.author_id
@@ -759,7 +766,7 @@ const SingleTicket = ({
       } catch (err) {
         clearTimeout(timeoutId);
 
-        if (err.name === 'AbortError') {
+        if (err.name === "AbortError") {
           // Keep the optimistic message but mark it as pending
           setChatMessages((prev) =>
             prev.map((msg) =>
@@ -769,17 +776,17 @@ const SingleTicket = ({
             )
           );
           setError(
-            'Message is taking longer to send. It will be delivered when connection improves.'
+            "Message is taking longer to send. It will be delivered when connection improves."
           );
         } else {
-          console.error('Error sending message:', err);
+          console.error("Error sending message:", err);
           // Remove the failed message
           setChatMessages((prev) => {
             const updated = prev.filter((msg) => msg.id !== tempMessage.id);
             setCachedMessages(ticket.id, updated);
             return updated;
           });
-          setError('Failed to send message. Please try again.');
+          setError("Failed to send message. Please try again.");
         }
       }
     }
@@ -799,10 +806,10 @@ const SingleTicket = ({
     if (!file) return;
 
     const MAX_FILE_SIZE = 3145728;
-    const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/gif'];
+    const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/gif"];
     const ERROR_MESSAGES = {
-      INVALID_TYPE: 'Only JPEG, PNG, or GIF images are allowed.',
-      SIZE_EXCEEDED: 'Image size must be less than 3MB.',
+      INVALID_TYPE: "Only JPEG, PNG, or GIF images are allowed.",
+      SIZE_EXCEEDED: "Image size must be less than 3MB.",
     };
 
     // Helper function to update state
@@ -850,9 +857,9 @@ const SingleTicket = ({
     reader.onerror = () => {
       updateUploadState({
         imageUploadError: true,
-        imageUploadMessage: 'Error reading the file.',
+        imageUploadMessage: "Error reading the file.",
       });
-      alert('Error reading the file.');
+      alert("Error reading the file.");
     };
 
     reader.readAsDataURL(file);
@@ -861,46 +868,46 @@ const SingleTicket = ({
 
   const formatTimestamp = (timestamp) =>
     new Date(timestamp).toLocaleTimeString([], {
-      hour: '2-digit',
-      minute: '2-digit',
+      hour: "2-digit",
+      minute: "2-digit",
     });
 
   return (
-    <div className='rd-single-ticket rd-flex rd-flex-col rd-h-full'>
-      <div className='single-ticket-header rd-search-header rd-bg-blue rd-flex rd-items-center rd-justify-between rd-flex-col rd-message-list-header'>
+    <div className="rd-single-ticket rd-flex rd-flex-col rd-h-full">
+      <div className="single-ticket-header rd-search-header rd-bg-blue rd-flex rd-items-center rd-justify-between rd-flex-col rd-message-list-header">
         <button
-          className='back-button rd-flex rd-items-center rd-gap-1 rd-border-none rd-bg-transparent rd-m-0 rd-p-0'
+          className="back-button rd-flex rd-items-center rd-gap-1 rd-border-none rd-bg-transparent rd-m-0 rd-p-0"
           onClick={onBack}
         >
           <FaChevronLeft />
         </button>
-        {image_urls.wide_logo && image_urls.wide_logo.trim() !== '' ? (
+        {image_urls.wide_logo && image_urls.wide_logo.trim() !== "" ? (
           <img
             src={image_urls.wide_logo}
-            alt='Plugin Wide Logo'
-            className='rd-header-logo rd-m-auto'
-            onError={(e) => (e.target.style.display = 'none')}
+            alt="Plugin Wide Logo"
+            className="rd-header-logo rd-m-auto"
+            onError={(e) => (e.target.style.display = "none")}
           />
-        ) : image_urls.logo && image_urls.logo.trim() !== '' ? (
+        ) : image_urls.logo && image_urls.logo.trim() !== "" ? (
           <img
             src={image_urls.logo}
-            alt='Plugin Logo'
-            className='rd-header-logo rd-m-auto'
-            onError={(e) => (e.target.style.display = 'none')}
+            alt="Plugin Logo"
+            className="rd-header-logo rd-m-auto"
+            onError={(e) => (e.target.style.display = "none")}
           />
         ) : (
-          <div className='rd-header-logo default-logo'>
+          <div className="rd-header-logo default-logo">
             <img
               src={defaultLogo}
-              alt='Default Plugin Logo'
-              className='rd-header-logo rd-m-auto'
+              alt="Default Plugin Logo"
+              className="rd-header-logo rd-m-auto"
             />
           </div>
         )}
       </div>
-      <div className='rd-px-18 rd-py-15 rd-border-bottom-light'>
-        <div className='rd-body-text'>
-          <p className='rd-text-center rd-body-text rd-mb-0'>
+      <div className="rd-px-18 rd-py-15 rd-border-bottom-light">
+        <div className="rd-body-text">
+          <p className="rd-text-center rd-body-text rd-mb-0">
             {ticketIntroMessage}
           </p>
         </div>
@@ -908,12 +915,12 @@ const SingleTicket = ({
       <div
         ref={chatContainerRef}
         className={`chat-container rd-flex rd-flex-col rd-flex-grow rd-px-18 rd-py-15 rd-overflow-auto ${
-          ticketClosed ? 'ticket-closed' : ''
+          ticketClosed ? "ticket-closed" : ""
         }`}
       >
         {/* Show pagination loader at the top when loading older messages */}
         {isPaginationLoading && (
-          <div className='rd-pagination-loader rd-mb-10'>
+          <div className="rd-pagination-loader rd-mb-10">
             <ConversationSkeleton count={3} />
           </div>
         )}
@@ -921,13 +928,13 @@ const SingleTicket = ({
         {/* Show connection warning if there's an error but we have cached messages */}
         {error && chatMessages.length > 0 && (
           <div
-            className='rd-connection-warning rd-px-12 rd-py-8 rd-mb-10 rd-text-center'
+            className="rd-connection-warning rd-px-12 rd-py-8 rd-mb-10 rd-text-center"
             style={{
-              backgroundColor: '#fff3cd',
-              border: '1px solid #ffc107',
-              borderRadius: '8px',
-              color: '#856404',
-              fontSize: '12px',
+              backgroundColor: "#fff3cd",
+              border: "1px solid #ffc107",
+              borderRadius: "8px",
+              color: "#856404",
+              fontSize: "12px",
             }}
           >
             {error}
@@ -937,9 +944,9 @@ const SingleTicket = ({
         {loading && !initialLoadComplete ? (
           <ConversationSkeleton />
         ) : error && chatMessages.length === 0 ? (
-          <p className='err_msg rd-text-center'>{error}</p>
+          <p className="err_msg rd-text-center">{error}</p>
         ) : chatMessages.length === 0 ? (
-          <p className='rd-text-center rd-body-text'>
+          <p className="rd-text-center rd-body-text">
             No conversations yet. Start a conversation below.
           </p>
         ) : (
@@ -950,36 +957,38 @@ const SingleTicket = ({
                 !!prevMsg &&
                 prevMsg.sender === msg.sender &&
                 !!prevMsg.isBot === !!msg.isBot &&
-                String(prevMsg.author_id || '') === String(msg.author_id || '');
-              const marginBottom = isSameSender ? '4px' : '12px';
+                String(prevMsg.author_id || "") === String(msg.author_id || "");
+              const marginBottom = isSameSender ? "4px" : "12px";
 
               return (
                 <div
                   key={msg.id}
                   className={`chat-message rd-flex rd-items-start ${
-                    msg.sender === 'me' || msg.isSending
-                      ? 'rd-ml-auto sent'
-                      : 'rd-flex rd-gap-8 received'
+                    msg.sender === "me" || msg.isSending
+                      ? "rd-ml-auto sent"
+                      : "rd-flex rd-gap-8 received"
                   }`}
                   style={{
-                    maxWidth: '80%',
+                    maxWidth: "80%",
                     marginBottom,
-                    marginTop: index === 0 || !isSameSender ? '12px' : '4px',
+                    marginTop: index === 0 || !isSameSender ? "12px" : "4px",
                   }}
                 >
-                  {(!isSameSender || index === 0) && (
+                  {(!isSameSender || index === 0) &&
                     (() => {
                       // Bot avatar handling: prefer configured bot profile image, then the server-provided Gravatar fallback.
-                      const botProfileImage = configuredBotAvatar || msg.image || '';
-                      const botTitleName = configuredBotName || msg.senderName || 'Bot';
+                      const botProfileImage =
+                        configuredBotAvatar || msg.image || "";
+                      const botTitleName =
+                        configuredBotName || msg.senderName || "Bot";
                       const isBot = !!msg.isBot;
 
                       if (isBot) {
                         return (
                           <img
                             src={botProfileImage || DefaultAvatar}
-                            alt={botTitleName || 'Bot'}
-                            className='rd-rounded-full rd-object-cover rd-single-message-avatar'
+                            alt={botTitleName || "Bot"}
+                            className="rd-rounded-full rd-object-cover rd-single-message-avatar"
                             onError={(e) => {
                               e.target.onerror = null;
                               e.target.src = DefaultAvatar;
@@ -988,12 +997,12 @@ const SingleTicket = ({
                         );
                       }
 
-                      if (msg.sender === 'me' || msg.isSending) {
+                      if (msg.sender === "me" || msg.isSending) {
                         return (
                           <img
                             src={customerAvatar}
-                            alt={'You'}
-                            className='rd-rounded-full rd-object-cover rd-single-message-avatar'
+                            alt={"You"}
+                            className="rd-rounded-full rd-object-cover rd-single-message-avatar"
                           />
                         );
                       }
@@ -1003,78 +1012,81 @@ const SingleTicket = ({
                         <img
                           src={msg.image || DefaultAvatar}
                           alt={msg.senderName}
-                          className='rd-rounded-full rd-object-cover rd-single-message-avatar'
+                          className="rd-rounded-full rd-object-cover rd-single-message-avatar"
                         />
                       );
-                    })()
-                  )}
+                    })()}
                   {isSameSender && index !== 0 && (
                     <div
                       style={{
-                        width: '30px',
-                        height: '30px',
+                        width: "30px",
+                        height: "30px",
                         flexShrink: 0,
                       }}
                     />
                   )}
                   <div
-                    className='message-content'
+                    className="message-content"
                     style={{
                       backgroundColor:
-                        msg.sender === 'me' || msg.isSending
-                          ? '#007BFF'
-                          : '#FFFFFF',
+                        msg.sender === "me" || msg.isSending
+                          ? "#007BFF"
+                          : "#FFFFFF",
                       color:
-                        msg.sender === 'me' || msg.isSending
-                          ? '#FFFFFF'
-                          : '#000000',
+                        msg.sender === "me" || msg.isSending
+                          ? "#FFFFFF"
+                          : "#000000",
                       border:
-                        msg.sender === 'other' && !msg.isSending
-                          ? '1px solid #E0E0E0'
-                          : 'none',
-                      borderRadius: '10px',
-                      padding: '8px 12px',
-                      width: '80%',
-                      maxWidth: '100%',
+                        msg.sender === "other" && !msg.isSending
+                          ? "1px solid #E0E0E0"
+                          : "none",
+                      borderRadius: "10px",
+                      padding: "8px 12px",
+                      width: "80%",
+                      maxWidth: "100%",
                     }}
                   >
                     {msg.isSending || msg.isPending ? (
                       <span
-                        className='rd-body-text single-message'
+                        className="rd-body-text single-message"
                         style={{ opacity: msg.isPending ? 0.7 : 1 }}
-                        dangerouslySetInnerHTML={{ __html: normalizeMessageText(msg.text) }}
+                        dangerouslySetInnerHTML={{
+                          __html: normalizeMessageText(msg.text),
+                        }}
                       />
                     ) : (
                       <>
                         {msg.text && (
                           <span
                             className={[
-                              'rd-body-text',
-                              'single-message',
-                              msg.action ? 'rd-is-action' : null,
+                              "rd-body-text",
+                              "single-message",
+                              msg.action ? "rd-is-action" : null,
                             ]
                               .filter(Boolean)
-                              .join(' ')}
-                            dangerouslySetInnerHTML={{ __html: normalizeMessageText(msg.text) }}
+                              .join(" ")}
+                            dangerouslySetInnerHTML={{
+                              __html: normalizeMessageText(msg.text),
+                            }}
                           />
                         )}
                       </>
                     )}
                     <div
-                      className='rd-text-small rd-text-gray'
+                      className="rd-text-small rd-text-gray"
                       style={{
-                        marginTop: '4px',
+                        marginTop: "4px",
                         textAlign:
-                          msg.sender === 'me' || msg.isSending
-                            ? 'right'
-                            : 'left',
-                        fontSize: '10px',
+                          msg.sender === "me" || msg.isSending
+                            ? "right"
+                            : "left",
+                        fontSize: "10px",
                       }}
                     >
                       {msg.isSending
-                        ? ''
+                        ? ""
                         : msg.isPending
-                        ? 'Pending...'
+                        ? "Pending..."
                         : formatTimestamp(msg.created_at)}
                     </div>
                   </div>
@@ -1086,77 +1098,80 @@ const SingleTicket = ({
       </div>
       <div
         className={`chat-input rd-flex rd-flex-col rd-px-18 rd-py-15 rd-border-top-light rd-bg-white  ${
-          previewImage ? 'has-preview' : ''
+          previewImage ? "has-preview" : ""
         }`}
       >
         {previewImage && (
-          <div className='rd-mb-10 rd-flex rd-align-center'>
+          <div className="rd-mb-10 rd-flex rd-align-center">
             <div>
               <img
                 src={previewImage}
-                alt='Preview'
-                className='rd-max-w-full  rd-border-radius-md rd-preview-image'
-                style={{ maxWidth: '80px' }}
+                alt="Preview"
+                className="rd-max-w-full  rd-border-radius-md rd-preview-image"
+                style={{ maxWidth: "80px" }}
               />
               <button
                 onClick={() => setPreviewImage(null)}
-                className='rd-ml-10 rd-text-red-500 rd-border-none rd-cursor-pointer remove-preview rd-position-absolute rd-p-0'
+                className="rd-ml-10 rd-text-red-500 rd-border-none rd-cursor-pointer remove-preview rd-position-absolute rd-p-0"
               >
                 <IoClose />
               </button>
             </div>
           </div>
         )}
-        <div className='rd-flex rd-align-center rd-justify-between'>
+        <div className="rd-flex rd-align-center rd-justify-between">
           {!ticketClosed ? (
             <>
               <textarea
-                id='mesg'
+                id="mesg"
                 ref={textareaRef}
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
                 onKeyDown={(e) => {
-                  if (e.key === 'Enter' && !e.shiftKey) {
+                  if (e.key === "Enter" && !e.shiftKey) {
                     e.preventDefault();
                     handleSend();
                   }
                 }}
-                placeholder='Write a message...'
-                className='rd-flex-grow rd-border-none rd-outline-none rd-py-5 rd-w-full rd-resize-none'
-                rows='1'
+                placeholder="Write a message..."
+                className="rd-flex-grow rd-border-none rd-outline-none rd-py-5 rd-w-full rd-resize-none"
+                rows="1"
               />
-              <div className='rd-flex rd-gap-20 rd-relative'>
+              <div className="rd-flex rd-gap-20 rd-relative">
                 <button
                   onClick={toggleEmojiPicker}
-                  className='rd-bg-transparent rd-border-none rd-mr-10 icon-dark rd-cursor-pointer rd-p-0'
+                  className="rd-bg-transparent rd-border-none rd-mr-10 icon-dark rd-cursor-pointer rd-p-0"
                 >
-                  <FaRegFaceSmileBeam className='icon-dark' size={20} />
+                  <FaRegFaceSmileBeam className="icon-dark" size={20} />
                 </button>
                 {showPicker && (
-                  <div className='rd-position-absolute rd-bottom-0 rd-right-0 emoji-picker-wrap'>
+                  <div className="rd-position-absolute rd-bottom-0 rd-right-0 emoji-picker-wrap">
                     <EmojiPicker onEmojiClick={handleEmojiClick} />
                   </div>
                 )}
-                <div className='rd-flex'>
+                <div className="rd-flex">
                   <input
-                    type='file'
+                    type="file"
                     ref={fileInputRef}
                     onChange={handleFileUpload}
-                    accept='image/*'
-                    className='rd-hidden'
+                    accept="image/*"
+                    className="rd-hidden"
                   />
                   <button
                     onClick={triggerFileInput}
-                    className='rd-bg-transparent rd-border-none rd-mr-10 rd-cursor-pointer rd-p-0 icon-dark'
+                    className="rd-bg-transparent rd-border-none rd-mr-10 rd-cursor-pointer rd-p-0 icon-dark"
                   >
-                    <FiPaperclip className='icon-dark' size={20} />
+                    <FiPaperclip
+                      className="icon-dark rbd-paperclip"
+                      size={20}
+                    />
                   </button>
                 </div>
                 <button
                   onClick={handleSend}
-                  className='rd-bg-transparent rd-border-none rd-ml-10 icon-dark rd-cursor-pointer rd-p-0'
+                  className="rd-bg-transparent rd-border-none rd-ml-10 icon-dark rd-cursor-pointer rd-p-0"
                 >
-                  <PiPaperPlaneRightFill className='icon-dark' size={20} />
+                  <PiPaperPlaneRightFill className="icon-dark" size={20} />
                 </button>
               </div>
             </>

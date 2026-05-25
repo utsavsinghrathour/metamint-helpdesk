@@ -27,7 +27,7 @@ const normalizeImagePaths = (html, baseUrl = "/") => {
         return `${prefix}${baseUrl}${path}${suffix}`;
       }
       return match;
-    },
+    }
   );
 };
 
@@ -55,7 +55,7 @@ const FAQDetail = memo(
           setAuthorNames(
             faq.author
               ? faq.author.split(",").map((name) => name.trim())
-              : ["Unknown"],
+              : ["Unknown"]
           );
         } catch (err) {
           setAuthorNames(["Unknown"]);
@@ -205,7 +205,9 @@ const FAQDetail = memo(
                     {faq?.author?.total_posts} articles
                   </h5>
                   {/* <h5 className="sub-text">By {faq?.author?.display_name}</h5> */}
-                  <span className="rd-text-small">By {faq?.author?.display_name}</span>
+                  <span className="rd-text-small">
+                    By {faq?.author?.display_name}
+                  </span>
                 </div>
                 <div className="rd-author-avatar rd-flex rd-align-center">
                   <img
@@ -255,7 +257,7 @@ const FAQDetail = memo(
         </div>
       </div>
     );
-  },
+  }
 );
 
 const FAQItem = memo(({ faq, onSelect }) => (
@@ -314,12 +316,12 @@ const FAQ = ({
         }
 
         const response = await fetch(
-          `/wp-json/wp/v2/robodesk_faq?_fields=id,title.rendered,excerpt.rendered,content.rendered,author_info&per_page=100&page=1`,
+          `/wp-json/wp/v2/robodesk_faq?_fields=id,title.rendered,excerpt.rendered,content.rendered,author_info&per_page=100&page=1`
         );
 
         if (!response.ok) {
           throw new Error(
-            `Failed to fetch FAQs: ${response.status} ${response.statusText}`,
+            `Failed to fetch FAQs: ${response.status} ${response.statusText}`
           );
         }
 
@@ -366,7 +368,7 @@ const FAQ = ({
 
   const filteredFaqs = useMemo(() => {
     const filtered = faqs.filter((faq) =>
-      faq.question.toLowerCase().includes(searchTerm.toLowerCase()),
+      faq.question.toLowerCase().includes(searchTerm.toLowerCase())
     );
     return filtered;
   }, [faqs, searchTerm]);
@@ -395,7 +397,9 @@ const FAQ = ({
     <div className="rd-faq-container">
       <div className="rd-main-content">
         <div className="rd-p-10 rd-search-header rd-bg-blue rd-flex rd-items-center rd-justify-between rd-flex-col">
-          <h5 className="heading-5 rd-text-white rd-text-center rd-p-16">Search</h5>
+          <h5 className="heading-5 rd-text-white rd-text-center rd-p-16">
+            Search
+          </h5>
           <div className="rd-mt-20 rd-search-bar rd-flex rd-items-center rd-bg-white rd-rounded rd-position-relative searh-bar">
             <input
               type="text"
@@ -420,7 +424,9 @@ const FAQ = ({
             </p>
           ) : isLoading ? (
             <div className="rd-skeleton">
-              <p className="rd-body-text rd-text rd-text-center rd-p-16">Loading...</p>
+              <p className="rd-body-text rd-text rd-text-center rd-p-16">
+                Loading...
+              </p>
               {[...Array(10)].map((_, i) => (
                 <div
                   key={i}

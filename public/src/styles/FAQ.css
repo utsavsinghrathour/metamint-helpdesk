@@ -1,4 +1,5 @@
 @import url(../../assets/css/variables.css);
+
 /* FAQ.css */
 .rd-faq-container {
   max-width: 600px;
@@ -8,23 +9,29 @@
 .rd-faq-item {
   padding: var(--header-padding);
   cursor: pointer;
+  padding: 10px 15px;
 }
+
 .rd-faq-item .rd-title-text {
   margin-top: 0;
 }
+
 /* .rd-faq-item p{
     margin-top: 8px;
 } */
 .rd-faq-item .rd-faq-content {
   max-width: 92%;
 }
+
 .rd-faq-item:hover {
   background-color: #f5f5f5;
 }
+
 .rd-faq-item svg {
   height: 15px;
   width: 15px;
 }
+
 .rd-faq-content {
   flex-grow: 1;
 }
@@ -43,6 +50,7 @@
 .rd-faq-item:last-child:not(.featured-faq .rd-faq-item) {
   border-bottom: none;
 }
+
 /* css for search header */
 .back-button {
   background-color: #007bff;
@@ -52,12 +60,14 @@
   cursor: pointer;
   margin-bottom: 15px;
 }
+
 .rd-search-header .rd-search-bar input {
   background-color: #fff !important;
   padding: 14px 15px;
   line-height: 18px;
   font-size: 14px;
 }
+
 .rd-search-header .rd-search-bar svg {
   position: absolute;
   right: 10px;
@@ -66,14 +76,17 @@
   top: 50%;
   transform: translate(-50%, -50%);
 }
+
 .rd-search-header .back-button {
   position: absolute;
   /* left: 18px; */
   top: 20px;
 }
+
 .rd-search-header {
   padding: 18px 18px 12px 18px;
 }
+
 /* css for search header end */
 
 /* css for single faq */
@@ -83,53 +96,65 @@
   object-fit: cover;
   border-radius: 50%;
 }
+
 .rd-single-faq-footer {
   padding-left: 10px;
   padding-right: 10px;
   margin: 30px 0;
 }
+
 .rd-faq-actions {
   gap: 40px;
   margin-bottom: 15px;
 }
+
 .rd-faq-actions svg path {
   fill: #555555;
 }
+
 .liked svg path {
   fill: var(--primary-blue);
 }
+
 .disliked svg path {
   fill: #ef2c3f;
 }
+
 .single-faq-content {
   /* max-height: 468px; */
   overflow: auto;
-  min-height: 468px;
-  height: 60vh;
+  min-height: 300px;
+  height: 50vh;
 }
+
 .single-faq-content p a {
   text-decoration: underline !important;
   background: url(../images/copy-icon.svg) no-repeat right center;
   padding-right: 20px;
   background-size: 22%;
 }
+
 .rd-faq-content .rd-faq-title {
   margin: 8px 0;
 }
+
 .rd-wiki-wrap {
   /* max-height: 320px; */
   max-height: 45vh;
   overflow: auto;
 }
+
 .single-faq-content .wp-block-image img,
 .rd-notice-item .wp-block-image img {
   margin: 15px 0;
 }
+
 .single-faq-content iframe {
   width: 100%;
   min-height: 250px;
   margin: 15px 0;
 }
+
 .single-faq-other-faq-content .rd-faq-item {
   border: 1px solid var(--border-light-gray);
   border-radius: 15px;

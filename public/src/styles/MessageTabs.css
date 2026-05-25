@@ -1,4 +1,5 @@
 @import url(../../assets/css/variables.css);
+
 .robodesk-plugin .rd-message-tab .rd-search-header {
   padding: 20px;
 }
@@ -166,6 +167,7 @@
   font-size: 13px !important;
   line-height: 16px !important;
 }
+
 .robodesk-plugin .rd-message-tab-content input {
   width: 50%;
 }
@@ -173,6 +175,7 @@
 .robodesk-plugin .rd-message-tab-content select {
   width: 25%;
 }
+
 .robodesk-plugin .rd-message-tab-content input::placeholder {
   color: #84818a !important;
   font-size: 13px !important;
@@ -188,12 +191,15 @@
 
 .robodesk-plugin .rd-single-ticket .chat-container {
   /* min-height: 370px; */
-  min-height: 355px;
+  /* min-height: 355px; */
   height: 44vh;
+  min-height: 325px;
 }
+
 .robodesk-plugin .rd-single-ticket .chat-container.ticket-closed {
   min-height: 320px;
 }
+
 .robodesk-plugin .rd-preloader {
   position: absolute;
   top: 50%;
@@ -224,7 +230,7 @@
   right: 135px;
 }
 
-.robodesk-plugin .rd-message-image-preview + .rd-flex textarea {
+.robodesk-plugin .rd-message-image-preview+.rd-flex textarea {
   max-width: 60%;
 }
 
@@ -313,13 +319,11 @@
   bottom: 0;
   left: 0;
   transform: translateX(-100%);
-  background: linear-gradient(
-    90deg,
-    rgba(255, 255, 255, 0) 0,
-    rgba(255, 255, 255, 0.2) 20%,
-    rgba(255, 255, 255, 0.5) 60%,
-    rgba(255, 255, 255, 0)
-  );
+  background: linear-gradient(90deg,
+      rgba(255, 255, 255, 0) 0,
+      rgba(255, 255, 255, 0.2) 20%,
+      rgba(255, 255, 255, 0.5) 60%,
+      rgba(255, 255, 255, 0));
   animation: shimmer 2s infinite;
 }
 
@@ -344,12 +348,10 @@
   bottom: 0;
   left: 0;
   transform: translateX(-100%);
-  background: linear-gradient(
-    90deg,
-    rgba(255, 255, 255, 0) 0,
-    rgba(255, 255, 255, 0.1) 20%,
-    rgba(255, 255, 255, 0.3) 60%,
-    rgba(255, 255, 255, 0)
-  );
+  background: linear-gradient(90deg,
+      rgba(255, 255, 255, 0) 0,
+      rgba(255, 255, 255, 0.1) 20%,
+      rgba(255, 255, 255, 0.3) 60%,
+      rgba(255, 255, 255, 0));
   animation: shimmer 2s infinite;
 }
