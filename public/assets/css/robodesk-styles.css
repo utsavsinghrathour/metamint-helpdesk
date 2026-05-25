@@ -10,15 +10,19 @@
   padding: 20px;
   letter-spacing: normal;
 }
+
 .robodesk-plugin .text-start {
   text-align: start;
 }
+
 .robodesk-plugin .flex-1 {
   flex: 1;
 }
+
 .robodesk-dashboard-content h3 {
   font-size: 16px;
 }
+
 /* Ticket Submission Form */
 .robodesk-ticket-form label {
   display: block;
@@ -88,9 +92,11 @@
   font-family: var(--font-family);
   padding: 0;
 }
+
 .robodesk-dashboard-content #credential-form {
   padding-top: 30px;
 }
+
 .robodesk-frontend-dashboard nav {
   width: 250px;
   background-color: #f9fafb;
@@ -113,10 +119,12 @@
   padding: 15px 15px;
   text-decoration: none;
   color: #333;
-  border-bottom: 1px solid #f2f1f1; /* Add a bottom border for separation */
+  border-bottom: 1px solid #f2f1f1;
+  /* Add a bottom border for separation */
   font-size: 16px;
   text-decoration: none !important;
 }
+
 .robodesk-frontend-dashboard nav li:last-child a {
   border-bottom: none;
 }
@@ -134,8 +142,10 @@
   flex-grow: 1;
   padding: 20px;
   border: 1px solid #f2f1f1;
-  border-left: none; /* Remove left border to join with nav */
+  border-left: none;
+  /* Remove left border to join with nav */
 }
+
 .robodesk-dashboard-content .robodesk-single-ticket .comment-list {
   font-size: 14px;
   padding: 0 0 0 10px;
@@ -144,9 +154,16 @@
   gap: 18px;
 }
 
-.robodesk-dashboard-content
-  .robodesk-single-ticket
-  .robodesk-ticket-status-priority {
+.comment-author img {
+  align-items: center;
+  aspect-ratio: 1;
+  border-radius: 50px;
+  height: 30px !important;
+  width: 30px;
+  object-fit: cover;
+}
+
+.robodesk-dashboard-content .robodesk-single-ticket .robodesk-ticket-status-priority {
   display: flex;
   flex-direction: column;
   gap: 10px;
@@ -162,12 +179,15 @@
 .robodesk-dashboard-content .robodesk-single-ticket .robodesk-ticket-meta p {
   margin: 0;
 }
+
 .robodesk-dashboard-content p {
   font-size: 14px;
 }
+
 .robodesk-dashboard-content p.ticket_date {
   margin-top: 8px;
 }
+
 .robodesk-dashboard-content input,
 .robodesk-dashboard-content textarea {
   border: 1px solid #f2f1f1;
@@ -176,9 +196,11 @@
   width: 100%;
   margin-top: 8px;
 }
+
 #wp-ticket_content-wrap {
   margin-top: 8px;
 }
+
 .robodesk-dashboard-content input[type="submit"] {
   background-color: #000;
   color: #fff;
@@ -187,18 +209,22 @@
   width: auto;
   padding: 10px 24px;
 }
+
 .robodesk-dashboard-content input[type="submit"]:hover {
   background-color: #282828;
 }
+
 .robodesk-dashboard-content label {
   font-size: 14px;
   font-weight: 500;
 }
+
 .robodesk-dashboard-content h2 {
   margin-bottom: 20px;
   font-size: 18px;
   font-weight: 600;
 }
+
 .robodesk-dashboard-content select {
   border: 1px solid #f2f1f1;
   padding: 8px 20px;
@@ -207,14 +233,17 @@
   line-height: 18px;
   flex: 1;
 }
+
 .robodesk-dashboard-content a {
   text-decoration: none !important;
   color: var(--rd-primary-color);
 }
+
 .robodesk_tickets_select_form {
   display: flex;
   align-items: center;
 }
+
 .robodesk_tickets_select_form input[type="submit"] {
   width: fit-content;
   font-size: 14px;
@@ -224,40 +253,49 @@
   border: transparent;
   cursor: pointer;
 }
+
 .robodesk-table-content-title {
   font-size: 14px;
   font-weight: 500;
   color: #6b7280;
   line-height: 1.3;
 }
+
 .robodesk-table-content td {
   font-size: 14px;
 }
+
 .robodesk-table-content .ticket-comment-by {
   font-weight: 500;
   margin: 0;
 }
+
 .robodesk-status-pill.open {
   background-color: #fef2f2;
   color: #dc2626;
   font-weight: 400;
 }
+
 .robodesk-status-pill.closed {
   background-color: #f0fdf4;
   color: #16a34a;
 }
+
 .robodesk-status-pill.archived {
   background-color: #f3e8ff;
   color: #9333ea;
 }
+
 .robodesk-status-pill.in-progress {
   background-color: #fffbeb;
   color: #d97706;
 }
+
 .robodesk-priority-pill.highh {
   background-color: #fef2f2;
   color: #dc2626;
 }
+
 .robodesk-status-pill,
 .robodesk-priority-pill {
   display: inline-flex;
@@ -273,12 +311,14 @@
   font-weight: 400;
   color: #000;
 }
+
 .robodesk-frontend-dashboard .ticket-date {
   font-size: 14px;
   color: #6b7280;
   margin-top: 5px;
   margin-bottom: 0;
 }
+
 /* FAQ Styles */
 .robodesk-faq-single {
   margin-bottom: 20px;
@@ -299,10 +339,12 @@
   margin-right: 5px;
   cursor: pointer;
 }
+
 .robodesk-faq-voted {
   pointer-events: none;
   opacity: 0.5;
 }
+
 .robodesk-notification-count {
   background-color: red;
   color: white;
@@ -316,10 +358,12 @@
   width: 100%;
   border-collapse: collapse;
 }
+
 #credential_notes {
   width: 100%;
   min-height: 100px;
 }
+
 #robodesk-credentials-modal th,
 #robodesk-credentials-modal td {
   border: 1px solid black;
@@ -341,10 +385,12 @@
   box-sizing: border-box;
   text-align: center;
 }
+
 .robodesk-infograph h3 {
   font-weight: 500;
   font-size: 16px;
 }
+
 .robodesk-chart {
   background-color: #eee;
   height: 30px;
@@ -365,7 +411,8 @@
   font-size: 14px;
   font-weight: 500;
   padding: 8px 12px;
-  transition: width 0.5s ease; /* Smooth width transition */
+  transition: width 0.5s ease;
+  /* Smooth width transition */
 }
 
 .robodesk-total-bar {
@@ -379,19 +426,23 @@
   font-size: 14px;
   font-weight: 500;
 }
+
 .robodesk-chart-label {
   display: flex;
   justify-content: space-between;
 }
+
 .robodesk-chart-label span {
   font-size: 14px;
   font-weight: 500;
 }
+
 .robodesk-notification-count-display {
   font-size: 20px;
   margin: 15px 0;
   text-align: center;
 }
+
 /* bishal css */
 .robodesk-notifications-list {
   list-style: none;
@@ -477,6 +528,7 @@
     white-space: normal;
   }
 }
+
 /* bishal css */
 .robodesk-time-ago-over-30 {
   color: red;
@@ -486,7 +538,8 @@
 
 .password-hidden {
   display: inline-block;
-  width: 80px; /* Adjust as needed */
+  width: 80px;
+  /* Adjust as needed */
   text-align: start;
 }
 
@@ -503,13 +556,16 @@
   text-align: left;
   font-size: 14px;
 }
+
 .robodesk-container th {
   font-size: 14px;
   color: #6b7280;
 }
+
 .robodesk-container th {
   background-color: #f9fafb;
 }
+
 /* 
 .custom-file-upload {
   border: 1px solid #ccc;
@@ -594,7 +650,8 @@
 /* Blur effect for the form */
 .blurred {
   filter: blur(2px);
-  pointer-events: none; /* Prevent interaction with the form */
+  pointer-events: none;
+  /* Prevent interaction with the form */
 }
 
 /* Spinner styling */
@@ -605,18 +662,22 @@
   transform: translate(-50%, -50%);
   width: 40px;
   height: 40px;
-  border: 4px solid #f3f3f3; /* Light grey */
-  border-top: 4px solid #3498db; /* Blue */
+  border: 4px solid #f3f3f3;
+  /* Light grey */
+  border-top: 4px solid #3498db;
+  /* Blue */
   border-radius: 50%;
   animation: spin 1s linear infinite;
   z-index: 1000;
-  display: none; /* Initially hidden */
+  display: none;
+  /* Initially hidden */
 }
 
 @keyframes spin {
   0% {
     transform: translate(-50%, -50%) rotate(0deg);
   }
+
   100% {
     transform: translate(-50%, -50%) rotate(360deg);
   }
@@ -627,6 +688,7 @@
   text-align: center;
   margin-top: 20px;
 }
+
 .robodesk-dashboard-content .pagination a,
 .robodesk-dashboard-content .pagination span {
   padding: 5px 10px;
@@ -635,6 +697,7 @@
   text-decoration: none;
   font-size: 14px;
 }
+
 .robodesk-dashboard-content .pagination .current {
   background: var(--rd-primary-color);
   color: #fff;
@@ -738,27 +801,34 @@
 .robodesk-my-credentials {
   margin: 30px 0;
 }
+
 .desktop-menu {
   display: block;
 }
+
 .mobile-menu {
   display: none;
 }
+
 .tickets_table_wrapper,
 .credential-table-wrapper {
   max-width: 100%;
   overflow: auto;
 }
+
 .credential-table-wrapper tbody tr td:nth-child(3) {
   display: flex;
   justify-content: space-between;
 }
+
 .credential-table-wrapper .show-password {
   background-color: transparent;
 }
+
 .credential-table-wrapper .show-password:focus {
   border: transparent;
 }
+
 .credential-table-wrapper .delete-credential {
   background-color: #fef2f2;
   color: #dc2626;
@@ -767,6 +837,7 @@
   font-weight: 600;
   border-radius: 5px;
 }
+
 .tickets_table_wrapper thead tr th:first-child,
 .robodesk-ticket-table-content td:first-child {
   position: sticky;
@@ -774,36 +845,46 @@
   z-index: 9999;
   background: #fff;
 }
+
 .tickets_table_wrapper thead tr th:first-child {
   background-color: #f9fafb;
 }
+
 .robodesk-table-content td:first-child {
   min-width: 150px;
 }
+
 .robodesk-table-content td:nth-child(3) {
   min-width: 120px;
 }
+
 .robodesk-table-content td:nth-child(4),
 .robodesk-table-content td:nth-child(5) {
   min-width: 110px;
 }
+
 .robodesk-dashboard-content .mce-container {
   width: 100%;
   background-color: transparent !important;
 }
+
 .dashicons-calendar {
   margin-left: 10px;
 }
+
 .dashicons-calendar:before {
   font-family: "dashicons";
 }
+
 #robodesk-create-ticket select {
   width: 100%;
 }
+
 td.credential_url a {
   text-decoration: underline;
   text-underline-offset: 3px;
 }
+
 .robodesk-header button,
 .robodesk-header button:hover,
 .robodesk-header button:focus {
@@ -811,6 +892,7 @@ td.credential_url a {
   padding: 0;
   border: none;
 }
+
 #robodesk-bot-input.chat-input {
   background: #fff;
   position: absolute;
@@ -818,9 +900,11 @@ td.credential_url a {
   width: 100%;
   bottom: 88px;
 }
+
 #robodesk-bot-input.chat-input input[type="text"] {
   width: 100%;
 }
+
 .robodesk-bot-message {
   overflow-y: auto;
   padding: 16px;
@@ -829,27 +913,34 @@ td.credential_url a {
   gap: 4px;
   height: calc(70vh - 200px);
 }
+
 @media screen and (max-width: 768px) {
   .desktop-menu {
     display: none;
   }
+
   .mobile-menu {
     display: block;
     width: 100%;
     padding: 10px;
   }
+
   .robodesk-infographs {
     flex-direction: column;
   }
+
   .robodesk-infograph {
     width: 100%;
   }
+
   .robodesk-frontend-dashboard {
     flex-direction: column;
   }
+
   .robodesk-dashboard-content {
     border: 1px solid #f2f1f1;
   }
+
   #mobile-menu {
     border: 1px solid #f2f1f1;
     border-radius: 50px;
@@ -859,17 +950,21 @@ td.credential_url a {
     font-weight: 600;
     height: auto;
   }
+
   .robodesk-container {
     padding: 0;
   }
+
   .robodesk_tickets_select_form {
     flex-wrap: wrap;
     gap: 15px;
   }
+
   #credential-form {
     padding: 20px;
     margin: 20px 0;
   }
+
   .dashicons-calendar {
     display: flex;
     margin-left: 0;
