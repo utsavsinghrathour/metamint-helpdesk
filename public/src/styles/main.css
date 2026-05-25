@@ -1,4 +1,5 @@
 @import url(../../assets/css/variables.css);
+
 .robodesk-plugin {
   z-index: 9999999 !important;
   font-size: 16px !important;
@@ -55,17 +56,21 @@
   font-size: 14px !important;
   word-break: break-word;
 }
+
 .robodesk-plugin .text-danger {
   color: red !important;
 }
+
 .robodesk-plugin .text-green.color-green {
   color: green !important;
 }
+
 .robodesk-plugin .success_msg {
   color: green !important;
   font-weight: 500 !important;
   font-size: 14px !important;
 }
+
 .robodesk-plugin .color-blue {
   color: var(--primary-blue) !important;
 }
@@ -118,12 +123,15 @@ button.no-bg,
   height: 40px;
   width: auto;
 }
+
 .single-faq-header {
   background-color: var(--robodesk-theme-color);
 }
+
 .single-faq-header svg {
   fill: #fff;
 }
+
 .robodesk-plugin .rd-header-logo img:not(.rd-faq-header img),
 .robodesk-plugin .default-logo img {
   height: 40px;
@@ -147,7 +155,7 @@ button.no-bg,
   flex: 2 !important;
 }
 
-.icon-dark svg {
+.icon-dark svg:not(.rbd-paperclip) {
   fill: var(--icon-dark) !important;
 }
 
@@ -172,7 +180,7 @@ button.no-bg,
 }
 
 .rd-align-start {
-  align-items: flex-start !important ;
+  align-items: flex-start !important;
 }
 
 .rd-align-end {
@@ -204,7 +212,7 @@ button.no-bg,
 }
 
 .rd-gap-20 {
-  gap: 20px !important ;
+  gap: 20px !important;
 }
 
 .rd-pt-0 {
@@ -262,9 +270,11 @@ button.no-bg,
 .rd-m-5 {
   margin: 5px !important;
 }
+
 .rd-mt-0 {
   margin-top: 0 !important;
 }
+
 .rd-mt-5 {
   margin-top: 5px !important;
 }
@@ -294,12 +304,15 @@ button.no-bg,
 .rd-mt-30 {
   margin-top: 30px !important;
 }
+
 .rd-mb-0 {
   margin-bottom: 0 !important;
 }
+
 .rd-mb-5 {
   margin-bottom: 5px !important;
 }
+
 .rd-mb-8 {
   margin-bottom: 8px !important;
 }
@@ -482,6 +495,7 @@ button.no-bg,
   border-top: 1px solid var(--border-light-gray) !important;
   border-bottom: 1px solid var(--border-light-gray) !important;
 }
+
 .rd-main-content .rd-body-text,
 .rd-main-content .rd-body-text p,
 .rd-main-content .rd-body-text li,
@@ -491,10 +505,12 @@ button.no-bg,
   margin-top: 0;
   transition: font-size 0.5s ease;
 }
+
 .rd-main-content p {
   font-size: 0.8125rem !important;
   font-weight: 400 !important;
 }
+
 .color-body-text {
   color: var(--body-text);
 }
@@ -502,6 +518,7 @@ button.no-bg,
 .color-danger {
   color: red;
 }
+
 .rd-color-gray {
   color: rgba(132, 129, 138, 1) !important;
 }
@@ -521,22 +538,45 @@ button.no-bg,
 .rd-resize-none {
   resize: none !important;
 }
+
 .rd-conversation-fixed-bottm {
   position: fixed;
-  bottom: 25px;
+  left: 0;
+  bottom: 0;
+  background-color: #fff;
+  box-sizing: border-box;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  border-bottom: 1px solid var(--border-light-gray);
+  padding: 20px;
 }
+
+.rd-conversation-fixed-bottm h4 {
+  text-align: center;
+}
+
+.rd-conversation-fixed-bottm button {
+  width: fit-content;
+  margin: auto;
+}
+
 .rd-main-content input::placeholder {
   font-size: 16px !important;
   line-height: 20px !important;
   font-size: var(--font-base) !important;
 }
+
 .rd-main-content figcaption {
   margin: 10px 0 !important;
 }
+
 .rd-main-content ul,
 .rd-main-content ol {
   margin: 10px 0 !important;
 }
+
 .robodesk-toggle-btn {
   align-items: center;
   aspect-ratio: 50 / 50;
@@ -567,10 +607,12 @@ button.no-bg,
 .robodesk-plugin .rd-hidden {
   display: none !important;
 }
+
 .rd-main-content textarea {
   font-size: 14px !important;
   line-height: 18px !important;
 }
+
 .custom-svg svg {
   height: 20px;
   width: 20px;
@@ -732,9 +774,11 @@ button.no-bg,
 .bi.bi-chevron-up {
   color: #fff;
 }
+
 .rd-main-content p {
   margin-bottom: 0 !important;
 }
+
 .single-content-other-content a {
   font-size: var(--font-base) !important;
   text-decoration: none;
@@ -747,9 +791,11 @@ button.no-bg,
   justify-content: center;
   line-height: 18px !important;
 }
+
 .single-content-other-content a:hover {
   color: #fff;
 }
+
 /* For notification red dot */
 /* Must remove this later  */
 .rd-title-with-dot {
@@ -769,6 +815,7 @@ button.no-bg,
   border-radius: 50%;
   background-color: red;
 }
+
 .rd-main-content .wp-video,
 .rd-main-content .wp-video video {
   width: 100% !important;
@@ -776,6 +823,7 @@ button.no-bg,
   height: auto;
   margin: 10px 0;
 }
+
 .rd-main-content figure,
 .rd-main-content figure img {
   width: 100% !important;
