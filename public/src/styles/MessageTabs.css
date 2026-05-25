@@ -211,6 +211,9 @@
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
+  width: 24px;
+  height: 24px !important;
+  object-fit: cover;
 }
 
 .robodesk-plugin .rd-message-list-wrap {
