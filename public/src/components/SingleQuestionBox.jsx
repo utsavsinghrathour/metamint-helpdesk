@@ -3,6 +3,7 @@ import { FaChevronLeft } from 'react-icons/fa';
 import SendMessageField from './SendMessageField';
 import parse from 'html-react-parser';
 import DOMPurify from 'dompurify';
+import he from 'he';
 import Footer from './Footer';
 import '../styles/SingleQuestionBox.css';
 import RobodeskBotChatWidgetMain from './RobodeskBotChatWidgetMain';
@@ -11,6 +12,8 @@ import defaultLogo from '../images/robodesk-logo.png';
 
 const faqCache = {};
 // const wpHomeUrl = window.robodeskData?.home_url || '';
+
+const decodeTitle = (title = '') => he.decode(String(title)).trim();
 
 const normalizeImagePaths = (html, baseUrl = wpHomeUrl) => {
   return html.replace(
@@ -71,7 +74,7 @@ const SingleQuestionBox = ({
         const data = await response.json();
         const formattedQuestions = data.map((faq) => ({
           id: faq.id,
-          title: faq.title.rendered,
+          title: decodeTitle(faq.title?.rendered),
           content: faq?.content?.rendered,
           excerpt: DOMPurify.sanitize(faq.excerpt.rendered, {
             ADD_TAGS: ['p', 'strong', 'em'],
