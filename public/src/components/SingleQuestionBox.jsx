@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { FaChevronLeft } from 'react-icons/fa';
 import SendMessageField from './SendMessageField';
 import parse from 'html-react-parser';
@@ -50,6 +50,7 @@ const SingleQuestionBox = ({
   const [primaryBot, setPrimaryBot] = useState(false);
   const [widgetConfig, setWidgetConfig] = useState(null);
   const [activeAIMode, setActiveAIMode] = useState('');
+  const contentRef = useRef(null);
 
   const shouldShowBotWidget = isAddonActive && activeAIMode && primaryBot;
 
@@ -97,6 +98,13 @@ const SingleQuestionBox = ({
   useEffect(() => {
     setShowHeaderFooter(!selectedQuestion);
   }, [selectedQuestion, setShowHeaderFooter]);
+
+  useEffect(() => {
+    contentRef.current?.scrollTo?.({ top: 0, behavior: 'auto' });
+    if (contentRef.current) {
+      contentRef.current.scrollTop = 0;
+    }
+  }, [selectedQuestion?.id]);
 
   const handleLike = () => {
     setIsLiked(!isLiked);
@@ -270,7 +278,7 @@ const SingleQuestionBox = ({
             </button>
           </div>
 
-          <div className='rd-py-15 single-faq-content rd-px-20'>
+          <div ref={contentRef} className='rd-py-15 single-faq-content rd-px-20'>
             <div className='rd-flex rd-gap-15'>
               <div>
                 <h4 className='rd-faq-title heading-4'>
