@@ -157,6 +157,7 @@
 .robodesk-dashboard-content .comment-list .comment-author {
   display: flex;
   align-items: center;
+  /* gap: 8px;  */
   gap: 8px;
 }
 
