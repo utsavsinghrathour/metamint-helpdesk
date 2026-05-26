@@ -1187,8 +1187,32 @@ function robodesk_handle_selected_staff(WP_REST_Request $request)
         $selected_staff_id = get_option('robodesk_default_staff', '');
     }
 
-    // If still empty, attempt to select the least-loaded support staff dynamically
-    if (empty($selected_staff_id)) {
+    $staff_user = null;
+
+    if (!empty($selected_staff_id)) {
+        $staff_user = get_userdata($selected_staff_id);
+
+        if (!$staff_user) {
+            $eligible_staff = get_users(array(
+                'role__in' => array('robodesk_support_staff', 'robodesk_support_manager', 'administrator', 'author', 'editor'),
+                'fields' => array('ID', 'display_name', 'user_login')
+            ));
+
+            foreach ($eligible_staff as $staff) {
+                $matches_configured_staff = ((string) $staff->ID === (string) $selected_staff_id) ||
+                    ((string) $staff->display_name === (string) $selected_staff_id) ||
+                    ((string) $staff->user_login === (string) $selected_staff_id);
+
+                if ($matches_configured_staff) {
+                    $staff_user = $staff;
+                    break;
+                }
+            }
+        }
+    }
+
+    // If the configured staff cannot be resolved, attempt to select the least-loaded support staff dynamically.
+    if (!$staff_user) {
         $assigned_name = null;
         if (function_exists('auto_assign_ticket_to_support_staff')) {
             // This returns a display name for the chosen staff member
@@ -1201,20 +1225,22 @@ function robodesk_handle_selected_staff(WP_REST_Request $request)
                 $found = get_user_by('login', $assigned_name);
             }
             if ($found) {
+                $staff_user = $found;
                 $selected_staff_id = $found->ID;
             }
         }
     }
 
     // Check if staff ID is set
-    if (empty($selected_staff_id)) {
+    if (!$staff_user && empty($selected_staff_id)) {
         return new WP_REST_Response(array(
             'error' => 'No default staff member configured'
         ), 404);
     }
 
-    // Get user data
-    $staff_user = get_userdata($selected_staff_id);
+    if (!$staff_user) {
+        $staff_user = get_userdata($selected_staff_id);
+    }
 
     if (!$staff_user) {
         return new WP_REST_Response(array(
