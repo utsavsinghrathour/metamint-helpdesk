@@ -1,4 +1,11 @@
 /* Custom styles for the Robodesk dashboard */
+:root {
+  --color-main: #3b82f6;
+}
+
+.rb-relative {
+  position: relative;
+}
 
 /* Navigation styles */
 .nav-link {
@@ -24,30 +31,37 @@
 .page-content {
   animation: fadeIn 0.3s ease-in-out;
 }
+
 .sticky-sidebar {
   position: sticky;
   top: 2rem;
-  height: max-content; /* Keeps the element from being naturally tall */
+  height: max-content;
+  /* Keeps the element from being naturally tall */
   align-self: start;
   z-index: 10;
 }
+
 .author-image img {
   width: 100%;
   height: 100%;
   object-fit: cover;
 }
+
 .icon-tickets {
   height: 18px;
   width: auto;
 }
+
 .robodesk-popover-trigger:focus {
   outline: none;
   border: none;
   box-shadow: none !important;
 }
+
 .robodesk-popover-trigger i {
   font-size: 20px;
 }
+
 .rb-popover {
   position: absolute;
   background-color: rgba(51, 51, 51, 1);
@@ -81,11 +95,13 @@
   transform: translateX(-50%);
   margin: 0;
 }
+
 @keyframes fadeIn {
   from {
     opacity: 0;
     transform: translateY(10px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -127,6 +143,7 @@
   /* background-color: #fffbeb; */
   color: #d97706;
 }
+
 .status-badge.High {
   /* background-color: #fef2f2; */
   color: #dc2626;
@@ -156,6 +173,7 @@
 .ticket-title-80 {
   width: 80%;
 }
+
 .ticket-tab.active,
 .settings-tab.active {
   border-color: #3b82f6;
@@ -393,9 +411,11 @@
   border-color: #16a34a;
   color: #15803d;
 }
+
 #toast {
   top: 100px;
 }
+
 .toast-error {
   background-color: #fef2f2;
   border-color: #dc2626;
@@ -453,6 +473,7 @@
   0% {
     transform: rotate(0deg);
   }
+
   100% {
     transform: rotate(360deg);
   }
@@ -525,12 +546,14 @@
   pointer-events: none;
   position: absolute;
 }
+
 .editor-content.placeholder:focus::before {
   content: none;
 }
 
 .reply-action {
-  background-color: #00265e; /* blue background */
+  background-color: #00265e;
+  /* blue background */
 }
 
 .blinking-red {
@@ -564,9 +587,11 @@
   0% {
     opacity: 1;
   }
+
   50% {
     opacity: 0;
   }
+
   100% {
     opacity: 1;
   }
@@ -578,10 +603,12 @@
 }
 
 @keyframes pulse {
+
   0%,
   100% {
     opacity: 1;
   }
+
   50% {
     opacity: 0.5;
   }
@@ -611,6 +638,7 @@
     opacity: 0;
     transform: translateY(-10px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -639,22 +667,20 @@
   justify-content: space-between;
   align-items: center;
 }
+
 .sticky-sidebar .add-label-wrapper.gap-2 label {
   min-width: 100px;
   margin-bottom: 0;
 }
+
 .add-label-wrapper .select2-container--default .select2-selection--single {
   border: 1px solid #d1d5db;
   border-radius: 0.5rem;
   height: auto;
   padding: 0;
 }
-.toplevel_page_robodesk-dashboard
-  .select2-container--default
-  .select2-search--dropdown
-  .select2-search__field,
-.toplevel_page_robodesk-dashboard
-  .select2-container--default
-  .select2-results__option {
+
+.toplevel_page_robodesk-dashboard .select2-container--default .select2-search--dropdown .select2-search__field,
+.toplevel_page_robodesk-dashboard .select2-container--default .select2-results__option {
   padding: 4px;
 }

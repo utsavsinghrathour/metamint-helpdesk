@@ -6,7 +6,8 @@ if (!defined('ABSPATH')) {
 <div id="new-ticket-page" class="page-content hidden">
     <div class="bg-white shadow rounded-lg">
         <div class="px-4 py-5 sm:p-6">
-            <h3 class="text-lg font-bold text-gray-900 mb-6"><?php esc_html_e('Create New Conversation', 'robodesk'); ?></h3>
+            <h3 class="text-lg font-bold text-gray-900 mb-6"><?php esc_html_e('Create New Conversation', 'robodesk'); ?>
+            </h3>
 
             <form id="robodesk-new-ticket-form" class="space-y-6">
                 <input type="hidden" name="nonce"
@@ -15,7 +16,7 @@ if (!defined('ABSPATH')) {
                     value="<?php echo esc_attr(wp_create_nonce('robodesk_create_ticket_action')); ?>">
                 <input type="hidden" name="ticket_source" value="Form"> <!-- Added for robodesk_ticket_origin -->
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
+                    <div class="rb-form-group rb-relative">
                         <label
                             class="block text-sm font-medium text-gray-700 mb-2"><?php esc_html_e('Customer Name', 'robodesk'); ?>
                             *</label>
@@ -26,7 +27,7 @@ if (!defined('ABSPATH')) {
                         </div>
                     </div>
 
-                    <div>
+                    <div class="rb-form-group rb-relative">
                         <label
                             class="block text-sm font-medium text-gray-700 mb-2"><?php esc_html_e('Customer Email', 'robodesk'); ?>
                             *</label>
@@ -39,7 +40,7 @@ if (!defined('ABSPATH')) {
 
                 </div>
 
-                <div>
+                <div class="rb-form-group">
                     <label
                         class="block text-sm font-medium text-gray-700 mb-2"><?php esc_html_e('Conversation Title', 'robodesk'); ?>
                         *</label>
@@ -48,8 +49,9 @@ if (!defined('ABSPATH')) {
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2"><?php esc_html_e('Priority', 'robodesk'); ?>
+                    <div class="rb-form-group">
+                        <label
+                            class="block text-sm font-medium text-gray-700 mb-2"><?php esc_html_e('Priority', 'robodesk'); ?>
                             *</label>
                         <select id="ticket-priority" name="ticket_priority" required
                             class="styled-select block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
@@ -65,8 +67,9 @@ if (!defined('ABSPATH')) {
                             ?>
                         </select>
                     </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2"><?php esc_html_e('Department', 'robodesk'); ?>
+                    <div class="rb-form-group">
+                        <label
+                            class="block text-sm font-medium text-gray-700 mb-2"><?php esc_html_e('Department', 'robodesk'); ?>
                         </label>
                         <select id="ticket-category" name="ticket_category"
                             class="styled-select block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
@@ -92,7 +95,7 @@ if (!defined('ABSPATH')) {
                             ?>
                         </select>
                     </div>
-                    <div>
+                    <div class="rb-form-group">
                         <label
                             class="block text-sm font-medium text-gray-700 mb-2"><?php esc_html_e('Assign to', 'robodesk'); ?>
                             *</label>
@@ -111,20 +114,21 @@ if (!defined('ABSPATH')) {
                             ]);
                             ?>
                             <?php foreach ($robodesk_agents as $robodesk_agent): ?>
-                                <?php
+                            <?php
                                 $robodesk_agent_value = (int) $robodesk_agent->ID;
                                 $robodesk_is_selected = (string) $robodesk_default_agent === (string) $robodesk_agent_value ||
                                     (string) $robodesk_default_agent === (string) $robodesk_agent->display_name;
                                 ?>
-                                <option value="<?php echo esc_attr($robodesk_agent_value); ?>" <?php selected($robodesk_is_selected, true); ?>>
-                                    <?php echo esc_html($robodesk_agent->display_name); ?>
-                                </option>
+                            <option value="<?php echo esc_attr($robodesk_agent_value); ?>"
+                                <?php selected($robodesk_is_selected, true); ?>>
+                                <?php echo esc_html($robodesk_agent->display_name); ?>
+                            </option>
                             <?php endforeach; ?>
                         </select>
                     </div>
                 </div>
 
-                <div>
+                <div class="rb-form-group">
                     <label
                         class="block text-sm font-medium text-gray-700 mb-2"><?php esc_html_e('Conversation Description', 'robodesk'); ?>
                         *</label>
