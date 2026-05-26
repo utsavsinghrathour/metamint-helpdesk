@@ -311,7 +311,7 @@ jQuery(document).ready(function ($) {
   $(".delete-credential").click(function () {
     var credentialId = $(this).data("credential-id");
     var confirmDelete = confirm(
-      "Are you sure you want to delete this credential?",
+      "Are you sure you want to delete this credential?"
     );
     if (confirmDelete) {
       $.ajax({
@@ -377,14 +377,14 @@ jQuery(document).ready(function ($) {
       success: function (response) {
         if (response.success) {
           $("#robodesk-response-message").html(
-            '<p style="color: green;">Ticket created successfully!</p>',
+            '<p style="color: green;">Ticket created successfully!</p>'
           );
           $("#robodesk-create-ticket")[0].reset();
           $("#robodesk-response-message").delay(5000).fadeOut(2000);
         } else {
           $("#robodesk-response-message")
             .html(
-              '<p style="color: red;">Error: ' + response.data.message + "</p>",
+              '<p style="color: red;">Error: ' + response.data.message + "</p>"
             )
             .fadeOut(1000);
           $("#robodesk-response-message").delay(5000).fadeOut(2000);
@@ -392,7 +392,7 @@ jQuery(document).ready(function ($) {
       },
       error: function () {
         $("#robodesk-response-message").html(
-          '<p style="color: red;">An error occurred. Please try again.</p>',
+          '<p style="color: red;">An error occurred. Please try again.</p>'
         );
         $("#robodesk-response-message").delay(5000).fadeOut(2000);
       },
@@ -403,4 +403,6 @@ jQuery(document).ready(function ($) {
       },
     });
   });
+
+  //
 });
