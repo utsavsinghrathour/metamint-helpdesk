@@ -154,6 +154,12 @@
   gap: 18px;
 }
 
+.robodesk-dashboard-content .comment-list .comment-author {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .comment-author img {
   align-items: center;
   aspect-ratio: 1;
@@ -223,6 +229,10 @@
   margin-bottom: 20px;
   font-size: 18px;
   font-weight: 600;
+}
+
+.robodesk-status-selector {
+  margin: 20px 0 10px;
 }
 
 .robodesk-dashboard-content select {
@@ -911,7 +921,34 @@ td.credential_url a {
   display: flex;
   flex-direction: column;
   gap: 4px;
-  height: calc(70vh - 200px);
+  height: calc(70vh - 250px);
+}
+
+.rd-body-notices {
+  min-height: auto;
+  height: calc(70vh - 170px);
+  overflow: auto;
+}
+
+.robodesk-popup:has(.rd-single-notice-view) .rd-border-top-light {
+  margin-top: 5px;
+}
+
+.rd-body-text #Content a {
+  color: var(--rd-primary-color) !important;
+}
+
+.rd-body-text #Content a::before {
+  content: "";
+  background-image: url(../../src/images/link-solid-full.svg);
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  background-repeat: no-repeat;
+  background-size: 14px;
+  margin-right: 1px;
+  position: relative;
+  top: 4px;
 }
 
 @media screen and (max-width: 768px) {
