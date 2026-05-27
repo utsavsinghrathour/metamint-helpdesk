@@ -579,6 +579,89 @@ function rbd_log($message)
 
     // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log
     error_log(wp_date('[Y-m-d H:i:s] ') . $message . PHP_EOL, 3, $log_file);
+
+    if (function_exists('robodesk_prune_debug_log')) {
+        robodesk_prune_debug_log($log_file, 30);
+    }
+}
+
+if (!function_exists('robodesk_prune_debug_log')) {
+    function robodesk_prune_debug_log($log_file = '', $days = 30)
+    {
+        $log_file = $log_file !== '' ? $log_file : plugin_dir_path(__FILE__) . 'logs/debug.log';
+
+        if (!file_exists($log_file) || !is_readable($log_file)) {
+            return false;
+        }
+
+        $contents = file_get_contents($log_file);
+        if ($contents === false || $contents === '') {
+            return false;
+        }
+
+        $lines = preg_split('/\r\n|\r|\n/', $contents);
+        if (!is_array($lines) || empty($lines)) {
+            return false;
+        }
+
+        $cutoff = current_time('timestamp') - (max(1, (int) $days) * DAY_IN_SECONDS);
+        $preamble = [];
+        $kept_entries = [];
+        $current_entry = [];
+        $current_timestamp = null;
+        $seen_timestamp = false;
+
+        foreach ($lines as $line) {
+            $line = rtrim((string) $line);
+            if ($line === '') {
+                continue;
+            }
+
+            if (preg_match('/^\[(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})\]/', $line, $matches)) {
+                $seen_timestamp = true;
+
+                if (!empty($current_entry) && $current_timestamp !== null && $current_timestamp >= $cutoff) {
+                    $kept_entries[] = implode(PHP_EOL, $current_entry);
+                }
+
+                $timestamp = DateTimeImmutable::createFromFormat('Y-m-d H:i:s', $matches[1], wp_timezone());
+                $current_timestamp = $timestamp ? $timestamp->getTimestamp() : strtotime($matches[1]);
+                $current_entry = [$line];
+                continue;
+            }
+
+            if (!$seen_timestamp) {
+                $preamble[] = $line;
+                continue;
+            }
+
+            if (!empty($current_entry)) {
+                $current_entry[] = $line;
+            }
+        }
+
+        if (!empty($current_entry) && $current_timestamp !== null && $current_timestamp >= $cutoff) {
+            $kept_entries[] = implode(PHP_EOL, $current_entry);
+        }
+
+        $new_contents = [];
+        if (!empty($preamble)) {
+            $new_contents[] = implode(PHP_EOL, $preamble);
+        }
+
+        if (!empty($kept_entries)) {
+            $new_contents[] = implode(PHP_EOL, $kept_entries);
+        }
+
+        if (empty($new_contents)) {
+            return false;
+        }
+
+        $final_contents = implode(PHP_EOL, $new_contents) . PHP_EOL;
+        file_put_contents($log_file, $final_contents, LOCK_EX);
+
+        return true;
+    }
 }
 
 function robodesk_get_support_user_ids()

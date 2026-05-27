@@ -62,6 +62,98 @@ if (!function_exists('robodesk_read_debug_log_tail')) {
     }
 }
 
+if (!function_exists('robodesk_read_debug_log_recent')) {
+    function robodesk_read_debug_log_recent($days = 30, $max_bytes = 2097152)
+    {
+        $log_path = robodesk_get_debug_log_path();
+
+        if (!file_exists($log_path) || !is_readable($log_path)) {
+            return [];
+        }
+
+        $size = filesize($log_path);
+        if ($size === false || $size <= 0) {
+            return [];
+        }
+
+        global $wp_filesystem;
+        if (empty($wp_filesystem)) {
+            require_once ABSPATH . '/wp-admin/includes/file.php';
+            WP_Filesystem();
+        }
+
+        $offset = max(0, $size - (int) $max_bytes);
+        $full_content = $wp_filesystem->get_contents($log_path);
+        if ($full_content === false) {
+            return [];
+        }
+
+        $content = $offset > 0 ? substr($full_content, $offset) : $full_content;
+        if ($content === false || $content === '') {
+            return [];
+        }
+
+        if ($offset > 0) {
+            $first_newline = strpos($content, "\n");
+            if ($first_newline !== false) {
+                $content = substr($content, $first_newline + 1);
+            }
+        }
+
+        $rows = preg_split('/\r\n|\r|\n/', $content);
+        if (!is_array($rows)) {
+            return [];
+        }
+
+        $cutoff = strtotime('-' . max(1, (int) $days) . ' days');
+        if ($cutoff === false) {
+            $cutoff = time() - (max(1, (int) $days) * DAY_IN_SECONDS);
+        }
+
+        $recent_rows = [];
+        $current_entry = [];
+        $current_timestamp = null;
+
+        foreach ($rows as $row) {
+            $row = rtrim($row);
+            if ($row === '') {
+                continue;
+            }
+
+            if (preg_match('/^\[(.*?)\]/', $row, $matches)) {
+                if (!empty($current_entry) && $current_timestamp !== null && $current_timestamp >= $cutoff) {
+                    $recent_rows = array_merge($recent_rows, $current_entry);
+                }
+
+                $current_timestamp = strtotime($matches[1]);
+                $current_entry = [$row];
+                continue;
+            }
+
+            if (!empty($current_entry)) {
+                $current_entry[] = $row;
+            }
+        }
+
+        if (!empty($current_entry) && $current_timestamp !== null && $current_timestamp >= $cutoff) {
+            $recent_rows = array_merge($recent_rows, $current_entry);
+        }
+
+        return $recent_rows;
+    }
+}
+
+if (!function_exists('robodesk_prune_debug_log_on_admin_load')) {
+    function robodesk_prune_debug_log_on_admin_load()
+    {
+        if (function_exists('robodesk_prune_debug_log')) {
+            robodesk_prune_debug_log();
+        }
+    }
+}
+
+add_action('admin_init', 'robodesk_prune_debug_log_on_admin_load');
+
 if (!function_exists('robodesk_download_debug_log')) {
     function robodesk_download_debug_log()
     {
@@ -76,18 +168,18 @@ if (!function_exists('robodesk_download_debug_log')) {
             wp_die(esc_html__('Debug log file is not available.', 'robodesk'));
         }
 
+        $debug_log_lines = robodesk_read_debug_log_recent(30);
+        $download_content = implode("\n", $debug_log_lines);
+        if ($download_content !== '') {
+            $download_content .= "\n";
+        }
+
         nocache_headers();
         header('Content-Type: text/plain; charset=utf-8');
-        header('Content-Disposition: attachment; filename="robodesk-debug.log"');
-        header('Content-Length: ' . filesize($log_path));
-
-        global $wp_filesystem;
-        if (empty($wp_filesystem)) {
-            require_once ABSPATH . '/wp-admin/includes/file.php';
-            WP_Filesystem();
-        }
+        header('Content-Disposition: attachment; filename="robodesk-debug-30-days.log"');
+        header('Content-Length: ' . strlen($download_content));
         // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- raw log file download, output sent as text/plain attachment
-        echo $wp_filesystem->get_contents($log_path);
+        echo $download_content;
         exit;
     }
 }
@@ -100,9 +192,13 @@ if (!function_exists('robodesk_debug_log_page_callback')) {
             wp_die(esc_html__('You do not have sufficient permissions to access this page.', 'robodesk'));
         }
 
+        if (function_exists('robodesk_prune_debug_log')) {
+            robodesk_prune_debug_log();
+        }
+
         $debug_log_path = robodesk_get_debug_log_path();
         $debug_log_exists = file_exists($debug_log_path) && is_readable($debug_log_path);
-        $debug_log_lines = $debug_log_exists ? robodesk_read_debug_log_tail(200) : [];
+        $debug_log_lines = $debug_log_exists ? robodesk_read_debug_log_recent(30) : [];
         $debug_log_size = $debug_log_exists ? (int) filesize($debug_log_path) : 0;
         $debug_log_modified = $debug_log_exists ? (int) filemtime($debug_log_path) : 0;
         $debug_log_download_url = wp_nonce_url(
@@ -113,6 +209,7 @@ if (!function_exists('robodesk_debug_log_page_callback')) {
 
         echo '<div class="wrap">';
         echo '<h1>' . esc_html__('Robodesk Debug Log', 'robodesk') . '</h1>';
+        echo '<p>' . esc_html__('This view shows only the last 30 days of logs. Anything older is automatically deleted.', 'robodesk') . '</p>';
 
         if ($debug_log_exists) {
             echo '<p>';
@@ -124,7 +221,7 @@ if (!function_exists('robodesk_debug_log_page_callback')) {
             );
             echo '</p>';
 
-            echo '<p><a href="' . esc_url($debug_log_download_url) . '" class="button button-primary">' . esc_html__('Download Full Log', 'robodesk') . '</a></p>';
+            echo '<p><a href="' . esc_url($debug_log_download_url) . '" class="button button-primary">' . esc_html__('Download Last 30 Days', 'robodesk') . '</a></p>';
 
             echo '<textarea readonly style="width:100%;min-height:520px;font-family:monospace;line-height:1.4;">'
                 . esc_textarea(implode("\n", $debug_log_lines)) .
