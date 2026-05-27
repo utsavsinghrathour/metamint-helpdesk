@@ -12,6 +12,7 @@ const Header = ({ logo, onClose, setActiveTab, setShowLogin, updateSelectedTicke
   const CHAT_KEY = "robodesk_chat_session";
   const [selectedStaff, setSelectedStaff] = useState(null);
   const { loggedinContext, loggedInUsrId, refreshTickets } = useAppData();
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleCloseClick = () => {
     onClose();
@@ -53,43 +54,36 @@ const Header = ({ logo, onClose, setActiveTab, setShowLogin, updateSelectedTicke
 
 
   const handleTalkToHumanClick = async () => {
-    // Retrieve chat messages from session storage
+    if (isSubmitting) return; // ← guard against multiple clicks
+    setIsSubmitting(true);
+
     const saved = sessionStorage.getItem(CHAT_KEY);
     const messages = saved ? JSON.parse(saved) : [];
     const messagesExceptFirst = messages.slice(1);
 
-    // If no messages, return early
     if (!messages || messages.length === 0) {
+      setIsSubmitting(false);
       return;
     }
 
-    // Get user messages (messages with role 'user')
     const userMessages = messages.filter(msg => msg.role === 'user');
-    console.log('Filtered user messages:', userMessages);
-
     if (userMessages.length === 0) {
-      console.log('No user messages found');
+      setIsSubmitting(false);
       return;
     }
 
-    // First user message becomes the ticket title
     const ticketTitle = userMessages[0].text;
-    console.log('Ticket title:', ticketTitle);
-
-    // All user messages become the ticket description/content
     const ticketDescription = userMessages.map(msg => msg.text).join('\n\n');
-    console.log('Ticket description:', ticketDescription);
 
-    // Check if user is logged in
     if (!loggedinContext) {
       localStorage.setItem('temp_ticket_title', ticketTitle);
       setActiveTab(1);
       setShowLogin(true);
+      setIsSubmitting(false);
       return;
     }
 
     try {
-      // Create ticket with title and description
       const result = await createTicket(loggedInUsrId, ticketTitle, ticketDescription);
 
       const newTicket = {
@@ -108,7 +102,6 @@ const Header = ({ logo, onClose, setActiveTab, setShowLogin, updateSelectedTicke
       updateSelectedTicket(newTicket);
       setActiveTab(1);
 
-
       if (messagesExceptFirst.length > 0) {
         messagesExceptFirst.forEach((message) => {
           if (message.role === 'user') {
@@ -119,15 +112,13 @@ const Header = ({ logo, onClose, setActiveTab, setShowLogin, updateSelectedTicke
         });
       }
 
-
-      // Clear session storage after successful ticket creation
       sessionStorage.removeItem(CHAT_KEY);
-
     } catch (error) {
       console.error("Failed to create ticket:", error);
+    } finally {
+      setIsSubmitting(false); // ← always re-enable, even on error
     }
   };
-
 
   useEffect(() => {
     fetchDefaultStaff();
@@ -169,6 +160,7 @@ const Header = ({ logo, onClose, setActiveTab, setShowLogin, updateSelectedTicke
           <button
             className="rd-m-5"
             onClick={handleTalkToHumanClick}
+            disabled={isSubmitting} 
           >
             <div className="icon-dark custom-svg rd-cursor-pointer">
               <IoAddCircle />
