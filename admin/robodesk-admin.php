@@ -36,32 +36,7 @@ function robodesk_add_admin_menu()
         'robodesk_dashboard_callback'
     );
 
-    // All Tickets (linking to CPT)
-    add_submenu_page(
-        'robodesk-dashboard',
-        'All Tickets',
-        'All Tickets',
-        'edit_posts',
-        'edit.php?post_type=robodesk_ticket'
-    );
 
-    // // Add New Ticket
-    // add_submenu_page(
-    //     'robodesk-dashboard',
-    //     'Add New Ticket',
-    //     'Add New Ticket',
-    //     'edit_posts',
-    //     'post-new.php?post_type=robodesk_ticket'
-    // );
-
-    // Ticket Origins (taxonomy)
-    // add_submenu_page(
-    //     'robodesk-dashboard',
-    //     'Ticket Origins',
-    //     'Ticket Origins',
-    //     'manage_categories',
-    //     'edit-tags.php?taxonomy=robodesk_ticket_origin&post_type=robodesk_ticket'
-    // );
 
     add_submenu_page(
         'robodesk-dashboard',
@@ -135,38 +110,6 @@ function robodesk_add_admin_menu()
         'robodesk-debug-log',
         'robodesk_debug_log_page_callback'
     );
-
-    // Fetch Emails
-    // add_submenu_page(
-    //     'robodesk-dashboard',
-    //     'Fetch Tickets',
-    //     'Fetch Tickets',
-    //     'manage_options',
-    //     'robodesk-email-to-ticket',
-    //     'robodesk_fetch_emails_callback'
-    // );
-
-    // Uncomment if needed later
-    /*
-    add_submenu_page(
-        'robodesk-dashboard',
-        'Robodesk Settings for Email',
-        'Email Settings',
-        'manage_options',
-        'robodesk_imap_settings',
-        'robodesk_imap_settings_callback'
-    );
-    */
-
-    // // Hidden callback page
-    // add_submenu_page(
-    //     null,
-    //     'Email Callback',
-    //     'Email Callback',
-    //     'manage_options',
-    //     'email-callback',
-    //     'email_fetcher_callback'
-    // );
 }
 
 
