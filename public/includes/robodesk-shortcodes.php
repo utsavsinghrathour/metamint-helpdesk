@@ -144,7 +144,7 @@ function robodesk_my_tickets_shortcode()
     $dashboard_base_url = get_permalink(get_queried_object_id());
 
     if (empty($dashboard_base_url)) {
-        $dashboard_base_url = site_url('/dashboard/');
+        $dashboard_base_url = home_url('/robodesk-support/');
     }
 
     $paged = (get_query_var('paged')) ? absint(get_query_var('paged')) : 1;
@@ -431,9 +431,9 @@ function robodesk_frontend_dashboard_shortcode()
                         $active_class = ($current_page == $slug) ? 'active' : '';
                         $url = add_query_arg('robodesk_page', $slug, get_permalink());
                     ?>
-                         <li><a href="<?php echo esc_url($url); ?>" class="<?php echo esc_attr($active_class); ?>"><?php echo esc_html($menu_item['title']); ?></a></li>
-                     <?php endforeach; ?>
-                     <li><a href="<?php echo esc_url(wp_logout_url(get_permalink())); ?>">Logout</a></li>
+                        <li><a href="<?php echo esc_url($url); ?>" class="<?php echo esc_attr($active_class); ?>"><?php echo esc_html($menu_item['title']); ?></a></li>
+                    <?php endforeach; ?>
+                    <li><a href="<?php echo esc_url(wp_logout_url(get_permalink())); ?>">Logout</a></li>
                 </ul>
             </nav>
             <select id="mobile-menu" class="mobile-menu" onchange="window.location.href=this.value;">
@@ -441,11 +441,11 @@ function robodesk_frontend_dashboard_shortcode()
                     $active_class = ($current_page == $slug) ? 'selected' : '';
                     $url = add_query_arg('robodesk_page', $slug, get_permalink());
                 ?>
-                     <option value="<?php echo esc_url($url); ?>" <?php echo esc_attr($active_class); ?>>
-                         <?php echo esc_html($menu_item['title']); ?>
-                     </option>
-                 <?php endforeach; ?>
-                 <option value="<?php echo esc_url(wp_logout_url(get_permalink())); ?>">Logout</option>
+                    <option value="<?php echo esc_url($url); ?>" <?php echo esc_attr($active_class); ?>>
+                        <?php echo esc_html($menu_item['title']); ?>
+                    </option>
+                <?php endforeach; ?>
+                <option value="<?php echo esc_url(wp_logout_url(get_permalink())); ?>">Logout</option>
             </select>
             <div class="robodesk-dashboard-content">
                 <?php
@@ -715,7 +715,7 @@ function robodesk_notifications_content()
 
     $dashboard_base_url = get_permalink(get_queried_object_id());
     if (empty($dashboard_base_url)) {
-        $dashboard_base_url = site_url('/dashboard/');
+        $dashboard_base_url = home_url('/robodesk-support/');
     }
 
     $unread_count = 0;
@@ -1097,9 +1097,9 @@ function robodesk_single_ticket_shortcode($atts)
             </div>
             <div>
                 <div class="robodesk-ticket-content">
-                    <?php 
+                    <?php
                     // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped, WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound
-                    echo apply_filters('the_content', $ticket->post_content); 
+                    echo apply_filters('the_content', $ticket->post_content);
                     ?>
                 </div>
                 <div class="robodesk-ticket-comments">
@@ -1268,18 +1268,18 @@ function robodesk_single_ticket_shortcode($atts)
         ?>
             <div class="robodesk-login-form robodesk-container">
                 <h2>Login</h2>
-                <?php 
+                <?php
                 // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
-                echo $error_message; 
+                echo $error_message;
                 ?>
                 <form name="robodesk-login-form" id="robodesk-login-form" action="<?php echo esc_url(site_url('wp-login.php')); ?>" method="post">
                     <p>
                         <label for="user_login">Username or Email<br />
                             <input type="text" name="log" id="user_login" class="input" value="<?php
-                            // phpcs:disable WordPress.Security.NonceVerification.Missing, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized, WordPress.Security.ValidatedSanitizedInput.MissingUnslash
-                            echo esc_attr(wp_unslash(isset($_POST['log']) ? $_POST['log'] : ''));
-                            // phpcs:enable WordPress.Security.NonceVerification.Missing, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized, WordPress.Security.ValidatedSanitizedInput.MissingUnslash
-                            ?>" size="20" autocapitalize="off" />
+                                                                                                // phpcs:disable WordPress.Security.NonceVerification.Missing, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized, WordPress.Security.ValidatedSanitizedInput.MissingUnslash
+                                                                                                echo esc_attr(wp_unslash(isset($_POST['log']) ? $_POST['log'] : ''));
+                                                                                                // phpcs:enable WordPress.Security.NonceVerification.Missing, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized, WordPress.Security.ValidatedSanitizedInput.MissingUnslash
+                                                                                                ?>" size="20" autocapitalize="off" />
                         </label>
                     </p>
                     <p>
