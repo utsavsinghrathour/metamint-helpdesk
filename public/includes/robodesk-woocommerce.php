@@ -49,30 +49,12 @@ function robodesk_add_custom_menu_item_to_my_account($items)
 add_filter('woocommerce_account_menu_items', 'robodesk_add_custom_menu_item_to_my_account');
 
 //Register the custom endpoint
-function robodesk_add_support_endpoint()
+function robodesk_get_support_endpoint_url($url, $endpoint, $value, $permalink)
 {
-    add_rewrite_endpoint('robodesk-support', EP_ROOT | EP_PAGES);
-}
-add_action('init', 'robodesk_add_support_endpoint');
-
-//Handle the redirect
-function robodesk_handle_support_redirect()
-{
-    global $wp_query;
-
-    if (isset($wp_query->query_vars['robodesk-support']) && !is_admin()) {
-        wp_safe_redirect(site_url('/dashboard/'));
-        exit;
+    if ($endpoint === 'robodesk-support') {
+        return robodesk_get_support_page_url();
     }
-}
-add_action('template_redirect', 'robodesk_handle_support_redirect');
 
-/**
- * Flush rewrite rules on activation
- */
-function robodesk_flush_rewrite_rules()
-{
-    robodesk_add_support_endpoint();
-    flush_rewrite_rules();
+    return $url;
 }
-register_activation_hook(__FILE__, 'robodesk_flush_rewrite_rules');
+add_filter('woocommerce_get_endpoint_url', 'robodesk_get_support_endpoint_url', 10, 4);

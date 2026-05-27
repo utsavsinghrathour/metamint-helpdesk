@@ -10,6 +10,22 @@ if (in_array('woocommerce/woocommerce.php', (array) get_option('active_plugins',
 // for comments
 require_once ROBODESK_PLUGIN_PATH . 'public/includes/robodesk-comments.php';
 
+if (!function_exists('robodesk_get_support_page_url')) {
+    function robodesk_get_support_page_url()
+    {
+        $support_page = get_page_by_path('robodesk-support', OBJECT, 'page');
+
+        if ($support_page && !is_wp_error($support_page)) {
+            $page_url = get_permalink($support_page->ID);
+            if (!empty($page_url)) {
+                return $page_url;
+            }
+        }
+
+        return home_url('/robodesk-support/');
+    }
+}
+
 // Function to send notification email
 function robodesk_send_ticket_update_email($ticket_id, $comment_content, $update_type)
 {
@@ -272,8 +288,9 @@ function add_custom_table_to_my_account()
         );
 
         $query = new WP_Query($args);
-        $ticket_url = add_query_arg(array('robodesk_page' => 'my-tickets', 'tid' => get_the_ID()), site_url('/dashboard/'));
-        $create_ticket_url = add_query_arg(array('robodesk_page' => 'create-ticket'), site_url('/dashboard/'));
+        $dashboard_base_url = home_url('/robodesk-support/');
+        $ticket_url = add_query_arg(array('robodesk_page' => 'my-tickets', 'tid' => get_the_ID()), $dashboard_base_url);
+        $create_ticket_url = add_query_arg(array('robodesk_page' => 'create-ticket'), $dashboard_base_url);
         ##Aby##   
     ?>
         <h3>Get Support Ticket</h3>
@@ -323,7 +340,7 @@ function add_custom_table_to_my_account()
                         <tr>
                             <td>
                                 <?php
-                                $ticket_url = add_query_arg(array('robodesk_page' => 'my-tickets', 'tid' => get_the_ID()), site_url('/dashboard/'));
+                                $ticket_url = add_query_arg(array('robodesk_page' => 'my-tickets', 'tid' => get_the_ID()), home_url('/robodesk-support/'));
                                 ?>
                                 <a href="<?php echo esc_url($ticket_url); ?>"><?php the_title(); ?></a>
 

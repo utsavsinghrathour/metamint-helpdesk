@@ -1883,6 +1883,7 @@ function robodesk_create_support_page()
             'post_status' => 'publish',
             'post_author' => 1,
             'post_type' => 'page',
+            'post_name' => 'robodesk-support',
         );
 
 
