@@ -107,3 +107,68 @@ function robodesk_remove_cpt_single_rewrite()
     // flush_rewrite_rules();
 }
 add_action('init', 'robodesk_remove_cpt_single_rewrite', 20);
+
+
+
+/**
+ * Exclude 'ticket_replies' comment type from the WP Admin comments list.
+ */
+
+// 1. Filter the query that powers edit-comments.php
+add_action( 'pre_get_comments', function( WP_Comment_Query $query ) {
+    if ( ! is_admin() ) {
+        return;
+    }
+
+    $types = $query->query_vars['type__not_in'] ?? [];
+
+    if ( ! is_array( $types ) ) {
+        $types = [ $types ];
+    }
+
+    if ( ! in_array( 'ticket_replies', $types, true ) ) {
+        $types[] = 'ticket_replies';
+        $query->query_vars['type__not_in'] = $types;
+    }
+} );
+
+// 2. Exclude from the counts shown in the status tabs (All / Pending / Approved etc.)
+add_filter( 'wp_count_comments', function( $counts, $post_id ) {
+    global $wpdb;
+
+    $counts = (array) $wpdb->get_results(
+        "SELECT comment_approved, COUNT(*) AS num_comments
+         FROM {$wpdb->comments}
+         WHERE comment_type != 'ticket_replies'
+         GROUP BY comment_approved",
+        ARRAY_A
+    );
+
+    $approved   = 0;
+    $pending    = 0;
+    $spam       = 0;
+    $trash      = 0;
+    $post_trash = 0;
+    $total      = 0;
+
+    foreach ( $counts as $row ) {
+        switch ( $row['comment_approved'] ) {
+            case '1':        $approved   += $row['num_comments']; break;
+            case '0':        $pending    += $row['num_comments']; break;
+            case 'spam':     $spam       += $row['num_comments']; break;
+            case 'trash':    $trash      += $row['num_comments']; break;
+            case 'post-trashed': $post_trash += $row['num_comments']; break;
+        }
+        $total += $row['num_comments'];
+    }
+
+    return (object) [
+        'approved'       => $approved,
+        'moderated'      => $pending,
+        'spam'           => $spam,
+        'trash'          => $trash,
+        'post-trashed'   => $post_trash,
+        'total_comments' => $total,
+        'all'            => $approved + $pending,
+    ];
+}, 10, 2 );
