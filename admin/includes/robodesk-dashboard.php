@@ -54,9 +54,12 @@ function robodesk_dashboard_callback()
                 <div class="flex items-center">
                     <div class="flex-shrink-0 flex items-center">
                         <button onclick="showPage('dashboard')" class="text-blue-600 hover:text-blue-800">
-                            <i class="fas fa-ticket-alt text-blue-600 text-2xl"></i>
-                            <span
-                                class="ml-2 text-xl font-bold text-gray-900"><?php esc_html_e('Robodesk', 'robodesk'); ?></span>
+                            <?php
+                                $plugin_base_url = plugin_dir_url(dirname(__FILE__, 2));
+                                $logo_url        = $plugin_base_url . 'public/src/images/robodesk-black.png';
+
+                                echo '<img src="' . esc_url($logo_url) . '" alt="Company Logo" width="130" height="100">';
+                                ?>
                         </button>
                     </div>
                     <div class="hidden md:ml-10 md:flex md:space-x-8">
