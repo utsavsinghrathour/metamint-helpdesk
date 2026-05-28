@@ -116,7 +116,9 @@ add_action('init', 'robodesk_remove_cpt_single_rewrite', 20);
 
 // 1. Filter the query that powers edit-comments.php
 add_action( 'pre_get_comments', function( WP_Comment_Query $query ) {
-    if ( ! is_admin() ) {
+    global $pagenow;
+
+    if ( ! is_admin() || $pagenow !== 'edit-comments.php' ) {
         return;
     }
 
@@ -134,9 +136,15 @@ add_action( 'pre_get_comments', function( WP_Comment_Query $query ) {
 
 // 2. Exclude from the counts shown in the status tabs (All / Pending / Approved etc.)
 add_filter( 'wp_count_comments', function( $counts, $post_id ) {
+    global $pagenow;
+
+    if ( ! is_admin() || $pagenow !== 'edit-comments.php' ) {
+        return $counts;
+    }
+
     global $wpdb;
 
-    $counts = (array) $wpdb->get_results(
+    $rows = $wpdb->get_results(
         "SELECT comment_approved, COUNT(*) AS num_comments
          FROM {$wpdb->comments}
          WHERE comment_type != 'ticket_replies'
@@ -144,22 +152,16 @@ add_filter( 'wp_count_comments', function( $counts, $post_id ) {
         ARRAY_A
     );
 
-    $approved   = 0;
-    $pending    = 0;
-    $spam       = 0;
-    $trash      = 0;
-    $post_trash = 0;
-    $total      = 0;
+    $approved = $pending = $spam = $trash = $post_trash = 0;
 
-    foreach ( $counts as $row ) {
+    foreach ( $rows as $row ) {
         switch ( $row['comment_approved'] ) {
-            case '1':        $approved   += $row['num_comments']; break;
-            case '0':        $pending    += $row['num_comments']; break;
-            case 'spam':     $spam       += $row['num_comments']; break;
-            case 'trash':    $trash      += $row['num_comments']; break;
+            case '1':            $approved   += $row['num_comments']; break;
+            case '0':            $pending    += $row['num_comments']; break;
+            case 'spam':         $spam       += $row['num_comments']; break;
+            case 'trash':        $trash      += $row['num_comments']; break;
             case 'post-trashed': $post_trash += $row['num_comments']; break;
         }
-        $total += $row['num_comments'];
     }
 
     return (object) [
@@ -168,7 +170,7 @@ add_filter( 'wp_count_comments', function( $counts, $post_id ) {
         'spam'           => $spam,
         'trash'          => $trash,
         'post-trashed'   => $post_trash,
-        'total_comments' => $total,
+        'total_comments' => $approved + $pending + $spam + $trash + $post_trash,
         'all'            => $approved + $pending,
     ];
 }, 10, 2 );
