@@ -358,7 +358,7 @@ $priority_terms = get_terms(array(
                     <label class="block text-sm font-medium text-gray-700 mb-2">Search by Customer</label>
                     <div class="relative" id="robodesk-customer-filter-wrapper">
                         <div id="robodesk-customer-tags"
-                            class="flex flex-wrap items-center gap-2 w-full min-h-[40px] bg-white focus-within:ring-1 focus-within:ring-blue-500 focus-within:border-blue-500">
+                            class="flex flex-wrap items-center gap-2 w-full min-h-[40px] bg-white">
                             <input type="text" id="robodesk-customer-filter-input"
                                 placeholder="Type customer name and press Enter"
                                 class="styled-input flex-1 min-w-[150px] px-1 py-1 border-0 bg-transparent placeholder-gray-500 focus:outline-none focus:ring-0 focus:border-0">
@@ -378,7 +378,7 @@ $priority_terms = get_terms(array(
                     <label class="block text-sm font-medium text-gray-700 mb-2">Search by Agent</label>
                     <div class="relative" id="robodesk-agent-filter-wrapper">
                         <div id="robodesk-agent-tags"
-                            class="flex flex-wrap items-center gap-2 w-full min-h-[40px] bg-white focus-within:ring-1 focus-within:ring-blue-500 focus-within:border-blue-500">
+                            class="flex flex-wrap items-center gap-2 w-full min-h-[40px] bg-white">
                             <input type="text" id="robodesk-agent-filter-input"
                                 placeholder="Type agent name and press Enter"
                                 class="styled-input flex-1 min-w-[150px] px-1 py-1 border-0 bg-transparent placeholder-gray-500 focus:outline-none focus:ring-0 focus:border-0">
