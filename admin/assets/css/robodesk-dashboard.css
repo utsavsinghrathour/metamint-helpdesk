@@ -684,3 +684,10 @@
 .toplevel_page_robodesk-dashboard .select2-container--default .select2-results__option {
   padding: 4px;
 }
+
+/* -------------------
+CONVERSATION
+----------------------*/
+.rd-conversations-frm input.rd-search {
+  padding-left: 30px;
+}
