@@ -56,7 +56,7 @@ function robodesk_dashboard_callback()
                         <button onclick="showPage('dashboard')" class="text-blue-600 hover:text-blue-800">
                             <?php
                                 $plugin_base_url = plugin_dir_url(dirname(__FILE__, 2));
-                                $logo_url        = $plugin_base_url . 'public/src/images/robodesk-black.png';
+                                $logo_url        = $plugin_base_url . 'admin/assets/images/robodesk-black.png';
 
                                 echo '<img src="' . esc_url($logo_url) . '" alt="Company Logo" width="130" height="100">';
                                 ?>
