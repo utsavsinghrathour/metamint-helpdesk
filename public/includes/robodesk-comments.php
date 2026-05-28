@@ -122,16 +122,20 @@ add_action( 'pre_get_comments', function( WP_Comment_Query $query ) {
         return;
     }
 
+    $excluded_types = [ 'ticket_replies', 'ticket_notes' ];
     $types = $query->query_vars['type__not_in'] ?? [];
 
     if ( ! is_array( $types ) ) {
         $types = [ $types ];
     }
 
-    if ( ! in_array( 'ticket_replies', $types, true ) ) {
-        $types[] = 'ticket_replies';
-        $query->query_vars['type__not_in'] = $types;
+    foreach ( $excluded_types as $type ) {
+        if ( ! in_array( $type, $types, true ) ) {
+            $types[] = $type;
+        }
     }
+
+    $query->query_vars['type__not_in'] = $types;
 } );
 
 // 2. Exclude from the counts shown in the status tabs (All / Pending / Approved etc.)
@@ -144,11 +148,17 @@ add_filter( 'wp_count_comments', function( $counts, $post_id ) {
 
     global $wpdb;
 
+    $excluded_types = [ 'ticket_replies', 'ticket_notes' ];
+    $placeholders   = implode( ', ', array_fill( 0, count( $excluded_types ), '%s' ) );
+
     $rows = $wpdb->get_results(
-        "SELECT comment_approved, COUNT(*) AS num_comments
-         FROM {$wpdb->comments}
-         WHERE comment_type != 'ticket_replies'
-         GROUP BY comment_approved",
+        $wpdb->prepare(
+            "SELECT comment_approved, COUNT(*) AS num_comments
+             FROM {$wpdb->comments}
+             WHERE comment_type NOT IN ($placeholders)
+             GROUP BY comment_approved",
+            ...$excluded_types
+        ),
         ARRAY_A
     );
 
