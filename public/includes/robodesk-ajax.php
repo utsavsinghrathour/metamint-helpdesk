@@ -143,7 +143,7 @@ function robodesk_handle_ticket_submission()
         $comment_id = wp_insert_comment(array(
             'comment_post_ID' => $post_id,
             'user_id'  => $user_id,
-            'comment_content' => $title,
+            'comment_content' => trim($title . "\n\n" . $content),
             'comment_author' => $user_name,
             'comment_author_email' => $email_address,
             'comment_approved' => 1,
