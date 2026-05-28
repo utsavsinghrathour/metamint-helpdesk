@@ -22,6 +22,7 @@ Robodesk is a simple and efficient support plugin for WordPress that enables use
 
 = 1.11.6 =
 * Latest improvements and bug fixes
+* This is a test line to check deployment
 
 == License ==
 
