@@ -148,7 +148,7 @@
 
 .robodesk-dashboard-content .robodesk-single-ticket .comment-list {
   font-size: 14px;
-  padding: 0 0 0 10px;
+  padding: 0;
   display: flex;
   flex-direction: column;
   gap: 18px;
@@ -526,6 +526,76 @@
   white-space: nowrap;
   font-size: 12px;
   margin-top: 2px;
+}
+
+/* ---------------------
+SINGLE TICKET
+-------------------------*/
+.d-flex {
+  display: flex;
+  align-items: flex-start;
+  gap: 20px;
+}
+
+.rd-col-75 {
+  width: 75%;
+}
+
+.rd-col-25 {
+  width: 25%;
+}
+
+.robodesk-right-column {
+  border: 1px solid #f2f1f1;
+  padding: 20px;
+  margin-left: 20px;
+}
+
+.rd-card-box {
+  background-color: #f0f0f0;
+  padding: 20px;
+  margin: 0;
+}
+
+.rd-card-box:has(.open) {
+  background-color: #fef2f2;
+  color: #dc2626;
+}
+
+.rd-card-box:has(.closed) {
+  background-color: #f0fdf4;
+  color: #16a34a;
+}
+
+.rd-card-box:has(.in-progress) {
+  background-color: #fffbeb;
+  color: #d97706;
+}
+
+.robodesk-single-ticket-row .ticket_replies {
+  list-style: none;
+  background-color: #f9fafb;
+  border: 1px solid #f2f1f1;
+  padding: 20px;
+}
+
+.robodesk-single-ticket-row .comment-meta {
+  display: flex;
+  gap: 20px;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.robodesk-single-ticket-row .ticket_replies.thread-odd {
+  background-color: #ffffff;
+}
+
+.robodesk-single-ticket-row .ticket_replies.thread-odd .comment-meta {
+  flex-direction: row-reverse;
+}
+
+.robodesk-single-ticket-row .ticket_replies.thread-odd .comment-content {
+  text-align: right;
 }
 
 @media (max-width: 768px) {
