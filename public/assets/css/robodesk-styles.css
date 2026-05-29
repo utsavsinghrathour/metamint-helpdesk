@@ -93,8 +93,6 @@
   display: flex;
   font-family: var(--font-family);
   padding: 0;
-  background: #f8fbfd;
-  box-shadow: 0 16px 44px rgba(15, 23, 42, 0.05);
   min-height: 620px;
   overflow: hidden;
 }
@@ -104,18 +102,25 @@
 }
 
 .robodesk-frontend-dashboard nav {
-  width: 176px;
+  width: 200px;
   background-color: #ffffff;
   padding: 0px;
   border: 0;
   box-shadow: 14px 0 36px rgba(15, 23, 42, 0.035);
-  flex: 0 0 176px;
+  flex: 0 0 200px;
 }
 
 .robodesk-frontend-dashboard nav ul {
   list-style: none;
   padding: 0;
   margin: 0;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.robodesk-frontend-dashboard nav ul li:last-child {
+  margin-top: auto;
 }
 
 .robodesk-frontend-dashboard nav li a:focus {
@@ -156,6 +161,11 @@
   color: #008f88;
 }
 
+.robodesk-frontend-dashboard nav li:last-child a:hover {
+  background-color: #fbeeee;
+  color: #dc2626;
+}
+
 .robodesk-frontend-dashboard nav li a.active {
   background-color: #e9f8f5;
   border-left: 3px solid #0aa39b;
@@ -173,7 +183,6 @@
   flex-grow: 1;
   padding: 28px 34px;
   border: 0;
-  background: #fbfdff;
   min-width: 0;
 }
 
@@ -200,9 +209,7 @@
   object-fit: cover;
 }
 
-.robodesk-dashboard-content
-  .robodesk-single-ticket
-  .robodesk-ticket-status-priority {
+.robodesk-dashboard-content .robodesk-single-ticket .robodesk-ticket-status-priority {
   display: flex;
   flex-direction: column;
   gap: 10px;
@@ -227,6 +234,22 @@
   margin-top: 8px;
 }
 
+.rodobesk-update-profile-form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  width: 100%;
+  max-width: 100% !important;
+}
+
+.rd-form-group {
+  width: calc(50% - 10px);
+}
+
+.rd-form-group.full-width {
+  flex: 0 0 100%;
+}
+
 .robodesk-dashboard-content input,
 .robodesk-dashboard-content textarea {
   background: #ffffff;
@@ -237,6 +260,11 @@
   font-size: 14px;
   width: 100%;
   margin-top: 7px;
+  box-sizing: border-box;
+}
+
+.robodesk-dashboard-content input#profile_picture {
+  width: 50%;
 }
 
 #wp-ticket_content-wrap {
@@ -244,8 +272,8 @@
 }
 
 .robodesk-dashboard-content input[type="submit"] {
-  background-color: #009f98;
-  border: 0;
+  background-color: var(--rd-brand-color);
+  border: 1px solid var(--rd-brand-color);
   border-radius: 5px;
   color: #fff;
   cursor: pointer;
@@ -257,7 +285,8 @@
 }
 
 .robodesk-dashboard-content input[type="submit"]:hover {
-  background-color: #057e79;
+  background-color: transparent;
+  color: var(--rd-brand-color);
 }
 
 .robodesk-dashboard-content label {
@@ -498,7 +527,7 @@
 }
 
 .robodesk-page-create-ticket .robodesk-container,
-.robodesk-page-profile .robodesk-dashboard-content > form,
+.robodesk-page-profile .robodesk-dashboard-content>form,
 #credential-form {
   background: #ffffff;
   border: 1px solid #edf2f7;
@@ -834,8 +863,7 @@ SINGLE TICKET
   font-weight: 700;
 }
 
-.robodesk-frontend-dashboard:has(.robodesk-single-ticket)
-  .robodesk-dashboard-content {
+.robodesk-frontend-dashboard:has(.robodesk-single-ticket) .robodesk-dashboard-content {
   background: #fbfdff;
   border: 0;
   padding: 28px 34px;
@@ -940,10 +968,7 @@ SINGLE TICKET
   padding: 0 14px;
 }
 
-.robodesk-dashboard-content
-  .robodesk-ticket-comments
-  .robodesk-status-selector
-  select {
+.robodesk-dashboard-content .robodesk-ticket-comments .robodesk-status-selector select {
   background: #ffffff;
   border: 0;
   border-right: 1px solid #e5ebf2;
@@ -1019,9 +1044,7 @@ SINGLE TICKET
   padding: 8px 14px;
 }
 
-.robodesk-dashboard-content
-  .robodesk-ticket-comments
-  input[type="submit"]:hover {
+.robodesk-dashboard-content .robodesk-ticket-comments input[type="submit"]:hover {
   background: transparent;
   color: var(--rd-brand-color);
 }
@@ -1060,7 +1083,7 @@ SINGLE TICKET
 }
 
 .robodesk-single-ticket-row .ticket_replies,
-.robodesk-ticket-comments .comment-list > li {
+.robodesk-ticket-comments .comment-list>li {
   background: transparent;
   border: 0;
   list-style: none;
@@ -1131,48 +1154,33 @@ SINGLE TICKET
   margin-bottom: 0;
 }
 
-.robodesk-ticket-comments
-  .comment-list
-  > li.robodesk-comment-sent
-  .comment-body {
+.robodesk-ticket-comments .comment-list>li.robodesk-comment-sent .comment-body {
   flex-direction: row-reverse;
   justify-content: flex-start;
   margin: 5px;
 }
 
-.robodesk-ticket-comments
-  .comment-list
-  > li.robodesk-comment-sent
-  .robodesk-comment-bubble {
+.robodesk-ticket-comments .comment-list>li.robodesk-comment-sent .robodesk-comment-bubble {
   background: #eefbf8;
   border-color: #cbece5;
   color: #183f3c;
 }
 
-.robodesk-ticket-comments
-  .comment-list
-  > li.robodesk-comment-sent
-  .comment-metadata {
+.robodesk-ticket-comments .comment-list>li.robodesk-comment-sent .comment-metadata {
   color: #6f8d8a;
   text-align: right;
 }
 
-.robodesk-ticket-comments
-  .comment-list
-  > li.robodesk-comment-sent
-  .comment-meta {
+.robodesk-ticket-comments .comment-list>li.robodesk-comment-sent .comment-meta {
   color: #0b5550;
   text-align: right;
 }
 
-.robodesk-ticket-comments .comment-list > li.robodesk-comment-same-sender {
+.robodesk-ticket-comments .comment-list>li.robodesk-comment-same-sender {
   margin-top: -6px;
 }
 
-.robodesk-ticket-comments
-  .comment-list
-  > li.robodesk-comment-same-sender
-  .comment-author {
+.robodesk-ticket-comments .comment-list>li.robodesk-comment-same-sender .comment-author {
   visibility: hidden;
 }
 
@@ -1214,11 +1222,9 @@ SINGLE TICKET
 
 .robodesk-ticket-meta-priority {
   background: #fff1c2;
-  background: color-mix(
-    in srgb,
-    var(--rd-priority-color, #f4c84b) 24%,
-    #fff 76%
-  );
+  background: color-mix(in srgb,
+      var(--rd-priority-color, #f4c84b) 24%,
+      #fff 76%);
 }
 
 .d-flex {
@@ -1771,9 +1777,7 @@ td.credential_url a {
   background: #ffffff;
 }
 
-.robodesk-frontend-dashboard
-  .robodesk-ticket-table-content:hover
-  td:first-child {
+.robodesk-frontend-dashboard .robodesk-ticket-table-content:hover td:first-child {
   background: #fbfffe;
 }
 
@@ -1828,9 +1832,14 @@ td.credential_url a {
 }
 
 .robodesk-frontend-dashboard #add-credential-button {
-  background: #009f98;
-  border: 0;
+  background: var(--rd-brand-color);
+  border: 1px solid var(--rd-brand-color);
   color: #ffffff;
+}
+
+.robodesk-frontend-dashboard #add-credential-button:hover {
+  background: transparent;
+  color: var(--rd-brand-color);
 }
 
 .robodesk-frontend-dashboard .robodesk-notifications-header {
@@ -1845,8 +1854,8 @@ td.credential_url a {
 }
 
 .robodesk-frontend-dashboard .robodesk-mark-all-read-btn {
-  background: #009f98;
-  border: 0;
+  background: var(--rd-brand-color);
+  border: 1px solid var(--rd-brand-color);
   border-radius: 5px;
   color: #ffffff;
   cursor: pointer;
@@ -1856,7 +1865,8 @@ td.credential_url a {
 }
 
 .robodesk-frontend-dashboard .robodesk-mark-all-read-btn:hover {
-  background: #057e79;
+  background: transparent;
+  color: var(--rd-brand-color);
 }
 
 .robodesk-frontend-dashboard .robodesk-notifications-list {
@@ -1903,7 +1913,7 @@ td.credential_url a {
 }
 
 .robodesk-frontend-dashboard.robodesk-page-profile img.avatar,
-.robodesk-frontend-dashboard.robodesk-page-profile form > img {
+.robodesk-frontend-dashboard.robodesk-page-profile form>img {
   border: 3px solid #ffffff;
   border-radius: 999px;
   box-shadow: 0 8px 18px rgba(15, 23, 42, 0.12);
@@ -1957,8 +1967,7 @@ td.credential_url a {
     min-height: 0;
   }
 
-  .robodesk-frontend-dashboard:has(.robodesk-single-ticket)
-    .robodesk-dashboard-content {
+  .robodesk-frontend-dashboard:has(.robodesk-single-ticket) .robodesk-dashboard-content {
     padding: 24px 16px;
   }
 
