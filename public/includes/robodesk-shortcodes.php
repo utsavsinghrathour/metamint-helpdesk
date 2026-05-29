@@ -22,23 +22,23 @@ function robodesk_ticket_form_shortcode()
 
             <label for="ticket_origin">Ticket Origin:</label>
             <?php
-                wp_dropdown_categories(array(
-                    'taxonomy' => 'robodesk_ticket_origin',
-                    'name' => 'ticket_origin',
-                    'show_option_none' => 'Ticket Origin',
-                    'hierarchical' => true,
-                ));
-                ?><br><br>
+                    wp_dropdown_categories(array(
+                        'taxonomy' => 'robodesk_ticket_origin',
+                        'name' => 'ticket_origin',
+                        'show_option_none' => 'Ticket Origin',
+                        'hierarchical' => true,
+                    ));
+                    ?><br><br>
 
             <label for="ticket_priority">Priority:</label>
             <?php
-                wp_dropdown_categories(array(
-                    'taxonomy' => 'robodesk_ticket_priority',
-                    'name' => 'ticket_priority',
-                    'show_option_none' => 'Select Priority',
-                    'hierarchical' => true,
-                ));
-                ?><br><br>
+                    wp_dropdown_categories(array(
+                        'taxonomy' => 'robodesk_ticket_priority',
+                        'name' => 'ticket_priority',
+                        'show_option_none' => 'Select Priority',
+                        'hierarchical' => true,
+                    ));
+                    ?><br><br>
 
             <input type="submit" value="Submit Ticket">
             <?php wp_nonce_field('robodesk_submit_ticket_action', 'robodesk_submit_ticket_nonce'); ?>
@@ -79,41 +79,6 @@ function robodesk_ticket_form_shortcode()
     }
 }
 
-// phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedFunctionFound
-function order_posts_by_term_meta($clauses, $query)
-{
-    // Check if our custom query parameter is set
-    if (!$query->get('order_by_tax_priority')) {
-        return $clauses;
-    }
-
-    global $wpdb;
-
-    // Join necessary tables to access term meta
-    $clauses['join'] .= "
-        LEFT JOIN {$wpdb->term_relationships} AS tr ON {$wpdb->posts}.ID = tr.object_id
-        LEFT JOIN {$wpdb->term_taxonomy} AS tt ON tr.term_taxonomy_id = tt.term_taxonomy_id
-        LEFT JOIN {$wpdb->termmeta} AS tm ON tt.term_id = tm.term_id
-    ";
-
-    // Specify the taxonomy and meta key
-    $clauses['where'] .= " AND tt.taxonomy = 'robodesk_ticket_priority'";
-    $clauses['where'] .= " AND tm.meta_key = 'taxonomy_order'";
-
-    // Group by post ID to handle multiple terms (if any)
-    $clauses['groupby'] = "{$wpdb->posts}.ID";
-
-    // Calculate term_order using the minimum meta_value (or 9999 if no term)
-    $clauses['fields'] .= ", COALESCE(MIN(CAST(tm.meta_value AS UNSIGNED)), 9999) as term_order";
-
-    // Order by the computed term_order and post_date (latest first)
-
-    $clauses['orderby'] = "term_order ASC, {$wpdb->posts}.post_date {$query->get('order')}";
-    return $clauses;
-}
-add_filter('posts_clauses', 'order_posts_by_term_meta', 10, 2);
-
-
 add_shortcode('robodesk_my_tickets', 'robodesk_my_tickets_shortcode');
 
 
@@ -152,20 +117,40 @@ function robodesk_my_tickets_shortcode()
     // phpcs:ignore WordPress.Security.NonceVerification.Recommended
     $orderby = isset($_GET['orderby']) ? sanitize_text_field(wp_unslash($_GET['orderby'])) : 'date';
 
-    $obystatus = trim($orderby) == 'meta_value' ? true : false;
-
     // phpcs:ignore WordPress.Security.NonceVerification.Recommended
     $order  = isset($_GET['order']) ? sanitize_text_field(wp_unslash($_GET['order'])) : 'DESC';
+
+    $allowed_orderby = array('date', 'meta_value');
+    if (!in_array($orderby, $allowed_orderby, true)) {
+        $orderby = 'date';
+    }
+
+    $allowed_order = array('ASC', 'DESC');
+    if (!in_array($order, $allowed_order, true)) {
+        $order = 'DESC';
+    }
+
+    $query_orderby = array(
+        'date' => $order,
+        'ID' => $order,
+    );
 
     $args = array(
         'post_type' => 'robodesk_ticket',
         'author' => $user_id,
         'posts_per_page' => 10,
         'paged' => $paged,
-        'orderby' => $orderby,
-        'order' => $order,
-        'order_by_tax_priority' => true,
     );
+
+    if ($orderby === 'meta_value') {
+        $args['meta_key'] = '_robodesk_ticket_status';
+        $query_orderby = array(
+            'meta_value' => $order,
+            'ID' => $order,
+        );
+    }
+
+    $args['orderby'] = $query_orderby;
 
     // phpcs:ignore WordPress.Security.NonceVerification.Recommended
     $selected_priority = isset($_GET['robodesk_ticket_priority']) ? sanitize_text_field(wp_unslash($_GET['robodesk_ticket_priority'])) : '';
@@ -427,21 +412,33 @@ function robodesk_frontend_dashboard_shortcode()
 
 
         $menu_items = apply_filters('robodesk_frontend_dashboard_menu_items', array());
+        $is_single_ticket_view = !empty($ticket_id) && get_post_type($ticket_id) == 'robodesk_ticket';
+        $dashboard_page_class = $is_single_ticket_view ? 'single-ticket' : sanitize_html_class($current_page);
 
         ob_start();
     ?>
-<div class="robodesk-frontend-dashboard robodesk-container">
+<div
+    class="robodesk-frontend-dashboard robodesk-container robodesk-page-<?php echo esc_attr($dashboard_page_class); ?>">
     <!-- Always render both, control visibility with CSS -->
     <nav class="desktop-menu">
         <ul>
             <?php foreach ($menu_items as $slug => $menu_item):
                         $active_class = ($current_page == $slug) ? 'active' : '';
                         $url = add_query_arg('robodesk_page', $slug, get_permalink());
+                        $tab_class = 'robodesk-dashboard-tab robodesk-dashboard-tab--' . sanitize_html_class($slug);
+                        $icon_class = robodesk_get_dashboard_menu_icon_class($slug);
                     ?>
             <li><a href="<?php echo esc_url($url); ?>"
-                    class="<?php echo esc_attr($active_class); ?>"><?php echo esc_html($menu_item['title']); ?></a></li>
+                    class="<?php echo esc_attr(trim($tab_class . ' ' . $active_class)); ?>"><span
+                        class="dashicons <?php echo esc_attr($icon_class); ?> robodesk-dashboard-tab-icon"
+                        aria-hidden="true"></span><span
+                        class="robodesk-dashboard-tab-label"><?php echo esc_html($menu_item['title']); ?></span></a>
+            </li>
             <?php endforeach; ?>
-            <li><a href="<?php echo esc_url(wp_logout_url(get_permalink())); ?>">Logout</a></li>
+            <li><a href="<?php echo esc_url(wp_logout_url(get_permalink())); ?>"
+                    class="robodesk-dashboard-tab robodesk-dashboard-tab--logout"><span
+                        class="dashicons <?php echo esc_attr(robodesk_get_dashboard_menu_icon_class('logout')); ?> robodesk-dashboard-tab-icon"
+                        aria-hidden="true"></span><span class="robodesk-dashboard-tab-label">Logout</span></a></li>
         </ul>
     </nav>
     <select id="mobile-menu" class="mobile-menu" onchange="window.location.href=this.value;">
@@ -457,7 +454,7 @@ function robodesk_frontend_dashboard_shortcode()
     </select>
     <div class="robodesk-dashboard-content">
         <?php
-                if (!empty($ticket_id) && get_post_type($ticket_id) == 'robodesk_ticket') {
+                if ($is_single_ticket_view) {
                     echo do_shortcode('[robodesk_single_ticket id="' . $ticket_id . '"]');
                 } else if (array_key_exists($current_page, $menu_items)) {
                     if ($current_page == 'dashboard') {
@@ -479,6 +476,22 @@ function robodesk_frontend_dashboard_shortcode()
         return '<div class="robodesk-container"><p>Please <a href="' . wp_login_url(get_permalink()) . '">login</a> to view your tickets.</p></div>';
     }
 }
+
+function robodesk_get_dashboard_menu_icon_class($slug)
+{
+    $icons = array(
+        'dashboard' => 'dashicons-dashboard',
+        'profile' => 'dashicons-admin-users',
+        'my-tickets' => 'dashicons-tickets-alt',
+        'notifications' => 'dashicons-bell',
+        'create-ticket' => 'dashicons-plus-alt',
+        'credentials-vault' => 'dashicons-lock',
+        'logout' => 'dashicons-exit',
+    );
+
+    return isset($icons[$slug]) ? $icons[$slug] : 'dashicons-admin-generic';
+}
+
 /*
 
 function robodesk_frontend_dashboard_shortcode()
@@ -690,30 +703,35 @@ function robodesk_profile_content()
         }
     ?>
 <h2>Update Profile</h2>
-<form method="post" enctype="multipart/form-data">
+<form method="post" enctype="multipart/form-data" class="rodobesk-update-profile-form">
     <?php wp_nonce_field('robodesk_update_profile', 'robodesk_profile_nonce'); ?>
-
-    <label for="first_name">First Name:</label><br>
-    <input type="text" name="first_name" id="first_name"
-        value="<?php echo esc_attr($current_user->first_name); ?>"><br><br>
-
-    <label for="last_name">Last Name:</label><br>
-    <input type="text" name="last_name" id="last_name"
-        value="<?php echo esc_attr($current_user->last_name); ?>"><br><br>
-
-    <label for="profile_picture">Profile Picture:</label><br>
-    <?php if ($avatar_url): ?>
-    <img src="<?php echo esc_url($avatar_url); ?>" alt="Profile Picture" width="96" height="96"><br>
-    <?php else:
+    <div class="rd-form-group">
+        <label for="first_name">First Name:</label><br>
+        <input type="text" name="first_name" id="first_name" value="<?php echo esc_attr($current_user->first_name); ?>">
+    </div>
+    <div class="rd-form-group">
+        <label for="last_name">Last Name:</label><br>
+        <input type="text" name="last_name" id="last_name" value="<?php echo esc_attr($current_user->last_name); ?>">
+    </div>
+    <div class="rd-form-group full-width">
+        <label for="profile_picture">Profile Picture:</label><br>
+        <?php if ($avatar_url): ?>
+        <img src="<?php echo esc_url($avatar_url); ?>" alt="Profile Picture" width="96" height="96"><br>
+        <?php else:
                 echo get_avatar($user_id, 96);
             endif; ?><br>
-    <input type="file" name="profile_picture" id="profile_picture"><br><br>
+        <input type="file" name="profile_picture" id="profile_picture">
+    </div>
 
-    <label for="password">New Password:</label><br>
-    <input type="password" name="password" id="password"><br><br>
+    <div class="rd-form-group">
+        <label for="password">New Password:</label><br>
+        <input type="password" name="password" id="password">
+    </div>
 
-    <label for="confirm_password">Confirm New Password:</label><br>
-    <input type="password" name="confirm_password" id="confirm_password"><br><br>
+    <div class="rd-form-group">
+        <label for="confirm_password">Confirm New Password:</label><br>
+        <input type="password" name="confirm_password" id="confirm_password">
+    </div>
 
     <input type="submit" value="Update Profile">
 </form>
@@ -1050,6 +1068,9 @@ function robodesk_single_ticket_shortcode($atts)
 
     $ticket = get_post($ticket_id);
     $status = get_post_meta($ticket_id, '_robodesk_ticket_status', true);
+    if ($status === '') {
+        $status = 'open';
+    }
     $priority_terms = wp_get_object_terms($ticket_id, 'robodesk_ticket_priority');
 
     $priority = !empty($priority_terms) && !is_wp_error($priority_terms) ? $priority_terms[0]->name : 'N/A';
@@ -1062,8 +1083,69 @@ function robodesk_single_ticket_shortcode($atts)
 
     $created_date = get_the_date('Y-m-d H:i:s', $ticket);
     $updated_date = get_the_modified_date('Y-m-d H:i:s', $ticket);
+    $created_display = get_the_date('m/d/Y', $ticket);
+    $updated_display = get_the_modified_date('m/d/Y', $ticket);
+    $date_meta_label = 'Last Updated';
+    $date_meta_display = $updated_display;
     $time_ago = human_time_diff(get_the_modified_time('U', $ticket), current_time('timestamp'));
     $time_ago_class = '';
+
+    foreach (array('_robodesk_due_date', 'robodesk_due_date', '_ticket_due_date', 'ticket_due_date', 'due_date') as $due_date_meta_key) {
+        $due_date_value = get_post_meta($ticket_id, $due_date_meta_key, true);
+        if (!empty($due_date_value)) {
+            $due_timestamp = strtotime((string) $due_date_value);
+            $date_meta_label = 'Due Date';
+            $date_meta_display = $due_timestamp ? date_i18n('m/d/Y', $due_timestamp) : (string) $due_date_value;
+            break;
+        }
+    }
+
+    $origin = get_post_meta($ticket_id, 'robodesk_ticket_origin', true);
+    if (empty($origin)) {
+        $origin_terms = wp_get_post_terms($ticket_id, 'robodesk_ticket_origin');
+        if (!is_wp_error($origin_terms) && !empty($origin_terms)) {
+            $origin = $origin_terms[0]->name;
+        }
+    }
+    $origin = $origin ?: 'Web';
+
+    $department_terms = wp_get_post_terms($ticket_id, 'robodesk_ticket_category');
+    $department = (!is_wp_error($department_terms) && !empty($department_terms)) ? $department_terms[0]->name : '';
+    if ($department === '') {
+        $department_terms = get_the_terms($ticket_id, 'robodesk_ticket_category');
+        $department = (!is_wp_error($department_terms) && !empty($department_terms)) ? $department_terms[0]->name : '';
+    }
+    if ($department === '') {
+        global $wpdb;
+        // Fallback for frontend views where taxonomy helper caches may not include the latest admin selection.
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+        $department = (string) $wpdb->get_var(
+            $wpdb->prepare(
+                "SELECT t.name
+                FROM {$wpdb->terms} t
+                INNER JOIN {$wpdb->term_taxonomy} tt ON t.term_id = tt.term_id
+                INNER JOIN {$wpdb->term_relationships} tr ON tt.term_taxonomy_id = tr.term_taxonomy_id
+                WHERE tr.object_id = %d
+                AND tt.taxonomy = %s
+                LIMIT 1",
+                $ticket_id,
+                'robodesk_ticket_category'
+            )
+        );
+    }
+    if ($department === '') {
+        $default_department_id = get_option('robodesk_default_ticket_category', '');
+        if (!empty($default_department_id)) {
+            $default_department = get_term((int) $default_department_id, 'robodesk_ticket_category');
+            if ($default_department && !is_wp_error($default_department)) {
+                $department = $default_department->name;
+            }
+        }
+    }
+    $department = $department ?: 'General';
+
+    $ticket_author = get_userdata((int) $ticket->post_author);
+    $ticket_author_name = $ticket_author && !empty($ticket_author->display_name) ? $ticket_author->display_name : 'Customer';
 
 
     $comments = get_comments(array(
@@ -1108,24 +1190,15 @@ function robodesk_single_ticket_shortcode($atts)
 */
 ?>
 <div class="robodesk-single-ticket robodesk-container">
-    <div class="robodesk-single-ticket-row d-flex flex-wrap gap-20">
-        <div class="robodesk-left-column rd-col-75">
-
-            <p class="robodesk-ticket-id"><strong>Ticket id:</strong>
-                <?php echo esc_html('#' . $ticket_id); ?></p>
+    <div class="robodesk-single-ticket-shell">
+        <div class="robodesk-ticket-main-panel">
+            <p class="robodesk-ticket-id">Ticket No. <?php echo esc_html($ticket_id); ?></p>
             <div class="robodesk-ticket-subject">
-                <h2><?php echo esc_html($ticket->post_title); ?></h2>
+                <h2>Subject : <?php echo esc_html($ticket->post_title); ?></h2>
             </div>
 
-            <div class="robodesk-ticket-details">
-                <div class="robodesk-ticket-content">
-                    <?php
-                    // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped, WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound
-                    echo apply_filters('the_content', $ticket->post_content);
-                    ?>
-                </div>
-                <div class="robodesk-ticket-comments">
-                    <?php
+            <div class="robodesk-ticket-comments">
+                <?php
 
                     if (comments_open($ticket_id) || get_comments_number($ticket_id) > 0) {
 
@@ -1143,31 +1216,45 @@ function robodesk_single_ticket_shortcode($atts)
                         echo '<p>Comments are closed.</p>';
                     }
                     ?>
-                </div>
             </div>
         </div>
 
-        <div class="robodesk-right-column rd-col-25">
-            <div class="robodesk-ticket-status-priority">
-                <p class="robodesk-ticket-status rd-card-box"><strong>Status:</strong> <span
-                        class="robodesk-status-pill <?php echo esc_attr(strtolower($status)); ?>">
-                        <?php echo esc_html(ucwords($status)); ?></span></p>
-                <p class="robodesk-ticket-priority rd-card-box"><strong>Priority:</strong><span
-                        class="robodesk-priority-pill <?php echo esc_attr(strtolower($priority)); ?>"
-                        style="background:<?php echo esc_attr($priority_color) ?>"><?php echo esc_html(ucwords($priority)); ?></span>
-                </p>
+        <aside class="robodesk-ticket-meta-panel">
+            <div class="robodesk-ticket-meta-card">
+                <span class="dashicons dashicons-admin-users" aria-hidden="true"></span>
+                <span>Customer Name : <?php echo esc_html($ticket_author_name); ?></span>
             </div>
-
-            <div class="robodesk-ticket-dates">
-                <p class="robodesk-ticket-created-at rd-card-box"><strong>Created At:</strong>
-                    <?php echo esc_html($created_date); ?></p>
-                <p class="robodesk-ticket-last-updated rd-card-box <?php echo esc_attr($time_ago_class); ?>">
-                    <strong>Last
-                        Updated:</strong>
-                    <?php echo $human_readable_time ? esc_html($human_readable_time) . ' ago' : '' ?>
-                </p>
+            <div class="robodesk-ticket-meta-card">
+                <span class="dashicons dashicons-portfolio" aria-hidden="true"></span>
+                <span>Department : <?php echo esc_html(ucwords((string) $department)); ?></span>
             </div>
-        </div>
+            <div class="robodesk-ticket-meta-card robodesk-ticket-meta-status">
+                <span class="dashicons dashicons-list-view" aria-hidden="true"></span>
+                <span>Status : <?php echo esc_html(ucwords(str_replace('-', ' ', $status))); ?></span>
+            </div>
+            <div class="robodesk-ticket-meta-card robodesk-ticket-meta-priority"
+                <?php if ($priority_color) : ?>style="--rd-priority-color: <?php echo esc_attr($priority_color); ?>"
+                <?php endif; ?>>
+                <span class="dashicons dashicons-tag" aria-hidden="true"></span>
+                <span>Priority : <?php echo esc_html(ucwords($priority)); ?></span>
+            </div>
+            <div class="robodesk-ticket-meta-card">
+                <span class="dashicons dashicons-businessperson" aria-hidden="true"></span>
+                <span>Ticket Owner : <?php echo esc_html($ticket_author_name); ?></span>
+            </div>
+            <div class="robodesk-ticket-meta-card">
+                <span class="dashicons dashicons-calendar-alt" aria-hidden="true"></span>
+                <span>Start Date : <?php echo esc_html($created_display); ?></span>
+            </div>
+            <div class="robodesk-ticket-meta-card">
+                <span class="dashicons dashicons-calendar" aria-hidden="true"></span>
+                <span><?php echo esc_html($date_meta_label); ?> : <?php echo esc_html($date_meta_display); ?></span>
+            </div>
+            <div class="robodesk-ticket-meta-card">
+                <span class="dashicons dashicons-megaphone" aria-hidden="true"></span>
+                <span>Source: <?php echo esc_html(ucwords((string) $origin)); ?></span>
+            </div>
+        </aside>
     </div>
 
     <div class="robodesk-ticket-meta">
@@ -1210,7 +1297,7 @@ function robodesk_single_ticket_shortcode($atts)
                     },
 
                     complete: function() {
-                        button.val('Post Comment');
+                        button.val('Submit');
                         button.prop('disabled', false);
                     }
                 });
@@ -1263,94 +1350,98 @@ function robodesk_single_ticket_shortcode($atts)
             });
         });
         </script>
-        <?php
-        return ob_get_clean();
+    </div>
+</div>
+<?php
+    $output = ob_get_clean();
+    $post = $original_post;
+    return $output;
+}
+add_shortcode('robodesk_single_ticket', 'robodesk_single_ticket_shortcode');
+
+function robodesk_submit_comment()
+{
+    // phpcs:ignore WordPress.Security.NonceVerification.Missing
+    $comment = wp_handle_comment_submission(wp_unslash($_POST));
+
+    global $wpdb;
+    if (is_wp_error($comment)) {
+        wp_send_json_error(array(
+            'message' => $comment->get_error_message()
+        ));
+    } else {
+        $comment_id = $comment->comment_ID;
+
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+        $wpdb->update(
+            $wpdb->comments,
+            array('comment_type' => 'robodesk_ticket_replies'),
+            array('comment_ID' => $comment_id),
+            array('%s'),
+            array('%d')
+        );
+        wp_send_json_success();
     }
-    add_shortcode('robodesk_single_ticket', 'robodesk_single_ticket_shortcode');
+}
+add_action('wp_ajax_robodesk_submit_comment', 'robodesk_submit_comment');
+add_action('wp_ajax_nopriv_robodesk_submit_comment', 'robodesk_submit_comment');
 
-    function robodesk_submit_comment()
-    {
-        // phpcs:ignore WordPress.Security.NonceVerification.Missing
-        $comment = wp_handle_comment_submission(wp_unslash($_POST));
 
-        global $wpdb;
-        if (is_wp_error($comment)) {
-            wp_send_json_error(array(
-                'message' => $comment->get_error_message()
-            ));
-        } else {
-            $comment_id = $comment->comment_ID;
+//Shortcode for login form
+function robodesk_login_form_shortcode()
+{
+    if (is_user_logged_in()) {
+        $dashboard_page = get_page_by_path('dashboard');
+        $redirect_url = $dashboard_page ? get_permalink($dashboard_page->ID) : home_url();
 
-            // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
-            $wpdb->update(
-                $wpdb->comments,
-                array('comment_type' => 'robodesk_ticket_replies'),
-                array('comment_ID' => $comment_id),
-                array('%s'),
-                array('%d')
-            );
-            wp_send_json_success();
-        }
+        wp_safe_redirect($redirect_url);
+        exit;
     }
-    add_action('wp_ajax_robodesk_submit_comment', 'robodesk_submit_comment');
-    add_action('wp_ajax_nopriv_robodesk_submit_comment', 'robodesk_submit_comment');
 
+    // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+    if (isset($_GET['login']) && sanitize_text_field(wp_unslash($_GET['login'])) == 'failed') {
+        $error_message = '<p class="robodesk-error">Invalid username or password.</p>';
+    } else {
+        $error_message = '';
+    }
 
-    //Shortcode for login form
-    function robodesk_login_form_shortcode()
-    {
-        if (is_user_logged_in()) {
-            $dashboard_page = get_page_by_path('dashboard');
-            $redirect_url = $dashboard_page ? get_permalink($dashboard_page->ID) : home_url();
-
-            wp_safe_redirect($redirect_url);
-            exit;
-        }
-
-        // phpcs:ignore WordPress.Security.NonceVerification.Recommended
-        if (isset($_GET['login']) && sanitize_text_field(wp_unslash($_GET['login'])) == 'failed') {
-            $error_message = '<p class="robodesk-error">Invalid username or password.</p>';
-        } else {
-            $error_message = '';
-        }
-
-        ob_start();
+    ob_start();
+?>
+<div class="robodesk-login-form robodesk-container">
+    <h2>Login</h2>
+    <?php
+        // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+        echo $error_message;
         ?>
-        <div class="robodesk-login-form robodesk-container">
-            <h2>Login</h2>
-            <?php
-                // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
-                echo $error_message;
-                ?>
-            <form name="robodesk-login-form" id="robodesk-login-form"
-                action="<?php echo esc_url(site_url('wp-login.php')); ?>" method="post">
-                <p>
-                    <label for="user_login">Username or Email<br />
-                        <input type="text" name="log" id="user_login" class="input" value="<?php
-                                                                                                // phpcs:disable WordPress.Security.NonceVerification.Missing, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized, WordPress.Security.ValidatedSanitizedInput.MissingUnslash
-                                                                                                echo esc_attr(wp_unslash(isset($_POST['log']) ? $_POST['log'] : ''));
-                                                                                                // phpcs:enable WordPress.Security.NonceVerification.Missing, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized, WordPress.Security.ValidatedSanitizedInput.MissingUnslash
-                                                                                                ?>" size="20"
-                            autocapitalize="off" />
-                    </label>
-                </p>
-                <p>
-                    <label for="user_pass">Password<br />
-                        <input type="password" name="pwd" id="user_pass" class="input" value="" size="20" />
-                    </label>
-                </p>
-                <p class="forgetmenot"><label for="rememberme"><input name="rememberme" type="checkbox" id="rememberme"
-                            value="forever" /> Remember Me</label></p>
-                <p class="submit">
-                    <input type="submit" name="wp-submit" id="wp-submit" class="button button-primary" value="Log In" />
-                    <input type="hidden" name="redirect_to" value="<?php echo esc_url(get_permalink()); ?>" />
-                </p>
-            </form>
-            <p id="nav">
-                <a href="<?php echo esc_url(wp_lostpassword_url()); ?>">Lost your password?</a>
-            </p>
-        </div>
-        <?php
-        return ob_get_clean();
-    }
-    add_shortcode('robodesk_login_form', 'robodesk_login_form_shortcode');
+    <form name="robodesk-login-form" id="robodesk-login-form" action="<?php echo esc_url(site_url('wp-login.php')); ?>"
+        method="post">
+        <p>
+            <label for="user_login">Username or Email<br />
+                <input type="text" name="log" id="user_login" class="input" value="<?php
+                                                                                        // phpcs:disable WordPress.Security.NonceVerification.Missing, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized, WordPress.Security.ValidatedSanitizedInput.MissingUnslash
+                                                                                        echo esc_attr(wp_unslash(isset($_POST['log']) ? $_POST['log'] : ''));
+                                                                                        // phpcs:enable WordPress.Security.NonceVerification.Missing, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized, WordPress.Security.ValidatedSanitizedInput.MissingUnslash
+                                                                                        ?>" size="20"
+                    autocapitalize="off" />
+            </label>
+        </p>
+        <p>
+            <label for="user_pass">Password<br />
+                <input type="password" name="pwd" id="user_pass" class="input" value="" size="20" />
+            </label>
+        </p>
+        <p class="forgetmenot"><label for="rememberme"><input name="rememberme" type="checkbox" id="rememberme"
+                    value="forever" /> Remember Me</label></p>
+        <p class="submit">
+            <input type="submit" name="wp-submit" id="wp-submit" class="button button-primary" value="Log In" />
+            <input type="hidden" name="redirect_to" value="<?php echo esc_url(get_permalink()); ?>" />
+        </p>
+    </form>
+    <p id="nav">
+        <a href="<?php echo esc_url(wp_lostpassword_url()); ?>">Lost your password?</a>
+    </p>
+</div>
+<?php
+    return ob_get_clean();
+}
+add_shortcode('robodesk_login_form', 'robodesk_login_form_shortcode');
