@@ -2108,6 +2108,8 @@ function robodesk_handle_bulk_action()
     // Process based on bulk action
     $updated_count = 0;
     $errors = array();
+    $user_id = get_current_user_id();
+    $user_object = get_userdata($user_id);
 
     foreach ($ticket_ids as $ticket_id) {
         // Verify post type to prevent accidental updates
@@ -2215,6 +2217,60 @@ function robodesk_handle_bulk_action()
                     $errors[] = "Failed to update assignee for ticket ID: $ticket_id";
                 }
                 break;
+        }
+
+        if ($action_type !== 'delete' && $user_object) {
+            $comment_content = '';
+            $comment_meta = array(
+                'is_action' => true,
+            );
+
+            if ($action_type === 'status') {
+                $comment_content = 'Conversation status changed to ' . $action_value . ' by ' . $user_object->display_name;
+            } elseif ($action_type === 'priority') {
+                $comment_content = 'Conversation priority changed to ' . $action_value . ' by ' . $user_object->display_name;
+            } elseif ($action_type === 'assignee') {
+                $assignee_display = '';
+                if (is_numeric($action_value)) {
+                    $assignee_user = get_user_by('id', (int) $action_value);
+                } else {
+                    $assignee_user = get_user_by('display_name', $action_value);
+                    if (!$assignee_user) {
+                        $assignee_user = get_user_by('login', $action_value);
+                    }
+                }
+
+                if ($assignee_user) {
+                    $assignee_display = $assignee_user->display_name;
+                }
+
+                if ($assignee_display === '') {
+                    $assignee_display = $action_value;
+                }
+
+                $comment_content = 'Conversation assigned to ' . $assignee_display . ' by ' . $user_object->display_name;
+            }
+
+            if ($comment_content !== '') {
+                $comment_id = wp_insert_comment(array(
+                    'comment_post_ID'      => $ticket_id,
+                    'comment_author'       => $user_object->display_name,
+                    'comment_author_email' => $user_object->user_email,
+                    'user_id'              => $user_id,
+                    'comment_content'      => $comment_content,
+                    'comment_approved'     => 1,
+                    'comment_type'         => 'ticket_replies',
+                    'is_robodesk_reply'    => true,
+                    'comment_meta'         => $comment_meta,
+                ));
+
+                if (is_wp_error($comment_id)) {
+                    $errors[] = "Failed to add comment for ticket ID: $ticket_id";
+                } elseif ($action_type === 'priority' || $action_type === 'assignee') {
+                    add_comment_meta($comment_id, 'comment_source', 'admin', true);
+                    add_comment_meta($comment_id, 'author_type', 'agent', true);
+                }
+            }
         }
     }
 
