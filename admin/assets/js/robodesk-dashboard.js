@@ -3640,7 +3640,7 @@ document.addEventListener("DOMContentLoaded", function () {
         const warningText =
           action === "delete" ? " This action cannot be undone." : "";
 
-        showCustomConfirm(
+        showBulkActionConfirm(
           `Are you sure you want to ${actionText} ${selectedIds.length} ticket(s)?${warningText}`,
           function onConfirm() {
             performBulkAction(selectedIds, action);
@@ -3674,6 +3674,31 @@ document.addEventListener("DOMContentLoaded", function () {
       modal.innerHTML = `
       <div class="bg-white rounded-lg shadow-lg p-6 max-w-sm w-full text-center">
         <div class="mb-4 text-lg font-medium text-gray-800">${message}</div>
+        <div class="flex justify-center gap-4">
+        <button id="custom-confirm-yes" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Yes</button>
+        <button id="custom-confirm-no" class="px-4 py-2 bg-gray-300 text-gray-800 rounded hover:bg-gray-400">Cancel</button>
+        </div>
+      </div>
+      `;
+      document.body.appendChild(modal);
+
+      modal.querySelector("#custom-confirm-yes").onclick = function () {
+        document.body.removeChild(modal);
+        if (typeof onConfirm === "function") onConfirm();
+      };
+      modal.querySelector("#custom-confirm-no").onclick = function () {
+        document.body.removeChild(modal);
+      };
+    }
+
+    function showBulkActionConfirm(message, onConfirm) {
+      const modal = document.createElement("div");
+      modal.className =
+        "fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40";
+      modal.innerHTML = `
+      <div class="bg-white rounded-lg shadow-lg p-6 max-w-sm w-full text-center">
+        <div class="mb-4 text-lg font-medium text-gray-800 text-center">${message}</div>
+       
         <div class="flex justify-center gap-4">
         <button id="custom-confirm-yes" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Yes</button>
         <button id="custom-confirm-no" class="px-4 py-2 bg-gray-300 text-gray-800 rounded hover:bg-gray-400">Cancel</button>
