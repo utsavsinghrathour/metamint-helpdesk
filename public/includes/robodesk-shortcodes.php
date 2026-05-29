@@ -1114,7 +1114,7 @@ function robodesk_single_ticket_shortcode($atts)
             <p class="robodesk-ticket-id"><strong>Ticket id:</strong>
                 <?php echo esc_html('#' . $ticket_id); ?></p>
             <div class="robodesk-ticket-subject">
-                <h2><?php echo esc_html($ticket->post_title); ?></h2>
+                <h2>Subject: <?php echo esc_html($ticket->post_title); ?></h2>
             </div>
 
             <div class="robodesk-ticket-details">
@@ -1167,6 +1167,13 @@ function robodesk_single_ticket_shortcode($atts)
                     <?php echo $human_readable_time ? esc_html($human_readable_time) . ' ago' : '' ?>
                 </p>
             </div>
+            <div class="robodesk-ticket-origin">
+                <p class="robodesk-ticket-channel rd-card-box"><strong>Channel:</strong> <span
+                        class="robodesk-channel-pill <?php echo esc_attr(strtolower($channel)); ?>"
+                        style="background:<?php echo esc_attr($channel_color) ?>"><?php echo esc_html(ucwords($channel)); ?></span>
+                </p>
+            </div>
+
         </div>
     </div>
 

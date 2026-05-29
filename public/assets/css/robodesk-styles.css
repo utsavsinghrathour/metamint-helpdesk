@@ -1,6 +1,8 @@
 /* General Styles */
 :root {
   --rd-primary-color: #007cba;
+  --rd-brand-color: #076c45;
+  --rd-light-brand-color: #e7f3ec;
 }
 
 .robodesk-container {
@@ -179,7 +181,6 @@
   display: flex;
   flex-direction: column;
   gap: 10px;
-  margin-top: 10px;
 }
 
 .robodesk-dashboard-content .robodesk-single-ticket .robodesk-ticket-meta p {
@@ -545,14 +546,9 @@ SINGLE TICKET
   width: 25%;
 }
 
-.robodesk-right-column {
-  border: 1px solid #f2f1f1;
-  padding: 20px;
-  margin-left: 20px;
-}
-
 .rd-card-box {
-  background-color: #f0f0f0;
+  background-color: var(--rd-light-brand-color);
+  border: 1px solid var(--rd-light-brand-color);
   padding: 20px;
   margin: 0;
 }
@@ -574,8 +570,8 @@ SINGLE TICKET
 
 .robodesk-single-ticket-row .ticket_replies {
   list-style: none;
-  background-color: #f9fafb;
-  border: 1px solid #f2f1f1;
+  background-color: var(--rd-light-brand-color);
+  border: 1px solid var(--rd-light-brand-color);
   padding: 20px;
 }
 
@@ -596,6 +592,17 @@ SINGLE TICKET
 
 .robodesk-single-ticket-row .ticket_replies.thread-odd .comment-content {
   text-align: right;
+}
+
+.robodesk-single-ticket-row .comment-content img {
+  width: 250px;
+  height: auto;
+}
+
+.robodesk-right-column {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
 
 @media (max-width: 768px) {
