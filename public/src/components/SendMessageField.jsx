@@ -5,6 +5,7 @@ import { useAppData } from '../utils/AppDataContext';
 
 const SendMessageField = ({ setShowLogin, setActiveTab, updateSelectedTicket, handleFocusedTextArea, focused }) => {
     const [message, setMessage] = useState("");
+    const [isSubmitting, setIsSubmitting] = useState(false);
     const [loggedIn, setLoggedIn] = useState(false);
     const [userId, setUserId] = useState(null);
     const [placeHolderText, setplaceHolderText] = useState('Start a conversation...');
@@ -21,6 +22,7 @@ const SendMessageField = ({ setShowLogin, setActiveTab, updateSelectedTicket, ha
 
     const textareaRef = useRef(null);
     const prevFocusedRef = useRef(false);
+    const submitLockRef = useRef(false);
 
     useEffect(() => {
         if (!prevFocusedRef.current && focused) {
@@ -57,19 +59,22 @@ const SendMessageField = ({ setShowLogin, setActiveTab, updateSelectedTicket, ha
 
 
     const handleSend = async () => {
+        const trimmedMessage = message.trim();
 
-
-        if (!message.trim()) return;
+        if (!trimmedMessage || submitLockRef.current || isSubmitting) return;
         if (!loggedinContext) {
-            localStorage.setItem('temp_ticket_title', message);
+            localStorage.setItem('temp_ticket_title', trimmedMessage);
             setActiveTab(1);
             setShowLogin(true);
 
             return;
         }
 
+        submitLockRef.current = true;
+        setIsSubmitting(true);
+
         try {
-            const result = await createTicket(loggedInUsrId, message, '');
+            const result = await createTicket(loggedInUsrId, trimmedMessage, '');
 
             const newTicket = {
                 id: result.data.id,
@@ -90,6 +95,9 @@ const SendMessageField = ({ setShowLogin, setActiveTab, updateSelectedTicket, ha
 
         } catch (error) {
             console.error("Failed to create ticket:", error);
+        } finally {
+            submitLockRef.current = false;
+            setIsSubmitting(false);
         }
 
     };
@@ -111,7 +119,7 @@ const SendMessageField = ({ setShowLogin, setActiveTab, updateSelectedTicket, ha
                     style={{ minHeight: "42px", maxHeight: "200px" }}
                     onKeyPress={(e) => {
                         if (e.key === "Enter" && !e.shiftKey) {
-                            //   e.preventDefault();
+                            e.preventDefault();
                             handleSend();
                         }
                     }}
@@ -125,7 +133,7 @@ const SendMessageField = ({ setShowLogin, setActiveTab, updateSelectedTicket, ha
                         handleSend();
                     }}
                     className="rd-bg-transparent rd-border-none rd-text-blue rd-p-0"
-                    disabled={!message.trim()}
+                    disabled={!message.trim() || isSubmitting}
                 >
                     <svg
                         xmlns="http://www.w3.org/2000/svg"
