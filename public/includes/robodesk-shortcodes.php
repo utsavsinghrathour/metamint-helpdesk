@@ -427,10 +427,12 @@ function robodesk_frontend_dashboard_shortcode()
 
 
         $menu_items = apply_filters('robodesk_frontend_dashboard_menu_items', array());
+        $is_single_ticket_view = !empty($ticket_id) && get_post_type($ticket_id) == 'robodesk_ticket';
+        $dashboard_page_class = $is_single_ticket_view ? 'single-ticket' : sanitize_html_class($current_page);
 
         ob_start();
     ?>
-<div class="robodesk-frontend-dashboard robodesk-container">
+<div class="robodesk-frontend-dashboard robodesk-container robodesk-page-<?php echo esc_attr($dashboard_page_class); ?>">
     <!-- Always render both, control visibility with CSS -->
     <nav class="desktop-menu">
         <ul>
@@ -457,7 +459,7 @@ function robodesk_frontend_dashboard_shortcode()
     </select>
     <div class="robodesk-dashboard-content">
         <?php
-                if (!empty($ticket_id) && get_post_type($ticket_id) == 'robodesk_ticket') {
+                if ($is_single_ticket_view) {
                     echo do_shortcode('[robodesk_single_ticket id="' . $ticket_id . '"]');
                 } else if (array_key_exists($current_page, $menu_items)) {
                     if ($current_page == 'dashboard') {
@@ -1050,6 +1052,9 @@ function robodesk_single_ticket_shortcode($atts)
 
     $ticket = get_post($ticket_id);
     $status = get_post_meta($ticket_id, '_robodesk_ticket_status', true);
+    if ($status === '') {
+        $status = 'open';
+    }
     $priority_terms = wp_get_object_terms($ticket_id, 'robodesk_ticket_priority');
 
     $priority = !empty($priority_terms) && !is_wp_error($priority_terms) ? $priority_terms[0]->name : 'N/A';
@@ -1062,8 +1067,69 @@ function robodesk_single_ticket_shortcode($atts)
 
     $created_date = get_the_date('Y-m-d H:i:s', $ticket);
     $updated_date = get_the_modified_date('Y-m-d H:i:s', $ticket);
+    $created_display = get_the_date('m/d/Y', $ticket);
+    $updated_display = get_the_modified_date('m/d/Y', $ticket);
+    $date_meta_label = 'Last Updated';
+    $date_meta_display = $updated_display;
     $time_ago = human_time_diff(get_the_modified_time('U', $ticket), current_time('timestamp'));
     $time_ago_class = '';
+
+    foreach (array('_robodesk_due_date', 'robodesk_due_date', '_ticket_due_date', 'ticket_due_date', 'due_date') as $due_date_meta_key) {
+        $due_date_value = get_post_meta($ticket_id, $due_date_meta_key, true);
+        if (!empty($due_date_value)) {
+            $due_timestamp = strtotime((string) $due_date_value);
+            $date_meta_label = 'Due Date';
+            $date_meta_display = $due_timestamp ? date_i18n('m/d/Y', $due_timestamp) : (string) $due_date_value;
+            break;
+        }
+    }
+
+    $origin = get_post_meta($ticket_id, 'robodesk_ticket_origin', true);
+    if (empty($origin)) {
+        $origin_terms = wp_get_post_terms($ticket_id, 'robodesk_ticket_origin');
+        if (!is_wp_error($origin_terms) && !empty($origin_terms)) {
+            $origin = $origin_terms[0]->name;
+        }
+    }
+    $origin = $origin ?: 'Web';
+
+    $department_terms = wp_get_post_terms($ticket_id, 'robodesk_ticket_category');
+    $department = (!is_wp_error($department_terms) && !empty($department_terms)) ? $department_terms[0]->name : '';
+    if ($department === '') {
+        $department_terms = get_the_terms($ticket_id, 'robodesk_ticket_category');
+        $department = (!is_wp_error($department_terms) && !empty($department_terms)) ? $department_terms[0]->name : '';
+    }
+    if ($department === '') {
+        global $wpdb;
+        // Fallback for frontend views where taxonomy helper caches may not include the latest admin selection.
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+        $department = (string) $wpdb->get_var(
+            $wpdb->prepare(
+                "SELECT t.name
+                FROM {$wpdb->terms} t
+                INNER JOIN {$wpdb->term_taxonomy} tt ON t.term_id = tt.term_id
+                INNER JOIN {$wpdb->term_relationships} tr ON tt.term_taxonomy_id = tr.term_taxonomy_id
+                WHERE tr.object_id = %d
+                AND tt.taxonomy = %s
+                LIMIT 1",
+                $ticket_id,
+                'robodesk_ticket_category'
+            )
+        );
+    }
+    if ($department === '') {
+        $default_department_id = get_option('robodesk_default_ticket_category', '');
+        if (!empty($default_department_id)) {
+            $default_department = get_term((int) $default_department_id, 'robodesk_ticket_category');
+            if ($default_department && !is_wp_error($default_department)) {
+                $department = $default_department->name;
+            }
+        }
+    }
+    $department = $department ?: 'General';
+
+    $ticket_author = get_userdata((int) $ticket->post_author);
+    $ticket_author_name = $ticket_author && !empty($ticket_author->display_name) ? $ticket_author->display_name : 'Customer';
 
 
     $comments = get_comments(array(
@@ -1108,66 +1174,70 @@ function robodesk_single_ticket_shortcode($atts)
 */
 ?>
 <div class="robodesk-single-ticket robodesk-container">
-    <div class="robodesk-single-ticket-row d-flex flex-wrap gap-20">
-        <div class="robodesk-left-column rd-col-75">
-
-            <p class="robodesk-ticket-id"><strong>Ticket id:</strong>
-                <?php echo esc_html('#' . $ticket_id); ?></p>
+    <div class="robodesk-single-ticket-shell">
+        <div class="robodesk-ticket-main-panel">
+            <p class="robodesk-ticket-id">Ticket No. <?php echo esc_html($ticket_id); ?></p>
             <div class="robodesk-ticket-subject">
-                <h2><?php echo esc_html($ticket->post_title); ?></h2>
+                <h2>Subject : <?php echo esc_html($ticket->post_title); ?></h2>
             </div>
 
-            <div class="robodesk-ticket-details">
-                <div class="robodesk-ticket-content">
-                    <?php
-                    // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped, WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound
-                    echo apply_filters('the_content', $ticket->post_content);
-                    ?>
-                </div>
-                <div class="robodesk-ticket-comments">
-                    <?php
+            <div class="robodesk-ticket-comments">
+                <?php
 
-                    if (comments_open($ticket_id) || get_comments_number($ticket_id) > 0) {
+                if (comments_open($ticket_id) || get_comments_number($ticket_id) > 0) {
 
-                        $plugin_template = plugin_dir_path(dirname(__FILE__, 2)) . 'templates/comments-ticket.php';
+                    $plugin_template = plugin_dir_path(dirname(__FILE__, 2)) . 'templates/comments-ticket.php';
 
-                        add_filter('comments_template', function ($theme_template) use ($plugin_template) {
-                            if (file_exists($plugin_template)) {
-                                return $plugin_template;
-                            }
-                            return $theme_template;
-                        });
+                    add_filter('comments_template', function ($theme_template) use ($plugin_template) {
+                        if (file_exists($plugin_template)) {
+                            return $plugin_template;
+                        }
+                        return $theme_template;
+                    });
 
-                        comments_template();
-                    } else {
-                        echo '<p>Comments are closed.</p>';
-                    }
-                    ?>
-                </div>
+                    comments_template();
+                } else {
+                    echo '<p>Comments are closed.</p>';
+                }
+                ?>
             </div>
         </div>
 
-        <div class="robodesk-right-column rd-col-25">
-            <div class="robodesk-ticket-status-priority">
-                <p class="robodesk-ticket-status rd-card-box"><strong>Status:</strong> <span
-                        class="robodesk-status-pill <?php echo esc_attr(strtolower($status)); ?>">
-                        <?php echo esc_html(ucwords($status)); ?></span></p>
-                <p class="robodesk-ticket-priority rd-card-box"><strong>Priority:</strong><span
-                        class="robodesk-priority-pill <?php echo esc_attr(strtolower($priority)); ?>"
-                        style="background:<?php echo esc_attr($priority_color) ?>"><?php echo esc_html(ucwords($priority)); ?></span>
-                </p>
+        <aside class="robodesk-ticket-meta-panel">
+            <div class="robodesk-ticket-meta-card">
+                <span class="dashicons dashicons-admin-users" aria-hidden="true"></span>
+                <span>Customer Name : <?php echo esc_html($ticket_author_name); ?></span>
             </div>
-
-            <div class="robodesk-ticket-dates">
-                <p class="robodesk-ticket-created-at rd-card-box"><strong>Created At:</strong>
-                    <?php echo esc_html($created_date); ?></p>
-                <p class="robodesk-ticket-last-updated rd-card-box <?php echo esc_attr($time_ago_class); ?>">
-                    <strong>Last
-                        Updated:</strong>
-                    <?php echo $human_readable_time ? esc_html($human_readable_time) . ' ago' : '' ?>
-                </p>
+            <div class="robodesk-ticket-meta-card">
+                <span class="dashicons dashicons-portfolio" aria-hidden="true"></span>
+                <span>Department : <?php echo esc_html(ucwords((string) $department)); ?></span>
             </div>
-        </div>
+            <div class="robodesk-ticket-meta-card robodesk-ticket-meta-status">
+                <span class="dashicons dashicons-list-view" aria-hidden="true"></span>
+                <span>Status : <?php echo esc_html(ucwords(str_replace('-', ' ', $status))); ?></span>
+            </div>
+            <div class="robodesk-ticket-meta-card robodesk-ticket-meta-priority"
+                <?php if ($priority_color) : ?>style="--rd-priority-color: <?php echo esc_attr($priority_color); ?>"<?php endif; ?>>
+                <span class="dashicons dashicons-tag" aria-hidden="true"></span>
+                <span>Priority : <?php echo esc_html(ucwords($priority)); ?></span>
+            </div>
+            <div class="robodesk-ticket-meta-card">
+                <span class="dashicons dashicons-businessperson" aria-hidden="true"></span>
+                <span>Ticket Owner : <?php echo esc_html($ticket_author_name); ?></span>
+            </div>
+            <div class="robodesk-ticket-meta-card">
+                <span class="dashicons dashicons-calendar-alt" aria-hidden="true"></span>
+                <span>Start Date : <?php echo esc_html($created_display); ?></span>
+            </div>
+            <div class="robodesk-ticket-meta-card">
+                <span class="dashicons dashicons-calendar" aria-hidden="true"></span>
+                <span><?php echo esc_html($date_meta_label); ?> : <?php echo esc_html($date_meta_display); ?></span>
+            </div>
+            <div class="robodesk-ticket-meta-card">
+                <span class="dashicons dashicons-megaphone" aria-hidden="true"></span>
+                <span>Channel : <?php echo esc_html(ucwords((string) $origin)); ?></span>
+            </div>
+        </aside>
     </div>
 
     <div class="robodesk-ticket-meta">
@@ -1210,7 +1280,7 @@ function robodesk_single_ticket_shortcode($atts)
                     },
 
                     complete: function() {
-                        button.val('Post Comment');
+                        button.val('Submit');
                         button.prop('disabled', false);
                     }
                 });
@@ -1263,8 +1333,12 @@ function robodesk_single_ticket_shortcode($atts)
             });
         });
         </script>
+    </div>
+</div>
         <?php
-        return ob_get_clean();
+        $output = ob_get_clean();
+        $post = $original_post;
+        return $output;
     }
     add_shortcode('robodesk_single_ticket', 'robodesk_single_ticket_shortcode');
 

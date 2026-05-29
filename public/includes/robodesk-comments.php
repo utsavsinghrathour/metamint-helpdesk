@@ -8,6 +8,18 @@ if (!defined('ABSPATH')) {
 }
 
 add_filter('comment_form_defaults', 'robodesk_add_tinymce_to_comments');
+add_filter('duplicate_comment_id', 'robodesk_allow_duplicate_ticket_replies', 10, 2);
+
+function robodesk_allow_duplicate_ticket_replies($dupe_id, $commentdata)
+{
+    $comment_post_id = isset($commentdata['comment_post_ID']) ? (int) $commentdata['comment_post_ID'] : 0;
+
+    if ($comment_post_id > 0 && get_post_type($comment_post_id) === 'robodesk_ticket') {
+        return 0;
+    }
+
+    return $dupe_id;
+}
 
 function robodesk_add_tinymce_to_comments($defaults)
 {
@@ -37,11 +49,12 @@ function robodesk_add_tinymce_to_comments($defaults)
 
     wp_editor('', 'comment', array(
         'media_buttons' => false,
-        'textarea_rows' => 10,
+        'textarea_rows' => 3,
+        'editor_height' => 64,
         'teeny' => true,
         'quicktags' => false,
         'tinymce' => array(
-            'toolbar1' => 'bold italic underline link | fullscreen',
+            'toolbar1' => 'bold italic underline link',
             'toolbar2' => '',
         ),
     ));
