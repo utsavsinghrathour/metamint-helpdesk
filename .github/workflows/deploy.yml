@@ -43,12 +43,15 @@ jobs:
             cd "$DEST_PATH"
 
             echo "🧹 Cleaning old files..."
-            rm -rf wooescrow
+            rm -rf robodesk
 
             echo "📦 Extracting ZIP..."
             unzip -o "$ZIP_NAME"
 
             echo "🗑 Removing ZIP..."
             rm -f "$ZIP_NAME"
+
+            echo "🔐 Fixing ownership..."
+            chown -R www:www robodesk
 
             echo "✅ Deployment complete!"

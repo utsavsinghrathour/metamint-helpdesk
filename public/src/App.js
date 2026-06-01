@@ -34,6 +34,8 @@ const AppContent = ({ imageUrls = { logo: "" } }) => {
   const hasAutoOpenedTicket = useRef(false);
   const hasAttemptedDeepLinkFetch = useRef(false);
 
+  const isSupportPage = window.location.pathname.includes("/robodesk-support");
+
   const notificationAudio = useRef(
     new Audio(window.wpAuth?.notificationSound || ""),
   );
@@ -75,7 +77,7 @@ const AppContent = ({ imageUrls = { logo: "" } }) => {
   }, []);
 
   useEffect(() => {
-    if (!requestedTicketId || hasAutoOpenedTicket.current) {
+    if (isSupportPage || !requestedTicketId || hasAutoOpenedTicket.current) {
       return;
     }
 
@@ -102,10 +104,10 @@ const AppContent = ({ imageUrls = { logo: "" } }) => {
       setActiveTab(1);
       hasAutoOpenedTicket.current = true;
     }
-  }, [requestedTicketId, ticketsContext]);
+  }, [isSupportPage, requestedTicketId, ticketsContext]);
 
   useEffect(() => {
-    if (!requestedTicketId || hasAutoOpenedTicket.current) {
+    if (isSupportPage || !requestedTicketId || hasAutoOpenedTicket.current) {
       return;
     }
 
@@ -123,11 +125,14 @@ const AppContent = ({ imageUrls = { logo: "" } }) => {
       id: ticket.id,
       ticketNumber: ticket.ticket_number,
       title: ticket.ticket_title || ticket.title?.rendered || "",
-      source: ticket.ticket_origin,
+      source:
+        ticket.ticket_origin && ticket.ticket_origin !== "N/A"
+          ? ticket.ticket_origin
+          : "Web",
       timeAgo: ticket.ticket_time_ago ? `${ticket.ticket_time_ago} ago` : "",
       authorImage: ticket.ticket_author_image || null,
       status: ticket.ticket_status ?? "open",
-      priority: ticket.ticket_priority ?? "Medium",
+      priority: ticket.ticket_priority ?? "N/A",
       author: ticket.ticket_author,
       author_id: ticket.author,
       lastReply: ticket.ticket_last_reply,
@@ -178,7 +183,7 @@ const AppContent = ({ imageUrls = { logo: "" } }) => {
     };
 
     fetchRequestedTicket();
-  }, [requestedTicketId, loggedInUsrId]);
+  }, [isSupportPage, requestedTicketId, loggedInUsrId]);
 
   const handleSelectedTicketUpdate = (newValue) => {
     setSelectedTicket(newValue);

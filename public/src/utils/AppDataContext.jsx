@@ -156,7 +156,10 @@ export const AppDataProvider = ({ children }) => {
           id: ticket.id,
           ticketNumber: ticket.ticket_number,
           title: ticket.ticket_title,
-          source: ticket.ticket_origin,
+          source:
+            ticket.ticket_origin && ticket.ticket_origin !== 'N/A'
+              ? ticket.ticket_origin
+              : 'Web',
           timeAgo: ticket.ticket_time_ago + ' ago',
           authorImage: ticket.ticket_author_image ?? Author1,
           status: ticket.ticket_status ?? 'New',
