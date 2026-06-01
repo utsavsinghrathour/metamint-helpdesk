@@ -125,7 +125,10 @@ const AppContent = ({ imageUrls = { logo: "" } }) => {
       id: ticket.id,
       ticketNumber: ticket.ticket_number,
       title: ticket.ticket_title || ticket.title?.rendered || "",
-      source: ticket.ticket_origin,
+      source:
+        ticket.ticket_origin && ticket.ticket_origin !== "N/A"
+          ? ticket.ticket_origin
+          : "Web",
       timeAgo: ticket.ticket_time_ago ? `${ticket.ticket_time_ago} ago` : "",
       authorImage: ticket.ticket_author_image || null,
       status: ticket.ticket_status ?? "open",

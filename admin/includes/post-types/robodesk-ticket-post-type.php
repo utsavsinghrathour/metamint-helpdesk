@@ -149,6 +149,20 @@ function robodesk_register_ticket_post_type()
     register_taxonomy('robodesk_ticket_category', array('robodesk_ticket'), $ticket_category_args);
 }
 
+function robodesk_get_ticket_origin_label($ticket_id)
+{
+    $ticket_origin = get_post_meta($ticket_id, 'robodesk_ticket_origin', true);
+
+    if (empty($ticket_origin)) {
+        $origin_terms = wp_get_post_terms($ticket_id, 'robodesk_ticket_origin');
+        if (!is_wp_error($origin_terms) && !empty($origin_terms)) {
+            $ticket_origin = $origin_terms[0]->name;
+        }
+    }
+
+    return $ticket_origin ?: 'Web';
+}
+
 // Meta Box for Ticket Status (Unchanged)
 add_action('add_meta_boxes', 'robodesk_add_status_meta_box');
 function robodesk_add_status_meta_box($post)
@@ -190,11 +204,8 @@ function robodesk_save_status_meta_box_data($post_id)
             return;
         }
     }
-
-    if (isset($_POST['robodesk_ticket_status'])) {
-        update_post_meta($post_id, '_robodesk_ticket_status', sanitize_text_field(wp_unslash($_POST['robodesk_ticket_status'])));
-    }
 }
+
 
 //Adding Ticket Status on  admin_column
 add_filter('manage_robodesk_ticket_posts_columns', 'robodesk_add_ticket_status_column');
