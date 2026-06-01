@@ -209,7 +209,9 @@
   object-fit: cover;
 }
 
-.robodesk-dashboard-content .robodesk-single-ticket .robodesk-ticket-status-priority {
+.robodesk-dashboard-content
+  .robodesk-single-ticket
+  .robodesk-ticket-status-priority {
   display: flex;
   flex-direction: column;
   gap: 10px;
@@ -527,7 +529,7 @@
 }
 
 .robodesk-page-create-ticket .robodesk-container,
-.robodesk-page-profile .robodesk-dashboard-content>form,
+.robodesk-page-profile .robodesk-dashboard-content > form,
 #credential-form {
   background: #ffffff;
   border: 1px solid #edf2f7;
@@ -863,7 +865,8 @@ SINGLE TICKET
   font-weight: 700;
 }
 
-.robodesk-frontend-dashboard:has(.robodesk-single-ticket) .robodesk-dashboard-content {
+.robodesk-frontend-dashboard:has(.robodesk-single-ticket)
+  .robodesk-dashboard-content {
   background: #fbfdff;
   border: 0;
   padding: 28px 34px;
@@ -968,7 +971,10 @@ SINGLE TICKET
   padding: 0 14px;
 }
 
-.robodesk-dashboard-content .robodesk-ticket-comments .robodesk-status-selector select {
+.robodesk-dashboard-content
+  .robodesk-ticket-comments
+  .robodesk-status-selector
+  select {
   background: #ffffff;
   border: 0;
   border-right: 1px solid #e5ebf2;
@@ -1044,7 +1050,9 @@ SINGLE TICKET
   padding: 8px 14px;
 }
 
-.robodesk-dashboard-content .robodesk-ticket-comments input[type="submit"]:hover {
+.robodesk-dashboard-content
+  .robodesk-ticket-comments
+  input[type="submit"]:hover {
   background: transparent;
   color: var(--rd-brand-color);
 }
@@ -1083,7 +1091,7 @@ SINGLE TICKET
 }
 
 .robodesk-single-ticket-row .ticket_replies,
-.robodesk-ticket-comments .comment-list>li {
+.robodesk-ticket-comments .comment-list > li {
   background: transparent;
   border: 0;
   list-style: none;
@@ -1154,33 +1162,48 @@ SINGLE TICKET
   margin-bottom: 0;
 }
 
-.robodesk-ticket-comments .comment-list>li.robodesk-comment-sent .comment-body {
+.robodesk-ticket-comments
+  .comment-list
+  > li.robodesk-comment-sent
+  .comment-body {
   flex-direction: row-reverse;
   justify-content: flex-start;
   margin: 5px;
 }
 
-.robodesk-ticket-comments .comment-list>li.robodesk-comment-sent .robodesk-comment-bubble {
+.robodesk-ticket-comments
+  .comment-list
+  > li.robodesk-comment-sent
+  .robodesk-comment-bubble {
   background: #eefbf8;
   border-color: #cbece5;
   color: #183f3c;
 }
 
-.robodesk-ticket-comments .comment-list>li.robodesk-comment-sent .comment-metadata {
+.robodesk-ticket-comments
+  .comment-list
+  > li.robodesk-comment-sent
+  .comment-metadata {
   color: #6f8d8a;
   text-align: right;
 }
 
-.robodesk-ticket-comments .comment-list>li.robodesk-comment-sent .comment-meta {
+.robodesk-ticket-comments
+  .comment-list
+  > li.robodesk-comment-sent
+  .comment-meta {
   color: #0b5550;
   text-align: right;
 }
 
-.robodesk-ticket-comments .comment-list>li.robodesk-comment-same-sender {
+.robodesk-ticket-comments .comment-list > li.robodesk-comment-same-sender {
   margin-top: -6px;
 }
 
-.robodesk-ticket-comments .comment-list>li.robodesk-comment-same-sender .comment-author {
+.robodesk-ticket-comments
+  .comment-list
+  > li.robodesk-comment-same-sender
+  .comment-author {
   visibility: hidden;
 }
 
@@ -1222,9 +1245,11 @@ SINGLE TICKET
 
 .robodesk-ticket-meta-priority {
   background: #fff1c2;
-  background: color-mix(in srgb,
-      var(--rd-priority-color, #f4c84b) 24%,
-      #fff 76%);
+  background: color-mix(
+    in srgb,
+    var(--rd-priority-color, #f4c84b) 24%,
+    #fff 76%
+  );
 }
 
 .d-flex {
@@ -1777,7 +1802,9 @@ td.credential_url a {
   background: #ffffff;
 }
 
-.robodesk-frontend-dashboard .robodesk-ticket-table-content:hover td:first-child {
+.robodesk-frontend-dashboard
+  .robodesk-ticket-table-content:hover
+  td:first-child {
   background: #fbfffe;
 }
 
@@ -1913,7 +1940,7 @@ td.credential_url a {
 }
 
 .robodesk-frontend-dashboard.robodesk-page-profile img.avatar,
-.robodesk-frontend-dashboard.robodesk-page-profile form>img {
+.robodesk-frontend-dashboard.robodesk-page-profile form > img {
   border: 3px solid #ffffff;
   border-radius: 999px;
   box-shadow: 0 8px 18px rgba(15, 23, 42, 0.12);
@@ -1967,7 +1994,8 @@ td.credential_url a {
     min-height: 0;
   }
 
-  .robodesk-frontend-dashboard:has(.robodesk-single-ticket) .robodesk-dashboard-content {
+  .robodesk-frontend-dashboard:has(.robodesk-single-ticket)
+    .robodesk-dashboard-content {
     padding: 24px 16px;
   }
 

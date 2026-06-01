@@ -34,6 +34,8 @@ const AppContent = ({ imageUrls = { logo: "" } }) => {
   const hasAutoOpenedTicket = useRef(false);
   const hasAttemptedDeepLinkFetch = useRef(false);
 
+  const isSupportPage = window.location.pathname.includes("/robodesk-support");
+
   const notificationAudio = useRef(
     new Audio(window.wpAuth?.notificationSound || ""),
   );
@@ -75,7 +77,7 @@ const AppContent = ({ imageUrls = { logo: "" } }) => {
   }, []);
 
   useEffect(() => {
-    if (!requestedTicketId || hasAutoOpenedTicket.current) {
+    if (isSupportPage || !requestedTicketId || hasAutoOpenedTicket.current) {
       return;
     }
 
@@ -102,10 +104,10 @@ const AppContent = ({ imageUrls = { logo: "" } }) => {
       setActiveTab(1);
       hasAutoOpenedTicket.current = true;
     }
-  }, [requestedTicketId, ticketsContext]);
+  }, [isSupportPage, requestedTicketId, ticketsContext]);
 
   useEffect(() => {
-    if (!requestedTicketId || hasAutoOpenedTicket.current) {
+    if (isSupportPage || !requestedTicketId || hasAutoOpenedTicket.current) {
       return;
     }
 
@@ -178,7 +180,7 @@ const AppContent = ({ imageUrls = { logo: "" } }) => {
     };
 
     fetchRequestedTicket();
-  }, [requestedTicketId, loggedInUsrId]);
+  }, [isSupportPage, requestedTicketId, loggedInUsrId]);
 
   const handleSelectedTicketUpdate = (newValue) => {
     setSelectedTicket(newValue);
