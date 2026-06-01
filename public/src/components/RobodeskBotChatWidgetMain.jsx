@@ -171,8 +171,11 @@ export default function RobodeskBotChatWidgetMain({
 
   useEffect(() => {
     sessionStorage.setItem(CHAT_KEY, JSON.stringify(messages));
-    fetchApiKey();
   }, [messages]);
+
+  useEffect(() => {
+    fetchApiKey();
+  }, []);
 
   // Configuration is now passed via props, no need to read from DOM
 
@@ -253,7 +256,7 @@ export default function RobodeskBotChatWidgetMain({
       })
     );
     setIsStreaming(true);
-    setLoadingText("Thinking...");
+    setLoadingText("...");
 
     const headers = { "Content-Type": "application/json" };
     if (window.RobodeskBotConfig?.restNonce) {
@@ -496,7 +499,7 @@ export default function RobodeskBotChatWidgetMain({
                 }}
               >
                 <span className="rd-body-text single-message">
-                  {loadingText || "Thinking..."}
+                  {loadingText || "..."}
                 </span>
               </div>
             </div>
