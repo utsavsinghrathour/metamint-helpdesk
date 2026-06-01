@@ -1103,14 +1103,12 @@ function robodesk_get_ticket_detail()
     $author = get_userdata((int) $post->post_author);
     $ticket_status = get_post_meta($ticket_id, '_robodesk_ticket_status', true) ?: 'N/A';
 
-    $ticket_origin = get_post_meta($ticket_id, 'robodesk_ticket_origin', true);
-    if (empty($ticket_origin)) {
-        $origin_terms = wp_get_post_terms($ticket_id, 'robodesk_ticket_origin');
-        if (!is_wp_error($origin_terms) && !empty($origin_terms)) {
-            $ticket_origin = $origin_terms[0]->name;
-        }
-    }
-    $ticket_origin = $ticket_origin ?: 'N/A';
+    $ticket_origin = function_exists('robodesk_get_ticket_origin_label')
+        ? robodesk_get_ticket_origin_label($ticket_id)
+        : (
+            get_post_meta($ticket_id, 'robodesk_ticket_origin', true)
+            ?: 'Web'
+        );
 
     $priority_terms = get_the_terms($ticket_id, 'robodesk_ticket_priority');
     $ticket_priority = $priority_terms && !is_wp_error($priority_terms) ? $priority_terms[0]->name : 'N/A';

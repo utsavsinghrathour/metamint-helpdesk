@@ -80,7 +80,10 @@ const SendMessageField = ({ setShowLogin, setActiveTab, updateSelectedTicket, ha
                 id: result.data.id,
                 ticketNumber: result.data.ticket_number,
                 title: result.data.ticket_title,
-                source: result.data.ticket_origin,
+                source:
+                    result.data.ticket_origin && result.data.ticket_origin !== 'N/A'
+                        ? result.data.ticket_origin
+                        : 'Web',
                 timeAgo: result.data.ticket_time_ago,
                 authorImage: result.data.ticket_author_image,
                 status: result.data.ticket_status,

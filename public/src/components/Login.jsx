@@ -360,7 +360,11 @@ const Login = ({
         id: ticketResponse.data.id,
         ticketNumber: ticketResponse.data.ticket_number,
         title: ticketResponse.data.ticket_title,
-        source: ticketResponse.data.ticket_origin,
+        source:
+          ticketResponse.data.ticket_origin &&
+          ticketResponse.data.ticket_origin !== 'N/A'
+            ? ticketResponse.data.ticket_origin
+            : 'Web',
         timeAgo: ticketResponse.data.ticket_time_ago,
         authorImage: ticketResponse.data.ticket_author_image,
         status: ticketResponse.data.ticket_status,
