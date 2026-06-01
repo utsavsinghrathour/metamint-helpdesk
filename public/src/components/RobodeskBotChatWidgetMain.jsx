@@ -253,7 +253,7 @@ export default function RobodeskBotChatWidgetMain({
       })
     );
     setIsStreaming(true);
-    setLoadingText("Thinking...");
+    setLoadingText("...");
 
     const headers = { "Content-Type": "application/json" };
     if (window.RobodeskBotConfig?.restNonce) {
@@ -496,7 +496,7 @@ export default function RobodeskBotChatWidgetMain({
                 }}
               >
                 <span className="rd-body-text single-message">
-                  {loadingText || "Thinking..."}
+                  {loadingText || "..."}
                 </span>
               </div>
             </div>
