@@ -388,7 +388,14 @@ function robodesk_get_user_notifications($user_id, $limit = 20)
     }
 
     // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter
-    $notifications = $wpdb->get_results($wpdb->prepare("SELECT * FROM {$table_name} WHERE user_id = %d ORDER BY notification_date DESC LIMIT %d", $user_id, $limit));
+    $notifications = $wpdb->get_results(
+        $wpdb->prepare(
+            "SELECT * FROM {$table_name} WHERE (user_id = %d OR recipient_user_id = %d) ORDER BY notification_date DESC LIMIT %d",
+            $user_id,
+            $user_id,
+            $limit
+        )
+    );
 
     return $notifications;
 }
@@ -407,7 +414,8 @@ function robodesk_get_notification_count($user_id)
     // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
     return (int) $wpdb->get_var(
         $wpdb->prepare(
-            "SELECT COUNT(*) FROM {$table_name} WHERE user_id = %d AND read_at IS NULL",
+            "SELECT COUNT(*) FROM {$table_name} WHERE (user_id = %d OR recipient_user_id = %d) AND read_at IS NULL",
+            $user_id,
             $user_id
         )
     );
