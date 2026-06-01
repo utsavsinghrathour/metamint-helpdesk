@@ -907,11 +907,6 @@ function robodesk_frontend_dashboard_menu($items)
             'function' => 'robodesk_credentials_page',
         ),
     );
-    if (class_exists('WooCommerce')) {
-        unset($new_items['profile']);
-    }
-
-
     return $new_items;
 }
 add_filter('robodesk_frontend_dashboard_menu_items', 'robodesk_frontend_dashboard_menu');
