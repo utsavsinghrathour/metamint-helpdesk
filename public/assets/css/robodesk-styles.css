@@ -15,10 +15,6 @@
   --rd-border-color: #d9e4ef;
 }
 
-* {
-  box-sizing: border-box;
-}
-
 /* ----------------------------------------------------------
    UTILITY
 ---------------------------------------------------------- */
@@ -876,7 +872,7 @@ td.credential_url a {
   align-self: stretch;
   border-right: 1px solid var(--rd-brand-color-light);
   display: flex;
-  flex: 0 0 118px;
+  flex: 0 0 125px;
   font-size: 13px;
   font-weight: 600;
   margin: 0;
@@ -1336,7 +1332,7 @@ td.credential_url a {
   width: 40px;
   height: 40px;
   border: 4px solid #f3f3f3;
-  border-top: 4px solid var(--rd-brand-color);
+  border-top: 4px solid #3498db;
   border-radius: 50%;
   animation: spin 1s linear infinite;
   z-index: 1000;

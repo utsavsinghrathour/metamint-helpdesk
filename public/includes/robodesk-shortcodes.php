@@ -404,11 +404,9 @@ function robodesk_frontend_dashboard_shortcode()
         $total_tickets_query = new WP_Query($total_tickets_args);
         $total_tickets = $total_tickets_query->post_count;
 
-
-        global $wpdb;
-        $notification_table = $wpdb->prefix . 'robodesk_ticket_notes';
-        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter
-        $notification_count = $wpdb->get_var($wpdb->prepare("SELECT COUNT(*) FROM {$notification_table} WHERE user_id = %d AND status = 'unread'", $user_id));
+        $notification_count = function_exists('robodesk_get_notification_count')
+            ? robodesk_get_notification_count($user_id)
+            : 0;
 
 
         $menu_items = apply_filters('robodesk_frontend_dashboard_menu_items', array());
