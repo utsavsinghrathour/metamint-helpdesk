@@ -705,7 +705,8 @@ function robodesk_get_new_tickets($last_id_client, $user_id)
     foreach ($sending_tickets_data as $conversations) {
         $ticket_id = $conversations->ID;
         $ticket_number = 'TCKT-' . str_pad($ticket_id, 3, '0', STR_PAD_LEFT);
-        $priority_name = get_post_meta($ticket_id, '_robodesk_ticket_priority', true) ?: 'Medium';
+        $priority_terms = get_the_terms($ticket_id, 'robodesk_ticket_priority');
+        $priority_name = (!is_wp_error($priority_terms) && !empty($priority_terms)) ? $priority_terms[0]->name : 'N/A';
 
         // Author details
         $author_id = $conversations->post_author;
