@@ -132,7 +132,7 @@ const AppContent = ({ imageUrls = { logo: "" } }) => {
       timeAgo: ticket.ticket_time_ago ? `${ticket.ticket_time_ago} ago` : "",
       authorImage: ticket.ticket_author_image || null,
       status: ticket.ticket_status ?? "open",
-      priority: ticket.ticket_priority ?? "Medium",
+      priority: ticket.ticket_priority ?? "N/A",
       author: ticket.ticket_author,
       author_id: ticket.author,
       lastReply: ticket.ticket_last_reply,
