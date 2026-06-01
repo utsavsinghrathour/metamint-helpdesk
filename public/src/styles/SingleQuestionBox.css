@@ -75,3 +75,25 @@
 .rd-border-bottom-light {
   border-bottom: 1px solid #e0e0e0;
 }
+
+/* Loading spinner styles to prevent layout shifts */
+.rd-loader-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 250px;
+}
+
+.rd-loader {
+  border: 3px solid #f3f3f3;
+  border-top: 3px solid #004aff;
+  border-radius: 50%;
+  width: 30px;
+  height: 30px;
+  animation: rd-spin 1s linear infinite;
+}
+
+@keyframes rd-spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
