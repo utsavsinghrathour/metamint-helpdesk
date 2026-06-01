@@ -238,9 +238,9 @@ function robodesk_credentials_page()
                         <td>
                             <span class="password-hidden">********</span>
                             <?php $display_password = robodesk_get_credential_password_value($credential->password); ?>
-                            <button class="show-password"
+                            <button type="button" class="show-password"
                                 data-password="<?php echo esc_attr($display_password !== false ? $display_password : ''); ?>">
-                                <span class="dashicons dashicons-visibility dashicons-hidden"></span>
+                                <span class="dashicons dashicons-visibility"></span>
                             </button>
                         </td>
                         <td class="credential_url"><a href="<?php echo esc_url($credential->url); ?>" target="_blank"
