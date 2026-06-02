@@ -20,10 +20,24 @@ if (post_password_required()) {
                     static $robodesk_previous_is_sent = null;
                     static $robodesk_previous_is_bot = null;
 
+                    $robodesk_current_user = wp_get_current_user();
+                    $robodesk_current_user_id = (int) get_current_user_id();
+                    $robodesk_current_user_email = $robodesk_current_user && !empty($robodesk_current_user->user_email) ? strtolower((string) $robodesk_current_user->user_email) : '';
+                    $robodesk_comment_email = !empty($comment->comment_author_email) ? strtolower((string) $comment->comment_author_email) : '';
+                    $robodesk_comment_author_type = (string) get_comment_meta($comment->comment_ID, 'author_type', true);
+                    $robodesk_ticket_customer_user_id = function_exists('robodesk_get_ticket_customer_user_id') ? (int) robodesk_get_ticket_customer_user_id($comment->comment_post_ID) : 0;
+
                     $robodesk_is_bot = function_exists('robodesk_is_bot_comment') ? robodesk_is_bot_comment($comment->comment_ID) : false;
-                    $robodesk_is_sent = !$robodesk_is_bot && (int) $comment->user_id === (int) get_current_user_id();
+                    $robodesk_is_sent = !$robodesk_is_bot && (
+                        (int) $comment->user_id === $robodesk_current_user_id ||
+                        ($robodesk_current_user_email !== '' && $robodesk_comment_email === $robodesk_current_user_email) ||
+                        ($robodesk_comment_author_type === 'customer' && $robodesk_ticket_customer_user_id === $robodesk_current_user_id)
+                    );
+                    $robodesk_sender_key = (int) $comment->user_id > 0
+                        ? 'user:' . (int) $comment->user_id
+                        : 'email:' . $robodesk_comment_email . ':' . $robodesk_comment_author_type;
                     $robodesk_is_same_sender = $robodesk_previous_author_id !== null
-                        && (int) $robodesk_previous_author_id === (int) $comment->user_id
+                        && $robodesk_previous_author_id === $robodesk_sender_key
                         && $robodesk_previous_is_sent === $robodesk_is_sent
                         && $robodesk_previous_is_bot === $robodesk_is_bot;
 
@@ -79,7 +93,7 @@ if (post_password_required()) {
             </div>
         </li>
         <?php
-                    $robodesk_previous_author_id = (int) $comment->user_id;
+                    $robodesk_previous_author_id = $robodesk_sender_key;
                     $robodesk_previous_is_sent = $robodesk_is_sent;
                     $robodesk_previous_is_bot = $robodesk_is_bot;
                 }
