@@ -186,76 +186,81 @@ function robodesk_credentials_page()
 
     ob_start();
 ?>
-    <div class="robodesk-container">
-        <h2>Credentials Vault</h2>
+<div class="robodesk-container">
+    <h2>Credentials Vault</h2>
 
-        <button id="add-credential-button">Add Credential</button>
+    <button id="add-credential-button">Add Credential</button>
 
-        <div id="credential-form" style="display: none;">
-            <h3>Add New Credential</h3>
-            <form id="robodesk-add-credential">
-                <label for="credential_name">Name:</label><br>
-                <input type="text" id="credential_name" name="credential_name" required><br><br>
+    <div id="credential-form" style="display: none;">
+        <h3>Add New Credential</h3>
+        <form id="robodesk-add-credential">
+            <label for="credential_name">Name:</label><br>
+            <input type="text" id="credential_name" name="credential_name" required><br><br>
 
-                <label for="credential_username">Username:</label><br>
-                <input type="text" id="credential_username" name="credential_username" required><br><br>
+            <label for="credential_username">Username:</label><br>
+            <input type="text" id="credential_username" name="credential_username" required><br><br>
 
-                <label for="credential_password">Password:</label><br>
-                <input type="password" id="credential_password" name="credential_password" required><br><br>
+            <label for="credential_password">Password:</label><br>
+            <input type="password" id="credential_password" name="credential_password" required><br><br>
 
-                <label for="credential_url">URL:</label><br>
-                <input type="text" id="credential_url" name="credential_url"><br><br>
+            <label for="credential_url">URL:</label><br>
+            <input type="text" id="credential_url" name="credential_url"><br><br>
 
-                <label for="credential_notes">Notes:</label><br>
-                <textarea id="credential_notes" name="credential_notes"></textarea><br><br>
+            <label for="credential_notes">Notes:</label><br>
+            <textarea id="credential_notes" name="credential_notes"></textarea><br><br>
 
-                <input type="hidden" name="action" value="robodesk_add_credential">
-                <?php wp_nonce_field('robodesk_add_credential_nonce'); ?>
-                <input type="submit" value="Add">
-            </form>
-        </div>
-
-        <div class="robodesk-my-credentials">
-            <h2>My Credentials</h2>
-            <?php if ($credentials): ?>
-                <div class="credential-table-wrapper">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Name</th>
-                                <th>Username</th>
-                                <th>Password</th>
-                                <th>URL</th>
-                                <th>Notes</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php foreach ($credentials as $credential): ?>
-                                <tr class="robodesk-table-content">
-                                    <td><?php echo esc_html($credential->name); ?></td>
-                                    <td><?php echo esc_html($credential->username); ?></td>
-                                    <td>
-                                        <span class="password-hidden">********</span>
-                                        <?php $display_password = robodesk_get_credential_password_value($credential->password); ?>
-                                        <button class="show-password" data-password="<?php echo esc_attr($display_password !== false ? $display_password : ''); ?>"><i class="fa-solid fa-eye"></i></button>
-                                    </td>
-                                    <td class="credential_url"><a href="<?php echo esc_url($credential->url); ?>" target="_blank" rel="noopener noreferrer"><?php echo esc_html($credential->url); ?></a></td>
-                                    <td><?php echo esc_html($credential->notes); ?></td>
-                                    <td>
-                                        <button class="delete-credential" data-credential-id="<?php echo esc_attr($credential->id); ?>">Delete</button>
-                                    </td>
-                                </tr>
-                            <?php endforeach; ?>
-                        </tbody>
-                    </table>
-                </div>
-            <?php else: ?>
-                <p>No credentials saved yet.</p>
-            <?php endif; ?>
-        </div>
+            <input type="hidden" name="action" value="robodesk_add_credential">
+            <?php wp_nonce_field('robodesk_add_credential_nonce'); ?>
+            <input type="submit" value="Add">
+        </form>
     </div>
-    <?php
+
+    <div class="robodesk-my-credentials">
+        <h2>My Credentials</h2>
+        <?php if ($credentials): ?>
+        <div class="credential-table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Username</th>
+                        <th>Password</th>
+                        <th>URL</th>
+                        <th>Notes</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php foreach ($credentials as $credential): ?>
+                    <tr class="robodesk-table-content">
+                        <td><?php echo esc_html($credential->name); ?></td>
+                        <td><?php echo esc_html($credential->username); ?></td>
+                        <td>
+                            <span class="password-hidden">********</span>
+                            <?php $display_password = robodesk_get_credential_password_value($credential->password); ?>
+                            <button type="button" class="show-password"
+                                data-password="<?php echo esc_attr($display_password !== false ? $display_password : ''); ?>">
+                                <span class="dashicons dashicons-visibility"></span>
+                            </button>
+                        </td>
+                        <td class="credential_url"><a href="<?php echo esc_url($credential->url); ?>" target="_blank"
+                                rel="noopener noreferrer"><?php echo esc_html($credential->url); ?></a></td>
+                        <td><?php echo esc_html($credential->notes); ?></td>
+                        <td>
+                            <button class="delete-credential"
+                                data-credential-id="<?php echo esc_attr($credential->id); ?>">Delete</button>
+                        </td>
+                    </tr>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
+        </div>
+        <?php else: ?>
+        <p>No credentials saved yet.</p>
+        <?php endif; ?>
+    </div>
+</div>
+<?php
     return ob_get_clean();
 }
 
@@ -293,20 +298,20 @@ function add_custom_table_to_my_account()
         $create_ticket_url = add_query_arg(array('robodesk_page' => 'create-ticket'), $dashboard_base_url);
         ##Aby##   
     ?>
-        <h3>Get Support Ticket</h3>
-        <a href="<?php echo esc_url($create_ticket_url); ?>">Create Ticket</a>
-        <table style="margin-top: 30px;">
-            <thead>
-                <tr>
-                    <th>Title</th>
-                    <th>Replies</th>
-                    <th>Last Reply</th>
-                    <th>Status</th>
-                    <th>Priority</th>
-                </tr>
-            </thead>
-            <tbody>
-                <?php if ($query->have_posts()) : while ($query->have_posts()) : $query->the_post();
+<h3>Get Support Ticket</h3>
+<a href="<?php echo esc_url($create_ticket_url); ?>">Create Ticket</a>
+<table style="margin-top: 30px;">
+    <thead>
+        <tr>
+            <th>Title</th>
+            <th>Replies</th>
+            <th>Last Reply</th>
+            <th>Status</th>
+            <th>Priority</th>
+        </tr>
+    </thead>
+    <tbody>
+        <?php if ($query->have_posts()) : while ($query->have_posts()) : $query->the_post();
                         global $post;
                         $status = get_post_meta(get_the_ID(), '_robodesk_ticket_status', true);
                         $terms = get_the_terms(get_the_ID(), 'robodesk_ticket_priority');
@@ -337,30 +342,35 @@ function add_custom_table_to_my_account()
                             get_the_author_meta('display_name', $post->post_author);
 
                 ?>
-                        <tr>
-                            <td>
-                                <?php
+        <tr>
+            <td>
+                <?php
                                 $ticket_url = add_query_arg(array('robodesk_page' => 'my-tickets', 'tid' => get_the_ID()), home_url('/robodesk-support/'));
                                 ?>
-                                <a href="<?php echo esc_url($ticket_url); ?>"><?php the_title(); ?></a>
+                <a href="<?php echo esc_url($ticket_url); ?>"><?php the_title(); ?></a>
 
-                                <p class="ticket-date"><?php echo get_the_date('dS M Y'); ?></p>
-                            </td>
-                            <td><?php echo esc_html($comment_count); ?></td>
-                            <td><?php echo esc_html($human_readable_time ? $human_readable_time . ' ago' : '-'); ?><p class="ticket-comment-by">By, <?php echo esc_html($comment_author); ?></p>
-                            </td>
-                            <td><span class="robodesk-status-pill <?php echo esc_attr(strtolower($status)); ?>"> <?php echo esc_html(ucwords($status)); ?></span></td>
-                            <td><span data-color="<?php echo esc_attr($priority_color); ?>" class="robodesk-priority-pill <?php echo esc_attr(strtolower($priority_name)); ?>" style="background:<?php echo esc_attr($priority_color); ?>"><?php echo esc_html($priority_name); ?></span></td>
-                        </tr>
-                    <?php endwhile;
+                <p class="ticket-date"><?php echo get_the_date('dS M Y'); ?></p>
+            </td>
+            <td><?php echo esc_html($comment_count); ?></td>
+            <td><?php echo esc_html($human_readable_time ? $human_readable_time . ' ago' : '-'); ?><p
+                    class="ticket-comment-by">By, <?php echo esc_html($comment_author); ?></p>
+            </td>
+            <td><span class="robodesk-status-pill <?php echo esc_attr(strtolower($status)); ?>">
+                    <?php echo esc_html(ucwords($status)); ?></span></td>
+            <td><span data-color="<?php echo esc_attr($priority_color); ?>"
+                    class="robodesk-priority-pill <?php echo esc_attr(strtolower($priority_name)); ?>"
+                    style="background:<?php echo esc_attr($priority_color); ?>"><?php echo esc_html($priority_name); ?></span>
+            </td>
+        </tr>
+        <?php endwhile;
                     wp_reset_postdata();
                 else : ?>
-                    <tr>
-                        <td colspan="3">No tickets found.</td>
-                    </tr>
-                <?php endif; ?>
-            </tbody>
-        </table>
+        <tr>
+            <td colspan="3">No tickets found.</td>
+        </tr>
+        <?php endif; ?>
+    </tbody>
+</table>
 
 <?php
     }
@@ -378,7 +388,14 @@ function robodesk_get_user_notifications($user_id, $limit = 20)
     }
 
     // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter
-    $notifications = $wpdb->get_results($wpdb->prepare("SELECT * FROM {$table_name} WHERE user_id = %d ORDER BY notification_date DESC LIMIT %d", $user_id, $limit));
+    $notifications = $wpdb->get_results(
+        $wpdb->prepare(
+            "SELECT * FROM {$table_name} WHERE (user_id = %d OR recipient_user_id = %d) ORDER BY notification_date DESC LIMIT %d",
+            $user_id,
+            $user_id,
+            $limit
+        )
+    );
 
     return $notifications;
 }
@@ -397,7 +414,8 @@ function robodesk_get_notification_count($user_id)
     // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
     return (int) $wpdb->get_var(
         $wpdb->prepare(
-            "SELECT COUNT(*) FROM {$table_name} WHERE user_id = %d AND read_at IS NULL",
+            "SELECT COUNT(*) FROM {$table_name} WHERE (user_id = %d OR recipient_user_id = %d) AND read_at IS NULL",
+            $user_id,
             $user_id
         )
     );
