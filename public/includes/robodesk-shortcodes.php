@@ -1242,7 +1242,6 @@ function robodesk_single_ticket_shortcode($atts)
         jQuery(document).ready(function($) {
             var originalFormParent = $('#respond').parent();
             var originalFormSibling = $('#respond').next();
-            var scrollToLatestReplyKey = 'robodesk_scroll_to_latest_reply_<?php echo esc_js((string) $ticket_id); ?>';
 
             function scrollToLatestReply() {
                 var commentList = $('.robodesk-ticket-comments .comment-list');
@@ -1261,14 +1260,7 @@ function robodesk_single_ticket_shortcode($atts)
                 return hasMedia || text.length > 0;
             }
 
-            try {
-                if (sessionStorage.getItem(scrollToLatestReplyKey) === '1') {
-                    sessionStorage.removeItem(scrollToLatestReplyKey);
-                    setTimeout(scrollToLatestReply, 100);
-                }
-            } catch (error) {
-                setTimeout(scrollToLatestReply, 100);
-            }
+            setTimeout(scrollToLatestReply, 100);
 
             $('.robodesk-ticket-comments #commentform').on('submit', function(e) {
                 if (typeof tinymce !== 'undefined' && tinymce.get('comment')) {
@@ -1301,9 +1293,6 @@ function robodesk_single_ticket_shortcode($atts)
                     },
                     success: function(response) {
                         if (response.success) {
-                            try {
-                                sessionStorage.setItem(scrollToLatestReplyKey, '1');
-                            } catch (error) {}
                             location.reload();
                         } else {
                             alert('Error: ' + response.data.message);

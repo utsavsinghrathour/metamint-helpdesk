@@ -50,6 +50,10 @@
   letter-spacing: normal;
 }
 
+.robodesk-dashboard-content .robodesk-container:has(#robodesk-create-ticket) {
+  max-width: 100%;
+}
+
 .robodesk-container table {
   border-collapse: separate;
   border-spacing: 0;
@@ -342,8 +346,7 @@ td.credential_url a {
 /* Dashboard content area */
 .robodesk-dashboard-content {
   flex-grow: 1;
-  padding: 28px 34px;
-  padding-top: 0;
+  padding: 0 34px;
   border: 0;
   min-width: 0;
 }
@@ -706,6 +709,7 @@ td.credential_url a {
 
 .robodesk-notification-item:last-child {
   border-bottom: 0;
+  margin-bottom: 0;
 }
 
 .robodesk-notification-item.is-unread {
@@ -767,7 +771,6 @@ td.credential_url a {
   color: var(--rd-color-black);
   font-size: 14px;
   font-weight: 500;
-  margin: 3px 0;
   padding: 13px 28px;
 }
 
