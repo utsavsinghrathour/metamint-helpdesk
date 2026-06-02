@@ -202,11 +202,19 @@ const MessageTabs = ({
           matchesTab = ticket.status === currentTab;
         }
 
-        const ticketPriority = ticket.priority?.toLowerCase() || '';
+        const ticketPriorityName = ticket.priority?.toLowerCase() || '';
+        const matchingTerm = window.wpAuth?.priorityTerms?.find(
+          (term) =>
+            term.name?.toLowerCase() === ticketPriorityName ||
+            term.slug?.toLowerCase() === ticketPriorityName
+        );
+        const ticketPrioritySlug = matchingTerm?.slug?.toLowerCase() || ticketPriorityName;
         const filterPriority = priorityFilter?.toLowerCase() || 'all';
 
         const matchesPriority =
-          filterPriority === 'all' || ticketPriority === filterPriority;
+          filterPriority === 'all' ||
+          ticketPriorityName === filterPriority ||
+          ticketPrioritySlug === filterPriority;
 
         // --- Search filter ---
         const searchLower = searchTerm.toLowerCase();
