@@ -759,7 +759,6 @@ td.credential_url a {
 
 .robodesk-frontend-dashboard:has(.robodesk-single-ticket) .desktop-menu {
   background: var(--rd-color-white);
-  padding-top: 10px;
 }
 
 .robodesk-frontend-dashboard:has(.robodesk-single-ticket) nav li a {
@@ -767,7 +766,6 @@ td.credential_url a {
   color: var(--rd-color-black);
   font-size: 14px;
   font-weight: 500;
-  margin: 3px 0;
   padding: 13px 28px;
 }
 
