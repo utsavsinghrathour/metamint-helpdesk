@@ -2092,6 +2092,16 @@ add_filter('rest_prepare_comment', function ($response, $comment, $request) {
 
         $data['ticket_id'] = $comment->comment_post_ID;
 
+        // Resolve author_type for sender alignment in frontend
+        $author_type = get_comment_meta($comment->comment_ID, 'author_type', true);
+        if ($author_type === '' && $author_id > 0) {
+            $author_type = function_exists('robodesk_get_author_type')
+                ? robodesk_get_author_type($author_id)
+                : 'customer';
+        }
+
+        $data['author_type'] = $author_type;
+
         $data['author_data'] = array(
             'id' => $author_id,
             'name' => $author_name,
