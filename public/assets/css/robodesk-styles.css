@@ -88,6 +88,12 @@
   border-bottom: 0;
 }
 
+.robodesk-popup .notice-tab-content {
+  min-height: auto;
+  max-height: 40vh;
+  height: auto;
+}
+
 /* ----------------------------------------------------------
    TICKET SUBMISSION FORM
 ---------------------------------------------------------- */
