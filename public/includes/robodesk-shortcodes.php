@@ -1254,6 +1254,13 @@ function robodesk_single_ticket_shortcode($atts)
                 commentList.scrollTop(commentList[0].scrollHeight);
             }
 
+            function hasReplyContent(content) {
+                var hasMedia = /<(img|iframe|video|audio|embed|object)\b/i.test(content);
+                var text = $('<div>').html(content).text().replace(/\u00a0/g, ' ').trim();
+
+                return hasMedia || text.length > 0;
+            }
+
             try {
                 if (sessionStorage.getItem(scrollToLatestReplyKey) === '1') {
                     sessionStorage.removeItem(scrollToLatestReplyKey);
@@ -1271,6 +1278,14 @@ function robodesk_single_ticket_shortcode($atts)
                 var button = $(this).find('input[type="submit"]');
                 e.preventDefault();
                 var form = $(this);
+                var commentField = form.find('[name="comment"]');
+                var commentContent = commentField.val();
+
+                if (!hasReplyContent(commentContent)) {
+                    alert('Please enter a reply before submitting.');
+                    return;
+                }
+
                 var formData = new FormData(this);
 
                 formData.append('action', 'robodesk_submit_comment');
@@ -1361,8 +1376,33 @@ function robodesk_single_ticket_shortcode($atts)
 }
 add_shortcode('robodesk_single_ticket', 'robodesk_single_ticket_shortcode');
 
+function robodesk_reply_has_visible_content($content)
+{
+    $content = (string) $content;
+
+    if (preg_match('/<(img|iframe|video|audio|embed|object)\b/i', $content)) {
+        return true;
+    }
+
+    $content = str_replace('&nbsp;', ' ', $content);
+    $content = html_entity_decode($content, ENT_QUOTES, get_bloginfo('charset'));
+    $content = wp_strip_all_tags($content);
+    $content = preg_replace('/\x{00a0}/u', ' ', $content);
+
+    return trim((string) $content) !== '';
+}
+
 function robodesk_submit_comment()
 {
+    // phpcs:ignore WordPress.Security.NonceVerification.Missing
+    $reply_content = isset($_POST['comment']) ? wp_unslash($_POST['comment']) : '';
+
+    if (!robodesk_reply_has_visible_content($reply_content)) {
+        wp_send_json_error(array(
+            'message' => 'Please enter a reply before submitting.'
+        ));
+    }
+
     // phpcs:ignore WordPress.Security.NonceVerification.Missing
     $comment = wp_handle_comment_submission(wp_unslash($_POST));
 
