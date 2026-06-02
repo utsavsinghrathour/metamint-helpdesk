@@ -60,7 +60,7 @@ jobs:
           key: ${{ secrets.SERVER_SSH_KEY }}
           script_stop: true
           script: |
-            cd "/www/wwwroot/robodesk.codepixelz.tech/wp-content/plugins/"
+            cd "/www/wwwroot/robo-desk.codepixelz.tech/wp-content/plugins/"
 
             echo "🔐 Fixing ownership..."
             chown -R www:www robodesk
