@@ -203,6 +203,13 @@ function robodesk_fetch_emails()
             //Vr Rv <vriasuhn@gmail.com> remove the email address
             $from = preg_replace('/<.*?>/', '', $from);
             $from = trim($from);
+            $useremail = '';
+            if (!empty($headerInfo->from[0]->mailbox) && !empty($headerInfo->from[0]->host)) {
+                $useremail = sanitize_email($headerInfo->from[0]->mailbox . '@' . $headerInfo->from[0]->host);
+            }
+            if ($useremail === '' && preg_match('/<([^>]+)>/', (string) ($headerInfo->fromaddress ?? ''), $from_email_match)) {
+                $useremail = sanitize_email($from_email_match[1]);
+            }
             // only showing the name part 
             $subject = $headerInfo->subject ?? 'No Subject';
             rbd_log('Email from: ' . $from . ', Subject: ' . $subject);
@@ -278,9 +285,22 @@ function robodesk_fetch_emails()
 
                     if (!$is_duplicate) {
                         rbd_log('Adding comment to ticket ID: ' . $original_post_id);
+                        $comment_user_id = 0;
+                        if ($useremail !== '') {
+                            $reply_user = get_user_by('email', $useremail);
+                            if ($reply_user && !empty($reply_user->ID)) {
+                                $comment_user_id = (int) $reply_user->ID;
+                            }
+                        }
+                        if ($comment_user_id <= 0 && function_exists('robodesk_get_ticket_customer_user_id')) {
+                            $comment_user_id = (int) robodesk_get_ticket_customer_user_id($original_post_id);
+                        }
+
                         $comment_id = wp_insert_comment([
                             'comment_post_ID' => $original_post_id,
                             'comment_author' => $from,
+                            'comment_author_email' => $useremail,
+                            'user_id' => $comment_user_id,
                             'comment_content' => $message,
                             'comment_date' => $date,
                             'comment_approved' => 1,
@@ -316,7 +336,6 @@ function robodesk_fetch_emails()
             }
 
             // Create new ticket
-            $useremail = $headerInfo->from[0]->mailbox . '@' . $headerInfo->from[0]->host;
             rbd_log('Creating new ticket from email: ' . $useremail);
 
             // Check if email should be filtered before creating ticket
@@ -429,6 +448,8 @@ function robodesk_fetch_emails()
                 $comment_id = wp_insert_comment([
                     'comment_post_ID' => $post_id,
                     'comment_author' => $from,
+                    'comment_author_email' => $useremail,
+                    'user_id' => $user_id,
                     'comment_content' => $message,
                     'comment_date' => $date,
                     'comment_approved' => 1,
