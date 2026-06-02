@@ -2718,6 +2718,52 @@ function robodesk_get_email_logo_url()
     return '';
 }
 
+/**
+ * Resolve a filesystem path for the configured email logo (wide or regular).
+ * Returns empty string when no local file can be found.
+ */
+function robodesk_get_email_logo_file_path()
+{
+    // Try wide logo first, then regular logo
+    $candidates = [
+        trim((string) get_option('robodesk_wide_logo', '')),
+        trim((string) get_option('robodesk_logo', '')),
+    ];
+
+    $uploads = wp_get_upload_dir();
+
+    foreach ($candidates as $val) {
+        if ($val === '') {
+            continue;
+        }
+
+        // Attachment ID
+        if (ctype_digit($val)) {
+            $path = get_attached_file((int) $val);
+            if ($path && file_exists($path)) {
+                return $path;
+            }
+            continue;
+        }
+
+        // If stored as URL inside uploads, map to basedir
+        if (strpos($val, $uploads['baseurl']) === 0) {
+            $path = str_replace($uploads['baseurl'], $uploads['basedir'], $val);
+            if ($path && file_exists($path)) {
+                return $path;
+            }
+            continue;
+        }
+
+        // If it's an absolute path (unlikely), check directly
+        if (file_exists($val)) {
+            return $val;
+        }
+    }
+
+    return '';
+}
+
 function robodesk_get_default_email_header_template()
 {
     return <<<'HTML'
@@ -2903,5 +2949,79 @@ function robodesk_send_email($to, $subject, $message, $headers = [], $attachment
 
     $email_template = robodesk_render_email_template($subject, $message);
 
+    // Try to embed logo as a CID attachment when possible for reliable display
+    $logo_file = robodesk_get_email_logo_file_path();
+    $logo_url = robodesk_get_email_logo_url();
+
+    if ($logo_file !== '') {
+        // Ensure PHPMailer classes are available
+        if (!class_exists('PHPMailer\\PHPMailer\\PHPMailer')) {
+            if (file_exists(ABSPATH . WPINC . '/PHPMailer/PHPMailer.php')) {
+                require_once ABSPATH . WPINC . '/PHPMailer/PHPMailer.php';
+            }
+            if (file_exists(ABSPATH . WPINC . '/PHPMailer/SMTP.php')) {
+                require_once ABSPATH . WPINC . '/PHPMailer/SMTP.php';
+            }
+            if (file_exists(ABSPATH . WPINC . '/PHPMailer/Exception.php')) {
+                require_once ABSPATH . WPINC . '/PHPMailer/Exception.php';
+            }
+        }
+
+        if (class_exists('PHPMailer\\PHPMailer\\PHPMailer')) {
+            try {
+                $mail = new \PHPMailer\PHPMailer\PHPMailer(true);
+
+                // Apply SMTP settings if configured
+                if (function_exists('robodesk_apply_smtp_to_phpmailer')) {
+                    robodesk_apply_smtp_to_phpmailer($mail);
+                }
+
+                // Ensure From is set
+                if (empty($mail->From)) {
+                    $from_email = get_option('robodesk_smtp_settings', [])['from_email'] ?? get_option('admin_email');
+                    $from_name = get_option('robodesk_smtp_settings', [])['from_name'] ?? get_bloginfo('name');
+                    $mail->setFrom($from_email, $from_name);
+                }
+
+                $mail->isHTML(true);
+                $mail->Subject = $subject;
+
+                // Embed the logo and replace URL references with CID
+                $cid = 'robodesk_logo_' . md5($logo_file);
+                try {
+                    $mail->addEmbeddedImage($logo_file, $cid, basename($logo_file));
+                    if (!empty($logo_url)) {
+                        $email_template = str_replace($logo_url, 'cid:' . $cid, $email_template);
+                    }
+                } catch (Exception $e) {
+                    // ignore embedding errors and continue to send without CID
+                }
+
+                $mail->Body = $email_template;
+                $mail->AltBody = wp_strip_all_tags($message);
+
+                // Add recipient
+                $mail->clearAllRecipients();
+                $mail->addAddress($to);
+
+                // Attach files if any (only local file paths)
+                if (!empty($attachments) && is_array($attachments)) {
+                    foreach ($attachments as $att) {
+                        if (is_string($att) && file_exists($att)) {
+                            $mail->addAttachment($att);
+                        }
+                    }
+                }
+
+                $sent = $mail->send();
+                return (bool) $sent;
+            } catch (\Exception $e) {
+                error_log('Robodesk: PHPMailer send failed: ' . $e->getMessage());
+                // Fall back to wp_mail below
+            }
+        }
+    }
+
+    // Fallback to WordPress mail
     return wp_mail($to, $subject, $email_template, $headers, $attachments);
 }

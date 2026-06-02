@@ -9,25 +9,7 @@ if (post_password_required()) {
 ?>
 
 <div id="comments" class="comments-area">
-    <?php if (comments_open()) : ?>
-    <?php
-        comment_form(array(
-            'title_reply' => '',
-            'label_submit' => 'Add Reply',
-            'comment_notes_before' => '',
-            'comment_notes_after' => '',
-            'id_form' => 'commentform',
-            'id_submit' => 'submit',
-            'class_submit' => 'submit',
-            'submit_field' => '<p class="form-submit">%1$s %2$s</p>'
-
-        ));
-        ?>
-
-    <?php endif; ?>
-
     <?php if (have_comments()) : ?>
-    <h3>Replies</h3>
     <ol class="comment-list">
         <?php
             wp_list_comments(array(
@@ -105,4 +87,22 @@ if (post_password_required()) {
             ?>
     </ol>
     <?php endif; ?>
+    <?php if (comments_open()) : ?>
+    <?php
+        comment_form(array(
+            'title_reply' => '',
+            'label_submit' => 'Add Reply',
+            'comment_notes_before' => '',
+            'comment_notes_after' => '',
+            'id_form' => 'commentform',
+            'id_submit' => 'submit',
+            'class_submit' => 'submit',
+            'submit_field' => '<p class="form-submit">%1$s %2$s</p>'
+
+        ));
+        ?>
+
+    <?php endif; ?>
+
+
 </div>

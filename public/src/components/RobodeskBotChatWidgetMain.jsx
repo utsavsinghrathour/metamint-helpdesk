@@ -171,8 +171,11 @@ export default function RobodeskBotChatWidgetMain({
 
   useEffect(() => {
     sessionStorage.setItem(CHAT_KEY, JSON.stringify(messages));
-    fetchApiKey();
   }, [messages]);
+
+  useEffect(() => {
+    fetchApiKey();
+  }, []);
 
   // Configuration is now passed via props, no need to read from DOM
 

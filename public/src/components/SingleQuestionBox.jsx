@@ -46,7 +46,9 @@ const SingleQuestionBox = ({
   const [error, setError] = useState(null);
   const image_urls = window.robodeskData?.imageUrls || {};
   const [isAddonActive, setIsAddonActive] = useState(false);
-  const [loadingAddonStatus, setLoadingAddonStatus] = useState(true);
+  const [loadingAddon, setLoadingAddon] = useState(true);
+  const [loadingWidgetConfig, setLoadingWidgetConfig] = useState(true);
+  const loadingAddonStatus = loadingAddon || loadingWidgetConfig;
   const [primaryBot, setPrimaryBot] = useState(false);
   const [widgetConfig, setWidgetConfig] = useState(null);
   const [activeAIMode, setActiveAIMode] = useState('');
@@ -121,7 +123,7 @@ const SingleQuestionBox = ({
         setIsAddonActive(false);
       })
       .finally(() => {
-        setLoadingAddonStatus(false);
+        setLoadingAddon(false);
       });
   }, []);
 
@@ -160,13 +162,13 @@ const SingleQuestionBox = ({
       console.error("Error fetching widget config:", error);
       setPrimaryBot(false);
     } finally {
-      setLoadingAddonStatus(false);
+      setLoadingWidgetConfig(false);
     }
   };
 
   useEffect(() => {
     fetchApiKey();
-  }, [primaryBot]);
+  }, []);
 
 
   const QuestionItem = ({ question }) => (
@@ -347,7 +349,11 @@ const SingleQuestionBox = ({
                   Have any questions or need a quote? Leave us a message.
                 </h5>
               </div> */}
-              {shouldShowBotWidget ? (
+              {loadingAddonStatus ? (
+                <div className="rd-loader-container">
+                  <div className="rd-loader"></div>
+                </div>
+              ) : shouldShowBotWidget ? (
                 <RobodeskBotChatWidgetMain
                   widgetConfig={widgetConfig}
                   activeAIMode={activeAIMode}
