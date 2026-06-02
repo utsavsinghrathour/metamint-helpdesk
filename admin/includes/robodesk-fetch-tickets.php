@@ -43,14 +43,57 @@ function robodesk_fetch_emails_callback()
 // Basic email cleaning function
 function robodesk_clean_email_message($message)
 {
-    // Remove quoted replies, signatures, and excessive whitespace
-    $message = preg_replace('/^>.*$/m', '', $message); // Remove lines starting with ">"
-    $message = wp_strip_all_tags($message); // Remove HTML tags
-    // dont remove line breaks
-    $message = preg_replace('/\s+/', ' ', $message); // Replace multiple spaces with a single space
-    $message = preg_replace('/\n+/', "\n", $message); // Replace multiple newlines with a single newline
-    //remove On Fri, 25 Jul 2025 at 12:23, Vr Rv wrote:
-    $message = preg_replace('/On\s.*wrote:\s*$/', '', $message);
+    if (empty($message)) {
+        return '';
+    }
+
+    // 1. If it's HTML, try to cut off the email thread at common HTML reply structures first
+    if (strpos($message, '<') !== false) {
+        $html_split_patterns = array(
+            '/<blockquote/i',
+            '/<div\s+class=["\']gmail_quote["\']/i',
+            '/<div\s+id=["\']gmail_quote["\']/i',
+            '/<div\s+class=["\']outlook_signature["\']/i',
+            '/<div\s+class=["\']email-quote["\']/i',
+            '/<hr\s+[^>]*id=["\'](?:stopSpelling|divRplyFwdMsg)["\']/i', // Outlook / Webmail horizontal rules
+        );
+        foreach ($html_split_patterns as $pattern) {
+            $parts = preg_split($pattern, $message, 2);
+            if (count($parts) > 1) {
+                $message = $parts[0];
+            }
+        }
+    }
+
+    // 2. Remove common email reply headers in plain text or mixed text
+    $split_patterns = array(
+        '/[\r\n]+\s*On\s+(?:(?!\bOn\b).){1,250}?\s+wrote:\s*/i', // On ... wrote:
+        '/[\r\n]+\s*-+\s*Original Message\s*-+/i',             // -----Original Message-----
+        '/[\r\n]+\s*From:\s+.*[\r\n]+\s*(?:Sent|Date):\s+/i',    // Outlook style: From: ... Sent: ...
+        '/[\r\n]+\s*_{32,}/',                                    // Divider lines (32+ underscores)
+        '/[\r\n]+\s*-{10,}/',                                    // Divider lines (10+ dashes)
+    );
+    foreach ($split_patterns as $pattern) {
+        $parts = preg_split($pattern, $message, 2);
+        if (count($parts) > 1) {
+            $message = $parts[0];
+        }
+    }
+
+    // 3. Remove lines starting with ">" (quoted text)
+    $message = preg_replace('/^>.*$/m', '', $message);
+
+    // 4. Strip HTML tags
+    $message = wp_strip_all_tags($message);
+
+    // 5. Replace multiple horizontal spaces/tabs with a single space
+    $message = preg_replace('/\h+/', ' ', $message);
+
+    // 6. Replace multiple vertical whitespace/newlines with a single newline
+    $message = preg_replace('/\v+/', "\n", $message);
+
+    // 7. Clean up single-line On ... wrote: prefix if it remained at the very end of the text
+    $message = preg_replace('/On\s.*wrote:\s*$/i', '', $message);
 
     return trim($message);
 }
@@ -214,23 +257,36 @@ function robodesk_fetch_emails()
             $subject = $headerInfo->subject ?? 'No Subject';
             rbd_log('Email from: ' . $from . ', Subject: ' . $subject);
 
-            // Fetch email body with robust MIME handling( we assume plain text for simplicity)
+            // Fetch email body with robust MIME handling and transfer encoding decoding
             $structure = imap_fetchstructure($email, $email_number);
             $message = '';
+            $encoding = 0;
+
             if ($structure->type == 1 && isset($structure->parts)) { // Multipart
                 foreach ($structure->parts as $part_number => $part) {
                     if ($part->subtype == 'PLAIN') {
                         $message = imap_fetchbody($email, $email_number, $part_number + 1);
+                        $encoding = $part->encoding;
                         break;
                     }
                 }
             }
+
             if (empty($message)) {
                 // Fallback to default body
                 $message = imap_fetchbody($email, $email_number, 1.1);
+                $encoding = $structure->parts[0]->parts[0]->encoding ?? 0;
                 if (empty($message)) {
                     $message = imap_fetchbody($email, $email_number, 1);
+                    $encoding = $structure->encoding ?? 0;
                 }
+            }
+
+            // Decode message based on transfer encoding (3 = Base64, 4 = Quoted-Printable)
+            if ($encoding == 3) {
+                $message = base64_decode($message);
+            } elseif ($encoding == 4) {
+                $message = quoted_printable_decode($message);
             }
 
             if (empty($message)) {
