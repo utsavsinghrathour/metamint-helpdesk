@@ -426,8 +426,7 @@ td.credential_url a {
   border: 1px solid var(--rd-border-color);
   border-radius: 6px;
   color: var(--rd-color-black);
-  padding: 9px 13px;
-  margin-right: 10px;
+  padding: 9px 25px 9px 13px;
   font-size: 14px;
   line-height: 18px;
   flex: 1;
@@ -494,6 +493,10 @@ td.credential_url a {
 .robodesk-dashboard-content .mce-container {
   width: 100%;
   background-color: transparent !important;
+}
+
+.robodesk-dashboard-content .mce-statusbar {
+  display: none;
 }
 
 /* ----------------------------------------------------------
@@ -777,8 +780,7 @@ td.credential_url a {
 
 .robodesk-frontend-dashboard:has(.robodesk-single-ticket) .robodesk-dashboard-content {
   border: 0;
-  padding: 28px 34px;
-  padding-top: 0;
+  padding: 0 34px;
 }
 
 .robodesk-dashboard-content .robodesk-single-ticket {
@@ -824,7 +826,7 @@ td.credential_url a {
   border: 1px solid #d9e4ef;
   border-radius: 6px;
   overflow: hidden;
-  margin: 30px 0 14px;
+  margin: 30px 0 0;
   padding: 0;
 }
 
@@ -932,7 +934,7 @@ td.credential_url a {
 }
 
 .robodesk-ticket-comments iframe {
-  height: 140px !important;
+  height: 150px !important;
   min-height: 140px !important;
 }
 
@@ -976,7 +978,7 @@ td.credential_url a {
   gap: 12px;
   list-style: none;
   margin: 0;
-  max-height: 290px;
+  max-height: 350px;
   overflow-y: auto;
   overflow-x: hidden;
   padding: 14px 10px;
@@ -1006,7 +1008,6 @@ td.credential_url a {
   border: 0;
   display: flex;
   gap: 10px;
-  margin: 10px !important;
   padding: 0;
 }
 
@@ -1054,6 +1055,10 @@ td.credential_url a {
   color: inherit;
   font-size: 12px;
   line-height: 1.55;
+  margin: 0;
+}
+
+.robodesk-ticket-comments .comment-content p {
   margin: 0;
 }
 
@@ -1437,6 +1442,11 @@ td.credential_url a {
     background: #f9fafb;
     font-weight: 600;
     height: auto;
+    appearance: none;
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    background-size: 16px;
   }
 
   .robodesk-infographs {
@@ -1448,7 +1458,13 @@ td.credential_url a {
   }
 
   .robodesk-dashboard-content {
-    border: 1px solid #f2f1f1;
+    border: none;
+    padding: 28px 0;
+  }
+
+  .rd-form-group,
+  .robodesk-dashboard-content input#profile_picture {
+    width: 100%;
   }
 
   .robodesk-container {

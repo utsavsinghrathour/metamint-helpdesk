@@ -10,7 +10,6 @@ if (post_password_required()) {
 
 <div id="comments" class="comments-area">
     <?php if (have_comments()) : ?>
-    <h3>Replies</h3>
     <ol class="comment-list">
         <?php
             wp_list_comments(array(
