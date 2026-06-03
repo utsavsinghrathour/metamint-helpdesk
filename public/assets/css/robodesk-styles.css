@@ -48,6 +48,10 @@ body:has(.robodesk-popup.open) {
   overflow: hidden;
 }
 
+.rd-h-full {
+  height: 100%;
+}
+
 /* ----------------------------------------------------------
    CONTAINER
 ---------------------------------------------------------- */
@@ -92,11 +96,10 @@ body:has(.robodesk-popup.open) {
   border-bottom: 0;
 }
 
-.robodesk-popup .notice-tab-content {
+.robodesk-popup .rd-notice-tab-wrap {
   min-height: auto;
-  max-height: 40vh;
-  height: auto;
-  padding-bottom: 50px;
+  max-height: calc(100% - 160px);
+  overflow: auto;
 }
 
 /* ----------------------------------------------------------
@@ -1397,12 +1400,25 @@ td.credential_url a {
 
 .rd-body-notices {
   min-height: auto;
-  height: calc(70vh - 170px);
+  height: calc(100% - 90px);
   overflow: auto;
+}
+
+.rd-single-notice-view .rd-border-top-light {
+  border: none !important;
+}
+
+.robodesk-popup:has(.rd-single-notice-view) .robodesk-footer {
+  border-top: 1px solid var(--border-light-gray)
 }
 
 .robodesk-popup:has(.rd-single-notice-view) .rd-border-top-light {
   margin-top: 5px;
+}
+
+.robodesk-popup:has(.rd-single-notice-view) .rd-h-full,
+.robodesk-popup .rd-single-notice-view {
+  height: 100%
 }
 
 .rd-body-text #Content a {
@@ -1545,5 +1561,11 @@ td.credential_url a {
 
   .robodesk-notification-time {
     white-space: normal;
+  }
+}
+
+@media screen and (max-width: 550px) {
+  .robodesk-plugin .robodesk-popup.open {
+    width: 355px;
   }
 }
