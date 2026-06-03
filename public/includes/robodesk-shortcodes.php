@@ -275,17 +275,19 @@ function robodesk_my_tickets_shortcode()
                             'order' => 'DESC'
                         ));
 
-                        $last_activity = !empty($comments) ?  strtotime($comments[0]->comment_date_gmt) : get_the_modified_time('U');
+                        $last_activity = !empty($comments) 
+                        ? strtotime($comments[0]->comment_date_gmt) 
+                        : get_post_modified_time('U', true);
                         $comment_author = !empty($comments) ? get_the_author_meta('display_name', $comments[0]->user_id) :
                             get_the_author_meta('display_name', $post->post_author);
 
-                        $human_readable_time = human_time_diff($last_activity, current_time('U'));
+                        $human_readable_time = human_time_diff($last_activity, wp_date('U'));
 
                 ?>
             <tr class="robodesk-table-content robodesk-ticket-table-content">
                 <td>
                     <?php
-                                $ticket_url = add_query_arg(array('robodesk_page' => 'my-tickets', 'tid' => get_the_ID()), $dashboard_base_url);
+                        $ticket_url = add_query_arg(array('robodesk_page' => 'my-tickets', 'tid' => get_the_ID()), $dashboard_base_url);
                                 ?>
                     <a class="robodesk-table-content-title"
                         href="<?php echo esc_url($ticket_url); ?>"><?php the_title(); ?></a>
