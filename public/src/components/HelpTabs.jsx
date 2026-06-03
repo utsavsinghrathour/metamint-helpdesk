@@ -1,15 +1,22 @@
-import React from 'react';
-import FAQ from './FAQ.jsx'; // Adjust path as needed
+import React from "react";
+import FAQ from "./FAQ.jsx"; // Adjust path as needed
 
-const HelpTabs = ({ setActiveTab, setIsOpen, isExpanded, setIsExpanded, activeTab , handleFocusedTextArea }) => {
+const HelpTabs = ({
+  setActiveTab,
+  setIsOpen,
+  isExpanded,
+  setIsExpanded,
+  activeTab,
+  handleFocusedTextArea,
+}) => {
   return (
-    <div className="help-tabs">
+    <div className="help-tabs rd-h-full">
       <FAQ
         setActiveTab={setActiveTab}
         setIsOpen={setIsOpen}
         isExpanded={isExpanded}
         setIsExpanded={setIsExpanded}
-        activeTab={activeTab} 
+        activeTab={activeTab}
         handleFocusedTextArea={handleFocusedTextArea}
         // Pass activeTab to FAQ
       />
