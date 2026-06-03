@@ -52,6 +52,10 @@ body:has(.robodesk-popup.open) {
   height: 100%;
 }
 
+.single-message {
+  word-break: break-word;
+}
+
 /* ----------------------------------------------------------
    CONTAINER
 ---------------------------------------------------------- */
@@ -202,12 +206,12 @@ body:has(.robodesk-popup.open) {
   width: 100%;
 }
 
-.tickets_table_wrapper thead tr th:first-child,
+/* .tickets_table_wrapper thead tr th:first-child,
 .robodesk-ticket-table-content td:first-child {
   position: sticky;
   left: 0;
   z-index: 9999;
-}
+} */
 
 .robodesk-table-content td {
   font-size: 14px;
@@ -1007,11 +1011,24 @@ td.credential_url a {
   scrollbar-width: thin;
 }
 
-.robodesk-ticket-comments .comment-list::-webkit-scrollbar {
-  width: 6px;
+.tickets_table_wrapper,
+.credential-table-wrapper,
+.rd-content-list {
+  scrollbar-color: #b7c5d4 transparent;
+  scrollbar-width: thin;
 }
 
-.robodesk-ticket-comments .comment-list::-webkit-scrollbar-thumb {
+.robodesk-ticket-comments .comment-list::-webkit-scrollbar,
+.tickets_table_wrapper::-webkit-scrollbar,
+.credential-table-wrapper::-webkit-scrollbar,
+.rd-content-list::-webkit-scrollbar {
+  width: 4px;
+}
+
+.robodesk-ticket-comments .comment-list::-webkit-scrollbar-thumb,
+.tickets_table_wrapper::-webkit-scrollbar-thumb,
+.credential-table-wrapper::-webkit-scrollbar-thumb,
+.rd-content-list::-webkit-scrollbar-thumb {
   background: #b7c5d4;
   border-radius: 999px;
 }
@@ -1469,11 +1486,10 @@ td.credential_url a {
   }
 
   #mobile-menu {
-    border: 1px solid #f2f1f1;
+    border: 1px solid var(--rd-border-color);
     border-radius: 50px;
     padding: 15px;
     margin-bottom: 20px;
-    background: #f9fafb;
     font-weight: 600;
     height: auto;
     appearance: none;
@@ -1561,6 +1577,13 @@ td.credential_url a {
 
   .robodesk-notification-time {
     white-space: normal;
+  }
+
+  .tickets_table_wrapper,
+  .credential-table-wrapper,
+  .rd-content-list {
+    max-width: 1024px;
+    overflow: auto;
   }
 }
 
