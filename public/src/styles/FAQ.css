@@ -47,8 +47,8 @@
   margin-left: 15px;
 }
 
-.rd-faq-item:last-child:not(.featured-faq .rd-faq-item) {
-  border-bottom: none;
+.rd-faq-item:last-child:not(.featured-faq .rd-faq-item, .single-faq-other-faq-content .rd-faq-item) {
+  border-bottom: none !important;
 }
 
 /* css for search header */
@@ -121,10 +121,10 @@
 }
 
 .single-faq-content {
-  /* max-height: 468px; */
   overflow: auto;
   min-height: 250px;
-  height: 45vh;
+  /* height: 45vh; */
+  height: calc(100% - 193px);
 }
 
 .single-faq-content p a {
@@ -140,7 +140,7 @@
 
 .rd-wiki-wrap {
   /* max-height: 320px; */
-  max-height: 45vh;
+  max-height: calc(100% - 245px);
   overflow: auto;
 }
 

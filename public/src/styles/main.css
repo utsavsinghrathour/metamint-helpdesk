@@ -560,6 +560,7 @@ button.no-bg,
   flex-direction: column;
   justify-content: center;
   border-bottom: 1px solid var(--border-light-gray);
+  border-top: 1px solid var(--border-light-gray);
   padding: 10px 20px 20px;
 }
 
