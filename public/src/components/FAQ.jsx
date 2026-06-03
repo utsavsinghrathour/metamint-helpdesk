@@ -27,7 +27,7 @@ const normalizeImagePaths = (html, baseUrl = "/") => {
         return `${prefix}${baseUrl}${path}${suffix}`;
       }
       return match;
-    }
+    },
   );
 };
 
@@ -56,7 +56,7 @@ const FAQDetail = memo(
           setAuthorNames(
             faq.author
               ? faq.author.split(",").map((name) => name.trim())
-              : ["Unknown"]
+              : ["Unknown"],
           );
         } catch (err) {
           setAuthorNames(["Unknown"]);
@@ -119,8 +119,8 @@ const FAQDetail = memo(
     };
 
     return (
-      <div className="rd-faq-detail">
-        <div className="rd-main-content no-footer">
+      <div className="rd-faq-detail rd-h-full">
+        <div className="rd-main-content no-footer rd-h-full">
           <div className="single-faq-header rd-flex rd-align-center rd-justify-between rd-cursor-pointer rd-border-bottom-light rd-p-10 rd-bg-primary ">
             <button
               className="back-button rd-flex rd-items-center rd-bg-transparent rd-border-none icon-dark rd-p-0 rd-m-0"
@@ -197,7 +197,10 @@ const FAQDetail = memo(
               </svg>
             </button>
           </div>
-          <div ref={contentRef} className="rd-px-20 rd-py-15 single-faq-content">
+          <div
+            ref={contentRef}
+            className="rd-px-20 rd-py-15 single-faq-content"
+          >
             <div>
               <h4 className="rd-faq-title heading-4">{faq.question}</h4>
               {parsedContent ? (
@@ -226,7 +229,7 @@ const FAQDetail = memo(
               </div>
             </div>
             {relatedFaqs.length > 0 && (
-              <div className="single-faq-other-faq-content rd-my-20 single-content-other-content">
+              <div className="single-faq-other-faq-content single-content-other-content">
                 <h4 className="heading-4">Didn't get your answer?</h4>
                 <div className="rd-body-text rd-mt-8">
                   <p>Here are some related articles.</p>
@@ -265,7 +268,7 @@ const FAQDetail = memo(
         </div>
       </div>
     );
-  }
+  },
 );
 
 const FAQItem = memo(({ faq, onSelect }) => (
@@ -324,12 +327,12 @@ const FAQ = ({
         }
 
         const response = await fetch(
-          `/wp-json/wp/v2/robodesk_faq?_fields=id,title.rendered,excerpt.rendered,content.rendered,author_info&per_page=100&page=1`
+          `/wp-json/wp/v2/robodesk_faq?_fields=id,title.rendered,excerpt.rendered,content.rendered,author_info&per_page=100&page=1`,
         );
 
         if (!response.ok) {
           throw new Error(
-            `Failed to fetch FAQs: ${response.status} ${response.statusText}`
+            `Failed to fetch FAQs: ${response.status} ${response.statusText}`,
           );
         }
 
@@ -376,14 +379,14 @@ const FAQ = ({
 
   const filteredFaqs = useMemo(() => {
     const filtered = faqs.filter((faq) =>
-      faq.question.toLowerCase().includes(searchTerm.toLowerCase())
+      faq.question.toLowerCase().includes(searchTerm.toLowerCase()),
     );
     return filtered;
   }, [faqs, searchTerm]);
 
   if (selectedFAQ) {
     return (
-      <div className="rd-faq-container">
+      <div className="rd-faq-container rd-h-full">
         <FAQDetail
           faq={selectedFAQ}
           onBack={() => {
@@ -402,8 +405,8 @@ const FAQ = ({
   }
 
   return (
-    <div className="rd-faq-container">
-      <div className="rd-main-content">
+    <div className="rd-faq-container rd-h-full">
+      <div className="rd-main-content rd-h-full">
         <div className="rd-p-10 rd-search-header rd-bg-blue rd-flex rd-items-center rd-justify-between rd-flex-col">
           <h5 className="heading-5 rd-text-white rd-text-center rd-p-16">
             Search
