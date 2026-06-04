@@ -1077,12 +1077,22 @@ function robodesk_single_ticket_shortcode($atts)
     }
 
     $created_date = get_the_date('Y-m-d H:i:s', $ticket);
-    $updated_date = get_the_modified_date('Y-m-d H:i:s', $ticket);
+
+    $comments = get_comments(array(
+        'post_id' => $ticket_id,
+        'number' => 1,
+        'status' => 'approve',
+        'orderby' => 'comment_date_gmt',
+        'order' => 'DESC'
+    ));
+    $last_activity = !empty($comments) ?  strtotime($comments[0]->comment_date_gmt) : get_the_modified_time('U', $ticket);
+
+    $updated_date = wp_date('Y-m-d H:i:s', $last_activity);
     $created_display = get_the_date('m/d/Y', $ticket);
-    $updated_display = get_the_modified_date('m/d/Y', $ticket);
+    $updated_display = wp_date('m/d/Y', $last_activity);
     $date_meta_label = 'Last Updated';
     $date_meta_display = $updated_display;
-    $time_ago = human_time_diff(get_the_modified_time('U', $ticket), current_time('timestamp'));
+    $time_ago = human_time_diff($last_activity, current_time('timestamp'));
     $time_ago_class = '';
 
     foreach (array('_robodesk_due_date', 'robodesk_due_date', '_ticket_due_date', 'ticket_due_date', 'due_date') as $due_date_meta_key) {
@@ -1143,14 +1153,6 @@ function robodesk_single_ticket_shortcode($atts)
     $ticket_author_name = $ticket_author && !empty($ticket_author->display_name) ? $ticket_author->display_name : 'Customer';
 
 
-    $comments = get_comments(array(
-        'post_id' => $ticket_id,
-        'number' => 1,
-        'status' => 'approve',
-        'orderby' => 'comment_date_gmt',
-        'order' => 'DESC'
-    ));
-    $last_activity = !empty($comments) ?  strtotime($comments[0]->comment_date_gmt) : get_the_modified_time('U', $ticket);
     $human_readable_time = human_time_diff($last_activity, current_time('U'));
 
     //new code ends
@@ -1232,7 +1234,7 @@ function robodesk_single_ticket_shortcode($atts)
             </div>
             <div class="robodesk-ticket-meta-card">
                 <span class="dashicons dashicons-calendar" aria-hidden="true"></span>
-                <span>Last Update: <?php echo esc_html($date_meta_display); ?></span>
+                <span><?php echo esc_html($date_meta_label); ?>: <?php echo esc_html($date_meta_display); ?></span>
             </div>
         </aside>
     </div>
