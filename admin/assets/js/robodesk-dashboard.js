@@ -1615,47 +1615,56 @@ function loadTicketDetail() {
   // Load ticket meta information
   const ticketMetaInfo = document.getElementById("ticket-meta-info");
 
-  const sourceIpRow = isEmptyOrNA(currentTicket.source_ip)
-    ? ""
-    : `
-      <div class="flex justify-between items-center">
-        <span class="text-gray-500">IP Address:</span>
-        <span class="text-gray-900 font-mono">${escapeHTML(currentTicket.source_ip)}</span>
-      </div>
-    `;
-
-  const countryRow = isEmptyOrNA(currentTicket.source_country)
-    ? ""
-    : `
-      <div class="flex justify-between items-center">
-        <span class="text-gray-500">Location:</span>
-        <span class="text-gray-900">${escapeHTML(currentTicket.source_country)}</span>
-      </div>
-    `;
-
-  const browserRow = isEmptyOrNA(currentTicket.source_browser)
-    ? ""
-    : `
-      <div class="flex justify-between items-center">
-        <span class="text-gray-500">Browser:</span>
-        <span class="text-gray-900">${escapeHTML(currentTicket.source_browser)}</span>
-      </div>
-    `;
-
   if (ticketMetaInfo) {
-    ticketMetaInfo.innerHTML = `
-      <div class="space-y-4 pt-6 border-t border-gray-100 text-sm">
-        <div class="flex justify-between items-center">
-          <span class="text-gray-500">Origin:</span>
-          <span id="ticket-source" class="bg-blue-100 text-blue-700 px-2 py-0.5 rounded text-xs font-bold uppercase">${escapeHTML(
-            String(currentTicket.source || "").toUpperCase(),
-          )}</span>
+    // Hide ticket meta info for email-originated tickets (IP, browser, location are not relevant)
+    const ticketSource = String(currentTicket.source || "").toLowerCase();
+    if (ticketSource === "email") {
+      ticketMetaInfo.style.display = "none";
+      ticketMetaInfo.innerHTML = "";
+    } else {
+      ticketMetaInfo.style.display = "";
+
+      const sourceIpRow = isEmptyOrNA(currentTicket.source_ip)
+        ? ""
+        : `
+          <div class="flex justify-between items-center">
+            <span class="text-gray-500">IP Address:</span>
+            <span class="text-gray-900 font-mono">${escapeHTML(currentTicket.source_ip)}</span>
+          </div>
+        `;
+
+      const countryRow = isEmptyOrNA(currentTicket.source_country)
+        ? ""
+        : `
+          <div class="flex justify-between items-center">
+            <span class="text-gray-500">Location:</span>
+            <span class="text-gray-900">${escapeHTML(currentTicket.source_country)}</span>
+          </div>
+        `;
+
+      const browserRow = isEmptyOrNA(currentTicket.source_browser)
+        ? ""
+        : `
+          <div class="flex justify-between items-center">
+            <span class="text-gray-500">Browser:</span>
+            <span class="text-gray-900">${escapeHTML(currentTicket.source_browser)}</span>
+          </div>
+        `;
+
+      ticketMetaInfo.innerHTML = `
+        <div class="space-y-4 pt-6 border-t border-gray-100 text-sm">
+          <div class="flex justify-between items-center">
+            <span class="text-gray-500">Origin:</span>
+            <span id="ticket-source" class="bg-blue-100 text-blue-700 px-2 py-0.5 rounded text-xs font-bold uppercase">${escapeHTML(
+              String(currentTicket.source || "").toUpperCase(),
+            )}</span>
+          </div>
+          ${sourceIpRow}
+          ${countryRow}
+          ${browserRow}
         </div>
-        ${sourceIpRow}
-        ${countryRow}
-        ${browserRow}
-      </div>
-    `;
+      `;
+    }
   }
 
   const categorySelect = document.getElementById("ticket-category-select");
