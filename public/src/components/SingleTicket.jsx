@@ -340,7 +340,7 @@ const SingleTicket = ({
 
       const response = await fetch(
         `/wp-json/wp/v2/comments?post=${ticket.id}&per_page=${perPage}&offset=${fetchOffset}&order=asc&comment_type=ticket_replies&_fields=id,content,date,author_data,time_ago,author_name,author_image,comment_action,is_bot_response`,
-        { signal: controller.signal }
+        { signal: controller.signal },
       );
 
       clearTimeout(timeoutId);
@@ -358,7 +358,7 @@ const SingleTicket = ({
           : formattedComments;
 
         const uniqueMessages = Array.from(
-          new Map(newMessages.map((msg) => [msg.id, msg])).values()
+          new Map(newMessages.map((msg) => [msg.id, msg])).values(),
         );
 
         // Cache the messages
@@ -464,12 +464,12 @@ const SingleTicket = ({
       };
 
       const uniqueMessages = Array.from(
-        new Map([...prev, newMessage].map((msg) => [msg.id, msg])).values()
+        new Map([...prev, newMessage].map((msg) => [msg.id, msg])).values(),
       );
 
       // Update cache with new messages
       const sorted = uniqueMessages.sort(
-        (a, b) => getMessageSortId(a) - getMessageSortId(b)
+        (a, b) => getMessageSortId(a) - getMessageSortId(b),
       );
       setCachedMessages(ticket.id, sorted);
 
@@ -490,7 +490,7 @@ const SingleTicket = ({
       return {
         id: comment.id,
         text: normalizeMessageText(
-          comment.content?.rendered || comment.content?.plain || ""
+          comment.content?.rendered || comment.content?.plain || "",
         ),
         sender,
         senderName: isBotFlag
@@ -512,7 +512,7 @@ const SingleTicket = ({
     });
 
     return formattedComments.sort(
-      (a, b) => getMessageSortId(a) - getMessageSortId(b)
+      (a, b) => getMessageSortId(a) - getMessageSortId(b),
     );
   };
 
@@ -544,7 +544,7 @@ const SingleTicket = ({
           `/wp-json/wp/v2/comments?post=${ticket.id}&per_page=1&order=asc&_fields=id`,
           {
             signal: controller.signal,
-          }
+          },
         );
 
         clearTimeout(timeoutId);
@@ -678,7 +678,7 @@ const SingleTicket = ({
       "new_mine_comment",
       (data) => {
         handleNewComment(data, false);
-      }
+      },
     );
 
     return () => {
@@ -731,7 +731,7 @@ const SingleTicket = ({
           message,
           previewImage,
           false,
-          controller.signal
+          controller.signal,
         );
 
         clearTimeout(timeoutId);
@@ -772,11 +772,11 @@ const SingleTicket = ({
             prev.map((msg) =>
               msg.id === tempMessage.id
                 ? { ...msg, isPending: true, isSending: false }
-                : msg
-            )
+                : msg,
+            ),
           );
           setError(
-            "Message is taking longer to send. It will be delivered when connection improves."
+            "Message is taking longer to send. It will be delivered when connection improves.",
           );
         } else {
           console.error("Error sending message:", err);
@@ -905,210 +905,214 @@ const SingleTicket = ({
           </div>
         )}
       </div>
-      <div className="rd-px-18 rd-py-15 rd-border-bottom-light">
-        <div className="rd-body-text">
-          <p className="rd-text-center rd-body-text rd-mb-0">
-            {ticketIntroMessage}
-          </p>
+      <div className="rd-single-chat-body-wrapper">
+        <div className="rd-px-18 rd-py-15 rd-border-bottom-light rd-single-chat-intro">
+          <div className="rd-body-text">
+            <p className="rd-text-center rd-body-text rd-mb-0">
+              {ticketIntroMessage}
+            </p>
+          </div>
         </div>
-      </div>
-      <div
-        ref={chatContainerRef}
-        className={`chat-container rd-flex rd-flex-col rd-flex-grow rd-px-18 rd-py-15 rd-overflow-auto ${
-          ticketClosed ? "ticket-closed" : ""
-        }`}
-      >
-        {/* Show pagination loader at the top when loading older messages */}
-        {isPaginationLoading && (
-          <div className="rd-pagination-loader rd-mb-10">
-            <ConversationSkeleton count={3} />
-          </div>
-        )}
+        <div
+          ref={chatContainerRef}
+          className={`chat-container rd-flex rd-flex-col rd-flex-grow rd-px-18 rd-py-15 rd-overflow-auto ${
+            ticketClosed ? "ticket-closed" : ""
+          }`}
+        >
+          {/* Show pagination loader at the top when loading older messages */}
+          {isPaginationLoading && (
+            <div className="rd-pagination-loader rd-mb-10">
+              <ConversationSkeleton count={3} />
+            </div>
+          )}
 
-        {/* Show connection warning if there's an error but we have cached messages */}
-        {error && chatMessages.length > 0 && (
-          <div
-            className="rd-connection-warning rd-px-12 rd-py-8 rd-mb-10 rd-text-center"
-            style={{
-              backgroundColor: "#fff3cd",
-              border: "1px solid #ffc107",
-              borderRadius: "8px",
-              color: "#856404",
-              fontSize: "12px",
-            }}
-          >
-            {error}
-          </div>
-        )}
+          {/* Show connection warning if there's an error but we have cached messages */}
+          {error && chatMessages.length > 0 && (
+            <div
+              className="rd-connection-warning rd-px-12 rd-py-8 rd-mb-10 rd-text-center"
+              style={{
+                backgroundColor: "#fff3cd",
+                border: "1px solid #ffc107",
+                borderRadius: "8px",
+                color: "#856404",
+                fontSize: "12px",
+              }}
+            >
+              {error}
+            </div>
+          )}
 
-        {loading && !initialLoadComplete ? (
-          <ConversationSkeleton />
-        ) : error && chatMessages.length === 0 ? (
-          <p className="err_msg rd-text-center">{error}</p>
-        ) : chatMessages.length === 0 ? (
-          <p className="rd-text-center rd-body-text">
-            No conversations yet. Start a conversation below.
-          </p>
-        ) : (
-          <>
-            {chatMessages.map((msg, index) => {
-              const prevMsg = index > 0 ? chatMessages[index - 1] : null;
-              const isSameSender =
-                !!prevMsg &&
-                prevMsg.sender === msg.sender &&
-                !!prevMsg.isBot === !!msg.isBot &&
-                String(prevMsg.author_id || "") === String(msg.author_id || "");
-              const marginBottom = isSameSender ? "4px" : "12px";
+          {loading && !initialLoadComplete ? (
+            <ConversationSkeleton />
+          ) : error && chatMessages.length === 0 ? (
+            <p className="err_msg rd-text-center">{error}</p>
+          ) : chatMessages.length === 0 ? (
+            <p className="rd-text-center rd-body-text">
+              No conversations yet. Start a conversation below.
+            </p>
+          ) : (
+            <>
+              {chatMessages.map((msg, index) => {
+                const prevMsg = index > 0 ? chatMessages[index - 1] : null;
+                const isSameSender =
+                  !!prevMsg &&
+                  prevMsg.sender === msg.sender &&
+                  !!prevMsg.isBot === !!msg.isBot &&
+                  String(prevMsg.author_id || "") ===
+                    String(msg.author_id || "");
+                const marginBottom = isSameSender ? "4px" : "12px";
 
-              return (
-                <div
-                  key={msg.id}
-                  className={`chat-message rd-flex rd-items-start ${
-                    msg.sender === "me" || msg.isSending
-                      ? "rd-ml-auto sent"
-                      : "rd-flex rd-gap-8 received"
-                  }`}
-                  style={{
-                    maxWidth: "80%",
-                    marginBottom,
-                    marginTop: index === 0 || !isSameSender ? "12px" : "4px",
-                  }}
-                >
-                  {(!isSameSender || index === 0) &&
-                    (() => {
-                      // Bot avatar handling: prefer configured bot profile image, then the server-provided Gravatar fallback.
-                      const botProfileImage =
-                        configuredBotAvatar || msg.image || "";
-                      const botTitleName =
-                        configuredBotName || msg.senderName || "Bot";
-                      const isBot = !!msg.isBot;
-
-                      if (isBot) {
-                        return (
-                          <img
-                            src={botProfileImage || DefaultAvatar}
-                            alt={botTitleName || "Bot"}
-                            className="rd-rounded-full rd-object-cover rd-single-message-avatar"
-                            onError={(e) => {
-                              e.target.onerror = null;
-                              e.target.src = DefaultAvatar;
-                            }}
-                          />
-                        );
-                      }
-
-                      if (msg.sender === "me" || msg.isSending) {
-                        return (
-                          <img
-                            src={customerAvatar}
-                            alt={"You"}
-                            className="rd-rounded-full rd-object-cover rd-single-message-avatar"
-                          />
-                        );
-                      }
-
-                      // regular non-bot other user
-                      return (
-                        <img
-                          src={msg.image || DefaultAvatar}
-                          alt={msg.senderName}
-                          className="rd-rounded-full rd-object-cover rd-single-message-avatar"
-                        />
-                      );
-                    })()}
-                  {isSameSender && index !== 0 && (
-                    <div
-                      style={{
-                        width: "30px",
-                        height: "30px",
-                        flexShrink: 0,
-                      }}
-                    />
-                  )}
+                return (
                   <div
-                    className="message-content"
+                    key={msg.id}
+                    className={`chat-message rd-flex rd-items-start ${
+                      msg.sender === "me" || msg.isSending
+                        ? "rd-ml-auto sent"
+                        : "rd-flex rd-gap-8 received"
+                    }`}
                     style={{
-                      backgroundColor:
-                        msg.sender === "me" || msg.isSending
-                          ? "#007BFF"
-                          : "#FFFFFF",
-                      color:
-                        msg.sender === "me" || msg.isSending
-                          ? "#FFFFFF"
-                          : "#000000",
-                      border:
-                        msg.sender === "other" && !msg.isSending
-                          ? "1px solid #E0E0E0"
-                          : "none",
-                      borderRadius: "10px",
-                      padding: "8px 12px",
-                      // width: "80%",
-                      maxWidth: "100%",
-                      minWidth: "auto",
+                      maxWidth: "80%",
+                      marginBottom,
+                      marginTop: index === 0 || !isSameSender ? "12px" : "4px",
                     }}
                   >
-                    {msg.isSending || msg.isPending ? (
-                      <span
-                        className="rd-body-text single-message"
-                        style={{ opacity: msg.isPending ? 0.7 : 1 }}
-                        dangerouslySetInnerHTML={{
-                          __html: normalizeMessageText(msg.text),
+                    {(!isSameSender || index === 0) &&
+                      (() => {
+                        // Bot avatar handling: prefer configured bot profile image, then the server-provided Gravatar fallback.
+                        const botProfileImage =
+                          configuredBotAvatar || msg.image || "";
+                        const botTitleName =
+                          configuredBotName || msg.senderName || "Bot";
+                        const isBot = !!msg.isBot;
+
+                        if (isBot) {
+                          return (
+                            <img
+                              src={botProfileImage || DefaultAvatar}
+                              alt={botTitleName || "Bot"}
+                              className="rd-rounded-full rd-object-cover rd-single-message-avatar"
+                              onError={(e) => {
+                                e.target.onerror = null;
+                                e.target.src = DefaultAvatar;
+                              }}
+                            />
+                          );
+                        }
+
+                        if (msg.sender === "me" || msg.isSending) {
+                          return (
+                            <img
+                              src={customerAvatar}
+                              alt={"You"}
+                              className="rd-rounded-full rd-object-cover rd-single-message-avatar"
+                            />
+                          );
+                        }
+
+                        // regular non-bot other user
+                        return (
+                          <img
+                            src={msg.image || DefaultAvatar}
+                            alt={msg.senderName}
+                            className="rd-rounded-full rd-object-cover rd-single-message-avatar"
+                          />
+                        );
+                      })()}
+                    {isSameSender && index !== 0 && (
+                      <div
+                        style={{
+                          width: "30px",
+                          height: "30px",
+                          flexShrink: 0,
                         }}
                       />
-                    ) : (
-                      <>
-                        {msg.text && (
-                          <span
-                            className={[
-                              "rd-body-text",
-                              "single-message",
-                              msg.action ? "rd-is-action" : null,
-                            ]
-                              .filter(Boolean)
-                              .join(" ")}
-                            dangerouslySetInnerHTML={{
-                              __html: normalizeMessageText(msg.text),
-                            }}
-                          />
-                        )}
-                      </>
                     )}
                     <div
-                      className="rd-text-small rd-text-gray"
+                      className="message-content"
                       style={{
-                        marginTop: "4px",
-                        textAlign:
+                        backgroundColor:
                           msg.sender === "me" || msg.isSending
-                            ? "right"
-                            : "left",
-                        fontSize: "10px",
+                            ? "#007BFF"
+                            : "#FFFFFF",
+                        color:
+                          msg.sender === "me" || msg.isSending
+                            ? "#FFFFFF"
+                            : "#000000",
+                        border:
+                          msg.sender === "other" && !msg.isSending
+                            ? "1px solid #E0E0E0"
+                            : "none",
+                        borderRadius: "10px",
+                        padding: "8px 12px",
+                        // width: "80%",
+                        maxWidth: "100%",
+                        minWidth: "auto",
                       }}
                     >
-                      {msg.isSending
-                        ? ""
-                        : msg.isPending
-                        ? "Pending..."
-                        : formatTimestamp(msg.created_at)}
+                      {msg.isSending || msg.isPending ? (
+                        <span
+                          className="rd-body-text single-message"
+                          style={{ opacity: msg.isPending ? 0.7 : 1 }}
+                          dangerouslySetInnerHTML={{
+                            __html: normalizeMessageText(msg.text),
+                          }}
+                        />
+                      ) : (
+                        <>
+                          {msg.text && (
+                            <span
+                              className={[
+                                "rd-body-text",
+                                "single-message",
+                                msg.action ? "rd-is-action" : null,
+                              ]
+                                .filter(Boolean)
+                                .join(" ")}
+                              dangerouslySetInnerHTML={{
+                                __html: normalizeMessageText(msg.text),
+                              }}
+                            />
+                          )}
+                        </>
+                      )}
+                      <div
+                        className="rd-text-small rd-text-gray"
+                        style={{
+                          marginTop: "4px",
+                          textAlign:
+                            msg.sender === "me" || msg.isSending
+                              ? "right"
+                              : "left",
+                          fontSize: "10px",
+                        }}
+                      >
+                        {msg.isSending
+                          ? ""
+                          : msg.isPending
+                          ? "Pending..."
+                          : formatTimestamp(msg.created_at)}
+                      </div>
                     </div>
                   </div>
-                </div>
-              );
-            })}
-          </>
-        )}
+                );
+              })}
+            </>
+          )}
+        </div>
       </div>
+
       <div
         className={`chat-input rd-flex rd-flex-col rd-px-18 rd-py-15 rd-border-top-light rd-bg-white  ${
           previewImage ? "has-preview" : ""
         }`}
       >
         {previewImage && (
-          <div className="rd-mb-10 rd-flex rd-align-center">
-            <div>
+          <div className="rd-flex rd-align-center rd-image-upload-container">
+            <div className="rd-image-preview-wrapper">
               <img
                 src={previewImage}
                 alt="Preview"
-                className="rd-max-w-full  rd-border-radius-md rd-preview-image"
+                className="rd-max-w-full rd-preview-image"
                 style={{ maxWidth: "80px" }}
               />
               <button
