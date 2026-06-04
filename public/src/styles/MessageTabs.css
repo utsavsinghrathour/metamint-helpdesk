@@ -177,9 +177,10 @@
 
 .robodesk-plugin .rd-message-tab-content input,
 .robodesk-plugin .rd-message-tab-content select {
-  font-weight: 500 !important;
   font-size: 13px !important;
+  font-weight: 500 !important;
   line-height: 16px !important;
+  padding: 8px 12px !important;
 }
 
 .robodesk-plugin .rd-message-tab-content input {
@@ -188,6 +189,13 @@
 
 .robodesk-plugin .rd-message-tab-content select {
   width: 25%;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  background-size: 16px;
 }
 
 .robodesk-plugin .rd-message-tab-content input::placeholder {
@@ -201,13 +209,7 @@
   font-size: 13px !important;
   line-height: 18px !important;
   color: rgba(85, 85, 85, 1);
-}
-
-.robodesk-plugin .rd-single-ticket .chat-container {
-  /* min-height: 370px; */
-  /* min-height: 355px; */
-  /* height: 44vh;
-  min-height: 325px; */
+  height: 34px;
 }
 
 .robodesk-plugin .rd-single-ticket .rd-single-chat-body-wrapper {
