@@ -698,6 +698,7 @@ button.no-bg,
   display: flex;
   flex: 1;
   flex-direction: column;
+  height: 100%;
 }
 
 .robodesk-popup .rd-single-ticket {
@@ -706,6 +707,7 @@ button.no-bg,
 
 .robodesk-popup .chat-input {
   margin-top: auto;
+  position: relative;
 }
 
 /* popup expaned contract closed css end */
