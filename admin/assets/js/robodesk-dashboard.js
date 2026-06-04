@@ -111,7 +111,7 @@ function loadDashboardTickets() {
                   ticket.id
                 } <span class="${getBlinkingClass(ticket)}"></span></div>
                 <div class="text-sm text-gray-500 truncate max-w-xs">${escapeHTML(
-                  ticket.title.slice(0, 20),
+                  decodeHTML(ticket.title).slice(0, 20),
                 )}</div>
               </td>
               <td class="px-6 py-4 whitespace-nowrap">
@@ -782,6 +782,14 @@ function escapeHTML(str) {
   const div = document.createElement("div");
   div.textContent = str;
   return div.innerHTML;
+}
+
+// Helper function to decode HTML entities
+function decodeHTML(html) {
+  if (!html) return "";
+  const txt = document.createElement("textarea");
+  txt.innerHTML = html;
+  return txt.value;
 }
 
 // Helper function to calculate time since (if not already defined)
@@ -1574,7 +1582,7 @@ function loadTicketDetail() {
   };
 
   document.getElementById("ticket-detail-title").textContent =
-    `Conversation #${currentTicket.id} - ${currentTicket.title}`;
+    `Conversation #${currentTicket.id} - ${decodeHTML(currentTicket.title)}`;
 
   // Load customer information
   const customerInfo = document.getElementById("customer-info");
@@ -1831,8 +1839,8 @@ function loadCustomerTicketsList(ticketList) {
             <div class="flex justify-between items-center">
                 <div>
                     <div class="font-medium text-sm">#${ticket.id} - ${
-                      ticket.title.slice(0, 50) +
-                      (ticket.title.length > 50 ? "..." : "")
+                      decodeHTML(ticket.title).slice(0, 50) +
+                      (decodeHTML(ticket.title).length > 50 ? "..." : "")
                     }</div>
                     <div class="text-xs text-gray-500">${formatDate(
                       ticket.created,
@@ -4293,7 +4301,7 @@ function renderNotificationList() {
           </div>
           <div class="flex-1 min-w-0">
             <div class="flex items-center justify-between gap-3">
-              <p class="text-sm font-medium text-gray-900 truncate">${escapeHTML(item.title)}</p>
+              <p class="text-sm font-medium text-gray-900 truncate">${escapeHTML(decodeHTML(item.title))}</p>
               <p class="text-xs text-gray-500 whitespace-nowrap inline-flex items-center gap-1">
                 <i class="far fa-user-circle text-gray-400"></i>
                 <span>${escapeHTML(assigneeValue)}</span>
