@@ -125,8 +125,8 @@ function robodesk_fetch_emails()
     rbd_log('Last fetched date: ' . $last_fetched_date);
     rbd_log('Robodesk: Last email fetched date/time: ' . $last_fetched_date);
 
-    // Convert to IMAP-compatible date with time
-    $since_date = gmdate('d-M-Y H:i:s', strtotime($last_fetched_date));
+    $last_fetched_gmt = get_gmt_from_date($last_fetched_date, 'Y-m-d H:i:s');
+    $since_date = gmdate('d-M-Y H:i:s', strtotime($last_fetched_gmt));
     rbd_log('IMAP since date format: ' . $since_date);
 
 
@@ -218,7 +218,8 @@ function robodesk_fetch_emails()
                 continue;
             }
 
-            $date = gmdate("Y-m-d H:i:s", strtotime($headerInfo->date ?? 'now'));
+            $date_utc = gmdate("Y-m-d H:i:s", strtotime($headerInfo->date ?? 'now'));
+            $date = get_date_from_gmt($date_utc, 'Y-m-d H:i:s');
             rbd_log('Email date: ' . $date . ', Last fetched: ' . $last_fetched_date);
 
             // Skip emails older than or equal to last fetched date
