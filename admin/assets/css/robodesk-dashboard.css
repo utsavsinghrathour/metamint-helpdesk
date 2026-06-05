@@ -1,6 +1,13 @@
 /* Custom styles for the Robodesk dashboard */
 :root {
   --color-main: #3b82f6;
+  --color-text: #6b7280;
+  --color-white: #ffffff;
+  --color-error: #dc2626;
+  --color-main-active: #2563eb;
+  --color-text-hover: #374151;
+  --color-border: #d1d5db;
+  --color-background: #f9fafb;
 }
 
 .rb-relative {
@@ -13,18 +20,18 @@
 }
 
 .nav-link.active {
-  border-color: #3b82f6;
-  color: #2563eb;
+  border-color: var(--color-main);
+  color: var(--color-main-active);
 }
 
 .nav-link:not(.active) {
   border-color: transparent;
-  color: #6b7280;
+  color: var(--color-text);
 }
 
 .nav-link:not(.active):hover {
-  color: #374151;
-  border-color: #d1d5db;
+  color: var(--color-text-hover);
+  border-color: var(--color-border);
 }
 
 /* Page content */
@@ -65,7 +72,7 @@
 .rb-popover {
   position: absolute;
   background-color: rgba(51, 51, 51, 1);
-  color: #fff;
+  color: var(--color-white);
   padding: 0.5rem 0.75rem;
   border-radius: 0.3rem;
   border: none !important;
@@ -115,7 +122,7 @@
   font-size: 0.75rem;
   /* font-weight: 600; */
   border-radius: 9999px;
-  color: white;
+  color: var(--color-white);
 }
 
 .status-open {
@@ -176,20 +183,20 @@
 
 .ticket-tab.active,
 .settings-tab.active {
-  border-color: #3b82f6;
-  color: #2563eb;
+  border-color: var(--color-main);
+  color: var(--color-main-active);
 }
 
 .ticket-tab:not(.active),
 .settings-tab:not(.active) {
   border-color: transparent;
-  color: #6b7280;
+  color: var(--color-text);
 }
 
 .ticket-tab:not(.active):hover,
 .settings-tab:not(.active):hover {
-  color: #374151;
-  border-color: #d1d5db;
+  color: var(--color-text-hover);
+  border-color: var(--color-border);
 }
 
 /* Dashboard filter buttons */
@@ -198,20 +205,20 @@
 }
 
 .dashboard-filter-btn.active {
-  background-color: #3b82f6;
-  color: white;
-  border-color: #3b82f6;
+  background-color: var(--color-main);
+  color: var(--color-white);
+  border-color: var(--color-main);
 }
 
 .dashboard-filter-btn:not(.active) {
-  background-color: white;
-  color: #6b7280;
-  border-color: #d1d5db;
+  background-color: var(--color-white);
+  color: var(--color-text);
+  border-color: var(--color-border);
 }
 
 .dashboard-filter-btn:not(.active):hover {
-  background-color: #f9fafb;
-  color: #374151;
+  background-color: var(--color-background);
+  color: var(--color-text-hover);
 }
 
 .dashboard-filter-count-badge {
@@ -224,7 +231,7 @@
   padding: 0 0.25rem;
   border-radius: 9999px;
   background-color: #ef4444;
-  color: #ffffff;
+  color: var(--color-white);
   font-size: 0.75rem;
   font-weight: 600;
   line-height: 1;
@@ -250,8 +257,8 @@
 
 /* Customer stats */
 .customer-stat-card {
-  background: white;
-  border: 1px solid #e5e7eb;
+  background: var(--color-white);
+  border: 1px solid var(--color-border);
   border-radius: 8px;
   padding: 1rem;
   text-align: center;
@@ -260,8 +267,8 @@
 }
 
 .customer-stat-card:hover {
-  background-color: #f9fafb;
-  border-color: #3b82f6;
+  background-color: var(--color-background);
+  border-color: var(--color-main);
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
@@ -274,7 +281,7 @@
 
 .customer-stat-label {
   font-size: 0.875rem;
-  color: #6b7280;
+  color: var(--color-text);
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
@@ -282,26 +289,26 @@
 /* Customer tickets list */
 .customer-ticket-item {
   padding: 0.75rem;
-  border: 1px solid #e5e7eb;
+  border: 1px solid var(--color-border);
   border-radius: 6px;
   margin-bottom: 0.5rem;
   transition: all 0.2s ease-in-out;
 }
 
 .customer-ticket-item:hover {
-  background-color: #f9fafb;
-  border-color: #3b82f6;
+  background-color: var(--color-background);
+  border-color: var(--color-main);
 }
 
 /* Reply and note styles */
 .reply-customer {
   background-color: #eff6ff;
-  border-left: 4px solid #3b82f6;
+  border-left: 4px solid var(--color-main);
 }
 
 .reply-agent {
-  background-color: #f9fafb;
-  border-left: 4px solid #6b7280;
+  background-color: var(--color-background);
+  border-left: 4px solid var(--color-text);
 }
 
 .note-internal {
@@ -313,25 +320,25 @@
 .styled-input {
   transition: all 0.2s ease-in-out;
   padding: 0.5rem 0.75rem;
-  border: 1px solid #d1d5db;
+  border: 1px solid var(--color-border);
   border-radius: 0.375rem;
-  background-color: white;
+  background-color: var(--color-white);
   font-size: 0.875rem;
   line-height: 1.25;
 }
 
 .styled-input:focus {
   outline: none;
-  border-color: #3b82f6;
-  box-shadow: 0 0 0 1px #3b82f6;
+  border-color: var(--color-main);
+  box-shadow: 0 0 0 1px var(--color-main);
 }
 
 .styled-select {
   transition: all 0.2s ease-in-out;
   padding: 0.5rem 2.5rem 0.5rem 0.75rem;
-  border: 1px solid #d1d5db;
+  border: 1px solid var(--color-border);
   border-radius: 0.375rem;
-  background-color: white;
+  background-color: var(--color-white);
   background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
   background-position: right 0.5rem center;
   background-repeat: no-repeat;
@@ -343,18 +350,18 @@
 
 .styled-select:focus {
   outline: none;
-  border-color: #3b82f6;
-  box-shadow: 0 0 0 1px #3b82f6;
+  border-color: var(--color-main);
+  box-shadow: 0 0 0 1px var(--color-main);
 }
 
 /* Form validation */
 .form-error {
-  border-color: #dc2626;
-  box-shadow: 0 0 0 1px #dc2626;
+  border-color: var(--color-error);
+  box-shadow: 0 0 0 1px var(--color-error);
 }
 
 .error-message {
-  color: #dc2626;
+  color: var(--color-error);
   font-size: 0.75rem;
   margin-top: 0.25rem;
 }
@@ -364,18 +371,18 @@
   display: flex;
   gap: 0.25rem;
   padding: 0.5rem;
-  background-color: #f9fafb;
-  border: 1px solid #d1d5db;
+  background-color: var(--color-background);
+  border: 1px solid var(--color-border);
   border-bottom: none;
   border-radius: 0.375rem 0.375rem 0 0;
 }
 
 .editor-btn {
   padding: 0.375rem 0.5rem;
-  border: 1px solid #d1d5db;
+  border: 1px solid var(--color-border);
   border-radius: 0.25rem;
-  background-color: white;
-  color: #374151;
+  background-color: var(--color-white);
+  color: var(--color-text-hover);
   font-size: 0.875rem;
   cursor: pointer;
   transition: all 0.2s ease-in-out;
@@ -392,17 +399,17 @@
 .editor-content {
   min-height: 100px;
   padding: 0.75rem;
-  border: 1px solid #d1d5db;
+  border: 1px solid var(--color-border);
   border-radius: 0 0 0.375rem 0.375rem;
-  background-color: white;
+  background-color: var(--color-white);
   font-size: 0.875rem;
   line-height: 1.5;
   outline: none;
 }
 
 .editor-content:focus {
-  border-color: #3b82f6;
-  box-shadow: 0 0 0 1px #3b82f6;
+  border-color: var(--color-main);
+  box-shadow: 0 0 0 1px var(--color-main);
 }
 
 /* Toast notification */
@@ -418,13 +425,13 @@
 
 .toast-error {
   background-color: #fef2f2;
-  border-color: #dc2626;
-  color: #dc2626;
+  border-color: var(--color-error);
+  color: var(--color-error);
 }
 
 /* Table hover effects */
 .table-row:hover {
-  background-color: #f9fafb;
+  background-color: var(--color-background);
 }
 
 /* Button hover effects */
@@ -464,7 +471,7 @@
   width: 1rem;
   height: 1rem;
   border: 2px solid #f3f3f3;
-  border-top: 2px solid #3b82f6;
+  border-top: 2px solid var(--color-main);
   border-radius: 50%;
   animation: spin 1s linear infinite;
 }
@@ -481,7 +488,7 @@
 
 /* Ticket creation form */
 .form-section {
-  background-color: #f9fafb;
+  background-color: var(--color-background);
   padding: 1.5rem;
   border-radius: 0.5rem;
   margin-bottom: 1.5rem;
@@ -674,7 +681,7 @@
 }
 
 .add-label-wrapper .select2-container--default .select2-selection--single {
-  border: 1px solid #d1d5db;
+  border: 1px solid var(--color-border);
   border-radius: 0.5rem;
   height: auto;
   padding: 0;
@@ -690,4 +697,23 @@ CONVERSATION
 ----------------------*/
 .rd-conversations-frm input.rd-search {
   padding-left: 30px;
+}
+
+.overflow-auto {
+  scrollbar-width: thin;
+  scrollbar-color: #d7e4f6 transparent;
+}
+
+.overflow-auto::webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+
+.overflow-auto::webkit-scrollbar-track {
+  background: transparent;
+}
+
+.overflow-auto::webkit-scrollbar-thumb {
+  background: #d8d8d8;
+  border-radius: 3px;
 }
