@@ -342,15 +342,41 @@ function robodesk_fetch_emails()
 
                     if (!$is_duplicate) {
                         rbd_log('Adding comment to ticket ID: ' . $original_post_id);
+
+                        // Determine if this reply is from the support inbox (agent) or an external customer.
+                        // Compare the sender email against the configured IMAP username (the support inbox address).
+                        $imap_settings = get_option('robodesk_imap_settings', []);
+                        $support_email = isset($imap_settings['username']) ? strtolower(trim($imap_settings['username'])) : '';
+                        $reply_email_lower = strtolower(trim($useremail));
+                        $is_from_support_inbox = ($reply_email_lower !== '' && $reply_email_lower === $support_email);
+
                         $comment_user_id = 0;
-                        if ($useremail !== '') {
-                            $reply_user = get_user_by('email', $useremail);
-                            if ($reply_user && !empty($reply_user->ID)) {
-                                $comment_user_id = (int) $reply_user->ID;
+                        $author_type = 'customer';
+
+                        if ($is_from_support_inbox) {
+                            // Reply is from the support inbox — treat as agent reply.
+                            // Try to resolve the actual WordPress user for the support inbox email.
+                            $author_type = 'agent';
+                            if ($useremail !== '') {
+                                $reply_user = get_user_by('email', $useremail);
+                                if ($reply_user && !empty($reply_user->ID)) {
+                                    $comment_user_id = (int) $reply_user->ID;
+                                }
                             }
-                        }
-                        if ($comment_user_id <= 0 && function_exists('robodesk_get_ticket_customer_user_id')) {
-                            $comment_user_id = (int) robodesk_get_ticket_customer_user_id($original_post_id);
+                            // If no matching WP user, leave comment_user_id as 0 (system/agent without WP account).
+                            rbd_log('Reply is from support inbox (' . $useremail . '), treating as agent. WP user ID: ' . $comment_user_id);
+                        } else {
+                            // Reply is from an external customer.
+                            if ($useremail !== '') {
+                                $reply_user = get_user_by('email', $useremail);
+                                if ($reply_user && !empty($reply_user->ID)) {
+                                    $comment_user_id = (int) $reply_user->ID;
+                                }
+                            }
+                            if ($comment_user_id <= 0 && function_exists('robodesk_get_ticket_customer_user_id')) {
+                                $comment_user_id = (int) robodesk_get_ticket_customer_user_id($original_post_id);
+                            }
+                            rbd_log('Reply is from external email (' . $useremail . '), treating as customer. WP user ID: ' . $comment_user_id);
                         }
 
                         $comment_id = wp_insert_comment([
@@ -362,18 +388,17 @@ function robodesk_fetch_emails()
                             'comment_date' => $date,
                             'comment_approved' => 1,
                             'comment_type' => 'ticket_replies',
-                            'is_robodesk_note'     => true, // Custom comment type for ticket replies
                         ]);
 
                         if (!is_wp_error($comment_id)) {
                             add_comment_meta($comment_id, 'email_message_id', $message_id, true);
                             add_comment_meta($comment_id, 'comment_source', 'email', true);
-                            add_comment_meta($comment_id, 'author_type', 'customer', true);
+                            add_comment_meta($comment_id, 'author_type', $author_type, true);
                             add_comment_meta($comment_id, '_robodesk_source_ip', $email_source_context['ip'], true);
                             add_comment_meta($comment_id, '_robodesk_source_country', $email_source_context['country'], true);
                             add_comment_meta($comment_id, '_robodesk_source_browser', $email_source_context['browser'], true);
                             robodesk_store_ticket_source_meta($original_post_id, $email_source_context, $comment_id);
-                            rbd_log('Successfully added comment ID: ' . $comment_id);
+                            rbd_log('Successfully added comment ID: ' . $comment_id . ' (author_type: ' . $author_type . ')');
                             $reply_count++;
                         } else {
                             rbd_log('Failed to add comment: ' . $comment_id->get_error_message());
