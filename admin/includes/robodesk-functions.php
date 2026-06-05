@@ -3083,6 +3083,6 @@ function robodesk_send_email($to, $subject, $message, $headers = [], $attachment
         }
     }
 
-    // Fallback to WordPress mail
+    // Fallback to WordPress mail.
     return wp_mail($to, $subject, $email_template, $headers, $attachments);
 }
