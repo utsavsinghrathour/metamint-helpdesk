@@ -162,6 +162,7 @@ function robodesk_enqueue_scripts()
             'faq_nonce' => wp_create_nonce('robodesk_faq_vote_nonce'),
             'add_credential_nonce' => wp_create_nonce('robodesk_add_credential_nonce'),
             'delete_credential_nonce' => wp_create_nonce('robodesk_delete_credential_nonce'),
+            'reveal_credential_nonce' => wp_create_nonce('robodesk_reveal_credential_nonce'),
             'notifications_nonce' => wp_create_nonce('robodesk_notifications_action'),
 
 
@@ -460,8 +461,25 @@ add_action('init', 'robodesk_maybe_create_notifications_table');
 
 
 
-function robodesk_encrypt($plaintext, $key)
+function robodesk_get_encryption_key()
 {
+    if (defined('ROBODESK_ENCRYPTION_KEY') && ROBODESK_ENCRYPTION_KEY !== '') {
+        return ROBODESK_ENCRYPTION_KEY;
+    }
+
+    if (defined('AUTH_KEY') && AUTH_KEY !== '') {
+        return AUTH_KEY;
+    }
+
+    return 'robodesk';
+}
+
+function robodesk_encrypt($plaintext, $key = null)
+{
+    if ($key === null) {
+        $key = robodesk_get_encryption_key();
+    }
+
     $ivlen = openssl_cipher_iv_length($cipher = "AES-256-CBC");
     $iv = openssl_random_pseudo_bytes($ivlen);
     $ciphertext = openssl_encrypt($plaintext, $cipher, $key, $options = 0, $iv);
@@ -469,9 +487,18 @@ function robodesk_encrypt($plaintext, $key)
 }
 
 
-function robodesk_decrypt($ciphertext, $key)
+function robodesk_decrypt($ciphertext, $key = null)
 {
-    list($encrypted_data, $iv) = explode('::', base64_decode($ciphertext), 2);
+    if ($key === null) {
+        $key = robodesk_get_encryption_key();
+    }
+
+    $decoded = base64_decode($ciphertext, true);
+    if ($decoded === false || strpos($decoded, '::') === false) {
+        return false;
+    }
+
+    list($encrypted_data, $iv) = explode('::', $decoded, 2);
     return openssl_decrypt($encrypted_data, "AES-256-CBC", $key, $options = 0, $iv);
 }
 

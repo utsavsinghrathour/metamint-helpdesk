@@ -161,7 +161,7 @@ function robodesk_get_credential_password_value($stored_password)
     $decoded_password = base64_decode($stored_password, true);
 
     if ($decoded_password !== false && strpos($decoded_password, '::') !== false) {
-        $decrypted_password = robodesk_decrypt($stored_password, 'robodesk');
+        $decrypted_password = robodesk_decrypt($stored_password);
         if ($decrypted_password !== false) {
             return $decrypted_password;
         }
@@ -233,18 +233,50 @@ function robodesk_credentials_page()
                 <tbody>
                     <?php foreach ($credentials as $credential): ?>
                     <tr class="robodesk-table-content">
-                        <td><?php echo esc_html($credential->name); ?></td>
-                        <td><?php echo esc_html($credential->username); ?></td>
                         <td>
-                            <span class="password-hidden">********</span>
-                            <?php $display_password = robodesk_get_credential_password_value($credential->password); ?>
-                            <button type="button" class="show-password"
-                                data-password="<?php echo esc_attr($display_password !== false ? $display_password : ''); ?>">
-                                <span class="dashicons dashicons-visibility"></span>
-                            </button>
+                            <span class="credential-cell-wrap">
+                                <span class="credential-name-text"><?php echo esc_html($credential->name); ?></span>
+                                <button type="button" class="copy-credential" data-copy-value="<?php echo esc_attr($credential->name); ?>" title="Copy Name">
+                                    <span class="dashicons dashicons-admin-page"></span>
+                                </button>
+                            </span>
                         </td>
-                        <td class="credential_url"><a href="<?php echo esc_url($credential->url); ?>" target="_blank"
-                                rel="noopener noreferrer"><?php echo esc_html($credential->url); ?></a></td>
+                        <td>
+                            <span class="credential-cell-wrap">
+                                <span class="credential-username-text"><?php echo esc_html($credential->username); ?></span>
+                                <button type="button" class="copy-credential" data-copy-value="<?php echo esc_attr($credential->username); ?>" title="Copy Username">
+                                    <span class="dashicons dashicons-admin-page"></span>
+                                </button>
+                            </span>
+                        </td>
+                        <td>
+                            <span class="credential-cell-wrap">
+                                <span class="password-hidden">********</span>
+                                <button type="button" class="show-password"
+                                    data-credential-id="<?php echo esc_attr($credential->id); ?>" title="Show Password">
+                                    <span class="dashicons dashicons-visibility"></span>
+                                </button>
+                                <button type="button" class="copy-password"
+                                    data-credential-id="<?php echo esc_attr($credential->id); ?>" title="Copy Password">
+                                    <span class="dashicons dashicons-admin-page"></span>
+                                </button>
+                            </span>
+                        </td>
+                        <td>
+                            <span class="credential-cell-wrap">
+                                <?php if (!empty($credential->url)): ?>
+                                <a href="<?php echo esc_url($credential->url); ?>" target="_blank"
+                                    rel="noopener noreferrer" class="credential-url-link" title="<?php echo esc_url($credential->url); ?>">
+                                    <span class="dashicons dashicons-external" aria-hidden="true"></span>
+                                </a>
+                                <button type="button" class="copy-credential" data-copy-value="<?php echo esc_url($credential->url); ?>" title="<?php echo esc_url($credential->url); ?>">
+                                    <span class="dashicons dashicons-admin-page"></span>
+                                </button>
+                                <?php else: ?>
+                                <span class="credential-url-text">—</span>
+                                <?php endif; ?>
+                            </span>
+                        </td>
                         <td><?php echo esc_html($credential->notes); ?></td>
                         <td>
                             <button class="delete-credential"
