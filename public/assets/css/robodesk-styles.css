@@ -250,9 +250,10 @@ body:has(.robodesk-popup.open) {
   margin: 3px 0 0;
 }
 
-.credential-table-wrapper tbody tr td:nth-child(3) {
-  display: flex;
-  justify-content: space-between;
+.credential-table-wrapper .credential-cell-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
 }
 
 .credential-table-wrapper .show-password {
@@ -277,10 +278,48 @@ body:has(.robodesk-popup.open) {
   border: 1px solid #dc2626;
 }
 
-td.credential_url a {
-  text-decoration: underline;
-  text-underline-offset: 3px;
+.credential-table-wrapper .credential-url-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
 }
+
+.credential-table-wrapper .credential-url-link .dashicons {
+  font-size: 16px;
+  width: 16px;
+  height: 16px;
+}
+
+.credential-table-wrapper .copy-credential,
+.credential-table-wrapper .copy-password {
+  background-color: transparent;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  margin-left: 4px;
+  vertical-align: middle;
+  opacity: 0.5;
+  transition: opacity 0.2s ease;
+}
+
+.credential-table-wrapper .copy-credential:hover,
+.credential-table-wrapper .copy-password:hover {
+  opacity: 1;
+}
+
+.credential-table-wrapper .copy-credential:focus,
+.credential-table-wrapper .copy-password:focus {
+  border: none;
+  outline: none;
+}
+
+.credential-table-wrapper .copy-credential.is-copied,
+.credential-table-wrapper .copy-password.is-copied {
+  color: #22c55e;
+  opacity: 1;
+}
+
 
 /* ----------------------------------------------------------
    FRONTEND DASHBOARD — SHELL
