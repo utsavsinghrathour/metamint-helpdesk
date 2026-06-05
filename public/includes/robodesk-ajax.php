@@ -256,7 +256,7 @@ function robodesk_add_credential_callback()
         wp_send_json_error('Please fill in all required fields.');
     }
 
-    $encrypted_password = robodesk_encrypt($password, 'robodesk');
+    $encrypted_password = robodesk_encrypt($password);
 
     // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
     $inserted = $wpdb->insert(
@@ -316,6 +316,42 @@ function robodesk_delete_credential_callback()
     }
 
     wp_die();
+}
+
+add_action('wp_ajax_robodesk_reveal_credential_password', 'robodesk_reveal_credential_password_callback');
+function robodesk_reveal_credential_password_callback()
+{
+    check_ajax_referer('robodesk_reveal_credential_nonce', 'nonce');
+
+    $credential_id = isset($_POST['credential_id']) ? intval($_POST['credential_id']) : 0;
+    $user_id = get_current_user_id();
+
+    if ($credential_id <= 0 || !$user_id) {
+        wp_send_json_error('Invalid request.');
+    }
+
+    global $wpdb;
+    $credentials_table = $wpdb->prefix . 'robodesk_credentials';
+
+    // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+    $credential = $wpdb->get_row($wpdb->prepare(
+        "SELECT password FROM {$credentials_table} WHERE id = %d AND user_id = %d",
+        $credential_id,
+        $user_id
+    ));
+
+    if (!$credential) {
+        wp_send_json_error('Credential not found or access denied.');
+    }
+
+    $decrypted_password = robodesk_decrypt($credential->password);
+    if ($decrypted_password === false) {
+        wp_send_json_error('Unable to decrypt password.');
+    }
+
+    wp_send_json_success(array(
+        'password' => $decrypted_password,
+    ));
 }
 
 add_action('wp_ajax_robodesk_mark_user_notification_read', 'robodesk_mark_user_notification_read');
