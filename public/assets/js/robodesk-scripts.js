@@ -338,18 +338,140 @@ jQuery(document).ready(function ($) {
     }
   });
 
-  // Show Password Functionality
-  $(".show-password").click(function () {
-    var passwordSpan = $(this).prev(".password-hidden");
-    var password = $(this).data("password");
-    var icon = $(this).find(".dashicons"); // Toggle password visibility
-    if (passwordSpan.text() === "********") {
-      passwordSpan.text(password);
-      icon.removeClass("dashicons-visibility").addClass("dashicons-hidden");
-    } else {
-      passwordSpan.text("********");
-      icon.removeClass("dashicons-hidden").addClass("dashicons-visibility");
+  // Copy to Clipboard Functionality
+  $(document).on("click", ".copy-credential", function () {
+    var value = $(this).data("copy-value");
+    if (!value) {
+      return;
     }
+    copyToClipboard(value, $(this));
+  });
+
+  // Copy Password Functionality (AJAX-based)
+  $(document).on("click", ".copy-password", function () {
+    var button = $(this);
+    var credentialId = button.data("credential-id");
+
+    if (!credentialId) {
+      return;
+    }
+
+    // If password is already revealed, copy directly from the span
+    var passwordSpan = button.siblings(".password-hidden");
+    if (passwordSpan.data("revealed")) {
+      copyToClipboard(passwordSpan.text(), button);
+      return;
+    }
+
+    // Fetch decrypted password from server and copy
+    $.ajax({
+      url: robodesk_ajax_object.ajax_url,
+      type: "POST",
+      data: {
+        action: "robodesk_reveal_credential_password",
+        credential_id: credentialId,
+        nonce: robodesk_ajax_object.reveal_credential_nonce,
+      },
+      beforeSend: function () {
+        button.prop("disabled", true);
+      },
+      success: function (response) {
+        if (response.success) {
+          copyToClipboard(response.data.password, button);
+        } else {
+          alert(response.data || "Unable to copy password.");
+        }
+      },
+      error: function () {
+        alert("An error occurred while fetching the password.");
+      },
+      complete: function () {
+        button.prop("disabled", false);
+      },
+    });
+  });
+
+  function copyToClipboard(text, button) {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(function () {
+        showCopyFeedback(button);
+      }).catch(function () {
+        fallbackCopyToClipboard(text, button);
+      });
+    } else {
+      fallbackCopyToClipboard(text, button);
+    }
+  }
+
+  function fallbackCopyToClipboard(text, button) {
+    var tempInput = $("<textarea>");
+    $("body").append(tempInput);
+    tempInput.val(text).trigger("select");
+    document.execCommand("copy");
+    tempInput.remove();
+    showCopyFeedback(button);
+  }
+
+  function showCopyFeedback(button) {
+    var originalIcon = button.find(".dashicons").attr("class");
+    button.find(".dashicons").removeClass().addClass("dashicons dashicons-yes");
+    button.addClass("is-copied");
+    setTimeout(function () {
+      button.find(".dashicons").removeClass().addClass(originalIcon);
+      button.removeClass("is-copied");
+    }, 1500);
+  }
+
+  // Show Password Functionality (AJAX-based decryption)
+  $(document).on("click", ".show-password", function () {
+    var button = $(this);
+    var passwordSpan = button.siblings(".password-hidden");
+    var icon = button.find(".dashicons");
+    var credentialId = button.data("credential-id");
+
+    if (!credentialId) {
+      return;
+    }
+
+    // If already revealed, hide it
+    if (passwordSpan.data("revealed")) {
+      passwordSpan.text("********");
+      passwordSpan.data("revealed", false);
+      icon.removeClass("dashicons-hidden").addClass("dashicons-visibility");
+      return;
+    }
+
+    // Fetch decrypted password from server
+    $.ajax({
+      url: robodesk_ajax_object.ajax_url,
+      type: "POST",
+      data: {
+        action: "robodesk_reveal_credential_password",
+        credential_id: credentialId,
+        nonce: robodesk_ajax_object.reveal_credential_nonce,
+      },
+      beforeSend: function () {
+        passwordSpan.text("Loading...");
+        button.prop("disabled", true);
+      },
+      success: function (response) {
+        if (response.success) {
+          passwordSpan.text(response.data.password);
+          passwordSpan.data("revealed", true);
+          icon.removeClass("dashicons-visibility").addClass("dashicons-hidden");
+        } else {
+          passwordSpan.text("********");
+          alert(response.data || "Unable to reveal password.");
+        }
+      },
+      error: function () {
+        passwordSpan.text("********");
+        alert("An error occurred while fetching the password.");
+      },
+      complete: function () {
+        button.prop("disabled", false);
+      },
+    });
   });
 
   $("body").append('<div class="spinner"></div>');
