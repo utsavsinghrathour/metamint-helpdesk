@@ -67,8 +67,7 @@ function robodesk_clean_email_message($message)
 
     // 2. Remove common email reply headers in plain text or mixed text
     $split_patterns = array(
-        // "On ... wrote:" — with OR without a preceding newline (covers single-line and multi-line variants)
-        '/([\r\n]+\s*|^)On\s+(?:(?!\bOn\b).){1,250}?\s+wrote:\s*/is',
+        '/[\r\n]+\s*On\s+(?:(?!\bOn\b).){1,250}?\s+wrote:\s*/i', // On ... wrote:
         '/[\r\n]+\s*-+\s*Original Message\s*-+/i',             // -----Original Message-----
         '/[\r\n]+\s*From:\s+.*[\r\n]+\s*(?:Sent|Date):\s+/i',    // Outlook style: From: ... Sent: ...
         '/[\r\n]+\s*_{32,}/',                                    // Divider lines (32+ underscores)
@@ -77,7 +76,6 @@ function robodesk_clean_email_message($message)
     foreach ($split_patterns as $pattern) {
         $parts = preg_split($pattern, $message, 2);
         if (count($parts) > 1) {
-            // Keep only the part BEFORE the quote marker
             $message = $parts[0];
         }
     }
@@ -142,85 +140,63 @@ function robodesk_fetch_emails()
         'password' => '',
     ));
 
-    // Construct the base IMAP connection string (without folder)
-    $imap_base = '{' . $settings['hostname'] . ':' . $settings['port'] . '/imap/ssl}';
+    // Construct the IMAP connection string
+    $hostname = '{' . $settings['hostname'] . ':' . $settings['port'] . '/imap/ssl}INBOX';
     $username = $settings['username'];
     $password = $settings['password'];
 
-    // Folders to scan: INBOX for incoming, Sent for outgoing support replies.
-    // Common sent-folder names vary by mail provider — try the most common ones.
-    $folders_to_scan = ['INBOX', 'Sent', 'Sent Items', 'Sent Messages', 'INBOX.Sent'];
 
-    // Discover which sent folder actually exists on this server.
-    $test_conn = @imap_open($imap_base . 'INBOX', $username, $password, OP_HALFOPEN);
-    $active_folders = ['INBOX']; // Always scan INBOX
-    if ($test_conn) {
-        $all_folders = imap_list($test_conn, $imap_base, '*');
-        if (is_array($all_folders)) {
-            foreach ($folders_to_scan as $candidate) {
-                foreach ($all_folders as $server_folder) {
-                    // imap_list returns full strings like {host:993/imap/ssl}Sent
-                    $folder_name = str_replace($imap_base, '', $server_folder);
-                    if (strcasecmp(trim($folder_name), $candidate) === 0) {
-                        if ($candidate !== 'INBOX') {
-                            $active_folders[] = $folder_name;
-                        }
-                        break;
-                    }
-                }
-            }
-        }
-        imap_close($test_conn);
+    rbd_log('Attempting to connect to IMAP server: ' . $hostname);
+
+    // Connect to email with error handling
+    $email = @imap_open($hostname, $username, $password);
+    if (!$email) {
+        $error_message = 'Cannot connect to email: ' . imap_last_error();
+        rbd_log($error_message);
+        return 'Error: ' . $error_message;
     }
-    rbd_log('Folders to scan: ' . implode(', ', $active_folders));
 
-    $processed_count = 0;
-    $skipped_count   = 0;
-    $reply_count     = 0;
-    $error_count     = 0;
-    $summary         = '';
-
-    // Pre-fetch existing message IDs once (shared across all folder scans)
-    $existing_message_ids = get_posts([
-        'post_type'      => 'robodesk_ticket',
-        'meta_key'       => 'email_message_id',
-        'posts_per_page' => -1,
-        'fields'         => 'ids',
-        'meta_query'     => [['key' => 'email_message_id', 'compare' => 'EXISTS']],
-    ]);
-    $existing_message_ids = array_map(function ($post_id) {
-        return get_post_meta($post_id, 'email_message_id', true);
-    }, $existing_message_ids);
-
-    foreach ($active_folders as $folder) {
-        $hostname = $imap_base . $folder;
-        rbd_log('Attempting to connect to IMAP folder: ' . $hostname);
-
-        $email = @imap_open($hostname, $username, $password);
-        if (!$email) {
-            rbd_log('Cannot connect to folder ' . $folder . ': ' . imap_last_error());
-            continue; // Try next folder
-        }
-
-        rbd_log('Successfully connected to folder: ' . $folder);
-
+    rbd_log('Successfully connected to IMAP server');
+    // Check if the mailbox is empty
     try {
         // Fetch emails received after last fetched date
         $search_criteria = 'SINCE "' . $since_date . '"';
-        rbd_log('Search criteria for ' . $folder . ': ' . $search_criteria);
+        rbd_log('Search criteria: ' . $search_criteria);
 
         $emails = imap_search($email, $search_criteria);
 
         if (!$emails) {
-            rbd_log('No new emails found in ' . $folder . ' since ' . $since_date);
-            imap_close($email);
-            continue;
+            $notice = 'No new emails found since ' . $since_date;
+            rbd_log($notice);
+            return $notice; // ✅ Return this message, don't echo
         }
 
-        rbd_log('Found ' . count($emails) . ' emails in ' . $folder . ' to process');
+        rbd_log('Found ' . count($emails) . ' emails to process');
 
         // Sort emails oldest to newest
         sort($emails);
+
+        // Pre-fetch existing message IDs to prevent duplicates
+        $existing_message_ids = get_posts([
+            'post_type' => 'robodesk_ticket',
+            'meta_key' => 'email_message_id',
+            'posts_per_page' => -1,
+            'fields' => 'ids',
+            'meta_query' => [
+                [
+                    'key' => 'email_message_id',
+                    'compare' => 'EXISTS',
+                ],
+            ],
+        ]);
+        $existing_message_ids = array_map(function ($post_id) {
+            return get_post_meta($post_id, 'email_message_id', true);
+        }, $existing_message_ids);
+
+        $processed_count = 0;
+        $skipped_count = 0;
+        $reply_count = 0;
+        $error_count = 0;
 
         foreach ($emails as $email_number) {
             rbd_log('Processing email #' . $email_number);
@@ -329,49 +305,21 @@ function robodesk_fetch_emails()
 
             if (!empty($in_reply_to) || !empty($references)) {
                 rbd_log('Email #' . $email_number . ' appears to be a reply');
-
-                // Build list of IDs to search: check in_reply_to first (most direct), then references
-                $reference_ids = [];
-                if (!empty($in_reply_to)) {
-                    $reference_ids[] = trim($in_reply_to);
-                }
-                if (!empty($references)) {
-                    $refs_from_header = array_filter(array_map('trim', explode(' ', trim($references))));
-                    // Merge, avoiding duplicates, most recent refs last
-                    foreach (array_reverse($refs_from_header) as $r) {
-                        if (!in_array($r, $reference_ids, true)) {
-                            $reference_ids[] = $r;
-                        }
-                    }
-                }
-
+                $reference_ids = !empty($references) ? explode(' ', trim($references)) : [$in_reply_to];
                 foreach ($reference_ids as $ref_id) {
-                    if (empty($ref_id)) continue;
-
-                    // 1. Check ticket post meta (email_message_id stored on ticket post)
-                    $original_query = new WP_Query([
-                        'meta_key'       => 'email_message_id',
-                        'meta_value'     => $ref_id,
-                        'post_type'      => 'robodesk_ticket',
-                        'posts_per_page' => 1,
-                        'fields'         => 'ids',
-                    ]);
-                    if (!empty($original_query->posts)) {
-                        $original_post_id = $original_query->posts[0];
-                        rbd_log('Found original ticket (post meta) with ID: ' . $original_post_id . ' via ref: ' . $ref_id);
-                        break;
-                    }
-
-                    // 2. Check comment meta (email_message_id stored on a previous reply comment)
-                    $matching_comments = get_comments([
-                        'meta_key'   => 'email_message_id',
-                        'meta_value' => $ref_id,
-                        'number'     => 1,
-                    ]);
-                    if (!empty($matching_comments)) {
-                        $original_post_id = (int) $matching_comments[0]->comment_post_ID;
-                        rbd_log('Found original ticket (comment meta) with ID: ' . $original_post_id . ' via ref: ' . $ref_id);
-                        break;
+                    if (!empty($ref_id)) {
+                        $original_query = new WP_Query([
+                            'meta_key' => 'email_message_id',
+                            'meta_value' => $ref_id,
+                            'post_type' => 'robodesk_ticket',
+                            'posts_per_page' => 1,
+                            'fields' => 'ids',
+                        ]);
+                        if (!empty($original_query->posts)) {
+                            $original_post_id = $original_query->posts[0];
+                            rbd_log('Found original ticket with ID: ' . $original_post_id);
+                            break;
+                        }
                     }
                 }
 
@@ -394,45 +342,15 @@ function robodesk_fetch_emails()
 
                     if (!$is_duplicate) {
                         rbd_log('Adding comment to ticket ID: ' . $original_post_id);
-
-                        // Determine if this reply is from the support inbox (agent) or an external customer.
-                        // Compare the sender email against the configured IMAP username (the support inbox address).
-                        // Also treat any email found in a non-INBOX folder (e.g. Sent) as an agent reply.
-                        $imap_settings = get_option('robodesk_imap_settings', []);
-                        $support_email = isset($imap_settings['username']) ? strtolower(trim($imap_settings['username'])) : '';
-                        $reply_email_lower = strtolower(trim($useremail));
-                        $is_from_support_inbox = (
-                            ($reply_email_lower !== '' && $reply_email_lower === $support_email)
-                            || $folder !== 'INBOX'  // Emails in Sent/Sent Items are always outgoing agent replies
-                        );
-
                         $comment_user_id = 0;
-                        $author_type = 'customer';
-
-                        if ($is_from_support_inbox) {
-                            // Reply is from the support inbox — treat as agent reply.
-                            // Try to resolve the actual WordPress user for the support inbox email.
-                            $author_type = 'agent';
-                            if ($useremail !== '') {
-                                $reply_user = get_user_by('email', $useremail);
-                                if ($reply_user && !empty($reply_user->ID)) {
-                                    $comment_user_id = (int) $reply_user->ID;
-                                }
+                        if ($useremail !== '') {
+                            $reply_user = get_user_by('email', $useremail);
+                            if ($reply_user && !empty($reply_user->ID)) {
+                                $comment_user_id = (int) $reply_user->ID;
                             }
-                            // If no matching WP user, leave comment_user_id as 0 (system/agent without WP account).
-                            rbd_log('Reply is from support inbox (' . $useremail . '), treating as agent. WP user ID: ' . $comment_user_id);
-                        } else {
-                            // Reply is from an external customer.
-                            if ($useremail !== '') {
-                                $reply_user = get_user_by('email', $useremail);
-                                if ($reply_user && !empty($reply_user->ID)) {
-                                    $comment_user_id = (int) $reply_user->ID;
-                                }
-                            }
-                            if ($comment_user_id <= 0 && function_exists('robodesk_get_ticket_customer_user_id')) {
-                                $comment_user_id = (int) robodesk_get_ticket_customer_user_id($original_post_id);
-                            }
-                            rbd_log('Reply is from external email (' . $useremail . '), treating as customer. WP user ID: ' . $comment_user_id);
+                        }
+                        if ($comment_user_id <= 0 && function_exists('robodesk_get_ticket_customer_user_id')) {
+                            $comment_user_id = (int) robodesk_get_ticket_customer_user_id($original_post_id);
                         }
 
                         $comment_id = wp_insert_comment([
@@ -449,12 +367,12 @@ function robodesk_fetch_emails()
                         if (!is_wp_error($comment_id)) {
                             add_comment_meta($comment_id, 'email_message_id', $message_id, true);
                             add_comment_meta($comment_id, 'comment_source', 'email', true);
-                            add_comment_meta($comment_id, 'author_type', $author_type, true);
+                            add_comment_meta($comment_id, 'author_type', 'customer', true);
                             add_comment_meta($comment_id, '_robodesk_source_ip', $email_source_context['ip'], true);
                             add_comment_meta($comment_id, '_robodesk_source_country', $email_source_context['country'], true);
                             add_comment_meta($comment_id, '_robodesk_source_browser', $email_source_context['browser'], true);
                             robodesk_store_ticket_source_meta($original_post_id, $email_source_context, $comment_id);
-                            rbd_log('Successfully added comment ID: ' . $comment_id . ' (author_type: ' . $author_type . ')');
+                            rbd_log('Successfully added comment ID: ' . $comment_id);
                             $reply_count++;
                         } else {
                             rbd_log('Failed to add comment: ' . $comment_id->get_error_message());
@@ -471,16 +389,6 @@ function robodesk_fetch_emails()
                 } else {
                     rbd_log('Could not find original ticket for reply, creating new ticket instead');
                 }
-            }
-
-            // Never create a new ticket from an email sent BY the support inbox itself
-            // (e.g. outgoing replies sitting in the Sent folder with no matching In-Reply-To).
-            $imap_settings_check = get_option('robodesk_imap_settings', []);
-            $support_inbox_email = strtolower(trim($imap_settings_check['username'] ?? ''));
-            if ($support_inbox_email !== '' && strtolower(trim($useremail)) === $support_inbox_email) {
-                rbd_log('Skipping email #' . $email_number . ' — sent FROM support inbox, not creating new ticket');
-                $skipped_count++;
-                continue;
             }
 
             // Create new ticket
@@ -650,24 +558,20 @@ function robodesk_fetch_emails()
             rbd_log('Robodesk: Updated last fetched email date/time to: ' . $date);
         }
 
-        // Display summary per folder
-        $folder_summary = "Folder '$folder': Processed: $processed_count, Replies: $reply_count, Errors: $error_count";
-        rbd_log($folder_summary);
-        $summary .= ($summary ? ' | ' : '') . $folder_summary;
+        // Display summary
+        // $summary = "Email processing complete. Processed: $processed_count, Replies: $reply_count, Skipped: $skipped_count, Errors: $error_count";
+        $summary = "Email processing complete. Processed: $processed_count, Replies: $reply_count, Errors: $error_count";
+
+        rbd_log($summary);
+
+        return $summary; // ✅ Return it
 
     } finally {
-        // Ensure IMAP connection is closed for this folder
-        if (isset($email) && $email) {
+        // Ensure IMAP connection is closed
+        if ($email) {
             imap_close($email);
         }
     }
-    } // end foreach $active_folders
-
-    if (empty($summary)) {
-        $summary = 'No new emails found since ' . $since_date;
-    }
-    rbd_log('Overall: ' . $summary);
-    return $summary;
 }
 
 
