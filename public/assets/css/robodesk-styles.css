@@ -276,6 +276,12 @@ body:has(.robodesk-popup.open) {
   font-weight: 400;
   border-radius: 6px;
   border: 1px solid #dc2626;
+  cursor: pointer;
+}
+
+.credential-table-wrapper .delete-credential:focus {
+  border: 1px solid #dc2626;
+  outline: none;
 }
 
 .credential-table-wrapper .credential-url-link {
@@ -286,9 +292,9 @@ body:has(.robodesk-popup.open) {
 }
 
 .credential-table-wrapper .credential-url-link .dashicons {
-  font-size: 16px;
-  width: 16px;
-  height: 16px;
+  font-size: 20px;
+  width: 20px;
+  height: 20px;
 }
 
 .credential-table-wrapper .copy-credential,
@@ -597,6 +603,15 @@ body:has(.robodesk-popup.open) {
   color: var(--rd-color-black);
   margin-top: 5px;
   margin-bottom: 0;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.robodesk-frontend-dashboard .ticket-date .dashicons-calendar {
+  display: flex;
+  align-items: center;
+  gap: 3px;
 }
 
 .dashicons-calendar:before {
@@ -1265,6 +1280,8 @@ body:has(.robodesk-popup.open) {
   display: inline-block;
   width: 80px;
   text-align: start;
+  white-space: nowrap;
+  overflow: hidden;
 }
 
 .robodesk-right-column {
