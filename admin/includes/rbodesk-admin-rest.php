@@ -114,43 +114,19 @@ function robodesk_live_admin_comments($request)
 
         foreach ($comments as $comment) {
             // Determine user type
+            $user = get_userdata($comment->user_id);
             $type = 'customer';
             $role = 'Customer';
             $is_bot_response = function_exists('robodesk_is_bot_comment') ? robodesk_is_bot_comment($comment->comment_ID) : false;
 
-            $saved_author_type = get_comment_meta($comment->comment_ID, 'author_type', true);
-
             if ($is_bot_response) {
                 $type = 'agent';
                 $role = 'AI BOT';
-            } elseif ($saved_author_type === 'agent') {
-                $type = 'agent';
-                $user = $comment->user_id ? get_userdata($comment->user_id) : false;
-                if ($user && !empty($user->roles)) {
-                    $roles = $user->roles;
-                    if (in_array('administrator', $roles)) {
-                        $role = 'Administrator';
-                    } elseif (in_array('robodesk_support_manager', $roles)) {
-                        $role = 'Support Manager';
-                    } elseif (in_array('robodesk_support_staff', $roles)) {
-                        $role = 'Support Staff';
-                    } elseif (in_array('robodesk_agent', $roles)) {
-                        $role = 'Agent';
-                    } else {
-                        $role = 'Support Staff';
-                    }
-                } else {
-                    $role = 'Support Staff';
-                }
-            } elseif ($saved_author_type !== 'customer') {
-                // Legacy fallback: no meta — use WP role
-                $user = $comment->user_id ? get_userdata($comment->user_id) : false;
-                if ($user) {
-                    $roles = $user->roles;
-                    if (in_array('administrator', $roles) || in_array('robodesk_agent', $roles)) {
-                        $type = 'agent';
-                        $role = 'Agent';
-                    }
+            } elseif ($user) {
+                $roles = $user->roles;
+                if (in_array('administrator', $roles) || in_array('robodesk_agent', $roles)) {
+                    $type = 'agent';
+                    $role = 'Agent';
                 }
             }
 
