@@ -1857,10 +1857,7 @@ function robodesk_send_unseen_reply_email($comment_id)
         return;
     }
 
-    $assignee_name = trim((string) get_post_meta($ticket_id, 'ticket_assignee', true));
-    if ($assignee_name === '') {
-        $assignee_name = $comment->comment_author;
-    }
+    $reply_author_name = trim((string) $comment->comment_author);
 
     $ticket_title = get_the_title($ticket_id);
     $reply_plain = trim(wp_strip_all_tags($comment->comment_content));
@@ -1890,7 +1887,7 @@ function robodesk_send_unseen_reply_email($comment_id)
     }
 
 
-    $message .= "<p><strong>" . esc_html($assignee_name) . "</strong> replied with:</p>";
+    $message .= "<p><strong>" . esc_html($reply_author_name) . "</strong> replied with:</p>";
     if ($reply_excerpt !== '') {
         $message .= "<p>\"" . esc_html($reply_excerpt) . "\"</p>";
     }
