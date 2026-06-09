@@ -1620,53 +1620,114 @@ function robodesk_handle_get_ticket_replies()
     ]);
 
     $replies = [];
+
+    // Retrieve IMAP support inbox email once (used to identify email-piped agent replies)
+    $imap_settings    = get_option('robodesk_imap_settings', []);
+    $support_inbox    = strtolower(trim($imap_settings['username'] ?? ''));
+
     foreach ($comments as $comment) {
-        // Determine user type and role
-        $user = get_userdata($comment->user_id);
+        $is_bot_response = function_exists('robodesk_is_bot_comment') ? robodesk_is_bot_comment($comment->comment_ID) : false;
+
+        // ── Determine type & role ─────────────────────────────────────────────
+        // Priority order:
+        //   1. Bot detection (always wins)
+        //   2. author_type comment meta (set by email-piping and reply handlers)
+        //   3. WP user role fallback (for replies added through the dashboard UI)
+        // -----------------------------------------------------------------
+
+        $saved_author_type = get_comment_meta($comment->comment_ID, 'author_type', true); // 'agent' | 'customer' | ''
+
         $type = 'customer';
         $role = 'Customer';
-        $is_bot_response = function_exists('robodesk_is_bot_comment') ? robodesk_is_bot_comment($comment->comment_ID) : false;
 
         if ($is_bot_response) {
             $type = 'agent';
             $role = 'AI BOT';
-        } elseif ($user) {
-            $roles = $user->roles;
-            // Check for staff roles
-            if (in_array('administrator', $roles)) {
+        } elseif ($saved_author_type === 'agent') {
+            // Marked as agent by the email-piping code or dashboard handler.
+            $type = 'agent';
+            // Derive a human-readable role label from the WP user (if available),
+            // falling back to 'Support Staff' for email-piped replies (user_id may be 0).
+            $user = $comment->user_id ? get_userdata($comment->user_id) : false;
+            if ($user) {
+                $roles = $user->roles;
+                if (in_array('administrator', $roles)) {
+                    $role = 'Administrator';
+                } elseif (in_array('robodesk_support_manager', $roles)) {
+                    $role = 'Support Manager';
+                } elseif (in_array('robodesk_support_staff', $roles)) {
+                    $role = 'Support Staff';
+                } elseif (in_array('robodesk_agent', $roles)) {
+                    $role = 'Agent';
+                } elseif (in_array('editor', $roles)) {
+                    $role = 'Editor';
+                } else {
+                    $role = 'Support Staff';
+                }
+            } else {
+                // No WP user (email-piped reply) — show inbox address as role label
+                // if available, otherwise generic label.
+                $comment_email = strtolower(trim($comment->comment_author_email));
+                if ($comment_email && $comment_email === $support_inbox) {
+                    $role = 'Support';
+                } else {
+                    $role = 'Support Staff';
+                }
+            }
+        } elseif ($saved_author_type === 'customer') {
+            $type = 'customer';
+            $role = 'Customer';
+        } else {
+            // No meta saved — fall back to WP role detection (covers legacy comments
+            // added before author_type meta was introduced).
+            $user = $comment->user_id ? get_userdata($comment->user_id) : false;
+            if ($user) {
+                $roles = $user->roles;
+                if (in_array('administrator', $roles)) {
+                    $type = 'agent';
+                    $role = 'Administrator';
+                } elseif (in_array('robodesk_support_manager', $roles)) {
+                    $type = 'agent';
+                    $role = 'Support Manager';
+                } elseif (in_array('robodesk_support_staff', $roles)) {
+                    $type = 'agent';
+                    $role = 'Support Staff';
+                } elseif (in_array('robodesk_agent', $roles)) {
+                    $type = 'agent';
+                    $role = 'Agent';
+                } elseif (in_array('editor', $roles)) {
+                    $type = 'agent';
+                    $role = 'Editor';
+                }
+            }
+        }
+
+        // Also check sender address against IMAP inbox as a final safety net:
+        // if the comment came from the support inbox but meta/role detection missed it.
+        if ($type === 'customer' && $support_inbox !== '') {
+            $comment_email = strtolower(trim($comment->comment_author_email));
+            if ($comment_email === $support_inbox) {
                 $type = 'agent';
-                $role = 'Administrator';
-            } elseif (in_array('robodesk_support_manager', $roles)) {
-                $type = 'agent';
-                $role = 'Support Manager';
-            } elseif (in_array('robodesk_support_staff', $roles)) {
-                $type = 'agent';
-                $role = 'Support Staff';
-            } elseif (in_array('robodesk_agent', $roles)) {
-                $type = 'agent';
-                $role = 'Agent';
-            } elseif (in_array('editor', $roles)) {
-                $type = 'agent';
-                $role = 'Editor';
+                $role = 'Support';
             }
         }
 
         // Get comment meta
         $is_action = get_comment_meta($comment->comment_ID, 'is_action', true);
         $comment_meta = [
-            'is_action' => $is_action ? true : false, // Ensure boolean value
+            'is_action'      => $is_action ? true : false,
             'is_bot_response' => $is_bot_response,
         ];
 
         $replies[] = [
-            'id'        => $comment->comment_ID,
-            'author'    => $is_bot_response && function_exists('robodesk_get_bot_display_name') ? robodesk_get_bot_display_name() : $comment->comment_author,
-            'message'   => $comment->comment_content,
-            'timestamp' => $comment->comment_date,
-            'type'      => $type,
-            'role'      => $role,
+            'id'             => $comment->comment_ID,
+            'author'         => $is_bot_response && function_exists('robodesk_get_bot_display_name') ? robodesk_get_bot_display_name() : $comment->comment_author,
+            'message'        => $comment->comment_content,
+            'timestamp'      => $comment->comment_date,
+            'type'           => $type,
+            'role'           => $role,
             'is_bot_response' => $is_bot_response,
-            'comment_meta' => $comment_meta, // Include comment_meta object
+            'comment_meta'   => $comment_meta,
         ];
     }
 
@@ -3022,6 +3083,6 @@ function robodesk_send_email($to, $subject, $message, $headers = [], $attachment
         }
     }
 
-    // Fallback to WordPress mail
+    // Fallback to WordPress mail.
     return wp_mail($to, $subject, $email_template, $headers, $attachments);
 }
