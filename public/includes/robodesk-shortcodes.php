@@ -1307,8 +1307,10 @@ function robodesk_single_ticket_shortcode($atts)
                     },
 
                     complete: function() {
-                        button.val('Submit');
-                        button.prop('disabled', false);
+                        setTimeout(function() {
+                            button.val('Submit');
+                            button.prop('disabled', false);
+                        }, 3000);
                     }
                 });
             });
@@ -1396,8 +1398,13 @@ function robodesk_submit_comment()
         ));
     }
 
+    // Bypass WordPress core comment flood check for Robodesk chat submissions
+    add_filter('wp_is_comment_flood', '__return_false');
+
     // phpcs:ignore WordPress.Security.NonceVerification.Missing
     $comment = wp_handle_comment_submission(wp_unslash($_POST));
+
+    remove_filter('wp_is_comment_flood', '__return_false');
 
     global $wpdb;
     if (is_wp_error($comment)) {
