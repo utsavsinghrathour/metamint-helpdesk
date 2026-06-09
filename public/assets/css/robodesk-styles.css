@@ -103,6 +103,11 @@ body:has(.robodesk-popup.open) {
 .robodesk-popup .rd-notice-tab-wrap {
   min-height: auto;
   max-height: calc(100% - 160px);
+  display: flex;
+  flex-direction: column;
+}
+
+.rd-notice-tab-wrap .notice-tab-content {
   overflow: auto;
 }
 
