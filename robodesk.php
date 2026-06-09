@@ -69,6 +69,9 @@ function robodesk_deactivate()
     remove_role('robodesk_support_manager');
     remove_role('robodesk_support_staff');
     remove_role('robodesk_support_customer');
+
+    // Clear the email fetch cron event
+    wp_clear_scheduled_hook('robodesk_email_fetch_cron');
 }
 
 /**

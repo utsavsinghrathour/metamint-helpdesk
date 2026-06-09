@@ -842,6 +842,19 @@ function robodesk_save_cropped_logo()
 
 // configure automatic ticket assignment and fetch timing
 
+add_filter('cron_schedules', 'robodesk_add_fetch_cron_interval');
+function robodesk_add_fetch_cron_interval($schedules)
+{
+    $interval = get_option('robodesk_fetch_interval', 15);
+    $schedules['robodesk_fetch_interval'] = [
+        'interval' => $interval * 60,
+        'display'  => sprintf(esc_html__('Every %d minutes (Robodesk fetch)', 'robodesk'), $interval),
+    ];
+    return $schedules;
+}
+
+add_action('robodesk_email_fetch_cron', 'robodesk_fetch_emails');
+
 add_action('wp_ajax_robodesk_save_ticket_assignment_settings', 'robodesk_save_ticket_assignment_settings');
 function robodesk_save_ticket_assignment_settings()
 {
@@ -868,6 +881,12 @@ function robodesk_save_ticket_assignment_settings()
     // Save settings to the database
     update_option('robodesk_fetch_interval', $fetch_interval);
     update_option('robodesk_default_agent', $default_agent);
+
+    // Reschedule the cron event with the new interval
+    if (wp_next_scheduled('robodesk_email_fetch_cron')) {
+        wp_clear_scheduled_hook('robodesk_email_fetch_cron');
+    }
+    wp_schedule_event(time(), 'robodesk_fetch_interval', 'robodesk_email_fetch_cron');
 
     wp_send_json_success(['message' => 'Ticket assignment settings saved successfully']);
 }
