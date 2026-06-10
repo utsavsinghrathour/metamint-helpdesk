@@ -170,7 +170,8 @@ jQuery(document).ready(function ($) {
       },
       success: function (response) {
         if (response.success) {
-          location.reload();
+          var row = $(".robodesk-delete-credentials[data-credential-id='" + credentialId + "']").closest("tr");
+          row.remove();
         } else {
           alert(response.data.message);
           console.log(response);
@@ -276,55 +277,111 @@ jQuery(document).ready(function ($) {
 jQuery(document).ready(function ($) {
   // ... other JavaScript code
 
-  // Show/Hide Add Credential Form
+  // Load Add Credential Form via AJAX
   $("#add-credential-button").click(function () {
-    $("#credential-form").toggle();
-  });
-
-  // Add Credential AJAX
-  $("#robodesk-add-credential").submit(function (e) {
-    e.preventDefault();
-
-    var formData = $(this).serialize();
+    var existing = $("#credential-form");
+    if (existing.length) {
+      existing.slideUp(function () { $(this).remove(); });
+      return;
+    }
+    var container = $("<div id='credential-form'></div>").insertAfter(this);
     $.ajax({
       url: robodesk_ajax_object.ajax_url,
       type: "POST",
-      data: formData,
-      success: function (response) {
-        console.log(response);
-        if (response.success) {
-          $("#robodesk-add-credential")[0].reset();
-          location.reload();
-        } else {
-          alert(response.data);
-          console.error(response);
-        }
+      data: {
+        action: "robodesk_get_credential_form",
+        nonce: robodesk_ajax_object.add_credential_nonce,
       },
-      error: function (jqXHR, textStatus, errorThrown) {
-        alert("An error occurred: " + textStatus + " " + errorThrown);
-        console.error("AJAX Error:", jqXHR, textStatus, errorThrown);
+      success: function (response) {
+        if (response.success) {
+          container.html(response.data.html).slideDown();
+          bindAddCredentialForm();
+        }
       },
     });
   });
 
+  function bindAddCredentialForm() {
+    $("#robodesk-add-credential")
+      .off("submit")
+      .on("submit", function (e) {
+        e.preventDefault();
+
+        var formData = $(this).serialize();
+        $.ajax({
+          url: robodesk_ajax_object.ajax_url,
+          type: "POST",
+          data: formData,
+          success: function (response) {
+            if (response.success) {
+              $("#robodesk-add-credential")[0].reset();
+              $("#credential-form").slideUp();
+              var cred = response.data;
+              var row = buildCredentialRow(cred);
+              var wrapper = $(".credential-table-wrapper");
+              if (wrapper.length) {
+                wrapper.find("table tbody").append(row);
+              } else {
+                $(".robodesk-my-credentials").html(
+                  '<div class="credential-table-wrapper"><table><thead><tr><th>Name</th><th>Username</th><th>Password</th><th>URL</th><th>Notes</th><th>Actions</th></tr></thead><tbody></tbody></table></div>'
+                );
+                $(".credential-table-wrapper table tbody").append(row);
+              }
+            } else {
+              alert(response.data);
+              console.error(response);
+            }
+          },
+          error: function (jqXHR, textStatus, errorThrown) {
+            alert("An error occurred: " + textStatus + " " + errorThrown);
+            console.error("AJAX Error:", jqXHR, textStatus, errorThrown);
+          },
+        });
+      });
+  }
+
+  bindAddCredentialForm();
+
+  function buildCredentialRow(cred) {
+    var urlHtml = cred.url
+      ? '<span class="credential-cell-wrap"><a href="' + cred.url + '" target="_blank" rel="noopener noreferrer" class="credential-url-link" title="' + cred.url + '"><span class="dashicons dashicons-external" aria-hidden="true"></span></a><button type="button" class="copy-credential" data-copy-value="' + cred.url + '" title="' + cred.url + '"><span class="dashicons dashicons-admin-page"></span></button></span>'
+      : '<span class="credential-url-text">&mdash;</span>';
+
+    return '<tr class="robodesk-table-content">' +
+      '<td><span class="credential-cell-wrap"><span class="credential-name-text">' + cred.name + '</span><button type="button" class="copy-credential" data-copy-value="' + cred.name + '" title="Copy Name"><span class="dashicons dashicons-admin-page"></span></button></span></td>' +
+      '<td><span class="credential-cell-wrap"><span class="credential-username-text">' + cred.username + '</span><button type="button" class="copy-credential" data-copy-value="' + cred.username + '" title="Copy Username"><span class="dashicons dashicons-admin-page"></span></button></span></td>' +
+      '<td><span class="credential-cell-wrap"><span class="password-hidden">********</span><button type="button" class="show-password" data-credential-id="' + cred.id + '" title="Show Password"><span class="dashicons dashicons-visibility"></span></button><button type="button" class="copy-password" data-credential-id="' + cred.id + '" title="Copy Password"><span class="dashicons dashicons-admin-page"></span></button></span></td>' +
+      '<td>' + urlHtml + '</td>' +
+      '<td>' + (cred.notes || '') + '</td>' +
+      '<td><button class="delete-credential" data-credential-id="' + cred.id + '">Delete</button></td>' +
+      '</tr>';
+  }
+
   // Delete Credential AJAX
-  $(".delete-credential").click(function () {
+  $(document).on("click", ".delete-credential", function () {
     var credentialId = $(this).data("credential-id");
     var confirmDelete = confirm(
       "Are you sure you want to delete this credential?",
     );
     if (confirmDelete) {
+      var row = $(this).closest("tr");
       $.ajax({
         url: robodesk_ajax_object.ajax_url,
         type: "POST",
         data: {
           action: "robodesk_delete_credential",
           credential_id: credentialId,
-          nonce: robodesk_ajax_object.delete_credential_nonce, // Use the correct nonce
+          nonce: robodesk_ajax_object.delete_credential_nonce,
         },
         success: function (response) {
           if (response.success) {
-            location.reload();
+            row.remove();
+            var tbody = $(".credential-table-wrapper table tbody");
+            if (tbody.length && tbody.find("tr").length === 0) {
+              $(".robodesk-my-credentials").html(
+                "<p>No credentials saved yet.</p>"
+              );
+            }
           } else {
             alert(response.data);
             console.error(response);

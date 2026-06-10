@@ -191,30 +191,6 @@ function robodesk_credentials_page()
 
     <button id="add-credential-button">Add Credential</button>
 
-    <div id="credential-form" style="display: none;">
-        <h3>Add New Credential</h3>
-        <form id="robodesk-add-credential">
-            <label for="credential_name">Name:</label><br>
-            <input type="text" id="credential_name" name="credential_name" required><br><br>
-
-            <label for="credential_username">Username:</label><br>
-            <input type="text" id="credential_username" name="credential_username" required><br><br>
-
-            <label for="credential_password">Password:</label><br>
-            <input type="password" id="credential_password" name="credential_password" required><br><br>
-
-            <label for="credential_url">URL:</label><br>
-            <input type="text" id="credential_url" name="credential_url"><br><br>
-
-            <label for="credential_notes">Notes:</label><br>
-            <textarea id="credential_notes" name="credential_notes"></textarea><br><br>
-
-            <input type="hidden" name="action" value="robodesk_add_credential">
-            <?php wp_nonce_field('robodesk_add_credential_nonce'); ?>
-            <input type="submit" value="Add">
-        </form>
-    </div>
-
     <div class="robodesk-my-credentials">
         <h2>My Credentials</h2>
         <?php if ($credentials): ?>
