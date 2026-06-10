@@ -5,6 +5,17 @@ if (!defined('ABSPATH')) {
     exit; // Exit if accessed directly
 }
 
+// Bypass WordPress comment flood protection for all Robodesk ticket comment submissions
+add_filter('wp_is_comment_flood', function ($flood, $user_id) {
+    if (isset($_POST['comment_post_ID']) && get_post_type((int) $_POST['comment_post_ID']) === 'robodesk_ticket') {
+        return false;
+    }
+    if (isset($_POST['post_id']) && get_post_type((int) $_POST['post_id']) === 'robodesk_ticket') {
+        return false;
+    }
+    return $flood;
+}, 10, 2);
+
 add_shortcode('robodesk_ticket_form', 'robodesk_ticket_form_shortcode');
 function robodesk_ticket_form_shortcode()
 {
