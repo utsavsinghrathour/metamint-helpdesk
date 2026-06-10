@@ -44,9 +44,9 @@
   width: 25%;
 }
 
-body:has(.robodesk-popup.open) {
+/* body:has(.robodesk-popup.open) {
   overflow: hidden;
-}
+} */
 
 .rd-h-full {
   height: 100%;
