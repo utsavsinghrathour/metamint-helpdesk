@@ -106,13 +106,16 @@ const Header = ({ logo, onClose, setActiveTab, setShowLogin, updateSelectedTicke
       setActiveTab(1);
 
       if (messagesExceptFirst.length > 0) {
-        messagesExceptFirst.forEach((message) => {
+        for (const message of messagesExceptFirst) {
+          const messageText = message.text || message.message || '';
+          if (!messageText.trim()) continue;
+
           if (message.role === 'user') {
-            sendReply(newTicket.id, loggedInUsrId, message.text);
+            await sendReply(newTicket.id, loggedInUsrId, messageText);
           } else if (message.role === 'assistant') {
-            sendReply(newTicket.id, selectedStaff, message.message, false, true);
+            await sendReply(newTicket.id, selectedStaff || loggedInUsrId, messageText, false, true);
           }
-        });
+        }
       }
 
       sessionStorage.removeItem(CHAT_KEY);
