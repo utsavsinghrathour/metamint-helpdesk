@@ -219,7 +219,7 @@ const AppContent = ({ imageUrls = { logo: "" } }) => {
           ? data.map((item) => (typeof item === "object" ? item.id : item))
           : [];
 
-        console.info("Executed From new notif");
+        // console.info("Executed From new notif");
         //   console.log('We ant here')
         handleSelectedTicketUpdate(null);
         if (updateNewCommentNotification(ids)) {

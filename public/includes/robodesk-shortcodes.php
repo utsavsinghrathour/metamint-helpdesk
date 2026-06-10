@@ -1063,6 +1063,15 @@ function robodesk_single_ticket_shortcode($atts)
     }
 
     $ticket = get_post($ticket_id);
+
+    $current_user = wp_get_current_user();
+    $allowed_roles = array('administrator', 'editor', 'support_agent', 'support_manager');
+    $is_author = (int) $ticket->post_author === $current_user->ID;
+    $is_staff = array_intersect($allowed_roles, $current_user->roles);
+
+    if (!$is_author && empty($is_staff)) {
+        return '<div class="robodesk-container"><p>You do not have permission to view this ticket.</p></div>';
+    }
     $status = get_post_meta($ticket_id, '_robodesk_ticket_status', true);
     if ($status === '') {
         $status = 'open';
