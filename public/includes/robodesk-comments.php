@@ -56,6 +56,7 @@ function robodesk_add_tinymce_to_comments($defaults)
         'tinymce' => array(
             'toolbar1' => 'bold italic underline link',
             'toolbar2' => '',
+            'plugins' => 'link',
         ),
     ));
 
