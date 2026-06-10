@@ -371,9 +371,6 @@ const Login = ({
         priority: ticketResponse.data.ticket_priority,
         messages: [],
       };
-      refreshTickets();
-      handleStateUpdate(newTicket);
-
       if (transcriptMessages.length > 1) {
         for (const message of transcriptMessages.slice(1)) {
           const messageText = message.text || message.message || "";
@@ -394,6 +391,9 @@ const Login = ({
           }
         }
       }
+
+      refreshTickets();
+      handleStateUpdate(newTicket);
 
       sessionStorage.removeItem(CHAT_KEY);
       return ticketResponse;
