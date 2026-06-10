@@ -73,7 +73,13 @@ const Header = ({ logo, onClose, setActiveTab, setShowLogin, updateSelectedTicke
     }
 
     const ticketTitle = userMessages[0].text;
-    const ticketDescription = userMessages.map(msg => msg.text).join('\n\n');
+    const ticketDescription = messages
+      .map((message) => {
+        const label = message.role === 'assistant' ? 'AI BOT' : 'Customer';
+        const body = message.text || message.message || '';
+        return `${label}: ${body}`.trim();
+      })
+      .join('\n\n');
 
     if (!loggedinContext) {
       localStorage.setItem('temp_ticket_title', ticketTitle);
@@ -106,13 +112,13 @@ const Header = ({ logo, onClose, setActiveTab, setShowLogin, updateSelectedTicke
       setActiveTab(1);
 
       if (messagesExceptFirst.length > 0) {
-        messagesExceptFirst.forEach((message) => {
+        for (const message of messagesExceptFirst) {
           if (message.role === 'user') {
-            sendReply(newTicket.id, loggedInUsrId, message.text);
+            await sendReply(newTicket.id, loggedInUsrId, message.text);
           } else if (message.role === 'assistant') {
-            sendReply(newTicket.id, selectedStaff, message.message, false, true);
+            await sendReply(newTicket.id, selectedStaff || loggedInUsrId, message.message, false, true);
           }
-        });
+        }
       }
 
       sessionStorage.removeItem(CHAT_KEY);
