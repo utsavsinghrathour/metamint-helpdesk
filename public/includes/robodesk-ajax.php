@@ -235,6 +235,42 @@ function robodesk_faq_vote_callback()
 }
 
 
+add_action('wp_ajax_robodesk_get_credential_form', 'robodesk_get_credential_form_callback');
+function robodesk_get_credential_form_callback()
+{
+    check_ajax_referer('robodesk_add_credential_nonce', 'nonce');
+    if (!is_user_logged_in()) {
+        wp_send_json_error('Not logged in.');
+    }
+    ob_start();
+    ?>
+    <h3>Add New Credential</h3>
+    <form id="robodesk-add-credential">
+        <label for="credential_name">Name:</label><br>
+        <input type="text" id="credential_name" name="credential_name" required><br><br>
+
+        <label for="credential_username">Username:</label><br>
+        <input type="text" id="credential_username" name="credential_username" required><br><br>
+
+        <label for="credential_password">Password:</label><br>
+        <input type="password" id="credential_password" name="credential_password" required><br><br>
+
+        <label for="credential_url">URL:</label><br>
+        <input type="text" id="credential_url" name="credential_url"><br><br>
+
+        <label for="credential_notes">Notes:</label><br>
+        <textarea id="credential_notes" name="credential_notes"></textarea><br><br>
+
+        <input type="hidden" name="action" value="robodesk_add_credential">
+        <?php wp_nonce_field('robodesk_add_credential_nonce'); ?>
+        <input type="submit" value="Add">
+    </form>
+    <?php
+    $html = ob_get_clean();
+    wp_send_json_success(array('html' => $html));
+    wp_die();
+}
+
 add_action('wp_ajax_robodesk_add_credential', 'robodesk_add_credential_callback');
 function robodesk_add_credential_callback()
 {
@@ -273,7 +309,15 @@ function robodesk_add_credential_callback()
     );
 
     if ($inserted !== false) {
-        wp_send_json_success();
+        $new_id = $wpdb->insert_id;
+        wp_send_json_success(array(
+            'id' => $new_id,
+            'name' => $name,
+            'username' => $username,
+            'url' => $url,
+            'notes' => $notes,
+            'created_at' => current_time('mysql'),
+        ));
     } else {
         wp_send_json_error('Error adding credential.');
     }
