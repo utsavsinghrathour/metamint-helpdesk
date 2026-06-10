@@ -101,10 +101,6 @@ const Header = ({ logo, onClose, setActiveTab, setShowLogin, updateSelectedTicke
         messages: [],
       };
 
-      refreshTickets();
-      updateSelectedTicket(newTicket);
-      setActiveTab(1);
-
       if (messagesExceptFirst.length > 0) {
         for (const message of messagesExceptFirst) {
           const messageText = message.text || message.message || '';
@@ -117,6 +113,10 @@ const Header = ({ logo, onClose, setActiveTab, setShowLogin, updateSelectedTicke
           }
         }
       }
+
+      refreshTickets();
+      updateSelectedTicket(newTicket);
+      setActiveTab(1);
 
       sessionStorage.removeItem(CHAT_KEY);
     } catch (error) {
