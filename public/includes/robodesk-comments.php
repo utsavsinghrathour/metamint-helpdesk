@@ -35,15 +35,15 @@ function robodesk_add_tinymce_to_comments($defaults)
     if (!is_wp_error(get_post_type($tid))) {
         $value = get_post_meta($tid, '_robodesk_ticket_status', true);
 ?>
-        <div class="robodesk-status-selector">
-            <label for="robodesk_ticket_status_comment"><?php esc_html_e('Select Status *', 'robodesk') ?></label>
-            <select name="robodesk_ticket_status_comment" id="robodesk_ticket_status_comment" required>
-                <option value="open" <?php selected($value, 'new'); ?>>New</option>
-                <option value="open" <?php selected($value, 'open'); ?>>Open</option>
-                <option value="in-progress" <?php selected($value, 'in-progress'); ?>>In Progress</option>
-                <option value="closed" <?php selected($value, 'closed'); ?>>Closed</option>
-            </select>
-        </div>
+<div class="robodesk-status-selector">
+    <label for="robodesk_ticket_status_comment"><?php esc_html_e('Select Status *', 'robodesk') ?></label>
+    <select name="robodesk_ticket_status_comment" id="robodesk_ticket_status_comment" required>
+        <option value="open" <?php selected($value, 'new'); ?>>New</option>
+        <option value="open" <?php selected($value, 'open'); ?>>Open</option>
+        <option value="in-progress" <?php selected($value, 'in-progress'); ?>>In Progress</option>
+        <option value="closed" <?php selected($value, 'closed'); ?>>Closed</option>
+    </select>
+</div>
 <?php
     }
 
