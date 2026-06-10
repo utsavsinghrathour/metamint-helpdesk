@@ -222,11 +222,12 @@ body:has(.robodesk-popup.open) {
   font-size: 14px;
 }
 
-.robodesk-table-content td:nth-child(2),
-.robodesk-table-content td:nth-child(4),
-.robodesk-table-content td:nth-child(5) {
+.robodesk-table-content td:nth-child(2):not(.robodesk-my-credentials td:nth-child(2)),
+.robodesk-table-content td:nth-child(4):not(.robodesk-my-credentials td:nth-child(4)),
+.robodesk-table-content td:nth-child(5):not(.robodesk-my-credentials td:nth-child(5)) {
   white-space: nowrap;
 }
+
 
 .robodesk-table-content td:first-child {
   min-width: 150px;
