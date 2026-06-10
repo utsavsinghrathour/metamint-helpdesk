@@ -937,6 +937,7 @@ function robodesk_create_ticket_page()
                         'wp_autoresize_on' => true,
                         'resize' => false,
                         'menubar' => false,
+                        'plugins' => 'link',
                     ),
                 );
                 wp_editor('', 'ticket_content', $args);
