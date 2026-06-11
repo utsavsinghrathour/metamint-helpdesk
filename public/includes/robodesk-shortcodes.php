@@ -600,95 +600,103 @@ function robodesk_profile_content()
     $user_id = get_current_user_id();
     // Save the Edits.
 
-    if (isset($_POST['first_name']) && isset($_POST['last_name'])) {
+    $errors = array();
+    $success_messages = array();
+
+    if (isset($_POST['robodesk_profile_nonce'])) {
         // phpcs:ignore WordPress.Security.NonceVerification.Missing
-        $profile_nonce = isset($_POST['robodesk_profile_nonce']) ? sanitize_text_field(wp_unslash($_POST['robodesk_profile_nonce'])) : '';
-        if ($profile_nonce === '' || ! wp_verify_nonce($profile_nonce, 'robodesk_update_profile')) {
-            echo '<p style="color:red;">Nonce verification failed</p>';
-            return;
-        }
-        $first_name = sanitize_text_field(wp_unslash($_POST['first_name']));
-        $last_name = sanitize_text_field(wp_unslash($_POST['last_name']));
-        $full_name = trim($first_name . ' ' . $last_name);
-
-        $userdata = array(
-            'ID'         => $user_id,
-            'first_name' => $first_name,
-            'last_name'  => $last_name,
-        );
-
-        if ($full_name !== '') {
-            $userdata['display_name'] = $full_name;
-        }
-
-        $user_id_update = wp_update_user($userdata);
-
-        if (is_wp_error($user_id_update)) {
-            echo '<p style="color:red;">Error updating user data: ' . esc_html($user_id_update->get_error_message()) . '</p>';
-        } else {
-            echo '<p style="color:green;">Profile updated successfully!</p>';
-        }
-    }
-    if (isset($_FILES['profile_picture']['error']) && $_FILES['profile_picture']['error'] !== UPLOAD_ERR_NO_FILE) { // Check for file and no error code for no file
-        // phpcs:ignore WordPress.Security.NonceVerification.Missing
-        $profile_nonce = isset($_POST['robodesk_profile_nonce']) ? sanitize_text_field(wp_unslash($_POST['robodesk_profile_nonce'])) : '';
-        if ($profile_nonce === '' || !wp_verify_nonce($profile_nonce, 'robodesk_update_profile')) {
+        $profile_nonce = sanitize_text_field(wp_unslash($_POST['robodesk_profile_nonce']));
+        if (! wp_verify_nonce($profile_nonce, 'robodesk_update_profile')) {
             echo '<p style="color:red;">Nonce verification failed</p>';
             return;
         }
 
-        $allowed_types = array('image/jpeg', 'image/png', 'image/gif', 'image/svg+xml');
-        $max_size = 5 * 1024 * 1024; // 5MB in bytes
+        // --- Validate all fields first ---
 
-        $file_type = isset($_FILES['profile_picture']['type']) ? sanitize_text_field(wp_unslash($_FILES['profile_picture']['type'])) : '';
-        $file_size = isset($_FILES['profile_picture']['size']) ? intval(wp_unslash($_FILES['profile_picture']['size'])) : 0;
+        $first_name = isset($_POST['first_name']) ? sanitize_text_field(wp_unslash($_POST['first_name'])) : '';
+        $last_name  = isset($_POST['last_name']) ? sanitize_text_field(wp_unslash($_POST['last_name'])) : '';
 
-        if (!in_array($file_type, $allowed_types)) {
-            echo '<p style="color:red;">Invalid file type. Only JPG, PNG, GIF, and SVG are allowed.</p>';
-            return;
+        $has_file = isset($_FILES['profile_picture']['error']) && $_FILES['profile_picture']['error'] !== UPLOAD_ERR_NO_FILE;
+        if ($has_file) {
+            $allowed_types = array('image/jpeg', 'image/png', 'image/gif', 'image/svg+xml');
+            $max_size = 5 * 1024 * 1024;
+            $file_type = isset($_FILES['profile_picture']['type']) ? sanitize_text_field(wp_unslash($_FILES['profile_picture']['type'])) : '';
+            $file_size = isset($_FILES['profile_picture']['size']) ? intval(wp_unslash($_FILES['profile_picture']['size'])) : 0;
+
+            if (!in_array($file_type, $allowed_types)) {
+                $errors[] = 'Invalid file type. Only JPG, PNG, GIF, and SVG are allowed.';
+            } elseif ($file_size > $max_size) {
+                $errors[] = 'Please make sure your profile picture is less than 5MB.';
+            }
         }
 
-        if ($file_size > $max_size) {
-            echo '<p style="color:red;">Please make sure your profile picture is less than 5MB.</p>';
-            return;
-        }
-
-        require_once(ABSPATH . 'wp-admin/includes/image.php');
-        require_once(ABSPATH . 'wp-admin/includes/file.php');
-        require_once(ABSPATH . 'wp-admin/includes/media.php');
-
-        $attachment_id = media_handle_upload('profile_picture', 0);
-
-        if (is_wp_error($attachment_id)) {
-            echo '<p style="color:red;">Error uploading profile picture: ' . esc_html($attachment_id->get_error_message()) . '</p>';
-        } else {
-            update_user_meta($user_id, 'wp_user_avatar', $attachment_id);
-            echo '<p style="color:green;">Profile picture updated successfully!</p>';
-        }
-    }
-    if (!empty($_POST['password']) && !empty($_POST['confirm_password'])) {
-        // phpcs:ignore WordPress.Security.NonceVerification.Missing
-        $profile_nonce = isset($_POST['robodesk_profile_nonce']) ? sanitize_text_field(wp_unslash($_POST['robodesk_profile_nonce'])) : '';
-        if ($profile_nonce === '' || ! wp_verify_nonce($profile_nonce, 'robodesk_update_profile')) {
-            echo '<p style="color:red;">Nonce verification failed</p>';
-            return;
-        }
         // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
         $password = isset($_POST['password']) ? wp_unslash($_POST['password']) : '';
         // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
         $confirm_password = isset($_POST['confirm_password']) ? wp_unslash($_POST['confirm_password']) : '';
 
-        if ($password !== $confirm_password) {
-            echo '<p style="color:red;">Passwords do not match.</p>';
-        } elseif (strlen($password) < 6) {
-            echo '<p style="color:red;">Password must be at least 6 characters long.</p>';
-        } else {
-            $user_update = wp_update_user(array('ID' => $user_id, 'user_pass' => $password));
+        if (!empty($password) || !empty($confirm_password)) {
+            if ($password !== $confirm_password) {
+                $errors[] = 'Passwords do not match.';
+            } elseif (strlen($password) < 8) {
+                $errors[] = 'Password must be at least 8 characters long.';
+            } elseif (!preg_match('/[A-Z]/', $password)) {
+                $errors[] = 'Password must contain at least one uppercase letter.';
+            } elseif (!preg_match('/[a-z]/', $password)) {
+                $errors[] = 'Password must contain at least one lowercase letter.';
+            } elseif (!preg_match('/[0-9]/', $password)) {
+                $errors[] = 'Password must contain at least one number.';
+            } elseif (!preg_match('/[^A-Za-z0-9]/', $password)) {
+                $errors[] = 'Password must contain at least one special character.';
+            }
+        }
 
-            if (is_wp_error($user_update)) {
-                echo '<p style="color:red;">Error changing password: ' . esc_html($user_update->get_error_message()) . '</p>';
+        // --- Process only if no validation errors ---
+
+        if (!empty($errors)) {
+            echo '<p style="color:red;">' . implode('</p><p style="color:red;">', array_map('esc_html', $errors)) . '</p>';
+        } else {
+            $full_name = trim($first_name . ' ' . $last_name);
+            $userdata = array(
+                'ID'         => $user_id,
+                'first_name' => $first_name,
+                'last_name'  => $last_name,
+            );
+            if ($full_name !== '') {
+                $userdata['display_name'] = $full_name;
+            }
+            $user_id_update = wp_update_user($userdata);
+            if (is_wp_error($user_id_update)) {
+                echo '<p style="color:red;">Error updating user data: ' . esc_html($user_id_update->get_error_message()) . '</p>';
             } else {
-                echo '<p style="color:green;">Password changed successfully!</p>';
+                $success_messages[] = 'Profile updated successfully!';
+            }
+
+            if ($has_file) {
+                require_once(ABSPATH . 'wp-admin/includes/image.php');
+                require_once(ABSPATH . 'wp-admin/includes/file.php');
+                require_once(ABSPATH . 'wp-admin/includes/media.php');
+
+                $attachment_id = media_handle_upload('profile_picture', 0);
+                if (is_wp_error($attachment_id)) {
+                    echo '<p style="color:red;">Error uploading profile picture: ' . esc_html($attachment_id->get_error_message()) . '</p>';
+                } else {
+                    update_user_meta($user_id, 'wp_user_avatar', $attachment_id);
+                    $success_messages[] = 'Profile picture updated successfully!';
+                }
+            }
+
+            if (!empty($password) && !empty($confirm_password)) {
+                $user_update = wp_update_user(array('ID' => $user_id, 'user_pass' => $password));
+                if (is_wp_error($user_update)) {
+                    echo '<p style="color:red;">Error changing password: ' . esc_html($user_update->get_error_message()) . '</p>';
+                } else {
+                    $success_messages[] = 'Password changed successfully!';
+                }
+            }
+
+            if (!empty($success_messages)) {
+                echo '<p style="color:green;">' . implode('</p><p style="color:green;">', $success_messages) . '</p>';
             }
         }
     }
@@ -720,21 +728,101 @@ function robodesk_profile_content()
         <?php else:
                     echo get_avatar($user_id, 96);
                 endif; ?><br>
-        <input type="file" name="profile_picture" id="profile_picture">
+        <input type="file" name="profile_picture" id="profile_picture"><br>
+        <img id="profile-preview" style="display:none; max-width: 150px; max-height: 150px; margin-top: 8px;">
     </div>
 
     <div class="rd-form-group">
         <label for="password">New Password:</label><br>
         <input type="password" name="password" id="password">
+        <span id="password-feedback" style="font-size:0.9em;"></span>
     </div>
 
     <div class="rd-form-group">
         <label for="confirm_password">Confirm New Password:</label><br>
         <input type="password" name="confirm_password" id="confirm_password">
+        <span id="confirm-password-feedback" style="font-size:0.9em;"></span>
     </div>
 
-    <input type="submit" value="Update Profile">
+    <span id="password-match-feedback" style="display:block; margin-top:4px;"></span>
+    <input type="submit" value="Update Profile" id="profile-submit">
 </form>
+<script>
+jQuery(document).ready(function($){
+    // --- Image preview ---
+    $('#profile_picture').on('change', function(e){
+        var file = this.files[0];
+        if (file) {
+            var reader = new FileReader();
+            reader.onload = function(ev){
+                $('#profile-preview').attr('src', ev.target.result).show();
+            };
+            reader.readAsDataURL(file);
+        } else {
+            $('#profile-preview').hide().attr('src', '');
+        }
+    });
+
+    // --- Password validation ---
+    var $password = $('#password');
+    var $confirm  = $('#confirm_password');
+    var $pwFeedback = $('#password-feedback');
+    var $cfFeedback = $('#confirm-password-feedback');
+    var $matchFeedback = $('#password-match-feedback');
+    var $submit = $('#profile-submit');
+
+    function getPasswordErrors(pw){
+        var errors = [];
+        if (pw.length < 8) errors.push('min 8 characters');
+        if (!/[A-Z]/.test(pw)) errors.push('uppercase');
+        if (!/[a-z]/.test(pw)) errors.push('lowercase');
+        if (!/[0-9]/.test(pw)) errors.push('number');
+        if (!/[^A-Za-z0-9]/.test(pw)) errors.push('special char');
+        return errors;
+    }
+
+    function validatePasswords(){
+        var pw = $password.val();
+        var cf = $confirm.val();
+        var pwErrors = getPasswordErrors(pw);
+        var cfErrors = getPasswordErrors(cf);
+        var match = (pw === cf) && pw.length > 0;
+
+        if (pw.length === 0) {
+            $pwFeedback.text('');
+        } else if (pwErrors.length === 0) {
+            $pwFeedback.text('✓').css('color','green');
+        } else {
+            $pwFeedback.text('✗ ' + pwErrors.join(', ')).css('color','red');
+        }
+
+        if (cf.length === 0) {
+            $cfFeedback.text('');
+        } else if (cfErrors.length === 0) {
+            $cfFeedback.text('✓').css('color','green');
+        } else {
+            $cfFeedback.text('✗ ' + cfErrors.join(', ')).css('color','red');
+        }
+
+        if (pw.length > 0 || cf.length > 0) {
+            var pwValid = pwErrors.length === 0;
+            var cfValid = cfErrors.length === 0;
+            if (pw.length > 0 && cf.length > 0 && pwValid && cfValid && match) {
+                $matchFeedback.text('✓ Passwords match').css('color','green');
+            } else if (pw.length > 0 && cf.length > 0 && !match && pwValid && cfValid) {
+                $matchFeedback.text('✗ Passwords do not match').css('color','red');
+            } else {
+                $matchFeedback.text('');
+            }
+        } else {
+            $matchFeedback.text('');
+        }
+    }
+
+    $password.on('keyup', validatePasswords);
+    $confirm.on('keyup', validatePasswords);
+});
+</script>
 <?php
     }
 }
