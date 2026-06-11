@@ -580,6 +580,83 @@ jQuery(document).ready(function ($) {
       },
     });
   });
+  // --- Profile: image preview ---
+  var fileInput = document.getElementById('profile_picture');
+  var previewImg = document.getElementById('profile-preview');
+  if (fileInput && previewImg) {
+    fileInput.addEventListener('change', function () {
+      var file = this.files[0];
+      if (previewImg.src && previewImg.src.indexOf('blob:') === 0) {
+        URL.revokeObjectURL(previewImg.src);
+      }
+      if (file) {
+        previewImg.src = URL.createObjectURL(file);
+        previewImg.style.display = 'inline';
+      } else {
+        previewImg.src = '';
+        previewImg.style.display = 'none';
+      }
+    });
+  }
 
-  //
+  // --- Profile: password validation ---
+  var $pwField = $('#password');
+  var $confirmField = $('#confirm_password');
+  var $pwFeedback = $('#password-feedback');
+  var $cfFeedback = $('#confirm-password-feedback');
+  var $matchFeedback = $('#password-match-feedback');
+
+  if ($pwField.length && $confirmField.length) {
+    function getPwErrors(val) {
+      var errors = [];
+      if (val.length < 8) errors.push('min 8 characters');
+      if (!/[A-Z]/.test(val)) errors.push('uppercase');
+      if (!/[a-z]/.test(val)) errors.push('lowercase');
+      if (!/[0-9]/.test(val)) errors.push('number');
+      if (!/[^A-Za-z0-9]/.test(val)) errors.push('special char');
+      return errors;
+    }
+
+    function validatePwFields() {
+      var pw = $pwField.val();
+      var cf = $confirmField.val();
+      var pwErrors = getPwErrors(pw);
+      var cfErrors = getPwErrors(cf);
+      var match = pw === cf && pw.length > 0;
+
+      if (pw.length === 0) {
+        $pwFeedback.text('');
+      } else if (pwErrors.length === 0) {
+        $pwFeedback.text('\u2713').css('color', 'green');
+      } else {
+        $pwFeedback.text('\u2717 ' + pwErrors.join(', ')).css('color', 'red');
+      }
+
+      if (cf.length === 0) {
+        $cfFeedback.text('');
+      } else if (cfErrors.length === 0) {
+        $cfFeedback.text('\u2713').css('color', 'green');
+      } else {
+        $cfFeedback.text('\u2717 ' + cfErrors.join(', ')).css('color', 'red');
+      }
+
+      if (pw.length > 0 || cf.length > 0) {
+        var pwValid = pwErrors.length === 0;
+        var cfValid = cfErrors.length === 0;
+        if (pwValid && cfValid && match) {
+          $matchFeedback.text('\u2713 Passwords match').css('color', 'green');
+        } else if (pwValid && cfValid && !match) {
+          $matchFeedback.text('\u2717 Passwords do not match').css('color', 'red');
+        } else {
+          $matchFeedback.text('');
+        }
+      } else {
+        $matchFeedback.text('');
+      }
+    }
+
+    $pwField.on('keyup', validatePwFields);
+    $confirmField.on('keyup', validatePwFields);
+  }
+
 });
