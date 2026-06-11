@@ -661,4 +661,29 @@ jQuery(document).ready(function ($) {
     $confirmField.on('keyup', validatePwFields);
   }
 
+  // --- Profile: form submit validation ---
+  $('.rodobesk-update-profile-form').on('submit', function () {
+    var pw = $pwField.val();
+    var cf = $confirmField.val();
+    var pwErrors = getPwErrors ? getPwErrors(pw) : [];
+    var hasError = false;
+
+    if (pw.length > 0 && cf.length === 0) {
+      $cfFeedback.text('Please confirm your new password').css('color', 'red');
+      hasError = true;
+    }
+
+    if (pw.length > 0 && cf.length > 0 && pwErrors.length === 0 && pw !== cf) {
+      $matchFeedback.text('Passwords do not match').css('color', 'red');
+      hasError = true;
+    }
+
+    if (pw.length > 0 && pwErrors.length > 0) {
+      $pwFeedback.text('Missing: ' + pwErrors.join(', ')).css('color', 'red');
+      hasError = true;
+    }
+
+    return !hasError;
+  });
+
 });
