@@ -631,22 +631,22 @@ function robodesk_profile_content()
         }
 
         // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
-        $password = isset($_POST['password']) ? wp_unslash($_POST['password']) : '';
+        $new_pass = isset($_POST['password']) ? wp_unslash($_POST['password']) : '';
         // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
-        $confirm_password = isset($_POST['confirm_password']) ? wp_unslash($_POST['confirm_password']) : '';
+        $confirm_new_pass = isset($_POST['confirm_password']) ? wp_unslash($_POST['confirm_password']) : '';
 
-        if (!empty($password) || !empty($confirm_password)) {
-            if ($password !== $confirm_password) {
+        if (!empty($new_pass) || !empty($confirm_new_pass)) {
+            if ($new_pass !== $confirm_new_pass) {
                 $errors[] = 'Passwords do not match.';
-            } elseif (strlen($password) < 8) {
+            } elseif (strlen($new_pass) < 8) {
                 $errors[] = 'Password must be at least 8 characters long.';
-            } elseif (!preg_match('/[A-Z]/', $password)) {
+            } elseif (!preg_match('/[A-Z]/', $new_pass)) {
                 $errors[] = 'Password must contain at least one uppercase letter.';
-            } elseif (!preg_match('/[a-z]/', $password)) {
+            } elseif (!preg_match('/[a-z]/', $new_pass)) {
                 $errors[] = 'Password must contain at least one lowercase letter.';
-            } elseif (!preg_match('/[0-9]/', $password)) {
+            } elseif (!preg_match('/[0-9]/', $new_pass)) {
                 $errors[] = 'Password must contain at least one number.';
-            } elseif (!preg_match('/[^A-Za-z0-9]/', $password)) {
+            } elseif (!preg_match('/[^A-Za-z0-9]/', $new_pass)) {
                 $errors[] = 'Password must contain at least one special character.';
             }
         }
@@ -686,8 +686,8 @@ function robodesk_profile_content()
                 }
             }
 
-            if (!empty($password) && !empty($confirm_password)) {
-                $user_update = wp_update_user(array('ID' => $user_id, 'user_pass' => $password));
+            if (!empty($new_pass) && !empty($confirm_new_pass)) {
+                $user_update = wp_update_user(array('ID' => $user_id, 'user_pass' => $new_pass));
                 if (is_wp_error($user_update)) {
                     echo '<p style="color:red;">Error changing password: ' . esc_html($user_update->get_error_message()) . '</p>';
                 } else {
@@ -764,28 +764,27 @@ jQuery(document).ready(function($){
     });
 
     // --- Password validation ---
-    var $password = $('#password');
-    var $confirm  = $('#confirm_password');
+    var $pwField = $('#password');
+    var $confirmField  = $('#confirm_password');
     var $pwFeedback = $('#password-feedback');
     var $cfFeedback = $('#confirm-password-feedback');
     var $matchFeedback = $('#password-match-feedback');
-    var $submit = $('#profile-submit');
 
-    function getPasswordErrors(pw){
+    function getPwErrors(val){
         var errors = [];
-        if (pw.length < 8) errors.push('min 8 characters');
-        if (!/[A-Z]/.test(pw)) errors.push('uppercase');
-        if (!/[a-z]/.test(pw)) errors.push('lowercase');
-        if (!/[0-9]/.test(pw)) errors.push('number');
-        if (!/[^A-Za-z0-9]/.test(pw)) errors.push('special char');
+        if (val.length < 8) errors.push('min 8 characters');
+        if (!/[A-Z]/.test(val)) errors.push('uppercase');
+        if (!/[a-z]/.test(val)) errors.push('lowercase');
+        if (!/[0-9]/.test(val)) errors.push('number');
+        if (!/[^A-Za-z0-9]/.test(val)) errors.push('special char');
         return errors;
     }
 
-    function validatePasswords(){
-        var pw = $password.val();
-        var cf = $confirm.val();
-        var pwErrors = getPasswordErrors(pw);
-        var cfErrors = getPasswordErrors(cf);
+    function validatePwFields(){
+        var pw = $pwField.val();
+        var cf = $confirmField.val();
+        var pwErrors = getPwErrors(pw);
+        var cfErrors = getPwErrors(cf);
         var match = (pw === cf) && pw.length > 0;
 
         if (pw.length === 0) {
@@ -819,8 +818,8 @@ jQuery(document).ready(function($){
         }
     }
 
-    $password.on('keyup', validatePasswords);
-    $confirm.on('keyup', validatePasswords);
+    $pwField.on('keyup', validatePwFields);
+    $confirmField.on('keyup', validatePwFields);
 });
 </script>
 <?php
