@@ -1,3 +1,5 @@
+var credentialIdMap = new WeakMap();
+
 jQuery(document).ready(function ($) {
   $("#change-ticket-status").change(function () {
     var ticketId = $(this).data("ticket-id");
@@ -275,7 +277,11 @@ jQuery(document).ready(function ($) {
 });
 
 jQuery(document).ready(function ($) {
-  // ... other JavaScript code
+  // --- Credential vault: populate ID map from DOM ---
+  $(".show-password, .copy-password, .delete-credential").each(function () {
+    var id = parseInt($(this).attr("data-credential-id"), 10);
+    if (id) credentialIdMap.set(this, id);
+  });
 
   // Load Add Credential Form via AJAX
   $("#add-credential-button").click(function () {
@@ -327,6 +333,9 @@ jQuery(document).ready(function ($) {
                 );
                 $(".credential-table-wrapper table tbody").append(row);
               }
+              row.find(".show-password, .copy-password, .delete-credential").each(function () {
+                credentialIdMap.set(this, cred.id);
+              });
             } else {
               alert(response.data);
               console.error(response);
@@ -359,7 +368,7 @@ jQuery(document).ready(function ($) {
 
   // Delete Credential AJAX
   $(document).on("click", ".delete-credential", function () {
-    var credentialId = $(this).data("credential-id");
+    var credentialId = credentialIdMap.get(this);
     var confirmDelete = confirm(
       "Are you sure you want to delete this credential?",
     );
@@ -407,7 +416,7 @@ jQuery(document).ready(function ($) {
   // Copy Password Functionality (AJAX-based)
   $(document).on("click", ".copy-password", function () {
     var button = $(this);
-    var credentialId = button.data("credential-id");
+    var credentialId = credentialIdMap.get(this);
 
     if (!credentialId) {
       return;
@@ -484,7 +493,7 @@ jQuery(document).ready(function ($) {
     var button = $(this);
     var passwordSpan = button.siblings(".password-hidden");
     var icon = button.find(".dashicons");
-    var credentialId = button.data("credential-id");
+    var credentialId = credentialIdMap.get(this);
 
     if (!credentialId) {
       return;
@@ -599,6 +608,14 @@ jQuery(document).ready(function ($) {
     });
   }
 
+  // --- Profile: show password toggle ---
+  $('.toggle-pw').on('click', function () {
+    var target = $('#' + $(this).data('target'));
+    var isPassword = target.attr('type') === 'password';
+    target.attr('type', isPassword ? 'text' : 'password');
+    $(this).toggleClass('dashicons-visibility dashicons-hidden');
+  });
+
   // --- Profile: password validation ---
   var $pwField = $('#password');
   var $confirmField = $('#confirm_password');
@@ -609,11 +626,11 @@ jQuery(document).ready(function ($) {
   if ($pwField.length && $confirmField.length) {
     function getPwErrors(val) {
       var errors = [];
-      if (val.length < 8) errors.push('min 8 characters');
-      if (!/[A-Z]/.test(val)) errors.push('uppercase');
-      if (!/[a-z]/.test(val)) errors.push('lowercase');
+      if (val.length < 8) errors.push('at least 8 characters');
+      if (!/[A-Z]/.test(val)) errors.push('uppercase letter');
+      if (!/[a-z]/.test(val)) errors.push('lowercase letter');
       if (!/[0-9]/.test(val)) errors.push('number');
-      if (!/[^A-Za-z0-9]/.test(val)) errors.push('special char');
+      if (!/[^A-Za-z0-9]/.test(val)) errors.push('special character');
       return errors;
     }
 
@@ -621,35 +638,20 @@ jQuery(document).ready(function ($) {
       var pw = $pwField.val();
       var cf = $confirmField.val();
       var pwErrors = getPwErrors(pw);
-      var cfErrors = getPwErrors(cf);
       var match = pw === cf && pw.length > 0;
 
       if (pw.length === 0) {
         $pwFeedback.text('');
-      } else if (pwErrors.length === 0) {
-        $pwFeedback.text('\u2713').css('color', 'green');
+      } else if (pwErrors.length > 0) {
+        $pwFeedback.text('Missing: ' + pwErrors.join(', ')).css('color', 'red');
       } else {
-        $pwFeedback.text('\u2717 ' + pwErrors.join(', ')).css('color', 'red');
+        $pwFeedback.text('');
       }
 
-      if (cf.length === 0) {
-        $cfFeedback.text('');
-      } else if (cfErrors.length === 0) {
-        $cfFeedback.text('\u2713').css('color', 'green');
-      } else {
-        $cfFeedback.text('\u2717 ' + cfErrors.join(', ')).css('color', 'red');
-      }
+      $cfFeedback.text('');
 
-      if (pw.length > 0 || cf.length > 0) {
-        var pwValid = pwErrors.length === 0;
-        var cfValid = cfErrors.length === 0;
-        if (pwValid && cfValid && match) {
-          $matchFeedback.text('\u2713 Passwords match').css('color', 'green');
-        } else if (pwValid && cfValid && !match) {
-          $matchFeedback.text('\u2717 Passwords do not match').css('color', 'red');
-        } else {
-          $matchFeedback.text('');
-        }
+      if (pw.length > 0 && cf.length > 0 && pwErrors.length === 0 && !match) {
+        $matchFeedback.text('Passwords do not match').css('color', 'red');
       } else {
         $matchFeedback.text('');
       }

@@ -733,17 +733,23 @@ function robodesk_profile_content()
 
     <div class="rd-form-group">
         <label for="password">New Password:</label><br>
-        <input type="password" name="password" id="password">
-        <span id="password-feedback" style="font-size:0.9em;"></span>
+        <span style="position:relative;display:block;">
+            <input type="password" name="password" id="password" style="width:100%;padding-right:24px;">
+            <span class="dashicons dashicons-visibility toggle-pw" data-target="password" style="position:absolute;right:2px;top:50%;transform:translateY(-50%);cursor:pointer;font-size:16px;line-height:1;"></span>
+        </span>
+        <span id="password-feedback" style="display:block;font-size:14px;"></span>
     </div>
 
     <div class="rd-form-group">
         <label for="confirm_password">Confirm New Password:</label><br>
-        <input type="password" name="confirm_password" id="confirm_password">
-        <span id="confirm-password-feedback" style="font-size:0.9em;"></span>
+        <span style="position:relative;display:block;">
+            <input type="password" name="confirm_password" id="confirm_password" style="width:100%;padding-right:24px;">
+            <span class="dashicons dashicons-visibility toggle-pw" data-target="confirm_password" style="position:absolute;right:2px;top:50%;transform:translateY(-50%);cursor:pointer;font-size:16px;line-height:1;"></span>
+        </span>
+        <span id="confirm-password-feedback" style="display:block;font-size:14px;"></span>
+        <span id="password-match-feedback" style="display:block;font-size:14px;"></span>
     </div>
 
-    <span id="password-match-feedback" style="display:block; margin-top:4px;"></span>
     <input type="submit" value="Update Profile" id="profile-submit">
 </form>
 <?php
