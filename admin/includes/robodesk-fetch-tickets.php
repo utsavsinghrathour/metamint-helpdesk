@@ -585,12 +585,19 @@ function robodesk_imap_settings_callback()
         $port     = isset($_POST['robodesk_imap_port']) ? intval(wp_unslash($_POST['robodesk_imap_port'])) : 143;
         $username = isset($_POST['robodesk_imap_username']) ? sanitize_email(wp_unslash($_POST['robodesk_imap_username'])) : '';
         $password = isset($_POST['robodesk_imap_password']) ? sanitize_text_field(wp_unslash($_POST['robodesk_imap_password'])) : '';
+        $stored   = get_option('robodesk_imap_settings', array());
+
+        if ($password === '********' && !empty($stored['password'])) {
+            $password_encrypted = $stored['password'];
+        } else {
+            $password_encrypted = robodesk_encrypt($password);
+        }
 
         $settings = array(
             'hostname' => $hostname,
             'port'     => $port,
             'username' => $username,
-            'password' => $password,
+            'password' => $password_encrypted,
         );
 
         update_option('robodesk_imap_settings', $settings);
@@ -605,7 +612,11 @@ function robodesk_imap_settings_callback()
         $hostname_val = isset($_POST['robodesk_imap_hostname']) ? sanitize_text_field(wp_unslash($_POST['robodesk_imap_hostname'])) : '';
         $port_val     = isset($_POST['robodesk_imap_port']) ? intval(wp_unslash($_POST['robodesk_imap_port'])) : 143;
         $username     = isset($_POST['robodesk_imap_username']) ? sanitize_email(wp_unslash($_POST['robodesk_imap_username'])) : '';
-        $password     = isset($_POST['robodesk_imap_password']) ? sanitize_text_field(wp_unslash($_POST['robodesk_imap_password'])) : '';
+        $submitted_password = isset($_POST['robodesk_imap_password']) ? sanitize_text_field(wp_unslash($_POST['robodesk_imap_password'])) : '';
+        $stored       = get_option('robodesk_imap_settings', array());
+        $password     = $submitted_password === '********' && !empty($stored['password'])
+            ? robodesk_decrypt($stored['password'])
+            : $submitted_password;
 
         $hostname = '{' . $hostname_val . ':' . $port_val . '/imap/ssl}INBOX';
 
@@ -635,7 +646,7 @@ function robodesk_imap_settings_callback()
     $hostname = $settings['hostname'];
     $port     = $settings['port'];
     $username = $settings['username'];
-    $password = $settings['password'];
+    $password = !empty($settings['password']) ? '********' : '';
 ?>
 
     <div class="wrap">

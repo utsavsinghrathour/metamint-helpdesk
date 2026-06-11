@@ -259,10 +259,15 @@ function robodesk_imap_test_connection()
         exit;
     }
 
+    $submitted_password = sanitize_text_field(wp_unslash($_POST['robodesk_imap_password']));
+    $stored = get_option('robodesk_imap_settings', array());
+
     $auth_type = (isset($_POST['robodesk_imap_auth']) && sanitize_text_field(wp_unslash($_POST['robodesk_imap_auth'])) == '1') ? 'ssl' : 'tls';
     $hostname = '{' . sanitize_text_field(wp_unslash($_POST['robodesk_imap_hostname'])) . ':' . intval($_POST['robodesk_imap_port']) . '/imap/' . $auth_type . '/novalidate-cert}INBOX';
     $username = sanitize_text_field(wp_unslash($_POST['robodesk_imap_username']));
-    $password = sanitize_text_field(wp_unslash($_POST['robodesk_imap_password']));
+    $password = $submitted_password === '********' && !empty($stored['password'])
+        ? robodesk_decrypt($stored['password'])
+        : $submitted_password;
 
     // Clear previous errors
     imap_errors();
@@ -345,10 +350,15 @@ function robodesk_imap_save_settings()
         exit;
     }
 
+    $submitted_password = sanitize_text_field(wp_unslash($_POST['robodesk_imap_password']));
+    $stored = get_option('robodesk_imap_settings', array());
+
     $auth_type = (isset($_POST['robodesk_imap_auth']) && sanitize_text_field(wp_unslash($_POST['robodesk_imap_auth'])) == '1') ? 'ssl' : 'tls';
     $hostname = '{' . sanitize_text_field(wp_unslash($_POST['robodesk_imap_hostname'])) . ':' . intval($_POST['robodesk_imap_port']) . '/imap/' . $auth_type . '/novalidate-cert}INBOX';
     $username = sanitize_text_field(wp_unslash($_POST['robodesk_imap_username']));
-    $password = sanitize_text_field(wp_unslash($_POST['robodesk_imap_password']));
+    $password = $submitted_password === '********' && !empty($stored['password'])
+        ? robodesk_decrypt($stored['password'])
+        : $submitted_password;
 
     // Clear previous errors
     imap_errors();
@@ -362,7 +372,9 @@ function robodesk_imap_save_settings()
             'hostname' => sanitize_text_field(wp_unslash($_POST['robodesk_imap_hostname'])),
             'port' => intval($_POST['robodesk_imap_port']),
             'username' => sanitize_email(wp_unslash($_POST['robodesk_imap_username'])),
-            'password' => robodesk_encrypt(sanitize_text_field(wp_unslash($_POST['robodesk_imap_password']))),
+            'password' => $submitted_password === '********' && !empty($stored['password'])
+                ? $stored['password']
+                : robodesk_encrypt($submitted_password),
             'auth' => isset($_POST['robodesk_imap_auth']) ? sanitize_text_field(wp_unslash($_POST['robodesk_imap_auth'])) : '',
 
         );
@@ -464,7 +476,12 @@ function robodesk_smtp_save_settings()
     }
 
     if (!empty($settings['password'])) {
-        $settings['password'] = robodesk_encrypt($settings['password']);
+        if ($settings['password'] === '********') {
+            $stored = get_option('robodesk_smtp_settings', array());
+            $settings['password'] = !empty($stored['password']) ? $stored['password'] : '';
+        } else {
+            $settings['password'] = robodesk_encrypt($settings['password']);
+        }
     }
     update_option('robodesk_smtp_settings', $settings);
     wp_send_json_success(['message' => 'SMTP settings saved successfully']);
