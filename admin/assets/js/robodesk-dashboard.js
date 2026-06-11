@@ -830,7 +830,7 @@ function formatDate(dateString) {
 function setDashboardFilter(filter) {
   currentDashboardFilter = filter;
   loadDashboardTickets();
-  conssole.log("clicked", filter);
+  console.log("clicked", filter);
   // Update active filter button styling
   document.querySelectorAll(".filter-button").forEach((btn) => {
     btn.classList.remove("active");
@@ -1745,7 +1745,7 @@ function bindPopoverTriggers(scope) {
 
       const popover = document.createElement("div");
       popover.className = "rb-popover";
-      popover.innerHTML = `<div class="arrow"></div><div class="popover-body">${text}</div>`;
+      popover.innerHTML = `<div class="arrow"></div><div class="popover-body">${escapeHTML(text)}</div>`;
       document.body.appendChild(popover);
       activePopover = popover;
 
@@ -3315,7 +3315,7 @@ async function loadReplies() {
     }
   } catch (error) {
     console.error("Failed to load replies:", error);
-    repliesList.innerHTML = `<div class="text-red-500 p-4">Error: ${error.message}</div>`;
+    repliesList.innerHTML = `<div class="text-red-500 p-4">Error: ${escapeHTML(error.message)}</div>`;
   } finally {
   }
 }
@@ -3351,7 +3351,7 @@ function renderReplies(replies) {
             )}</span>
           </div>
           <p class="text-sm text-gray-700">${
-            isAction ? reply.message : reply.message
+            escapeHTML(reply.message)
           }</p>
         </div>
       `;
@@ -3379,22 +3379,20 @@ function closeTicket() {
 
   // Helper for custom confirmation modal
   function showCustomConfirm(message, onConfirm) {
-    // Create modal elements
-    let modal = document.createElement("div");
-    modal.className =
-      "fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40";
-    modal.innerHTML = `
-      <div class="bg-white rounded-lg shadow-lg p-6 max-w-sm w-full text-center">
-        <div class="mb-4 text-lg font-medium text-gray-800">${message}</div>
-        <div class="flex justify-center gap-4">
-          <button id="custom-confirm-yes" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Yes</button>
-          <button id="custom-confirm-no" class="px-4 py-2 bg-gray-300 text-gray-800 rounded hover:bg-gray-400">Cancel</button>
-        </div>
-      </div>
-    `;
+    const container = document.createElement("div");
+    container.className = "bg-white rounded-lg shadow-lg p-6 max-w-sm w-full text-center";
+    container.innerHTML =
+      '<div class="mb-4 text-lg font-medium text-gray-800"></div>' +
+      '<div class="flex justify-center gap-4">' +
+      '<button id="custom-confirm-yes" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Yes</button>' +
+      '<button id="custom-confirm-no" class="px-4 py-2 bg-gray-300 text-gray-800 rounded hover:bg-gray-400">Cancel</button>' +
+      '</div>';
+    container.querySelector(".mb-4").textContent = message;
+    const modal = document.createElement("div");
+    modal.className = "fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40";
+    modal.appendChild(container);
     document.body.appendChild(modal);
 
-    // Event listeners
     modal.querySelector("#custom-confirm-yes").onclick = function () {
       document.body.removeChild(modal);
       if (typeof onConfirm === "function") onConfirm();
@@ -3552,7 +3550,7 @@ async function loadNotes() {
     }
   } catch (error) {
     console.error("Failed to load notes:", error);
-    notesList.innerHTML = `<div class="text-red-500 p-4">Error: ${error.message}</div>`;
+    notesList.innerHTML = `<div class="text-red-500 p-4">Error: ${escapeHTML(error.message)}</div>`;
   }
 }
 
@@ -3572,7 +3570,7 @@ function renderNotes(notes) {
     
         <span class="text-xs text-gray-500">${formatDate(note.timestamp)}</span>
       </div>
-      <p class="text-sm text-gray-700">${note.message}</p>
+      <p class="text-sm text-gray-700">${escapeHTML(note.message)}</p>
     </div>
   `,
     )
@@ -3667,38 +3665,39 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     // Helper functions for custom modals
-    function showCustomAlert(message) {
+    function createModalElement(contentHtml) {
       const modal = document.createElement("div");
       modal.className =
         "fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40";
-      modal.innerHTML = `
-      <div class="bg-white rounded-lg shadow-lg p-6 max-w-sm w-full text-center">
-        <div class="mb-4 text-lg font-medium text-gray-800">${message}</div>
-        <button id="custom-alert-ok" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">OK</button>
-      </div>
-      `;
+      modal.appendChild(contentHtml);
       document.body.appendChild(modal);
+      return modal;
+    }
 
+    function showCustomAlert(message) {
+      const container = document.createElement("div");
+      container.className = "bg-white rounded-lg shadow-lg p-6 max-w-sm w-full text-center";
+      container.innerHTML =
+        '<div class="mb-4 text-lg font-medium text-gray-800"></div>' +
+        '<button id="custom-alert-ok" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">OK</button>';
+      container.querySelector(".mb-4").textContent = message;
+      const modal = createModalElement(container);
       modal.querySelector("#custom-alert-ok").onclick = function () {
         document.body.removeChild(modal);
       };
     }
 
     function showCustomConfirm(message, onConfirm) {
-      const modal = document.createElement("div");
-      modal.className =
-        "fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40";
-      modal.innerHTML = `
-      <div class="bg-white rounded-lg shadow-lg p-6 max-w-sm w-full text-center">
-        <div class="mb-4 text-lg font-medium text-gray-800">${message}</div>
-        <div class="flex justify-center gap-4">
-        <button id="custom-confirm-yes" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Yes</button>
-        <button id="custom-confirm-no" class="px-4 py-2 bg-gray-300 text-gray-800 rounded hover:bg-gray-400">Cancel</button>
-        </div>
-      </div>
-      `;
-      document.body.appendChild(modal);
-
+      const container = document.createElement("div");
+      container.className = "bg-white rounded-lg shadow-lg p-6 max-w-sm w-full text-center";
+      container.innerHTML =
+        '<div class="mb-4 text-lg font-medium text-gray-800"></div>' +
+        '<div class="flex justify-center gap-4">' +
+        '<button id="custom-confirm-yes" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Yes</button>' +
+        '<button id="custom-confirm-no" class="px-4 py-2 bg-gray-300 text-gray-800 rounded hover:bg-gray-400">Cancel</button>' +
+        '</div>';
+      container.querySelector(".mb-4").textContent = message;
+      const modal = createModalElement(container);
       modal.querySelector("#custom-confirm-yes").onclick = function () {
         document.body.removeChild(modal);
         if (typeof onConfirm === "function") onConfirm();
@@ -3709,21 +3708,16 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     function showBulkActionConfirm(message, onConfirm) {
-      const modal = document.createElement("div");
-      modal.className =
-        "fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40";
-      modal.innerHTML = `
-      <div class="bg-white rounded-lg shadow-lg p-6 max-w-sm w-full text-center">
-        <div class="mb-4 text-lg font-medium text-gray-800 text-center">${message}</div>
-       
-        <div class="flex justify-center gap-4">
-        <button id="custom-confirm-yes" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Yes</button>
-        <button id="custom-confirm-no" class="px-4 py-2 bg-gray-300 text-gray-800 rounded hover:bg-gray-400">Cancel</button>
-        </div>
-      </div>
-      `;
-      document.body.appendChild(modal);
-
+      const container = document.createElement("div");
+      container.className = "bg-white rounded-lg shadow-lg p-6 max-w-sm w-full text-center";
+      container.innerHTML =
+        '<div class="mb-4 text-lg font-medium text-gray-800"></div>' +
+        '<div class="flex justify-center gap-4">' +
+        '<button id="custom-confirm-yes" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Yes</button>' +
+        '<button id="custom-confirm-no" class="px-4 py-2 bg-gray-300 text-gray-800 rounded hover:bg-gray-400">Cancel</button>' +
+        '</div>';
+      container.querySelector(".mb-4").textContent = message;
+      const modal = createModalElement(container);
       modal.querySelector("#custom-confirm-yes").onclick = function () {
         document.body.removeChild(modal);
         if (typeof onConfirm === "function") onConfirm();
@@ -3850,13 +3844,14 @@ document.addEventListener("DOMContentLoaded", function () {
 });
 
 jQuery(document).ready(function ($) {
-  function createSSE(ticketId, lastCid, userId = "142", parentElement) {
+  function createSSE(ticketId, lastCid, userId, parentElement) {
     let eventSource = null;
 
     function connect() {
+      const userIdParam = userId || "";
       const sseUrl = `${
         window.location.origin
-      }/wp-json/robodesk/v1/adminstream/${ticketId}/${lastCid || ""}/${"42"}`;
+      }/wp-json/robodesk/v1/adminstream/${ticketId}/${lastCid || ""}/${userIdParam}`;
       console.log("🔌 Connecting to SSE:", sseUrl);
 
       eventSource = new EventSource(sseUrl);
@@ -3975,7 +3970,7 @@ jQuery(document).ready(function ($) {
 
       let lastCid = lastReply ? lastReply.getAttribute("data-cid") : null;
 
-      let sse = createSSE(ticketId, lastCid, repliesList);
+      let sse = createSSE(ticketId, lastCid, robodeskCurrentUser.id, repliesList);
       sse.connect();
 
       const observer = new MutationObserver((mutationsList) => {
@@ -3993,7 +3988,7 @@ jQuery(document).ready(function ($) {
                 : null;
 
               sse.disconnect();
-              sse = createSSE(ticketId, lastCid, repliesList);
+              sse = createSSE(ticketId, lastCid, robodeskCurrentUser.id, repliesList);
               sse.connect();
             }
           }

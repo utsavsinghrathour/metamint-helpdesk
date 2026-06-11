@@ -747,9 +747,8 @@ function robodesk_handle_tickets_webhook(WP_REST_Request $request)
 
             ];
             rbd_log(sprintf(
-                "Comment received for ticket #%s: %s\n",
-                $ticket_id,
-                $reply
+                "Comment received for ticket #%s\n",
+                $ticket_id
             ));
             update_post_meta($ticket_id, 'rbd_all_seen', 'yes');
             return rest_ensure_response(array(
@@ -911,46 +910,74 @@ add_filter('wp_kses_allowed_html', 'robodesk_allow_image_in_comments', 10, 2);
 
 function robodesk_base64_image_upload($base64_data)
 {
-    // Extract the image data
+    if (!preg_match('/^data:image\/(jpeg|png|gif|webp);base64,/', $base64_data, $matches)) {
+        return new WP_Error('invalid_type', 'Invalid image type. Only JPEG, PNG, GIF, WebP allowed.');
+    }
 
+    $image_type = $matches[1];
+    $image_data = substr($base64_data, strpos($base64_data, ',') + 1);
+    $image_data = base64_decode($image_data, true);
 
-    if (preg_match('/^data:image\/(\w+);base64,/', $base64_data, $matches)) {
+    if (false === $image_data || '' === $image_data) {
+        return new WP_Error('invalid_data', 'Invalid base64 image data');
+    }
 
-        $image_type = $matches[1]; // png, jpg, etc.
-        $image_data = substr($base64_data, strpos($base64_data, ',') + 1);
-        $image_data = base64_decode($image_data);
+    $max_size = 5 * 1024 * 1024;
+    if (strlen($image_data) > $max_size) {
+        return new WP_Error('file_too_large', 'Image exceeds maximum size of 5MB');
+    }
 
-        if (!$image_data) {
-            return new WP_Error('invalid_image', 'Invalid base64 image data');
-        }
+    $ext_map = [
+        'jpeg' => 'jpg',
+        'png'  => 'png',
+        'gif'  => 'gif',
+        'webp' => 'webp',
+    ];
+    $ext = $ext_map[$image_type];
+    $filename = 'ticket-' . time() . '-' . wp_rand(100, 999) . '.' . $ext;
 
-        $upload_dir = wp_upload_dir();
-        $filename = 'ticket-' . time() . '.' . $image_type;
-        $file_path = $upload_dir['path'] . '/' . $filename;
+    $tmp_file = tmpfile();
+    if (false === $tmp_file) {
+        return new WP_Error('file_error', 'Could not create temporary file');
+    }
 
-        if (file_put_contents($file_path, $image_data) === false) {
-            return new WP_Error('file_error', 'Could not save image file');
-        }
+    fwrite($tmp_file, $image_data);
+    $tmp_path = stream_get_meta_data($tmp_file)['uri'];
 
-        // Prepare file data for WordPress
-        $filetype = wp_check_filetype($filename, null);
-        $attachment = array(
-            'post_mime_type' => $filetype['type'],
-            'post_title' => sanitize_file_name($filename),
-            'post_content' => '',
-            'post_status' => 'inherit'
-        );
+    $file_array = [
+        'name'     => $filename,
+        'tmp_name' => $tmp_path,
+        'error'    => 0,
+        'size'     => strlen($image_data),
+    ];
 
-        // Insert attachment
-        $attach_id = wp_insert_attachment($attachment, $file_path);
+    require_once ABSPATH . 'wp-admin/includes/media.php';
+    require_once ABSPATH . 'wp-admin/includes/file.php';
+    require_once ABSPATH . 'wp-admin/includes/image.php';
 
-        // Generate metadata and thumbnails
-        require_once(ABSPATH . 'wp-admin/includes/image.php');
-        $attach_data = wp_generate_attachment_metadata($attach_id, $file_path);
-        wp_update_attachment_metadata($attach_id, $attach_data);
+    add_filter('upload_mimes', function ($mimes) {
+        $mimes['webp'] = 'image/webp';
+        return $mimes;
+    });
 
+    $overrides = [
+        'test_form' => false,
+        'mimes'     => [
+            'jpg'  => 'image/jpeg',
+            'jpeg' => 'image/jpeg',
+            'png'  => 'image/png',
+            'gif'  => 'image/gif',
+            'webp' => 'image/webp',
+        ],
+    ];
+
+    $attach_id = media_handle_sideload($file_array, 0, '', $overrides);
+
+    fclose($tmp_file);
+
+    if (is_wp_error($attach_id)) {
         return $attach_id;
     }
 
-    return false;
+    return $attach_id;
 }

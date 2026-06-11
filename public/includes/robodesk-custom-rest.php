@@ -1512,9 +1512,8 @@ function robodesk_handle_reply_receive($data)
     ];
 
     rbd_log(sprintf(
-        "Comment received for ticket #%s: %s\n",
-        $ticket_id,
-        $reply
+        "Comment received for ticket #%s\n",
+        $ticket_id
     ));
 
 

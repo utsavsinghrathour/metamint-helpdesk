@@ -199,23 +199,21 @@
 
              <!----------------------- IMAP Settings load saved settings ------------------->
              <?php
-                // Load saved settings
-                $robodesk_imap_settings = get_option('robodesk_imap_settings', array(
+                $robodesk_imap_raw = get_option('robodesk_imap_settings', array(
                     'hostname' => 'email.example.com',
                     'port'     => 993,
                     'username' => '',
                     'password' => '',
                     'auth'     => true,
-
                 ));
 
-                $robodesk_imap_hostname = $robodesk_imap_settings['hostname'];
-                $robodesk_imap_port     = $robodesk_imap_settings['port'];
-                $robodesk_imap_username = $robodesk_imap_settings['username'];
-                $robodesk_imap_password = $robodesk_imap_settings['password'];
-                $robodesk_imap_auth     = isset($robodesk_imap_settings['auth']) ? $robodesk_imap_settings['auth'] : true;
+                $robodesk_imap_hostname = $robodesk_imap_raw['hostname'];
+                $robodesk_imap_port     = $robodesk_imap_raw['port'];
+                $robodesk_imap_username = $robodesk_imap_raw['username'];
+                $robodesk_imap_password = !empty($robodesk_imap_raw['password']) ? '********' : '';
+                $robodesk_imap_auth     = isset($robodesk_imap_raw['auth']) ? $robodesk_imap_raw['auth'] : true;
 
-                $robodesk_smtp_settings = get_option('robodesk_smtp_settings', array(
+                $robodesk_smtp_raw = get_option('robodesk_smtp_settings', array(
                     'enabled' => false,
                     'host' => '',
                     'port' => 587,
@@ -226,14 +224,14 @@
                     'from_name' => get_bloginfo('name'),
                 ));
 
-                $robodesk_smtp_enabled = !empty($robodesk_smtp_settings['enabled']);
-                $robodesk_smtp_host = isset($robodesk_smtp_settings['host']) ? $robodesk_smtp_settings['host'] : '';
-                $robodesk_smtp_port = isset($robodesk_smtp_settings['port']) ? (int) $robodesk_smtp_settings['port'] : 587;
-                $robodesk_smtp_username = isset($robodesk_smtp_settings['username']) ? $robodesk_smtp_settings['username'] : '';
-                $robodesk_smtp_password = isset($robodesk_smtp_settings['password']) ? $robodesk_smtp_settings['password'] : '';
-                $robodesk_smtp_encryption = isset($robodesk_smtp_settings['encryption']) ? $robodesk_smtp_settings['encryption'] : 'tls';
-                $robodesk_smtp_from_email = isset($robodesk_smtp_settings['from_email']) ? $robodesk_smtp_settings['from_email'] : get_option('admin_email', '');
-                $robodesk_smtp_from_name = isset($robodesk_smtp_settings['from_name']) ? $robodesk_smtp_settings['from_name'] : get_bloginfo('name');
+                $robodesk_smtp_enabled = !empty($robodesk_smtp_raw['enabled']);
+                $robodesk_smtp_host = isset($robodesk_smtp_raw['host']) ? $robodesk_smtp_raw['host'] : '';
+                $robodesk_smtp_port = isset($robodesk_smtp_raw['port']) ? (int) $robodesk_smtp_raw['port'] : 587;
+                $robodesk_smtp_username = isset($robodesk_smtp_raw['username']) ? $robodesk_smtp_raw['username'] : '';
+                $robodesk_smtp_password = !empty($robodesk_smtp_raw['password']) ? '********' : '';
+                $robodesk_smtp_encryption = isset($robodesk_smtp_raw['encryption']) ? $robodesk_smtp_raw['encryption'] : 'tls';
+                $robodesk_smtp_from_email = isset($robodesk_smtp_raw['from_email']) ? $robodesk_smtp_raw['from_email'] : get_option('admin_email', '');
+                $robodesk_smtp_from_name = isset($robodesk_smtp_raw['from_name']) ? $robodesk_smtp_raw['from_name'] : get_bloginfo('name');
 
                 ?>
 

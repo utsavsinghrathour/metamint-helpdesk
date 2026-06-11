@@ -1,6 +1,8 @@
 var credentialIdMap = new WeakMap();
 
 jQuery(document).ready(function ($) {
+
+  // --- Ticket status change ---
   $("#change-ticket-status").change(function () {
     var ticketId = $(this).data("ticket-id");
     var newStatus = $(this).val();
@@ -185,9 +187,8 @@ jQuery(document).ready(function ($) {
       },
     });
   });
-});
 
-jQuery(document).ready(function ($) {
+  // --- Notification handlers ---
   $(document).on("click", ".robodesk-notification-ticket-link", function (e) {
     var link = $(this);
     var notificationId = parseInt(link.data("notification-id"), 10) || 0;
@@ -235,14 +236,15 @@ jQuery(document).ready(function ($) {
       },
     });
   });
-});
 
-jQuery(document).ready(function ($) {
-  // ... other code
-
+  // --- Add note form ---
   $("#robodesk-add-note").submit(function (e) {
-    // Select the form by ID
     e.preventDefault();
+
+    var noteContent = $("#robodesk-add-note textarea, #robodesk-add-note input[type=text]").val();
+    if (!noteContent || !noteContent.trim()) {
+      return;
+    }
 
     var formData = $(this).serialize();
 
@@ -274,9 +276,7 @@ jQuery(document).ready(function ($) {
       fileList.append("<div>" + files[i].name + "</div>");
     }
   });
-});
 
-jQuery(document).ready(function ($) {
   // --- Credential vault: populate ID map from DOM ---
   $(".show-password, .copy-password, .delete-credential").each(function () {
     var id = parseInt($(this).attr("data-credential-id"), 10);
@@ -312,6 +312,13 @@ jQuery(document).ready(function ($) {
       .off("submit")
       .on("submit", function (e) {
         e.preventDefault();
+
+        var credName = $("#robodesk-add-credential input[name=credential_name]").val();
+        var credUsername = $("#robodesk-add-credential input[name=credential_username]").val();
+        var credPassword = $("#robodesk-add-credential input[name=credential_password]").val();
+        if (!credName || !credName.trim() || !credUsername || !credUsername.trim() || !credPassword || !credPassword.trim()) {
+          return;
+        }
 
         var formData = $(this).serialize();
         $.ajax({
@@ -501,6 +508,9 @@ jQuery(document).ready(function ($) {
 
     // If already revealed, hide it
     if (passwordSpan.data("revealed")) {
+      if (passwordSpan.data("hideTimer")) {
+        clearTimeout(passwordSpan.data("hideTimer"));
+      }
       passwordSpan.text("********");
       passwordSpan.data("revealed", false);
       icon.removeClass("dashicons-hidden").addClass("dashicons-visibility");
@@ -525,6 +535,16 @@ jQuery(document).ready(function ($) {
           passwordSpan.text(response.data.password);
           passwordSpan.data("revealed", true);
           icon.removeClass("dashicons-visibility").addClass("dashicons-hidden");
+          // Auto-hide password after 10 seconds
+          if (passwordSpan.data("hideTimer")) {
+            clearTimeout(passwordSpan.data("hideTimer"));
+          }
+          var hideTimer = setTimeout(function () {
+            passwordSpan.text("********");
+            passwordSpan.data("revealed", false);
+            icon.removeClass("dashicons-hidden").addClass("dashicons-visibility");
+          }, 10000);
+          passwordSpan.data("hideTimer", hideTimer);
         } else {
           passwordSpan.text("********");
           alert(response.data || "Unable to reveal password.");

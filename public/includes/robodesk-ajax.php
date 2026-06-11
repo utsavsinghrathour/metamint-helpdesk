@@ -12,6 +12,10 @@ function robodesk_change_ticket_status_callback()
     $new_status = isset($_POST['new_status']) ? sanitize_text_field(wp_unslash($_POST['new_status'])) : '';
     $old_status = $ticket_id > 0 ? (string) get_post_meta($ticket_id, '_robodesk_ticket_status', true) : '';
 
+    if ($ticket_id && !current_user_can('edit_post', $ticket_id)) {
+        wp_send_json_error('Permission denied');
+    }
+
     $allowed_statuses = array('new', 'in-progress', 'archived', 'completed'); // Valid statuses
     if ($ticket_id > 0 && in_array($new_status, $allowed_statuses)) {
         $updated = update_post_meta($ticket_id, '_robodesk_ticket_status', $new_status);
@@ -477,6 +481,15 @@ function robodesk_add_ticket_note_callback()
 
     if ($ticket_id <= 0) {
         wp_send_json_error(array('message' => 'Invalid ticket ID.'));
+    }
+
+    $ticket = get_post($ticket_id);
+    if (!$ticket || $ticket->post_type !== 'robodesk_ticket') {
+        wp_send_json_error(array('message' => 'Invalid ticket.'));
+    }
+
+    if (!current_user_can('edit_post', $ticket_id) && (int) $ticket->post_author !== $user_id) {
+        wp_send_json_error(array('message' => 'Permission denied.'));
     }
 
     $uploaded_files = array();

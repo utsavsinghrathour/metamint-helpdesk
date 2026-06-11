@@ -60,9 +60,6 @@ function robodesk_send_ticket_update_email($ticket_id, $comment_content, $update
     robodesk_send_email($to, $subject, $message);
 }
 
-global $wpdb;
-$robodesk_notifications_table = $wpdb->prefix . 'robodesk_notifications';
-
 // @utsav sir code don remove now
 // Create notification table on plugin activation
 // register_activation_hook(__FILE__, 'robodesk_create_notifications_table');

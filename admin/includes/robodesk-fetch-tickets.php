@@ -133,12 +133,7 @@ function robodesk_fetch_emails()
 
 
     // // Retrieve IMAP settings from options
-    $settings = get_option('robodesk_imap_settings', array(
-        'hostname' => '',
-        'port'     => 993,
-        'username' => '',
-        'password' => '',
-    ));
+    $settings = robodesk_get_imap_settings();
 
     // Construct the IMAP connection string
     $hostname = '{' . $settings['hostname'] . ':' . $settings['port'] . '/imap/ssl}INBOX';
@@ -627,12 +622,15 @@ function robodesk_imap_settings_callback()
     }
 
     // Load saved settings or use provided defaults
-    $settings = get_option('robodesk_imap_settings', array(
-        'hostname' => 'email.example.com', // Default hostname
-        'port'     => 993,
-        'username' => 'password',
-        'password' => '', // Avoid hardcoding password
-    ));
+    $settings = robodesk_get_imap_settings();
+    if (empty($settings['hostname'])) {
+        $settings = array(
+            'hostname' => 'email.example.com',
+            'port'     => 993,
+            'username' => 'password',
+            'password' => '',
+        );
+    }
 
     $hostname = $settings['hostname'];
     $port     = $settings['port'];

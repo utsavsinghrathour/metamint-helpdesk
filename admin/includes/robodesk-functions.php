@@ -283,6 +283,47 @@ function robodesk_imap_test_connection()
 
 //function to save the credentials(hostname, port, username, password, and auth type) for IMAP connection
 
+function robodesk_get_imap_settings()
+{
+    $defaults = array(
+        'hostname' => '',
+        'port'     => 993,
+        'username' => '',
+        'password' => '',
+        'auth'     => '',
+    );
+    $settings = get_option('robodesk_imap_settings', $defaults);
+    if (!empty($settings['password'])) {
+        $decrypted = robodesk_decrypt($settings['password']);
+        if (false !== $decrypted) {
+            $settings['password'] = $decrypted;
+        }
+    }
+    return $settings;
+}
+
+function robodesk_get_smtp_settings()
+{
+    $defaults = array(
+        'enabled'    => false,
+        'host'       => '',
+        'port'       => 587,
+        'username'   => '',
+        'password'   => '',
+        'encryption' => 'tls',
+        'from_email' => '',
+        'from_name'  => '',
+    );
+    $settings = get_option('robodesk_smtp_settings', $defaults);
+    if (!empty($settings['password'])) {
+        $decrypted = robodesk_decrypt($settings['password']);
+        if (false !== $decrypted) {
+            $settings['password'] = $decrypted;
+        }
+    }
+    return $settings;
+}
+
 add_action('wp_ajax_robodesk_imap_save_settings', 'robodesk_imap_save_settings');
 function robodesk_imap_save_settings()
 {
@@ -321,7 +362,7 @@ function robodesk_imap_save_settings()
             'hostname' => sanitize_text_field(wp_unslash($_POST['robodesk_imap_hostname'])),
             'port' => intval($_POST['robodesk_imap_port']),
             'username' => sanitize_email(wp_unslash($_POST['robodesk_imap_username'])),
-            'password' => sanitize_text_field(wp_unslash($_POST['robodesk_imap_password'])),
+            'password' => robodesk_encrypt(sanitize_text_field(wp_unslash($_POST['robodesk_imap_password']))),
             'auth' => isset($_POST['robodesk_imap_auth']) ? sanitize_text_field(wp_unslash($_POST['robodesk_imap_auth'])) : '',
 
         );
@@ -422,6 +463,9 @@ function robodesk_smtp_save_settings()
         exit;
     }
 
+    if (!empty($settings['password'])) {
+        $settings['password'] = robodesk_encrypt($settings['password']);
+    }
     update_option('robodesk_smtp_settings', $settings);
     wp_send_json_success(['message' => 'SMTP settings saved successfully']);
 }
@@ -472,7 +516,7 @@ function robodesk_smtp_test_connection()
 add_action('phpmailer_init', 'robodesk_apply_smtp_to_phpmailer');
 function robodesk_apply_smtp_to_phpmailer($phpmailer)
 {
-    $settings = get_option('robodesk_smtp_settings', []);
+    $settings = robodesk_get_smtp_settings();
     if (empty($settings) || empty($settings['enabled'])) {
         return;
     }
@@ -1219,10 +1263,14 @@ function robodesk_get_ticket_detail()
 
 //for search of username and email in create ticket form
 add_action('wp_ajax_robodesk_user_lookup', 'robodesk_user_lookup');
-add_action('wp_ajax_nopriv_robodesk_user_lookup', 'robodesk_user_lookup');
 
 function robodesk_user_lookup()
 {
+    if (!is_user_logged_in()) {
+        wp_send_json_error(['message' => 'Authentication required']);
+        return;
+    }
+
     check_ajax_referer('robodesk_user_lookup_action', 'nonce');
 
     if (!isset($_POST['type'], $_POST['value'])) {
@@ -1236,7 +1284,7 @@ function robodesk_user_lookup()
         'number' => 5,
         'fields' => ['display_name', 'user_email'],
         'search_columns' => [$type === 'email' ? 'user_email' : 'display_name'],
-        'search' => '*' . esc_attr($value) . '*',
+        'search' => '*' . $value . '*',
 
     ];
 
@@ -1492,6 +1540,10 @@ function robodesk_handle_add_ticket_reply()
         wp_send_json_error(['message' => 'User not logged in']);
     }
 
+    if (!current_user_can('edit_post', $ticket_id)) {
+        wp_send_json_error(['message' => 'Permission denied']);
+    }
+
     $comment_id = wp_insert_comment([
         'comment_post_ID'      => $ticket_id,
         'comment_author'       => $user_object->display_name,
@@ -1533,6 +1585,10 @@ function robodesk_handle_close_ticket()
 
     if (!$ticket_id) {
         wp_send_json_error(['message' => 'Invalid ticket ID']);
+    }
+
+    if (!current_user_can('edit_post', $ticket_id)) {
+        wp_send_json_error(['message' => 'Permission denied']);
     }
 
     // Update ticket status to closed
@@ -1599,9 +1655,8 @@ function robodesk_handle_close_ticket()
     if (!$customer_email) {
         rbd_log("No email found for ticket ID: $ticket_id");
     } elseif (!is_email($customer_email)) {
-        rbd_log("Invalid email: $customer_email");
+        rbd_log("Invalid email for ticket ID: $ticket_id");
     } else {
-        rbd_log("Sending email to: $customer_email");
         $subject = 'Your ticket has been closed';
         $ticket_link = robodesk_build_ticket_deeplink($ticket_id);
         $message = 'Hello, your ticket #' . $ticket_id . ' has been closed. If you have any further questions, feel free to reply to this email or visit: ' . $ticket_link;
@@ -1628,6 +1683,10 @@ function robodesk_handle_get_ticket_replies()
 
     if (!$ticket_id) {
         wp_send_json_error(['message' => 'Invalid ticket ID']);
+    }
+
+    if (!current_user_can('edit_post', $ticket_id)) {
+        wp_send_json_error(['message' => 'Permission denied']);
     }
 
     // Get ticket replies (comments)
@@ -1790,6 +1849,10 @@ function robodesk_handle_add_ticket_note()
         wp_send_json_error(['message' => 'User not logged in']);
     }
 
+    if (!current_user_can('edit_post', $ticket_id)) {
+        wp_send_json_error(['message' => 'Permission denied']);
+    }
+
     $note_id = wp_insert_comment([
         'comment_post_ID'      => $ticket_id,
         'comment_author'       => $user_object->display_name,
@@ -1825,6 +1888,10 @@ function robodesk_handle_get_ticket_notes()
 
     if (!$ticket_id) {
         wp_send_json_error(['message' => 'Invalid ticket ID']);
+    }
+
+    if (!current_user_can('edit_post', $ticket_id)) {
+        wp_send_json_error(['message' => 'Permission denied']);
     }
 
     // Get ticket notes (comments)
@@ -2141,7 +2208,7 @@ function robodesk_handle_bulk_action()
     }
 
     // Check user capabilities
-    if (!current_user_can('edit_posts')) {
+    if (!current_user_can('edit_others_posts') && !current_user_can('manage_options')) {
         wp_send_json_error(array('message' => 'You do not have permission to perform this action.'));
     }
 
