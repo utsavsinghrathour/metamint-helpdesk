@@ -235,6 +235,42 @@ function robodesk_faq_vote_callback()
 }
 
 
+add_action('wp_ajax_robodesk_get_credential_form', 'robodesk_get_credential_form_callback');
+function robodesk_get_credential_form_callback()
+{
+    check_ajax_referer('robodesk_add_credential_nonce', 'nonce');
+    if (!is_user_logged_in()) {
+        wp_send_json_error('Not logged in.');
+    }
+    ob_start();
+    ?>
+    <h3>Add New Credential</h3>
+    <form id="robodesk-add-credential">
+        <label for="credential_name">Name:</label><br>
+        <input type="text" id="credential_name" name="credential_name" required><br><br>
+
+        <label for="credential_username">Username:</label><br>
+        <input type="text" id="credential_username" name="credential_username" required><br><br>
+
+        <label for="credential_password">Password:</label><br>
+        <input type="password" id="credential_password" name="credential_password" required><br><br>
+
+        <label for="credential_url">URL:</label><br>
+        <input type="text" id="credential_url" name="credential_url"><br><br>
+
+        <label for="credential_notes">Notes:</label><br>
+        <textarea id="credential_notes" name="credential_notes"></textarea><br><br>
+
+        <input type="hidden" name="action" value="robodesk_add_credential">
+        <?php wp_nonce_field('robodesk_add_credential_nonce'); ?>
+        <input type="submit" value="Add">
+    </form>
+    <?php
+    $html = ob_get_clean();
+    wp_send_json_success(array('html' => $html));
+    wp_die();
+}
+
 add_action('wp_ajax_robodesk_add_credential', 'robodesk_add_credential_callback');
 function robodesk_add_credential_callback()
 {
@@ -256,7 +292,7 @@ function robodesk_add_credential_callback()
         wp_send_json_error('Please fill in all required fields.');
     }
 
-    $encrypted_password = robodesk_encrypt($password, 'robodesk');
+    $encrypted_password = robodesk_encrypt($password);
 
     // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
     $inserted = $wpdb->insert(
@@ -273,7 +309,15 @@ function robodesk_add_credential_callback()
     );
 
     if ($inserted !== false) {
-        wp_send_json_success();
+        $new_id = $wpdb->insert_id;
+        wp_send_json_success(array(
+            'id' => $new_id,
+            'name' => $name,
+            'username' => $username,
+            'url' => $url,
+            'notes' => $notes,
+            'created_at' => current_time('mysql'),
+        ));
     } else {
         wp_send_json_error('Error adding credential.');
     }
@@ -316,6 +360,42 @@ function robodesk_delete_credential_callback()
     }
 
     wp_die();
+}
+
+add_action('wp_ajax_robodesk_reveal_credential_password', 'robodesk_reveal_credential_password_callback');
+function robodesk_reveal_credential_password_callback()
+{
+    check_ajax_referer('robodesk_reveal_credential_nonce', 'nonce');
+
+    $credential_id = isset($_POST['credential_id']) ? intval($_POST['credential_id']) : 0;
+    $user_id = get_current_user_id();
+
+    if ($credential_id <= 0 || !$user_id) {
+        wp_send_json_error('Invalid request.');
+    }
+
+    global $wpdb;
+    $credentials_table = $wpdb->prefix . 'robodesk_credentials';
+
+    // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+    $credential = $wpdb->get_row($wpdb->prepare(
+        "SELECT password FROM {$credentials_table} WHERE id = %d AND user_id = %d",
+        $credential_id,
+        $user_id
+    ));
+
+    if (!$credential) {
+        wp_send_json_error('Credential not found or access denied.');
+    }
+
+    $decrypted_password = robodesk_decrypt($credential->password);
+    if ($decrypted_password === false) {
+        wp_send_json_error('Unable to decrypt password.');
+    }
+
+    wp_send_json_success(array(
+        'password' => $decrypted_password,
+    ));
 }
 
 add_action('wp_ajax_robodesk_mark_user_notification_read', 'robodesk_mark_user_notification_read');

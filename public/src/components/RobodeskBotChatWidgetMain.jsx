@@ -27,7 +27,7 @@ export default function RobodeskBotChatWidgetMain({
   widgetConfig,
   activeAIMode,
 }) {
-  console.log("test tse");
+  // console.log("test tse");
   const rootRef = useRef(null);
   const CHAT_KEY = "robodesk_chat_session";
   const chatHeading =

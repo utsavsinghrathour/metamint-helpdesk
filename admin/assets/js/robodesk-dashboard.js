@@ -111,7 +111,7 @@ function loadDashboardTickets() {
                   ticket.id
                 } <span class="${getBlinkingClass(ticket)}"></span></div>
                 <div class="text-sm text-gray-500 truncate max-w-xs">${escapeHTML(
-                  ticket.title.slice(0, 20),
+                  decodeHTML(ticket.title).slice(0, 20),
                 )}</div>
               </td>
               <td class="px-6 py-4 whitespace-nowrap">
@@ -782,6 +782,14 @@ function escapeHTML(str) {
   const div = document.createElement("div");
   div.textContent = str;
   return div.innerHTML;
+}
+
+// Helper function to decode HTML entities
+function decodeHTML(html) {
+  if (!html) return "";
+  const txt = document.createElement("textarea");
+  txt.innerHTML = html;
+  return txt.value;
 }
 
 // Helper function to calculate time since (if not already defined)
@@ -1574,7 +1582,7 @@ function loadTicketDetail() {
   };
 
   document.getElementById("ticket-detail-title").textContent =
-    `Conversation #${currentTicket.id} - ${currentTicket.title}`;
+    `Conversation #${currentTicket.id} - ${decodeHTML(currentTicket.title)}`;
 
   // Load customer information
   const customerInfo = document.getElementById("customer-info");
@@ -1607,47 +1615,56 @@ function loadTicketDetail() {
   // Load ticket meta information
   const ticketMetaInfo = document.getElementById("ticket-meta-info");
 
-  const sourceIpRow = isEmptyOrNA(currentTicket.source_ip)
-    ? ""
-    : `
-      <div class="flex justify-between items-center">
-        <span class="text-gray-500">IP Address:</span>
-        <span class="text-gray-900 font-mono">${escapeHTML(currentTicket.source_ip)}</span>
-      </div>
-    `;
-
-  const countryRow = isEmptyOrNA(currentTicket.source_country)
-    ? ""
-    : `
-      <div class="flex justify-between items-center">
-        <span class="text-gray-500">Location:</span>
-        <span class="text-gray-900">${escapeHTML(currentTicket.source_country)}</span>
-      </div>
-    `;
-
-  const browserRow = isEmptyOrNA(currentTicket.source_browser)
-    ? ""
-    : `
-      <div class="flex justify-between items-center">
-        <span class="text-gray-500">Browser:</span>
-        <span class="text-gray-900">${escapeHTML(currentTicket.source_browser)}</span>
-      </div>
-    `;
-
   if (ticketMetaInfo) {
-    ticketMetaInfo.innerHTML = `
-      <div class="space-y-4 pt-6 border-t border-gray-100 text-sm">
-        <div class="flex justify-between items-center">
-          <span class="text-gray-500">Origin:</span>
-          <span id="ticket-source" class="bg-blue-100 text-blue-700 px-2 py-0.5 rounded text-xs font-bold uppercase">${escapeHTML(
-            String(currentTicket.source || "").toUpperCase(),
-          )}</span>
+    // Hide ticket meta info for email-originated tickets (IP, browser, location are not relevant)
+    const ticketSource = String(currentTicket.source || "").toLowerCase();
+    if (ticketSource === "email") {
+      ticketMetaInfo.style.display = "none";
+      ticketMetaInfo.innerHTML = "";
+    } else {
+      ticketMetaInfo.style.display = "";
+
+      const sourceIpRow = isEmptyOrNA(currentTicket.source_ip)
+        ? ""
+        : `
+          <div class="flex justify-between items-center">
+            <span class="text-gray-500">IP Address:</span>
+            <span class="text-gray-900 font-mono">${escapeHTML(currentTicket.source_ip)}</span>
+          </div>
+        `;
+
+      const countryRow = isEmptyOrNA(currentTicket.source_country)
+        ? ""
+        : `
+          <div class="flex justify-between items-center">
+            <span class="text-gray-500">Location:</span>
+            <span class="text-gray-900">${escapeHTML(currentTicket.source_country)}</span>
+          </div>
+        `;
+
+      const browserRow = isEmptyOrNA(currentTicket.source_browser)
+        ? ""
+        : `
+          <div class="flex justify-between items-center">
+            <span class="text-gray-500">Browser:</span>
+            <span class="text-gray-900">${escapeHTML(currentTicket.source_browser)}</span>
+          </div>
+        `;
+
+      ticketMetaInfo.innerHTML = `
+        <div class="space-y-4 pt-6 border-t border-gray-100 text-sm">
+          <div class="flex justify-between items-center">
+            <span class="text-gray-500">Origin:</span>
+            <span id="ticket-source" class="bg-blue-100 text-blue-700 px-2 py-0.5 rounded text-xs font-bold uppercase">${escapeHTML(
+              String(currentTicket.source || "").toUpperCase(),
+            )}</span>
+          </div>
+          ${sourceIpRow}
+          ${countryRow}
+          ${browserRow}
         </div>
-        ${sourceIpRow}
-        ${countryRow}
-        ${browserRow}
-      </div>
-    `;
+      `;
+    }
   }
 
   const categorySelect = document.getElementById("ticket-category-select");
@@ -1831,8 +1848,8 @@ function loadCustomerTicketsList(ticketList) {
             <div class="flex justify-between items-center">
                 <div>
                     <div class="font-medium text-sm">#${ticket.id} - ${
-                      ticket.title.slice(0, 50) +
-                      (ticket.title.length > 50 ? "..." : "")
+                      decodeHTML(ticket.title).slice(0, 50) +
+                      (decodeHTML(ticket.title).length > 50 ? "..." : "")
                     }</div>
                     <div class="text-xs text-gray-500">${formatDate(
                       ticket.created,
@@ -4293,7 +4310,7 @@ function renderNotificationList() {
           </div>
           <div class="flex-1 min-w-0">
             <div class="flex items-center justify-between gap-3">
-              <p class="text-sm font-medium text-gray-900 truncate">${escapeHTML(item.title)}</p>
+              <p class="text-sm font-medium text-gray-900 truncate">${escapeHTML(decodeHTML(item.title))}</p>
               <p class="text-xs text-gray-500 whitespace-nowrap inline-flex items-center gap-1">
                 <i class="far fa-user-circle text-gray-400"></i>
                 <span>${escapeHTML(assigneeValue)}</span>

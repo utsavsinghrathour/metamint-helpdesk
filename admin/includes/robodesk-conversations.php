@@ -342,9 +342,9 @@ $priority_terms = get_terms(array(
                 <?php
                 // phpcs:ignore WordPress.Security.NonceVerification.Recommended
                 foreach ($_GET as $key => $value): ?>
-                    <?php if (!in_array($key, ['page', 'tab', 'search', 'customer', 'agent', 'status', 'paged'])): ?>
-                        <input type="hidden" name="<?php echo esc_attr($key); ?>" value="<?php echo esc_attr($value); ?>">
-                    <?php endif; ?>
+                <?php if (!in_array($key, ['page', 'tab', 'search', 'customer', 'agent', 'status', 'paged'])): ?>
+                <input type="hidden" name="<?php echo esc_attr($key); ?>" value="<?php echo esc_attr($value); ?>">
+                <?php endif; ?>
                 <?php endforeach; ?>
 
                 <div>
@@ -373,7 +373,7 @@ $priority_terms = get_terms(array(
                         </div>
                         <div id="robodesk-customer-hidden-inputs">
                             <?php foreach ($customer_filters as $customer_value): ?>
-                                <input type="hidden" name="customer[]" value="<?php echo esc_attr($customer_value); ?>">
+                            <input type="hidden" name="customer[]" value="<?php echo esc_attr($customer_value); ?>">
                             <?php endforeach; ?>
                         </div>
                     </div>
@@ -393,7 +393,7 @@ $priority_terms = get_terms(array(
                         </div>
                         <div id="robodesk-agent-hidden-inputs">
                             <?php foreach ($agent_filters as $agent_value): ?>
-                                <input type="hidden" name="agent[]" value="<?php echo esc_attr($agent_value); ?>">
+                            <input type="hidden" name="agent[]" value="<?php echo esc_attr($agent_value); ?>">
                             <?php endforeach; ?>
                         </div>
                     </div>
@@ -420,11 +420,11 @@ $priority_terms = get_terms(array(
 
                     <!-- Clear filters button -->
                     <?php if (!empty($search_term) || !empty($customer_filter) || !empty($agent_filter) || $status_filter !== 'all'): ?>
-                        <a href="<?php echo esc_url(admin_url('admin.php?page=robodesk-dashboard&tab=tickets')); ?>"
-                            class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md shadow-sm text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-                            <i class="fas fa-times mr-2"></i>
-                            Clear
-                        </a>
+                    <a href="<?php echo esc_url(admin_url('admin.php?page=robodesk-dashboard&tab=tickets')); ?>"
+                        class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md shadow-sm text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                        <i class="fas fa-times mr-2"></i>
+                        Clear
+                    </a>
                     <?php endif; ?>
                 </div>
             </form>
@@ -433,108 +433,108 @@ $priority_terms = get_terms(array(
     </div>
 
     <script>
-        const robodeskConversationCustomerOptions = <?php echo wp_json_encode($customer_filter_options); ?>;
-        const robodeskConversationAgentOptions = <?php echo wp_json_encode($agent_filter_options); ?>;
-        const robodeskSelectedCustomers = <?php echo wp_json_encode($customer_filters); ?>;
-        const robodeskSelectedAgents = <?php echo wp_json_encode($agent_filters); ?>;
+    const robodeskConversationCustomerOptions = <?php echo wp_json_encode($customer_filter_options); ?>;
+    const robodeskConversationAgentOptions = <?php echo wp_json_encode($agent_filter_options); ?>;
+    const robodeskSelectedCustomers = <?php echo wp_json_encode($customer_filters); ?>;
+    const robodeskSelectedAgents = <?php echo wp_json_encode($agent_filters); ?>;
     </script>
 
     <!-- Filter Results Summary -->
     <?php if (!empty($search_term) || !empty($customer_filter) || !empty($agent_filter) || $status_filter !== 'all'): ?>
-        <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-            <div class="flex items-center justify-between">
-                <div class="flex items-center">
-                    <i class="fas fa-filter text-blue-600 mr-2"></i>
-                    <span class="text-sm font-medium text-blue-800">Active Filters:</span>
-                    <div class="ml-2 flex flex-wrap gap-2">
-                        <?php if (!empty($search_term)): ?>
-                            <span
-                                class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                                Search: "<?php echo esc_html($search_term); ?>"
-                            </span>
-                        <?php endif; ?>
-                        <?php foreach ($customer_filters as $customer_value): ?>
-                            <span
-                                class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                                Customer: "<?php echo esc_html($customer_value); ?>"
-                            </span>
-                        <?php endforeach; ?>
-                        <?php foreach ($agent_filters as $agent_value): ?>
-                            <span
-                                class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                                Agent: "<?php echo esc_html($agent_value); ?>"
-                            </span>
-                        <?php endforeach; ?>
-                        <?php if ($status_filter !== 'all'): ?>
-                            <span
-                                class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                                Status: <?php echo esc_html(ucfirst(str_replace('-', ' ', $status_filter))); ?>
-                            </span>
-                        <?php endif; ?>
-                    </div>
+    <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+        <div class="flex items-center justify-between">
+            <div class="flex items-center">
+                <i class="fas fa-filter text-blue-600 mr-2"></i>
+                <span class="text-sm font-medium text-blue-800">Active Filters:</span>
+                <div class="ml-2 flex flex-wrap gap-2">
+                    <?php if (!empty($search_term)): ?>
+                    <span
+                        class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                        Search: "<?php echo esc_html($search_term); ?>"
+                    </span>
+                    <?php endif; ?>
+                    <?php foreach ($customer_filters as $customer_value): ?>
+                    <span
+                        class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                        Customer: "<?php echo esc_html($customer_value); ?>"
+                    </span>
+                    <?php endforeach; ?>
+                    <?php foreach ($agent_filters as $agent_value): ?>
+                    <span
+                        class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                        Agent: "<?php echo esc_html($agent_value); ?>"
+                    </span>
+                    <?php endforeach; ?>
+                    <?php if ($status_filter !== 'all'): ?>
+                    <span
+                        class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                        Status: <?php echo esc_html(ucfirst(str_replace('-', ' ', $status_filter))); ?>
+                    </span>
+                    <?php endif; ?>
                 </div>
-                <span class="text-sm text-blue-600"><?php echo esc_html($total_posts); ?>
-                    result<?php echo $total_posts !== 1 ? 's' : ''; ?> found</span>
             </div>
+            <span class="text-sm text-blue-600"><?php echo esc_html($total_posts); ?>
+                result<?php echo $total_posts !== 1 ? 's' : ''; ?> found</span>
         </div>
+    </div>
     <?php endif; ?>
 
     <!-- Bulk Actions Bar -->
     <?php if (!empty($tickets)): ?>
-        <div id="bulk-actions-bar" class="bg-white border border-gray-200 rounded-lg p-4 mb-4" style="display: none;">
-            <div class="flex items-center justify-between">
-                <div class="flex items-center space-x-4">
-                    <span id="selected-count" class="text-sm font-medium text-gray-900">0 items selected</span>
-                    <div class="flex items-center space-x-2">
-                        <select id="bulk-action-select" class="styled-select text-sm border-gray-300 rounded-md">
-                            <option value="">Select Action</option>
-                            <optgroup label="Status">
-                                <option value="status-open">Set Status: Open</option>
-                                <option value="status-in-progress">Set Status: In Progress</option>
-                                <option value="status-closed">Set Status: Closed</option>
-                            </optgroup>
-                            <optgroup label="Priority">
-                                <?php if (!empty($priority_terms)): ?>
-                                    <?php foreach ($priority_terms as $priority_term): ?>
-                                        <option value="priority-<?php echo esc_attr($priority_term->name); ?>">Set Priority:
-                                            <?php echo esc_html($priority_term->name); ?></option>
-                                    <?php endforeach; ?>
-                                <?php endif; ?>
-                            </optgroup>
-                            <optgroup label="Assignee">
-                                <?php foreach ($users as $user): ?>
-                                    <option value="assignee-<?php echo esc_attr($user->ID); ?>">Assign to:
-                                        <?php echo esc_html($user->display_name); ?></option>
-                                <?php endforeach; ?>
-                            </optgroup>
-                            <optgroup label="Actions">
-                                <option value="delete" class="text-red-600">Delete Selected</option>
-                            </optgroup>
-                        </select>
-                        <button id="apply-bulk-action" type="button"
-                            class="inline-flex items-center px-3 py-1.5 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                            disabled>
-                            Apply
-                        </button>
-                    </div>
+    <div id="bulk-actions-bar" class="bg-white border border-gray-200 rounded-lg p-4 mb-4" style="display: none;">
+        <div class="flex items-center justify-between">
+            <div class="flex items-center space-x-4">
+                <span id="selected-count" class="text-sm font-medium text-gray-900">0 items selected</span>
+                <div class="flex items-center space-x-2">
+                    <select id="bulk-action-select" class="styled-select text-sm border-gray-300 rounded-md">
+                        <option value="">Select Action</option>
+                        <optgroup label="Status">
+                            <option value="status-open">Set Status: Open</option>
+                            <option value="status-in-progress">Set Status: In Progress</option>
+                            <option value="status-closed">Set Status: Closed</option>
+                        </optgroup>
+                        <optgroup label="Priority">
+                            <?php if (!empty($priority_terms)): ?>
+                            <?php foreach ($priority_terms as $priority_term): ?>
+                            <option value="priority-<?php echo esc_attr($priority_term->name); ?>">Set Priority:
+                                <?php echo esc_html($priority_term->name); ?></option>
+                            <?php endforeach; ?>
+                            <?php endif; ?>
+                        </optgroup>
+                        <optgroup label="Assignee">
+                            <?php foreach ($users as $user): ?>
+                            <option value="assignee-<?php echo esc_attr($user->ID); ?>">Assign to:
+                                <?php echo esc_html($user->display_name); ?></option>
+                            <?php endforeach; ?>
+                        </optgroup>
+                        <optgroup label="Actions">
+                            <option value="delete" class="text-red-600">Delete Selected</option>
+                        </optgroup>
+                    </select>
+                    <button id="apply-bulk-action" type="button"
+                        class="inline-flex items-center px-3 py-1.5 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                        disabled>
+                        Apply
+                    </button>
                 </div>
-                <button id="clear-selection" type="button" class="text-sm text-gray-500 hover:text-gray-700">
-                    Clear Selection
-                </button>
             </div>
+            <button id="clear-selection" type="button" class="text-sm text-gray-500 hover:text-gray-700">
+                Clear Selection
+            </button>
         </div>
+    </div>
     <?php endif; ?>
 
     <!----------------------------- Tickets Table ----------------------------->
-    <div class="bg-white shadow rounded-lg overflow-hidden">
+    <div class="bg-white shadow rounded-lg overflow-auto">
         <table class="min-w-full divide-y divide-gray-200">
             <thead class="bg-gray-50">
                 <tr>
                     <?php if (!empty($tickets)): ?>
-                        <th class="px-3 py-3 text-left">
-                            <input type="checkbox" id="select-all-tickets"
-                                class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
-                        </th>
+                    <th class="px-3 py-3 text-left">
+                        <input type="checkbox" id="select-all-tickets"
+                            class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                    </th>
                     <?php endif; ?>
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Conversation</th>
@@ -553,87 +553,88 @@ $priority_terms = get_terms(array(
             <tbody class="bg-white divide-y divide-gray-200" id="tickets-table">
                 <!-- JavaScript for tickets (now only for viewing, not filtering) -->
                 <script>
-                    const tickets = <?php echo wp_json_encode($tickets); ?>;
-                    const ajaxUrl = '<?php echo esc_url(admin_url('admin-ajax.php')); ?>';
-                    const bulkActionNonce = '<?php echo esc_js(wp_create_nonce('robodesk_bulk_action')); ?>';
+                const tickets = <?php echo wp_json_encode($tickets); ?>;
+                const ajaxUrl = '<?php echo esc_url(admin_url('admin-ajax.php')); ?>';
+                const bulkActionNonce = '<?php echo esc_js(wp_create_nonce('robodesk_bulk_action')); ?>';
                 </script>
                 <?php if (!empty($tickets)): ?>
-                    <?php foreach ($tickets as $ticket): ?>
-                        <tr class="table-row">
-                            <td class="px-3 py-4 whitespace-nowrap">
-                                <input type="checkbox"
-                                    class="ticket-checkbox rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                                    value="<?php echo esc_attr($ticket['id']); ?>"
-                                    data-ticket-id="<?php echo esc_attr($ticket['id']); ?>">
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap cursor-pointer"
-                                onclick="viewTicket(<?php echo esc_js($ticket['id']); ?>)">
-                                <div class="text-sm font-medium text-gray-900">#<?php echo esc_html($ticket['id']); ?></div>
-                                <div class="text-sm text-gray-500 truncate max-w-xs">
-                                    <?php echo esc_html(substr($ticket['title'], 0, 25) . (strlen($ticket['title']) > 50 ? '...' : '')); ?>
-                                </div>
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap cursor-pointer"
-                                onclick="viewTicket(<?php echo esc_js($ticket['id']); ?>)">
-                                <div class="text-sm font-medium text-gray-900"><?php echo esc_html($ticket['customer']); ?>
-                                </div>
-                                <div class="text-sm text-gray-500 truncate max-w-xs"><?php echo esc_html($ticket['email']); ?>
-                                </div>
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap cursor-pointer"
-                                onclick="viewTicket(<?php echo esc_js($ticket['id']); ?>)">
-                                <span
-                                    class="status-badge <?php echo esc_attr(robodesk_get_status_class($ticket['status'])); ?> editable-status inline-flex items-center gap-1 cursor-pointer hover:opacity-90"
-                                    title="Click to edit status"
-                                    onclick="event.stopPropagation(); editStatus(<?php echo esc_js($ticket['id']); ?>, this)">
-                                    <?php echo esc_html(str_replace('-', ' ', $ticket['status'])); ?>
-                                    <i class="fas fa-chevron-down text-[10px] opacity-70"></i>
-                                </span>
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap cursor-pointer"
-                                onclick="viewTicket(<?php echo esc_js($ticket['id']); ?>)">
-                                <span
-                                    class="status-badge editable-priority inline-flex items-center gap-1 cursor-pointer hover:opacity-90"
-                                    style="background-color:<?php echo esc_attr(robodesk_get_priority_class($ticket['priority'])); ?>"
-                                    title="Click to edit priority"
-                                    onclick="event.stopPropagation(); editPriority(<?php echo esc_js($ticket['id']); ?>, this)">
-                                    <?php echo esc_html($ticket['priority']); ?>
-                                    <i class="fas fa-chevron-down text-[10px] opacity-70"></i>
-                                </span>
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap cursor-pointer"
-                                onclick="viewTicket(<?php echo esc_js($ticket['id']); ?>)">
-                                <span
-                                    class="text-sm font-medium text-gray-900 editable-assignee inline-flex items-center gap-1 cursor-pointer hover:text-blue-700"
-                                    title="Click to edit assignee"
-                                    onclick="event.stopPropagation(); editAssignee(<?php echo esc_js($ticket['id']); ?>, this)">
-                                    <?php echo esc_html($ticket['assignee']); ?>
-                                    <i class="fas fa-chevron-down text-[10px] opacity-70"></i>
-                                </span>
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 cursor-pointer"
-                                onclick="viewTicket(<?php echo esc_js($ticket['id']); ?>)">
-                                <?php echo esc_html(wp_date($ticket['updated'])); ?>
-                            </td>
-                        </tr>
-                    <?php endforeach; ?>
+                <?php foreach ($tickets as $ticket): ?>
+                <tr class="table-row">
+                    <td class="px-3 py-4 whitespace-nowrap">
+                        <input type="checkbox"
+                            class="ticket-checkbox rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                            value="<?php echo esc_attr($ticket['id']); ?>"
+                            data-ticket-id="<?php echo esc_attr($ticket['id']); ?>">
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap cursor-pointer"
+                        onclick="viewTicket(<?php echo esc_js($ticket['id']); ?>)">
+                        <div class="text-sm font-medium text-gray-900">#<?php echo esc_html($ticket['id']); ?></div>
+                        <div class="text-sm text-gray-500 truncate max-w-xs">
+                            <?php echo esc_html(substr($ticket['title'], 0, 25) . (strlen($ticket['title']) > 50 ? '...' : '')); ?>
+                        </div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap cursor-pointer"
+                        onclick="viewTicket(<?php echo esc_js($ticket['id']); ?>)">
+                        <div class="text-sm font-medium text-gray-900"><?php echo esc_html($ticket['customer']); ?>
+                        </div>
+                        <div class="text-sm text-gray-500 truncate max-w-xs"><?php echo esc_html($ticket['email']); ?>
+                        </div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap cursor-pointer"
+                        onclick="viewTicket(<?php echo esc_js($ticket['id']); ?>)">
+                        <span
+                            class="status-badge <?php echo esc_attr(robodesk_get_status_class($ticket['status'])); ?> editable-status inline-flex items-center gap-1 cursor-pointer hover:opacity-90"
+                            title="Click to edit status"
+                            onclick="event.stopPropagation(); editStatus(<?php echo esc_js($ticket['id']); ?>, this)">
+                            <?php echo esc_html(str_replace('-', ' ', $ticket['status'])); ?>
+                            <i class="fas fa-chevron-down text-[10px] opacity-70"></i>
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap cursor-pointer"
+                        onclick="viewTicket(<?php echo esc_js($ticket['id']); ?>)">
+                        <span
+                            class="status-badge editable-priority inline-flex items-center gap-1 cursor-pointer hover:opacity-90"
+                            style="background-color:<?php echo esc_attr(robodesk_get_priority_class($ticket['priority'])); ?>"
+                            title="Click to edit priority"
+                            onclick="event.stopPropagation(); editPriority(<?php echo esc_js($ticket['id']); ?>, this)">
+                            <?php echo esc_html($ticket['priority']); ?>
+                            <i class="fas fa-chevron-down text-[10px] opacity-70"></i>
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap cursor-pointer"
+                        onclick="viewTicket(<?php echo esc_js($ticket['id']); ?>)">
+                        <span
+                            class="text-sm font-medium text-gray-900 editable-assignee inline-flex items-center gap-1 cursor-pointer hover:text-blue-700"
+                            title="Click to edit assignee"
+                            onclick="event.stopPropagation(); editAssignee(<?php echo esc_js($ticket['id']); ?>, this)">
+                            <?php echo esc_html($ticket['assignee']); ?>
+                            <i class="fas fa-chevron-down text-[10px] opacity-70"></i>
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 cursor-pointer"
+                        onclick="viewTicket(<?php echo esc_js($ticket['id']); ?>)">
+                        <?php echo esc_html(wp_date($ticket['updated'])); ?>
+                    </td>
+                </tr>
+                <?php endforeach; ?>
                 <?php else: ?>
-                    <tr>
-                        <td colspan="7" class="px-6 py-4 text-center text-gray-500">
-                            <?php if (!empty($search_term) || !empty($customer_filter) || !empty($agent_filter) || $status_filter !== 'all'): ?>
-                                No conversations found matching your filters. <a href="<?php
+                <tr>
+                    <td colspan="7" class="px-6 py-4 text-center text-gray-500">
+                        <?php if (!empty($search_term) || !empty($customer_filter) || !empty($agent_filter) || $status_filter !== 'all'): ?>
+                        No conversations found matching your filters. <a href="<?php
                                                                                         // phpcs:disable WordPress.Security.NonceVerification.Recommended
                                                                                         echo esc_url(admin_url('admin.php?' . http_build_query(array_filter($_GET, function ($key) {
                                                                                             return !in_array($key, ['search', 'customer', 'agent', 'status', 'paged']);
                                                                                         }, ARRAY_FILTER_USE_KEY))));
                                                                                         // phpcs:enable WordPress.Security.NonceVerification.Recommended
-                                                                                        ?>" class="text-blue-600 hover:text-blue-800">Clear filters</a> to see all
-                                conversations.
-                            <?php else: ?>
-                                No Conversations found.
-                            <?php endif; ?>
-                        </td>
-                    </tr>
+                                                                                        ?>"
+                            class="text-blue-600 hover:text-blue-800">Clear filters</a> to see all
+                        conversations.
+                        <?php else: ?>
+                        No Conversations found.
+                        <?php endif; ?>
+                    </td>
+                </tr>
                 <?php endif; ?>
             </tbody>
         </table>
@@ -641,146 +642,146 @@ $priority_terms = get_terms(array(
 
     <!-- Custom Pagination for Plugin Dashboard -->
     <?php if ($total_pages > 1): ?>
-        <div class="mt-4">
-            <nav id="cpm-nav" class="flex items-center justify-between">
-                <div class="flex-1 flex justify-between sm:hidden">
-                    <!-- Mobile pagination -->
-                    <?php if ($current_page > 1): ?>
-                        <a href="<?php echo esc_url(get_pagination_url($current_page - 1)); ?>"
-                            class="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
-                            Previous
-                        </a>
-                    <?php else: ?>
-                        <span
-                            class="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-400 bg-gray-100 cursor-not-allowed">
-                            Previous
-                        </span>
-                    <?php endif; ?>
+    <div class="mt-4">
+        <nav id="cpm-nav" class="flex items-center justify-between">
+            <div class="flex-1 flex justify-between sm:hidden">
+                <!-- Mobile pagination -->
+                <?php if ($current_page > 1): ?>
+                <a href="<?php echo esc_url(get_pagination_url($current_page - 1)); ?>"
+                    class="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                    Previous
+                </a>
+                <?php else: ?>
+                <span
+                    class="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-400 bg-gray-100 cursor-not-allowed">
+                    Previous
+                </span>
+                <?php endif; ?>
 
-                    <?php if ($current_page < $total_pages): ?>
-                        <a href="<?php echo esc_url(get_pagination_url($current_page + 1)); ?>"
-                            class="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
-                            Next
-                        </a>
-                    <?php else: ?>
-                        <span
-                            class="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-400 bg-gray-100 cursor-not-allowed">
-                            Next
+                <?php if ($current_page < $total_pages): ?>
+                <a href="<?php echo esc_url(get_pagination_url($current_page + 1)); ?>"
+                    class="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                    Next
+                </a>
+                <?php else: ?>
+                <span
+                    class="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-400 bg-gray-100 cursor-not-allowed">
+                    Next
+                </span>
+                <?php endif; ?>
+            </div>
+
+            <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+                <div>
+                    <p class="text-sm text-gray-700">
+                        Showing <span class="font-medium">
+                            <?php echo esc_html((($current_page - 1) * $posts_per_page) + 1); ?>
                         </span>
-                    <?php endif; ?>
+                        to <span
+                            class="font-medium"><?php echo esc_html(min($current_page * $posts_per_page, $total_posts)); ?></span>
+                        of <span class="font-medium"><?php echo esc_html($total_posts); ?></span> results
+                    </p>
                 </div>
 
-                <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
-                    <div>
-                        <p class="text-sm text-gray-700">
-                            Showing <span class="font-medium">
-                                <?php echo esc_html((($current_page - 1) * $posts_per_page) + 1); ?>
-                            </span>
-                            to <span
-                                class="font-medium"><?php echo esc_html(min($current_page * $posts_per_page, $total_posts)); ?></span>
-                            of <span class="font-medium"><?php echo esc_html($total_posts); ?></span> results
-                        </p>
-                    </div>
+                <div>
+                    <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+                        <!-- Previous Page Link -->
+                        <?php if ($current_page > 1): ?>
+                        <a href="<?php echo esc_url(get_pagination_url($current_page - 1)); ?>"
+                            class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                            <span class="sr-only">Previous</span>
+                            <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"
+                                fill="currentColor" aria-hidden="true">
+                                <path fill-rule="evenodd"
+                                    d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z"
+                                    clip-rule="evenodd" />
+                            </svg>
+                        </a>
+                        <?php else: ?>
+                        <span
+                            class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-gray-100 text-sm font-medium text-gray-400 cursor-not-allowed">
+                            <span class="sr-only">Previous</span>
+                            <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"
+                                fill="currentColor" aria-hidden="true">
+                                <path fill-rule="evenodd"
+                                    d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z"
+                                    clip-rule="evenodd" />
+                            </svg>
+                        </span>
+                        <?php endif; ?>
 
-                    <div>
-                        <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
-                            <!-- Previous Page Link -->
-                            <?php if ($current_page > 1): ?>
-                                <a href="<?php echo esc_url(get_pagination_url($current_page - 1)); ?>"
-                                    class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
-                                    <span class="sr-only">Previous</span>
-                                    <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"
-                                        fill="currentColor" aria-hidden="true">
-                                        <path fill-rule="evenodd"
-                                            d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z"
-                                            clip-rule="evenodd" />
-                                    </svg>
-                                </a>
-                            <?php else: ?>
-                                <span
-                                    class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-gray-100 text-sm font-medium text-gray-400 cursor-not-allowed">
-                                    <span class="sr-only">Previous</span>
-                                    <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"
-                                        fill="currentColor" aria-hidden="true">
-                                        <path fill-rule="evenodd"
-                                            d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z"
-                                            clip-rule="evenodd" />
-                                    </svg>
-                                </span>
-                            <?php endif; ?>
-
-                            <!-- Page Numbers -->
-                            <?php
+                        <!-- Page Numbers -->
+                        <?php
                             $start_page = max(1, $current_page - 2);
                             $end_page = min($total_pages, $current_page + 2);
 
                             // Show first page if we're not close to it
                             if ($start_page > 1): ?>
-                                <a href="<?php echo esc_url(get_pagination_url(1)); ?>"
-                                    class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">
-                                    1
-                                </a>
-                                <?php if ($start_page > 2): ?>
-                                    <span
-                                        class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700">...</span>
-                                <?php endif; ?>
-                            <?php endif; ?>
+                        <a href="<?php echo esc_url(get_pagination_url(1)); ?>"
+                            class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">
+                            1
+                        </a>
+                        <?php if ($start_page > 2): ?>
+                        <span
+                            class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700">...</span>
+                        <?php endif; ?>
+                        <?php endif; ?>
 
-                            <?php for ($i = $start_page; $i <= $end_page; $i++) : ?>
-                                <?php if ($i == $current_page) : ?>
-                                    <span
-                                        class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-blue-50 text-sm font-medium text-blue-600">
-                                        <?php echo esc_html($i); ?>
-                                    </span>
-                                <?php else: ?>
-                                    <a href="<?php echo esc_url(get_pagination_url($i)); ?>"
-                                        class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">
-                                        <?php echo esc_html($i); ?>
-                                    </a>
-                                <?php endif; ?>
-                            <?php endfor; ?>
+                        <?php for ($i = $start_page; $i <= $end_page; $i++) : ?>
+                        <?php if ($i == $current_page) : ?>
+                        <span
+                            class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-blue-50 text-sm font-medium text-blue-600">
+                            <?php echo esc_html($i); ?>
+                        </span>
+                        <?php else: ?>
+                        <a href="<?php echo esc_url(get_pagination_url($i)); ?>"
+                            class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">
+                            <?php echo esc_html($i); ?>
+                        </a>
+                        <?php endif; ?>
+                        <?php endfor; ?>
 
-                            <!-- Show last page if we're not close to it -->
-                            <?php if ($end_page < $total_pages): ?>
-                                <?php if ($end_page < $total_pages - 1): ?>
-                                    <span
-                                        class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700">...</span>
-                                <?php endif; ?>
-                                <a href="<?php echo esc_url(get_pagination_url(absint($total_pages))); ?>"
-                                    class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">
-                                    <?php echo esc_html($total_pages); ?>
-                                </a>
-                            <?php endif; ?>
+                        <!-- Show last page if we're not close to it -->
+                        <?php if ($end_page < $total_pages): ?>
+                        <?php if ($end_page < $total_pages - 1): ?>
+                        <span
+                            class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700">...</span>
+                        <?php endif; ?>
+                        <a href="<?php echo esc_url(get_pagination_url(absint($total_pages))); ?>"
+                            class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">
+                            <?php echo esc_html($total_pages); ?>
+                        </a>
+                        <?php endif; ?>
 
-                            <!-- Next Page Link -->
-                            <?php if ($current_page < $total_pages): ?>
-                                <a href="<?php echo esc_url(get_pagination_url($current_page + 1)); ?>"
-                                    class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
-                                    <span class="sr-only">Next</span>
-                                    <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"
-                                        fill="currentColor" aria-hidden="true">
-                                        <path fill-rule="evenodd"
-                                            d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
-                                            clip-rule="evenodd" />
-                                    </svg>
-                                </a>
-                            <?php else: ?>
-                                <span
-                                    class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-gray-100 text-sm font-medium text-gray-400 cursor-not-allowed">
-                                    <span class="sr-only">Next</span>
-                                    <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"
-                                        fill="currentColor" aria-hidden="true">
-                                        <path fill-rule="evenodd"
-                                            d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
-                                            clip-rule="evenodd" />
-                                    </svg>
-                                </span>
-                            <?php endif; ?>
-                        </nav>
-                    </div>
+                        <!-- Next Page Link -->
+                        <?php if ($current_page < $total_pages): ?>
+                        <a href="<?php echo esc_url(get_pagination_url($current_page + 1)); ?>"
+                            class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                            <span class="sr-only">Next</span>
+                            <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"
+                                fill="currentColor" aria-hidden="true">
+                                <path fill-rule="evenodd"
+                                    d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
+                                    clip-rule="evenodd" />
+                            </svg>
+                        </a>
+                        <?php else: ?>
+                        <span
+                            class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-gray-100 text-sm font-medium text-gray-400 cursor-not-allowed">
+                            <span class="sr-only">Next</span>
+                            <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"
+                                fill="currentColor" aria-hidden="true">
+                                <path fill-rule="evenodd"
+                                    d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
+                                    clip-rule="evenodd" />
+                            </svg>
+                        </span>
+                        <?php endif; ?>
+                    </nav>
                 </div>
-            </nav>
-        </div>
+            </div>
+        </nav>
+    </div>
     <?php endif; ?>
 </div>
 <?php
@@ -788,8 +789,8 @@ $priority_terms = get_terms(array(
 ?>
 
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // Intentionally no auto-submit search here.
-        // Filtering only runs when user clicks the Filter button.
-    });
+document.addEventListener('DOMContentLoaded', function() {
+    // Intentionally no auto-submit search here.
+    // Filtering only runs when user clicks the Filter button.
+});
 </script>
