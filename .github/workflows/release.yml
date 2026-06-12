@@ -62,10 +62,24 @@ jobs:
 
       - name: Create full plugin zip
         run: |
-          zip -r "robodesk.zip" . -x ".git/*" ".github/*" "*.zip" "**/node_modules/*" \
-          "composer.json" "composer.lock" "package.json" "**/package.json" "**/package-lock.json" \
-          "plugin-zip.js" "stylelint.config.mjs" ".php-cs-fixer.dist.php" "eslint.config.mjs" \
-          ".stylelintignore" ".gitignore" ".husky/*" "**/.babelrc" "public/src/**" ".DS_Store"
+          # Clean up node_modules first to make copy fast
+          rm -rf public/node_modules
+          
+          # Create temp directory
+          mkdir -p /tmp/robodesk-zip/robodesk
+          
+          # Copy all files
+          cp -r . /tmp/robodesk-zip/robodesk/
+          
+          # Clean up unwanted files in the copied folder
+          cd /tmp/robodesk-zip/robodesk
+          rm -rf .git .github *.zip composer.json composer.lock package.json package-lock.json public/package.json public/package-lock.json plugin-zip.js stylelint.config.mjs .php-cs-fixer.dist.php eslint.config.mjs .stylelintignore .gitignore .husky public/src
+          find . -name ".DS_Store" -delete
+          find . -name ".babelrc" -delete
+          
+          # Zip the folder
+          cd /tmp/robodesk-zip
+          zip -r "$GITHUB_WORKSPACE/robodesk.zip" robodesk
 
       - name: Create and push tag
         run: |
