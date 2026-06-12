@@ -101,19 +101,22 @@ const Header = ({ logo, onClose, setActiveTab, setShowLogin, updateSelectedTicke
         messages: [],
       };
 
+      if (messagesExceptFirst.length > 0) {
+        for (const message of messagesExceptFirst) {
+          const messageText = message.text || message.message || '';
+          if (!messageText.trim()) continue;
+
+          if (message.role === 'user') {
+            await sendReply(newTicket.id, loggedInUsrId, messageText);
+          } else if (message.role === 'assistant') {
+            await sendReply(newTicket.id, selectedStaff || loggedInUsrId, messageText, false, true);
+          }
+        }
+      }
+
       refreshTickets();
       updateSelectedTicket(newTicket);
       setActiveTab(1);
-
-      if (messagesExceptFirst.length > 0) {
-        messagesExceptFirst.forEach((message) => {
-          if (message.role === 'user') {
-            sendReply(newTicket.id, loggedInUsrId, message.text);
-          } else if (message.role === 'assistant') {
-            sendReply(newTicket.id, selectedStaff, message.message, false, true);
-          }
-        });
-      }
 
       sessionStorage.removeItem(CHAT_KEY);
     } catch (error) {

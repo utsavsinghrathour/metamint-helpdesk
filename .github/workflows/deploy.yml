@@ -65,4 +65,4 @@ jobs:
             echo "🔐 Fixing ownership..."
             chown -R www:www robodesk
 
-            echo "✅ Ownership changed!"
+            echo "✅ Deployment complete!"

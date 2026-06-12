@@ -1,3 +1,5 @@
+var credentialIdMap = new WeakMap();
+
 jQuery(document).ready(function ($) {
   $("#change-ticket-status").change(function () {
     var ticketId = $(this).data("ticket-id");
@@ -170,7 +172,8 @@ jQuery(document).ready(function ($) {
       },
       success: function (response) {
         if (response.success) {
-          location.reload();
+          var row = $(".robodesk-delete-credentials[data-credential-id='" + credentialId + "']").closest("tr");
+          row.remove();
         } else {
           alert(response.data.message);
           console.log(response);
@@ -274,57 +277,120 @@ jQuery(document).ready(function ($) {
 });
 
 jQuery(document).ready(function ($) {
-  // ... other JavaScript code
-
-  // Show/Hide Add Credential Form
-  $("#add-credential-button").click(function () {
-    $("#credential-form").toggle();
+  // --- Credential vault: populate ID map from DOM ---
+  $(".show-password, .copy-password, .delete-credential").each(function () {
+    var id = parseInt($(this).attr("data-credential-id"), 10);
+    if (id) credentialIdMap.set(this, id);
   });
 
-  // Add Credential AJAX
-  $("#robodesk-add-credential").submit(function (e) {
-    e.preventDefault();
-
-    var formData = $(this).serialize();
+  // Load Add Credential Form via AJAX
+  $("#add-credential-button").click(function () {
+    var existing = $("#credential-form");
+    if (existing.length) {
+      existing.slideUp(function () { $(this).remove(); });
+      return;
+    }
+    var container = $("<div id='credential-form'></div>").insertAfter(this);
     $.ajax({
       url: robodesk_ajax_object.ajax_url,
       type: "POST",
-      data: formData,
-      success: function (response) {
-        console.log(response);
-        if (response.success) {
-          $("#robodesk-add-credential")[0].reset();
-          location.reload();
-        } else {
-          alert(response.data);
-          console.error(response);
-        }
+      data: {
+        action: "robodesk_get_credential_form",
+        nonce: robodesk_ajax_object.add_credential_nonce,
       },
-      error: function (jqXHR, textStatus, errorThrown) {
-        alert("An error occurred: " + textStatus + " " + errorThrown);
-        console.error("AJAX Error:", jqXHR, textStatus, errorThrown);
+      success: function (response) {
+        if (response.success) {
+          container.html(response.data.html).slideDown();
+          bindAddCredentialForm();
+        }
       },
     });
   });
 
+  function bindAddCredentialForm() {
+    $("#robodesk-add-credential")
+      .off("submit")
+      .on("submit", function (e) {
+        e.preventDefault();
+
+        var formData = $(this).serialize();
+        $.ajax({
+          url: robodesk_ajax_object.ajax_url,
+          type: "POST",
+          data: formData,
+          success: function (response) {
+            if (response.success) {
+              $("#robodesk-add-credential")[0].reset();
+              $("#credential-form").slideUp();
+              var cred = response.data;
+              var row = buildCredentialRow(cred);
+              var wrapper = $(".credential-table-wrapper");
+              if (wrapper.length) {
+                wrapper.find("table tbody").append(row);
+              } else {
+                $(".robodesk-my-credentials").html(
+                  '<div class="credential-table-wrapper"><table><thead><tr><th>Name</th><th>Username</th><th>Password</th><th>URL</th><th>Notes</th><th>Actions</th></tr></thead><tbody></tbody></table></div>'
+                );
+                $(".credential-table-wrapper table tbody").append(row);
+              }
+              row.find(".show-password, .copy-password, .delete-credential").each(function () {
+                credentialIdMap.set(this, cred.id);
+              });
+            } else {
+              alert(response.data);
+              console.error(response);
+            }
+          },
+          error: function (jqXHR, textStatus, errorThrown) {
+            alert("An error occurred: " + textStatus + " " + errorThrown);
+            console.error("AJAX Error:", jqXHR, textStatus, errorThrown);
+          },
+        });
+      });
+  }
+
+  bindAddCredentialForm();
+
+  function buildCredentialRow(cred) {
+    var urlHtml = cred.url
+      ? '<span class="credential-cell-wrap"><a href="' + cred.url + '" target="_blank" rel="noopener noreferrer" class="credential-url-link" title="' + cred.url + '"><span class="dashicons dashicons-external" aria-hidden="true"></span></a><button type="button" class="copy-credential" data-copy-value="' + cred.url + '" title="' + cred.url + '"><span class="dashicons dashicons-admin-page"></span></button></span>'
+      : '<span class="credential-url-text">&mdash;</span>';
+
+    return '<tr class="robodesk-table-content">' +
+      '<td><span class="credential-cell-wrap"><span class="credential-name-text">' + cred.name + '</span><button type="button" class="copy-credential" data-copy-value="' + cred.name + '" title="Copy Name"><span class="dashicons dashicons-admin-page"></span></button></span></td>' +
+      '<td><span class="credential-cell-wrap"><span class="credential-username-text">' + cred.username + '</span><button type="button" class="copy-credential" data-copy-value="' + cred.username + '" title="Copy Username"><span class="dashicons dashicons-admin-page"></span></button></span></td>' +
+      '<td><span class="credential-cell-wrap"><span class="password-hidden">********</span><button type="button" class="show-password" data-credential-id="' + cred.id + '" title="Show Password"><span class="dashicons dashicons-visibility"></span></button><button type="button" class="copy-password" data-credential-id="' + cred.id + '" title="Copy Password"><span class="dashicons dashicons-admin-page"></span></button></span></td>' +
+      '<td>' + urlHtml + '</td>' +
+      '<td>' + (cred.notes || '') + '</td>' +
+      '<td><button class="delete-credential" data-credential-id="' + cred.id + '">Delete</button></td>' +
+      '</tr>';
+  }
+
   // Delete Credential AJAX
-  $(".delete-credential").click(function () {
-    var credentialId = $(this).data("credential-id");
+  $(document).on("click", ".delete-credential", function () {
+    var credentialId = credentialIdMap.get(this);
     var confirmDelete = confirm(
       "Are you sure you want to delete this credential?",
     );
     if (confirmDelete) {
+      var row = $(this).closest("tr");
       $.ajax({
         url: robodesk_ajax_object.ajax_url,
         type: "POST",
         data: {
           action: "robodesk_delete_credential",
           credential_id: credentialId,
-          nonce: robodesk_ajax_object.delete_credential_nonce, // Use the correct nonce
+          nonce: robodesk_ajax_object.delete_credential_nonce,
         },
         success: function (response) {
           if (response.success) {
-            location.reload();
+            row.remove();
+            var tbody = $(".credential-table-wrapper table tbody");
+            if (tbody.length && tbody.find("tr").length === 0) {
+              $(".robodesk-my-credentials").html(
+                "<p>No credentials saved yet.</p>"
+              );
+            }
           } else {
             alert(response.data);
             console.error(response);
@@ -338,18 +404,140 @@ jQuery(document).ready(function ($) {
     }
   });
 
-  // Show Password Functionality
-  $(".show-password").click(function () {
-    var passwordSpan = $(this).prev(".password-hidden");
-    var password = $(this).data("password");
-    var icon = $(this).find(".dashicons"); // Toggle password visibility
-    if (passwordSpan.text() === "********") {
-      passwordSpan.text(password);
-      icon.removeClass("dashicons-visibility").addClass("dashicons-hidden");
-    } else {
-      passwordSpan.text("********");
-      icon.removeClass("dashicons-hidden").addClass("dashicons-visibility");
+  // Copy to Clipboard Functionality
+  $(document).on("click", ".copy-credential", function () {
+    var value = $(this).data("copy-value");
+    if (!value) {
+      return;
     }
+    copyToClipboard(value, $(this));
+  });
+
+  // Copy Password Functionality (AJAX-based)
+  $(document).on("click", ".copy-password", function () {
+    var button = $(this);
+    var credentialId = credentialIdMap.get(this);
+
+    if (!credentialId) {
+      return;
+    }
+
+    // If password is already revealed, copy directly from the span
+    var passwordSpan = button.siblings(".password-hidden");
+    if (passwordSpan.data("revealed")) {
+      copyToClipboard(passwordSpan.text(), button);
+      return;
+    }
+
+    // Fetch decrypted password from server and copy
+    $.ajax({
+      url: robodesk_ajax_object.ajax_url,
+      type: "POST",
+      data: {
+        action: "robodesk_reveal_credential_password",
+        credential_id: credentialId,
+        nonce: robodesk_ajax_object.reveal_credential_nonce,
+      },
+      beforeSend: function () {
+        button.prop("disabled", true);
+      },
+      success: function (response) {
+        if (response.success) {
+          copyToClipboard(response.data.password, button);
+        } else {
+          alert(response.data || "Unable to copy password.");
+        }
+      },
+      error: function () {
+        alert("An error occurred while fetching the password.");
+      },
+      complete: function () {
+        button.prop("disabled", false);
+      },
+    });
+  });
+
+  function copyToClipboard(text, button) {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(function () {
+        showCopyFeedback(button);
+      }).catch(function () {
+        fallbackCopyToClipboard(text, button);
+      });
+    } else {
+      fallbackCopyToClipboard(text, button);
+    }
+  }
+
+  function fallbackCopyToClipboard(text, button) {
+    var tempInput = $("<textarea>");
+    $("body").append(tempInput);
+    tempInput.val(text).trigger("select");
+    document.execCommand("copy");
+    tempInput.remove();
+    showCopyFeedback(button);
+  }
+
+  function showCopyFeedback(button) {
+    var originalIcon = button.find(".dashicons").attr("class");
+    button.find(".dashicons").removeClass().addClass("dashicons dashicons-yes");
+    button.addClass("is-copied");
+    setTimeout(function () {
+      button.find(".dashicons").removeClass().addClass(originalIcon);
+      button.removeClass("is-copied");
+    }, 1500);
+  }
+
+  // Show Password Functionality (AJAX-based decryption)
+  $(document).on("click", ".show-password", function () {
+    var button = $(this);
+    var passwordSpan = button.siblings(".password-hidden");
+    var icon = button.find(".dashicons");
+    var credentialId = credentialIdMap.get(this);
+
+    if (!credentialId) {
+      return;
+    }
+
+    // If already revealed, hide it
+    if (passwordSpan.data("revealed")) {
+      passwordSpan.text("********");
+      passwordSpan.data("revealed", false);
+      icon.removeClass("dashicons-hidden").addClass("dashicons-visibility");
+      return;
+    }
+
+    // Fetch decrypted password from server
+    $.ajax({
+      url: robodesk_ajax_object.ajax_url,
+      type: "POST",
+      data: {
+        action: "robodesk_reveal_credential_password",
+        credential_id: credentialId,
+        nonce: robodesk_ajax_object.reveal_credential_nonce,
+      },
+      beforeSend: function () {
+        passwordSpan.text("Loading...");
+        button.prop("disabled", true);
+      },
+      success: function (response) {
+        if (response.success) {
+          passwordSpan.text(response.data.password);
+          passwordSpan.data("revealed", true);
+          icon.removeClass("dashicons-visibility").addClass("dashicons-hidden");
+        } else {
+          passwordSpan.text("********");
+          alert(response.data || "Unable to reveal password.");
+        }
+      },
+      error: function () {
+        passwordSpan.text("********");
+        alert("An error occurred while fetching the password.");
+      },
+      complete: function () {
+        button.prop("disabled", false);
+      },
+    });
   });
 
   $("body").append('<div class="spinner"></div>');
@@ -401,6 +589,101 @@ jQuery(document).ready(function ($) {
       },
     });
   });
+  // --- Profile: image preview ---
+  var fileInput = document.getElementById('profile_picture');
+  var previewImg = document.getElementById('profile-preview');
+  if (fileInput && previewImg) {
+    fileInput.addEventListener('change', function () {
+      var file = this.files[0];
+      if (previewImg.src && previewImg.src.indexOf('blob:') === 0) {
+        URL.revokeObjectURL(previewImg.src);
+      }
+      if (file) {
+        previewImg.src = URL.createObjectURL(file);
+        previewImg.style.display = 'inline';
+      } else {
+        previewImg.src = '';
+        previewImg.style.display = 'none';
+      }
+    });
+  }
 
-  //
+  // --- Profile: show password toggle ---
+  $('.toggle-pw').on('click', function () {
+    var target = $('#' + $(this).data('target'));
+    var isPassword = target.attr('type') === 'password';
+    target.attr('type', isPassword ? 'text' : 'password');
+    $(this).toggleClass('dashicons-visibility dashicons-hidden');
+  });
+
+  // --- Profile: password validation ---
+  var $pwField = $('#password');
+  var $confirmField = $('#confirm_password');
+  var $pwFeedback = $('#password-feedback');
+  var $cfFeedback = $('#confirm-password-feedback');
+  var $matchFeedback = $('#password-match-feedback');
+
+  if ($pwField.length && $confirmField.length) {
+    function getPwErrors(val) {
+      var errors = [];
+      if (val.length < 8) errors.push('at least 8 characters');
+      if (!/[A-Z]/.test(val)) errors.push('uppercase letter');
+      if (!/[a-z]/.test(val)) errors.push('lowercase letter');
+      if (!/[0-9]/.test(val)) errors.push('number');
+      if (!/[^A-Za-z0-9]/.test(val)) errors.push('special character');
+      return errors;
+    }
+
+    function validatePwFields() {
+      var pw = $pwField.val();
+      var cf = $confirmField.val();
+      var pwErrors = getPwErrors(pw);
+      var match = pw === cf && pw.length > 0;
+
+      if (pw.length === 0) {
+        $pwFeedback.text('');
+      } else if (pwErrors.length > 0) {
+        $pwFeedback.text('Missing: ' + pwErrors.join(', ')).css('color', 'red');
+      } else {
+        $pwFeedback.text('');
+      }
+
+      $cfFeedback.text('');
+
+      if (pw.length > 0 && cf.length > 0 && pwErrors.length === 0 && !match) {
+        $matchFeedback.text('Passwords do not match').css('color', 'red');
+      } else {
+        $matchFeedback.text('');
+      }
+    }
+
+    $pwField.on('keyup', validatePwFields);
+    $confirmField.on('keyup', validatePwFields);
+  }
+
+  // --- Profile: form submit validation ---
+  $('.rodobesk-update-profile-form').on('submit', function () {
+    var pw = $pwField.val();
+    var cf = $confirmField.val();
+    var pwErrors = getPwErrors ? getPwErrors(pw) : [];
+    var hasError = false;
+
+    if (pw.length > 0 && cf.length === 0) {
+      $cfFeedback.text('Please confirm your new password').css('color', 'red');
+      hasError = true;
+    }
+
+    if (pw.length > 0 && cf.length > 0 && pwErrors.length === 0 && pw !== cf) {
+      $matchFeedback.text('Passwords do not match').css('color', 'red');
+      hasError = true;
+    }
+
+    if (pw.length > 0 && pwErrors.length > 0) {
+      $pwFeedback.text('Missing: ' + pwErrors.join(', ')).css('color', 'red');
+      hasError = true;
+    }
+
+    return !hasError;
+  });
+
 });

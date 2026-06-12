@@ -19,7 +19,7 @@ const normalizeImagePaths = (html) => {
         return `${prefix}${baseUrl}${path}${suffix}`;
       }
       return match;
-    }
+    },
   );
 };
 
@@ -232,16 +232,16 @@ const SingleNoticeView = memo(
             </svg>
           </button>
         </div>
-        <div className="rd-px-20 rd-py-15">
+        <div className="rd-px-20 rd-py-15 rd-body-notices">
           <h4 className="heading-4 rd-mb-10">{title}</h4>
-          <div className="rd-body-text rd-body-notices">{parsedContent}</div>
+          <div className="rd-body-text">{parsedContent}</div>
         </div>
         <div className="rd-border-top-light">
           <Footer showCopyrightOnly={true} />
         </div>
       </div>
     );
-  }
+  },
 );
 
 const NoticeTabs = ({
@@ -317,33 +317,36 @@ const NoticeTabs = ({
               {showHeaderFooter && (
                 <>
                   <Header logo={logo} onClose={() => setIsOpen(false)} />
-                  <div className="rd-text-center rd-p-16 rd-flex rd-flex-col rd-gap-5 rd-mb-20 notice-tab-title home-tab-title">
-                    <h4 className="heading-4">Notices</h4>
-                    <h5 className="sub-text">
-                      Stay updated with our latest announcements.
-                    </h5>
+                  <div className="rd-notice-tab-wrap">
+                    <div className="rd-text-center rd-p-16 rd-flex rd-flex-col rd-gap-5 notice-tab-title home-tab-title">
+                      <h4 className="heading-4">Notices</h4>
+                      <h5 className="sub-text">
+                        Stay updated with our latest announcements.
+                      </h5>
+                    </div>
+
+                    <div className="rd-px-18 rd-mt-20 rd-mb-15 notice-tab-content">
+                      <div className="rd-flex rd-flex-col rd-gap-20 featured-faq">
+                        {loading ? (
+                          <p className="rd-body-text rd-text-center">
+                            Loading notices...
+                          </p>
+                        ) : notices.length === 0 ? (
+                          <p className="rd-text-center">No notices found.</p>
+                        ) : (
+                          notices.map((notice) => (
+                            <NoticeItem
+                              key={notice.id}
+                              notice={notice}
+                              onSelect={setSelectedNotice}
+                            />
+                          ))
+                        )}
+                      </div>
+                    </div>
                   </div>
                 </>
               )}
-              <div className="rd-px-18 rd-mt-20 rd-mb-15 rd-overflow-h-320 notice-tab-content">
-                <div className="rd-flex rd-flex-col rd-gap-20 featured-faq">
-                  {loading ? (
-                    <p className="rd-body-text rd-text-center">
-                      Loading notices...
-                    </p>
-                  ) : notices.length === 0 ? (
-                    <p className="rd-text-center">No notices found.</p>
-                  ) : (
-                    notices.map((notice) => (
-                      <NoticeItem
-                        key={notice.id}
-                        notice={notice}
-                        onSelect={setSelectedNotice}
-                      />
-                    ))
-                  )}
-                </div>
-              </div>
             </div>
             {showHeaderFooter && (
               <Footer activeTab={2} setActiveTab={setActiveTab} />

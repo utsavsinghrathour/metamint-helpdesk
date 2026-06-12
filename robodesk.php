@@ -69,6 +69,9 @@ function robodesk_deactivate()
     remove_role('robodesk_support_manager');
     remove_role('robodesk_support_staff');
     remove_role('robodesk_support_customer');
+
+    // Clear the email fetch cron event
+    wp_clear_scheduled_hook('robodesk_email_fetch_cron');
 }
 
 /**
@@ -162,6 +165,7 @@ function robodesk_enqueue_scripts()
             'faq_nonce' => wp_create_nonce('robodesk_faq_vote_nonce'),
             'add_credential_nonce' => wp_create_nonce('robodesk_add_credential_nonce'),
             'delete_credential_nonce' => wp_create_nonce('robodesk_delete_credential_nonce'),
+            'reveal_credential_nonce' => wp_create_nonce('robodesk_reveal_credential_nonce'),
             'notifications_nonce' => wp_create_nonce('robodesk_notifications_action'),
 
 
@@ -460,8 +464,25 @@ add_action('init', 'robodesk_maybe_create_notifications_table');
 
 
 
-function robodesk_encrypt($plaintext, $key)
+function robodesk_get_encryption_key()
 {
+    if (defined('ROBODESK_ENCRYPTION_KEY') && ROBODESK_ENCRYPTION_KEY !== '') {
+        return ROBODESK_ENCRYPTION_KEY;
+    }
+
+    if (defined('AUTH_KEY') && AUTH_KEY !== '') {
+        return AUTH_KEY;
+    }
+
+    return 'robodesk';
+}
+
+function robodesk_encrypt($plaintext, $key = null)
+{
+    if ($key === null) {
+        $key = robodesk_get_encryption_key();
+    }
+
     $ivlen = openssl_cipher_iv_length($cipher = "AES-256-CBC");
     $iv = openssl_random_pseudo_bytes($ivlen);
     $ciphertext = openssl_encrypt($plaintext, $cipher, $key, $options = 0, $iv);
@@ -469,9 +490,18 @@ function robodesk_encrypt($plaintext, $key)
 }
 
 
-function robodesk_decrypt($ciphertext, $key)
+function robodesk_decrypt($ciphertext, $key = null)
 {
-    list($encrypted_data, $iv) = explode('::', base64_decode($ciphertext), 2);
+    if ($key === null) {
+        $key = robodesk_get_encryption_key();
+    }
+
+    $decoded = base64_decode($ciphertext, true);
+    if ($decoded === false || strpos($decoded, '::') === false) {
+        return false;
+    }
+
+    list($encrypted_data, $iv) = explode('::', $decoded, 2);
     return openssl_decrypt($encrypted_data, "AES-256-CBC", $key, $options = 0, $iv);
 }
 
@@ -1830,10 +1860,7 @@ function robodesk_send_unseen_reply_email($comment_id)
         return;
     }
 
-    $assignee_name = trim((string) get_post_meta($ticket_id, 'ticket_assignee', true));
-    if ($assignee_name === '') {
-        $assignee_name = $comment->comment_author;
-    }
+    $reply_author_name = trim((string) $comment->comment_author);
 
     $ticket_title = get_the_title($ticket_id);
     $reply_plain = trim(wp_strip_all_tags($comment->comment_content));
@@ -1863,7 +1890,7 @@ function robodesk_send_unseen_reply_email($comment_id)
     }
 
 
-    $message .= "<p><strong>" . esc_html($assignee_name) . "</strong> replied with:</p>";
+    $message .= "<p><strong>" . esc_html($reply_author_name) . "</strong> replied with:</p>";
     if ($reply_excerpt !== '') {
         $message .= "<p>\"" . esc_html($reply_excerpt) . "\"</p>";
     }
@@ -2091,6 +2118,16 @@ add_filter('rest_prepare_comment', function ($response, $comment, $request) {
         }
 
         $data['ticket_id'] = $comment->comment_post_ID;
+
+        // Resolve author_type for sender alignment in frontend
+        $author_type = get_comment_meta($comment->comment_ID, 'author_type', true);
+        if ($author_type === '' && $author_id > 0) {
+            $author_type = function_exists('robodesk_get_author_type')
+                ? robodesk_get_author_type($author_id)
+                : 'customer';
+        }
+
+        $data['author_type'] = $author_type;
 
         $data['author_data'] = array(
             'id' => $author_id,

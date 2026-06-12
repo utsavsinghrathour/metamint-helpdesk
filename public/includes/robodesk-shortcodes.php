@@ -275,11 +275,13 @@ function robodesk_my_tickets_shortcode()
                             'order' => 'DESC'
                         ));
 
-                        $last_activity = !empty($comments) ?  strtotime($comments[0]->comment_date_gmt) : get_the_modified_time('U');
+                        $last_activity = !empty($comments)
+                            ? strtotime($comments[0]->comment_date_gmt)
+                            : get_post_modified_time('U', true);
                         $comment_author = !empty($comments) ? get_the_author_meta('display_name', $comments[0]->user_id) :
                             get_the_author_meta('display_name', $post->post_author);
 
-                        $human_readable_time = human_time_diff($last_activity, current_time('U'));
+                        $human_readable_time = human_time_diff($last_activity, wp_date('U'));
 
                 ?>
             <tr class="robodesk-table-content robodesk-ticket-table-content">
@@ -607,24 +609,23 @@ function robodesk_profile_content()
         }
         $first_name = sanitize_text_field(wp_unslash($_POST['first_name']));
         $last_name = sanitize_text_field(wp_unslash($_POST['last_name']));
-        $full_name = trim($first_name . ' ' . $last_name);
 
-        $userdata = array(
-            'ID'         => $user_id,
-            'first_name' => $first_name,
-            'last_name'  => $last_name,
-        );
-
-        if ($full_name !== '') {
-            $userdata['display_name'] = $full_name;
-        }
-
-        $user_id_update = wp_update_user($userdata);
-
-        if (is_wp_error($user_id_update)) {
-            echo '<p style="color:red;">Error updating user data: ' . esc_html($user_id_update->get_error_message()) . '</p>';
-        } else {
-            echo '<p style="color:green;">Profile updated successfully!</p>';
+        if ($first_name !== $current_user->first_name || $last_name !== $current_user->last_name) {
+            $full_name = trim($first_name . ' ' . $last_name);
+            $userdata = array(
+                'ID'         => $user_id,
+                'first_name' => $first_name,
+                'last_name'  => $last_name,
+            );
+            if ($full_name !== '') {
+                $userdata['display_name'] = $full_name;
+            }
+            $user_id_update = wp_update_user($userdata);
+            if (is_wp_error($user_id_update)) {
+                echo '<p style="color:red;">Error updating user data: ' . esc_html($user_id_update->get_error_message()) . '</p>';
+            } else {
+                echo '<p style="color:green;">Profile updated successfully!</p>';
+            }
         }
     }
     if (isset($_FILES['profile_picture']['error']) && $_FILES['profile_picture']['error'] !== UPLOAD_ERR_NO_FILE) { // Check for file and no error code for no file
@@ -678,8 +679,16 @@ function robodesk_profile_content()
 
         if ($password !== $confirm_password) {
             echo '<p style="color:red;">Passwords do not match.</p>';
-        } elseif (strlen($password) < 6) {
-            echo '<p style="color:red;">Password must be at least 6 characters long.</p>';
+        } elseif (strlen($password) < 8) {
+            echo '<p style="color:red;">Password must be at least 8 characters long.</p>';
+        } elseif (!preg_match('/[A-Z]/', $password)) {
+            echo '<p style="color:red;">Password must contain at least one uppercase letter.</p>';
+        } elseif (!preg_match('/[a-z]/', $password)) {
+            echo '<p style="color:red;">Password must contain at least one lowercase letter.</p>';
+        } elseif (!preg_match('/[0-9]/', $password)) {
+            echo '<p style="color:red;">Password must contain at least one number.</p>';
+        } elseif (!preg_match('/[^A-Za-z0-9]/', $password)) {
+            echo '<p style="color:red;">Password must contain at least one special character.</p>';
         } else {
             $user_update = wp_update_user(array('ID' => $user_id, 'user_pass' => $password));
 
@@ -718,20 +727,32 @@ function robodesk_profile_content()
         <?php else:
                     echo get_avatar($user_id, 96);
                 endif; ?><br>
-        <input type="file" name="profile_picture" id="profile_picture">
+        <input type="file" name="profile_picture" id="profile_picture"><br>
+        <img id="profile-preview" style="display:none; max-width:150px; max-height:150px; margin-top:8px;">
     </div>
 
     <div class="rd-form-group">
         <label for="password">New Password:</label><br>
-        <input type="password" name="password" id="password">
+        <span style="position:relative;display:block;">
+            <input type="password" name="password" id="password" style="width:100%;padding-right:24px;">
+            <span class="dashicons dashicons-visibility toggle-pw" data-target="password"
+                style="position:absolute;right:2px;top:50%;transform:translateY(-50%);cursor:pointer;font-size:16px;line-height:1;"></span>
+        </span>
+        <span id="password-feedback" style="display:block;font-size:14px;"></span>
     </div>
 
     <div class="rd-form-group">
         <label for="confirm_password">Confirm New Password:</label><br>
-        <input type="password" name="confirm_password" id="confirm_password">
+        <span style="position:relative;display:block;">
+            <input type="password" name="confirm_password" id="confirm_password" style="width:100%;padding-right:24px;">
+            <span class="dashicons dashicons-visibility toggle-pw" data-target="confirm_password"
+                style="position:absolute;right:5px;top:50%;transform:translateY(-50%);cursor:pointer;font-size:16px;line-height:1;"></span>
+        </span>
+        <span id="confirm-password-feedback" style="display:block;font-size:14px;"></span>
+        <span id="password-match-feedback" style="display:block;font-size:14px;"></span>
     </div>
 
-    <input type="submit" value="Update Profile">
+    <input type="submit" value="Update Profile" id="profile-submit">
 </form>
 <?php
     }
@@ -935,6 +956,7 @@ function robodesk_create_ticket_page()
                         'wp_autoresize_on' => true,
                         'resize' => false,
                         'menubar' => false,
+                        'plugins' => 'link',
                     ),
                 );
                 wp_editor('', 'ticket_content', $args);
@@ -1060,6 +1082,15 @@ function robodesk_single_ticket_shortcode($atts)
     }
 
     $ticket = get_post($ticket_id);
+
+    $current_user = wp_get_current_user();
+    $allowed_roles = array('administrator', 'editor', 'support_agent', 'support_manager');
+    $is_author = (int) $ticket->post_author === $current_user->ID;
+    $is_staff = array_intersect($allowed_roles, $current_user->roles);
+
+    if (!$is_author && empty($is_staff)) {
+        return '<div class="robodesk-container"><p>You do not have permission to view this ticket.</p></div>';
+    }
     $status = get_post_meta($ticket_id, '_robodesk_ticket_status', true);
     if ($status === '') {
         $status = 'open';
@@ -1075,12 +1106,22 @@ function robodesk_single_ticket_shortcode($atts)
     }
 
     $created_date = get_the_date('Y-m-d H:i:s', $ticket);
-    $updated_date = get_the_modified_date('Y-m-d H:i:s', $ticket);
+
+    $comments = get_comments(array(
+        'post_id' => $ticket_id,
+        'number' => 1,
+        'status' => 'approve',
+        'orderby' => 'comment_date_gmt',
+        'order' => 'DESC'
+    ));
+    $last_activity = !empty($comments) ?  strtotime($comments[0]->comment_date_gmt) : get_the_modified_time('U', $ticket);
+
+    $updated_date = wp_date('Y-m-d H:i:s', $last_activity);
     $created_display = get_the_date('m/d/Y', $ticket);
-    $updated_display = get_the_modified_date('m/d/Y', $ticket);
+    $updated_display = wp_date('m/d/Y', $last_activity);
     $date_meta_label = 'Last Updated';
     $date_meta_display = $updated_display;
-    $time_ago = human_time_diff(get_the_modified_time('U', $ticket), current_time('timestamp'));
+    $time_ago = human_time_diff($last_activity, current_time('timestamp'));
     $time_ago_class = '';
 
     foreach (array('_robodesk_due_date', 'robodesk_due_date', '_ticket_due_date', 'ticket_due_date', 'due_date') as $due_date_meta_key) {
@@ -1141,14 +1182,6 @@ function robodesk_single_ticket_shortcode($atts)
     $ticket_author_name = $ticket_author && !empty($ticket_author->display_name) ? $ticket_author->display_name : 'Customer';
 
 
-    $comments = get_comments(array(
-        'post_id' => $ticket_id,
-        'number' => 1,
-        'status' => 'approve',
-        'orderby' => 'comment_date_gmt',
-        'order' => 'DESC'
-    ));
-    $last_activity = !empty($comments) ?  strtotime($comments[0]->comment_date_gmt) : get_the_modified_time('U', $ticket);
     $human_readable_time = human_time_diff($last_activity, current_time('U'));
 
     //new code ends
@@ -1230,7 +1263,7 @@ function robodesk_single_ticket_shortcode($atts)
             </div>
             <div class="robodesk-ticket-meta-card">
                 <span class="dashicons dashicons-calendar" aria-hidden="true"></span>
-                <span>Last Update: <?php echo esc_html($date_meta_display); ?></span>
+                <span><?php echo esc_html($date_meta_label); ?>: <?php echo esc_html($date_meta_display); ?></span>
             </div>
         </aside>
     </div>
@@ -1303,8 +1336,10 @@ function robodesk_single_ticket_shortcode($atts)
                     },
 
                     complete: function() {
-                        button.val('Submit');
-                        button.prop('disabled', false);
+                        setTimeout(function() {
+                            button.val('Submit');
+                            button.prop('disabled', false);
+                        }, 3000);
                     }
                 });
             });
@@ -1392,8 +1427,13 @@ function robodesk_submit_comment()
         ));
     }
 
+    // Bypass WordPress core comment flood check for Robodesk chat submissions
+    add_filter('wp_is_comment_flood', '__return_false');
+
     // phpcs:ignore WordPress.Security.NonceVerification.Missing
     $comment = wp_handle_comment_submission(wp_unslash($_POST));
+
+    remove_filter('wp_is_comment_flood', '__return_false');
 
     global $wpdb;
     if (is_wp_error($comment)) {
