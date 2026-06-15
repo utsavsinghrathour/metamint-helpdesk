@@ -107,6 +107,11 @@ function robodesk_handle_ticket_submission()
         wp_send_json_error(array('message' => 'Fill in the required fields first'));
     }
 
+    $priority_term = term_exists($priority, 'robodesk_ticket_priority');
+    if ($priority > 0 && !$priority_term) {
+        $priority = 0;
+    }
+
     $post_data = array(
         'post_title'    => $title,
         'post_content'  => $content,
