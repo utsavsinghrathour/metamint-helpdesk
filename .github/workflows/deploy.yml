@@ -1,10 +1,14 @@
 name: Deploy from Release Tag
 
+# on:
+#   workflow_run:
+#     workflows: ["Robodesk Plugin Auto Release (main)"]
+#     types:
+#       - completed
+
 on:
-  workflow_run:
-    workflows: ["Robodesk Plugin Auto Release (main)"]
-    types:
-      - completed
+  push:
+    branches: ["prod"]
 
 jobs:
   deploy:
