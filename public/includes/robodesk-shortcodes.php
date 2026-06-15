@@ -15,7 +15,7 @@ function robodesk_ticket_form_shortcode()
     < <h2>Submit a Ticket</h2>
         <form method="post" id="robodesk_submit_ticket">
             <label for="ticket_title">Title:</label>
-            <input type="text" name="ticket_title" id="ticket_title" maxlength="200" required><br><br>
+            <input type="text" name="ticket_title" id="ticket_title" required><br><br>
 
             <label for="ticket_content">Description:</label>
             <textarea name="ticket_content" id="ticket_content" rows="5" required></textarea><br><br>
@@ -55,11 +55,6 @@ function robodesk_ticket_form_shortcode()
             $ticket_origin = (int)$_POST['ticket_origin'];
             $ticket_priority = (int)$_POST['ticket_priority'];
             $user_id = get_current_user_id();
-
-            if (mb_strlen($ticket_title) > 200) {
-                echo "<div class='robodesk-container'><p>Title must be under 200 characters.</p></div>";
-                return ob_get_clean();
-            }
 
             $origin_term = term_exists($ticket_origin, 'robodesk_ticket_origin');
             if (!$origin_term) {
@@ -958,7 +953,7 @@ function robodesk_create_ticket_page()
     <h2>Create New Ticket</h2>
     <form method="post" id="robodesk-create-ticket">
         <label for="ticket_title">Title:</label><br>
-        <input type="text" id="ticket_title" name="ticket_title" maxlength="200" required><br><br>
+        <input type="text" id="ticket_title" name="ticket_title" required><br><br>
 
         <label for="ticket_content">Description:</label><br>
         <!-- <textarea id="ticket_content" name="ticket_content" rows="4" required></textarea><br><br> -->
