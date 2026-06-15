@@ -302,7 +302,14 @@ jQuery(document).ready(function ($) {
         if (response.success) {
           container.html(response.data.html).slideDown();
           bindAddCredentialForm();
+        } else {
+          container.remove();
+          alert(response.data || "Failed to load the credential form.");
         }
+      },
+      error: function () {
+        container.remove();
+        alert("An error occurred while loading the credential form.");
       },
     });
   });

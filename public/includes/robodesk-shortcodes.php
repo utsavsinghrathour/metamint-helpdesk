@@ -15,7 +15,7 @@ function robodesk_ticket_form_shortcode()
     < <h2>Submit a Ticket</h2>
         <form method="post" id="robodesk_submit_ticket">
             <label for="ticket_title">Title:</label>
-            <input type="text" name="ticket_title" id="ticket_title" required><br><br>
+            <input type="text" name="ticket_title" id="ticket_title" maxlength="200" required><br><br>
 
             <label for="ticket_content">Description:</label>
             <textarea name="ticket_content" id="ticket_content" rows="5" required></textarea><br><br>
@@ -56,6 +56,20 @@ function robodesk_ticket_form_shortcode()
             $ticket_priority = (int)$_POST['ticket_priority'];
             $user_id = get_current_user_id();
 
+            if (mb_strlen($ticket_title) > 200) {
+                echo "<div class='robodesk-container'><p>Title must be under 200 characters.</p></div>";
+                return ob_get_clean();
+            }
+
+            $origin_term = term_exists($ticket_origin, 'robodesk_ticket_origin');
+            if (!$origin_term) {
+                $ticket_origin = 0;
+            }
+            $priority_term = term_exists($ticket_priority, 'robodesk_ticket_priority');
+            if (!$priority_term) {
+                $ticket_priority = 0;
+            }
+
             $post_id = wp_insert_post(array(
                 'post_title'    => $ticket_title,
                 'post_content'  => $ticket_content,
@@ -65,8 +79,12 @@ function robodesk_ticket_form_shortcode()
             ));
 
             if ($post_id) {
-                wp_set_object_terms($post_id, $ticket_origin, 'robodesk_ticket_origin');
-                wp_set_object_terms($post_id, $ticket_priority, 'robodesk_ticket_priority');
+                if ($ticket_origin) {
+                    wp_set_object_terms($post_id, $ticket_origin, 'robodesk_ticket_origin');
+                }
+                if ($ticket_priority) {
+                    wp_set_object_terms($post_id, $ticket_priority, 'robodesk_ticket_priority');
+                }
                 echo "<div class='robodesk-container'><p>Ticket submitted successfully!</p></div>";
             } else {
                 echo "<div class='robodesk-container'><p>Error submitting ticket.</p></div>";
@@ -940,7 +958,7 @@ function robodesk_create_ticket_page()
     <h2>Create New Ticket</h2>
     <form method="post" id="robodesk-create-ticket">
         <label for="ticket_title">Title:</label><br>
-        <input type="text" id="ticket_title" name="ticket_title" required><br><br>
+        <input type="text" id="ticket_title" name="ticket_title" maxlength="200" required><br><br>
 
         <label for="ticket_content">Description:</label><br>
         <!-- <textarea id="ticket_content" name="ticket_content" rows="4" required></textarea><br><br> -->
