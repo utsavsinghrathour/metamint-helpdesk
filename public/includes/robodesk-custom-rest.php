@@ -1232,21 +1232,17 @@ function robodesk_handle_selected_staff(WP_REST_Request $request)
         }
     }
 
-    // Check if staff ID is set
-    if (!$staff_user && empty($selected_staff_id)) {
-        return new WP_REST_Response(array(
-            'error' => 'No default staff member configured'
-        ), 404);
-    }
-
     if (!$staff_user) {
         $staff_user = get_userdata($selected_staff_id);
     }
 
     if (!$staff_user) {
         return new WP_REST_Response(array(
-            'error' => 'Staff member not found'
-        ), 404);
+            'staff_display_name' => '',
+            'staff_user_image' => '',
+            'staff_user_email' => '',
+            'staff_user_id' => 0,
+        ), 200);
     }
 
     return new WP_REST_Response(array(
