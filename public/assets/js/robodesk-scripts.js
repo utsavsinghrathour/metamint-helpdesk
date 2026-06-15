@@ -551,7 +551,7 @@ jQuery(document).ready(function ($) {
   $("#robodesk-create-ticket").submit(function (e) {
     e.preventDefault();
 
-    $("#robodesk-response-message").html("");
+    $("#robodesk-response-message").show().html("");
     var formData = {
       action: "robodesk_create_new_ticket",
       ticket_title: $("#ticket_title").val(),
@@ -579,8 +579,8 @@ jQuery(document).ready(function ($) {
             .html(
               '<p style="color: red;">Error: ' + response.data.message + "</p>",
             )
-            .fadeOut(1000);
-          $("#robodesk-response-message").delay(5000).fadeOut(2000);
+            .delay(5000)
+            .fadeOut(2000);
         }
       },
       error: function () {
