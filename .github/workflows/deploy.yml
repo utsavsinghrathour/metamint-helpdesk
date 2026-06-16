@@ -1,14 +1,11 @@
 name: Deploy from Release Tag
 
-# on:
-#   workflow_run:
-#     workflows: ["Robodesk Plugin Auto Release (main)"]
-#     types:
-#       - completed
-
 on:
-  push:
-    branches: ["prod"]
+  workflow_run:
+    workflows: ["Robodesk Plugin Auto Release (main)"]
+    types:
+      - completed
+
 
 jobs:
   deploy:
@@ -18,9 +15,7 @@ jobs:
     steps:
       - name: Download release asset
         run: |
-          gh release download "${{ github.event.release.tag_name }}" \
-            --pattern "robodesk.zip" \
-            --repo "${{ github.repository }}"
+          gh release download --pattern "robodesk.zip" --repo "${{ github.repository }}"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -45,6 +40,13 @@ jobs:
             ZIP_NAME="robodesk.zip"
 
             cd "$DEST_PATH"
+
+            CURRENT_DIR=$(basename "$PWD")
+            if [ "$CURRENT_DIR" = "robodesk" ]; then
+              echo "📂 We are inside the 'robodesk' folder. Moving zip to parent directory and shifting context..."
+              mv "$ZIP_NAME" ../
+              cd ..
+            fi
 
             echo "🧹 Cleaning old files..."
             rm -rf robodesk

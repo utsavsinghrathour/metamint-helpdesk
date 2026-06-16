@@ -220,7 +220,13 @@ export default function RobodeskBotChatWidgetMain({
       const resp = await fetch(apiProxy, {
         method: "POST",
         headers,
-        body: JSON.stringify({ query: q }),
+        body: JSON.stringify({
+          query: q,
+          history: messages.slice(-15).map(m => ({
+            role: m.role,
+            content: m.role === "user" ? (m.text || m.message || "") : (m.message || m.text || "")
+          }))
+        }),
       });
 
       const j = await resp.json();
@@ -267,7 +273,13 @@ export default function RobodeskBotChatWidgetMain({
       const resp = await fetch(apiProxyStream, {
         method: "POST",
         headers,
-        body: JSON.stringify({ query: q }),
+        body: JSON.stringify({
+          query: q,
+          history: messages.slice(-15).map(m => ({
+            role: m.role,
+            content: m.role === "user" ? (m.text || m.message || "") : (m.message || m.text || "")
+          }))
+        }),
       });
 
       if (!resp.body) throw new Error("Streaming not supported");
