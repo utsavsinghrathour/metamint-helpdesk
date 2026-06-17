@@ -848,6 +848,7 @@ function robodesk_add_fetch_cron_interval($schedules)
     $interval = get_option('robodesk_fetch_interval', 15);
     $schedules['robodesk_fetch_interval'] = [
         'interval' => $interval * 60,
+        // translators: %d is the number of minutes between fetch intervals.
         'display'  => sprintf(esc_html__('Every %d minutes (Robodesk fetch)', 'robodesk'), $interval),
     ];
     return $schedules;
