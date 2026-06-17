@@ -290,7 +290,7 @@ jQuery(document).ready(function ($) {
       existing.slideUp(function () { $(this).remove(); });
       return;
     }
-    var container = $("<div id='credential-form'></div>").insertAfter(this);
+    var container = $("<div id='credential-form' style='display:none'></div>").insertAfter(this);
     $.ajax({
       url: robodesk_ajax_object.ajax_url,
       type: "POST",
