@@ -56,6 +56,13 @@ const Header = ({ logo, onClose, setActiveTab, setShowLogin, updateSelectedTicke
   const handleTalkToHumanClick = async () => {
     if (isSubmitting) return; // ← guard against multiple clicks
     setIsSubmitting(true);
+    
+    // Dispatch event to show loader in chat window
+    window.dispatchEvent(
+      new CustomEvent("robodesk:creatingTicket", {
+        detail: { isCreating: true },
+      })
+    );
 
     const saved = sessionStorage.getItem(CHAT_KEY);
     const messages = saved ? JSON.parse(saved) : [];
@@ -63,12 +70,22 @@ const Header = ({ logo, onClose, setActiveTab, setShowLogin, updateSelectedTicke
 
     if (!messages || messages.length === 0) {
       setIsSubmitting(false);
+      window.dispatchEvent(
+        new CustomEvent("robodesk:creatingTicket", {
+          detail: { isCreating: false },
+        })
+      );
       return;
     }
 
     const userMessages = messages.filter(msg => msg.role === 'user');
     if (userMessages.length === 0) {
       setIsSubmitting(false);
+      window.dispatchEvent(
+        new CustomEvent("robodesk:creatingTicket", {
+          detail: { isCreating: false },
+        })
+      );
       return;
     }
 
@@ -80,6 +97,11 @@ const Header = ({ logo, onClose, setActiveTab, setShowLogin, updateSelectedTicke
       setActiveTab(1);
       setShowLogin(true);
       setIsSubmitting(false);
+      window.dispatchEvent(
+        new CustomEvent("robodesk:creatingTicket", {
+          detail: { isCreating: false },
+        })
+      );
       return;
     }
 
@@ -100,6 +122,17 @@ const Header = ({ logo, onClose, setActiveTab, setShowLogin, updateSelectedTicke
         priority: result.data.ticket_priority,
         messages: [],
       };
+
+      // Add a single transition reply the first time a human ticket is created from the chat
+      if (newTicket.id) {
+        await sendReply(
+          newTicket.id,
+          selectedStaff || loggedInUsrId,
+          'Transitioned conversations from AI to human agent.',
+          false,
+          true
+        );
+      }
 
       if (messagesExceptFirst.length > 0) {
         for (const message of messagesExceptFirst) {
@@ -123,6 +156,12 @@ const Header = ({ logo, onClose, setActiveTab, setShowLogin, updateSelectedTicke
       console.error("Failed to create ticket:", error);
     } finally {
       setIsSubmitting(false); // ← always re-enable, even on error
+      // Dispatch event to hide loader in chat window
+      window.dispatchEvent(
+        new CustomEvent("robodesk:creatingTicket", {
+          detail: { isCreating: false },
+        })
+      );
     }
   };
 
