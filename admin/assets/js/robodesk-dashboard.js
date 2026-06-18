@@ -1,3 +1,56 @@
+function parseRobodeskDate(value) {
+  if (!value) return null;
+  if (value instanceof Date) return isNaN(value.getTime()) ? null : value;
+  if (typeof value === "number") {
+    const timestamp = value < 1000000000000 ? value * 1000 : value;
+    const date = new Date(timestamp);
+    return isNaN(date.getTime()) ? null : date;
+  }
+
+  const date = new Date(String(value).trim());
+  return isNaN(date.getTime()) ? null : date;
+}
+
+function getRobodeskTime(value) {
+  const date = parseRobodeskDate(value);
+  return date ? date.getTime() : 0;
+}
+
+function formatRobodeskLocalTime(value, format = "datetime") {
+  const date = parseRobodeskDate(value);
+  if (!date) return value || "";
+
+  const options =
+    format === "date"
+      ? { year: "numeric", month: "short", day: "numeric" }
+      : {
+          year: "numeric",
+          month: "short",
+          day: "numeric",
+          hour: "2-digit",
+          minute: "2-digit",
+        };
+
+  return date.toLocaleString(undefined, options);
+}
+
+function localizeRobodeskTimes(root = document) {
+  root.querySelectorAll(".robodesk-local-time[data-utc]").forEach((element) => {
+    const formatted = formatRobodeskLocalTime(
+      element.getAttribute("data-utc"),
+      element.getAttribute("data-format") || "datetime",
+    );
+
+    if (formatted) {
+      element.textContent = formatted;
+    }
+  });
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  localizeRobodeskTimes();
+});
+
 function loadDashboardTickets() {
   const tableBody = document.getElementById("dashboard-tickets-table");
   let filteredTickets = [];
@@ -13,27 +66,27 @@ function loadDashboardTickets() {
         .filter(
           (t) => t.assignee === current_user_name && t.status !== "closed",
         )
-        .sort((a, b) => new Date(b.updated) - new Date(a.updated));
+        .sort((a, b) => getRobodeskTime(b.updated) - getRobodeskTime(a.updated));
       break;
     case "unassigned_conversation":
       filteredTickets = dashboard_tickets
         .filter((t) => t.assignee === "N/A" || !t.assignee)
-        .sort((a, b) => new Date(b.updated) - new Date(a.updated));
+        .sort((a, b) => getRobodeskTime(b.updated) - getRobodeskTime(a.updated));
       break;
     case "open_conversation":
       filteredTickets = dashboard_tickets
         .filter((t) => t.status === "open" || t.status === "in-progress")
-        .sort((a, b) => new Date(b.updated) - new Date(a.updated));
+        .sort((a, b) => getRobodeskTime(b.updated) - getRobodeskTime(a.updated));
       break;
     case "chat_conversation":
       filteredTickets = dashboard_tickets
         .filter((t) => t.source === "chat" && t.status !== "closed")
-        .sort((a, b) => new Date(b.updated) - new Date(a.updated));
+        .sort((a, b) => getRobodeskTime(b.updated) - getRobodeskTime(a.updated));
       break;
     default:
       filteredTickets = dashboard_tickets
         .slice()
-        .sort((a, b) => new Date(b.updated) - new Date(a.updated));
+        .sort((a, b) => getRobodeskTime(b.updated) - getRobodeskTime(a.updated));
       break;
   }
 
@@ -55,12 +108,12 @@ function loadDashboardTickets() {
     const lastReply = replies.length > 0 ? replies[replies.length - 1] : null;
 
     const now = new Date();
-    const lastReplyTime = new Date(
+    const lastReplyTime = parseRobodeskDate(
       lastReply?.timestamp || lastReply?.date || ticket.updated,
     );
     const isValidDate =
       lastReplyTime instanceof Date &&
-      !isNaN(lastReplyTime) &&
+      !isNaN(lastReplyTime.getTime()) &&
       lastReplyTime <= now;
 
     const diffMinutes = isValidDate
@@ -120,10 +173,10 @@ function loadDashboardTickets() {
                     ? (() => {
                         const sortedReplies = [...ticket.replies].sort(
                           (a, b) => {
-                            const aDate = new Date(
+                            const aDate = getRobodeskTime(
                               a?.timestamp || a?.date || 0,
                             );
-                            const bDate = new Date(
+                            const bDate = getRobodeskTime(
                               b?.timestamp || b?.date || 0,
                             );
                             return bDate - aDate;
@@ -135,7 +188,7 @@ function loadDashboardTickets() {
                           lastReply.timestamp ||
                           lastReply.date ||
                           ticket.updated;
-                        const timeAgo = timeSince(new Date(lastReplyDate));
+                        const timeAgo = timeSince(parseRobodeskDate(lastReplyDate));
                         return `
                           <div class="text-sm font-medium text-gray-900">${escapeHTML(
                             lastReplyAuthor,
@@ -812,18 +865,9 @@ function timeSince(date) {
   }
 }
 
-// Helper function to format date (if not already defined)
+// Helper function to format date (delegates to UTC-aware formatter)
 function formatDate(dateString) {
-  const date = new Date(dateString);
-  const options = {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-    hour12: false,
-  };
-  return date.toLocaleDateString("en-US", options);
+  return formatRobodeskLocalTime(dateString);
 }
 
 // Function to handle filter changes
@@ -1023,16 +1067,6 @@ function debounce(func, wait) {
     clearTimeout(timeout);
     timeout = setTimeout(later, wait);
   };
-}
-
-function formatDate(dateString) {
-  return new Date(dateString).toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
 }
 
 function getStatusClass(status) {
@@ -3456,18 +3490,6 @@ function escapeHTML(str) {
     .replace(/'/g, "&#039;");
 }
 
-// Helper function to format dates
-function formatDate(dateString) {
-  const date = new Date(dateString);
-  return date.toLocaleString("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-    hour: "numeric",
-    minute: "2-digit",
-  });
-}
-
 // This function add a note to the current ticket
 
 function addNote() {
@@ -4272,7 +4294,7 @@ function renderNotificationList() {
 
   listContainer.innerHTML = sortedItems
     .map((item, index) => {
-      const timeAgo = timeSinceCompact(new Date(item.timestamp));
+      const timeAgo = timeSinceCompact(parseRobodeskDate(item.timestamp));
       let icon = "fa-bell";
       let iconColor = "text-blue-500";
       const ticketData = Array.isArray(dashboard_tickets)

@@ -378,8 +378,9 @@ function robodesk_get_formatted_comments($post_id)
             'author_name' => $author_name,
             'author_image' => $author_avatar,
             'is_bot_response' => $is_bot_response,
-            'date' => $comment->comment_date,
-            'date_gmt' => $comment->comment_date_gmt,
+            'date' => function_exists('robodesk_comment_utc_iso') ? robodesk_comment_utc_iso($comment) : $comment->comment_date,
+            'date_gmt' => function_exists('robodesk_comment_utc_iso') ? robodesk_comment_utc_iso($comment) : $comment->comment_date_gmt,
+            'date_utc' => function_exists('robodesk_comment_utc_iso') ? robodesk_comment_utc_iso($comment) : $comment->comment_date_gmt,
             'content' => [
                 'rendered' => $rendered_content,
                 'plain' => $plain_content,
@@ -742,7 +743,7 @@ function robodesk_handle_tickets_webhook(WP_REST_Request $request)
                 'author_id' => $comment->user_id,    // User ID
                 'author_image' => function_exists('robodesk_get_ticket_comment_avatar_url') ? robodesk_get_ticket_comment_avatar_url($comment, 96) : (function_exists('robodesk_get_avatar_url') ? robodesk_get_avatar_url((int) $comment->user_id, 96) : get_avatar_url($comment->user_id, ['size' => 96])),
                 'content' => $comment->comment_content,
-                'created_at' => $comment->comment_date,
+                'created_at' => function_exists('robodesk_comment_utc_iso') ? robodesk_comment_utc_iso($comment) : $comment->comment_date,
                 'is_bot_response' => $is_bot_response,
 
             ];
@@ -785,7 +786,7 @@ function robodesk_handle_tickets_webhook(WP_REST_Request $request)
                 'author_id' => $comment->user_id,
                 'author_image' => $author_image,
                 'content' => $comment->comment_content,
-                'created_at' => $comment->comment_date,
+                'created_at' => function_exists('robodesk_comment_utc_iso') ? robodesk_comment_utc_iso($comment) : $comment->comment_date,
                 'is_bot_response' => function_exists('robodesk_is_bot_comment') ? robodesk_is_bot_comment($comment->comment_ID) : false,
             ];
         }

@@ -93,7 +93,12 @@ if (post_password_required()) {
                             </div>
                             <div class="comment-metadata">
                                 <?php
-                                printf('<time>%s</time>', esc_html(get_comment_date('Y-m-d H:i:s')));
+                                $robodesk_comment_utc = function_exists('robodesk_comment_utc_iso') ? robodesk_comment_utc_iso($comment) : get_comment_date('Y-m-d H:i:s');
+                                printf(
+                                    '<time class="robodesk-local-time" datetime="%1$s" data-utc="%1$s" data-format="datetime">%2$s</time>',
+                                    esc_attr($robodesk_comment_utc),
+                                    esc_html(get_comment_date('Y-m-d H:i:s'))
+                                );
                                 ?>
                             </div>
                         </div>

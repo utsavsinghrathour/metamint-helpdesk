@@ -295,6 +295,7 @@ function robodesk_my_tickets_shortcode()
                             get_the_author_meta('display_name', $post->post_author);
 
                         $human_readable_time = human_time_diff($last_activity, wp_date('U'));
+                        $ticket_created_utc = function_exists('robodesk_post_utc_iso') ? robodesk_post_utc_iso(get_post()) : get_the_date('Y-m-d H:i:s');
 
                 ?>
             <tr class="robodesk-table-content robodesk-ticket-table-content">
@@ -307,7 +308,10 @@ function robodesk_my_tickets_shortcode()
 
                     <p class="ticket-date">
                         <span class="ticket-num"><?php echo '#' . esc_html(get_the_ID()); ?></span> <span
-                            class="dashicons-calendar"> <?php echo esc_html(get_the_date('m/d/Y')); ?></span>
+                            class="dashicons-calendar"> <time class="robodesk-local-time"
+                                datetime="<?php echo esc_attr($ticket_created_utc); ?>"
+                                data-utc="<?php echo esc_attr($ticket_created_utc); ?>"
+                                data-format="date"><?php echo esc_html(get_the_date('m/d/Y')); ?></time></span>
                     </p>
                 </td>
                 <td><?php echo esc_html($comment_count); ?></td>
@@ -841,6 +845,7 @@ function robodesk_notifications_content()
                         $notification_text = sprintf('%s has replied to', $actor_name);
                     }
 
+                    $notification_utc = function_exists('robodesk_datetime_to_utc_iso') ? robodesk_datetime_to_utc_iso($notification->notification_date) : $notification->notification_date;
                     $formatted_time = date_i18n('F j, Y, g:i a', strtotime($notification->notification_date));
                     ?>
         <?php $is_unread = empty($notification->read_at); ?>
@@ -851,7 +856,10 @@ function robodesk_notifications_content()
                 <a class="robodesk-notification-ticket-link" href="<?php echo esc_url($ticket_url); ?>"
                     data-notification-id="<?php echo esc_attr((int) $notification->id); ?>"><?php echo esc_html($ticket_title); ?></a>
             </div>
-            <small class="robodesk-notification-time"><?php echo esc_html($formatted_time); ?></small>
+            <small class="robodesk-notification-time"><time class="robodesk-local-time"
+                    datetime="<?php echo esc_attr($notification_utc); ?>"
+                    data-utc="<?php echo esc_attr($notification_utc); ?>"
+                    data-format="datetime"><?php echo esc_html($formatted_time); ?></time></small>
         </li>
         <?php endforeach; ?>
     </ul>
@@ -1119,6 +1127,7 @@ function robodesk_single_ticket_shortcode($atts)
     }
 
     $created_date = get_the_date('Y-m-d H:i:s', $ticket);
+    $created_utc = function_exists('robodesk_post_utc_iso') ? robodesk_post_utc_iso($ticket) : $created_date;
 
     $comments = get_comments(array(
         'post_id' => $ticket_id,
@@ -1130,6 +1139,7 @@ function robodesk_single_ticket_shortcode($atts)
     $last_activity = !empty($comments) ?  strtotime($comments[0]->comment_date_gmt) : get_the_modified_time('U', $ticket);
 
     $updated_date = wp_date('Y-m-d H:i:s', $last_activity);
+    $updated_utc = function_exists('robodesk_datetime_to_utc_iso') ? robodesk_datetime_to_utc_iso($last_activity) : $updated_date;
     $created_display = get_the_date('m/d/Y', $ticket);
     $updated_display = wp_date('m/d/Y', $last_activity);
     $date_meta_label = 'Last Updated';
@@ -1272,11 +1282,22 @@ function robodesk_single_ticket_shortcode($atts)
             </div>
             <div class="robodesk-ticket-meta-card">
                 <span class="dashicons dashicons-calendar-alt" aria-hidden="true"></span>
-                <span>Created at: <?php echo esc_html($created_display); ?></span>
+                <span>Created at: <time class="robodesk-local-time"
+                        datetime="<?php echo esc_attr($created_utc); ?>"
+                        data-utc="<?php echo esc_attr($created_utc); ?>"
+                        data-format="date"><?php echo esc_html($created_display); ?></time></span>
             </div>
             <div class="robodesk-ticket-meta-card">
                 <span class="dashicons dashicons-calendar" aria-hidden="true"></span>
-                <span><?php echo esc_html($date_meta_label); ?>: <?php echo esc_html($date_meta_display); ?></span>
+                <span><?php echo esc_html($date_meta_label); ?>:
+                    <?php if ($date_meta_label === 'Last Updated') : ?>
+                    <time class="robodesk-local-time" datetime="<?php echo esc_attr($updated_utc); ?>"
+                        data-utc="<?php echo esc_attr($updated_utc); ?>"
+                        data-format="date"><?php echo esc_html($date_meta_display); ?></time>
+                    <?php else : ?>
+                    <?php echo esc_html($date_meta_display); ?>
+                    <?php endif; ?>
+                </span>
             </div>
         </aside>
     </div>

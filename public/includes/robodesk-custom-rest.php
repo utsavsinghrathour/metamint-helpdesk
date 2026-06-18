@@ -571,7 +571,8 @@ function robodesk_live_conversations($ticket_id, $last_comment_client, $loggedin
                     'content' => array(
                         'rendered' => wpautop($comment->comment_content)
                     ),
-                    'date' => $comment->comment_date,
+                    'date' => function_exists('robodesk_comment_utc_iso') ? robodesk_comment_utc_iso($comment) : $comment->comment_date,
+                    'date_utc' => function_exists('robodesk_comment_utc_iso') ? robodesk_comment_utc_iso($comment) : $comment->comment_date_gmt,
                     'author_data' => array(
                         'id' => (int) $comment->user_id
                     ),
@@ -649,7 +650,8 @@ function robodesk_my_own_conversations($ticket_id, $last_my_comment_client)
                     'content' => array(
                         'rendered' => wpautop($comment->comment_content)
                     ),
-                    'date' => $comment->comment_date,
+                    'date' => function_exists('robodesk_comment_utc_iso') ? robodesk_comment_utc_iso($comment) : $comment->comment_date,
+                    'date_utc' => function_exists('robodesk_comment_utc_iso') ? robodesk_comment_utc_iso($comment) : $comment->comment_date_gmt,
                     'author_data' => array(
                         'id' => (int) $comment->user_id
                     ),
@@ -724,7 +726,7 @@ function robodesk_get_new_tickets($last_id_client, $user_id)
                 'id' => $comment->comment_ID,
                 'author' => $comment->comment_author,
                 'content' => $comment->comment_content,
-                'date' => $comment->comment_date
+                'date' => function_exists('robodesk_comment_utc_iso') ? robodesk_comment_utc_iso($comment) : $comment->comment_date
             ];
         }, $comments);
 
@@ -852,7 +854,8 @@ function robodesk_live_comments($request)
                     'content' => array(
                         'rendered' => wpautop($comment->comment_content)
                     ),
-                    'date' => $comment->comment_date,
+                    'date' => function_exists('robodesk_comment_utc_iso') ? robodesk_comment_utc_iso($comment) : $comment->comment_date,
+                    'date_utc' => function_exists('robodesk_comment_utc_iso') ? robodesk_comment_utc_iso($comment) : $comment->comment_date_gmt,
                     'author_data' => array(
                         'id' => (int) $comment->user_id
                     ),
@@ -1501,7 +1504,7 @@ function robodesk_handle_reply_receive($data)
         'author_id' => $comment->user_id,
         'author_image' => function_exists('robodesk_get_ticket_comment_avatar_url') ? robodesk_get_ticket_comment_avatar_url($comment, 96) : robodesk_get_comment_avatar($comment->user_id, 96),
         'content' => $comment->comment_content,
-        'created_at' => $comment->comment_date,
+        'created_at' => function_exists('robodesk_comment_utc_iso') ? robodesk_comment_utc_iso($comment) : $comment->comment_date,
         'is_bot_response' => $is_bot_response,
         // 'attachment_id' => $attachment_id,
         // 'attachment_url' => $attachment_url
@@ -1554,7 +1557,7 @@ function robodesk_handle_comments_get($data)
             'author_id' => $comment->user_id,
             'author_image' => function_exists('robodesk_get_ticket_comment_avatar_url') ? robodesk_get_ticket_comment_avatar_url($comment, 96) : robodesk_get_comment_avatar($comment->user_id, 96),
             'content' => $comment->comment_content,
-            'created_at' => $comment->comment_date,
+            'created_at' => function_exists('robodesk_comment_utc_iso') ? robodesk_comment_utc_iso($comment) : $comment->comment_date,
             'is_bot_response' => function_exists('robodesk_is_bot_comment') ? robodesk_is_bot_comment($comment->comment_ID) : false,
         ];
     }, $comments);

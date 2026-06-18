@@ -26,6 +26,65 @@ if (function_exists('ini_set')) {
 define('ROBODESK_PLUGIN_PATH', plugin_dir_path(__FILE__));
 define('ROBODESK_PLUGIN_URL', plugin_dir_url(__FILE__));
 
+if (!function_exists('robodesk_datetime_to_utc_iso')) {
+    function robodesk_datetime_to_utc_iso($datetime, $is_gmt = false)
+    {
+        $datetime = is_string($datetime) ? trim($datetime) : $datetime;
+
+        if (empty($datetime) || $datetime === '0000-00-00 00:00:00') {
+            return '';
+        }
+
+        if (is_numeric($datetime)) {
+            return gmdate('Y-m-d\TH:i:s\Z', (int) $datetime);
+        }
+
+        try {
+            if ($is_gmt) {
+                $date = new DateTimeImmutable((string) $datetime, new DateTimeZone('UTC'));
+            } else {
+                $date = new DateTimeImmutable((string) $datetime, wp_timezone());
+            }
+        } catch (Exception $e) {
+            $timestamp = strtotime((string) $datetime);
+            return $timestamp ? gmdate('Y-m-d\TH:i:s\Z', $timestamp) : '';
+        }
+
+        return $date->setTimezone(new DateTimeZone('UTC'))->format('Y-m-d\TH:i:s\Z');
+    }
+}
+
+if (!function_exists('robodesk_comment_utc_iso')) {
+    function robodesk_comment_utc_iso($comment)
+    {
+        $comment = is_numeric($comment) ? get_comment((int) $comment) : $comment;
+
+        if (!$comment || empty($comment->comment_date_gmt) || $comment->comment_date_gmt === '0000-00-00 00:00:00') {
+            return '';
+        }
+
+        return robodesk_datetime_to_utc_iso($comment->comment_date_gmt, true);
+    }
+}
+
+if (!function_exists('robodesk_post_utc_iso')) {
+    function robodesk_post_utc_iso($post, $modified = false)
+    {
+        $post = is_numeric($post) ? get_post((int) $post) : $post;
+
+        if (!$post) {
+            return '';
+        }
+
+        $field = $modified ? 'post_modified_gmt' : 'post_date_gmt';
+        if (empty($post->$field) || $post->$field === '0000-00-00 00:00:00') {
+            return '';
+        }
+
+        return robodesk_datetime_to_utc_iso($post->$field, true);
+    }
+}
+
 // Activation/Deactivation Hooks
 register_activation_hook(__FILE__, 'robodesk_activate');
 register_deactivation_hook(__FILE__, 'robodesk_deactivate');
@@ -2114,6 +2173,12 @@ add_filter('rest_prepare_comment', function ($response, $comment, $request) {
         $human_readable_time = $diff < 5 ? 'just now' : human_time_diff($comment_time_local, $now_local) . ' ago';
 
         $data['time_ago'] = $human_readable_time;
+        $comment_utc = function_exists('robodesk_comment_utc_iso') ? robodesk_comment_utc_iso($comment) : $comment->comment_date_gmt;
+        if ($comment_utc !== '') {
+            $data['date'] = $comment_utc;
+            $data['date_gmt'] = $comment_utc;
+            $data['date_utc'] = $comment_utc;
+        }
 
         $author_name = $comment->comment_author;
         if (function_exists('robodesk_get_comment_avatar')) {
