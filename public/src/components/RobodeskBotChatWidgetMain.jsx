@@ -58,6 +58,7 @@ export default function RobodeskBotChatWidgetMain({
   const [input, setInput] = useState("");
   const [loadingText, setLoadingText] = useState("");
   const [isStreaming, setIsStreaming] = useState(false);
+  const [isCreatingTicket, setIsCreatingTicket] = useState(false);
   const [botName, setBotName] = useState(resolvedBotName);
   const [botImage, setBotImage] = useState(resolvedBotImage);
   const apiProxy = window.location.origin + "/wp-json/robodesk-bot/v1/chat";
@@ -175,6 +176,21 @@ export default function RobodeskBotChatWidgetMain({
 
   useEffect(() => {
     fetchApiKey();
+  }, []);
+
+  // Listen for ticket creation events
+  useEffect(() => {
+    const handleTicketCreation = (e) => {
+      setIsCreatingTicket(e.detail?.isCreating ?? false);
+      if (e.detail?.isCreating) {
+        setLoadingText("Transitioning conversations from AI to human agents.");
+      } else {
+        setLoadingText("");
+      }
+    };
+
+    window.addEventListener("robodesk:creatingTicket", handleTicketCreation);
+    return () => window.removeEventListener("robodesk:creatingTicket", handleTicketCreation);
   }, []);
 
   // Configuration is now passed via props, no need to read from DOM
@@ -482,7 +498,7 @@ export default function RobodeskBotChatWidgetMain({
           )}
 
           {/* STREAMING LOADER */}
-          {isStreaming && (
+          {(isStreaming || isCreatingTicket) && (
             <div
               className="chat-message rd-flex rd-items-start rd-gap-8 received rd-streaming-loader"
               style={{ maxWidth: "70%" }}
