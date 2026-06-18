@@ -27,7 +27,11 @@ get_header(); ?>
                                                             $robodesk_origin = !empty($robodesk_origin_terms) && !is_wp_error($robodesk_origin_terms) ? $robodesk_origin_terms[0]->name : 'N/A';
                                                             echo esc_html($robodesk_origin);
                                                             ?></span> |
-                        <span class="ticket-date">Date: <?php the_date(); ?></span>
+                        <?php $robodesk_ticket_utc = function_exists('robodesk_post_utc_iso') ? robodesk_post_utc_iso(get_post()) : get_the_date('Y-m-d H:i:s'); ?>
+                        <span class="ticket-date">Date: <time class="robodesk-local-time"
+                                datetime="<?php echo esc_attr($robodesk_ticket_utc); ?>"
+                                data-utc="<?php echo esc_attr($robodesk_ticket_utc); ?>"
+                                data-format="date"><?php echo esc_html(get_the_date()); ?></time></span>
                     </div>
                 </header>
 

@@ -1184,8 +1184,8 @@ function robodesk_get_ticket_detail()
             'author' => $reply->comment_author,
             'message' => $reply->comment_content,
             'content' => $reply->comment_content,
-            'date' => $reply->comment_date,
-            'timestamp' => $reply->comment_date,
+            'date' => function_exists('robodesk_comment_utc_iso') ? robodesk_comment_utc_iso($reply) : $reply->comment_date,
+            'timestamp' => function_exists('robodesk_comment_utc_iso') ? robodesk_comment_utc_iso($reply) : $reply->comment_date,
             'type' => $author_type,
             'author_type' => $author_type,
             'is_bot_response' => $is_bot,
@@ -1206,9 +1206,9 @@ function robodesk_get_ticket_detail()
         'source_browser' => $ticket_source_meta['browser'],
         'status' => $ticket_status,
         'author_image' => function_exists('robodesk_get_avatar_url') ? robodesk_get_avatar_url((int) $post->post_author, 32) : get_avatar_url($post->post_author, ['size' => 32]),
-        'created' => get_the_date('Y-m-d H:i:s', $ticket_id),
+        'created' => function_exists('robodesk_post_utc_iso') ? robodesk_post_utc_iso($post) : get_the_date('Y-m-d H:i:s', $ticket_id),
         'priority' => $ticket_priority,
-        'updated' => get_the_modified_date('Y-m-d H:i:s', $ticket_id),
+        'updated' => function_exists('robodesk_post_utc_iso') ? robodesk_post_utc_iso($post, true) : get_the_modified_date('Y-m-d H:i:s', $ticket_id),
         'assignee' => get_post_meta($ticket_id, 'ticket_assignee', true) ?: 'N/A',
         'assignee_id' => (int) get_post_meta($ticket_id, 'ticket_assignee_id', true),
         'replies' => $formatted_replies,
@@ -1281,7 +1281,7 @@ function robodesk_update_ticket_status()
     }
 
     update_post_meta($ticket_id, '_robodesk_ticket_status', $new_status);
-    $updated = current_time('mysql');
+    $updated = function_exists('robodesk_datetime_to_utc_iso') ? robodesk_datetime_to_utc_iso(current_time('mysql')) : current_time('mysql');
 
     if ($old_status !== $new_status && function_exists('robodesk_notify_status_changed')) {
         robodesk_notify_status_changed($ticket_id, $new_status, get_current_user_id(), 'admin');
@@ -1350,7 +1350,7 @@ function robodesk_update_ticket_priority()
 
     wp_set_post_terms($ticket_id, [(int)$term['term_id']], 'robodesk_ticket_priority');
 
-    $updated = current_time('mysql');
+    $updated = function_exists('robodesk_datetime_to_utc_iso') ? robodesk_datetime_to_utc_iso(current_time('mysql')) : current_time('mysql');
 
     //add a comment to indicate the priority change
     $user_id = get_current_user_id();
@@ -1426,7 +1426,7 @@ function robodesk_update_ticket_assignee()
     } else {
         robodesk_store_ticket_assignee_id($ticket_id, $assignee_display);
     }
-    $updated = current_time('mysql');
+    $updated = function_exists('robodesk_datetime_to_utc_iso') ? robodesk_datetime_to_utc_iso(current_time('mysql')) : current_time('mysql');
 
 
     // create a new comment to indicate the assignee change
@@ -1743,7 +1743,7 @@ function robodesk_handle_get_ticket_replies()
             'id'             => $comment->comment_ID,
             'author'         => $is_bot_response && function_exists('robodesk_get_bot_display_name') ? robodesk_get_bot_display_name() : $comment->comment_author,
             'message'        => $comment->comment_content,
-            'timestamp'      => $comment->comment_date,
+            'timestamp'      => function_exists('robodesk_comment_utc_iso') ? robodesk_comment_utc_iso($comment) : $comment->comment_date,
             'type'           => $type,
             'role'           => $role,
             'is_bot_response' => $is_bot_response,
@@ -1868,7 +1868,7 @@ function robodesk_handle_get_ticket_notes()
             'id'        => $comment->comment_ID,
             'author'    => $comment->comment_author,
             'message'   => $comment->comment_content,
-            'timestamp' => $comment->comment_date,
+            'timestamp' => function_exists('robodesk_comment_utc_iso') ? robodesk_comment_utc_iso($comment) : $comment->comment_date,
             'type'      => $type,
             'role'      => $role,
         ];
@@ -2521,8 +2521,9 @@ function robodesk_refresh_dashboard_tickets()
             $author_image = function_exists('robodesk_get_avatar_url') ? robodesk_get_avatar_url((int) get_the_author_meta('ID'), 32) : get_avatar_url(get_the_author_meta('ID'), ['size' => 32]);
 
             $ticket_priority = $priority_terms && !is_wp_error($priority_terms) ? $priority_terms[0]->name : 'N/A';
-            $updated_at = get_the_modified_date('Y-m-d H:i:s', $ticket_id);
-            $created_at = get_the_date('Y-m-d H:i:s', $ticket_id);
+            $ticket_post = get_post($ticket_id);
+            $updated_at = function_exists('robodesk_post_utc_iso') ? robodesk_post_utc_iso($ticket_post, true) : get_the_modified_date('Y-m-d H:i:s', $ticket_id);
+            $created_at = function_exists('robodesk_post_utc_iso') ? robodesk_post_utc_iso($ticket_post) : get_the_date('Y-m-d H:i:s', $ticket_id);
             $ticket_terms = wp_get_post_terms($ticket_id, 'robodesk_ticket_category');
 
             $ticket_category = '';
@@ -2548,8 +2549,8 @@ function robodesk_refresh_dashboard_tickets()
                     'author' => $reply->comment_author,
                     'message' => $reply->comment_content,
                     'content' => $reply->comment_content,
-                    'date' => $reply->comment_date,
-                    'timestamp' => $reply->comment_date,
+                    'date' => function_exists('robodesk_comment_utc_iso') ? robodesk_comment_utc_iso($reply) : $reply->comment_date,
+                    'timestamp' => function_exists('robodesk_comment_utc_iso') ? robodesk_comment_utc_iso($reply) : $reply->comment_date,
                     'type' => $author_type,
                     'author_type' => $author_type,
                 ];
@@ -2645,7 +2646,7 @@ function robodesk_get_notifications()
                 ? 'New Conversation #' . $ticket_id
                 : 'New Reply on #' . $ticket_id,
             'assignee' => get_post_meta($ticket_id, 'ticket_assignee', true) ?: 'Unassigned',
-            'timestamp' => $row['created_at'],
+            'timestamp' => function_exists('robodesk_datetime_to_utc_iso') ? robodesk_datetime_to_utc_iso($row['created_at']) : $row['created_at'],
         ];
     }
 

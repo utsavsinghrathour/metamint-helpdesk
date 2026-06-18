@@ -275,8 +275,9 @@ if (! defined('ABSPATH')) {
                     : get_avatar_url($author_id, ['size' => 32]);
 
                 $ticket_priority = $priority_terms && !is_wp_error($priority_terms) ? $priority_terms[0]->name : 'N/A';
-                $updated_at = get_the_modified_date('Y-m-d H:i:s', $ticket_id);
-                $created_at = get_the_date('Y-m-d H:i:s', $ticket_id);
+                $ticket_post = get_post($ticket_id);
+                $updated_at = function_exists('robodesk_post_utc_iso') ? robodesk_post_utc_iso($ticket_post, true) : get_the_modified_date('Y-m-d H:i:s', $ticket_id);
+                $created_at = function_exists('robodesk_post_utc_iso') ? robodesk_post_utc_iso($ticket_post) : get_the_date('Y-m-d H:i:s', $ticket_id);
                 $ticket_terms = wp_get_post_terms($ticket_id, 'robodesk_ticket_category');
 
                 $ticket_category = '';
@@ -292,12 +293,13 @@ if (! defined('ABSPATH')) {
                 $replies = get_comments(['post_id' => $ticket_id]);
                 $replies_count = count($replies);
                 $replies = array_map(function ($reply) {
+                    $reply_timestamp = function_exists('robodesk_comment_utc_iso') ? robodesk_comment_utc_iso($reply) : $reply->comment_date;
                     return [
                         'id' => $reply->comment_ID,
                         'author' => $reply->comment_author,
                         'content' => $reply->comment_content,
-                        'date' => $reply->comment_date,
-                        'timestamp' => $reply->comment_date,
+                        'date' => $reply_timestamp,
+                        'timestamp' => $reply_timestamp,
                     ];
                 }, $replies);
 
