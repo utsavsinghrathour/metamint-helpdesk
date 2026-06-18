@@ -693,4 +693,16 @@ jQuery(document).ready(function ($) {
     return !hasError;
   });
 
+  // Localize timestamps to the visitor's timezone
+  document.querySelectorAll(".robodesk-local-time[data-utc]").forEach(function (el) {
+    var utc = el.getAttribute("data-utc");
+    if (!utc) return;
+    var d = new Date(utc);
+    if (isNaN(d.getTime())) return;
+    var format = el.getAttribute("data-format") || "datetime";
+    var options = format === "date"
+      ? { year: "numeric", month: "short", day: "numeric" }
+      : { year: "numeric", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" };
+    el.textContent = d.toLocaleString(undefined, options);
+  });
 });

@@ -165,7 +165,7 @@ function robodesk_live_admin_comments($request)
                 'id'        => $comment->comment_ID,
                 'author'    => $is_bot_response && function_exists('robodesk_get_bot_display_name') ? robodesk_get_bot_display_name() : $comment->comment_author,
                 'message'   => $comment->comment_content,
-                'timestamp' => $comment->comment_date,
+                'timestamp' => function_exists('robodesk_comment_utc_iso') ? robodesk_comment_utc_iso($comment) : $comment->comment_date,
                 'type'      => $type,
                 'role'      => $role,
                 'is_bot_response' => $is_bot_response,

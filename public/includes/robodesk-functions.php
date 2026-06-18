@@ -357,7 +357,11 @@ function add_custom_table_to_my_account()
                                 ?>
                 <a href="<?php echo esc_url($ticket_url); ?>"><?php the_title(); ?></a>
 
-                <p class="ticket-date"><?php echo get_the_date('dS M Y'); ?></p>
+                <?php $my_ticket_utc = function_exists('robodesk_post_utc_iso') ? robodesk_post_utc_iso(get_post()) : get_the_date('Y-m-d H:i:s'); ?>
+                <p class="ticket-date"><time class="robodesk-local-time"
+                  datetime="<?php echo esc_attr($my_ticket_utc); ?>"
+                  data-utc="<?php echo esc_attr($my_ticket_utc); ?>"
+                  data-format="date"><?php echo esc_html(get_the_date('dS M Y')); ?></time></p>
             </td>
             <td><?php echo esc_html($comment_count); ?></td>
             <td><?php echo esc_html($human_readable_time ? $human_readable_time . ' ago' : '-'); ?><p

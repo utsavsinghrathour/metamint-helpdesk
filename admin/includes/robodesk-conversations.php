@@ -184,8 +184,9 @@ if ($query->have_posts()) {
             ? robodesk_get_avatar_url($author_id, 32)
             : get_avatar_url($author_id, array('size' => 32));
         $ticket_priority = $priority_terms ? $priority_terms[0]->name : 'N/A';
-        $updated_at = get_the_modified_date('Y-m-d H:i:s', $ticket_id);
-        $created_at = get_the_date('Y-m-d H:i:s', $ticket_id);
+        $ticket_post = get_post($ticket_id);
+        $updated_at = function_exists('robodesk_post_utc_iso') ? robodesk_post_utc_iso($ticket_post, true) : get_the_modified_date('Y-m-d H:i:s', $ticket_id);
+        $created_at = function_exists('robodesk_post_utc_iso') ? robodesk_post_utc_iso($ticket_post) : get_the_date('Y-m-d H:i:s', $ticket_id);
         $ticket_terms = wp_get_post_terms($ticket_id, 'robodesk_ticket_category');
         $ticket_category = '';
         if (!is_wp_error($ticket_terms) && !empty($ticket_terms)) {
@@ -205,7 +206,7 @@ if ($query->have_posts()) {
                     'id' => $reply->comment_ID,
                     'author' => $reply->comment_author,
                     'content' => $reply->comment_content,
-                    'date' => $reply->comment_date
+                    'date' => function_exists('robodesk_comment_utc_iso') ? robodesk_comment_utc_iso($reply) : $reply->comment_date
                 ];
             }, $replies);
         } else {
@@ -613,7 +614,9 @@ $priority_terms = get_terms(array(
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 cursor-pointer"
                         onclick="viewTicket(<?php echo esc_js($ticket['id']); ?>)">
-                        <?php echo esc_html(wp_date($ticket['updated'])); ?>
+                        <time class="robodesk-local-time" datetime="<?php echo esc_attr($ticket['updated']); ?>"
+                            data-utc="<?php echo esc_attr($ticket['updated']); ?>"
+                            data-format="datetime"><?php echo esc_html(function_exists('robodesk_datetime_to_utc_iso') ? wp_date(get_option('date_format') . ' ' . get_option('time_format'), strtotime($ticket['updated'])) : wp_date($ticket['updated'])); ?></time>
                     </td>
                 </tr>
                 <?php endforeach; ?>
