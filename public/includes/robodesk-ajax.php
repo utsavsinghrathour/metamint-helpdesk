@@ -380,11 +380,9 @@ function robodesk_reveal_credential_password_callback()
     }
 
     global $wpdb;
-    $credentials_table = $wpdb->prefix . 'robodesk_credentials';
-
-    // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+    // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, PluginCheck.Security.DirectDB.UnescapedDBParameter
     $credential = $wpdb->get_row($wpdb->prepare(
-        "SELECT password FROM {$credentials_table} WHERE id = %d AND user_id = %d",
+        "SELECT password FROM {$wpdb->prefix}robodesk_credentials WHERE id = %d AND user_id = %d",
         $credential_id,
         $user_id
     ));

@@ -3097,7 +3097,7 @@ function robodesk_send_email($to, $subject, $message, $headers = [], $attachment
                 $sent = $mail->send();
                 return (bool) $sent;
             } catch (\Exception $e) {
-                error_log('Robodesk: PHPMailer send failed: ' . $e->getMessage());
+                rbd_log('PHPMailer send failed: ' . $e->getMessage());
                 // Fall back to wp_mail below
             }
         }

@@ -395,10 +395,10 @@ function robodesk_get_user_notifications($user_id, $limit = 20)
         return array();
     }
 
-    // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter
+    // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
     $notifications = $wpdb->get_results(
         $wpdb->prepare(
-            "SELECT * FROM {$table_name} WHERE (user_id = %d OR recipient_user_id = %d) ORDER BY notification_date DESC LIMIT %d",
+            "SELECT * FROM {$wpdb->prefix}robodesk_notifications WHERE (user_id = %d OR recipient_user_id = %d) ORDER BY notification_date DESC LIMIT %d",
             $user_id,
             $user_id,
             $limit

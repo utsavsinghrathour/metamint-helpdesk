@@ -162,16 +162,15 @@ add_filter( 'wp_count_comments', function( $counts, $post_id ) {
 
     global $wpdb;
 
-    $excluded_types = [ 'ticket_replies', 'ticket_notes' ];
-    $placeholders   = implode( ', ', array_fill( 0, count( $excluded_types ), '%s' ) );
-
+    // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
     $rows = $wpdb->get_results(
         $wpdb->prepare(
             "SELECT comment_approved, COUNT(*) AS num_comments
              FROM {$wpdb->comments}
-             WHERE comment_type NOT IN ($placeholders)
+             WHERE comment_type NOT IN (%s, %s)
              GROUP BY comment_approved",
-            ...$excluded_types
+            'ticket_replies',
+            'ticket_notes'
         ),
         ARRAY_A
     );
