@@ -59,11 +59,19 @@ if (!function_exists('robodesk_comment_utc_iso')) {
     {
         $comment = is_numeric($comment) ? get_comment((int) $comment) : $comment;
 
-        if (!$comment || empty($comment->comment_date_gmt) || $comment->comment_date_gmt === '0000-00-00 00:00:00') {
+        if (!$comment) {
             return '';
         }
 
-        return robodesk_datetime_to_utc_iso($comment->comment_date_gmt, true);
+        if (!empty($comment->comment_date_gmt) && $comment->comment_date_gmt !== '0000-00-00 00:00:00') {
+            return robodesk_datetime_to_utc_iso($comment->comment_date_gmt, true);
+        }
+
+        if (!empty($comment->comment_date) && $comment->comment_date !== '0000-00-00 00:00:00') {
+            return robodesk_datetime_to_utc_iso($comment->comment_date, false);
+        }
+
+        return '';
     }
 }
 
@@ -76,12 +84,17 @@ if (!function_exists('robodesk_post_utc_iso')) {
             return '';
         }
 
-        $field = $modified ? 'post_modified_gmt' : 'post_date_gmt';
-        if (empty($post->$field) || $post->$field === '0000-00-00 00:00:00') {
-            return '';
+        $gmt_field = $modified ? 'post_modified_gmt' : 'post_date_gmt';
+        if (!empty($post->$gmt_field) && $post->$gmt_field !== '0000-00-00 00:00:00') {
+            return robodesk_datetime_to_utc_iso($post->$gmt_field, true);
         }
 
-        return robodesk_datetime_to_utc_iso($post->$field, true);
+        $local_field = $modified ? 'post_modified' : 'post_date';
+        if (!empty($post->$local_field) && $post->$local_field !== '0000-00-00 00:00:00') {
+            return robodesk_datetime_to_utc_iso($post->$local_field, false);
+        }
+
+        return '';
     }
 }
 
