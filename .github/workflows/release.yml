@@ -2,7 +2,7 @@ name: Robodesk Plugin Auto Release (main)
 
 on:
   push:
-    branches: [main]
+    branches: [dev]
   pull_request:
     branches: [main]
     types: [closed]

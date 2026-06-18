@@ -4,7 +4,7 @@
  * Plugin Name: Robodesk Support Ticket System
  * Plugin URI: https://robodesk.io
  * Description: A support ticket and FAQ system.
- * Version: 1.17.1
+ * Version: 1.0.0
  * Author: Code Pixelz Media
  * Author URI: https://codepixelzmedia.com
  * License: GPL2
