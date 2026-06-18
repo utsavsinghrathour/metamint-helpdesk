@@ -595,11 +595,13 @@ function robodesk_get_requested_ticket_id_from_query()
 // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedFunctionFound
 function rbd_log($message)
 {
-    $log_file = plugin_dir_path(__FILE__) . 'logs/debug.log';
+    $upload_dir = wp_upload_dir();
+    $log_dir    = $upload_dir['basedir'] . '/robodesk';
+    $log_file   = $log_dir . '/debug.log';
 
-    if (!file_exists(dirname($log_file))) {
+    if (!file_exists($log_dir)) {
         // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_mkdir
-        mkdir(dirname($log_file), 0755, true);
+        mkdir($log_dir, 0755, true);
     }
 
     if (is_array($message) || is_object($message)) {
@@ -618,7 +620,10 @@ function rbd_log($message)
 if (!function_exists('robodesk_prune_debug_log')) {
     function robodesk_prune_debug_log($log_file = '', $days = 30)
     {
-        $log_file = $log_file !== '' ? $log_file : plugin_dir_path(__FILE__) . 'logs/debug.log';
+        if ($log_file === '') {
+            $upload_dir = wp_upload_dir();
+            $log_file   = $upload_dir['basedir'] . '/robodesk/debug.log';
+        }
 
         if (!file_exists($log_file) || !is_readable($log_file)) {
             return false;

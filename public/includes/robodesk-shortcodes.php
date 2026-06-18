@@ -1432,7 +1432,7 @@ function robodesk_reply_has_visible_content($content)
 function robodesk_submit_comment()
 {
     // phpcs:ignore WordPress.Security.NonceVerification.Missing
-    $reply_content = isset($_POST['comment']) ? wp_unslash($_POST['comment']) : '';
+    $reply_content = isset($_POST['comment']) ? sanitize_textarea_field(wp_unslash($_POST['comment'])) : '';
 
     if (!robodesk_reply_has_visible_content($reply_content)) {
         wp_send_json_error(array(
