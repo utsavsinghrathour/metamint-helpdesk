@@ -62,7 +62,7 @@ function robodesk_dashboard_callback()
                                 ?>
                         </button>
                     </div>
-                    <div class="hidden md:ml-10 md:flex md:space-x-8">
+                    <div class="rbd-menu-head rbd-mobile-hidden md:ml-10 md:flex md:space-x-8">
                         <button onclick="showPage('dashboard')"
                             class="nav-link inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
                             data-page="dashboard">
@@ -96,6 +96,9 @@ function robodesk_dashboard_callback()
                         </button>
                         <?php endif; ?>
                     </div>
+                    <button class="rbd-nav-ham-tog rbd-desktop-hidden">
+                        <i class="fa-solid fa-bars" style="color: rgb(0, 124, 186);"></i>
+                    </button>
                 </div>
                 <div class="flex items-center relative">
                     <button id="dashboard-notification-bell" onclick="toggleNotificationDropdown()"
