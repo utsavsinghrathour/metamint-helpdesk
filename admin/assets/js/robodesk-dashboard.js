@@ -66,27 +66,37 @@ function loadDashboardTickets() {
         .filter(
           (t) => t.assignee === current_user_name && t.status !== "closed",
         )
-        .sort((a, b) => getRobodeskTime(b.updated) - getRobodeskTime(a.updated));
+        .sort(
+          (a, b) => getRobodeskTime(b.updated) - getRobodeskTime(a.updated),
+        );
       break;
     case "unassigned_conversation":
       filteredTickets = dashboard_tickets
         .filter((t) => t.assignee === "N/A" || !t.assignee)
-        .sort((a, b) => getRobodeskTime(b.updated) - getRobodeskTime(a.updated));
+        .sort(
+          (a, b) => getRobodeskTime(b.updated) - getRobodeskTime(a.updated),
+        );
       break;
     case "open_conversation":
       filteredTickets = dashboard_tickets
         .filter((t) => t.status === "open" || t.status === "in-progress")
-        .sort((a, b) => getRobodeskTime(b.updated) - getRobodeskTime(a.updated));
+        .sort(
+          (a, b) => getRobodeskTime(b.updated) - getRobodeskTime(a.updated),
+        );
       break;
     case "chat_conversation":
       filteredTickets = dashboard_tickets
         .filter((t) => t.source === "chat" && t.status !== "closed")
-        .sort((a, b) => getRobodeskTime(b.updated) - getRobodeskTime(a.updated));
+        .sort(
+          (a, b) => getRobodeskTime(b.updated) - getRobodeskTime(a.updated),
+        );
       break;
     default:
       filteredTickets = dashboard_tickets
         .slice()
-        .sort((a, b) => getRobodeskTime(b.updated) - getRobodeskTime(a.updated));
+        .sort(
+          (a, b) => getRobodeskTime(b.updated) - getRobodeskTime(a.updated),
+        );
       break;
   }
 
@@ -188,7 +198,9 @@ function loadDashboardTickets() {
                           lastReply.timestamp ||
                           lastReply.date ||
                           ticket.updated;
-                        const timeAgo = timeSince(parseRobodeskDate(lastReplyDate));
+                        const timeAgo = timeSince(
+                          parseRobodeskDate(lastReplyDate),
+                        );
                         return `
                           <div class="text-sm font-medium text-gray-900">${escapeHTML(
                             lastReplyAuthor,
@@ -4705,3 +4717,23 @@ showTicketTab = function (tabName) {
     stopRepliesAutoRefresh();
   }
 };
+
+jQuery(document).ready(function () {
+  // 1. Toggle menu when hamburger is clicked
+  jQuery(".rbd-nav-ham-tog").click(function (event) {
+    event.stopPropagation();
+    jQuery(".rbd-menu-head").toggleClass("rbd-show");
+  });
+
+  // 2. Close menu when any button inside it is clicked
+  jQuery(".rbd-menu-head button").click(function () {
+    jQuery(".rbd-menu-head").removeClass("rbd-show");
+  });
+
+  // 3. Close menu when clicking anywhere outside
+  jQuery(document).click(function (event) {
+    if (!jQuery(event.target).closest(".rbd-menu-head").length) {
+      jQuery(".rbd-menu-head").removeClass("rbd-show");
+    }
+  });
+});
