@@ -1452,7 +1452,31 @@ function robodesk_reply_has_visible_content($content)
 
 function robodesk_submit_comment()
 {
-    // phpcs:ignore WordPress.Security.NonceVerification.Missing
+    if (!isset($_POST['robodesk_reply_nonce']) || !wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['robodesk_reply_nonce'])), 'robodesk_reply_action')) {
+        wp_send_json_error(array(
+            'message' => 'Security check failed.'
+        ));
+    }
+
+    $ticket_id = isset($_POST['comment_post_ID']) ? intval($_POST['comment_post_ID']) : 0;
+    if ($ticket_id <= 0 || get_post_type($ticket_id) !== 'robodesk_ticket') {
+        wp_send_json_error(array(
+            'message' => 'Invalid ticket.'
+        ));
+    }
+
+    $ticket = get_post($ticket_id);
+    $current_user = wp_get_current_user();
+    $allowed_roles = array('administrator', 'editor', 'support_agent', 'support_manager');
+    $is_author = (int) $ticket->post_author === $current_user->ID;
+    $is_staff = array_intersect($allowed_roles, $current_user->roles);
+
+    if (!$is_author && empty($is_staff)) {
+        wp_send_json_error(array(
+            'message' => 'You do not have permission to reply to this ticket.'
+        ));
+    }
+
     $reply_content = isset($_POST['comment']) ? sanitize_textarea_field(wp_unslash($_POST['comment'])) : '';
 
     if (!robodesk_reply_has_visible_content($reply_content)) {
@@ -1461,10 +1485,8 @@ function robodesk_submit_comment()
         ));
     }
 
-    // Bypass WordPress core comment flood check for Robodesk chat submissions
     add_filter('wp_is_comment_flood', '__return_false');
 
-    // phpcs:ignore WordPress.Security.NonceVerification.Missing
     $comment = wp_handle_comment_submission(wp_unslash($_POST));
 
     remove_filter('wp_is_comment_flood', '__return_false');
@@ -1480,7 +1502,7 @@ function robodesk_submit_comment()
         // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
         $wpdb->update(
             $wpdb->comments,
-            array('comment_type' => 'robodesk_ticket_replies'),
+            array('comment_type' => 'ticket_replies'),
             array('comment_ID' => $comment_id),
             array('%s'),
             array('%d')
