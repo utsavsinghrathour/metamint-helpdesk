@@ -308,6 +308,7 @@
 
 .reply-agent {
   background-color: var(--color-background);
+  border: 1px solid var(--color-border);
   border-left: 4px solid var(--color-text);
 }
 
@@ -716,4 +717,63 @@ CONVERSATION
 .overflow-auto::webkit-scrollbar-thumb {
   background: #d8d8d8;
   border-radius: 3px;
+}
+
+.rbd-settings-nav-sec {
+  gap: 10px;
+  justify-content: space-between;
+}
+
+.rbd-settings-nav-sec button {
+  margin: 0 !important;
+}
+
+@media (min-width: 1025px) {
+  .rbd-desktop-hidden {
+    display: none;
+  }
+}
+
+@media (max-width: 1024px) {
+  .rbd-settings-nav-sec {
+    flex-wrap: wrap;
+    justify-content: flex-start;
+  }
+
+  .rbd-mobile-hidden {
+    display: none;
+  }
+
+  .rbd-menu-head.rbd-show {
+    display: flex;
+  }
+
+  .rbd-nav-ham-tog {
+    position: absolute;
+    right: 55px;
+  }
+
+  .rbd-nav-ham-tog i {
+    font-size: 20px;
+  }
+
+  .rbd-menu-head {
+    position: absolute;
+    flex-direction: column;
+    top: 100px;
+    background: var(--color-white);
+    width: 100%;
+    left: 0;
+    padding: 20px;
+    gap: 15px;
+    border-top: 1px solid var(--color-border);
+    border-bottom: 1px solid var(--color-border);
+    z-index: 100000000;
+  }
+
+  .nav-link.active,
+  .nav-link:not(.active):hover {
+    border-color: transparent;
+  }
+
 }
