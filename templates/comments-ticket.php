@@ -124,6 +124,10 @@ if (post_password_required()) {
     <?php endif; ?>
     <?php if (comments_open()) : ?>
         <?php
+        add_filter('comment_form_submit_field', function ($submit_field) {
+            $nonce = wp_nonce_field('robodesk_reply_action', 'robodesk_reply_nonce', true, false);
+            return $submit_field . $nonce;
+        });
         comment_form(array(
             'title_reply' => '',
             'label_submit' => 'Add Reply',
