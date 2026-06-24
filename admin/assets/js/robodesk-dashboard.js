@@ -1667,12 +1667,13 @@ function loadTicketDetail() {
           </div>
         `;
 
-      const countryRow = isEmptyOrNA(currentTicket.source_country)
+      const locationValue = currentTicket.user_location || currentTicket.source_country;
+      const countryRow = isEmptyOrNA(locationValue)
         ? ""
         : `
           <div class="flex justify-between items-center">
             <span class="text-gray-500">Location:</span>
-            <span class="text-gray-900">${escapeHTML(currentTicket.source_country)}</span>
+            <span class="text-gray-900">${escapeHTML(locationValue)}</span>
           </div>
         `;
 
