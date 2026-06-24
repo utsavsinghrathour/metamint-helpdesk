@@ -157,7 +157,7 @@ add_action('admin_init', 'robodesk_prune_debug_log_on_admin_load');
 if (!function_exists('robodesk_download_debug_log')) {
     function robodesk_download_debug_log()
     {
-        if (!current_user_can('manage_options')) {
+        if (!current_user_can('robodesk_access_dashboard')) {
             wp_die(esc_html__('You do not have sufficient permissions to access this file.', 'robodesk'));
         }
 
@@ -188,7 +188,7 @@ add_action('admin_post_robodesk_download_debug_log', 'robodesk_download_debug_lo
 if (!function_exists('robodesk_debug_log_page_callback')) {
     function robodesk_debug_log_page_callback()
     {
-        if (!current_user_can('manage_options')) {
+        if (!current_user_can('robodesk_access_dashboard')) {
             wp_die(esc_html__('You do not have sufficient permissions to access this page.', 'robodesk'));
         }
 
