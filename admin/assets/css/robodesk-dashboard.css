@@ -700,9 +700,10 @@ CONVERSATION
   padding-left: 30px;
 }
 
-.overflow-auto {
+.overflow-auto,
+.overflow-y-auto {
   scrollbar-width: thin;
-  scrollbar-color: #d7e4f6 transparent;
+  scrollbar-color: #eeeeee transparent;
 }
 
 .overflow-auto::webkit-scrollbar {
@@ -726,6 +727,28 @@ CONVERSATION
 
 .rbd-settings-nav-sec button {
   margin: 0 !important;
+}
+
+.rd-comment-img {
+  height: 300px;
+  object-fit: cover;
+}
+
+.editor-content ol,
+.editor-content ul,
+#replies-list ol,
+#replies-list ul {
+  list-style: auto;
+  margin-left: 2em;
+}
+
+#replies-list ul,
+.editor-content ul {
+  list-style: inherit;
+}
+
+.rbd-break-all {
+  word-break: break-all;
 }
 
 @media (min-width: 1025px) {
