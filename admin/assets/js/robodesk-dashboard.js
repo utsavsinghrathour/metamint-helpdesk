@@ -4247,13 +4247,33 @@ function fetchNotifications() {
       }
 
       const prevCount = notificationCount;
+      const prevItemsMap = {};
+      notificationItems.forEach(function (item) {
+        prevItemsMap[item.id] = item;
+      });
       notificationItems = Array.isArray(response.data.items)
         ? response.data.items
         : [];
       notificationCount = Number(response.data.count || 0);
       updateNotificationBadge(notificationCount);
 
-      if (notificationCount > prevCount) {
+      var hasNewOrUpdatedNotification = notificationCount > prevCount;
+      if (!hasNewOrUpdatedNotification && prevCount > 0) {
+        for (var i = 0; i < notificationItems.length; i++) {
+          var newItem = notificationItems[i];
+          var prevItem = prevItemsMap[newItem.id];
+          if (prevItem && (prevItem.message !== newItem.message || prevItem.timestamp !== newItem.timestamp)) {
+            hasNewOrUpdatedNotification = true;
+            break;
+          }
+          if (!prevItem) {
+            hasNewOrUpdatedNotification = true;
+            break;
+          }
+        }
+      }
+
+      if (hasNewOrUpdatedNotification) {
         const audioUrl =
           typeof robodeskNotificationSound !== "undefined"
             ? robodeskNotificationSound
