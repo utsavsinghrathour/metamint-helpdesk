@@ -505,7 +505,7 @@ function createInlineDropdown(options, selectedValue, className) {
     const item = document.createElement("button");
     item.type = "button";
     item.className =
-      "w-full text-left px-3 py-2 text-sm whitespace-nowrap hover:bg-blue-50 border-b last:border-b-0";
+      "w-full text-left px-3 py-2 text-sm hover:bg-blue-50 border-b last:border-b-0";
     if (String(option.value) === String(selectedValue)) {
       item.classList.add("bg-blue-50");
     }
