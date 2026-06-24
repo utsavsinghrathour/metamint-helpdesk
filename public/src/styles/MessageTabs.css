@@ -315,6 +315,19 @@
   height: 6px;
   border-radius: 50%;
   background-color: red;
+  animation: blink-dot 1s infinite;
+}
+
+@keyframes blink-dot {
+
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.2;
+  }
 }
 
 /* Skeleton Loader Styles */
