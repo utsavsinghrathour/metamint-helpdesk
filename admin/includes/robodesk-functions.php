@@ -1201,6 +1201,7 @@ function robodesk_get_ticket_detail()
         'author_id' => $author ? (int) $author->ID : 0,
         'category' => $ticket_category,
         'source' => $ticket_origin,
+        'user_location' => $author ? get_user_meta((int) $author->ID, 'robodesk_user_location', true) : '',
         'source_ip' => $ticket_source_meta['ip'],
         'source_country' => $ticket_source_meta['country'],
         'source_browser' => $ticket_source_meta['browser'],
@@ -1998,8 +1999,9 @@ add_action('edit_user_profile_update', 'save_robodesk_user_meta_fields');
 // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedFunctionFound
 function add_robodesk_user_meta_fields($user)
 {
+    $user_location = get_user_meta($user->ID, 'robodesk_user_location', true);
 ?>
-    <h3><?php esc_html_e('Robodesk Support Department', 'robodesk'); ?></h3>
+    <h3><?php esc_html_e('Robodesk Support', 'robodesk'); ?></h3>
     <table class="form-table">
         <tr>
             <th><label for="robodesk_user_department"><?php esc_html_e('Department', 'robodesk'); ?></label></th>
@@ -2022,6 +2024,13 @@ function add_robodesk_user_meta_fields($user)
                 <p class="description"><?php esc_html_e('Select the department this user belongs to.', 'robodesk'); ?></p>
             </td>
         </tr>
+        <tr>
+            <th><label for="robodesk_user_location"><?php esc_html_e('Location', 'robodesk'); ?></label></th>
+            <td>
+                <input type="text" name="robodesk_user_location" id="robodesk_user_location" value="<?php echo esc_attr($user_location); ?>" class="regular-text">
+                <p class="description"><?php esc_html_e('Enter the location of this user (e.g. Denmark, USA).', 'robodesk'); ?></p>
+            </td>
+        </tr>
     </table>
 <?php
 }
@@ -2039,6 +2048,10 @@ function save_robodesk_user_meta_fields($user_id)
 
     if (isset($_POST['robodesk_user_department'])) {
         update_user_meta($user_id, 'robodesk_user_department', sanitize_text_field(wp_unslash($_POST['robodesk_user_department'])));
+    }
+
+    if (isset($_POST['robodesk_user_location'])) {
+        update_user_meta($user_id, 'robodesk_user_location', sanitize_text_field(wp_unslash($_POST['robodesk_user_location'])));
     }
 }
 
@@ -2562,6 +2575,7 @@ function robodesk_refresh_dashboard_tickets()
                 'customer' => get_the_author(),
                 'email' => get_the_author_meta('user_email'),
                 'author_id' => get_the_author_meta('ID'),
+                'user_location' => get_user_meta((int) get_the_author_meta('ID'), 'robodesk_user_location', true),
                 'category' => $ticket_category,
                 'source' => $ticket_origin,
                 'source_ip' => $ticket_source_meta['ip'],

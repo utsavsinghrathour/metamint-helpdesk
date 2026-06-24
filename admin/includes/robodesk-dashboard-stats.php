@@ -309,6 +309,7 @@ if (! defined('ABSPATH')) {
                     'customer' => get_the_author(),
                     'email' => get_the_author_meta('user_email'),
                     'author_id' => get_the_author_meta('ID'),
+                    'user_location' => get_user_meta((int) get_the_author_meta('ID'), 'robodesk_user_location', true),
                     'category' => $ticket_category,
                     'source' => $ticket_origin,
                     'source_ip' => $ticket_source_meta['ip'],
