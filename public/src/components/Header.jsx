@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import defaultLogo from '../images/robodesk-logo.png'; // Adjust path to your default logo
 import '../styles/header.css';
-import { IoAddCircle, IoCloseCircleSharp } from 'react-icons/io5';
+import { IoAddCircle, IoCloseCircleSharp, IoLogoWhatsapp } from 'react-icons/io5';
 import { sendReply } from '../utils/modules';
 import { useAppData } from '../utils/AppDataContext';
 import { createTicket } from "../utils/modules";
@@ -13,6 +13,7 @@ const Header = ({ logo, onClose, setActiveTab, setShowLogin, updateSelectedTicke
   const [selectedStaff, setSelectedStaff] = useState(null);
   const { loggedinContext, loggedInUsrId, refreshTickets } = useAppData();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [sendWhatsappMessage, setSendWhatsappMessage] = useState(true);
 
   const handleCloseClick = () => {
     onClose();
@@ -201,6 +202,16 @@ const Header = ({ logo, onClose, setActiveTab, setShowLogin, updateSelectedTicke
             />
           </div>
         )}
+        {sendWhatsappMessage && 
+        <button
+          className="rd-m-5 rd-border-none rd-bg-transparent rd-p-0"
+          onClick={() => {sendWhatsappMessage}}
+        >
+          <div className="icon-dark custom-svg rd-cursor-pointer">
+            <IoLogoWhatsapp />
+          </div>
+        </button>
+        }
         {talkToHuman && messageCount > 0 && (
           <button
             className="rd-m-5"
