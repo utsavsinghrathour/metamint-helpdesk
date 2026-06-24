@@ -1643,12 +1643,12 @@ function loadTicketDetail() {
         <div class="w-full min-w-0">
           <span class="lg:w-full w-100 flex justify-between items-start gap-3">
             <div class="min-w-0">
-              <h3 class="font-bold text-gray-900 leading-tight truncate">${escapeHTML(currentTicket.customer || "")}</h3>
+              <h3 class="font-bold text-gray-900 leading-tight truncate">${escapeHTML(currentTicket.customer || "")} <a href="${robodeskAjax.ajaxurl.replace('admin-ajax.php', '')}user-edit.php?user_id=${currentTicket.author_id || 0}" target="_blank" class="robodesk-popover-trigger text-gray-500 hover:text-green-700 ml-1" data-popover-text="Edit customer profile" aria-label="Edit customer profile"><i class="fas fa-user-edit" style="font-size: 12px;"></i></a></h3>
               <p class="text-sm text-gray-500 truncate">${escapeHTML(currentTicket.email || "")}</p>
             </div>
-            <span class="icon-tickets shrink-0 mt-1">
+            <span class="icon-tickets shrink-0 mt-1 flex items-center gap-1">
               <a href="#" onclick="showCustomerTickets(); return false;" class="robodesk-popover-trigger text-gray-500 hover:text-blue-700" data-popover-text="View all conversations" aria-label="View all conversations">
-                <i class="fas fa-ticket mr-2"></i>
+                <i class="fas fa-ticket"></i>
               </a>
             </span>
           </span>
@@ -1679,12 +1679,13 @@ function loadTicketDetail() {
           </div>
         `;
 
-      const countryRow = isEmptyOrNA(currentTicket.source_country)
+      const locationValue = currentTicket.user_location || currentTicket.source_country;
+      const countryRow = isEmptyOrNA(locationValue)
         ? ""
         : `
           <div class="flex justify-between items-center">
             <span class="text-gray-500">Location:</span>
-            <span class="text-gray-900">${escapeHTML(currentTicket.source_country)}</span>
+            <span class="text-gray-900">${escapeHTML(locationValue)}</span>
           </div>
         `;
 

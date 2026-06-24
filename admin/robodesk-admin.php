@@ -19,7 +19,7 @@ function robodesk_add_admin_menu()
     add_menu_page(
         'Robodesk',
         'Robodesk',
-        'manage_options',
+        'robodesk_access_dashboard',
         'robodesk-dashboard',
         'robodesk_dashboard_callback',
         'dashicons-email-alt',
@@ -31,7 +31,7 @@ function robodesk_add_admin_menu()
         'robodesk-dashboard',
         'Dashboard',
         'Dashboard',
-        'manage_options',
+        'robodesk_access_dashboard',
         'robodesk-dashboard',
         'robodesk_dashboard_callback'
     );
@@ -106,7 +106,7 @@ function robodesk_add_admin_menu()
         'robodesk-dashboard',
         'Debug Log',
         'Debug Log',
-        'manage_options',
+        'robodesk_access_dashboard',
         'robodesk-debug-log',
         'robodesk_debug_log_page_callback'
     );

@@ -19,7 +19,7 @@ if (!function_exists('check_admin_referer')) {
 function robodesk_dashboard_callback()
 {
     // Check if the user has the required capability to view the dashboard
-    if (!current_user_can('manage_options')) {
+    if (!current_user_can('robodesk_access_dashboard')) {
         wp_die(esc_html__('You do not have sufficient permissions to access this page.', 'robodesk'));
     }
 

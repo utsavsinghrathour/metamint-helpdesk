@@ -578,7 +578,7 @@ function robodesk_fetch_emails()
 // Function to display the IMAP settings page
 function robodesk_imap_settings_callback()
 {
-    if (!current_user_can('manage_options')) {
+    if (!current_user_can('robodesk_access_dashboard')) {
         wp_die(esc_html__('You do not have sufficient permissions to access this page.', 'robodesk'));
     }
 
