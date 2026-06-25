@@ -3,7 +3,11 @@ if (!defined('ABSPATH')) {
     exit; // Exit if accessed directly
 }
 ?>
-<div id="new-ticket-page" class="page-content hidden">
+<?php
+$current_tab = isset($_GET['tab']) ? sanitize_key($_GET['tab']) : '';
+$nt_hidden = ($current_tab === 'new-ticket') ? '' : ' hidden';
+?>
+<div id="new-ticket-page" class="page-content<?php echo $nt_hidden; ?>">
     <div class="bg-white shadow rounded-lg">
         <div class="px-4 py-5 sm:p-6">
             <h3 class="text-lg font-bold text-gray-900 mb-6"><?php esc_html_e('Create New Conversation', 'robodesk'); ?>
