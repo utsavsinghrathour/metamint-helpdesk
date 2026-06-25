@@ -213,6 +213,12 @@ if ($query->have_posts()) {
             $replies = [];
         }
 
+        $last_reply_time = $updated_at;
+        if ($replies_count > 0) {
+            $last_reply = reset($replies);
+            $last_reply_time = $last_reply['date'];
+        }
+
         $tickets[] = [
             'id' => $ticket_id,
             'title' => get_the_title(),
@@ -237,7 +243,8 @@ if ($query->have_posts()) {
                 'content' => 'No replies yet',
                 'date' => $updated_at
             ],
-            'replies_count' => $replies_count
+            'replies_count' => $replies_count,
+            'last_reply_time' => $last_reply_time
         ];
     }
 }
@@ -614,9 +621,9 @@ $priority_terms = get_terms(array(
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 cursor-pointer"
                         onclick="viewTicket(<?php echo esc_js($ticket['id']); ?>)">
-                        <time class="robodesk-local-time" datetime="<?php echo esc_attr($ticket['updated']); ?>"
-                            data-utc="<?php echo esc_attr($ticket['updated']); ?>"
-                            data-format="datetime"><?php echo esc_html(function_exists('robodesk_datetime_to_utc_iso') ? wp_date(get_option('date_format') . ' ' . get_option('time_format'), strtotime($ticket['updated'])) : wp_date($ticket['updated'])); ?></time>
+                        <time class="robodesk-local-time" datetime="<?php echo esc_attr($ticket['last_reply_time']); ?>"
+                            data-utc="<?php echo esc_attr($ticket['last_reply_time']); ?>"
+                            data-format="datetime"><?php echo esc_html(function_exists('robodesk_datetime_to_utc_iso') ? wp_date(get_option('date_format') . ' ' . get_option('time_format'), strtotime($ticket['last_reply_time'])) : wp_date($ticket['last_reply_time'])); ?></time>
                     </td>
                 </tr>
                 <?php endforeach; ?>
