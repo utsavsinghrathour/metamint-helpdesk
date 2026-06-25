@@ -1464,6 +1464,10 @@ function viewTicket(ticketId) {
   currentTicket = dashboard_tickets.find((t) => t.id === ticketId);
   window.currentTicket = currentTicket; // Make available globally for templates
 
+  // Always navigate to the ticket detail page immediately to avoid showing
+  // the conversation tab while the AJAX call is in flight.
+  navigateToTicket(ticketId);
+
   // If local cache is stale, fetch the latest detail from server.
   if (!currentTicket) {
     fetch(robodeskAjax.ajax_url, {
@@ -1482,7 +1486,7 @@ function viewTicket(ticketId) {
         if (response.success) {
           currentTicket = response.data;
           window.currentTicket = currentTicket; // Make available globally for templates
-          navigateToTicket(ticketId);
+          loadTicketDetail();
         } else {
           console.error("Failed to fetch ticket details", response.data);
         }
@@ -1490,15 +1494,7 @@ function viewTicket(ticketId) {
       .catch((error) => {
         console.error("Error fetching ticket:", error);
       });
-    return;
   }
-
-  if (!currentTicket) {
-    console.error(`Ticket with ID ${ticketId} not found`);
-    return;
-  }
-
-  navigateToTicket(ticketId);
 }
 
 function navigateToTicket(ticketId) {
@@ -1509,9 +1505,7 @@ function navigateToTicket(ticketId) {
     history.pushState({ ticketId }, "", url);
   }
 
-  resetTicketComposeEditors();
   showPage("ticket-detail");
-  loadTicketDetail();
   showTicketTab("replies");
 }
 
