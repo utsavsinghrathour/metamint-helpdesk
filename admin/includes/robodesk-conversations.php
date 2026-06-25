@@ -339,7 +339,8 @@ $priority_terms = get_terms(array(
 ?>
 <?php
 $current_tab = isset($_GET['tab']) ? sanitize_key($_GET['tab']) : '';
-$tickets_hidden = ($current_tab === 'tickets') ? '' : ' hidden';
+$has_ticket  = isset($_GET['ticket']) ? intval($_GET['ticket']) : 0;
+$tickets_hidden = ($current_tab === 'tickets' && $has_ticket === 0) ? '' : ' hidden';
 ?>
 <div id="tickets-page" class="page-content<?php echo $tickets_hidden; ?>">
     <!-- Search and Filter Bar -->
