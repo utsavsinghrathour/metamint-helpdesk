@@ -305,6 +305,11 @@ add_action('rest_api_init', function () {
         'permission_callback' => '__return_true',
     ));
 
+    register_rest_route('robodesk-bot/v1', '/wa-settings', array(
+        'methods' => 'GET',
+        'callback' => 'robodesk_handle_wa_settings',
+        'permission_callback' => '__return_true',
+    ));
 
     register_rest_route('robodesk/v1', '/messaging/(?P<post_id>\d+)(?:/(?P<last_comment_id>\d+))?(?:/(?P<user_id>\d+))?', array(
         'methods' => 'GET',
@@ -1256,6 +1261,17 @@ function robodesk_handle_selected_staff(WP_REST_Request $request)
     ), 200);
 }
 
+/**
+ * Handle WhatsApp settings REST endpoint
+ * Returns WhatsApp phone number if available
+ */
+function robodesk_handle_wa_settings(WP_REST_Request $request)
+{
+    $wa_settings = get_option('robodesk_whatsapp_credentials', []);
+    return new WP_REST_Response([
+        'phoneNumber' => $wa_settings['wa_number'] ?? '',
+    ], 200);
+}
 
 // Handles ticket creation event need to remove this later
 function robodesk_handle_ticket_creation($data)
