@@ -47,6 +47,10 @@ function robodesk_dashboard_callback()
 ?>
 
 <div class="bg-gray-100">
+    <!-- Ensure hidden class works immediately, before Tailwind CDN runtime processes -->
+    <style>
+        .hidden { display: none; }
+    </style>
     <!-- Navigation -->
     <nav class="bg-white shadow-lg border-b border-gray-200">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
