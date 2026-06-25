@@ -172,7 +172,6 @@ const Header = ({ logo, onClose, setActiveTab, setShowLogin, updateSelectedTicke
     try {
       const response = await fetch("/wp-json/robodesk-bot/v1/wa-settings");
       const data = await response.json();
-      console.log('WhatsApp Settings Response:', response.status, data);
       // response may be 404 if the AI Bot addon isn't loaded; handle gracefully
       if (response.ok && data?.phoneNumber) {
         setSendWhatsappMessage(true);
