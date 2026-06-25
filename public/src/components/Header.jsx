@@ -13,7 +13,9 @@ const Header = ({ logo, onClose, setActiveTab, setShowLogin, updateSelectedTicke
   const [selectedStaff, setSelectedStaff] = useState(null);
   const { loggedinContext, loggedInUsrId, refreshTickets } = useAppData();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [sendWhatsappMessage, setSendWhatsappMessage] = useState(true);
+  // null = unknown, true = available, false = unavailable
+  const [sendWhatsappMessage, setSendWhatsappMessage] = useState(null);
+  const [whatsappPhone, setWhatsappPhone] = useState(null);
 
   const handleCloseClick = () => {
     onClose();
@@ -166,9 +168,41 @@ const Header = ({ logo, onClose, setActiveTab, setShowLogin, updateSelectedTicke
     }
   };
 
+  const sendWhatsappMessageClick = async() => {
+    try {
+      const response = await fetch("/wp-json/robodesk-bot/v1/wa-settings");
+      const data = await response.json();
+      console.log('WhatsApp Settings Response:', response.status, data);
+      // response may be 404 if the AI Bot addon isn't loaded; handle gracefully
+      if (response.ok && data?.phoneNumber) {
+        setSendWhatsappMessage(true);
+        setWhatsappPhone(data.phoneNumber);
+      } else {
+        setSendWhatsappMessage(false);
+        setWhatsappPhone(null);
+      }
+    } catch (error) {
+      console.error("Error fetching widget config:", error);
+      setSendWhatsappMessage(false);
+      setWhatsappPhone(null);
+    }
+  }
+
+  const handleWhatsappClick = () => {
+    if (!whatsappPhone) return;
+
+    // Normalize to digits only for wa.me (international format without + or separators)
+    const normalized = whatsappPhone.toString().replace(/\D/g, '');
+    const message = 'Hi, I need your help.';
+    const url = `https://wa.me/${normalized}?text=${encodeURIComponent(message)}`;
+    window.open(url, '_blank');
+  }
+
   useEffect(() => {
     fetchDefaultStaff();
     fetchApiKey();
+    // Check WhatsApp availability on mount
+    sendWhatsappMessageClick();
     const saved = sessionStorage.getItem(CHAT_KEY);
     const messages = saved ? JSON.parse(saved) : [];
     setMessageCount(messages.length);
@@ -202,10 +236,10 @@ const Header = ({ logo, onClose, setActiveTab, setShowLogin, updateSelectedTicke
             />
           </div>
         )}
-        {sendWhatsappMessage && 
+        {sendWhatsappMessage === true &&
         <button
           className="rd-m-5 rd-border-none rd-bg-transparent rd-p-0"
-          onClick={() => {sendWhatsappMessage}}
+          onClick={handleWhatsappClick}
         >
           <div className="icon-dark custom-svg rd-cursor-pointer">
             <IoLogoWhatsapp />
