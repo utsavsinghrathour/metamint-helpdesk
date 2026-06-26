@@ -1609,7 +1609,7 @@ function updateTicketCategory(ticketId, categoryId) {
   });
 }
 
-// Updated loadTicketDetail function
+// Updated loadTicketDetail functions
 function loadTicketDetail() {
   if (!currentTicket) return;
 
@@ -1637,7 +1637,7 @@ function loadTicketDetail() {
         <div class="w-full min-w-0">
           <span class="lg:w-full w-100 flex justify-between items-start gap-3">
             <div class="min-w-0">
-              <h3 class="font-bold text-gray-900 leading-tight truncate">${escapeHTML(currentTicket.customer || "")} <a href="${robodeskAjax.ajaxurl.replace('admin-ajax.php', '')}user-edit.php?user_id=${currentTicket.author_id || 0}" target="_blank" class="robodesk-popover-trigger text-gray-500 hover:text-green-700 ml-1" data-popover-text="Edit customer profile" aria-label="Edit customer profile"><i class="fas fa-user-edit" style="font-size: 12px;"></i></a></h3>
+              <h3 class="font-bold text-gray-900 leading-tight truncate">${escapeHTML(currentTicket.customer || "")} <a href="${robodeskAjax.ajaxurl.replace("admin-ajax.php", "")}user-edit.php?user_id=${currentTicket.author_id || 0}" target="_blank" class="robodesk-popover-trigger text-gray-500 hover:text-green-700 ml-1" data-popover-text="Edit customer profile" aria-label="Edit customer profile"><i class="fas fa-user-edit" style="font-size: 12px;"></i></a></h3>
               <p class="text-sm text-gray-500 truncate">${escapeHTML(currentTicket.email || "")}</p>
             </div>
             <span class="icon-tickets shrink-0 mt-1 flex items-center gap-1">
@@ -1673,7 +1673,8 @@ function loadTicketDetail() {
           </div>
         `;
 
-      const locationValue = currentTicket.user_location || currentTicket.source_country;
+      const locationValue =
+        currentTicket.user_location || currentTicket.source_country;
       const countryRow = isEmptyOrNA(locationValue)
         ? ""
         : `
@@ -4256,7 +4257,11 @@ function fetchNotifications() {
         for (var i = 0; i < notificationItems.length; i++) {
           var newItem = notificationItems[i];
           var prevItem = prevItemsMap[newItem.id];
-          if (prevItem && (prevItem.message !== newItem.message || prevItem.timestamp !== newItem.timestamp)) {
+          if (
+            prevItem &&
+            (prevItem.message !== newItem.message ||
+              prevItem.timestamp !== newItem.timestamp)
+          ) {
             hasNewOrUpdatedNotification = true;
             break;
           }
