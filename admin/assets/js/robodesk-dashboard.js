@@ -1494,8 +1494,6 @@ function viewTicket(ticketId) {
       .catch((error) => {
         console.error("Error fetching ticket:", error);
       });
-  } else {
-    loadRepliesAndNotes();
   }
 }
 
