@@ -1515,9 +1515,27 @@ function robodesk_handle_add_ticket_reply()
     // Trigger action for integrations (Slack, Discord, etc.)
     do_action('robodesk_after_reply_added', $ticket_id, $comment_id, $reply, $user_object);
 
+    // Build human-readable role label
+    $user_role_label = 'Support Staff';
+    if (!empty($user_object->roles)) {
+        $roles = $user_object->roles;
+        if (in_array('administrator', $roles)) {
+            $user_role_label = 'Administrator';
+        } elseif (in_array('robodesk_support_manager', $roles)) {
+            $user_role_label = 'Support Manager';
+        } elseif (in_array('robodesk_support_staff', $roles)) {
+            $user_role_label = 'Support Staff';
+        } elseif (in_array('robodesk_agent', $roles)) {
+            $user_role_label = 'Agent';
+        } elseif (in_array('editor', $roles)) {
+            $user_role_label = 'Editor';
+        }
+    }
+
     wp_send_json_success([
         'comment_id' => $comment_id,
         'author'     => $user_object->display_name,
+        'userRole'   => $user_role_label,
     ]);
 }
 
@@ -1807,9 +1825,27 @@ function robodesk_handle_add_ticket_note()
         wp_send_json_error(['message' => 'Failed to insert note']);
     }
 
+    // Build human-readable role label
+    $user_role_label = 'Agent';
+    if (!empty($user_object->roles)) {
+        $roles = $user_object->roles;
+        if (in_array('administrator', $roles)) {
+            $user_role_label = 'Administrator';
+        } elseif (in_array('robodesk_support_manager', $roles)) {
+            $user_role_label = 'Support Manager';
+        } elseif (in_array('robodesk_support_staff', $roles)) {
+            $user_role_label = 'Support Staff';
+        } elseif (in_array('robodesk_agent', $roles)) {
+            $user_role_label = 'Agent';
+        } elseif (in_array('editor', $roles)) {
+            $user_role_label = 'Editor';
+        }
+    }
+
     wp_send_json_success([
-        'note_id' => $note_id,
-        'author'  => $user_object->display_name,
+        'note_id'  => $note_id,
+        'author'   => $user_object->display_name,
+        'userRole' => $user_role_label,
     ]);
 }
 
@@ -1878,6 +1914,176 @@ function robodesk_handle_get_ticket_notes()
     wp_send_json_success([
         'notes' => $notes,
         'count' => count($notes),
+    ]);
+}
+
+// GET TICKET REPLIES AND NOTES (combined)
+add_action('wp_ajax_get_ticket_replies_and_notes', 'robodesk_handle_get_ticket_replies_and_notes');
+
+function robodesk_handle_get_ticket_replies_and_notes()
+{
+    if (!isset($_POST['nonce']) || !wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['nonce'])), 'robodesk_get_ticket_replies_and_notes_action')) {
+        wp_send_json_error(['message' => 'Nonce verification failed']);
+    }
+
+    $ticket_id = isset($_POST['ticket_id']) ? intval($_POST['ticket_id']) : 0;
+
+    if (!$ticket_id) {
+        wp_send_json_error(['message' => 'Invalid ticket ID']);
+    }
+
+    // ── Replies ──
+    $reply_comments = get_comments([
+        'post_id' => $ticket_id,
+        'order'   => 'ASC',
+        'type'    => 'ticket_replies',
+        'is_robodesk_reply' => true,
+    ]);
+
+    $imap_settings = get_option('robodesk_imap_settings', []);
+    $support_inbox = strtolower(trim($imap_settings['username'] ?? ''));
+
+    $replies = [];
+
+    foreach ($reply_comments as $comment) {
+        $is_bot_response = function_exists('robodesk_is_bot_comment') ? robodesk_is_bot_comment($comment->comment_ID) : false;
+
+        $saved_author_type = get_comment_meta($comment->comment_ID, 'author_type', true);
+
+        $type = 'customer';
+        $role = 'Customer';
+
+        if ($is_bot_response) {
+            $type = 'agent';
+            $role = 'AI BOT';
+        } elseif ($saved_author_type === 'agent') {
+            $type = 'agent';
+            $user = $comment->user_id ? get_userdata($comment->user_id) : false;
+            if ($user) {
+                $roles = $user->roles;
+                if (in_array('administrator', $roles)) {
+                    $role = 'Administrator';
+                } elseif (in_array('robodesk_support_manager', $roles)) {
+                    $role = 'Support Manager';
+                } elseif (in_array('robodesk_support_staff', $roles)) {
+                    $role = 'Support Staff';
+                } elseif (in_array('robodesk_agent', $roles)) {
+                    $role = 'Agent';
+                } elseif (in_array('editor', $roles)) {
+                    $role = 'Editor';
+                } else {
+                    $role = 'Support Staff';
+                }
+            } else {
+                $comment_email = strtolower(trim($comment->comment_author_email));
+                if ($comment_email && $comment_email === $support_inbox) {
+                    $role = 'Support';
+                } else {
+                    $role = 'Support Staff';
+                }
+            }
+        } elseif ($saved_author_type === 'customer') {
+            $type = 'customer';
+            $role = 'Customer';
+        } else {
+            $user = $comment->user_id ? get_userdata($comment->user_id) : false;
+            if ($user) {
+                $roles = $user->roles;
+                if (in_array('administrator', $roles)) {
+                    $type = 'agent';
+                    $role = 'Administrator';
+                } elseif (in_array('robodesk_support_manager', $roles)) {
+                    $type = 'agent';
+                    $role = 'Support Manager';
+                } elseif (in_array('robodesk_support_staff', $roles)) {
+                    $type = 'agent';
+                    $role = 'Support Staff';
+                } elseif (in_array('robodesk_agent', $roles)) {
+                    $type = 'agent';
+                    $role = 'Agent';
+                } elseif (in_array('editor', $roles)) {
+                    $type = 'agent';
+                    $role = 'Editor';
+                }
+            }
+        }
+
+        if ($type === 'customer' && $support_inbox !== '') {
+            $comment_email = strtolower(trim($comment->comment_author_email));
+            if ($comment_email === $support_inbox) {
+                $type = 'agent';
+                $role = 'Support';
+            }
+        }
+
+        $is_action = get_comment_meta($comment->comment_ID, 'is_action', true);
+        $comment_meta = [
+            'is_action'       => $is_action ? true : false,
+            'is_bot_response' => $is_bot_response,
+        ];
+
+        $replies[] = [
+            'id'              => $comment->comment_ID,
+            'author'          => $is_bot_response && function_exists('robodesk_get_bot_display_name') ? robodesk_get_bot_display_name() : $comment->comment_author,
+            'message'         => $comment->comment_content,
+            'timestamp'       => function_exists('robodesk_comment_utc_iso') ? robodesk_comment_utc_iso($comment) : $comment->comment_date,
+            'type'            => $type,
+            'role'            => $role,
+            'is_bot_response' => $is_bot_response,
+            'comment_meta'    => $comment_meta,
+        ];
+    }
+
+    // ── Notes ──
+    $note_comments = get_comments([
+        'post_id' => $ticket_id,
+        'order'   => 'ASC',
+        'type'    => 'ticket_notes',
+        'is_robodesk_note' => true,
+    ]);
+
+    $notes = [];
+    foreach ($note_comments as $comment) {
+        $user = get_userdata($comment->user_id);
+        $type = 'agent';
+        $role = 'Agent';
+        if ($user) {
+            $roles = $user->roles;
+            if (in_array('administrator', $roles)) {
+                $type = 'agent';
+                $role = 'Administrator';
+            } elseif (in_array('robodesk_support_manager', $roles)) {
+                $type = 'agent';
+                $role = 'Support Manager';
+            } elseif (in_array('robodesk_support_staff', $roles)) {
+                $type = 'agent';
+                $role = 'Support Staff';
+            } elseif (in_array('robodesk_agent', $roles)) {
+                $type = 'agent';
+                $role = 'Agent';
+            } elseif (in_array('editor', $roles)) {
+                $type = 'agent';
+                $role = 'Editor';
+            } else {
+                $type = 'customer';
+                $role = 'Customer';
+            }
+        }
+        $notes[] = [
+            'id'        => $comment->comment_ID,
+            'author'    => $comment->comment_author,
+            'message'   => $comment->comment_content,
+            'timestamp' => function_exists('robodesk_comment_utc_iso') ? robodesk_comment_utc_iso($comment) : $comment->comment_date,
+            'type'      => $type,
+            'role'      => $role,
+        ];
+    }
+
+    wp_send_json_success([
+        'replies' => $replies,
+        'replies_count' => count($replies),
+        'notes'   => $notes,
+        'notes_count'   => count($notes),
     ]);
 }
 
