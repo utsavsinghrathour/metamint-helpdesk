@@ -192,8 +192,7 @@ const AppContent = ({ imageUrls = { logo: "" } }) => {
   const url = useMemo(() => {
     if (!ticketsContext[0]?.id) return null;
     if (!loggedinContext && !loggedInUsrId) return null;
-    // console.log('The url from memo change');
-    // console.log(window.location.origin);
+
     return `${window.location.origin}/wp-json/robodesk/v1/stream/tickets/0/${ticketsContext[0]?.id}/${loggedInUsrId}`;
   }, [ticketsContext[0]?.id, loggedInUsrId]);
 
@@ -204,11 +203,9 @@ const AppContent = ({ imageUrls = { logo: "" } }) => {
 
   useEffect(() => {
     if (!url && !loggedinContext && !loggedInUsrId) return;
-    // console.info('I am executed first');
     sseManager.connect(url);
 
     const unsubscribeNewTicket = sseManager.on("new_ticket", (data) => {
-      //   console.log('Executed From new Ticket');
       updateTicket(data);
     });
 
@@ -218,9 +215,6 @@ const AppContent = ({ imageUrls = { logo: "" } }) => {
         const ids = Array.isArray(data)
           ? data.map((item) => (typeof item === "object" ? item.id : item))
           : [];
-
-        // console.info("Executed From new notif");
-        //   console.log('We ant here')
         handleSelectedTicketUpdate(null);
         if (updateNewCommentNotification(ids)) {
           notificationAudio.current.play();
@@ -386,20 +380,18 @@ const AppContent = ({ imageUrls = { logo: "" } }) => {
       )}
 
       <div
-        className={`robodesk-popup rd-flex rd-flex-col rd-border-none rd-border-radius-md ${
-          isOpen ? "open" : "closed"
-        } ${isExpanded ? "expanded" : ""}`}
+        className={`robodesk-popup rd-flex rd-flex-col rd-border-none rd-border-radius-md ${isOpen ? "open" : "closed"
+          } ${isExpanded ? "expanded" : ""}`}
       >
         {tabs[activeTab].component}
       </div>
 
       <div
-        className={` rd-popup-top-icon-container ${
-          isOpen ? "rd-hidden " : ""
-        } ${hasNotificationOff && !isOpen ? "rd-title-with-dot" : ""}`}
+        className={` rd-popup-top-icon-container ${isOpen ? "rd-hidden " : ""
+          } ${hasNotificationOff && !isOpen ? "rd-title-with-dot" : ""}`}
       >
         {imageUrls.popover_top_icon &&
-        imageUrls.popover_top_icon.trim() !== "" ? (
+          imageUrls.popover_top_icon.trim() !== "" ? (
           <img
             src={imageUrls.popover_top_icon}
             alt="Popup Top Icon"
@@ -412,9 +404,8 @@ const AppContent = ({ imageUrls = { logo: "" } }) => {
       </div>
 
       <button
-        className={`robodesk-toggle-btn rd-bg-blue rd-rounded-border rd-border-none rd-cursor-pointer ${
-          isOpen ? "rotatedssss" : ""
-        }`}
+        className={`robodesk-toggle-btn rd-bg-blue rd-rounded-border rd-border-none rd-cursor-pointer ${isOpen ? "rotatedssss" : ""
+          }`}
         onClick={handlePopupToggle}
       >
         {isOpen ? (

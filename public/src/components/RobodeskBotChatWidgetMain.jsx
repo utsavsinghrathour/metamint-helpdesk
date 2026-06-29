@@ -27,7 +27,6 @@ export default function RobodeskBotChatWidgetMain({
   widgetConfig,
   activeAIMode,
 }) {
-  // console.log("test tse");
   const rootRef = useRef(null);
   const CHAT_KEY = "robodesk_chat_session";
   const chatHeading =
@@ -407,13 +406,11 @@ export default function RobodeskBotChatWidgetMain({
               return (
                 <div
                   key={i}
-                  className={`chat-message rd-flex rd-items-start ${
-                    m.role === "user"
+                  className={`chat-message rd-flex rd-items-start ${m.role === "user"
                       ? "rd-ml-auto sent"
                       : "rd-flex rd-gap-8 received"
-                  } ${
-                    isSameSender ? "rd-msg-same-sender" : "rd-msg-new-sender"
-                  } ${m.role === "user" ? "rd-msg-user" : "rd-msg-assistant"}`}
+                    } ${isSameSender ? "rd-msg-same-sender" : "rd-msg-new-sender"
+                    } ${m.role === "user" ? "rd-msg-user" : "rd-msg-assistant"}`}
                   style={{
                     maxWidth: "70%",
                     marginBottom: isSameSender ? "4px" : "12px",
