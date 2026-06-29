@@ -56,7 +56,12 @@ export const AppDataProvider = ({ children }) => {
         };
       }
 
-      return prev;
+      return {
+        ...prev,
+        ticketsContext: prev.ticketsContext.map((t) =>
+          t.id === ticket.id ? { ...t, ...ticket } : t
+        ),
+      };
     });
   };
 

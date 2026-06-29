@@ -21,7 +21,6 @@ const AppContent = ({ imageUrls = { logo: "" } }) => {
     loggedInUsrId,
     updateTicket,
     updateNewCommentNotification,
-    refreshTickets,
     errorContext,
     isSingleTicketPage,
   } = useAppData();
@@ -217,7 +216,15 @@ const AppContent = ({ imageUrls = { logo: "" } }) => {
         if (updateNewCommentNotification(ids)) {
           getNotificationAudio()?.play();
         }
-        refreshTickets();
+        ids.forEach((tid) => {
+          if (!tid) return;
+          fetch(`/wp-json/wp/v2/robodesk_ticket/${tid}`)
+            .then((r) => (r.ok ? r.json() : null))
+            .then((ticket) => {
+              if (ticket?.id) updateTicket(mapTicketPayload(ticket));
+            })
+            .catch(() => {});
+        });
       },
     );
     return () => {
