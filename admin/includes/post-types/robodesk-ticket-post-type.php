@@ -458,6 +458,18 @@ function robodesk_customize_ticket_response($response, $post, $request)
     // Get the UNIX timestamp of the local time
     $post_timestamp = strtotime($local_time);
 
+    // Use the last reply timestamp if available
+    $formatted_comments = robodesk_get_formatted_comments($post->ID);
+    if (!empty($formatted_comments)) {
+        $last_comment_utc = $formatted_comments[0]['date_utc'] ?? null;
+        if ($last_comment_utc) {
+            $last_reply_ts = strtotime($last_comment_utc);
+            if ($last_reply_ts) {
+                $post_timestamp = $last_reply_ts;
+            }
+        }
+    }
+
     // Get the current time in site's timezone
     $current_timestamp = current_time('timestamp');
 
@@ -481,7 +493,7 @@ function robodesk_customize_ticket_response($response, $post, $request)
     }
     $last_reply =  get_post_meta($post->ID, 'rbd_last_reply_id', true);
 
-    $formatted_comments = robodesk_get_formatted_comments($post->ID);
+    // $formatted_comments already fetched above
 
     $total_comments = get_comments([
         'post_id'      => $post->ID,
