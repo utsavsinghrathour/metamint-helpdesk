@@ -11,6 +11,7 @@ import { AppDataProvider, useAppData } from "./utils/AppDataContext.jsx";
 // import useExclusiveServerEvents from './Hooks/useExclusiveServerEvents.js';
 // import useSSE from './Hooks/useSSE.js';
 import { sseManager } from "./Hooks/sseManager.js";
+import { getNotificationAudio } from "./utils/notificationSound.js";
 
 const AppContent = ({ imageUrls = { logo: "" } }) => {
   const {
@@ -35,10 +36,6 @@ const AppContent = ({ imageUrls = { logo: "" } }) => {
   const hasAttemptedDeepLinkFetch = useRef(false);
 
   const isSupportPage = window.location.pathname.includes("/robodesk-support");
-
-  const notificationAudio = useRef(
-    new Audio(window.wpAuth?.notificationSound || ""),
-  );
 
   const handleFocusedTextArea = (focus) => setFocusedTextArea(focus);
 
@@ -197,7 +194,7 @@ const AppContent = ({ imageUrls = { logo: "" } }) => {
   }, [ticketsContext[0]?.id, loggedInUsrId]);
 
   useEffect(() => {
-    notificationAudio.current.load();
+    getNotificationAudio()?.load();
     // useSSE(url, handlers);
   }, []);
 
@@ -217,7 +214,7 @@ const AppContent = ({ imageUrls = { logo: "" } }) => {
           : [];
         handleSelectedTicketUpdate(null);
         if (updateNewCommentNotification(ids)) {
-          notificationAudio.current.play();
+          getNotificationAudio()?.play();
         }
       },
     );
@@ -242,6 +239,7 @@ const AppContent = ({ imageUrls = { logo: "" } }) => {
   };
 
   const generateToken = async () => {
+    if (generateToken._failed) return null;
     let duration = 1 * 24 * 60 * 60; // Default to 1 day
     const STORAGE_KEY = "mcp_jwt_token";
     try {
@@ -277,6 +275,7 @@ const AppContent = ({ imageUrls = { logo: "" } }) => {
       console.log("Generated new token");
       return response.token;
     } catch (err) {
+      generateToken._failed = true;
       console.error(
         err.message || __("Error generating token", "wordpress-mcp"),
       );

@@ -12,6 +12,7 @@ import { useAppData } from "../utils/AppDataContext";
 import DefaultAvatar from "../images/default-avatar.jpg";
 
 import { sseManager } from "../Hooks/sseManager";
+import { getNotificationAudio } from "../utils/notificationSound";
 
 // Helper to escape HTML in plain text
 const escapeHtml = (unsafe) =>
@@ -269,7 +270,6 @@ const SingleTicket = ({
   const configuredBotName =
     window.robodeskData?.robodesk_bot_title_name || "Bot";
   const previousScrollHeight = useRef(0);
-  const beep = useRef(new Audio(wpAuth.notificationSound));
   const isAtTop = useRef(false);
   const hasConnected = useRef(false);
   const {
@@ -307,7 +307,7 @@ const SingleTicket = ({
   }, []);
 
   useEffect(() => {
-    beep.current.load();
+    getNotificationAudio()?.load();
 
     return () => {
       if (hasConnected.current) {
@@ -327,7 +327,7 @@ const SingleTicket = ({
 
     // Create an AbortController for timeout
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+    const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
 
     try {
       // Only set loading for initial load, not for pagination
@@ -425,7 +425,7 @@ const SingleTicket = ({
         return prev;
       }
       if (play) {
-        beep.current.play();
+        getNotificationAudio()?.play();
       }
 
       const isBotMessage =
@@ -530,7 +530,7 @@ const SingleTicket = ({
       try {
         // Add timeout for the initial request too
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 8000); // 8 second timeout
+        const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
 
         const response = await fetch(
           `/wp-json/wp/v2/comments?post=${ticket.id}&per_page=1&order=asc&_fields=id`,

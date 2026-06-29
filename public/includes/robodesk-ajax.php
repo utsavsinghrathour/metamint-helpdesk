@@ -165,6 +165,14 @@ function robodesk_handle_ticket_submission()
 
         wp_set_object_terms($post_id, (int) $origin['term_id'], 'robodesk_ticket_origin');
 
+        // Auto-assign if enabled in Advanced Settings
+        $settings = get_option('robodesk_advanced_settings', []);
+        if (!empty($settings['enable_auto_assign'])) {
+            $assigned = auto_assign_ticket_to_support_staff();
+            update_post_meta($post_id, 'ticket_assignee', $assigned);
+            robodesk_store_ticket_assignee_id($post_id, $assigned);
+        }
+
         robodesk_notify_ticket_created($post_id, 'chat');
 
         wp_send_json_success(array('message' => 'Ticket created successfully!'));

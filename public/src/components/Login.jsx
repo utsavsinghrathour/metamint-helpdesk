@@ -9,6 +9,8 @@ import ChangePassword from "./ChangePassword";
 
 const CHAT_KEY = "robodesk_chat_session";
 
+let staffFetched = false;
+
 // Header Component
 const Header = ({ setActiveTab, image_urls, defaultLogo }) => (
   <div className="rd-search-header rd-bg-blue rd-flex rd-items-center rd-justify-between rd-flex-col rd-message-list-header">
@@ -188,6 +190,8 @@ const Login = ({
 
   useEffect(() => {
     const fetchDefaultStaff = async () => {
+      if (staffFetched) return;
+      staffFetched = true;
       try {
         const response = await fetch("/wp-json/robodesk/selected/staff");
         const data = await response.json();
