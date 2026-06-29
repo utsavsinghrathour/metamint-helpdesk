@@ -1431,7 +1431,8 @@ function showPage(pageName, fromClick = false) {
     resetTicketComposeEditors();
     loadTicketDetail();
   } else if (pageName === "settings") {
-    showSettingsTab("basic");
+    const settingsParams = new URLSearchParams(window.location.search);
+    showSettingsTab(settingsParams.get("settings_tab") || "basic");
   } else if (pageName === "dashboard") {
     loadDashboardTickets();
   }
@@ -1936,6 +1937,11 @@ function showTicketTab(tabName) {
 
 // Settings functions
 function showSettingsTab(tabName) {
+  // Update URL so refresh stays on the same tab
+  const url = new URL(window.location);
+  url.searchParams.set("settings_tab", tabName);
+  window.history.replaceState({}, "", url);
+
   // Update tab buttons
   document.querySelectorAll(".settings-tab").forEach((tab) => {
     tab.classList.remove("active");
@@ -4286,7 +4292,6 @@ function fetchNotifications() {
       updateNotificationBadge(notificationCount);
 
       var hasNewOrUpdatedNotification = notificationCount > prevCount;
-      var isForCurrentTicket = false;
       if (!hasNewOrUpdatedNotification && prevCount > 0) {
         for (var i = 0; i < notificationItems.length; i++) {
           var newItem = notificationItems[i];
@@ -4306,17 +4311,7 @@ function fetchNotifications() {
         }
       }
 
-      if (hasNewOrUpdatedNotification && !_notifFirstFetch) {
-        var shouldPlay = true;
-        if (currentPage === "ticket-detail" && currentTicket) {
-          for (var i = 0; i < notificationItems.length; i++) {
-            if (Number(notificationItems[i].ticketId) === currentTicket.id) {
-              shouldPlay = false;
-              break;
-            }
-          }
-        }
-        if (shouldPlay) {
+      if (hasNewOrUpdatedNotification && !_notifFirstFetch && currentPage !== "ticket-detail") {
           const audioUrl =
             typeof robodeskNotificationSound !== "undefined"
               ? robodeskNotificationSound
@@ -4328,7 +4323,6 @@ function fetchNotifications() {
             });
           }
         }
-      }
       _notifFirstFetch = false;
 
       const dropdown = document.getElementById("notification-dropdown");
@@ -4651,7 +4645,7 @@ function startRepliesPolling() {
         }
       })
       .catch(() => {});
-  }, 30000);
+  }, (typeof robodeskAdvancedSettings !== "undefined" ? robodeskAdvancedSettings.polling_interval : 30) * 1000);
 }
 
 function stopRepliesPolling() {
@@ -4663,7 +4657,7 @@ function stopRepliesPolling() {
 
 function startNotificationPolling() {
   if (notificationPollInterval) return;
-  notificationPollInterval = setInterval(fetchNotifications, 30000);
+  notificationPollInterval = setInterval(fetchNotifications, (typeof robodeskAdvancedSettings !== "undefined" ? robodeskAdvancedSettings.polling_interval : 30) * 1000);
 }
 
 function stopNotificationPolling() {
