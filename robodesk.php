@@ -786,11 +786,6 @@ if (!function_exists('robodesk_prune_debug_log')) {
 
 function robodesk_get_support_user_ids()
 {
-    $cached = get_transient('robodesk_support_user_ids');
-    if (false !== $cached) {
-        return $cached;
-    }
-
     $users = get_users([
         'role__in' => [
             'administrator',
@@ -800,18 +795,10 @@ function robodesk_get_support_user_ids()
         'fields' => ['ID'],
     ]);
 
-    $ids = array_values(array_unique(array_map(function ($user) {
+    return array_values(array_unique(array_map(function ($user) {
         return (int) $user->ID;
     }, $users)));
-
-    set_transient('robodesk_support_user_ids', $ids, HOUR_IN_SECONDS);
-
-    return $ids;
 }
-
-add_action('set_user_role', function () {
-    delete_transient('robodesk_support_user_ids');
-});
 
 function robodesk_resolve_user_id_from_assignee($assignee_name)
 {
@@ -1459,10 +1446,18 @@ function robodesk_create_notification($recipient_user_id, $ticket_id, $comment_i
         $normalized_source = robodesk_get_ticket_source($ticket_id);
     }
 
+    $customer_user_id = $ticket_id > 0 ? robodesk_get_ticket_customer_user_id($ticket_id) : 0;
+
     switch ($normalized_source) {
         case 'chat':
+            if ($comment_user_id > 0 && $comment_author_type === 'customer') {
+                $created_by = $comment_user_id;
+            } elseif ($customer_user_id > 0) {
+                $created_by = $customer_user_id;
+            }
+            break;
+
         case 'email':
-            $customer_user_id = $ticket_id > 0 ? robodesk_get_ticket_customer_user_id($ticket_id) : 0;
             if ($comment_user_id > 0 && $comment_author_type === 'customer') {
                 $created_by = $comment_user_id;
             } elseif ($customer_user_id > 0) {
