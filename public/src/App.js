@@ -21,6 +21,7 @@ const AppContent = ({ imageUrls = { logo: "" } }) => {
     loggedInUsrId,
     updateTicket,
     updateNewCommentNotification,
+    refreshTickets,
     errorContext,
     isSingleTicketPage,
   } = useAppData();
@@ -216,6 +217,7 @@ const AppContent = ({ imageUrls = { logo: "" } }) => {
         if (updateNewCommentNotification(ids)) {
           getNotificationAudio()?.play();
         }
+        refreshTickets();
       },
     );
     return () => {
