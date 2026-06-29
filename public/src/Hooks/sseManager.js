@@ -6,6 +6,8 @@ class SSEManager {
   }
 
   connect(url) {
+    if (!url) return;
+
     if (this.currentUrl === url && this.eventSource) {
       return;
     }

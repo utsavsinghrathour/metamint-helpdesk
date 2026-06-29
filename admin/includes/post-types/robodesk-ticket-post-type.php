@@ -580,7 +580,11 @@ function robodesk_handle_tickets_webhook(WP_REST_Request $request)
             delete_user_meta($author, 'robodesk_openai_conversation_id');
             wp_set_object_terms($ticket, 'medium', 'robodesk_ticket_priority', false);
 
-            $assigned = auto_assign_ticket_to_support_staff();
+            $assigned = false;
+            $settings = get_option('robodesk_advanced_settings', []);
+            if (!empty($settings['enable_auto_assign'])) {
+                $assigned = auto_assign_ticket_to_support_staff();
+            }
 
             update_post_meta($ticket, 'ticket_assignee', $assigned);
             robodesk_store_ticket_assignee_id($ticket, $assigned);
