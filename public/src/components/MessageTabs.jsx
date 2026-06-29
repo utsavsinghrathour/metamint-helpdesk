@@ -158,7 +158,7 @@ const MessageTabs = ({
   const handleLogin = (loginStatus) => {
     setIsLoggedIn(loginStatus);
     if (loginStatus) {
-      fetchTickets();
+      refreshTickets();
     }
   };
 
