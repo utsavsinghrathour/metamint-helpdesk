@@ -365,8 +365,8 @@ function robodesk_get_formatted_comments($post_id)
         $rendered_content = wpautop($comment->comment_content);
         $plain_content = wp_strip_all_tags($rendered_content);
 
-        $comment_time_local = strtotime(get_date_from_gmt($comment->comment_date_gmt));
-        $now_local = current_time('timestamp');
+        $comment_time_local = strtotime($comment->comment_date_gmt . ' UTC');
+        $now_local = time();
 
         $diff = $now_local - $comment_time_local;
         $time_ago = $diff < 5 ? 'just now' : human_time_diff($comment_time_local, $now_local) . ' ago';
@@ -453,10 +453,7 @@ function robodesk_customize_ticket_response($response, $post, $request)
     $ticket_number = 'TCKT-' . str_pad($ticket_id, 3, '0', STR_PAD_LEFT);
 
 
-    $local_time = get_date_from_gmt($post->post_date_gmt);
-
-    // Get the UNIX timestamp of the local time
-    $post_timestamp = strtotime($local_time);
+    $post_timestamp = strtotime($post->post_date_gmt . ' UTC');
 
     // Use the last reply timestamp if available
     $formatted_comments = robodesk_get_formatted_comments($post->ID);
@@ -470,8 +467,7 @@ function robodesk_customize_ticket_response($response, $post, $request)
         }
     }
 
-    // Get the current time in site's timezone
-    $current_timestamp = current_time('timestamp');
+    $current_timestamp = time();
 
     // Get the human-readable time difference
     $time_diff = human_time_diff($post_timestamp, $current_timestamp);
