@@ -21,7 +21,6 @@ const AppContent = ({ imageUrls = { logo: "" } }) => {
     loggedInUsrId,
     updateTicket,
     updateNewCommentNotification,
-    refreshTickets,
     errorContext,
     isSingleTicketPage,
   } = useAppData();
@@ -35,7 +34,6 @@ const AppContent = ({ imageUrls = { logo: "" } }) => {
   const [focusedTextArea, setFocusedTextArea] = useState(false);
   const hasAutoOpenedTicket = useRef(false);
   const hasAttemptedDeepLinkFetch = useRef(false);
-  const lastTicketRefresh = useRef(0);
 
   const isSupportPage = window.location.pathname.includes("/robodesk-support");
 
@@ -224,11 +222,15 @@ const AppContent = ({ imageUrls = { logo: "" } }) => {
         if (updateNewCommentNotification(ids)) {
           getNotificationAudio()?.play();
         }
-        const now = Date.now();
-        if (now - lastTicketRefresh.current > 15000) {
-          lastTicketRefresh.current = now;
-          refreshTickets();
-        }
+        ids.forEach((tid) => {
+          if (!tid) return;
+          fetch(`/wp-json/wp/v2/robodesk_ticket/${tid}`)
+            .then((r) => (r.ok ? r.json() : null))
+            .then((ticket) => {
+              if (ticket?.id) updateTicket(mapTicketPayload(ticket));
+            })
+            .catch(() => {});
+        });
       },
     );
     return () => {
