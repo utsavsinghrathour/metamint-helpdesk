@@ -338,4 +338,10 @@ function robodesk_enqueue_tailwind_and_styles()
 
     // Pass notification sound URL to JavaScript
     wp_localize_script('robodesk-dashboard-script', 'robodeskNotificationSound', get_option('robodesk_notification_sound', ''));
+
+    // Pass advanced settings to JavaScript
+    $robodesk_adv_settings = get_option('robodesk_advanced_settings', []);
+    wp_localize_script('robodesk-dashboard-script', 'robodeskAdvancedSettings', [
+        'polling_interval' => isset($robodesk_adv_settings['polling_interval']) ? absint($robodesk_adv_settings['polling_interval']) : 30,
+    ]);
 }
