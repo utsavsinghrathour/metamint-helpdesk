@@ -1637,7 +1637,7 @@ function loadTicketDetail() {
         <div class="w-full min-w-0">
           <span class="lg:w-full w-100 flex justify-between items-start gap-3">
             <div class="min-w-0">
-              <h3 class="font-bold text-gray-900 leading-tight truncate">${escapeHTML(currentTicket.customer || "")} <a href="${robodeskAjax.ajaxurl.replace("admin-ajax.php", "")}user-edit.php?user_id=${currentTicket.author_id || 0}" target="_blank" class="robodesk-popover-trigger text-gray-500 hover:text-green-700 ml-1" data-popover-text="Edit customer profile" aria-label="Edit customer profile"><i class="fas fa-user-edit" style="font-size: 12px;"></i></a></h3>
+              <h3 class="font-bold text-gray-900 leading-tight rbd-break-all">${escapeHTML(currentTicket.customer || "")} <a href="${robodeskAjax.ajaxurl.replace("admin-ajax.php", "")}user-edit.php?user_id=${currentTicket.author_id || 0}" target="_blank" class="robodesk-popover-trigger text-gray-500 hover:text-green-700 ml-1" data-popover-text="Edit customer profile" aria-label="Edit customer profile"><i class="fas fa-user-edit" style="font-size: 12px;"></i></a></h3>
               <p class="text-sm text-gray-500 truncate">${escapeHTML(currentTicket.email || "")}</p>
             </div>
             <span class="icon-tickets shrink-0 mt-1 flex items-center gap-1">
