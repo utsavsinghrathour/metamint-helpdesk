@@ -4301,6 +4301,7 @@ function fetchNotifications() {
       updateNotificationBadge(notificationCount);
 
       var hasNewOrUpdatedNotification = notificationCount > prevCount;
+      var isForCurrentTicket = false;
       if (!hasNewOrUpdatedNotification && prevCount > 0) {
         for (var i = 0; i < notificationItems.length; i++) {
           var newItem = notificationItems[i];
