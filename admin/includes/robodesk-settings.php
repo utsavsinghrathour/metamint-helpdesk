@@ -688,12 +688,13 @@ $settings_hidden = ($current_tab === 'settings') ? '' : ' hidden';
 
 
              <?php
-                $robodesk_advanced_settings = get_option('robodesk_advanced_settings', [
+                 $robodesk_advanced_settings = get_option('robodesk_advanced_settings', [
                     'enable_auto_assign' => false,
                     'enable_notifications' => true,
                     'enable_customer_portal' => true,
                     'max_file_upload_size' => 10,
-                    'reply_unseen_email_minutes' => 15
+                    'reply_unseen_email_minutes' => 15,
+                    'polling_interval' => 30,
                 ]);
                 ?>
              <div id="advanced-tab" class="settings-tab-content hidden">
@@ -743,11 +744,29 @@ $settings_hidden = ($current_tab === 'settings') ? '' : ' hidden';
                                         }
                                         ?>
                                  </select>
-                                 <span class="text-sm text-gray-600"><?php esc_html_e('minutes', 'robodesk'); ?></span>
-                             </div>
-                         </div>
-                         <div class="flex items-center">
-                             <input id="enable-customer-portal" type="checkbox"
+                                  <span class="text-sm text-gray-600"><?php esc_html_e('minutes', 'robodesk'); ?></span>
+                              </div>
+                          </div>
+                          <div>
+                              <label for="polling-interval"
+                                  class="block text-sm font-medium text-gray-700 mb-1">
+                                  <?php esc_html_e('Dashboard polling interval', 'robodesk'); ?>
+                              </label>
+                              <p class="text-xs text-gray-500 mb-2">
+                                  <?php esc_html_e('How often the dashboard checks for new replies and notifications. Shorter intervals feel more real-time but increase server load.', 'robodesk'); ?>
+                              </p>
+                              <select id="polling-interval" name="polling_interval"
+                                  class="styled-select block w-40 border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                                  <?php
+                                     $robodesk_polling_options = [15, 30, 45, 60, 120];
+                                     foreach ($robodesk_polling_options as $robodesk_poll_sec) {
+                                         echo '<option value="' . esc_attr($robodesk_poll_sec) . '" ' . selected($robodesk_advanced_settings['polling_interval'], $robodesk_poll_sec, false) . '>' . esc_html($robodesk_poll_sec) . ' ' . esc_html__('seconds', 'robodesk') . '</option>';
+                                     }
+                                     ?>
+                              </select>
+                          </div>
+                          <div class="flex items-center">
+                              <input id="enable-customer-portal" type="checkbox"
                                  <?php checked($robodesk_advanced_settings['enable_customer_portal'], true); ?>
                                  class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
                              <label for="enable-customer-portal" class="ml-2 block text-sm text-gray-900">
