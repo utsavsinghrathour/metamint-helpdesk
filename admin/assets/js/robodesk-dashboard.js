@@ -1458,6 +1458,8 @@ function isValidEmail(email) {
 
 // Ticket detail functions
 function viewTicket(ticketId) {
+  _rbd_firstTicketScroll = true;
+
   // Convert ticketId to number to ensure type consistency
   ticketId = parseInt(ticketId, 10);
 
@@ -3407,8 +3409,14 @@ function renderReplies(replies) {
     })
     .join("");
 
-  // Scroll to bottom of the page
-  window.scrollTo({ top: document.body.scrollHeight, behavior: "smooth" });
+  // Scroll to send-reply-btn on first ticket load only
+  if (_rbd_firstTicketScroll) {
+    _rbd_firstTicketScroll = false;
+    const btn = document.getElementById("send-reply-btn");
+    if (btn) {
+      btn.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+  }
 }
 
 function closeTicket() {
@@ -4082,6 +4090,7 @@ let dashboardRefreshInterval = null;
 let notificationCount = 0;
 let notificationItems = [];
 let _notifFirstFetch = true;
+let _rbd_firstTicketScroll = true;
 let shouldRefreshTicketsPage = false;
 let lastTicketsPageReloadAt = 0;
 
