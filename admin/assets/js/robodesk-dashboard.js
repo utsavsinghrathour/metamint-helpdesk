@@ -4286,6 +4286,7 @@ function fetchNotifications() {
       updateNotificationBadge(notificationCount);
 
       var hasNewOrUpdatedNotification = notificationCount > prevCount;
+      var isForCurrentTicket = false;
       if (!hasNewOrUpdatedNotification && prevCount > 0) {
         for (var i = 0; i < notificationItems.length; i++) {
           var newItem = notificationItems[i];
@@ -4306,15 +4307,26 @@ function fetchNotifications() {
       }
 
       if (hasNewOrUpdatedNotification && !_notifFirstFetch) {
-        const audioUrl =
-          typeof robodeskNotificationSound !== "undefined"
-            ? robodeskNotificationSound
-            : null;
-        if (audioUrl) {
-          const audio = new Audio(audioUrl);
-          audio.play().catch((err) => {
-            console.warn("Autoplay blocked by browser:", err);
-          });
+        var shouldPlay = true;
+        if (currentPage === "ticket-detail" && currentTicket) {
+          for (var i = 0; i < notificationItems.length; i++) {
+            if (Number(notificationItems[i].ticketId) === currentTicket.id) {
+              shouldPlay = false;
+              break;
+            }
+          }
+        }
+        if (shouldPlay) {
+          const audioUrl =
+            typeof robodeskNotificationSound !== "undefined"
+              ? robodeskNotificationSound
+              : null;
+          if (audioUrl) {
+            const audio = new Audio(audioUrl);
+            audio.play().catch((err) => {
+              console.warn("Autoplay blocked by browser:", err);
+            });
+          }
         }
       }
       _notifFirstFetch = false;
