@@ -35,6 +35,7 @@ const AppContent = ({ imageUrls = { logo: "" } }) => {
   const [focusedTextArea, setFocusedTextArea] = useState(false);
   const hasAutoOpenedTicket = useRef(false);
   const hasAttemptedDeepLinkFetch = useRef(false);
+  const lastTicketRefresh = useRef(0);
 
   const isSupportPage = window.location.pathname.includes("/robodesk-support");
 
@@ -223,7 +224,11 @@ const AppContent = ({ imageUrls = { logo: "" } }) => {
         if (updateNewCommentNotification(ids)) {
           getNotificationAudio()?.play();
         }
-        refreshTickets();
+        const now = Date.now();
+        if (now - lastTicketRefresh.current > 15000) {
+          lastTicketRefresh.current = now;
+          refreshTickets();
+        }
       },
     );
     return () => {
