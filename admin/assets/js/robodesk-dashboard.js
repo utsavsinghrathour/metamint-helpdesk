@@ -1431,7 +1431,8 @@ function showPage(pageName, fromClick = false) {
     resetTicketComposeEditors();
     loadTicketDetail();
   } else if (pageName === "settings") {
-    showSettingsTab("basic");
+    const settingsParams = new URLSearchParams(window.location.search);
+    showSettingsTab(settingsParams.get("settings_tab") || "basic");
   } else if (pageName === "dashboard") {
     loadDashboardTickets();
   }
@@ -1609,7 +1610,7 @@ function updateTicketCategory(ticketId, categoryId) {
   });
 }
 
-// Updated loadTicketDetail function
+// Updated loadTicketDetail functions
 function loadTicketDetail() {
   if (!currentTicket) return;
 
@@ -1763,8 +1764,7 @@ function loadTicketDetail() {
   document.getElementById("notes-count").textContent =
     currentTicket.notes?.length || 0;
 
-  loadReplies();
-  loadNotes();
+  loadRepliesAndNotes();
 }
 
 function bindPopoverTriggers(scope) {
@@ -1937,6 +1937,11 @@ function showTicketTab(tabName) {
 
 // Settings functions
 function showSettingsTab(tabName) {
+  // Update URL so refresh stays on the same tab
+  const url = new URL(window.location);
+  url.searchParams.set("settings_tab", tabName);
+  window.history.replaceState({}, "", url);
+
   // Update tab buttons
   document.querySelectorAll(".settings-tab").forEach((tab) => {
     tab.classList.remove("active");
@@ -3283,12 +3288,14 @@ function addReply() {
     .then((res) => res.json())
     .then((response) => {
       if (response.success) {
+        const replyRole = response.data.userRole || userRole || "Agent";
         const newReply = {
           id: response.data.comment_id,
           author: response.data.author,
           message: resolvedReplyText,
           timestamp: new Date().toISOString(),
-          type: "userRole" in response.data ? response.data.userRole : userRole,
+          type: "agent",
+          role: replyRole,
           comment_meta: response.data.comment_meta || { is_action: false },
         };
 
@@ -3309,7 +3316,7 @@ function addReply() {
           if (sigCheckbox) sigCheckbox.checked = false;
         }
 
-        loadReplies();
+        renderReplies(currentTicket.replies);
         showToast("Reply added successfully");
       } else {
         showToast(response.data?.message || "Failed to add reply", "error");
@@ -3400,11 +3407,8 @@ function renderReplies(replies) {
     })
     .join("");
 
-  // Scroll to the last reply
-  const lastReply = repliesList.querySelector(`#reply-${replies.length - 1}`);
-  if (lastReply) {
-    lastReply.scrollIntoView({ behavior: "smooth", block: "end" });
-  }
+  // Scroll to bottom of the page
+  window.scrollTo({ top: document.body.scrollHeight, behavior: "smooth" });
 }
 
 function closeTicket() {
@@ -3474,9 +3478,7 @@ function closeTicket() {
 
           // Clear the reply box
           resetEditorContent("new-reply");
-
-          // Reload the replies to show the close message and any final reply
-          loadReplies();
+          loadRepliesAndNotes();
         } else {
           showToast(response.data.message || "Error closing ticket", "error");
         }
@@ -3522,12 +3524,14 @@ function addNote() {
     .then((res) => res.json())
     .then((response) => {
       if (response.success) {
+        const noteRole = response.data.userRole || userRole || "Agent";
         const newNote = {
           id: response.data.note_id,
           author: response.data.author,
           message: resolvedNoteText,
           timestamp: new Date().toISOString(),
           type: "agent",
+          role: noteRole,
         };
 
         if (!Array.isArray(currentTicket.notes)) currentTicket.notes = [];
@@ -3538,7 +3542,7 @@ function addNote() {
         if (ticketIndex !== -1) tickets[ticketIndex] = currentTicket;
 
         noteBox.innerHTML = "Type your internal note here...";
-        loadNotes(); // This will call renderNotes, which handles scrolling
+        renderNotes(currentTicket.notes);
         showToast("Note added successfully");
       } else {
         showToast(response.data?.message || "Failed to add note", "error");
@@ -3584,6 +3588,41 @@ async function loadNotes() {
     console.error("Failed to load notes:", error);
     notesList.innerHTML = `<div class="text-red-500 p-4">Error: ${error.message}</div>`;
   }
+}
+
+// Function to load replies and notes via combined AJAX
+function loadRepliesAndNotes() {
+  if (!currentTicket) return;
+
+  const repliesList = document.getElementById("replies-list");
+  const notesList = document.getElementById("notes-list");
+
+  fetch(robodeskAjax.ajax_url, {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: new URLSearchParams({
+      action: "get_ticket_replies_and_notes",
+      ticket_id: currentTicket.id,
+      nonce: robodeskAjax.nonces.get_ticket_replies_and_notes,
+    }),
+  })
+    .then((res) => res.json())
+    .then((result) => {
+      if (!result.success) return;
+      currentTicket.replies = result.data.replies;
+      currentTicket.notes = result.data.notes;
+      if (repliesList) {
+        renderReplies(result.data.replies);
+        document.getElementById("replies-count").textContent = result.data.replies_count;
+      }
+      if (notesList) {
+        renderNotes(result.data.notes);
+        document.getElementById("notes-count").textContent = result.data.notes_count;
+      }
+    })
+    .catch((error) => {
+      console.error("Failed to load replies and notes:", error);
+    });
 }
 
 // Render notes to the DOM and scroll to the last note
@@ -4040,9 +4079,9 @@ jQuery(document).ready(function ($) {
 
 // Auto-refresh functionality for dashboard tickets
 let dashboardRefreshInterval = null;
-let notificationPollInterval = null;
 let notificationCount = 0;
 let notificationItems = [];
+let _notifFirstFetch = true;
 let shouldRefreshTicketsPage = false;
 let lastTicketsPageReloadAt = 0;
 
@@ -4257,7 +4296,11 @@ function fetchNotifications() {
         for (var i = 0; i < notificationItems.length; i++) {
           var newItem = notificationItems[i];
           var prevItem = prevItemsMap[newItem.id];
-          if (prevItem && (prevItem.message !== newItem.message || prevItem.timestamp !== newItem.timestamp)) {
+          if (
+            prevItem &&
+            (prevItem.message !== newItem.message ||
+              prevItem.timestamp !== newItem.timestamp)
+          ) {
             hasNewOrUpdatedNotification = true;
             break;
           }
@@ -4268,18 +4311,19 @@ function fetchNotifications() {
         }
       }
 
-      if (hasNewOrUpdatedNotification) {
-        const audioUrl =
-          typeof robodeskNotificationSound !== "undefined"
-            ? robodeskNotificationSound
-            : null;
-        if (audioUrl) {
-          const audio = new Audio(audioUrl);
-          audio.play().catch((err) => {
-            console.warn("Autoplay blocked by browser:", err);
-          });
+      if (hasNewOrUpdatedNotification && !_notifFirstFetch && currentPage !== "ticket-detail") {
+          const audioUrl =
+            typeof robodeskNotificationSound !== "undefined"
+              ? robodeskNotificationSound
+              : null;
+          if (audioUrl) {
+            const audio = new Audio(audioUrl);
+            audio.play().catch((err) => {
+              console.warn("Autoplay blocked by browser:", err);
+            });
+          }
         }
-      }
+      _notifFirstFetch = false;
 
       const dropdown = document.getElementById("notification-dropdown");
       if (dropdown && !dropdown.classList.contains("hidden")) {
@@ -4564,18 +4608,70 @@ function stopDashboardAutoRefresh() {
   }
 }
 
-// Start auto-refresh when on dashboard page
-document.addEventListener("DOMContentLoaded", function () {
-  // Initialize the notification badge with stored count on page load
-  updateNotificationBadge(notificationCount);
+// ── Lightweight polling ──
+let repliesPollInterval = null;
+let notificationPollInterval = null;
 
-  fetchNotifications();
+function startRepliesPolling() {
+  stopRepliesPolling();
+  repliesPollInterval = setInterval(function () {
+    if (!currentTicket) return;
+    const repliesTab = document.getElementById("replies-tab");
+    if (!repliesTab || repliesTab.classList.contains("hidden")) return;
+
+    fetch(robodeskAjax.ajax_url, {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({
+        action: "get_ticket_replies_and_notes",
+        ticket_id: currentTicket.id,
+        nonce: robodeskAjax.nonces.get_ticket_replies_and_notes,
+      }),
+    })
+      .then((r) => r.json())
+      .then((result) => {
+        if (!result.success) return;
+        const prevReplyCount = currentTicket.replies?.length ?? 0;
+        currentTicket.replies = result.data.replies;
+        currentTicket.notes = result.data.notes;
+        renderReplies(result.data.replies);
+        renderNotes(result.data.notes);
+        document.getElementById("replies-count").textContent = result.data.replies_count;
+        document.getElementById("notes-count").textContent = result.data.notes_count;
+
+        if (result.data.replies_count > prevReplyCount) {
+          const audioUrl = document.getElementById("replies-list")?.getAttribute("data-audio");
+          if (audioUrl) new Audio(audioUrl).play().catch(() => {});
+        }
+      })
+      .catch(() => {});
+  }, (typeof robodeskAdvancedSettings !== "undefined" ? robodeskAdvancedSettings.polling_interval : 30) * 1000);
+}
+
+function stopRepliesPolling() {
+  if (repliesPollInterval) {
+    clearInterval(repliesPollInterval);
+    repliesPollInterval = null;
+  }
+}
+
+function startNotificationPolling() {
+  if (notificationPollInterval) return;
+  notificationPollInterval = setInterval(fetchNotifications, (typeof robodeskAdvancedSettings !== "undefined" ? robodeskAdvancedSettings.polling_interval : 30) * 1000);
+}
+
+function stopNotificationPolling() {
   if (notificationPollInterval) {
     clearInterval(notificationPollInterval);
+    notificationPollInterval = null;
   }
-  notificationPollInterval = setInterval(fetchNotifications, 15000);
+}
 
-  // Start auto-refresh to keep notifications updated across all dashboard views
+// Start auto-refresh when on dashboard page
+document.addEventListener("DOMContentLoaded", function () {
+  updateNotificationBadge(notificationCount);
+  fetchNotifications();
+  startNotificationPolling();
   startDashboardAutoRefresh();
 });
 
@@ -4589,125 +4685,20 @@ filterDashboardTickets = function (filterType) {
   startDashboardAutoRefresh();
 };
 
-// Auto-refresh functionality for ticket detail replies
-let repliesRefreshInterval = null;
-
-// Function to refresh replies for the current ticket
-function refreshTicketReplies() {
-  if (!currentTicket || !currentTicket.id) {
-    return;
-  }
-
-  // Only refresh if we're on the replies tab
-  const repliesTab = document.getElementById("replies-tab");
-  if (!repliesTab || repliesTab.classList.contains("hidden")) {
-    return;
-  }
-
-  const data = {
-    action: "get_ticket_replies",
-    ticket_id: currentTicket.id,
-    nonce: robodeskAjax.nonces.get_ticket_replies,
-  };
-
-  fetch(robodeskAjax.ajax_url, {
-    method: "POST",
-    headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    body: new URLSearchParams(data).toString(),
-  })
-    .then((res) => res.json())
-    .then((result) => {
-      if (result.success) {
-        const currentRepliesCount = currentTicket.replies
-          ? currentTicket.replies.length
-          : 0;
-        const newRepliesCount = result.data.count;
-
-        // Only update if there are new replies
-        if (newRepliesCount > currentRepliesCount) {
-          // Update current ticket replies
-          currentTicket.replies = result.data.replies;
-
-          // Update the ticket in the tickets array
-          const ticketIndex = tickets.findIndex(
-            (t) => t.id === currentTicket.id,
-          );
-          if (ticketIndex !== -1) {
-            tickets[ticketIndex].replies = result.data.replies;
-          }
-
-          // Re-render replies
-          renderReplies(result.data.replies);
-
-          // Update count badge
-          document.getElementById("replies-count").textContent =
-            newRepliesCount;
-
-          // Play notification sound if available
-          const repliesList = document.getElementById("replies-list");
-          const audioUrl = repliesList.getAttribute("data-audio");
-          if (audioUrl) {
-            const audio = new Audio(audioUrl);
-            audio.play().catch((err) => {
-              console.warn("Autoplay blocked by browser:", err);
-            });
-          }
-        }
-      }
-    })
-    .catch((error) => {
-      console.error("Error refreshing replies:", error);
-    });
-}
-
-// Function to start replies auto-refresh
-function startRepliesAutoRefresh() {
-  // Clear any existing interval
-  if (repliesRefreshInterval) {
-    clearInterval(repliesRefreshInterval);
-  }
-
-  // Start auto-refresh every 10 seconds
-  repliesRefreshInterval = setInterval(refreshTicketReplies, 10000);
-}
-
-// Function to stop replies auto-refresh
-function stopRepliesAutoRefresh() {
-  if (repliesRefreshInterval) {
-    clearInterval(repliesRefreshInterval);
-    repliesRefreshInterval = null;
-  }
-}
-
-// Override the viewTicket function to start auto-refresh
+// Override viewTicket to start polling
 const originalViewTicket = viewTicket;
 viewTicket = function (ticketId) {
-  // Stop any existing refresh
-  stopRepliesAutoRefresh();
-
-  // Call the original function
   originalViewTicket(ticketId);
-
-  // Start auto-refresh for replies after a short delay to ensure page is loaded
-  setTimeout(() => {
-    if (currentTicket && currentTicket.id === ticketId) {
-      startRepliesAutoRefresh();
-    }
-  }, 1000);
+  startRepliesPolling();
 };
 
-// Override the showPage function to stop refresh when leaving ticket detail
+// Override showPage to stop polling when leaving ticket detail
 const originalShowPage = showPage;
 showPage = function (pageName, fromClick = false) {
-  // Stop replies refresh when leaving ticket detail page
   if (pageName !== "ticket-detail") {
-    stopRepliesAutoRefresh();
+    stopRepliesPolling();
   }
-
-  // Call the original function
   originalShowPage(pageName, fromClick);
-
-  // Start dashboard refresh when going to dashboard
   if (pageName === "dashboard") {
     if (
       currentDashboardFilter === "my_conversation" ||
@@ -4717,20 +4708,6 @@ showPage = function (pageName, fromClick = false) {
     }
   } else {
     stopDashboardAutoRefresh();
-  }
-};
-
-// Override the showTicketTab function to control refresh based on active tab
-const originalShowTicketTab = showTicketTab;
-showTicketTab = function (tabName) {
-  // Call the original function
-  originalShowTicketTab(tabName);
-
-  // Only auto-refresh when on replies tab
-  if (tabName === "replies" && currentTicket) {
-    startRepliesAutoRefresh();
-  } else {
-    stopRepliesAutoRefresh();
   }
 };
 
