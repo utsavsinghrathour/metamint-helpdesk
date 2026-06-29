@@ -113,6 +113,11 @@ const SingleQuestionBox = ({
   };
 
   useEffect(() => {
+    if (!window.robodeskData?.robodesk_addon_active) {
+      setIsAddonActive(false);
+      setLoadingAddon(false);
+      return;
+    }
     fetch("/wp-json/robodesk-addon/v1/status")
       .then((res) => res.json())
       .then((data) => {
@@ -147,6 +152,11 @@ const SingleQuestionBox = ({
   };
 
   const fetchApiKey = async () => {
+    if (!window.robodeskData?.robodesk_addon_active) {
+      setPrimaryBot(false);
+      setLoadingWidgetConfig(false);
+      return;
+    }
     try {
       const response = await fetch("/wp-json/robodesk-bot/v1/widget-config");
       const data = await response.json();
