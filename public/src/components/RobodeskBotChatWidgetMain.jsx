@@ -146,12 +146,10 @@ export default function RobodeskBotChatWidgetMain({
   };
 
   const fetchApiKey = async () => {
-    console.log("fetchApiKey");
     try {
       const response = await wp.apiFetch({
         path: `/robodesk-bot/v1/widget-config`,
       });
-      console.log("response", response);
       // Try both possible key formats your PHP might return
       setBotName(
         response.botName || response.bot_name || resolvedBotName || ""
@@ -334,13 +332,11 @@ export default function RobodeskBotChatWidgetMain({
 
           // update loader text
           if (eventName.startsWith("thinking")) {
-            console.log("Received thinking event:", eventName);
             setLoadingText(parsed.message);
           }
 
           // final message
           if (eventName === "Final Response:") {
-            console.log("Received final response event:", parsed);
             let finalText = "";
 
             if (typeof parsed.message === "string") {
@@ -358,7 +354,6 @@ export default function RobodeskBotChatWidgetMain({
             } else {
               finalText = "";
             }
-            console.log("Final parsed response:", finalText);
             setMessages((m) => [
               ...m,
               {
@@ -407,8 +402,8 @@ export default function RobodeskBotChatWidgetMain({
                 <div
                   key={i}
                   className={`chat-message rd-flex rd-items-start ${m.role === "user"
-                      ? "rd-ml-auto sent"
-                      : "rd-flex rd-gap-8 received"
+                    ? "rd-ml-auto sent"
+                    : "rd-flex rd-gap-8 received"
                     } ${isSameSender ? "rd-msg-same-sender" : "rd-msg-new-sender"
                     } ${m.role === "user" ? "rd-msg-user" : "rd-msg-assistant"}`}
                   style={{

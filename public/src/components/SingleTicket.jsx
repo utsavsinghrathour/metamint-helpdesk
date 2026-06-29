@@ -63,11 +63,10 @@ const ConversationSkeleton = ({ count = 6 }) => {
         return (
           <div
             key={index}
-            className={`chat-message rd-flex rd-items-start ${
-              msg.sender === "me"
-                ? "rd-justify-end"
-                : "rd-justify-start rd-gap-8"
-            }`}
+            className={`chat-message rd-flex rd-items-start ${msg.sender === "me"
+              ? "rd-justify-end"
+              : "rd-justify-start rd-gap-8"
+              }`}
             style={{
               maxWidth: "100%",
               marginBottom,
@@ -282,7 +281,6 @@ const SingleTicket = ({
     setSingleTicketPage,
   } = useAppData();
 
-  //   console.log('A single ticket data', ticket);
 
   const [ticketClosed, setTicketClosed] = useState(false);
 
@@ -396,7 +394,6 @@ const SingleTicket = ({
       clearTimeout(timeoutId);
 
       if (err.name === "AbortError") {
-        // console.log('Request timed out, using cached data if available');
         // If we have cached data, use it
         const cached = getCachedMessages(ticket.id);
         if (cached && cached.length > 0) {
@@ -431,11 +428,6 @@ const SingleTicket = ({
         beep.current.play();
       }
 
-      console.log("The author id is ", commentData.author_id);
-      console.log("The actual authorid is", loggedInUserId);
-      console.log(typeof commentData.author_id, typeof loggedInUserId);
-      console.log(String(commentData.author_id) === String(loggedInUserId));
-
       const isBotMessage =
         commentData.is_bot_response === true ||
         commentData.is_bot_response === "1";
@@ -453,8 +445,8 @@ const SingleTicket = ({
         image: isBotMessage
           ? configuredBotAvatar || commentData.author_image || DefaultAvatar
           : isOwnMessage
-          ? customerAvatar
-          : commentData.author_data?.avatar ||
+            ? customerAvatar
+            : commentData.author_data?.avatar ||
             commentData.author_image ||
             DefaultAvatar,
         isBot: isBotMessage,
@@ -499,8 +491,8 @@ const SingleTicket = ({
         image: isBotFlag
           ? configuredBotAvatar || comment.author_image || DefaultAvatar
           : sender === "me"
-          ? customerAvatar
-          : comment.author_data?.avatar ||
+            ? customerAvatar
+            : comment.author_data?.avatar ||
             comment.author_image ||
             DefaultAvatar,
         isBot: isBotFlag,
@@ -626,8 +618,8 @@ const SingleTicket = ({
       // Check if user is near bottom (within 100px)
       const isNearBottom =
         chatContainer.scrollHeight -
-          chatContainer.scrollTop -
-          chatContainer.clientHeight <
+        chatContainer.scrollTop -
+        chatContainer.clientHeight <
         100;
 
       // Only auto-scroll if near bottom or it's the initial load
@@ -691,7 +683,6 @@ const SingleTicket = ({
   }, [url]);
 
   const handleSend = async () => {
-    // console.log('From handle send', message);
     if (message.trim() || previewImage) {
       const imageHTML = previewImage
         ? `<a href="${previewImage}" target="_blank"><img src="${previewImage}" alt="Preview" class="rd-comment-img"  /></a>`
@@ -915,9 +906,8 @@ const SingleTicket = ({
         </div>
         <div
           ref={chatContainerRef}
-          className={`chat-container rd-flex rd-flex-col rd-flex-grow rd-px-18 rd-py-15 rd-overflow-auto ${
-            ticketClosed ? "ticket-closed" : ""
-          }`}
+          className={`chat-container rd-flex rd-flex-col rd-flex-grow rd-px-18 rd-py-15 rd-overflow-auto ${ticketClosed ? "ticket-closed" : ""
+            }`}
         >
           {/* Show pagination loader at the top when loading older messages */}
           {isPaginationLoading && (
@@ -959,17 +949,16 @@ const SingleTicket = ({
                   prevMsg.sender === msg.sender &&
                   !!prevMsg.isBot === !!msg.isBot &&
                   String(prevMsg.author_id || "") ===
-                    String(msg.author_id || "");
+                  String(msg.author_id || "");
                 const marginBottom = isSameSender ? "4px" : "12px";
 
                 return (
                   <div
                     key={msg.id}
-                    className={`chat-message rd-flex rd-items-start ${
-                      msg.sender === "me" || msg.isSending
-                        ? "rd-ml-auto sent"
-                        : "rd-flex rd-gap-8 received"
-                    }`}
+                    className={`chat-message rd-flex rd-items-start ${msg.sender === "me" || msg.isSending
+                      ? "rd-ml-auto sent"
+                      : "rd-flex rd-gap-8 received"
+                      }`}
                     style={{
                       maxWidth: "80%",
                       marginBottom,
@@ -1089,8 +1078,8 @@ const SingleTicket = ({
                         {msg.isSending
                           ? ""
                           : msg.isPending
-                          ? "Pending..."
-                          : formatTimestamp(msg.created_at)}
+                            ? "Pending..."
+                            : formatTimestamp(msg.created_at)}
                       </div>
                     </div>
                   </div>
@@ -1102,9 +1091,8 @@ const SingleTicket = ({
       </div>
 
       <div
-        className={`chat-input rd-flex rd-flex-col rd-px-18 rd-py-15 rd-border-top-light rd-bg-white  ${
-          previewImage ? "has-preview" : ""
-        }`}
+        className={`chat-input rd-flex rd-flex-col rd-px-18 rd-py-15 rd-border-top-light rd-bg-white  ${previewImage ? "has-preview" : ""
+          }`}
       >
         {previewImage && (
           <div className="rd-flex rd-align-center rd-image-upload-container">
