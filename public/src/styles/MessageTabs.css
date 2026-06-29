@@ -315,7 +315,7 @@
   height: 6px;
   border-radius: 50%;
   background-color: red;
-  animation: blink-dot 1s infinite;
+  animation: blink-dot 1s infinite ease-in-out;
 }
 
 @keyframes blink-dot {
@@ -323,10 +323,13 @@
   0%,
   100% {
     opacity: 1;
+    transform: scale(1);
   }
 
   50% {
-    opacity: 0.2;
+    opacity: 0.4;
+    transform: scale(1.5);
+    /* Increases size by 50% at the middle of the animation */
   }
 }
 
