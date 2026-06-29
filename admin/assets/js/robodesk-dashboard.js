@@ -1431,7 +1431,8 @@ function showPage(pageName, fromClick = false) {
     resetTicketComposeEditors();
     loadTicketDetail();
   } else if (pageName === "settings") {
-    showSettingsTab("basic");
+    const settingsParams = new URLSearchParams(window.location.search);
+    showSettingsTab(settingsParams.get("settings_tab") || "basic");
   } else if (pageName === "dashboard") {
     loadDashboardTickets();
   }
@@ -1457,6 +1458,8 @@ function isValidEmail(email) {
 
 // Ticket detail functions
 function viewTicket(ticketId) {
+  _rbd_firstTicketScroll = true;
+
   // Convert ticketId to number to ensure type consistency
   ticketId = parseInt(ticketId, 10);
 
@@ -1637,7 +1640,7 @@ function loadTicketDetail() {
         <div class="w-full min-w-0">
           <span class="lg:w-full w-100 flex justify-between items-start gap-3">
             <div class="min-w-0">
-              <h3 class="font-bold text-gray-900 leading-tight truncate">${escapeHTML(currentTicket.customer || "")} <a href="${robodeskAjax.ajaxurl.replace("admin-ajax.php", "")}user-edit.php?user_id=${currentTicket.author_id || 0}" target="_blank" class="robodesk-popover-trigger text-gray-500 hover:text-green-700 ml-1" data-popover-text="Edit customer profile" aria-label="Edit customer profile"><i class="fas fa-user-edit" style="font-size: 12px;"></i></a></h3>
+              <h3 class="font-bold text-gray-900 leading-tight rbd-break-all">${escapeHTML(currentTicket.customer || "")} <a href="${robodeskAjax.ajaxurl.replace("admin-ajax.php", "")}user-edit.php?user_id=${currentTicket.author_id || 0}" target="_blank" class="robodesk-popover-trigger text-gray-500 hover:text-green-700 ml-1" data-popover-text="Edit customer profile" aria-label="Edit customer profile"><i class="fas fa-user-edit" style="font-size: 12px;"></i></a></h3>
               <p class="text-sm text-gray-500 truncate">${escapeHTML(currentTicket.email || "")}</p>
             </div>
             <span class="icon-tickets shrink-0 mt-1 flex items-center gap-1">
@@ -1936,6 +1939,11 @@ function showTicketTab(tabName) {
 
 // Settings functions
 function showSettingsTab(tabName) {
+  // Update URL so refresh stays on the same tab
+  const url = new URL(window.location);
+  url.searchParams.set("settings_tab", tabName);
+  window.history.replaceState({}, "", url);
+
   // Update tab buttons
   document.querySelectorAll(".settings-tab").forEach((tab) => {
     tab.classList.remove("active");
@@ -3401,8 +3409,14 @@ function renderReplies(replies) {
     })
     .join("");
 
-  // Scroll to bottom of the page
-  window.scrollTo({ top: document.body.scrollHeight, behavior: "smooth" });
+  // Scroll to send-reply-btn on first ticket load only
+  if (_rbd_firstTicketScroll) {
+    _rbd_firstTicketScroll = false;
+    const btn = document.getElementById("send-reply-btn");
+    if (btn) {
+      btn.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+  }
 }
 
 function closeTicket() {
@@ -4076,6 +4090,7 @@ let dashboardRefreshInterval = null;
 let notificationCount = 0;
 let notificationItems = [];
 let _notifFirstFetch = true;
+let _rbd_firstTicketScroll = true;
 let shouldRefreshTicketsPage = false;
 let lastTicketsPageReloadAt = 0;
 
@@ -4306,17 +4321,7 @@ function fetchNotifications() {
         }
       }
 
-      if (hasNewOrUpdatedNotification && !_notifFirstFetch) {
-        var shouldPlay = true;
-        if (currentPage === "ticket-detail" && currentTicket) {
-          for (var i = 0; i < notificationItems.length; i++) {
-            if (Number(notificationItems[i].ticketId) === currentTicket.id) {
-              shouldPlay = false;
-              break;
-            }
-          }
-        }
-        if (shouldPlay) {
+      if (hasNewOrUpdatedNotification && !_notifFirstFetch && currentPage !== "ticket-detail") {
           const audioUrl =
             typeof robodeskNotificationSound !== "undefined"
               ? robodeskNotificationSound
@@ -4328,7 +4333,6 @@ function fetchNotifications() {
             });
           }
         }
-      }
       _notifFirstFetch = false;
 
       const dropdown = document.getElementById("notification-dropdown");
@@ -4651,7 +4655,7 @@ function startRepliesPolling() {
         }
       })
       .catch(() => {});
-  }, 30000);
+  }, (typeof robodeskAdvancedSettings !== "undefined" ? robodeskAdvancedSettings.polling_interval : 30) * 1000);
 }
 
 function stopRepliesPolling() {
@@ -4663,7 +4667,7 @@ function stopRepliesPolling() {
 
 function startNotificationPolling() {
   if (notificationPollInterval) return;
-  notificationPollInterval = setInterval(fetchNotifications, 30000);
+  notificationPollInterval = setInterval(fetchNotifications, (typeof robodeskAdvancedSettings !== "undefined" ? robodeskAdvancedSettings.polling_interval : 30) * 1000);
 }
 
 function stopNotificationPolling() {
