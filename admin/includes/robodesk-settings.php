@@ -694,7 +694,7 @@ $settings_hidden = ($current_tab === 'settings') ? '' : ' hidden';
                     'enable_customer_portal' => true,
                     'max_file_upload_size' => 10,
                     'reply_unseen_email_minutes' => 15,
-                    'polling_interval' => 30,
+                    'polling_interval' => 15,
                 ]);
                 ?>
              <div id="advanced-tab" class="settings-tab-content hidden">
