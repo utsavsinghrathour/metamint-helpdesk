@@ -68,7 +68,22 @@ const Header = ({ logo, onClose, setActiveTab, setShowLogin, updateSelectedTicke
     );
 
     const saved = sessionStorage.getItem(CHAT_KEY);
-    const messages = saved ? JSON.parse(saved) : [];
+    let messages = saved ? JSON.parse(saved) : [];
+
+    // Stably sort messages chronologically by timestamp
+    const withIndex = messages.map((msg, idx) => ({ msg, idx }));
+    withIndex.sort((a, b) => {
+      const timeA = a.msg.timestamp ? new Date(a.msg.timestamp).getTime() : null;
+      const timeB = b.msg.timestamp ? new Date(b.msg.timestamp).getTime() : null;
+      if (timeA !== null && timeB !== null) {
+        if (timeA !== timeB) {
+          return timeA - timeB;
+        }
+      }
+      return a.idx - b.idx;
+    });
+    messages = withIndex.map(item => item.msg);
+
     const messagesExceptFirst = messages.slice(1);
 
     if (!messages || messages.length === 0) {
@@ -109,7 +124,12 @@ const Header = ({ logo, onClose, setActiveTab, setShowLogin, updateSelectedTicke
     }
 
     try {
-      const result = await createTicket(loggedInUsrId, ticketTitle, ticketDescription);
+      const result = await createTicket(
+        loggedInUsrId,
+        ticketTitle,
+        ticketDescription,
+        userMessages[0]?.timestamp || new Date().toISOString()
+      );
 
       const newTicket = {
         id: result.data.id,
@@ -133,7 +153,9 @@ const Header = ({ logo, onClose, setActiveTab, setShowLogin, updateSelectedTicke
           selectedStaff || loggedInUsrId,
           'Transitioned conversations from AI to human agent.',
           false,
-          true
+          true,
+          undefined,
+          messages[0]?.timestamp || new Date().toISOString()
         );
       }
 
@@ -143,9 +165,9 @@ const Header = ({ logo, onClose, setActiveTab, setShowLogin, updateSelectedTicke
           if (!messageText.trim()) continue;
 
           if (message.role === 'user') {
-            await sendReply(newTicket.id, loggedInUsrId, messageText);
+            await sendReply(newTicket.id, loggedInUsrId, messageText, false, false, undefined, message.timestamp);
           } else if (message.role === 'assistant') {
-            await sendReply(newTicket.id, selectedStaff || loggedInUsrId, messageText, false, true);
+            await sendReply(newTicket.id, selectedStaff || loggedInUsrId, messageText, false, true, undefined, message.timestamp);
           }
         }
       }
