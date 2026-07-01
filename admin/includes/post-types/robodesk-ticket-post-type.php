@@ -365,8 +365,8 @@ function robodesk_get_formatted_comments($post_id)
         $rendered_content = wpautop($comment->comment_content);
         $plain_content = wp_strip_all_tags($rendered_content);
 
-        $comment_time_local = strtotime(get_date_from_gmt($comment->comment_date_gmt));
-        $now_local = current_time('timestamp');
+        $comment_time_local = strtotime($comment->comment_date_gmt . ' UTC');
+        $now_local = time();
 
         $diff = $now_local - $comment_time_local;
         $time_ago = $diff < 5 ? 'just now' : human_time_diff($comment_time_local, $now_local) . ' ago';
@@ -453,13 +453,21 @@ function robodesk_customize_ticket_response($response, $post, $request)
     $ticket_number = 'TCKT-' . str_pad($ticket_id, 3, '0', STR_PAD_LEFT);
 
 
-    $local_time = get_date_from_gmt($post->post_date_gmt);
+    $post_timestamp = strtotime($post->post_date_gmt . ' UTC');
 
-    // Get the UNIX timestamp of the local time
-    $post_timestamp = strtotime($local_time);
+    // Use the last reply timestamp if available
+    $formatted_comments = robodesk_get_formatted_comments($post->ID);
+    if (!empty($formatted_comments)) {
+        $last_comment_utc = $formatted_comments[0]['date_utc'] ?? null;
+        if ($last_comment_utc) {
+            $last_reply_ts = strtotime($last_comment_utc);
+            if ($last_reply_ts) {
+                $post_timestamp = $last_reply_ts;
+            }
+        }
+    }
 
-    // Get the current time in site's timezone
-    $current_timestamp = current_time('timestamp');
+    $current_timestamp = time();
 
     // Get the human-readable time difference
     $time_diff = human_time_diff($post_timestamp, $current_timestamp);
@@ -481,7 +489,7 @@ function robodesk_customize_ticket_response($response, $post, $request)
     }
     $last_reply =  get_post_meta($post->ID, 'rbd_last_reply_id', true);
 
-    $formatted_comments = robodesk_get_formatted_comments($post->ID);
+    // $formatted_comments already fetched above
 
     $total_comments = get_comments([
         'post_id'      => $post->ID,
@@ -577,7 +585,11 @@ function robodesk_handle_tickets_webhook(WP_REST_Request $request)
             delete_user_meta($author, 'robodesk_openai_conversation_id');
             wp_set_object_terms($ticket, 'medium', 'robodesk_ticket_priority', false);
 
-            $assigned = auto_assign_ticket_to_support_staff();
+            $assigned = false;
+            $settings = get_option('robodesk_advanced_settings', []);
+            if (!empty($settings['enable_auto_assign'])) {
+                $assigned = auto_assign_ticket_to_support_staff();
+            }
 
             update_post_meta($ticket, 'ticket_assignee', $assigned);
             robodesk_store_ticket_assignee_id($ticket, $assigned);

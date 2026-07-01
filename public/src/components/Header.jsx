@@ -6,6 +6,8 @@ import { sendReply } from '../utils/modules';
 import { useAppData } from '../utils/AppDataContext';
 import { createTicket } from "../utils/modules";
 
+let staffFetched = false;
+
 const Header = ({ logo, onClose, setActiveTab, setShowLogin, updateSelectedTicket }) => {
   const [talkToHuman, setTalkToHuman] = useState(false);
   const [messageCount, setMessageCount] = useState(0);
@@ -22,6 +24,10 @@ const Header = ({ logo, onClose, setActiveTab, setShowLogin, updateSelectedTicke
   };
 
   const fetchApiKey = async () => {
+    if (!window.robodeskData?.robodesk_addon_active) {
+      setTalkToHuman(false);
+      return;
+    }
     try {
       const response = await fetch("/wp-json/robodesk-bot/v1/widget-config");
       const data = await response.json();
@@ -37,6 +43,8 @@ const Header = ({ logo, onClose, setActiveTab, setShowLogin, updateSelectedTicke
   };
 
   const fetchDefaultStaff = async () => {
+    if (staffFetched) return;
+    staffFetched = true;
     try {
       const response = await fetch("/wp-json/robodesk/selected/staff");
       const data = await response.json();
@@ -191,6 +199,11 @@ const Header = ({ logo, onClose, setActiveTab, setShowLogin, updateSelectedTicke
   };
 
   const sendWhatsappMessageClick = async() => {
+    if (!window.robodeskData?.robodesk_addon_active) {
+      setSendWhatsappMessage(false);
+      setWhatsappPhone(null);
+      return;
+    }
     try {
       const response = await fetch("/wp-json/robodesk-bot/v1/wa-settings");
       const data = await response.json();
