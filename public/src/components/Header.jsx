@@ -15,6 +15,10 @@ const Header = ({ logo, onClose, setActiveTab, setShowLogin, updateSelectedTicke
   const [selectedStaff, setSelectedStaff] = useState(null);
   const { loggedinContext, loggedInUsrId, refreshTickets } = useAppData();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const canLoadWidgetConfig = Boolean(
+    window.robodeskData?.robodesk_addon_active &&
+      window.robodeskData?.robodesk_ai_bot_active,
+  );
   // null = unknown, true = available, false = unavailable
   const [sendWhatsappMessage, setSendWhatsappMessage] = useState(null);
   const [whatsappPhone, setWhatsappPhone] = useState(null);
@@ -24,7 +28,7 @@ const Header = ({ logo, onClose, setActiveTab, setShowLogin, updateSelectedTicke
   };
 
   const fetchApiKey = async () => {
-    if (!window.robodeskData?.robodesk_addon_active) {
+    if (!canLoadWidgetConfig) {
       setTalkToHuman(false);
       return;
     }
@@ -177,7 +181,7 @@ const Header = ({ logo, onClose, setActiveTab, setShowLogin, updateSelectedTicke
   };
 
   const sendWhatsappMessageClick = async() => {
-    if (!window.robodeskData?.robodesk_addon_active) {
+    if (!canLoadWidgetConfig) {
       setSendWhatsappMessage(false);
       setWhatsappPhone(null);
       return;
@@ -212,7 +216,11 @@ const Header = ({ logo, onClose, setActiveTab, setShowLogin, updateSelectedTicke
 
   useEffect(() => {
     fetchDefaultStaff();
-    fetchApiKey();
+    if (canLoadWidgetConfig) {
+      fetchApiKey();
+    } else {
+      setTalkToHuman(false);
+    }
     // Check WhatsApp availability on mount
     sendWhatsappMessageClick();
     const saved = sessionStorage.getItem(CHAT_KEY);

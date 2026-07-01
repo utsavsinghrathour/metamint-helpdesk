@@ -48,6 +48,10 @@ export default function RobodeskBotChatWidgetMain({
     widgetConfig?.botProfileImage ||
     widgetConfig?.bot_profile_image ||
     "";
+  const canLoadWidgetConfig = Boolean(
+    window.robodeskData?.robodesk_addon_active &&
+      window.robodeskData?.robodesk_ai_bot_active,
+  );
   const [enabled, setEnabled] = useState(true);
   const [AIMode, setAIMode] = useState(activeAIMode || "");
   const [open, setOpen] = useState(false);
@@ -147,7 +151,7 @@ export default function RobodeskBotChatWidgetMain({
   };
 
   const fetchApiKey = async () => {
-    if (!window.robodeskData?.robodesk_addon_active) return;
+    if (!canLoadWidgetConfig) return;
     console.log("fetchApiKey");
     try {
       const response = await wp.apiFetch({
@@ -176,7 +180,9 @@ export default function RobodeskBotChatWidgetMain({
   }, [messages]);
 
   useEffect(() => {
-    fetchApiKey();
+    if (canLoadWidgetConfig) {
+      fetchApiKey();
+    }
   }, []);
 
   // Listen for ticket creation events
