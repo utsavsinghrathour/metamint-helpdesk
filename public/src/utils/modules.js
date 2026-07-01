@@ -1,5 +1,5 @@
 //create ticket
-export const createTicket = async (userId, title, message = "") => {
+export const createTicket = async (userId, title, message = "", createdAt = null) => {
   const webhookUrl = "/wp-json/chat/v1/tickets";
 
   const ticketData = {
@@ -8,6 +8,7 @@ export const createTicket = async (userId, title, message = "") => {
       title: title,
       description: message,
       uid: userId,
+      ...(createdAt ? { created_at: createdAt } : {}),
     },
   };
 
@@ -119,6 +120,7 @@ export async function sendReply(
   img = false,
   isBotResponse = false,
   signal = undefined,
+  createdAt = null,
 ) {
   const payload = {
     event: "replies.receive",
@@ -128,6 +130,7 @@ export async function sendReply(
       message: message,
       image: img,
       is_bot_response: isBotResponse,
+      ...(createdAt ? { created_at: createdAt } : {}),
     },
   };
 

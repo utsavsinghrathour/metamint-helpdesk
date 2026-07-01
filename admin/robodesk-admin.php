@@ -270,6 +270,10 @@ function robodesk_enqueue_tailwind_and_styles()
 
     // Enqueue Font Awesome for icons
     // phpcs:disable PluginCheck.CodeAnalysis.EnqueuedResourceOffloading.OffloadedContent
+    add_action('wp_head', function () {
+        echo '<link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>';
+        echo '<link rel="preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">';
+    }, 1);
     wp_enqueue_style(
         'font-awesome',
         'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css',
@@ -282,6 +286,8 @@ function robodesk_enqueue_tailwind_and_styles()
     wp_localize_script('robodesk-dashboard-script', 'robodeskAjax', [
         'ajaxurl' => admin_url('admin-ajax.php'),
         'ajax_url' => admin_url('admin-ajax.php'), // Backward compatibility
+        'rest_url' => rest_url(),
+        'rest_nonce' => wp_create_nonce('wp_rest'),
         'nonces' => [
             'imap_settings' => wp_create_nonce('robodesk_imap_settings_action'),
             'email_template' => wp_create_nonce('robodesk_email_template_action'),
@@ -299,6 +305,7 @@ function robodesk_enqueue_tailwind_and_styles()
             'get_ticket_replies' => wp_create_nonce('robodesk_get_ticket_replies_action'),
             'add_ticket_note' => wp_create_nonce('robodesk_add_ticket_note_action'),
             'get_ticket_notes' => wp_create_nonce('robodesk_get_ticket_notes_action'),
+            'get_ticket_replies_and_notes' => wp_create_nonce('robodesk_get_ticket_replies_and_notes_action'),
             'fetch_emails' => wp_create_nonce('robodesk_fetch_emails_action'),
             // Slack Integration Nonces
             'slack_status' => wp_create_nonce('robodesk_slack_status_action'),
