@@ -286,6 +286,7 @@ function robodesk_enqueue_scripts()
                 'robodesk_bot_profile_image' => esc_url(get_option('robodesk_bot_profile_image', '')),
                 'robodesk_bot_title_name' => get_option('robodesk_bot_title_name', ''),
                 'robodesk_addon_active' => defined('ROBODESK_ADDON_VERSION'),
+                'robodesk_ai_bot_active' => get_option('robodesk_addon_ai_bot_status', 'inactive') === 'active',
             ]
         );
 
