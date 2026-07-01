@@ -168,6 +168,8 @@ export default function RobodeskBotChatWidgetMain({
   };
 
   const fetchApiKey = async () => {
+    if (!window.robodeskData?.robodesk_addon_active) return;
+    console.log("fetchApiKey");
     try {
       const response = await wp.apiFetch({
         path: `/robodesk-bot/v1/widget-config`,

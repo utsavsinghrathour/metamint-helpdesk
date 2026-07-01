@@ -616,7 +616,8 @@ function robodesk_save_advanced_settings()
         'enable_notifications',
         'enable_customer_portal',
         'max_file_upload_size',
-        'reply_unseen_email_minutes'
+        'reply_unseen_email_minutes',
+        'polling_interval',
     ];
 
     $sanitized_settings = [];
@@ -641,6 +642,13 @@ function robodesk_save_advanced_settings()
             if ($value < 0 || $value > 1440) {
                 $results[$key] = ['status' => 'error', 'message' => 'Invalid reply email minutes (must be 0–1440)'];
                 continue;
+            }
+            $sanitized_settings[$key] = $value;
+        } elseif ($key === 'polling_interval') {
+            $value = absint($settings[$key]);
+            $allowed_intervals = [15, 30, 45, 60, 120];
+            if (!in_array($value, $allowed_intervals)) {
+                $value = 30;
             }
             $sanitized_settings[$key] = $value;
         } else {

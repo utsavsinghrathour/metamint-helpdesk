@@ -1431,7 +1431,8 @@ function showPage(pageName, fromClick = false) {
     resetTicketComposeEditors();
     loadTicketDetail();
   } else if (pageName === "settings") {
-    showSettingsTab("basic");
+    const settingsParams = new URLSearchParams(window.location.search);
+    showSettingsTab(settingsParams.get("settings_tab") || "basic");
   } else if (pageName === "dashboard") {
     loadDashboardTickets();
   }
@@ -1457,6 +1458,8 @@ function isValidEmail(email) {
 
 // Ticket detail functions
 function viewTicket(ticketId) {
+  _rbd_firstTicketScroll = true;
+
   // Convert ticketId to number to ensure type consistency
   ticketId = parseInt(ticketId, 10);
 
@@ -1936,6 +1939,11 @@ function showTicketTab(tabName) {
 
 // Settings functions
 function showSettingsTab(tabName) {
+  // Update URL so refresh stays on the same tab
+  const url = new URL(window.location);
+  url.searchParams.set("settings_tab", tabName);
+  window.history.replaceState({}, "", url);
+
   // Update tab buttons
   document.querySelectorAll(".settings-tab").forEach((tab) => {
     tab.classList.remove("active");
@@ -3401,8 +3409,14 @@ function renderReplies(replies) {
     })
     .join("");
 
-  // Scroll to bottom of the page
-  window.scrollTo({ top: document.body.scrollHeight, behavior: "smooth" });
+  // Scroll to send-reply-btn on first ticket load only
+  if (_rbd_firstTicketScroll) {
+    _rbd_firstTicketScroll = false;
+    const btn = document.getElementById("send-reply-btn");
+    if (btn) {
+      btn.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+  }
 }
 
 function closeTicket() {
@@ -4076,6 +4090,7 @@ let dashboardRefreshInterval = null;
 let notificationCount = 0;
 let notificationItems = [];
 let _notifFirstFetch = true;
+let _rbd_firstTicketScroll = true;
 let shouldRefreshTicketsPage = false;
 let lastTicketsPageReloadAt = 0;
 
@@ -4286,6 +4301,7 @@ function fetchNotifications() {
       updateNotificationBadge(notificationCount);
 
       var hasNewOrUpdatedNotification = notificationCount > prevCount;
+      var isForCurrentTicket = false;
       if (!hasNewOrUpdatedNotification && prevCount > 0) {
         for (var i = 0; i < notificationItems.length; i++) {
           var newItem = notificationItems[i];
@@ -4305,18 +4321,18 @@ function fetchNotifications() {
         }
       }
 
-      if (hasNewOrUpdatedNotification && !_notifFirstFetch) {
-        const audioUrl =
-          typeof robodeskNotificationSound !== "undefined"
-            ? robodeskNotificationSound
-            : null;
-        if (audioUrl) {
-          const audio = new Audio(audioUrl);
-          audio.play().catch((err) => {
-            console.warn("Autoplay blocked by browser:", err);
-          });
+      if (hasNewOrUpdatedNotification && !_notifFirstFetch && currentPage !== "ticket-detail") {
+          const audioUrl =
+            typeof robodeskNotificationSound !== "undefined"
+              ? robodeskNotificationSound
+              : null;
+          if (audioUrl) {
+            const audio = new Audio(audioUrl);
+            audio.play().catch((err) => {
+              console.warn("Autoplay blocked by browser:", err);
+            });
+          }
         }
-      }
       _notifFirstFetch = false;
 
       const dropdown = document.getElementById("notification-dropdown");
@@ -4639,7 +4655,7 @@ function startRepliesPolling() {
         }
       })
       .catch(() => {});
-  }, 30000);
+  }, (typeof robodeskAdvancedSettings !== "undefined" ? robodeskAdvancedSettings.polling_interval : 30) * 1000);
 }
 
 function stopRepliesPolling() {
@@ -4651,7 +4667,7 @@ function stopRepliesPolling() {
 
 function startNotificationPolling() {
   if (notificationPollInterval) return;
-  notificationPollInterval = setInterval(fetchNotifications, 30000);
+  notificationPollInterval = setInterval(fetchNotifications, (typeof robodeskAdvancedSettings !== "undefined" ? robodeskAdvancedSettings.polling_interval : 30) * 1000);
 }
 
 function stopNotificationPolling() {

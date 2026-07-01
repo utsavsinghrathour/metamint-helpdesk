@@ -285,6 +285,7 @@ function robodesk_enqueue_scripts()
                 // Bot configuration for avatar/title used in ticket/chat rendering
                 'robodesk_bot_profile_image' => esc_url(get_option('robodesk_bot_profile_image', '')),
                 'robodesk_bot_title_name' => get_option('robodesk_bot_title_name', ''),
+                'robodesk_addon_active' => defined('ROBODESK_ADDON_VERSION'),
             ]
         );
 
@@ -324,6 +325,11 @@ function robodesk_enqueue_scripts()
 
             ],
         ));
+
+        // Supply wpApiSettings for @wordpress/api-fetch nonce middleware
+        if (!wp_script_is('wp-api', 'enqueued')) {
+            wp_enqueue_script('wp-api');
+        }
 
         // Enqueue React styles
         wp_enqueue_style(

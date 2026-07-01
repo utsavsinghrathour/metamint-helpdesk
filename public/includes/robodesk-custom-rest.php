@@ -1360,6 +1360,14 @@ function robodesk_handle_ticket_creation($data)
 
     $response_data = robodesk_build_ticket_response_data($ticket, $user_object, $reply_id);
 
+    // Auto-assign if enabled in Advanced Settings
+    $settings = get_option('robodesk_advanced_settings', []);
+    if (!empty($settings['enable_auto_assign'])) {
+        $assigned = auto_assign_ticket_to_support_staff();
+        update_post_meta($ticket, 'ticket_assignee', $assigned);
+        robodesk_store_ticket_assignee_id($ticket, $assigned);
+    }
+
     robodesk_notify_ticket_created($ticket, 'chat');
 
     return rest_ensure_response(array(
