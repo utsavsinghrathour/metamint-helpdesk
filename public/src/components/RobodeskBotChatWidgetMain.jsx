@@ -345,13 +345,13 @@ export default function RobodeskBotChatWidgetMain({
 
           // update loader text
           if (eventName.startsWith("thinking")) {
-            console.log("Received thinking event:", eventName);
+            // console.log("Received thinking event:", eventName);
             setLoadingText(parsed.message);
           }
 
           // final message
           if (eventName === "Final Response:") {
-            console.log("Received final response event:", parsed);
+            // console.log("Received final response event:", parsed);
             let finalText = "";
 
             if (typeof parsed.message === "string") {
@@ -369,7 +369,7 @@ export default function RobodeskBotChatWidgetMain({
             } else {
               finalText = "";
             }
-            console.log("Final parsed response:", finalText);
+            // console.log("Final parsed response:", finalText);
             setMessages((m) => [
               ...m,
               {
