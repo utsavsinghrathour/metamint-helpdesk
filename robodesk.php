@@ -2325,3 +2325,13 @@ function robodesk_disable_jquery_migrate_logging($scripts)
     }
 }
 add_action('wp_default_scripts', 'robodesk_disable_jquery_migrate_logging');
+
+add_filter( 'show_admin_bar', 'robodesk_show_admin_bar' );
+
+/**
+ * Hide the WordPress admin bar for everyone except administrators Support Managers/Support Staff.
+ */
+function robodesk_show_admin_bar( $show ) {
+    return current_user_can( 'administrator' )
+        || current_user_can( 'robodesk_access_dashboard' );
+}
