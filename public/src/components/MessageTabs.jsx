@@ -11,7 +11,6 @@ import Preloader from "../images/preloader.svg";
 import { useAppData } from "../utils/AppDataContext";
 import defaultLogo from "../images/robodesk-logo.png";
 // import ChangePassword from './ChangePassword';
-import { sseManager } from "../Hooks/sseManager";
 
 const SingleTicket = React.lazy(() => import("./SingleTicket"));
 
@@ -109,19 +108,6 @@ const MessageTabs = ({
 
   const image_urls = window.robodeskData?.imageUrls || {};
   const messageWrapperRef = useRef(null);
-
-  const beep = useRef(new Audio(wpAuth.notificationSound));
-
-  useEffect(() => {
-    if (!loggedInUsrId) {
-      return;
-    }
-
-    if (beep.current) {
-      beep.current.volume = 1.0;
-      beep.current.preload = "auto";
-    }
-  }, []);
 
   useEffect(() => {
     setSingleTicketPage(false);

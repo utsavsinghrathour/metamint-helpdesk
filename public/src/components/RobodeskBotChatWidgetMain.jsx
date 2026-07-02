@@ -209,7 +209,7 @@ export default function RobodeskBotChatWidgetMain({
     if (rootRef.current) {
       rootRef.current.scrollTop = rootRef.current.scrollHeight;
     }
-  }, [messages]);
+  }, [messages, isStreaming, loadingText]);
 
   if (!enabled) return null;
 
@@ -220,7 +220,8 @@ export default function RobodeskBotChatWidgetMain({
     const q = input.trim();
     if (!q) return;
 
-    setMessages((m) => [...m, { role: "user", text: q }]);
+    const now = new Date().toISOString();
+    setMessages((m) => [...m, { role: "user", text: q, timestamp: now }]);
     setInput("");
     window.dispatchEvent(
       new CustomEvent("robodesk:messageSent", {
@@ -263,6 +264,7 @@ export default function RobodeskBotChatWidgetMain({
           data: j.data || null,
           ui: j.ui || { suggestions: [], actions: [] },
           intent: j.intent || "",
+          timestamp: new Date().toISOString(),
         },
       ]);
     } catch (e) {
@@ -277,7 +279,8 @@ export default function RobodeskBotChatWidgetMain({
     const q = input.trim();
     if (!q) return;
 
-    setMessages((m) => [...m, { role: "user", text: q }]);
+    const now = new Date().toISOString();
+    setMessages((m) => [...m, { role: "user", text: q, timestamp: now }]);
     setInput("");
     window.dispatchEvent(
       new CustomEvent("robodesk:messageSent", {
@@ -377,6 +380,7 @@ export default function RobodeskBotChatWidgetMain({
                 data: parsed.data || null,
                 ui: parsed.ui || { suggestions: [], actions: [] },
                 intent: parsed.intent || "",
+                timestamp: new Date().toISOString(),
               },
             ]);
 
@@ -486,7 +490,9 @@ export default function RobodeskBotChatWidgetMain({
                           fontSize: "10px",
                         }}
                       >
-                        {new Date().toLocaleTimeString([], {
+                        {new Date(
+                          m.timestamp || new Date().toISOString()
+                        ).toLocaleTimeString([], {
                           hour: "2-digit",
                           minute: "2-digit",
                         })}

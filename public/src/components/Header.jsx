@@ -121,7 +121,8 @@ const Header = ({ logo, onClose, setActiveTab, setShowLogin, updateSelectedTicke
     }
 
     try {
-      const result = await createTicket(loggedInUsrId, ticketTitle, ticketDescription);
+      const firstUserTimestamp = userMessages[0]?.timestamp || null;
+      const result = await createTicket(loggedInUsrId, ticketTitle, ticketDescription, firstUserTimestamp);
 
       const newTicket = {
         id: result.data.id,
@@ -138,7 +139,20 @@ const Header = ({ logo, onClose, setActiveTab, setShowLogin, updateSelectedTicke
         messages: [],
       };
 
-      // Add a single transition reply the first time a human ticket is created from the chat
+      if (messagesExceptFirst.length > 0) {
+        for (const message of messagesExceptFirst) {
+          const messageText = message.text || message.message || '';
+          if (!messageText.trim()) continue;
+
+          if (message.role === 'user') {
+            await sendReply(newTicket.id, loggedInUsrId, messageText, false, false, undefined, message.timestamp);
+          } else if (message.role === 'assistant') {
+            await sendReply(newTicket.id, selectedStaff || loggedInUsrId, messageText, false, true, undefined, message.timestamp);
+          }
+        }
+      }
+
+      // Add a single transition reply at the end so it follows the original chat order
       if (newTicket.id) {
         await sendReply(
           newTicket.id,
@@ -147,19 +161,6 @@ const Header = ({ logo, onClose, setActiveTab, setShowLogin, updateSelectedTicke
           false,
           true
         );
-      }
-
-      if (messagesExceptFirst.length > 0) {
-        for (const message of messagesExceptFirst) {
-          const messageText = message.text || message.message || '';
-          if (!messageText.trim()) continue;
-
-          if (message.role === 'user') {
-            await sendReply(newTicket.id, loggedInUsrId, messageText);
-          } else if (message.role === 'assistant') {
-            await sendReply(newTicket.id, selectedStaff || loggedInUsrId, messageText, false, true);
-          }
-        }
       }
 
       refreshTickets();
