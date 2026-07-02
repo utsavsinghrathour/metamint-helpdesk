@@ -411,39 +411,66 @@ function robodesk_stream($request)
 
             $ticket_id = (int) $request->get_param('post_id');
             if ($ticket_id > 0) {
-                $ticket_status = get_post_meta($ticket_id, '_robodesk_ticket_status', true);
-                $last_comment_client = $request->get_param('last_id');
-                $new_conversations = robodesk_live_conversations($ticket_id, $last_comment_client, $user_id);
-                if (!empty($new_conversations)) {
-                    foreach ($new_conversations as $c) {
-                        echo "event: new_comment\n";
-                        echo "data: " . json_encode($c) . "\n\n";
-                        flush();
+                $last_comment_client = (int) $request->get_param('last_id');
+                $last_seen_comment_id = $last_comment_client;
+                $last_ticket_status = '';
+
+                while (!connection_aborted()) {
+                    $ticket_status = get_post_meta($ticket_id, '_robodesk_ticket_status', true);
+
+                    $new_conversations = robodesk_live_conversations($ticket_id, $last_seen_comment_id, $user_id);
+                    if (!empty($new_conversations)) {
+                        foreach ($new_conversations as $c) {
+                            $comment_id = isset($c['id']) ? (int) $c['id'] : 0;
+                            if ($comment_id > $last_seen_comment_id) {
+                                $last_seen_comment_id = $comment_id;
+                            }
+
+                            echo "event: new_comment\n";
+                            echo "data: " . json_encode($c) . "\n\n";
+                            flush();
+                        }
+                        update_post_meta($ticket_id, 'rbd_all_seen', 'yes');
                     }
-                    update_post_meta($ticket_id, 'rbd_all_seen', 'yes');
-                }
 
-                $my_own_conversations = robodesk_my_own_conversations($ticket_id, $last_comment_client);
+                    $my_own_conversations = robodesk_my_own_conversations($ticket_id, $last_seen_comment_id);
+                    if (!empty($my_own_conversations)) {
+                        foreach ($my_own_conversations as $moc) {
+                            $comment_id = isset($moc['id']) ? (int) $moc['id'] : 0;
+                            if ($comment_id > $last_seen_comment_id) {
+                                $last_seen_comment_id = $comment_id;
+                            }
 
-                if (!empty($my_own_conversations)) {
-                    foreach ($my_own_conversations as $moc) {
-                        echo "event: new_mine_comment\n";
-                        echo "data: " . json_encode($moc) . "\n\n";
-                        flush();
+                            echo "event: new_mine_comment\n";
+                            echo "data: " . json_encode($moc) . "\n\n";
+                            flush();
+                        }
                     }
-                }
 
-                if ($ticket_status == 'closed') {
-                    echo "event: ticket_closed\n";
-                    echo "data: " . json_encode(array('reason' => 'ticket_closed')) . "\n\n";
+                    if ($ticket_status !== $last_ticket_status) {
+                        $last_ticket_status = $ticket_status;
+
+                        if ($ticket_status == 'closed') {
+                            echo "event: ticket_closed\n";
+                            echo "data: " . json_encode(array('reason' => 'ticket_closed')) . "\n\n";
+                            flush();
+                        }
+
+                        if ($ticket_status == 'open') {
+                            echo "event: ticket_open\n";
+                            echo "data: " . json_encode(array('reason' => 'ticket_open')) . "\n\n";
+                            flush();
+                        }
+                    }
+
+                    echo ": heartbeat\n\n";
                     flush();
-                }
 
-
-                if ($ticket_status == 'open') {
-                    echo "event: ticket_open\n";
-                    echo "data: " . json_encode(array('reason' => 'ticket_open')) . "\n\n";
-                    flush();
+                    if (function_exists('usleep')) {
+                        usleep(5000000);
+                    } else {
+                        break;
+                    }
                 }
             }
 
@@ -455,20 +482,41 @@ function robodesk_stream($request)
             if ($ticket_id == 0) {
 
                 $last_ticket_id = (int) $request->get_param('last_id');
-                $new_ticket = robodesk_get_new_tickets($last_ticket_id, $user_id);
-                if ($last_ticket_id > 0 && !empty($new_ticket)) {
-                    foreach ($new_ticket as $ticket) {
-                        echo "event: new_ticket\n";
-                        echo "data: " . json_encode($ticket) . "\n\n";
+                $last_seen_ticket_id = $last_ticket_id;
+
+                echo "retry: 5000\n\n";
+                flush();
+
+                while (!connection_aborted()) {
+                    $new_ticket = robodesk_get_new_tickets($last_seen_ticket_id, $user_id);
+                    if (!empty($new_ticket)) {
+                        foreach ($new_ticket as $ticket) {
+                            $nt_id = isset($ticket['id']) ? (int) $ticket['id'] : 0;
+                            if ($nt_id > $last_seen_ticket_id) {
+                                $last_seen_ticket_id = $nt_id;
+                            }
+
+                            echo "event: new_ticket\n";
+                            echo "data: " . json_encode($ticket) . "\n\n";
+                            flush();
+                        }
+                    }
+
+                    $notifications = robodesk_get_new_notifications($user_id);
+                    if (!empty($notifications)) {
+                        echo "event: new_notification\n";
+                        echo "data: " . json_encode($notifications) . "\n\n";
                         flush();
                     }
-                }
 
-                $notifications = robodesk_get_new_notifications($user_id);
-                if (!empty($notifications)) {
-                    echo "event: new_notification\n";
-                    echo "data: " . json_encode($notifications) . "\n\n";
+                    echo ": heartbeat\n\n";
                     flush();
+
+                    if (function_exists('usleep')) {
+                        usleep(5000000);
+                    } else {
+                        break;
+                    }
                 }
             }
 
@@ -482,8 +530,6 @@ function robodesk_stream($request)
             exit;
     }
 
-    echo "retry: 6000\n";
-    flush();
     exit;
 }
 
@@ -1279,6 +1325,7 @@ function robodesk_handle_ticket_creation($data)
     $title = sanitize_text_field($data['data']['title'] ?? '');
     $content = sanitize_textarea_field($data['data']['description'] ?? '');
     $author = sanitize_text_field($data['data']['uid'] ?? '');
+    $timestamp = $data['data']['timestamp'] ?? null;
 
     $ticket = wp_insert_post(array(
         'post_type' => 'robodesk_ticket',
@@ -1339,7 +1386,7 @@ function robodesk_handle_ticket_creation($data)
     }
 
     // Add initial comment
-    $comment_id = wp_insert_comment(array(
+    $comment_data = array(
         'comment_post_ID' => $ticket,
         'user_id' => $author,
         'comment_content' => $title,
@@ -1347,7 +1394,15 @@ function robodesk_handle_ticket_creation($data)
         'comment_author_email' => $email_address,
         'comment_approved' => 1,
         'comment_type' => 'ticket_replies'
-    ));
+    );
+
+    if ($timestamp) {
+        $mysql_date = date('Y-m-d H:i:s', strtotime($timestamp));
+        $comment_data['comment_date'] = $mysql_date;
+        $comment_data['comment_date_gmt'] = get_gmt_from_date($mysql_date);
+    }
+
+    $comment_id = wp_insert_comment($comment_data);
 
     if (!is_wp_error($comment_id)) {
         add_comment_meta($comment_id, 'comment_source', 'chat', true);
@@ -1497,8 +1552,7 @@ function robodesk_handle_reply_receive($data)
         return new WP_Error('user_not_found', 'User not found', array('status' => 404));
     }
 
-    // Add reply to ticket
-    $comment_id = wp_insert_comment(array(
+    $comment_data = array(
         'comment_post_ID' => $ticket_id,
         'comment_author' => $user_object->display_name,
         'comment_author_email' => $user_object->user_email,
@@ -1506,7 +1560,17 @@ function robodesk_handle_reply_receive($data)
         'comment_content' => $reply,
         'comment_approved' => 1,
         'comment_type' => 'ticket_replies'
-    ));
+    );
+
+    $timestamp = $data['data']['timestamp'] ?? null;
+    if ($timestamp) {
+        $mysql_date = date('Y-m-d H:i:s', strtotime($timestamp));
+        $comment_data['comment_date'] = $mysql_date;
+        $comment_data['comment_date_gmt'] = get_gmt_from_date($mysql_date);
+    }
+
+    // Add reply to ticket
+    $comment_id = wp_insert_comment($comment_data);
 
     if (!$comment_id) {
         return new WP_Error('comment_failed', 'Failed to add reply', array('status' => 500));

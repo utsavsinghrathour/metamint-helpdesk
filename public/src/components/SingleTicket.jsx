@@ -10,7 +10,6 @@ import "../styles/MessageTabs.css";
 import { sendReply } from "../utils/modules";
 import { useAppData } from "../utils/AppDataContext";
 import DefaultAvatar from "../images/default-avatar.jpg";
-
 import { sseManager } from "../Hooks/sseManager";
 
 // Helper to escape HTML in plain text
@@ -270,9 +269,9 @@ const SingleTicket = ({
   const configuredBotName =
     window.robodeskData?.robodesk_bot_title_name || "Bot";
   const previousScrollHeight = useRef(0);
-  const beep = useRef(new Audio(wpAuth.notificationSound));
+  const beep = useRef(null);
   const isAtTop = useRef(false);
-  const hasConnected = useRef(false);
+  const [streamCursorId, setStreamCursorId] = useState(null);
   const {
     loggedinContext,
     loggedInUsrId,
@@ -296,6 +295,7 @@ const SingleTicket = ({
 
   useEffect(() => {
     setSingleTicketPage(true);
+    sseManager.disconnect();
 
     return () => {
       setSingleTicketPage(false);
@@ -309,13 +309,11 @@ const SingleTicket = ({
   }, []);
 
   useEffect(() => {
-    beep.current.load();
+    if (!beep.current) {
+      beep.current = new Audio(wpAuth.notificationSound);
+    }
 
-    return () => {
-      if (hasConnected.current) {
-        hasConnected.current = false;
-      }
-    };
+    beep.current.load();
   }, []);
 
   const fetchComments = async (fetchOffset = 0, prepend = false) => {
@@ -421,15 +419,17 @@ const SingleTicket = ({
 
   const handleNewComment = (commentData, play = true) => {
     updateTicketNotifications(ticket.id, "yes");
+
+    let isNew = false;
+
     setChatMessages((prev) => {
       const messageExists = prev.some((msg) => msg.id === commentData.id);
 
       if (messageExists) {
         return prev;
       }
-      if (play) {
-        beep.current.play();
-      }
+
+      isNew = true;
 
       console.log("The author id is ", commentData.author_id);
       console.log("The actual authorid is", loggedInUserId);
@@ -475,6 +475,10 @@ const SingleTicket = ({
 
       return sorted;
     });
+
+    if (isNew && play) {
+      beep.current?.play();
+    }
   };
 
   const formatTicketComments = (comments) => {
@@ -519,6 +523,8 @@ const SingleTicket = ({
   // Initial fetch to get total comments and latest messages
   useEffect(() => {
     const fetchInitialComments = async () => {
+      setStreamCursorId(null);
+
       // If we have cached messages, display them immediately
       const cached = getCachedMessages(ticket.id);
       if (cached && cached.length > 0) {
@@ -588,6 +594,15 @@ const SingleTicket = ({
     fetchInitialComments();
   }, [ticket.id]);
 
+  useEffect(() => {
+    if (initialLoadComplete && !streamCursorId && chatMessages.length > 0) {
+      const latestMessageId = chatMessages[chatMessages.length - 1]?.id;
+      if (latestMessageId) {
+        setStreamCursorId(latestMessageId);
+      }
+    }
+  }, [initialLoadComplete, chatMessages, streamCursorId]);
+
   // Handle scrolling to load older messages
 
   useEffect(() => {
@@ -640,53 +655,52 @@ const SingleTicket = ({
     }
   }, [chatMessages.length]);
 
-  const lastMessageId = useMemo(() => {
-    if (!chatMessages || chatMessages.length === 0) return false;
-    return chatMessages[chatMessages.length - 1].id;
-  }, [chatMessages]);
-
   const url = useMemo(() => {
     if (!ticket?.id) return null;
     if (!loggedinContext && !loggedInUsrId) return null;
-    if (!lastMessageId) return null;
-    return `/wp-json/robodesk/v1/stream/comments/${ticket.id}/${lastMessageId}/${loggedInUsrId}`;
-  }, [lastMessageId, ticket.id]);
-
-  const prevUrl = useMemo(() => {
-    if (!ticketsContext[0]?.id) return null;
-    if (!loggedinContext && !loggedInUsrId) return null;
-    return `/wp-json/robodesk/v1/stream/tickets/0/${ticketsContext[0]?.id}/${loggedInUsrId}`;
-  }, [ticketsContext[0]?.id, loggedInUsrId]);
+    if (!streamCursorId) return null;
+    return `/wp-json/robodesk/v1/stream/comments/${ticket.id}/${streamCursorId}/${loggedInUsrId}`;
+  }, [streamCursorId, ticket.id, loggedInUsrId, loggedinContext]);
 
   useEffect(() => {
+    if (!url) return undefined;
+
+    const handleStreamMessage = (handler) => (event) => {
+      try {
+        if (!event.data || event.data === "undefined" || event.data.trim() === "") {
+          return;
+        }
+
+        handler(JSON.parse(event.data));
+      } catch (error) {
+        console.error("Failed to parse SSE payload", error);
+      }
+    };
+
     sseManager.connect(url);
 
-    const unsubscribeNewComment = sseManager.on("new_comment", (data) => {
-      const commentData = data;
+    const unsubscribeNewComment = sseManager.on("new_comment", (commentData) => {
       handleNewComment(commentData);
     });
 
-    const unsubscribeTicketOpen = sseManager.on("ticket_open", (data) => {
+    const unsubscribeNewMineComment = sseManager.on("new_mine_comment", (commentData) => {
+      handleNewComment(commentData, false);
+    });
+
+    const unsubscribeTicketOpen = sseManager.on("ticket_open", () => {
       setTicketClosed(false);
     });
 
-    const unsubscribeTicketClosed = sseManager.on("ticket_closed", (data) => {
+    const unsubscribeTicketClosed = sseManager.on("ticket_closed", () => {
       setTicketClosed(true);
     });
 
-    const unsubscribeNewMineTicket = sseManager.on(
-      "new_mine_comment",
-      (data) => {
-        handleNewComment(data, false);
-      },
-    );
-
     return () => {
       unsubscribeNewComment();
+      unsubscribeNewMineComment();
       unsubscribeTicketOpen();
       unsubscribeTicketClosed();
-      unsubscribeNewMineTicket();
-      sseManager.connect(prevUrl);
+      sseManager.disconnect();
     };
   }, [url]);
 
