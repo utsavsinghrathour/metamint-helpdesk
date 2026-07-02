@@ -1068,7 +1068,7 @@ const SingleTicket = ({
                           className="rd-body-text single-message"
                           style={{ opacity: msg.isPending ? 0.7 : 1 }}
                           dangerouslySetInnerHTML={{
-                            __html: normalizeMessageText(msg.text),
+                            __html: msg.text,
                           }}
                         />
                       ) : (
@@ -1083,7 +1083,7 @@ const SingleTicket = ({
                                 .filter(Boolean)
                                 .join(" ")}
                               dangerouslySetInnerHTML={{
-                                __html: normalizeMessageText(msg.text),
+                                __html: msg.text,
                               }}
                             />
                           )}
