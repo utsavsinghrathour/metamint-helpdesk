@@ -553,6 +553,7 @@ function robodesk_handle_tickets_webhook(WP_REST_Request $request)
         $title    = sanitize_text_field($data['data']['title'] ?? '');
         $content  = sanitize_textarea_field($data['data']['description'] ?? '');
         $author   = sanitize_text_field($data['data']['uid'] ?? '');
+        $timestamp = $data['data']['timestamp'] ?? null;
 
         $ticket = wp_insert_post(array(
             'post_type'   => 'robodesk_ticket',
@@ -593,7 +594,7 @@ function robodesk_handle_tickets_webhook(WP_REST_Request $request)
                 update_post_meta($ticket, '_robodesk_customer_email', $email_address);
             }
 
-            $comment_id = wp_insert_comment(array(
+            $comment_data = array(
                 'comment_post_ID' => $ticket,
                 'user_id'  => $author,
                 'comment_content' => $title,
@@ -601,7 +602,15 @@ function robodesk_handle_tickets_webhook(WP_REST_Request $request)
                 'comment_author_email' => $email_address,
                 'comment_approved' => 1,
                 'comment_type' => 'ticket_replies'
-            ));
+            );
+
+            if ($timestamp) {
+                $mysql_date = date('Y-m-d H:i:s', strtotime($timestamp));
+                $comment_data['comment_date'] = $mysql_date;
+                $comment_data['comment_date_gmt'] = get_gmt_from_date($mysql_date);
+            }
+
+            $comment_id = wp_insert_comment($comment_data);
 
             if (!is_wp_error($comment_id)) {
                 add_comment_meta($comment_id, 'comment_source', 'chat', true);
@@ -697,6 +706,7 @@ function robodesk_handle_tickets_webhook(WP_REST_Request $request)
         $reply     = sanitize_textarea_field($data['data']['message'] ?? '');
         $base64_image = $data['data']['image'] ?? '';
         $is_bot_response = isset($data['data']['is_bot_response']) ? (bool) $data['data']['is_bot_response'] : false;
+        $timestamp = $data['data']['timestamp'] ?? null;
         $user_object =  get_user_by('id', $user_id);
         $user_name = $user_object->display_name;
         $email_address = $user_object->user_email;
@@ -728,7 +738,7 @@ function robodesk_handle_tickets_webhook(WP_REST_Request $request)
         }
 
         // Add reply to ticket
-        $comment_id = wp_insert_comment(array(
+        $comment_data = array(
             'comment_post_ID' => $ticket_id,
             'comment_author' => $user_name,
             'comment_author_email' => $email_address,
@@ -736,7 +746,15 @@ function robodesk_handle_tickets_webhook(WP_REST_Request $request)
             'comment_content' => $content,
             'comment_approved' => 1,
             'comment_type' => 'ticket_replies'
-        ));
+        );
+
+        if ($timestamp) {
+            $mysql_date = date('Y-m-d H:i:s', strtotime($timestamp));
+            $comment_data['comment_date'] = $mysql_date;
+            $comment_data['comment_date_gmt'] = get_gmt_from_date($mysql_date);
+        }
+
+        $comment_id = wp_insert_comment($comment_data);
 
 
         if ($comment_id) {
