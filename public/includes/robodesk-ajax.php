@@ -89,7 +89,6 @@ function robodesk_create_term_if_not_exists($term_name = 'Web', $taxonomy = 'rob
 
 
 add_action('wp_ajax_robodesk_create_new_ticket', 'robodesk_handle_ticket_submission');
-add_action('wp_ajax_nopriv_robodesk_create_new_ticket', 'robodesk_handle_ticket_submission');
 
 function robodesk_handle_ticket_submission()
 {
