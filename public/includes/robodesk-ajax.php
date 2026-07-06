@@ -649,6 +649,17 @@ function robodesk_register_user()
 // Handle Ajax request
 function robodesk_handle_change_password()
 {
+    $ip = isset($_SERVER['REMOTE_ADDR']) ? sanitize_text_field(wp_unslash($_SERVER['REMOTE_ADDR'])) : '0.0.0.0';
+    $rate_key = 'robodesk_reset_rate_' . md5($ip);
+    $attempts = get_transient($rate_key);
+    if ($attempts === false) {
+        $attempts = 0;
+    }
+    if ($attempts >= 5) {
+        wp_send_json_error(['message' => 'Too many password reset attempts. Please try again later.']);
+        wp_die();
+    }
+    set_transient($rate_key, $attempts + 1, HOUR_IN_SECONDS);
 
     check_ajax_referer('password-reset', 'nonce');
     $password  = isset($_POST['password']) ? sanitize_text_field(wp_unslash($_POST['password'])) : '';
