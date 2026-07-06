@@ -618,6 +618,7 @@ function robodesk_save_advanced_settings()
         'max_file_upload_size',
         'reply_unseen_email_minutes',
         'polling_interval',
+        'blocked_ips',
     ];
 
     $sanitized_settings = [];
@@ -651,6 +652,21 @@ function robodesk_save_advanced_settings()
                 $value = 30;
             }
             $sanitized_settings[$key] = $value;
+        } elseif ($key === 'blocked_ips') {
+            $raw = sanitize_textarea_field($settings[$key]);
+            $lines = explode("\n", $raw);
+            $valid_ips = array();
+            foreach ($lines as $line) {
+                $ip = trim($line);
+                if ($ip === '') {
+                    continue;
+                }
+                if (filter_var($ip, FILTER_VALIDATE_IP)) {
+                    $valid_ips[] = $ip;
+                }
+            }
+            $sanitized_settings[$key] = $raw;
+            update_option('robodesk_blocked_ips', $valid_ips, false);
         } else {
             // Sanitize boolean inputs
             $sanitized_settings[$key] = filter_var($settings[$key], FILTER_VALIDATE_BOOLEAN);

@@ -2283,6 +2283,7 @@ jQuery(document).ready(function ($) {
       reply_unseen_email_minutes: unseenEnabled
         ? $("#reply-unseen-email-minutes").val()
         : 0,
+      blocked_ips: $("#blocked-ips").val(),
     };
 
     $.ajax({

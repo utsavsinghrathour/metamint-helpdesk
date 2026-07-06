@@ -773,15 +773,27 @@ $settings_hidden = ($current_tab === 'settings') ? '' : ' hidden';
                                  <?php esc_html_e('Enable customer portal', 'robodesk'); ?>
                              </label>
                          </div>
-                         <div>
-                             <label
-                                 class="block text-sm font-medium text-gray-700"><?php esc_html_e('Maximum file upload size (MB)', 'robodesk'); ?></label>
-                             <input type="number" name="max_file_upload_size"
-                                 value="<?php echo esc_attr($robodesk_advanced_settings['max_file_upload_size']); ?>"
-                                 min="1" max="100"
-                                 class="styled-input mt-1 block w-32 border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
-                         </div>
-                     </div>
+                          <div>
+                              <label
+                                  class="block text-sm font-medium text-gray-700"><?php esc_html_e('Maximum file upload size (MB)', 'robodesk'); ?></label>
+                              <input type="number" name="max_file_upload_size"
+                                  value="<?php echo esc_attr($robodesk_advanced_settings['max_file_upload_size']); ?>"
+                                  min="1" max="100"
+                                  class="styled-input mt-1 block w-32 border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                          </div>
+                          <div>
+                              <label for="blocked-ips"
+                                  class="block text-sm font-medium text-gray-700"><?php esc_html_e('Blocked IPs', 'robodesk'); ?></label>
+                              <p class="text-xs text-gray-500 mb-2">
+                                  <?php esc_html_e('One IP per line. These IPs are blocked from signing up. Add or remove IPs manually.', 'robodesk'); ?>
+                              </p>
+                              <textarea id="blocked-ips" name="blocked_ips" rows="5"
+                                  class="mt-1 block w-full max-w-md border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 font-mono text-sm"><?php
+                                    $robodesk_blocked_ips = get_option('robodesk_blocked_ips', array());
+                                    echo esc_textarea(implode("\n", $robodesk_blocked_ips));
+                                  ?></textarea>
+                          </div>
+                      </div>
                      <hr class="my-6 border-gray-200">
                      <button type="button" id="save-advanced-settings"
                          class="mt-6 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">
