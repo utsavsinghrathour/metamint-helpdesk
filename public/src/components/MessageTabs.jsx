@@ -170,7 +170,7 @@ const MessageTabs = ({
 
     const { scrollTop, scrollHeight, clientHeight } = wrapper;
     if (scrollTop + clientHeight >= scrollHeight) {
-      console.log("now");
+      // console.log("now");
     }
   };
 
