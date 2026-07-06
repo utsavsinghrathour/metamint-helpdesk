@@ -653,13 +653,19 @@ function robodesk_profile_content()
             return;
         }
 
-        $allowed_types = array('image/jpeg', 'image/png', 'image/gif', 'image/svg+xml');
         $max_size = 5 * 1024 * 1024; // 5MB in bytes
 
-        $file_type = isset($_FILES['profile_picture']['type']) ? sanitize_text_field(wp_unslash($_FILES['profile_picture']['type'])) : '';
         $file_size = isset($_FILES['profile_picture']['size']) ? intval(wp_unslash($_FILES['profile_picture']['size'])) : 0;
+        $file_name = isset($_FILES['profile_picture']['name']) ? sanitize_file_name(wp_unslash($_FILES['profile_picture']['name'])) : '';
 
-        if (!in_array($file_type, $allowed_types)) {
+        $allowed_types = array(
+            'jpg|jpeg' => 'image/jpeg',
+            'png'      => 'image/png',
+            'gif'      => 'image/gif',
+            'svg'      => 'image/svg+xml',
+        );
+        $filetype = wp_check_filetype(basename($file_name), $allowed_types);
+        if (!$filetype['type']) {
             echo '<p style="color:red;">Invalid file type. Only JPG, PNG, GIF, and SVG are allowed.</p>';
             return;
         }
