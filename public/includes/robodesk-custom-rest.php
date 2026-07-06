@@ -270,6 +270,33 @@ add_filter('rest_pre_serve_request', function ($value, $result, $request, $serve
 //     }, 10, 4);
 
 
+function robodesk_can_view_ticket(WP_REST_Request $request)
+{
+    if (!is_user_logged_in()) {
+        return false;
+    }
+
+    $user_id = (int) $request->get_param('user_id');
+    $post_id = (int) $request->get_param('post_id');
+
+    if ($user_id !== get_current_user_id()) {
+        return false;
+    }
+
+    $post = get_post($post_id);
+    if (!$post || $post->post_type !== 'robodesk_ticket') {
+        return false;
+    }
+
+    if ((int) $post->post_author === $user_id) {
+        return true;
+    }
+
+    return current_user_can('manage_options')
+        || current_user_can('robodesk_support_staff')
+        || current_user_can('robodesk_support_manager');
+}
+
 /* Public Rest Api registration hooks */
 
 add_action('rest_api_init', function () {
@@ -302,7 +329,9 @@ add_action('rest_api_init', function () {
     register_rest_route('robodesk/selected', '/staff', array(
         'methods' => 'GET',
         'callback' => 'robodesk_handle_selected_staff',
-        'permission_callback' => '__return_true',
+        'permission_callback' => function () {
+            return is_user_logged_in();
+        },
     ));
 
     register_rest_route('robodesk-bot/v1', '/wa-settings', array(
@@ -314,7 +343,7 @@ add_action('rest_api_init', function () {
     register_rest_route('robodesk/v1', '/messaging/(?P<post_id>\d+)(?:/(?P<last_comment_id>\d+))?(?:/(?P<user_id>\d+))?', array(
         'methods' => 'GET',
         'callback' => 'robodesk_live_comments',
-        'permission_callback' => '__return_true',
+        'permission_callback' => 'robodesk_can_view_ticket',
         'args' => array(
             'post_id' => array(
                 'validate_callback' => function ($param) {
@@ -1724,11 +1753,11 @@ function robodesk_custom_lost_password(WP_REST_Request $request)
     $result = retrieve_password($user_login);
 
     if (is_wp_error($result)) {
-        return new WP_Error('reset_failed', $result->get_error_message(), array('status' => 400));
+        rbd_log('Lost password request failed for: ' . $user_login . ' — ' . $result->get_error_message());
     }
 
     return new WP_REST_Response(array(
-        'message' => __('A password reset link has been sent to your email address.', 'robodesk')
+        'message' => __('If the username or email exists, a password reset link has been sent.', 'robodesk')
     ), 200);
 }
 
