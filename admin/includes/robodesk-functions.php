@@ -775,10 +775,15 @@ function robodesk_save_basic_settings()
         $urls[$option_key] = $existing_url;
 
         if (!empty($_FILES[$file_key]['name'])) {
-            // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- type checked against allowlist below
+            // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
             $file = $_FILES[$file_key];
-            $allowed_types = ['image/jpeg', 'image/png', 'image/gif'];
-            if (!in_array($file['type'], $allowed_types)) {
+            $allowed_types = array(
+                'jpg|jpeg' => 'image/jpeg',
+                'png'      => 'image/png',
+                'gif'      => 'image/gif',
+            );
+            $filetype = wp_check_filetype(basename(sanitize_file_name($file['name'])), $allowed_types);
+            if (!$filetype['type']) {
                 $results[$file_key] = ['status' => 'error', 'message' => 'Invalid file type for ' . str_replace('_', ' ', $file_key) . '. Only JPEG, PNG, and GIF are allowed'];
                 continue;
             }
@@ -1246,7 +1251,6 @@ function robodesk_get_ticket_detail()
 
 //for search of username and email in create ticket form
 add_action('wp_ajax_robodesk_user_lookup', 'robodesk_user_lookup');
-add_action('wp_ajax_nopriv_robodesk_user_lookup', 'robodesk_user_lookup');
 
 function robodesk_user_lookup()
 {
