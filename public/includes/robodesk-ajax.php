@@ -590,7 +590,20 @@ add_action('wp_ajax_robodesk_check_email', 'robodesk_check_email');
 add_action('wp_ajax_nopriv_robodesk_check_email', 'robodesk_check_email');
 function robodesk_check_email()
 {
-    // phpcs:ignore WordPress.Security.NonceVerification.Missing
+    check_ajax_referer('robodesk-nonce', 'security');
+
+    $ip = isset($_SERVER['REMOTE_ADDR']) ? sanitize_text_field(wp_unslash($_SERVER['REMOTE_ADDR'])) : '0.0.0.0';
+    $rate_key = 'robodesk_email_check_rate_' . md5($ip);
+    $attempts = get_transient($rate_key);
+    if ($attempts === false) {
+        $attempts = 0;
+    }
+    if ($attempts >= 10) {
+        wp_send_json_error(['message' => 'Too many attempts. Please try again later.']);
+        wp_die();
+    }
+    set_transient($rate_key, $attempts + 1, HOUR_IN_SECONDS);
+
     $email = isset($_POST['email']) ? sanitize_email(wp_unslash($_POST['email'])) : '';
     if (empty($email) || ! is_email($email)) {
         wp_send_json_error([
