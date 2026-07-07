@@ -264,6 +264,11 @@ const Login = ({
 
       if (result.success) {
         setShowPasswordField(result.data.exists);
+      } else if (result.data && result.data.message) {
+        setErrors({
+          ...errors,
+          email: result.data.message,
+        });
       } else {
         await createUserAndLogin();
       }
@@ -286,7 +291,10 @@ const Login = ({
       await handleTempTicketCreation(user_id);
       updateLoginStatus(true, user_id);
     } catch (err) {
-      console.error("Failed to create ticket:", err);
+      setErrors({
+        ...errors,
+        email: err.message || "Signup failed. Please try again.",
+      });
     }
   };
 
