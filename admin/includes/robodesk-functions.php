@@ -228,7 +228,7 @@ if (!function_exists('robodesk_debug_log_page_callback')) {
                 '</textarea>';
         } else {
             echo '<div class="notice notice-error"><p>'
-                . esc_html__('Debug log file was not found or is not readable at logs/debug.log.', 'robodesk') .
+                . esc_html__('Debug log file was not found or is not readable.', 'robodesk') .
                 '</p></div>';
         }
 
