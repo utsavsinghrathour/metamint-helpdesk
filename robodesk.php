@@ -688,9 +688,8 @@ function robodesk_get_requested_ticket_id_from_query()
 // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedFunctionFound
 function rbd_log($message)
 {
-    $upload_dir = wp_upload_dir();
-    $log_dir    = $upload_dir['basedir'] . '/robodesk';
-    $log_file   = $log_dir . '/debug.log';
+    $log_file = ROBODESK_PLUGIN_PATH . 'logs/debug.log';
+    $log_dir  = dirname($log_file);
 
     if (!file_exists($log_dir)) {
         // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_mkdir
