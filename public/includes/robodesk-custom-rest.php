@@ -989,6 +989,15 @@ function robodesk_live_comments($request)
 
 function robodesk_secure_login_endpoint(WP_REST_Request $request)
 {
+    $ip = robodesk_get_client_ip();
+    $blocked = get_option('robodesk_blocked_ips', array());
+    if (in_array($ip, $blocked, true)) {
+        return new WP_Error(
+            'ip_blocked',
+            __('Your IP has been permanently blocked due to repeated abuse.', 'robodesk'),
+            array('status' => 403)
+        );
+    }
 
     $emailAddr = sanitize_email($request->get_param('email'));
     $password = $request->get_param('password');
@@ -1113,7 +1122,7 @@ function robodesk_protected_endpoint(WP_REST_Request $request)
 //Registers the new user
 function robodesk_user_signup(WP_REST_Request $request)
 {
-    $ip = isset($_SERVER['REMOTE_ADDR']) ? sanitize_text_field(wp_unslash($_SERVER['REMOTE_ADDR'])) : '0.0.0.0';
+    $ip = robodesk_get_client_ip();
     $blocked = get_option('robodesk_blocked_ips', array());
     if (in_array($ip, $blocked, true)) {
         return new WP_Error(
@@ -1128,6 +1137,8 @@ function robodesk_user_signup(WP_REST_Request $request)
     if ($attempts === false) {
         $attempts = 0;
     }
+    $attempts++;
+    set_transient($rate_key, $attempts, 2 * HOUR_IN_SECONDS);
     if ($attempts >= 5) {
         $strike_key = 'robodesk_signup_strike_' . md5($ip);
         $has_strike = get_transient($strike_key);

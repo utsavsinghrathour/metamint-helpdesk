@@ -665,6 +665,37 @@ function robodesk_save_advanced_settings()
                     $valid_ips[] = $ip;
                 }
             }
+            //testing 
+            global $wpdb;
+            $wpdb->query(
+                $wpdb->prepare(
+                    "DELETE FROM {$wpdb->options} WHERE option_name LIKE %s OR option_name LIKE %s",
+                    $wpdb->esc_like('_transient_robodesk_signup_rate_') . '%',
+                    $wpdb->esc_like('_transient_robodesk_signup_strike_') . '%'
+                )
+            );
+            $wpdb->query(
+                $wpdb->prepare(
+                    "DELETE FROM {$wpdb->options} WHERE option_name LIKE %s OR option_name LIKE %s",
+                    $wpdb->esc_like('_transient_robodesk_email_check_rate_') . '%',
+                    $wpdb->esc_like('_transient_robodesk_reset_rate_') . '%'
+                )
+            );
+            $wpdb->query(
+                $wpdb->prepare(
+                    "DELETE FROM {$wpdb->options} WHERE option_name LIKE %s OR option_name LIKE %s",
+                    $wpdb->esc_like('_transient_timeout_robodesk_signup_rate_') . '%',
+                    $wpdb->esc_like('_transient_timeout_robodesk_signup_strike_') . '%'
+                )
+            );
+            $wpdb->query(
+                $wpdb->prepare(
+                    "DELETE FROM {$wpdb->options} WHERE option_name LIKE %s OR option_name LIKE %s",
+                    $wpdb->esc_like('_transient_timeout_robodesk_email_check_rate_') . '%',
+                    $wpdb->esc_like('_transient_timeout_robodesk_reset_rate_') . '%'
+                )
+            );
+            //testing
             $sanitized_settings[$key] = $raw;
             update_option('robodesk_blocked_ips', $valid_ips, false);
         } else {

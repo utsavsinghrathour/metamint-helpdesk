@@ -981,6 +981,27 @@ function robodesk_is_public_ip($ip)
     ) !== false;
 }
 
+function robodesk_get_client_ip()
+{
+    $headers = robodesk_get_request_header_values();
+    $priority = array('cf-connecting-ip', 'x-forwarded-for', 'x-real-ip', 'x-client-ip', 'remote-addr');
+    foreach ($priority as $key) {
+        if (!empty($headers[$key])) {
+            $ip = robodesk_get_first_ip_from_value($headers[$key]);
+            if ($ip !== '') {
+                return $ip;
+            }
+        }
+    }
+    if (!empty($_SERVER['REMOTE_ADDR'])) {
+        $ip = sanitize_text_field(wp_unslash((string) $_SERVER['REMOTE_ADDR']));
+        if (filter_var($ip, FILTER_VALIDATE_IP)) {
+            return $ip;
+        }
+    }
+    return '0.0.0.0';
+}
+
 function robodesk_parse_browser_label($value)
 {
     $value = trim((string) $value);
