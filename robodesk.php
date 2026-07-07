@@ -1303,11 +1303,12 @@ function robodesk_get_agent_source_by_user($user_id)
     }
 
     $roles = (array) $user->roles;
-    if (
-        in_array('administrator', $roles, true) ||
-        in_array('editor', $roles, true)
-    ) {
+    if (in_array('administrator', $roles, true)) {
         return 'admin';
+    }
+
+    if (in_array('editor', $roles, true)) {
+        return 'editor';
     }
 
     if (
