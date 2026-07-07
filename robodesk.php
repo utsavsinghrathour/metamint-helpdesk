@@ -125,6 +125,13 @@ function robodesk_activate()
 
     $editor_role = get_role('editor');
     if ($editor_role) {
+        $editor_role->add_cap('create_tickets');
+        $editor_role->add_cap('edit_tickets');
+        $editor_role->add_cap('edit_others_tickets');
+        $editor_role->add_cap('publish_tickets');
+        $editor_role->add_cap('read_private_tickets');
+        $editor_role->add_cap('read_ticket');
+        $editor_role->add_cap('delete_ticket');
         $editor_role->add_cap('robodesk_access_dashboard');
     }
 
@@ -790,6 +797,7 @@ function robodesk_get_support_user_ids()
     $users = get_users([
         'role__in' => [
             'administrator',
+            'editor',
             'robodesk_support_manager',
             'robodesk_support_staff',
         ],
@@ -1272,6 +1280,7 @@ function robodesk_get_author_type($user_id)
     $roles = (array) $user->roles;
     if (
         in_array('administrator', $roles, true) ||
+        in_array('editor', $roles, true) ||
         in_array('robodesk_support_manager', $roles, true) ||
         in_array('robodesk_support_staff', $roles, true)
     ) {
@@ -1294,7 +1303,10 @@ function robodesk_get_agent_source_by_user($user_id)
     }
 
     $roles = (array) $user->roles;
-    if (in_array('administrator', $roles, true)) {
+    if (
+        in_array('administrator', $roles, true) ||
+        in_array('editor', $roles, true)
+    ) {
         return 'admin';
     }
 

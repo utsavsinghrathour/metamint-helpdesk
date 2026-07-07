@@ -43,9 +43,7 @@ add_action('rest_api_init',  function () {
         'methods' => 'GET',
         'callback' => 'robodesk_ticket_stream',
         'permission_callback' => function () {
-            return current_user_can('manage_options')
-                || current_user_can('robodesk_support_staff')
-                || current_user_can('robodesk_support_manager');
+            return current_user_can('robodesk_access_dashboard');
         },
         'args' => [
             'ticket_id' => [
