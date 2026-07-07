@@ -292,9 +292,7 @@ function robodesk_can_view_ticket(WP_REST_Request $request)
         return true;
     }
 
-    return current_user_can('manage_options')
-        || current_user_can('robodesk_support_staff')
-        || current_user_can('robodesk_support_manager');
+    return current_user_can('robodesk_access_dashboard');
 }
 
 /* Public Rest Api registration hooks */

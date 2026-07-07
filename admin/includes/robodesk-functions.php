@@ -1332,6 +1332,7 @@ function robodesk_update_ticket_status()
     $current_user = wp_get_current_user();
     $roles = (array) $current_user->roles;
     $is_support_role = in_array('administrator', $roles, true) ||
+        in_array('editor', $roles, true) ||
         in_array('robodesk_support_manager', $roles, true) ||
         in_array('robodesk_support_staff', $roles, true);
 
@@ -1390,6 +1391,7 @@ function robodesk_update_ticket_priority()
     $current_user = wp_get_current_user();
     $roles = (array) $current_user->roles;
     $is_support_role = in_array('administrator', $roles, true) ||
+        in_array('editor', $roles, true) ||
         in_array('robodesk_support_manager', $roles, true) ||
         in_array('robodesk_support_staff', $roles, true);
 
@@ -1459,6 +1461,7 @@ function robodesk_update_ticket_assignee()
     $current_user = wp_get_current_user();
     $roles = (array) $current_user->roles;
     $is_support_role = in_array('administrator', $roles, true) ||
+        in_array('editor', $roles, true) ||
         in_array('robodesk_support_manager', $roles, true) ||
         in_array('robodesk_support_staff', $roles, true);
 
@@ -2187,6 +2190,7 @@ function handle_update_ticket_category()
     $current_user = wp_get_current_user();
     $roles = (array) $current_user->roles;
     $is_support_role = in_array('administrator', $roles, true) ||
+        in_array('editor', $roles, true) ||
         in_array('robodesk_support_manager', $roles, true) ||
         in_array('robodesk_support_staff', $roles, true);
 
