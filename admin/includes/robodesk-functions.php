@@ -696,7 +696,6 @@ function robodesk_save_advanced_settings()
                 )
             );
             //testing
-            $sanitized_settings[$key] = $raw;
             update_option('robodesk_blocked_ips', $valid_ips, false);
         } else {
             // Sanitize boolean inputs
