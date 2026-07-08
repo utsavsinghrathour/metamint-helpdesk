@@ -255,7 +255,7 @@ function robodesk_get_credential_form_callback()
         wp_send_json_error('Not logged in.');
     }
     ob_start();
-    ?>
+?>
     <h3>Add New Credential</h3>
     <form id="robodesk-add-credential">
         <label for="credential_name">Name:</label><br>
@@ -277,7 +277,7 @@ function robodesk_get_credential_form_callback()
         <?php wp_nonce_field('robodesk_add_credential_nonce'); ?>
         <input type="submit" value="Add">
     </form>
-    <?php
+<?php
     $html = ob_get_clean();
     wp_send_json_success(array('html' => $html));
     wp_die();
@@ -542,6 +542,7 @@ function robodesk_add_ticket_note_callback()
 }
 
 
+/*
 add_action('wp_ajax_robodesk_login_action', 'robodesk_login_action_callback');
 add_action('wp_ajax_nopriv_robodesk_login_action', 'robodesk_login_action_callback');
 function robodesk_login_action_callback()
@@ -578,12 +579,13 @@ function robodesk_login_action_callback()
     }
     wp_send_json_error([
         'message' => sprintf(
-            /* translators: %s: error message returned from wp_insert_user */
+            //translators: %s: error message returned from wp_insert_user 
             __('Failed to create account: %s', 'robodesk'),
             $user_id->get_error_message()
         )
     ]);
 }
+*/
 
 
 add_action('wp_ajax_robodesk_check_email', 'robodesk_check_email');
