@@ -247,6 +247,12 @@ function robodesk_imap_test_connection()
         exit;
     }
 
+    // Verify capability
+    if (!current_user_can('manage_options')) {
+        wp_send_json_error(['message' => 'Insufficient permissions']);
+        exit;
+    }
+
     // Validate inputs
     if (empty($_POST['robodesk_imap_hostname']) || empty($_POST['robodesk_imap_port']) || empty($_POST['robodesk_imap_username']) || empty($_POST['robodesk_imap_password'])) {
         wp_send_json_error(['message' => 'Missing required fields']);
@@ -289,6 +295,12 @@ function robodesk_imap_save_settings()
     // Verify nonce
     if (!isset($_POST['nonce']) || !wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['nonce'])), 'robodesk_imap_settings_action')) {
         wp_send_json_error(['message' => 'Security check failed']);
+        exit;
+    }
+
+    // Verify capability
+    if (!current_user_can('manage_options')) {
+        wp_send_json_error(['message' => 'Insufficient permissions']);
         exit;
     }
 
@@ -336,12 +348,10 @@ function robodesk_imap_save_settings()
     }
 }
 
-function robodesk_get_smtp_settings_from_request()
+function robodesk_get_smtp_settings_from_request($data)
 {
-    // phpcs:ignore WordPress.Security.NonceVerification.Missing
-    $enabled = isset($_POST['robodesk_smtp_enabled']) ? sanitize_text_field(wp_unslash($_POST['robodesk_smtp_enabled'])) : '0';
-    // phpcs:ignore WordPress.Security.NonceVerification.Missing
-    $encryption = isset($_POST['robodesk_smtp_encryption']) ? sanitize_text_field(wp_unslash($_POST['robodesk_smtp_encryption'])) : 'tls';
+    $enabled = isset($data['robodesk_smtp_enabled']) ? sanitize_text_field(wp_unslash($data['robodesk_smtp_enabled'])) : '0';
+    $encryption = isset($data['robodesk_smtp_encryption']) ? sanitize_text_field(wp_unslash($data['robodesk_smtp_encryption'])) : 'tls';
     $allowed_encryption = ['none', 'ssl', 'tls'];
 
     if (!in_array($encryption, $allowed_encryption, true)) {
@@ -350,19 +360,13 @@ function robodesk_get_smtp_settings_from_request()
 
     return [
         'enabled' => $enabled === '1' || $enabled === 'true',
-        // phpcs:ignore WordPress.Security.NonceVerification.Missing
-        'host' => isset($_POST['robodesk_smtp_host']) ? sanitize_text_field(wp_unslash($_POST['robodesk_smtp_host'])) : '',
-        // phpcs:ignore WordPress.Security.NonceVerification.Missing
-        'port' => isset($_POST['robodesk_smtp_port']) ? absint(wp_unslash($_POST['robodesk_smtp_port'])) : 587,
-        // phpcs:ignore WordPress.Security.NonceVerification.Missing
-        'username' => isset($_POST['robodesk_smtp_username']) ? sanitize_text_field(wp_unslash($_POST['robodesk_smtp_username'])) : '',
-        // phpcs:ignore WordPress.Security.NonceVerification.Missing
-        'password' => isset($_POST['robodesk_smtp_password']) ? sanitize_text_field(wp_unslash($_POST['robodesk_smtp_password'])) : '',
+        'host' => isset($data['robodesk_smtp_host']) ? sanitize_text_field(wp_unslash($data['robodesk_smtp_host'])) : '',
+        'port' => isset($data['robodesk_smtp_port']) ? absint(wp_unslash($data['robodesk_smtp_port'])) : 587,
+        'username' => isset($data['robodesk_smtp_username']) ? sanitize_text_field(wp_unslash($data['robodesk_smtp_username'])) : '',
+        'password' => isset($data['robodesk_smtp_password']) ? sanitize_text_field(wp_unslash($data['robodesk_smtp_password'])) : '',
         'encryption' => $encryption,
-        // phpcs:ignore WordPress.Security.NonceVerification.Missing
-        'from_email' => isset($_POST['robodesk_smtp_from_email']) ? sanitize_email(wp_unslash($_POST['robodesk_smtp_from_email'])) : '',
-        // phpcs:ignore WordPress.Security.NonceVerification.Missing
-        'from_name' => isset($_POST['robodesk_smtp_from_name']) ? sanitize_text_field(wp_unslash($_POST['robodesk_smtp_from_name'])) : '',
+        'from_email' => isset($data['robodesk_smtp_from_email']) ? sanitize_email(wp_unslash($data['robodesk_smtp_from_email'])) : '',
+        'from_name' => isset($data['robodesk_smtp_from_name']) ? sanitize_text_field(wp_unslash($data['robodesk_smtp_from_name'])) : '',
     ];
 }
 
@@ -414,7 +418,7 @@ function robodesk_smtp_save_settings()
         exit;
     }
 
-    $settings = robodesk_get_smtp_settings_from_request();
+    $settings = robodesk_get_smtp_settings_from_request($_POST);
     $validation = robodesk_validate_smtp_settings($settings);
 
     if ($validation !== true) {
@@ -434,7 +438,7 @@ function robodesk_smtp_test_connection()
         exit;
     }
 
-    $settings = robodesk_get_smtp_settings_from_request();
+    $settings = robodesk_get_smtp_settings_from_request($_POST);
     $validation = robodesk_validate_smtp_settings($settings);
 
     if ($validation !== true) {

@@ -852,7 +852,7 @@ function robodesk_live_comments($request)
     header('Content-Type: text/event-stream');
     header('Cache-Control: no-cache');
     header('Connection: keep-alive');
-    header('Access-Control-Allow-Origin: *');
+    header('Access-Control-Allow-Origin: ' . esc_url(home_url()));
     header('Access-Control-Allow-Headers: Cache-Control');
     header('X-Accel-Buffering: no');
 
