@@ -29,10 +29,114 @@ if (file_exists($robodesk_jwt_file) && file_exists($robodesk_key_file)) {
 use \Firebase\JWT\JWT;
 use \Firebase\JWT\Key;
 
-// Defining JWT secret keys
-if (!defined('JWT_AUTH_SECRET_KEY')) {
-    define('JWT_AUTH_SECRET_KEY', 'robodesk-secret');
+define('ROBODESK_ACCESS_EXPIRY', 15 * MINUTE_IN_SECONDS);
+define('ROBODESK_REFRESH_EXPIRY', 7 * DAY_IN_SECONDS);
+
+function robodesk_generate_token_pair($user_id)
+{
+    $now = time();
+    $access_expiry = $now + ROBODESK_ACCESS_EXPIRY;
+    $refresh_expiry = $now + ROBODESK_REFRESH_EXPIRY;
+    $nonce = bin2hex(random_bytes(8));
+
+    $access_payload = $user_id . '|' . $access_expiry . '|access|' . $nonce;
+    $access_sig = hash_hmac('sha256', $access_payload, SECURE_AUTH_KEY);
+    $access_token = base64_encode($access_payload . '|' . $access_sig);
+
+    $refresh_payload = $user_id . '|' . $refresh_expiry . '|refresh|' . $nonce;
+    $refresh_sig = hash_hmac('sha256', $refresh_payload, SECURE_AUTH_KEY);
+    $refresh_token = base64_encode($refresh_payload . '|' . $refresh_sig);
+
+    $hashed = wp_hash($refresh_token);
+    update_user_meta($user_id, 'robodesk_refresh_hash', $hashed);
+
+    return array(
+        'access' => $access_token,
+        'refresh' => $refresh_token,
+    );
 }
+
+function robodesk_validate_access_token($token)
+{
+    if (!is_string($token) || $token === '') {
+        return false;
+    }
+
+    $decoded = base64_decode($token);
+    if ($decoded === false) {
+        return false;
+    }
+
+    $parts = explode('|', $decoded);
+    if (count($parts) !== 5) {
+        return false;
+    }
+
+    list($user_id, $expiry, $type, $nonce, $signature) = $parts;
+
+    if ($type !== 'access') {
+        return false;
+    }
+
+    $expected = hash_hmac('sha256', $user_id . '|' . $expiry . '|' . $type . '|' . $nonce, SECURE_AUTH_KEY);
+    if (!hash_equals($expected, $signature)) {
+        return false;
+    }
+
+    if ((int) $expiry < time()) {
+        return false;
+    }
+
+    return (int) $user_id;
+}
+
+function robodesk_set_auth_session($user_id)
+{
+    $tokens = robodesk_generate_token_pair($user_id);
+    $now = time();
+
+    setcookie('robodesk_access', $tokens['access'], array(
+        'expires' => $now + ROBODESK_ACCESS_EXPIRY,
+        'path' => '/',
+        'secure' => is_ssl(),
+        'httponly' => true,
+        'samesite' => 'Strict',
+    ));
+
+    setcookie('robodesk_refresh', $tokens['refresh'], array(
+        'expires' => $now + ROBODESK_REFRESH_EXPIRY,
+        'path' => '/',
+        'secure' => is_ssl(),
+        'httponly' => true,
+        'samesite' => 'Strict',
+    ));
+
+    return $tokens;
+}
+
+function robodesk_clear_auth_session()
+{
+    foreach (array('robodesk_access', 'robodesk_refresh') as $name) {
+        setcookie($name, '', array(
+            'expires' => 1,
+            'path' => '/',
+            'secure' => is_ssl(),
+            'httponly' => true,
+            'samesite' => 'Strict',
+        ));
+    }
+}
+
+add_filter('determine_current_user', function ($user_id) {
+    if (!empty($_COOKIE['robodesk_access'])) {
+        $uid = robodesk_validate_access_token(wp_unslash($_COOKIE['robodesk_access']));
+        if ($uid !== false) {
+            return $uid;
+        }
+        robodesk_clear_auth_session();
+    }
+    return $user_id;
+}, 20);
 
 /**
  * Get user profile picture URL
@@ -212,10 +316,7 @@ function robodesk_generate_token($user, $expiration_in_days = 7)
         return new WP_Error('invalid_user', 'Invalid user object.');
     }
 
-    // Generate or retrieve the secret key
-    $secret_key = defined('JWT_AUTH_SECRET_KEY')
-        ? JWT_AUTH_SECRET_KEY
-        : wp_generate_password(64, true, true);
+    $secret_key = SECURE_AUTH_KEY;
 
     // Set issued and expiration timestamps
     $issued_at = time();
@@ -318,10 +419,16 @@ add_action('rest_api_init', function () {
         'permission_callback' => '__return_true',
     ));
 
+    register_rest_route('robodesk/v1', '/refresh', array(
+        'methods' => 'POST',
+        'callback' => 'robodesk_refresh_token_endpoint',
+        'permission_callback' => '__return_true',
+    ));
+
     register_rest_route('robodesk/chat/v1', '/tickets', array(
         'methods' => 'POST',
         'callback' => 'robodesk_handle_tickets',
-        'permission_callback' => '__return_true',
+        'permission_callback' => 'is_user_logged_in',
     ));
 
     register_rest_route('robodesk/selected', '/staff', array(
@@ -1006,73 +1113,78 @@ function robodesk_secure_login_endpoint(WP_REST_Request $request)
         );
     }
 
-    $emailAddr = sanitize_email($request->get_param('email'));
+    $email = sanitize_email($request->get_param('email'));
     $password = $request->get_param('password');
 
-    // Input validation
-    if (empty($emailAddr) || empty($password)) {
-        return new WP_Error('missing_credentials', 'Username and password are required.', array('status' => 400));
+    if (empty($email) || empty($password)) {
+        return new WP_Error('missing_credentials', 'Email and password are required.', array('status' => 400));
     }
 
-    // Check if username is email
-    if (is_email($emailAddr)) {
-        $user = get_user_by('email', $emailAddr);
-        if (!$user) {
-            return new WP_Error('invalid_email', 'No user found with this email.', array('status' => 404));
-        }
-        $username = $user->user_login;
+    $user = get_user_by('email', $email);
+    if (!$user) {
+        return new WP_Error('invalid_credentials', 'Invalid email or password.', array('status' => 401));
     }
 
-    // Authenticate user
-    $creds = array(
-        'user_login' => $username,
-        'user_password' => $password,
-        'remember' => false,
+    if (!wp_check_password($password, $user->user_pass, $user->ID)) {
+        return new WP_Error('invalid_credentials', 'Invalid email or password.', array('status' => 401));
+    }
+
+    wp_set_current_user($user->ID);
+    robodesk_set_auth_session($user->ID);
+
+    return array(
+        'success' => true,
+        'user_id' => $user->ID,
+        'user_email' => $user->user_email,
+        'user_display_name' => $user->display_name,
     );
+}
 
-
-    // Sign in the user
-    $user = wp_signon($creds, false);
-
-    if (!is_wp_error($user)) {
-
-        wp_set_current_user($user->ID);
-        wp_set_auth_cookie($user->ID);
+function robodesk_refresh_token_endpoint()
+{
+    if (empty($_COOKIE['robodesk_refresh'])) {
+        return new WP_Error('no_token', 'Refresh token missing.', array('status' => 401));
     }
 
-
-    if (is_wp_error($user)) {
-        return new WP_Error('invalid_credentials', 'Invalid username or password.', array('status' => 401));
+    $token = wp_unslash($_COOKIE['robodesk_refresh']);
+    $decoded = base64_decode($token);
+    if ($decoded === false) {
+        return new WP_Error('invalid_token', 'Invalid refresh token.', array('status' => 401));
     }
 
-    // Generate JWT
-    $secret_key = defined('JWT_AUTH_SECRET_KEY') ? JWT_AUTH_SECRET_KEY : wp_generate_password(64, true, true);
-    $issued_at = time();
-    $expire = $issued_at + (DAY_IN_SECONDS * 7); // Token valid for 7 days
+    $parts = explode('|', $decoded);
+    if (count($parts) !== 5) {
+        return new WP_Error('invalid_token', 'Invalid refresh token.', array('status' => 401));
+    }
 
-    $token = array(
-        'iss' => get_site_url(),
-        'iat' => $issued_at,
-        'exp' => $expire,
-        'data' => array(
-            'user_id' => $user->ID,
-            'user_email' => $user->user_email,
-        ),
+    list($user_id, $expiry, $type, $nonce, $signature) = $parts;
+
+    if ($type !== 'refresh') {
+        return new WP_Error('invalid_token', 'Wrong token type.', array('status' => 401));
+    }
+
+    $expected = hash_hmac('sha256', $user_id . '|' . $expiry . '|' . $type . '|' . $nonce, SECURE_AUTH_KEY);
+    if (!hash_equals($expected, $signature)) {
+        return new WP_Error('invalid_token', 'Signature mismatch.', array('status' => 401));
+    }
+
+    if ((int) $expiry < time()) {
+        return new WP_Error('expired_token', 'Refresh token expired.', array('status' => 401));
+    }
+
+    $stored_hash = get_user_meta((int) $user_id, 'robodesk_refresh_hash', true);
+    if (!$stored_hash || !hash_equals($stored_hash, wp_hash($token))) {
+        robodesk_clear_auth_session();
+        return new WP_Error('invalid_token', 'Refresh token has been revoked.', array('status' => 401));
+    }
+
+    delete_user_meta((int) $user_id, 'robodesk_refresh_hash');
+    robodesk_set_auth_session((int) $user_id);
+
+    return array(
+        'success' => true,
+        'message' => 'Tokens refreshed successfully.',
     );
-
-    try {
-        $jwt = JWT::encode($token, $secret_key, 'HS256');
-        return array(
-            'success' => true,
-            'token' => $jwt,
-            'user_id' => $user->ID,
-            'user_email' => $user->user_email,
-            'user_display_name' => $user->display_name,
-            'expires_at' => $expire,
-        );
-    } catch (Exception $e) {
-        return new WP_Error('jwt_error', 'Error generating token: ' . $e->getMessage(), array('status' => 500));
-    }
 }
 
 function robodesk_validate_token(WP_REST_Request $request)
@@ -1083,9 +1195,8 @@ function robodesk_validate_token(WP_REST_Request $request)
         return new WP_Error('no_token', 'Authorization header missing.', array('status' => 401));
     }
 
-    // Extract token from "Bearer <token>"
     $token = str_replace('Bearer ', '', trim($auth_header));
-    $secret_key = defined('JWT_AUTH_SECRET_KEY') ? JWT_AUTH_SECRET_KEY : wp_generate_password(64, true, true);
+    $secret_key = SECURE_AUTH_KEY;
 
     try {
         $decoded = JWT::decode($token, new Key($secret_key, 'HS256'));
@@ -1207,38 +1318,14 @@ function robodesk_user_signup(WP_REST_Request $request)
         );
     }
 
-    $creds = array(
-        'user_login' => $email,
-        'user_password' => $password,
-        'remember' => true,
-    );
-
-    // Sign in the user
-    $user = wp_signon($creds, false);
-
-    if (!is_wp_error($user)) {
-
-        wp_set_current_user($user->ID);
-        wp_set_auth_cookie($user->ID);
-    }
+    wp_set_current_user($user_id);
+    robodesk_set_auth_session($user_id);
 
     // Send default WordPress user notification email
-    wp_new_user_notification($user_id, null, 'both'); // Sends email to user and admin
-
-    // Generate JWT token
-    $token = robodesk_generate_token($user_id);
-
-    if (is_wp_error($token)) {
-        return new WP_Error(
-            'token_failed',
-            __('Failed to generate token', 'robodesk'),
-            array('status' => 500)
-        );
-    }
+    wp_new_user_notification($user_id, null, 'both');
 
     return new WP_REST_Response(array(
         'message' => __('User created successfully', 'robodesk'),
-        'token' => $token,
         'user_id' => $user_id,
     ), 201);
 }
@@ -1294,17 +1381,44 @@ function robodesk_handle_tickets(WP_REST_Request $request)
         );
     }
 
+    $current_user_id = get_current_user_id();
+    if (!$current_user_id) {
+        return new WP_Error('not_logged_in', 'Authentication required', array('status' => 401));
+    }
+
+    $is_staff = current_user_can('robodesk_access_dashboard');
+
+    // Validate user_id/uid against the authenticated user
     switch ($data['event']) {
         case 'ticket.created':
+            $uid = sanitize_text_field($data['data']['uid'] ?? '');
+            if ((string) $uid !== (string) $current_user_id && !$is_staff) {
+                return new WP_Error('forbidden', 'You can only create tickets for yourself', array('status' => 403));
+            }
             return robodesk_handle_ticket_creation($data);
 
         case 'tickets.get':
+            $uid = sanitize_text_field($data['data']['uid'] ?? '');
+            if ((string) $uid !== (string) $current_user_id && !$is_staff) {
+                return new WP_Error('forbidden', 'You can only view your own tickets', array('status' => 403));
+            }
             return robodesk_handle_tickets_get($data);
 
         case 'replies.receive':
+            $uid = sanitize_text_field($data['data']['user_id'] ?? '');
+            if ((string) $uid !== (string) $current_user_id && !$is_staff) {
+                return new WP_Error('forbidden', 'You can only reply as yourself', array('status' => 403));
+            }
             return robodesk_handle_reply_receive($data);
 
         case 'comments.get':
+            $ticket_id = sanitize_text_field($data['data']['ticket_id'] ?? '');
+            if (!$is_staff) {
+                $ticket = get_post($ticket_id);
+                if (!$ticket || (string) $ticket->post_author !== (string) $current_user_id) {
+                    return new WP_Error('forbidden', 'You can only view comments on your own tickets', array('status' => 403));
+                }
+            }
             return robodesk_handle_comments_get($data);
 
         default:
@@ -1626,6 +1740,14 @@ function robodesk_handle_reply_receive($data)
             'ticket_not_found',
             'Ticket not found',
             array('status' => 404)
+        );
+    }
+
+    if (!current_user_can('robodesk_access_dashboard') && (string) $ticket->post_author !== (string) $user_id) {
+        return new WP_Error(
+            'forbidden',
+            'You can only reply to your own tickets',
+            array('status' => 403)
         );
     }
 
