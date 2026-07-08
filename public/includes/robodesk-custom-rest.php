@@ -368,7 +368,16 @@ add_action('rest_api_init', function () {
             array(
                 'methods' => 'GET',
                 'callback' => 'robodesk_stream',
-                'permission_callback' => '__return_true',
+                'permission_callback' => function (WP_REST_Request $request) {
+                    if (!is_user_logged_in()) {
+                        return false;
+                    }
+                    $user_id = (int) $request->get_param('user_id');
+                    if ($user_id > 0 && $user_id !== get_current_user_id()) {
+                        return false;
+                    }
+                    return true;
+                },
                 'args' => array(
                     'type' => array(
                         'validate_callback' => function ($param) {
@@ -409,7 +418,7 @@ function robodesk_stream($request)
     header('Content-Type: text/event-stream');
     header('Cache-Control: no-cache');
     header('Connection: keep-alive');
-    header('Access-Control-Allow-Origin: *');
+    header('Access-Control-Allow-Origin: ' . esc_url(home_url()));
     header('Access-Control-Allow-Headers: Cache-Control');
     header('X-Accel-Buffering: no');
 
