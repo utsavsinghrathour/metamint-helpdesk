@@ -219,6 +219,16 @@ require_once ROBODESK_PLUGIN_PATH . 'admin/includes/rbodesk-admin-rest.php';
 
 // Enqueue Scripts
 add_action('wp_enqueue_scripts', 'robodesk_enqueue_scripts');
+
+function robodesk_get_default_staff_id()
+{
+    $id = get_option('robodesk_default_agent', '');
+    if (empty($id)) {
+        $id = get_option('robodesk_default_staff', '');
+    }
+    return $id ? (int) $id : 0;
+}
+
 function robodesk_enqueue_scripts()
 {
 
@@ -318,6 +328,8 @@ function robodesk_enqueue_scripts()
             'notificationSound' => esc_url(get_option('robodesk_notification_sound', '')),
             'priorityTerms' => $priority_terms,
             'priorityColors' => $priority_colors,
+
+            'defaultStaffId' => robodesk_get_default_staff_id(),
 
             'status' => [
                 'active-conversations' => 'Active Conversations',

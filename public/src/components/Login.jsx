@@ -187,22 +187,9 @@ const Login = ({
   }, []);
 
   useEffect(() => {
-    const fetchDefaultStaff = async () => {
-      try {
-        const response = await fetch("/wp-json/robodesk/selected/staff");
-        const data = await response.json();
-
-        if (response.ok && data?.staff_user_id) {
-          setDefaultStaffId(data.staff_user_id);
-        } else {
-          setDefaultStaffId(null);
-        }
-      } catch (error) {
-        setDefaultStaffId(null);
-      }
-    };
-
-    fetchDefaultStaff();
+    if (window.wpAuth?.defaultStaffId) {
+      setDefaultStaffId(window.wpAuth.defaultStaffId);
+    }
   }, []);
 
   const handleStateUpdate = (ticket) => {
