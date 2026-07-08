@@ -11,7 +11,9 @@ add_action('rest_api_init',  function () {
     register_rest_route('robodesk/v1', '/adminstream/(?P<post_id>\d+)(?:/(?P<last_comment_id>\d+))?(?:/(?P<user_id>\d+))?', array(
         'methods' => 'GET',
         'callback' => 'robodesk_live_admin_comments',
-        'permission_callback' => '__return_true',
+        'permission_callback' => function () {
+            return is_user_logged_in() && current_user_can('robodesk_access_dashboard');
+        },
         'args' => array(
             'post_id' => array(
                 'validate_callback' => function ($param) {
@@ -67,7 +69,7 @@ function robodesk_live_admin_comments($request)
     header('Content-Type: text/event-stream');
     header('Cache-Control: no-cache');
     header('Connection: keep-alive');
-    header('Access-Control-Allow-Origin: *');
+    header('Access-Control-Allow-Origin: ' . esc_url(home_url()));
     header('Access-Control-Allow-Headers: Cache-Control');
     header('X-Accel-Buffering: no');
 
