@@ -547,6 +547,17 @@ function robodesk_handle_tickets_webhook(WP_REST_Request $request)
         );
     }
 
+    // HMAC verification using SECURE_AUTH_KEY
+    $signature = $_SERVER['HTTP_X_WEBHOOK_SIGNATURE'] ?? '';
+    $expected = hash_hmac('sha256', $payload, SECURE_AUTH_KEY);
+    if (!hash_equals($expected, $signature)) {
+        return new WP_Error(
+            'unauthorized',
+            'Invalid webhook signature',
+            array('status' => 401)
+        );
+    }
+
     // Handle ticket creation event
     if (isset($data['event']) && 'ticket.created' === $data['event']) {
 
