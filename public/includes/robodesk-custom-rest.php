@@ -29,9 +29,55 @@ if (file_exists($robodesk_jwt_file) && file_exists($robodesk_key_file)) {
 use \Firebase\JWT\JWT;
 use \Firebase\JWT\Key;
 
-// Defining JWT secret keys
-if (!defined('JWT_AUTH_SECRET_KEY')) {
-    define('JWT_AUTH_SECRET_KEY', 'robodesk-secret');
+/**
+ * Get the JWT secret key from wp-config.
+ *
+ * Uses SECURE_AUTH_KEY when available, otherwise falls back to AUTH_KEY.
+ * This avoids persisting the key in the database.
+ *
+ * @return string
+ */
+function robodesk_get_jwt_secret_key()
+{
+    if (defined('SECURE_AUTH_KEY') && SECURE_AUTH_KEY !== '') {
+        if (!defined('JWT_AUTH_SECRET_KEY')) {
+            define('JWT_AUTH_SECRET_KEY', SECURE_AUTH_KEY);
+        }
+
+        return SECURE_AUTH_KEY;
+    }
+
+    if (defined('AUTH_KEY') && AUTH_KEY !== '') {
+        if (!defined('JWT_AUTH_SECRET_KEY')) {
+            define('JWT_AUTH_SECRET_KEY', AUTH_KEY);
+        }
+
+        return AUTH_KEY;
+    }
+
+    if (defined('JWT_AUTH_SECRET_KEY') && JWT_AUTH_SECRET_KEY !== '') {
+        return JWT_AUTH_SECRET_KEY;
+    }
+
+    $key = wp_generate_password(64, true, true);
+    if (!defined('JWT_AUTH_SECRET_KEY')) {
+        define('JWT_AUTH_SECRET_KEY', $key);
+    }
+
+    return $key;
+}
+
+/**
+ * Write a debug message to the WP debug log when logging is enabled.
+ *
+ * @param string $message Log message.
+ * @return void
+ */
+function robodesk_log_debug($message)
+{
+    if (defined('WP_DEBUG') && WP_DEBUG && defined('WP_DEBUG_LOG') && WP_DEBUG_LOG) {
+        error_log('[Robodesk] ' . $message);
+    }
 }
 
 /**
@@ -212,16 +258,10 @@ function robodesk_generate_token($user, $expiration_in_days = 7)
         return new WP_Error('invalid_user', 'Invalid user object.');
     }
 
-    // Generate or retrieve the secret key
-    $secret_key = defined('JWT_AUTH_SECRET_KEY')
-        ? JWT_AUTH_SECRET_KEY
-        : wp_generate_password(64, true, true);
-
-    // Set issued and expiration timestamps
+    $secret_key = robodesk_get_jwt_secret_key();
     $issued_at = time();
     $expire = $issued_at + (DAY_IN_SECONDS * $expiration_in_days);
 
-    // Token payload
     $token = array(
         'iss' => get_site_url(),
         'iat' => $issued_at,
@@ -233,9 +273,9 @@ function robodesk_generate_token($user, $expiration_in_days = 7)
     );
 
     try {
-        $jwt = JWT::encode($token, $secret_key, 'HS256');
-        return $jwt;
+        return JWT::encode($token, $secret_key, 'HS256');
     } catch (Exception $e) {
+        robodesk_log_debug('JWT generation failed for user ' . $user->ID . ': ' . $e->getMessage());
         return new WP_Error('jwt_generation_failed', 'Failed to generate JWT: ' . $e->getMessage());
     }
 }
@@ -303,12 +343,6 @@ add_action('rest_api_init', function () {
         'methods' => 'POST',
         'callback' => 'robodesk_secure_login_endpoint',
         'permission_callback' => '__return_true', // Public access for login
-    ));
-
-    register_rest_route('custom/v1', '/protected', array(
-        'methods' => 'GET',
-        'callback' => 'robodesk_protected_endpoint',
-        'permission_callback' => 'robodesk_validate_token',
     ));
 
     // Robodesk Registration Rest Api Registration
@@ -996,125 +1030,98 @@ function robodesk_live_comments($request)
 
 function robodesk_secure_login_endpoint(WP_REST_Request $request)
 {
-    $emailAddr = sanitize_email($request->get_param('email'));
+    $login = $request->get_param('email');
     $password = $request->get_param('password');
 
-    // Input validation
-    if (empty($emailAddr) || empty($password)) {
+    if (empty($login) || empty($password)) {
+        robodesk_log_debug('Login failed: missing username/email or password.');
         return new WP_Error('missing_credentials', 'Username and password are required.', array('status' => 400));
     }
 
-    // Check if username is email
-    if (is_email($emailAddr)) {
-        $user = get_user_by('email', $emailAddr);
+    $login = sanitize_text_field($login);
+    $password = sanitize_text_field($password);
+
+    if (is_email($login)) {
+        $user = get_user_by('email', $login);
         if (!$user) {
+            robodesk_log_debug('Login failed: no user found for email ' . $login);
             return new WP_Error('invalid_email', 'No user found with this email.', array('status' => 404));
         }
-        $username = $user->user_login;
+        $login = $user->user_login;
     }
 
-    // Authenticate user
     $creds = array(
-        'user_login' => $username,
+        'user_login' => $login,
         'user_password' => $password,
         'remember' => false,
     );
 
-
-    // Sign in the user
     $user = wp_signon($creds, false);
 
-    if (!is_wp_error($user)) {
-
-        wp_set_current_user($user->ID);
-        wp_set_auth_cookie($user->ID);
-    }
-
-
     if (is_wp_error($user)) {
+        robodesk_log_debug('Login failed for login ' . $login . ': ' . $user->get_error_message());
         return new WP_Error('invalid_credentials', 'Invalid username or password.', array('status' => 401));
     }
 
-    // Generate JWT
-    $secret_key = defined('JWT_AUTH_SECRET_KEY') ? JWT_AUTH_SECRET_KEY : wp_generate_password(64, true, true);
-    $issued_at = time();
-    $expire = $issued_at + (DAY_IN_SECONDS * 7); // Token valid for 7 days
+    wp_set_current_user($user->ID);
+    wp_set_auth_cookie($user->ID);
 
-    $token = array(
-        'iss' => get_site_url(),
-        'iat' => $issued_at,
-        'exp' => $expire,
-        'data' => array(
-            'user_id' => $user->ID,
-            'user_email' => $user->user_email,
-        ),
-    );
-
-    try {
-        $jwt = JWT::encode($token, $secret_key, 'HS256');
-        return array(
-            'success' => true,
-            'token' => $jwt,
-            'user_id' => $user->ID,
-            'user_email' => $user->user_email,
-            'user_display_name' => $user->display_name,
-            'expires_at' => $expire,
-        );
-    } catch (Exception $e) {
-        return new WP_Error('jwt_error', 'Error generating token: ' . $e->getMessage(), array('status' => 500));
+    $token = robodesk_generate_token($user);
+    if (is_wp_error($token)) {
+        return new WP_Error('jwt_error', 'Error generating token: ' . $token->get_error_message(), array('status' => 500));
     }
+
+    return array(
+        'success' => true,
+        'token' => $token,
+        'user_id' => $user->ID,
+        'user_email' => $user->user_email,
+        'user_display_name' => $user->display_name,
+        'expires_at' => time() + (DAY_IN_SECONDS * 7),
+    );
 }
 
 function robodesk_validate_token(WP_REST_Request $request)
 {
-    $auth_header = $request->get_header(key: 'Authorization');
+    $current_user = wp_get_current_user();
+    if ($current_user instanceof WP_User && $current_user->ID > 0) {
+        return true;
+    }
 
+    $auth_header = $request->get_header('authorization');
     if (!$auth_header) {
         return new WP_Error('no_token', 'Authorization header missing.', array('status' => 401));
     }
 
-    // Extract token from "Bearer <token>"
     $token = str_replace('Bearer ', '', trim($auth_header));
-    $secret_key = defined('JWT_AUTH_SECRET_KEY') ? JWT_AUTH_SECRET_KEY : wp_generate_password(64, true, true);
+    $secret_key = robodesk_get_jwt_secret_key();
 
     try {
         $decoded = JWT::decode($token, new Key($secret_key, 'HS256'));
 
-        // Verify issuer
         if ($decoded->iss !== get_site_url()) {
+            robodesk_log_debug('Token validation failed: invalid issuer.');
             return new WP_Error('invalid_token', 'Invalid token issuer.', array('status' => 401));
         }
 
-        // Verify expiration
         if ($decoded->exp < time()) {
+            robodesk_log_debug('Token validation failed: token expired.');
             return new WP_Error('expired_token', 'Token has expired.', array('status' => 401));
         }
 
-        // Verify user exists
         $user = get_user_by('id', $decoded->data->user_id);
         if (!$user) {
+            robodesk_log_debug('Token validation failed: user not found for ID ' . ($decoded->data->user_id ?? 'unknown'));
             return new WP_Error('invalid_user', 'User not found.', array('status' => 401));
         }
 
-        // Set current user for the request
         wp_set_current_user($user->ID);
         return true;
     } catch (Exception $e) {
+        robodesk_log_debug('Token validation exception: ' . $e->getMessage());
         return new WP_Error('invalid_token', 'Invalid token: ' . $e->getMessage(), array('status' => 401));
     }
 }
-
-function robodesk_protected_endpoint(WP_REST_Request $request)
-{
-    $user = wp_get_current_user();
-    return array(
-        'success' => true,
-        'message' => 'Access granted to protected endpoint.',
-        'user_id' => $user->ID,
-        'user_email' => $user->user_email,
-    );
-}
-
 
 //Registers the new user
 function robodesk_user_signup(WP_REST_Request $request)
@@ -1209,17 +1216,19 @@ function robodesk_user_signup(WP_REST_Request $request)
     // Sign in the user
     $user = wp_signon($creds, false);
 
-    if (!is_wp_error($user)) {
-
-        wp_set_current_user($user->ID);
-        wp_set_auth_cookie($user->ID);
+    if (is_wp_error($user)) {
+        robodesk_log_debug('Signup login failed for new user ' . $email . ': ' . $user->get_error_message());
+        return new WP_Error('login_failed', 'Failed to sign in newly created user.', array('status' => 500));
     }
+
+    wp_set_current_user($user->ID);
+    wp_set_auth_cookie($user->ID);
 
     // Send default WordPress user notification email
     wp_new_user_notification($user_id, null, 'both'); // Sends email to user and admin
 
     // Generate JWT token
-    $token = robodesk_generate_token($user_id);
+    $token = robodesk_generate_token($user);
 
     if (is_wp_error($token)) {
         return new WP_Error(
