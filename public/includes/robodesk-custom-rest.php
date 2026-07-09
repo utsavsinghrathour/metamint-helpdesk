@@ -1135,24 +1135,6 @@ function robodesk_user_signup(WP_REST_Request $request)
             if ($has_strike !== false) {
                 $blocked[] = $ip;
                 update_option('robodesk_blocked_ips', $blocked, false);
-            return new WP_Error(
-                'ip_blocked',
-                __('Your IP has been permanently blocked due to repeated abuse.', 'robodesk'),
-                array('status' => 403)
-            );
-        }
-
-        $rate_key = 'robodesk_signup_rate_' . md5($ip);
-        $attempts = get_transient($rate_key);
-        if ($attempts === false) {
-            $attempts = 0;
-        }
-        if ($attempts >= 5) {
-            $strike_key = 'robodesk_signup_strike_' . md5($ip);
-            $has_strike = get_transient($strike_key);
-            if ($has_strike !== false) {
-                $blocked[] = $ip;
-                update_option('robodesk_blocked_ips', $blocked, false);
                 return new WP_Error(
                     'ip_blocked',
                     __('Your IP has been permanently blocked due to repeated abuse.', 'robodesk'),
