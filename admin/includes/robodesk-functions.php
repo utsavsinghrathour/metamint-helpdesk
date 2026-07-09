@@ -615,6 +615,7 @@ function robodesk_save_advanced_settings()
         'enable_auto_assign',
         'enable_notifications',
         'enable_customer_portal',
+        'enable_signup_rate_limiting',
         'max_file_upload_size',
         'reply_unseen_email_minutes',
         'polling_interval',
