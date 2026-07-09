@@ -1765,20 +1765,23 @@ add_action('rest_api_init', function () {
 
 function robodesk_custom_lost_password(WP_REST_Request $request)
 {
-    $ip = robodesk_get_client_ip();
-    $rate_key = 'robodesk_lost_password_rate_' . md5($ip);
-    $attempts = get_transient($rate_key);
-    if ($attempts === false) {
-        $attempts = 0;
+    $advanced_settings = get_option('robodesk_advanced_settings', array());
+    if (!empty($advanced_settings['enable_signup_rate_limiting'])) {
+        $ip = robodesk_get_client_ip();
+        $rate_key = 'robodesk_lost_password_rate_' . md5($ip);
+        $attempts = get_transient($rate_key);
+        if ($attempts === false) {
+            $attempts = 0;
+        }
+        if ($attempts >= 5) {
+            return new WP_Error(
+                'rate_limited',
+                __('Too many password reset requests. Please try again later.', 'robodesk'),
+                array('status' => 429)
+            );
+        }
+        set_transient($rate_key, $attempts + 1, HOUR_IN_SECONDS);
     }
-    if ($attempts >= 5) {
-        return new WP_Error(
-            'rate_limited',
-            __('Too many password reset requests. Please try again later.', 'robodesk'),
-            array('status' => 429)
-        );
-    }
-    set_transient($rate_key, $attempts + 1, HOUR_IN_SECONDS);
 
     $user_login = $request->get_param('user_login');
     if (empty($user_login)) {
