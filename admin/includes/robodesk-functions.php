@@ -677,9 +677,10 @@ function robodesk_save_advanced_settings()
             );
             $wpdb->query(
                 $wpdb->prepare(
-                    "DELETE FROM {$wpdb->options} WHERE option_name LIKE %s OR option_name LIKE %s",
+                    "DELETE FROM {$wpdb->options} WHERE option_name LIKE %s OR option_name LIKE %s OR option_name LIKE %s",
                     $wpdb->esc_like('_transient_robodesk_email_check_rate_') . '%',
-                    $wpdb->esc_like('_transient_robodesk_reset_rate_') . '%'
+                    $wpdb->esc_like('_transient_robodesk_reset_rate_') . '%',
+                    $wpdb->esc_like('_transient_robodesk_lost_password_rate_') . '%'
                 )
             );
             $wpdb->query(
@@ -691,9 +692,10 @@ function robodesk_save_advanced_settings()
             );
             $wpdb->query(
                 $wpdb->prepare(
-                    "DELETE FROM {$wpdb->options} WHERE option_name LIKE %s OR option_name LIKE %s",
+                    "DELETE FROM {$wpdb->options} WHERE option_name LIKE %s OR option_name LIKE %s OR option_name LIKE %s",
                     $wpdb->esc_like('_transient_timeout_robodesk_email_check_rate_') . '%',
-                    $wpdb->esc_like('_transient_timeout_robodesk_reset_rate_') . '%'
+                    $wpdb->esc_like('_transient_timeout_robodesk_reset_rate_') . '%',
+                    $wpdb->esc_like('_transient_timeout_robodesk_lost_password_rate_') . '%'
                 )
             );
             //testing
