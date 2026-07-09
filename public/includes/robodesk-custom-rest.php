@@ -1084,39 +1084,42 @@ function robodesk_protected_endpoint(WP_REST_Request $request)
 //Registers the new user
 function robodesk_user_signup(WP_REST_Request $request)
 {
-    $ip = isset($_SERVER['REMOTE_ADDR']) ? sanitize_text_field(wp_unslash($_SERVER['REMOTE_ADDR'])) : '0.0.0.0';
-    $blocked = get_option('robodesk_blocked_ips', array());
-    if (in_array($ip, $blocked, true)) {
-        return new WP_Error(
-            'ip_blocked',
-            __('Your IP has been permanently blocked due to repeated abuse.', 'robodesk'),
-            array('status' => 403)
-        );
-    }
-
-    $rate_key = 'robodesk_signup_rate_' . md5($ip);
-    $attempts = get_transient($rate_key);
-    if ($attempts === false) {
-        $attempts = 0;
-    }
-    if ($attempts >= 5) {
-        $strike_key = 'robodesk_signup_strike_' . md5($ip);
-        $has_strike = get_transient($strike_key);
-        if ($has_strike !== false) {
-            $blocked[] = $ip;
-            update_option('robodesk_blocked_ips', $blocked, false);
+    $advanced_settings = get_option('robodesk_advanced_settings', array());
+    if (!empty($advanced_settings['enable_signup_rate_limiting'])) {
+        $ip = isset($_SERVER['REMOTE_ADDR']) ? sanitize_text_field(wp_unslash($_SERVER['REMOTE_ADDR'])) : '0.0.0.0';
+        $blocked = get_option('robodesk_blocked_ips', array());
+        if (in_array($ip, $blocked, true)) {
             return new WP_Error(
                 'ip_blocked',
                 __('Your IP has been permanently blocked due to repeated abuse.', 'robodesk'),
                 array('status' => 403)
             );
         }
-        set_transient($strike_key, 1, DAY_IN_SECONDS);
-        return new WP_Error(
-            'rate_limited',
-            __('Too many signup attempts. Please try again later.', 'robodesk'),
-            array('status' => 429)
-        );
+
+        $rate_key = 'robodesk_signup_rate_' . md5($ip);
+        $attempts = get_transient($rate_key);
+        if ($attempts === false) {
+            $attempts = 0;
+        }
+        if ($attempts >= 5) {
+            $strike_key = 'robodesk_signup_strike_' . md5($ip);
+            $has_strike = get_transient($strike_key);
+            if ($has_strike !== false) {
+                $blocked[] = $ip;
+                update_option('robodesk_blocked_ips', $blocked, false);
+                return new WP_Error(
+                    'ip_blocked',
+                    __('Your IP has been permanently blocked due to repeated abuse.', 'robodesk'),
+                    array('status' => 403)
+                );
+            }
+            set_transient($strike_key, 1, DAY_IN_SECONDS);
+            return new WP_Error(
+                'rate_limited',
+                __('Too many signup attempts. Please try again later.', 'robodesk'),
+                array('status' => 429)
+            );
+        }
     }
 
     $params = $request->get_json_params();

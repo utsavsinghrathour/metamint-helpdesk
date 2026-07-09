@@ -2279,6 +2279,7 @@ jQuery(document).ready(function ($) {
       enable_auto_assign: $("#enable-auto-assign").is(":checked"),
       enable_notifications: $("#enable-notifications").is(":checked"),
       enable_customer_portal: $("#enable-customer-portal").is(":checked"),
+      enable_signup_rate_limiting: $("#enable-signup-rate-limiting").is(":checked"),
       max_file_upload_size: $form.find('input[type="number"]').val(),
       reply_unseen_email_minutes: unseenEnabled
         ? $("#reply-unseen-email-minutes").val()
