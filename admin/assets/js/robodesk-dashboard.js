@@ -3929,76 +3929,86 @@ document.addEventListener("DOMContentLoaded", function () {
 });
 
 jQuery(document).ready(function ($) {
-  function createSSE(ticketId, lastCid, userId = "142", parentElement) {
+  function createSSE(ticketId) {
     let eventSource = null;
+    let lastKnownReplyIds = new Set();
 
     function connect() {
-      const sseUrl = `${
-        window.location.origin
-      }/wp-json/robodesk/v1/adminstream/${ticketId}/${lastCid || ""}/${"42"}`;
-      console.log("🔌 Connecting to SSE:", sseUrl);
+      const nonce = window.robodeskAjax?.rest_nonce || "";
+      const sseUrl = `${window.location.origin}/wp-json/robodesk/v1/ticket-stream/${ticketId}?_wpnonce=${nonce}`;
+      console.log("🔌 Connecting to ticket-stream SSE:", sseUrl);
 
       eventSource = new EventSource(sseUrl);
 
-      eventSource.addEventListener("new_admin_comment", function (event) {
-        const comment = JSON.parse(event.data);
-        let index = 12;
-        const isAction = comment.comment_meta?.is_action === true;
-        const actionClass = isAction ? "reply-action bg-blue-200" : "";
-        const commentRole =
-          comment.role ||
-          (comment.is_bot_response || comment.comment_meta?.is_bot_response
-            ? "AI BOT"
-            : comment.type === "customer"
-              ? "Customer"
-              : userRole.toUpperCase());
-        const content = `
-                      <div
-                        data-cid="${comment.id}"
-                        class="p-4 rounded-lg replys reply-${
-                          comment.type
-                        } ${actionClass}"
-                        id="reply-${index}"
-                      >
-                        <div class="flex justify-between items-center mb-2">
-                          <span class="font-medium text-sm text-gray-900">
-                            ${escapeHTML(comment.author)} (${escapeHTML(commentRole)})
-                          </span>
-                          <span class="text-xs text-gray-500">
-                            ${formatDate(comment.timestamp)}
-                          </span>
-                        </div>
-                        <p class="text-sm text-gray-700">
-                          ${isAction ? comment.message : comment.message}
-                        </p>
-                      </div>
-                    `;
-        const repliesList = document.getElementById("replies-list");
+      // The ticket-stream endpoint sends a 'sync' event with full replies list
+      // whenever a new reply, note, or status change is detected (polls every 3s)
+      eventSource.addEventListener("sync", function (event) {
+        try {
+          const data = JSON.parse(event.data);
+          const replies = data.replies || [];
+          const status = data.status;
+          const repliesList = document.getElementById("replies-list");
 
-        // Insert new reply
-        repliesList.insertAdjacentHTML("beforeend", content);
+          // Detect if there are genuinely new replies
+          const incomingIds = new Set(replies.map((r) => String(r.id)));
+          const hasNewReplies = replies.some((r) => !lastKnownReplyIds.has(String(r.id)));
 
-        const audioUrl = repliesList.getAttribute("data-audio");
-        const audio = new Audio(audioUrl);
-        audio.play().catch((err) => {
-          console.warn("Autoplay blocked by browser:", err);
-        });
+          if (hasNewReplies && lastKnownReplyIds.size > 0 && repliesList) {
+            // Play notification sound for new replies from others
+            const audioUrl = repliesList.getAttribute("data-audio");
+            if (audioUrl) {
+              const audio = new Audio(audioUrl);
+              audio.play().catch((err) => {
+                console.warn("Autoplay blocked by browser:", err);
+              });
+            }
+          }
 
-        // Scroll to the last reply
-        const lastReply = repliesList.querySelector(".replys:last-child");
-        if (lastReply) {
-          lastReply.scrollIntoView({ behavior: "smooth", block: "end" });
+          lastKnownReplyIds = incomingIds;
+
+          // Re-render the replies list with fresh data
+          renderReplies(replies);
+
+          const repliesCountEl = document.getElementById("replies-count");
+          if (repliesCountEl) {
+            repliesCountEl.textContent = data.replies_count || replies.length;
+          }
+
+          // Update status badge if status changed
+          if (status && currentTicket) {
+            currentTicket.status = status;
+            const statusBadge = document.getElementById("ticket-status-badge");
+            if (statusBadge) {
+              statusBadge.textContent = status.charAt(0).toUpperCase() + status.slice(1);
+            }
+          }
+
+          // Scroll to bottom only if user is near the bottom
+          if (repliesList) {
+            const scrollThreshold = 150;
+            const isNearBottom =
+              repliesList.scrollHeight - repliesList.scrollTop - repliesList.clientHeight <
+              scrollThreshold;
+            if (isNearBottom) {
+              const lastReply = repliesList.querySelector(".replys:last-child");
+              if (lastReply) {
+                lastReply.scrollIntoView({ behavior: "smooth", block: "end" });
+              }
+            }
+          }
+        } catch (err) {
+          console.error("SSE sync parse error:", err);
         }
       });
 
       eventSource.onerror = function (err) {
-        // console.error('❌ SSE error:', err);
+        // SSE auto-reconnects on error; no manual action needed
       };
     }
 
     function disconnect() {
       if (eventSource) {
-        console.log("🔌 Disconnecting SSE...");
+        console.log("🔌 Disconnecting ticket-stream SSE...");
         eventSource.close();
         eventSource = null;
       }
@@ -4044,46 +4054,17 @@ jQuery(document).ready(function ($) {
     params.ticket
   ) {
     setTimeout(() => {
-      //run sse event
-      //
       const ticketId = params.ticket;
 
-      const repliesList = document.getElementById("replies-list");
-      const replyElements = repliesList.getElementsByClassName("replys");
-      const lastReply = replyElements[replyElements.length - 1];
-
-      let lastCid = lastReply ? lastReply.getAttribute("data-cid") : null;
-
-      let sse = createSSE(ticketId, lastCid, repliesList);
+      // Use ticket-stream which continuously polls every 3s and sends full sync events
+      let sse = createSSE(ticketId);
       sse.connect();
 
-      const observer = new MutationObserver((mutationsList) => {
-        for (let mutation of mutationsList) {
-          if (mutation.type === "childList" && mutation.addedNodes.length > 0) {
-            const newReplies = Array.from(mutation.addedNodes).filter(
-              (node) =>
-                node.nodeType === 1 && node.classList.contains("replys"),
-            );
-
-            if (newReplies.length > 0) {
-              const recentlyAddedItem = newReplies[newReplies.length - 1];
-              lastCid = recentlyAddedItem
-                ? recentlyAddedItem.getAttribute("data-cid")
-                : null;
-
-              sse.disconnect();
-              sse = createSSE(ticketId, lastCid, repliesList);
-              sse.connect();
-            }
-          }
-        }
+      // Clean up SSE when navigating away
+      window.addEventListener("beforeunload", function () {
+        sse.disconnect();
       });
-
-      observer.observe(repliesList, {
-        childList: true,
-        subtree: false,
-      });
-    }, 3000);
+    }, 1000);
   }
 });
 

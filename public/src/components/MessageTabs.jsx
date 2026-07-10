@@ -113,6 +113,10 @@ const MessageTabs = ({
     setSingleTicketPage(false);
   }, []);
 
+  useEffect(() => {
+    refreshTickets(searchTerm, priorityFilter, currentTab);
+  }, [currentTab]);
+
   const firstMessageId = useMemo(() => {
     if (!ticketsContext || ticketsContext.length === 0) return false;
 
@@ -121,7 +125,8 @@ const MessageTabs = ({
 
   const url = useMemo(() => {
     if (!loggedinContext && !loggedInUsrId) return null;
-    return `wp-json/robodesk/v1/stream/tickets/0/${firstMessageId}/${loggedInUsrId}/?ticket=1`;
+    const nonce = window.wpAuth?.restNonce || '';
+    return `wp-json/robodesk/v1/stream/tickets/0/${firstMessageId}/${loggedInUsrId}/?ticket=1&_wpnonce=${nonce}`;
   }, [firstMessageId]);
 
   useEffect(() => {

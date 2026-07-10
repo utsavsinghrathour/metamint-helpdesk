@@ -1121,9 +1121,10 @@ function robodesk_create_ticket()
             wp_send_json_error(['message' => 'Failed to add comment to ticket']);
             wp_die();
         } else {
-            add_comment_meta($comment_id, 'comment_source', 'admin', true);
-            add_comment_meta($comment_id, 'author_type', 'agent', true);
-            add_comment_meta($comment_id, 'rbd_suppress_notification', 1, true);
+            update_comment_meta($comment_id, 'comment_source', 'admin');
+            update_comment_meta($comment_id, 'author_type', 'agent');
+            update_comment_meta($comment_id, 'admin_comment', 'yes');
+            update_comment_meta($comment_id, 'rbd_suppress_notification', 1);
         }
     }
 
@@ -1440,8 +1441,9 @@ function robodesk_update_ticket_priority()
         ]);
 
         if (!is_wp_error($comment_id)) {
-            add_comment_meta($comment_id, 'comment_source', 'admin', true);
-            add_comment_meta($comment_id, 'author_type', 'agent', true);
+            update_comment_meta($comment_id, 'comment_source', 'admin');
+            update_comment_meta($comment_id, 'author_type', 'agent');
+            update_comment_meta($comment_id, 'admin_comment', 'yes');
         }
     }
     wp_send_json_success([
@@ -1518,8 +1520,9 @@ function robodesk_update_ticket_assignee()
         ]);
 
         if (!is_wp_error($comment_id)) {
-            add_comment_meta($comment_id, 'comment_source', 'admin', true);
-            add_comment_meta($comment_id, 'author_type', 'agent', true);
+            update_comment_meta($comment_id, 'comment_source', 'admin');
+            update_comment_meta($comment_id, 'author_type', 'agent');
+            update_comment_meta($comment_id, 'admin_comment', 'yes');
         }
     }
     wp_send_json_success([
@@ -1577,8 +1580,9 @@ function robodesk_handle_add_ticket_reply()
         wp_send_json_error(['message' => 'Failed to insert comment']);
     }
 
-    add_comment_meta($comment_id, 'comment_source', 'admin', true);
-    add_comment_meta($comment_id, 'author_type', 'agent', true);
+    update_comment_meta($comment_id, 'comment_source', 'admin');
+    update_comment_meta($comment_id, 'author_type', 'agent');
+    update_comment_meta($comment_id, 'admin_comment', 'yes');
 
     // Trigger action for integrations (Slack, Discord, etc.)
     do_action('robodesk_after_reply_added', $ticket_id, $comment_id, $reply, $user_object);
@@ -1655,8 +1659,9 @@ function robodesk_handle_close_ticket()
         if (is_wp_error($comment_id)) {
             wp_send_json_error(['message' => 'Failed to insert comment']);
         } else {
-            add_comment_meta($comment_id, 'comment_source', 'admin', true);
-            add_comment_meta($comment_id, 'author_type', 'agent', true);
+            update_comment_meta($comment_id, 'comment_source', 'admin');
+            update_comment_meta($comment_id, 'author_type', 'agent');
+            update_comment_meta($comment_id, 'admin_comment', 'yes');
         }
     }
 
@@ -1678,8 +1683,9 @@ function robodesk_handle_close_ticket()
     if (is_wp_error($close_comment_id)) {
         wp_send_json_error(['message' => 'Failed to add close comment']);
     } else {
-        add_comment_meta($close_comment_id, 'comment_source', 'admin', true);
-        add_comment_meta($close_comment_id, 'author_type', 'agent', true);
+        update_comment_meta($close_comment_id, 'comment_source', 'admin');
+        update_comment_meta($close_comment_id, 'author_type', 'agent');
+        update_comment_meta($close_comment_id, 'admin_comment', 'yes');
     }
     //if successful send email notification to the customer
     $customer_email = get_post_meta($ticket_id, '_robodesk_customer_email', true);
@@ -2634,8 +2640,9 @@ function robodesk_handle_bulk_action()
                 if (is_wp_error($comment_id)) {
                     $errors[] = "Failed to add comment for ticket ID: $ticket_id";
                 } elseif ($action_type === 'priority' || $action_type === 'assignee') {
-                    add_comment_meta($comment_id, 'comment_source', 'admin', true);
-                    add_comment_meta($comment_id, 'author_type', 'agent', true);
+                    update_comment_meta($comment_id, 'comment_source', 'admin');
+                    update_comment_meta($comment_id, 'author_type', 'agent');
+                    update_comment_meta($comment_id, 'admin_comment', 'yes');
                 }
             }
         }
