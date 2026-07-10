@@ -601,16 +601,15 @@ function robodesk_stream($request)
 //For new notifications
 function robodesk_get_new_notifications($user_id)
 {
-    // Get all tickets newer than last_id_client
     // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query
-    $notifications_data = get_posts(array(
+    $tickets = get_posts(array(
         'post_type' => 'robodesk_ticket',
         'post_status' => 'publish',
         'author' => $user_id,
         'orderby' => 'date',
         'order' => 'DESC',
         'fields' => 'ids',
-        'posts_per_page' => 4,
+        'posts_per_page' => 10,
         'meta_query' => array(
             array(
                 'key' => 'rbd_all_seen',
@@ -620,7 +619,27 @@ function robodesk_get_new_notifications($user_id)
         )
     ));
 
-    return $notifications_data;
+    // Return each ticket with its latest reply id so the client can detect a
+    // genuinely NEW message (rather than just an already-unread one) and beep
+    // for every new reply regardless of how many are still unread.
+    $result = array();
+    foreach ($tickets as $ticket_id) {
+        $latest = get_comments(array(
+            'post_id' => $ticket_id,
+            'number' => 1,
+            'orderby' => 'comment_ID',
+            'order' => 'DESC',
+            'type' => 'ticket_replies',
+            'status' => 'approve',
+            'fields' => 'ids',
+        ));
+        $result[] = array(
+            'id' => (int) $ticket_id,
+            'last_comment_id' => !empty($latest) ? (int) $latest[0] : 0,
+        );
+    }
+
+    return $result;
 }
 
 

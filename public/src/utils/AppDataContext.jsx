@@ -16,12 +16,20 @@ export const AppDataProvider = ({ children }) => {
     },
     noticesContext: [],
     isSingleTicketPage: false,
+    openTicketId: null,
   });
 
   const setSingleTicketPage = (val) => {
     setData((prev) => ({
       ...prev,
       isSingleTicketPage: val,
+    }));
+  };
+
+  const setOpenTicketId = (val) => {
+    setData((prev) => ({
+      ...prev,
+      openTicketId: val,
     }));
   };
 
@@ -276,6 +284,7 @@ export const AppDataProvider = ({ children }) => {
         updateTicket,
         updateNewCommentNotification,
         setSingleTicketPage,
+        setOpenTicketId,
       }}
     >
       {children}
