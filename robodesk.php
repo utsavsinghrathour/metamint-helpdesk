@@ -125,6 +125,13 @@ function robodesk_activate()
 
     $editor_role = get_role('editor');
     if ($editor_role) {
+        $editor_role->add_cap('create_tickets');
+        $editor_role->add_cap('edit_tickets');
+        $editor_role->add_cap('edit_others_tickets');
+        $editor_role->add_cap('publish_tickets');
+        $editor_role->add_cap('read_private_tickets');
+        $editor_role->add_cap('read_ticket');
+        $editor_role->add_cap('delete_ticket');
         $editor_role->add_cap('robodesk_access_dashboard');
     }
 
@@ -212,6 +219,16 @@ require_once ROBODESK_PLUGIN_PATH . 'admin/includes/rbodesk-admin-rest.php';
 
 // Enqueue Scripts
 add_action('wp_enqueue_scripts', 'robodesk_enqueue_scripts');
+
+function robodesk_get_default_staff_id()
+{
+    $id = get_option('robodesk_default_agent', '');
+    if (empty($id)) {
+        $id = get_option('robodesk_default_staff', '');
+    }
+    return $id ? (int) $id : 0;
+}
+
 function robodesk_enqueue_scripts()
 {
 
@@ -286,6 +303,7 @@ function robodesk_enqueue_scripts()
                 'robodesk_bot_profile_image' => esc_url(get_option('robodesk_bot_profile_image', '')),
                 'robodesk_bot_title_name' => get_option('robodesk_bot_title_name', ''),
                 'robodesk_addon_active' => defined('ROBODESK_ADDON_VERSION'),
+                'robodesk_ai_bot_active' => get_option('robodesk_addon_ai_bot_status', 'inactive') === 'active',
             ]
         );
 
@@ -310,6 +328,10 @@ function robodesk_enqueue_scripts()
             'notificationSound' => esc_url(get_option('robodesk_notification_sound', '')),
             'priorityTerms' => $priority_terms,
             'priorityColors' => $priority_colors,
+
+            'defaultStaffId' => robodesk_get_default_staff_id(),
+
+            'restNonce' => wp_create_nonce('wp_rest'),
 
             'status' => [
                 'active-conversations' => 'Active Conversations',
@@ -680,9 +702,8 @@ function robodesk_get_requested_ticket_id_from_query()
 // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedFunctionFound
 function rbd_log($message)
 {
-    $upload_dir = wp_upload_dir();
-    $log_dir    = $upload_dir['basedir'] . '/robodesk';
-    $log_file   = $log_dir . '/debug.log';
+    $log_file = ROBODESK_PLUGIN_PATH . 'logs/debug.log';
+    $log_dir  = dirname($log_file);
 
     if (!file_exists($log_dir)) {
         // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_mkdir
@@ -789,6 +810,7 @@ function robodesk_get_support_user_ids()
     $users = get_users([
         'role__in' => [
             'administrator',
+            'editor',
             'robodesk_support_manager',
             'robodesk_support_staff',
         ],
@@ -978,6 +1000,27 @@ function robodesk_is_public_ip($ip)
         FILTER_VALIDATE_IP,
         FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE
     ) !== false;
+}
+
+function robodesk_get_client_ip()
+{
+    $headers = robodesk_get_request_header_values();
+    $priority = array('cf-connecting-ip', 'x-forwarded-for', 'x-real-ip', 'x-client-ip', 'remote-addr');
+    foreach ($priority as $key) {
+        if (!empty($headers[$key])) {
+            $ip = robodesk_get_first_ip_from_value($headers[$key]);
+            if ($ip !== '') {
+                return $ip;
+            }
+        }
+    }
+    if (!empty($_SERVER['REMOTE_ADDR'])) {
+        $ip = sanitize_text_field(wp_unslash((string) $_SERVER['REMOTE_ADDR']));
+        if (filter_var($ip, FILTER_VALIDATE_IP)) {
+            return $ip;
+        }
+    }
+    return '0.0.0.0';
 }
 
 function robodesk_parse_browser_label($value)
@@ -1249,7 +1292,9 @@ function robodesk_get_author_type($user_id)
 
     $roles = (array) $user->roles;
     if (
+        user_can($user_id, 'robodesk_access_dashboard') ||
         in_array('administrator', $roles, true) ||
+        in_array('editor', $roles, true) ||
         in_array('robodesk_support_manager', $roles, true) ||
         in_array('robodesk_support_staff', $roles, true)
     ) {
@@ -1274,6 +1319,10 @@ function robodesk_get_agent_source_by_user($user_id)
     $roles = (array) $user->roles;
     if (in_array('administrator', $roles, true)) {
         return 'admin';
+    }
+
+    if (in_array('editor', $roles, true)) {
+        return 'editor';
     }
 
     if (
@@ -2331,3 +2380,14 @@ function robodesk_disable_jquery_migrate_logging($scripts)
     }
 }
 add_action('wp_default_scripts', 'robodesk_disable_jquery_migrate_logging');
+
+
+add_filter('show_admin_bar', 'robodesk_show_admin_bar');
+
+/** * Hide the WordPress admin bar for everyone except administrators Support Managers/Support Staff. */
+
+function robodesk_show_admin_bar($show)
+{
+    return current_user_can('administrator')
+        || current_user_can('robodesk_access_dashboard');
+}
