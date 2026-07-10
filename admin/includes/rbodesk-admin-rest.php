@@ -408,57 +408,53 @@ function robodesk_ticket_stream($request)
     $last_note_id  = $state['last_note_id'];
     $last_status   = $state['last_status'];
 
-    // ── Poll loop ──
-    while (!connection_aborted()) {
-        usleep(3000000);
-        $check_count++;
+    // ── Short-lived SSE ──
+    // Run once and exit. Browser EventSource reconnects via retry directive,
+    // avoiding long-running PHP-FPM workers that exhaust the pool.
+    usleep(1000000);
+    $check_count++;
 
-        $has_new = false;
+    wp_cache_delete('last_changed', 'comment_queries');
+    clean_post_cache($ticket_id);
 
-        // Check latest reply ID
-        $latest_reply = get_comments([
-            'post_id' => $ticket_id,
-            'number'  => 1,
-            'orderby' => 'comment_ID',
-            'order'   => 'DESC',
-            'type'    => 'ticket_replies',
-            'fields'  => 'ids',
-        ]);
-        $current_reply_id = !empty($latest_reply) ? (int) $latest_reply[0] : 0;
-        if ($current_reply_id > $last_reply_id) {
-            $has_new = true;
-        }
+    $has_new = false;
 
-        // Check latest note ID
-        $latest_note = get_comments([
-            'post_id' => $ticket_id,
-            'number'  => 1,
-            'orderby' => 'comment_ID',
-            'order'   => 'DESC',
-            'type'    => 'ticket_notes',
-            'fields'  => 'ids',
-        ]);
-        $current_note_id = !empty($latest_note) ? (int) $latest_note[0] : 0;
-        if ($current_note_id > $last_note_id) {
-            $has_new = true;
-        }
+    $latest_reply = get_comments([
+        'post_id' => $ticket_id,
+        'number'  => 1,
+        'orderby' => 'comment_ID',
+        'order'   => 'DESC',
+        'type'    => 'ticket_replies',
+        'fields'  => 'ids',
+    ]);
+    $current_reply_id = !empty($latest_reply) ? (int) $latest_reply[0] : 0;
+    if ($current_reply_id > $last_reply_id) {
+        $has_new = true;
+    }
 
-        // Check status change
-        $current_status = get_post_meta($ticket_id, '_robodesk_ticket_status', true) ?: 'open';
-        if ($current_status !== $last_status) {
-            $has_new = true;
-        }
+    $latest_note = get_comments([
+        'post_id' => $ticket_id,
+        'number'  => 1,
+        'orderby' => 'comment_ID',
+        'order'   => 'DESC',
+        'type'    => 'ticket_notes',
+        'fields'  => 'ids',
+    ]);
+    $current_note_id = !empty($latest_note) ? (int) $latest_note[0] : 0;
+    if ($current_note_id > $last_note_id) {
+        $has_new = true;
+    }
 
-        if ($has_new) {
-            $state = $send_data();
-            $last_reply_id = $state['last_reply_id'];
-            $last_note_id  = $state['last_note_id'];
-            $last_status   = $state['last_status'];
-        } elseif ($check_count >= 5) {
-            echo ": keepalive\n\n";
-            flush();
-            $check_count = 0;
-        }
+    $current_status = get_post_meta($ticket_id, '_robodesk_ticket_status', true) ?: 'open';
+    if ($current_status !== $last_status) {
+        $has_new = true;
+    }
+
+    if ($has_new) {
+        $state = $send_data();
+    } else {
+        echo ": keepalive\n\n";
+        flush();
     }
 
     exit;
@@ -533,11 +529,7 @@ function robodesk_notification_stream()
 
     $send();
 
-    while (!connection_aborted()) {
-        usleep(3000000);
-        $send();
-    }
-
+    // Short-lived: run once and exit. Browser EventSource reconnects.
     exit;
 }
 

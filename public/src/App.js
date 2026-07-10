@@ -197,7 +197,8 @@ const AppContent = ({ imageUrls = { logo: "" } }) => {
   const url = useMemo(() => {
     if (!initialCursorId) return null;
     if (!loggedinContext && !loggedInUsrId) return null;
-    return `${window.location.origin}/wp-json/robodesk/v1/stream/tickets/0/${initialCursorId}/${loggedInUsrId}`;
+    const nonce = window.wpAuth?.restNonce || '';
+    return `${window.location.origin}/wp-json/robodesk/v1/stream/tickets/0/${initialCursorId}/${loggedInUsrId}?_wpnonce=${nonce}`;
   }, [initialCursorId, loggedInUsrId]);
 
   useEffect(() => {

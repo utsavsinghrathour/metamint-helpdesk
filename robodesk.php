@@ -331,6 +331,8 @@ function robodesk_enqueue_scripts()
 
             'defaultStaffId' => robodesk_get_default_staff_id(),
 
+            'restNonce' => wp_create_nonce('wp_rest'),
+
             'status' => [
                 'active-conversations' => 'Active Conversations',
                 'open' => 'Open',
@@ -1290,6 +1292,7 @@ function robodesk_get_author_type($user_id)
 
     $roles = (array) $user->roles;
     if (
+        user_can($user_id, 'robodesk_access_dashboard') ||
         in_array('administrator', $roles, true) ||
         in_array('editor', $roles, true) ||
         in_array('robodesk_support_manager', $roles, true) ||
