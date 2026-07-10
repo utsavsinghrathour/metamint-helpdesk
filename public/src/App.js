@@ -31,14 +31,13 @@ const AppContent = ({ imageUrls = { logo: "" } }) => {
   const [showActiveFeatured, setShowActiveFeatured] = useState(true);
   const [selectedTicket, setSelectedTicket] = useState();
   const [focusedTextArea, setFocusedTextArea] = useState(false);
+  const [initialCursorId, setInitialCursorId] = useState(null);
   const hasAutoOpenedTicket = useRef(false);
   const hasAttemptedDeepLinkFetch = useRef(false);
 
   const isSupportPage = window.location.pathname.includes("/robodesk-support");
 
-  const notificationAudio = useRef(
-    new Audio(window.wpAuth?.notificationSound || ""),
-  );
+  const notificationAudio = useRef(null);
 
   const handleFocusedTextArea = (focus) => setFocusedTextArea(focus);
 
@@ -189,26 +188,41 @@ const AppContent = ({ imageUrls = { logo: "" } }) => {
     setSelectedTicket(newValue);
   };
 
+  useEffect(() => {
+    if (!initialCursorId && ticketsContext?.length > 0 && ticketsContext[0]?.id) {
+      setInitialCursorId(ticketsContext[0]?.id);
+    }
+  }, [ticketsContext]);
+
   const url = useMemo(() => {
-    if (!ticketsContext[0]?.id) return null;
+    if (!initialCursorId) return null;
     if (!loggedinContext && !loggedInUsrId) return null;
-    // console.log('The url from memo change');
-    // console.log(window.location.origin);
-    return `${window.location.origin}/wp-json/robodesk/v1/stream/tickets/0/${ticketsContext[0]?.id}/${loggedInUsrId}`;
-  }, [ticketsContext[0]?.id, loggedInUsrId]);
+    const nonce = window.wpAuth?.restNonce || '';
+    return `${window.location.origin}/wp-json/robodesk/v1/stream/tickets/0/${initialCursorId}/${loggedInUsrId}?_wpnonce=${nonce}`;
+  }, [initialCursorId, loggedInUsrId]);
 
   useEffect(() => {
+    if (!notificationAudio.current) {
+      notificationAudio.current = new Audio(
+        window.wpAuth?.notificationSound || "",
+      );
+    }
+
     notificationAudio.current.load();
     // useSSE(url, handlers);
   }, []);
 
   useEffect(() => {
-    if (!url && !loggedinContext && !loggedInUsrId) return;
-    // console.info('I am executed first');
+    if (selectedTicket || isSingleTicketPage) {
+      sseManager.disconnect();
+      return undefined;
+    }
+
+    if (!url) return undefined;
+
     sseManager.connect(url);
 
     const unsubscribeNewTicket = sseManager.on("new_ticket", (data) => {
-      //   console.log('Executed From new Ticket');
       updateTicket(data);
     });
 
@@ -218,9 +232,6 @@ const AppContent = ({ imageUrls = { logo: "" } }) => {
         const ids = Array.isArray(data)
           ? data.map((item) => (typeof item === "object" ? item.id : item))
           : [];
-
-        // console.info("Executed From new notif");
-        //   console.log('We ant here')
         handleSelectedTicketUpdate(null);
         if (updateNewCommentNotification(ids)) {
           notificationAudio.current.play();
@@ -231,8 +242,9 @@ const AppContent = ({ imageUrls = { logo: "" } }) => {
       console.info("closing");
       unsubscribeNewTicket();
       unsubscribeNotification();
+      sseManager.disconnect();
     };
-  }, [url]);
+  }, [url, selectedTicket, isSingleTicketPage, loggedinContext, loggedInUsrId]);
 
   useEffect(() => {
     if (selectedTicket) {
@@ -386,20 +398,18 @@ const AppContent = ({ imageUrls = { logo: "" } }) => {
       )}
 
       <div
-        className={`robodesk-popup rd-flex rd-flex-col rd-border-none rd-border-radius-md ${
-          isOpen ? "open" : "closed"
-        } ${isExpanded ? "expanded" : ""}`}
+        className={`robodesk-popup rd-flex rd-flex-col rd-border-none rd-border-radius-md ${isOpen ? "open" : "closed"
+          } ${isExpanded ? "expanded" : ""}`}
       >
         {tabs[activeTab].component}
       </div>
 
       <div
-        className={` rd-popup-top-icon-container ${
-          isOpen ? "rd-hidden " : ""
-        } ${hasNotificationOff && !isOpen ? "rd-title-with-dot" : ""}`}
+        className={` rd-popup-top-icon-container ${isOpen ? "rd-hidden " : ""
+          } ${hasNotificationOff && !isOpen ? "rd-title-with-dot" : ""}`}
       >
         {imageUrls.popover_top_icon &&
-        imageUrls.popover_top_icon.trim() !== "" ? (
+          imageUrls.popover_top_icon.trim() !== "" ? (
           <img
             src={imageUrls.popover_top_icon}
             alt="Popup Top Icon"
@@ -412,9 +422,8 @@ const AppContent = ({ imageUrls = { logo: "" } }) => {
       </div>
 
       <button
-        className={`robodesk-toggle-btn rd-bg-blue rd-rounded-border rd-border-none rd-cursor-pointer ${
-          isOpen ? "rotatedssss" : ""
-        }`}
+        className={`robodesk-toggle-btn rd-bg-blue rd-rounded-border rd-border-none rd-cursor-pointer ${isOpen ? "rotatedssss" : ""
+          }`}
         onClick={handlePopupToggle}
       >
         {isOpen ? (

@@ -35,15 +35,12 @@ class SSEManager {
           const data = JSON.parse(e.data);
 
           this._emit(event, data);
-        } catch (err) {}
+        } catch (err) { }
       });
     });
 
-    // console.log(this.eventSource);
-
     this.eventSource.onerror = (err) => {
       this._emit('error', { message: 'SSE connection error', error: err });
-      //   console.log('Disconnected');
       //   this.connect();
       // Avoid disconnecting unless necessary
       // this.disconnect();

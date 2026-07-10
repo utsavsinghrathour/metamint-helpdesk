@@ -11,7 +11,6 @@ import Preloader from "../images/preloader.svg";
 import { useAppData } from "../utils/AppDataContext";
 import defaultLogo from "../images/robodesk-logo.png";
 // import ChangePassword from './ChangePassword';
-import { sseManager } from "../Hooks/sseManager";
 
 const SingleTicket = React.lazy(() => import("./SingleTicket"));
 
@@ -110,22 +109,13 @@ const MessageTabs = ({
   const image_urls = window.robodeskData?.imageUrls || {};
   const messageWrapperRef = useRef(null);
 
-  const beep = useRef(new Audio(wpAuth.notificationSound));
-
-  useEffect(() => {
-    if (!loggedInUsrId) {
-      return;
-    }
-
-    if (beep.current) {
-      beep.current.volume = 1.0;
-      beep.current.preload = "auto";
-    }
-  }, []);
-
   useEffect(() => {
     setSingleTicketPage(false);
   }, []);
+
+  useEffect(() => {
+    refreshTickets(searchTerm, priorityFilter, currentTab);
+  }, [currentTab]);
 
   const firstMessageId = useMemo(() => {
     if (!ticketsContext || ticketsContext.length === 0) return false;
@@ -135,7 +125,8 @@ const MessageTabs = ({
 
   const url = useMemo(() => {
     if (!loggedinContext && !loggedInUsrId) return null;
-    return `wp-json/robodesk/v1/stream/tickets/0/${firstMessageId}/${loggedInUsrId}/?ticket=1`;
+    const nonce = window.wpAuth?.restNonce || '';
+    return `wp-json/robodesk/v1/stream/tickets/0/${firstMessageId}/${loggedInUsrId}/?ticket=1&_wpnonce=${nonce}`;
   }, [firstMessageId]);
 
   useEffect(() => {
@@ -184,7 +175,7 @@ const MessageTabs = ({
 
     const { scrollTop, scrollHeight, clientHeight } = wrapper;
     if (scrollTop + clientHeight >= scrollHeight) {
-      console.log("now");
+      // console.log("now");
     }
   };
 

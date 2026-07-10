@@ -187,22 +187,9 @@ const Login = ({
   }, []);
 
   useEffect(() => {
-    const fetchDefaultStaff = async () => {
-      try {
-        const response = await fetch("/wp-json/robodesk/selected/staff");
-        const data = await response.json();
-
-        if (response.ok && data?.staff_user_id) {
-          setDefaultStaffId(data.staff_user_id);
-        } else {
-          setDefaultStaffId(null);
-        }
-      } catch (error) {
-        setDefaultStaffId(null);
-      }
-    };
-
-    fetchDefaultStaff();
+    if (window.wpAuth?.defaultStaffId) {
+      setDefaultStaffId(window.wpAuth.defaultStaffId);
+    }
   }, []);
 
   const handleStateUpdate = (ticket) => {
@@ -264,6 +251,11 @@ const Login = ({
 
       if (result.success) {
         setShowPasswordField(result.data.exists);
+      } else if (result.data && result.data.message) {
+        setErrors({
+          ...errors,
+          email: result.data.message,
+        });
       } else {
         await createUserAndLogin();
       }
@@ -286,7 +278,10 @@ const Login = ({
       await handleTempTicketCreation(user_id);
       updateLoginStatus(true, user_id);
     } catch (err) {
-      console.error("Failed to create ticket:", err);
+      setErrors({
+        ...errors,
+        email: err.message || "Signup failed. Please try again.",
+      });
     }
   };
 
@@ -323,13 +318,27 @@ const Login = ({
       ? JSON.parse(savedConversation)
       : [];
 
-    const transcriptMessages = Array.isArray(conversationMessages)
+    let transcriptMessages = Array.isArray(conversationMessages)
       ? conversationMessages.filter(
           (message) =>
             (message.role === "user" || message.role === "assistant") &&
             !message.thinking,
         )
       : [];
+
+    // Stably sort transcriptMessages chronologically by timestamp
+    const withIndex = transcriptMessages.map((msg, idx) => ({ msg, idx }));
+    withIndex.sort((a, b) => {
+      const timeA = a.msg.timestamp ? new Date(a.msg.timestamp).getTime() : null;
+      const timeB = b.msg.timestamp ? new Date(b.msg.timestamp).getTime() : null;
+      if (timeA !== null && timeB !== null) {
+        if (timeA !== timeB) {
+          return timeA - timeB;
+        }
+      }
+      return a.idx - b.idx;
+    });
+    transcriptMessages = withIndex.map(item => item.msg);
 
     const userMessages = transcriptMessages.filter(
       (message) => message.role === "user",
@@ -354,6 +363,7 @@ const Login = ({
         userId,
         ticketTitle,
         ticketDescription,
+        userMessages[0]?.timestamp || new Date().toISOString()
       );
 
       const newTicket = {
@@ -379,7 +389,7 @@ const Login = ({
           }
 
           if (message.role === "user") {
-            await sendReply(newTicket.id, userId, messageText);
+            await sendReply(newTicket.id, userId, messageText, false, false, undefined, message.timestamp);
           } else if (message.role === "assistant") {
             await sendReply(
               newTicket.id,
@@ -387,6 +397,8 @@ const Login = ({
               messageText,
               false,
               true,
+              undefined,
+              message.timestamp,
             );
           }
         }

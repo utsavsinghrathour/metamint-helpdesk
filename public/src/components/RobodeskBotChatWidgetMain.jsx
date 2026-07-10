@@ -27,7 +27,6 @@ export default function RobodeskBotChatWidgetMain({
   widgetConfig,
   activeAIMode,
 }) {
-  // console.log("test tse");
   const rootRef = useRef(null);
   const CHAT_KEY = "robodesk_chat_session";
   const chatHeading =
@@ -48,12 +47,38 @@ export default function RobodeskBotChatWidgetMain({
     widgetConfig?.botProfileImage ||
     widgetConfig?.bot_profile_image ||
     "";
+  const canLoadWidgetConfig = Boolean(
+    window.robodeskData?.robodesk_addon_active &&
+    window.robodeskData?.robodesk_ai_bot_active,
+  );
   const [enabled, setEnabled] = useState(true);
   const [AIMode, setAIMode] = useState(activeAIMode || "");
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState(() => {
     const saved = sessionStorage.getItem(CHAT_KEY);
-    return saved ? JSON.parse(saved) : [];
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) {
+          // Stably sort messages in chronological order by timestamp
+          const withIndex = parsed.map((msg, idx) => ({ msg, idx }));
+          withIndex.sort((a, b) => {
+            const timeA = a.msg.timestamp ? new Date(a.msg.timestamp).getTime() : null;
+            const timeB = b.msg.timestamp ? new Date(b.msg.timestamp).getTime() : null;
+            if (timeA !== null && timeB !== null) {
+              if (timeA !== timeB) {
+                return timeA - timeB;
+              }
+            }
+            return a.idx - b.idx;
+          });
+          return withIndex.map(item => item.msg);
+        }
+      } catch (e) {
+        console.error("Error parsing saved chat session:", e);
+      }
+    }
+    return [];
   });
   const [input, setInput] = useState("");
   const [loadingText, setLoadingText] = useState("");
@@ -147,12 +172,12 @@ export default function RobodeskBotChatWidgetMain({
   };
 
   const fetchApiKey = async () => {
+    if (!canLoadWidgetConfig) return;
     console.log("fetchApiKey");
     try {
       const response = await wp.apiFetch({
         path: `/robodesk-bot/v1/widget-config`,
       });
-      console.log("response", response);
       // Try both possible key formats your PHP might return
       setBotName(
         response.botName || response.bot_name || resolvedBotName || ""
@@ -175,7 +200,9 @@ export default function RobodeskBotChatWidgetMain({
   }, [messages]);
 
   useEffect(() => {
-    fetchApiKey();
+    if (canLoadWidgetConfig) {
+      fetchApiKey();
+    }
   }, []);
 
   // Listen for ticket creation events
@@ -202,7 +229,7 @@ export default function RobodeskBotChatWidgetMain({
     if (rootRef.current) {
       rootRef.current.scrollTop = rootRef.current.scrollHeight;
     }
-  }, [messages]);
+  }, [messages, isStreaming, loadingText]);
 
   if (!enabled) return null;
 
@@ -213,7 +240,8 @@ export default function RobodeskBotChatWidgetMain({
     const q = input.trim();
     if (!q) return;
 
-    setMessages((m) => [...m, { role: "user", text: q }]);
+    const now = new Date().toISOString();
+    setMessages((m) => [...m, { role: "user", text: q, timestamp: now }]);
     setInput("");
     window.dispatchEvent(
       new CustomEvent("robodesk:messageSent", {
@@ -256,12 +284,13 @@ export default function RobodeskBotChatWidgetMain({
           data: j.data || null,
           ui: j.ui || { suggestions: [], actions: [] },
           intent: j.intent || "",
+          timestamp: new Date().toISOString(),
         },
       ]);
     } catch (e) {
       setMessages((m) => [
         ...m.filter((x) => !x.thinking),
-        { role: "assistant", message: e.message },
+        { role: "assistant", message: e.message, timestamp: new Date().toISOString() },
       ]);
     }
   };
@@ -270,7 +299,8 @@ export default function RobodeskBotChatWidgetMain({
     const q = input.trim();
     if (!q) return;
 
-    setMessages((m) => [...m, { role: "user", text: q }]);
+    const now = new Date().toISOString();
+    setMessages((m) => [...m, { role: "user", text: q, timestamp: now }]);
     setInput("");
     window.dispatchEvent(
       new CustomEvent("robodesk:messageSent", {
@@ -335,13 +365,13 @@ export default function RobodeskBotChatWidgetMain({
 
           // update loader text
           if (eventName.startsWith("thinking")) {
-            console.log("Received thinking event:", eventName);
+            // console.log("Received thinking event:", eventName);
             setLoadingText(parsed.message);
           }
 
           // final message
           if (eventName === "Final Response:") {
-            console.log("Received final response event:", parsed);
+            // console.log("Received final response event:", parsed);
             let finalText = "";
 
             if (typeof parsed.message === "string") {
@@ -359,7 +389,7 @@ export default function RobodeskBotChatWidgetMain({
             } else {
               finalText = "";
             }
-            console.log("Final parsed response:", finalText);
+            // console.log("Final parsed response:", finalText);
             setMessages((m) => [
               ...m,
               {
@@ -370,6 +400,7 @@ export default function RobodeskBotChatWidgetMain({
                 data: parsed.data || null,
                 ui: parsed.ui || { suggestions: [], actions: [] },
                 intent: parsed.intent || "",
+                timestamp: new Date().toISOString(),
               },
             ]);
 
@@ -379,7 +410,7 @@ export default function RobodeskBotChatWidgetMain({
         }
       }
     } catch (e) {
-      setMessages((m) => [...m, { role: "assistant", text: e.message }]);
+      setMessages((m) => [...m, { role: "assistant", text: e.message, timestamp: new Date().toISOString() }]);
       setIsStreaming(false);
       setLoadingText("");
     }
@@ -407,13 +438,11 @@ export default function RobodeskBotChatWidgetMain({
               return (
                 <div
                   key={i}
-                  className={`chat-message rd-flex rd-items-start ${
-                    m.role === "user"
-                      ? "rd-ml-auto sent"
-                      : "rd-flex rd-gap-8 received"
-                  } ${
-                    isSameSender ? "rd-msg-same-sender" : "rd-msg-new-sender"
-                  } ${m.role === "user" ? "rd-msg-user" : "rd-msg-assistant"}`}
+                  className={`chat-message rd-flex rd-items-start ${m.role === "user"
+                    ? "rd-ml-auto sent"
+                    : "rd-flex rd-gap-8 received"
+                    } ${isSameSender ? "rd-msg-same-sender" : "rd-msg-new-sender"
+                    } ${m.role === "user" ? "rd-msg-user" : "rd-msg-assistant"}`}
                   style={{
                     maxWidth: "70%",
                     marginBottom: isSameSender ? "4px" : "12px",
@@ -479,7 +508,9 @@ export default function RobodeskBotChatWidgetMain({
                           fontSize: "10px",
                         }}
                       >
-                        {new Date().toLocaleTimeString([], {
+                        {new Date(
+                          m.timestamp || new Date().toISOString()
+                        ).toLocaleTimeString([], {
                           hour: "2-digit",
                           minute: "2-digit",
                         })}

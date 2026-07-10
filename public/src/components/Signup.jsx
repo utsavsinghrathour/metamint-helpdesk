@@ -35,17 +35,17 @@ const Signup = ({ switchToLogin }) => {
 
   const checkPasswordStrength = (password) => {
     let score = 0;
-    
+
     // Length check
     if (password.length >= 8) score++;
     if (password.length >= 12) score++;
-    
+
     // Complexity checks
     if (/[A-Z]/.test(password)) score++; // Has uppercase
     if (/[a-z]/.test(password)) score++; // Has lowercase
     if (/[0-9]/.test(password)) score++; // Has numbers
     if (/[^A-Za-z0-9]/.test(password)) score++; // Has special chars
-    
+
     // Determine label and color
     let label, color;
     if (score <= 2) {
@@ -58,7 +58,7 @@ const Signup = ({ switchToLogin }) => {
       label = "Strong";
       color = "#52c41a"; // Green
     }
-    
+
     return { score, label, color };
   };
 
@@ -123,35 +123,31 @@ const Signup = ({ switchToLogin }) => {
         password: formData.password
       });
 
-      // Log response for debugging
-    //   console.log("Signup Response Status:", signupResponse.status);
-    //   console.log("Signup Response Data:", signupResponse);
-
       // Check if response indicates success
       if (signupResponse.success || signupResponse.message?.toLowerCase().includes("success")) {
         switchToLogin("Registration successful! Please login.");
       } else {
         throw new Error(signupResponse.message || "Registration failed");
       }
-      
+
     } catch (error) {
       console.error("Signup error:", error.message);
       // Handle specific error messages from the server
       let errorMessage = error.message || "Signup failed. Please try again.";
-      setErrors({ 
+      setErrors({
         username: error.message.includes("username") ? errorMessage : "",
-        email: error.message.includes("email") ? errorMessage : "", 
+        email: error.message.includes("email") ? errorMessage : "",
         password: error.message.includes("password") ? errorMessage : errorMessage,
         confirmPassword: ""
       });
     }
-    
+
     setIsSubmitting(false);
   };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    
+
     setFormData({ ...formData, [name]: value });
   };
 
@@ -164,7 +160,7 @@ const Signup = ({ switchToLogin }) => {
       </div>
 
       <form onSubmit={handleSubmit} noValidate>
-      
+
         <div>
           <label htmlFor="username" className="rd-body-text"></label>
           <input
@@ -227,7 +223,7 @@ const Signup = ({ switchToLogin }) => {
           {formData.password && (
             <div className="rd-mt-10 rd-flex rd-items-center rd-gap-10">
               <div className="rd-flex-1 rd-h-5 rd-bg-gray-100 rd-rounded-full rd-overflow-hidden">
-                <div 
+                <div
                   className="rd-h-full rd-rounded-full"
                   style={{
                     width: `${(passwordStrength.score / 6) * 100}%`,
@@ -235,7 +231,7 @@ const Signup = ({ switchToLogin }) => {
                   }}
                 ></div>
               </div>
-              <span 
+              <span
                 className="rd-text-sm"
                 style={{ color: passwordStrength.color }}
               >
@@ -290,7 +286,7 @@ const Signup = ({ switchToLogin }) => {
 
       <p className="rd-mt-15 rd-text-center rd-body-text rd-text-gray">
         Already have an account?{" "}
-        <button 
+        <button
           onClick={() => switchToLogin()}
           className="rd-text-blue rd-hover-underline rd-bg-transparent rd-border-none rd-cursor-pointer"
         >

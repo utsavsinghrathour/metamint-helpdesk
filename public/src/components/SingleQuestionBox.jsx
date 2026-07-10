@@ -45,6 +45,10 @@ const SingleQuestionBox = ({
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const image_urls = window.robodeskData?.imageUrls || {};
+  const canLoadWidgetConfig = Boolean(
+    window.robodeskData?.robodesk_addon_active &&
+      window.robodeskData?.robodesk_ai_bot_active,
+  );
   const [isAddonActive, setIsAddonActive] = useState(false);
   const [loadingAddon, setLoadingAddon] = useState(true);
   const [loadingWidgetConfig, setLoadingWidgetConfig] = useState(true);
@@ -113,17 +117,17 @@ const SingleQuestionBox = ({
   };
 
   useEffect(() => {
-    fetch("/wp-json/robodesk-addon/v1/status")
-      .then((res) => res.json())
-      .then((data) => {
-        setIsAddonActive(!!data?.activated);
-      })
-      .catch((error) => {
-        setIsAddonActive(false);
-      })
-      .finally(() => {
-        setLoadingAddon(false);
-      });
+    setIsAddonActive(canLoadWidgetConfig);
+    setLoadingAddon(false);
+
+    if (canLoadWidgetConfig) {
+      fetchApiKey();
+    } else {
+      setPrimaryBot(false);
+      setWidgetConfig(null);
+      setActiveAIMode("");
+      setLoadingWidgetConfig(false);
+    }
   }, []);
 
   const handleDislike = () => {
@@ -147,6 +151,13 @@ const SingleQuestionBox = ({
   };
 
   const fetchApiKey = async () => {
+    if (!canLoadWidgetConfig) {
+      setPrimaryBot(false);
+      setWidgetConfig(null);
+      setActiveAIMode("");
+      setLoadingWidgetConfig(false);
+      return;
+    }
     try {
       const response = await fetch("/wp-json/robodesk-bot/v1/widget-config");
       const data = await response.json();
@@ -164,10 +175,6 @@ const SingleQuestionBox = ({
       setLoadingWidgetConfig(false);
     }
   };
-
-  useEffect(() => {
-    fetchApiKey();
-  }, []);
 
   const QuestionItem = ({ question }) => (
     <div

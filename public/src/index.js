@@ -3,7 +3,6 @@ import App from './App.js';
 
 // Get the localized data
 const { imageUrls = { logo: '' } } = window.robodeskData || { imageUrls: {} };
-// console.log('arpan4444', window.robodeskData);
 
 if (document.getElementById('robodesk-plugin')) {
   const root = createRoot(document.getElementById('robodesk-plugin')); // Create root
