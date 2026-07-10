@@ -89,7 +89,6 @@ function robodesk_create_term_if_not_exists($term_name = 'Web', $taxonomy = 'rob
 
 
 add_action('wp_ajax_robodesk_create_new_ticket', 'robodesk_handle_ticket_submission');
-add_action('wp_ajax_nopriv_robodesk_create_new_ticket', 'robodesk_handle_ticket_submission');
 
 function robodesk_handle_ticket_submission()
 {
@@ -256,7 +255,7 @@ function robodesk_get_credential_form_callback()
         wp_send_json_error('Not logged in.');
     }
     ob_start();
-    ?>
+?>
     <h3>Add New Credential</h3>
     <form id="robodesk-add-credential">
         <label for="credential_name">Name:</label><br>
@@ -278,7 +277,7 @@ function robodesk_get_credential_form_callback()
         <?php wp_nonce_field('robodesk_add_credential_nonce'); ?>
         <input type="submit" value="Add">
     </form>
-    <?php
+<?php
     $html = ob_get_clean();
     wp_send_json_success(array('html' => $html));
     wp_die();
@@ -543,6 +542,7 @@ function robodesk_add_ticket_note_callback()
 }
 
 
+/*
 add_action('wp_ajax_robodesk_login_action', 'robodesk_login_action_callback');
 add_action('wp_ajax_nopriv_robodesk_login_action', 'robodesk_login_action_callback');
 function robodesk_login_action_callback()
@@ -579,19 +579,33 @@ function robodesk_login_action_callback()
     }
     wp_send_json_error([
         'message' => sprintf(
-            /* translators: %s: error message returned from wp_insert_user */
+            //translators: %s: error message returned from wp_insert_user 
             __('Failed to create account: %s', 'robodesk'),
             $user_id->get_error_message()
         )
     ]);
 }
+*/
 
 
 add_action('wp_ajax_robodesk_check_email', 'robodesk_check_email');
 add_action('wp_ajax_nopriv_robodesk_check_email', 'robodesk_check_email');
 function robodesk_check_email()
 {
-    // phpcs:ignore WordPress.Security.NonceVerification.Missing
+    check_ajax_referer('robodesk-nonce', 'security');
+
+    $ip = isset($_SERVER['REMOTE_ADDR']) ? sanitize_text_field(wp_unslash($_SERVER['REMOTE_ADDR'])) : '0.0.0.0';
+    $rate_key = 'robodesk_email_check_rate_' . md5($ip);
+    $attempts = get_transient($rate_key);
+    if ($attempts === false) {
+        $attempts = 0;
+    }
+    if ($attempts >= 10) {
+        wp_send_json_error(['message' => 'Too many attempts. Please try again later.']);
+        wp_die();
+    }
+    set_transient($rate_key, $attempts + 1, HOUR_IN_SECONDS);
+
     $email = isset($_POST['email']) ? sanitize_email(wp_unslash($_POST['email'])) : '';
     if (empty($email) || ! is_email($email)) {
         wp_send_json_error([
@@ -650,6 +664,17 @@ function robodesk_register_user()
 // Handle Ajax request
 function robodesk_handle_change_password()
 {
+    $ip = isset($_SERVER['REMOTE_ADDR']) ? sanitize_text_field(wp_unslash($_SERVER['REMOTE_ADDR'])) : '0.0.0.0';
+    $rate_key = 'robodesk_reset_rate_' . md5($ip);
+    $attempts = get_transient($rate_key);
+    if ($attempts === false) {
+        $attempts = 0;
+    }
+    if ($attempts >= 5) {
+        wp_send_json_error(['message' => 'Too many password reset attempts. Please try again later.']);
+        wp_die();
+    }
+    set_transient($rate_key, $attempts + 1, HOUR_IN_SECONDS);
 
     check_ajax_referer('password-reset', 'nonce');
     $password  = isset($_POST['password']) ? sanitize_text_field(wp_unslash($_POST['password'])) : '';

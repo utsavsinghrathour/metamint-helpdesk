@@ -31,14 +31,13 @@ const AppContent = ({ imageUrls = { logo: "" } }) => {
   const [showActiveFeatured, setShowActiveFeatured] = useState(true);
   const [selectedTicket, setSelectedTicket] = useState();
   const [focusedTextArea, setFocusedTextArea] = useState(false);
+  const [initialCursorId, setInitialCursorId] = useState(null);
   const hasAutoOpenedTicket = useRef(false);
   const hasAttemptedDeepLinkFetch = useRef(false);
 
   const isSupportPage = window.location.pathname.includes("/robodesk-support");
 
-  const notificationAudio = useRef(
-    new Audio(window.wpAuth?.notificationSound || ""),
-  );
+  const notificationAudio = useRef(null);
 
   const handleFocusedTextArea = (focus) => setFocusedTextArea(focus);
 
@@ -189,20 +188,38 @@ const AppContent = ({ imageUrls = { logo: "" } }) => {
     setSelectedTicket(newValue);
   };
 
-  const url = useMemo(() => {
-    if (!ticketsContext[0]?.id) return null;
-    if (!loggedinContext && !loggedInUsrId) return null;
+  useEffect(() => {
+    if (!initialCursorId && ticketsContext?.length > 0 && ticketsContext[0]?.id) {
+      setInitialCursorId(ticketsContext[0]?.id);
+    }
+  }, [ticketsContext]);
 
-    return `${window.location.origin}/wp-json/robodesk/v1/stream/tickets/0/${ticketsContext[0]?.id}/${loggedInUsrId}`;
-  }, [ticketsContext[0]?.id, loggedInUsrId]);
+  const url = useMemo(() => {
+    if (!initialCursorId) return null;
+    if (!loggedinContext && !loggedInUsrId) return null;
+    const nonce = window.wpAuth?.restNonce || '';
+    return `${window.location.origin}/wp-json/robodesk/v1/stream/tickets/0/${initialCursorId}/${loggedInUsrId}?_wpnonce=${nonce}`;
+  }, [initialCursorId, loggedInUsrId]);
 
   useEffect(() => {
+    if (!notificationAudio.current) {
+      notificationAudio.current = new Audio(
+        window.wpAuth?.notificationSound || "",
+      );
+    }
+
     notificationAudio.current.load();
     // useSSE(url, handlers);
   }, []);
 
   useEffect(() => {
-    if (!url && !loggedinContext && !loggedInUsrId) return;
+    if (selectedTicket || isSingleTicketPage) {
+      sseManager.disconnect();
+      return undefined;
+    }
+
+    if (!url) return undefined;
+
     sseManager.connect(url);
 
     const unsubscribeNewTicket = sseManager.on("new_ticket", (data) => {
@@ -225,8 +242,9 @@ const AppContent = ({ imageUrls = { logo: "" } }) => {
       console.info("closing");
       unsubscribeNewTicket();
       unsubscribeNotification();
+      sseManager.disconnect();
     };
-  }, [url]);
+  }, [url, selectedTicket, isSingleTicketPage, loggedinContext, loggedInUsrId]);
 
   useEffect(() => {
     if (selectedTicket) {

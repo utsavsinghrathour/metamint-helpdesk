@@ -10,7 +10,6 @@ import "../styles/MessageTabs.css";
 import { sendReply } from "../utils/modules";
 import { useAppData } from "../utils/AppDataContext";
 import DefaultAvatar from "../images/default-avatar.jpg";
-
 import { sseManager } from "../Hooks/sseManager";
 
 // Helper to escape HTML in plain text
@@ -262,6 +261,7 @@ const SingleTicket = ({
   const textareaRef = useRef(null);
   const fileInputRef = useRef(null);
   const chatContainerRef = useRef(null);
+  const sendInFlightRef = useRef(false);
   const image_urls = window.robodeskData?.imageUrls || {};
   const customerAvatar = ticket?.authorImage || DefaultAvatar;
   const configuredBotAvatar =
@@ -269,9 +269,16 @@ const SingleTicket = ({
   const configuredBotName =
     window.robodeskData?.robodesk_bot_title_name || "Bot";
   const previousScrollHeight = useRef(0);
-  const beep = useRef(new Audio(wpAuth.notificationSound));
+  const beep = useRef(null);
   const isAtTop = useRef(false);
-  const hasConnected = useRef(false);
+  const [streamCursorId, setStreamCursorId] = useState(null);
+
+  const formatTimestamp = (timestamp) =>
+    new Date(timestamp).toLocaleTimeString([], {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+
   const {
     loggedinContext,
     loggedInUsrId,
@@ -294,6 +301,7 @@ const SingleTicket = ({
 
   useEffect(() => {
     setSingleTicketPage(true);
+    sseManager.disconnect();
 
     return () => {
       setSingleTicketPage(false);
@@ -307,13 +315,11 @@ const SingleTicket = ({
   }, []);
 
   useEffect(() => {
-    beep.current.load();
+    if (!beep.current) {
+      beep.current = new Audio(wpAuth.notificationSound);
+    }
 
-    return () => {
-      if (hasConnected.current) {
-        hasConnected.current = false;
-      }
-    };
+    beep.current.load();
   }, []);
 
   const fetchComments = async (fetchOffset = 0, prepend = false) => {
@@ -418,15 +424,25 @@ const SingleTicket = ({
 
   const handleNewComment = (commentData, play = true) => {
     updateTicketNotifications(ticket.id, "yes");
+    const incomingCommentId = Number(commentData?.id);
+    if (Number.isFinite(incomingCommentId) && incomingCommentId > 0) {
+      setStreamCursorId((current) =>
+        Math.max(Number(current) || 0, incomingCommentId),
+      );
+    }
+
+    let isNew = false;
+
     setChatMessages((prev) => {
-      const messageExists = prev.some((msg) => msg.id === commentData.id);
+      const messageExists = prev.some(
+        (msg) => String(msg.id) === String(commentData.id),
+      );
 
       if (messageExists) {
         return prev;
       }
-      if (play) {
-        beep.current.play();
-      }
+
+      isNew = true;
 
       const isBotMessage =
         commentData.is_bot_response === true ||
@@ -452,6 +468,7 @@ const SingleTicket = ({
         isBot: isBotMessage,
         author_id: commentData.author_id || commentData.author_data?.id || 0,
         created_at: commentData.created_at || new Date().toISOString(),
+        time_ago: commentData.time_ago,
         isAdmin: commentData.author_id !== ticket.author_id,
       };
 
@@ -467,6 +484,10 @@ const SingleTicket = ({
 
       return sorted;
     });
+
+    if (isNew && play) {
+      beep.current?.play();
+    }
   };
 
   const formatTicketComments = (comments) => {
@@ -511,6 +532,8 @@ const SingleTicket = ({
   // Initial fetch to get total comments and latest messages
   useEffect(() => {
     const fetchInitialComments = async () => {
+      setStreamCursorId(null);
+
       // If we have cached messages, display them immediately
       const cached = getCachedMessages(ticket.id);
       if (cached && cached.length > 0) {
@@ -580,6 +603,15 @@ const SingleTicket = ({
     fetchInitialComments();
   }, [ticket.id]);
 
+  useEffect(() => {
+    if (initialLoadComplete && !streamCursorId && chatMessages.length > 0) {
+      const latestMessageId = chatMessages[chatMessages.length - 1]?.id;
+      if (latestMessageId) {
+        setStreamCursorId(latestMessageId);
+      }
+    }
+  }, [initialLoadComplete, chatMessages, streamCursorId]);
+
   // Handle scrolling to load older messages
 
   useEffect(() => {
@@ -632,72 +664,134 @@ const SingleTicket = ({
     }
   }, [chatMessages.length]);
 
-  const lastMessageId = useMemo(() => {
-    if (!chatMessages || chatMessages.length === 0) return false;
-    return chatMessages[chatMessages.length - 1].id;
-  }, [chatMessages]);
-
   const url = useMemo(() => {
     if (!ticket?.id) return null;
     if (!loggedinContext && !loggedInUsrId) return null;
-    if (!lastMessageId) return null;
-    return `/wp-json/robodesk/v1/stream/comments/${ticket.id}/${lastMessageId}/${loggedInUsrId}`;
-  }, [lastMessageId, ticket.id]);
-
-  const prevUrl = useMemo(() => {
-    if (!ticketsContext[0]?.id) return null;
-    if (!loggedinContext && !loggedInUsrId) return null;
-    return `/wp-json/robodesk/v1/stream/tickets/0/${ticketsContext[0]?.id}/${loggedInUsrId}`;
-  }, [ticketsContext[0]?.id, loggedInUsrId]);
+    if (!streamCursorId) return null;
+    const nonce = window.wpAuth?.restNonce || '';
+    return `/wp-json/robodesk/v1/stream/comments/${ticket.id}/${streamCursorId}/${loggedInUsrId}?_wpnonce=${nonce}`;
+  }, [streamCursorId, ticket.id, loggedInUsrId, loggedinContext]);
 
   useEffect(() => {
+    if (!url) return undefined;
+
     sseManager.connect(url);
 
-    const unsubscribeNewComment = sseManager.on("new_comment", (data) => {
-      const commentData = data;
+    const unsubscribeNewComment = sseManager.on("new_comment", (commentData) => {
       handleNewComment(commentData);
     });
 
-    const unsubscribeTicketOpen = sseManager.on("ticket_open", (data) => {
+    const unsubscribeNewMineComment = sseManager.on("new_mine_comment", (commentData) => {
+      handleNewComment(commentData, false);
+    });
+
+    const unsubscribeTicketOpen = sseManager.on("ticket_open", () => {
       setTicketClosed(false);
     });
 
-    const unsubscribeTicketClosed = sseManager.on("ticket_closed", (data) => {
+    const unsubscribeTicketClosed = sseManager.on("ticket_closed", () => {
       setTicketClosed(true);
     });
 
-    const unsubscribeNewMineTicket = sseManager.on(
-      "new_mine_comment",
-      (data) => {
-        handleNewComment(data, false);
-      },
-    );
-
     return () => {
       unsubscribeNewComment();
+      unsubscribeNewMineComment();
       unsubscribeTicketOpen();
       unsubscribeTicketClosed();
-      unsubscribeNewMineTicket();
-      sseManager.connect(prevUrl);
+      sseManager.disconnect();
     };
   }, [url]);
 
+  useEffect(() => {
+    if (!initialLoadComplete || !ticket?.id) return undefined;
+
+    let cancelled = false;
+
+    const pollLatestComments = async () => {
+      if (sendInFlightRef.current) return;
+      try {
+        const response = await fetch(
+          `/wp-json/wp/v2/comments?post=${ticket.id}&per_page=20&order=desc&comment_type=ticket_replies&_fields=id,content,date,author_data,time_ago,author_name,author_image,comment_action,is_bot_response`,
+          { cache: "no-store" },
+        );
+
+        if (!response.ok) return;
+
+        const data = await response.json();
+        if (cancelled || !Array.isArray(data) || data.length === 0) return;
+
+        const formattedComments = formatTicketComments(data);
+
+        setChatMessages((prev) => {
+          const merged = new Map(prev.map((msg) => [String(msg.id), msg]));
+          let hasNewMessages = false;
+
+          formattedComments.forEach((msg) => {
+            const key = String(msg.id);
+            if (!merged.has(key)) {
+              merged.set(key, msg);
+              hasNewMessages = true;
+            }
+          });
+
+          if (!hasNewMessages) return prev;
+
+          const sorted = Array.from(merged.values()).sort(
+            (a, b) => getMessageSortId(a) - getMessageSortId(b),
+          );
+          setCachedMessages(ticket.id, sorted);
+
+          const latestId = sorted.reduce(
+            (max, msg) => Math.max(max, getMessageSortId(msg)),
+            0,
+          );
+          if (latestId > 0) {
+            setStreamCursorId((current) =>
+              Math.max(Number(current) || 0, latestId),
+            );
+          }
+
+          return sorted;
+        });
+      } catch (error) {
+        console.error("Failed to poll latest comments:", error);
+      }
+    };
+
+    pollLatestComments();
+    const intervalId = setInterval(pollLatestComments, 4000);
+
+    return () => {
+      cancelled = true;
+      clearInterval(intervalId);
+    };
+  }, [initialLoadComplete, ticket.id, loggedInUserId]);
+
   const handleSend = async () => {
-    if (message.trim() || previewImage) {
-      const imageHTML = previewImage
-        ? `<a href="${previewImage}" target="_blank"><img src="${previewImage}" alt="Preview" class="rd-comment-img"  /></a>`
+    // console.log('From handle send', message);
+    const outgoingMessage = message;
+    const outgoingPreviewImage = previewImage;
+
+    if (sendInFlightRef.current) return;
+
+    if (outgoingMessage.trim() || outgoingPreviewImage) {
+      sendInFlightRef.current = true;
+
+      const imageHTML = outgoingPreviewImage
+        ? `<a href="${outgoingPreviewImage}" target="_blank"><img src="${outgoingPreviewImage}" alt="Preview" class="rd-comment-img"  /></a>`
         : false;
       const tempMessage = {
         id: `temp-${Date.now()}`,
         text:
-          normalizeMessageText(message) + (imageHTML ? "<br>" + imageHTML : ""),
+          normalizeMessageText(outgoingMessage) +
+          (imageHTML ? "<br>" + imageHTML : ""),
         sender: "me",
         senderName: "Me",
         image: customerAvatar,
         created_at: new Date().toISOString(),
         isSending: true,
         isOptimistic: true, // Mark as optimistic update
-        ...(previewImage && { imageUrl: previewImage }),
+        ...(outgoingPreviewImage && { imageUrl: outgoingPreviewImage }),
       };
 
       // Optimistically add the message immediately
@@ -719,8 +813,8 @@ const SingleTicket = ({
         const result = await sendReply(
           ticket.id,
           loggedInUserId,
-          message,
-          previewImage,
+          outgoingMessage,
+          outgoingPreviewImage,
           false,
           controller.signal,
         );
@@ -741,19 +835,29 @@ const SingleTicket = ({
           isAdmin: result.data.author_id
             ? result.data.author_id !== ticket.author_id
             : false,
-          ...(previewImage && { imageUrl: previewImage }),
+          ...(outgoingPreviewImage && { imageUrl: outgoingPreviewImage }),
         };
 
         // Replace temp message with real one
         setChatMessages((prev) => {
           const updated = [
-            ...prev.filter((msg) => msg.id !== tempMessage.id),
+            ...prev.filter(
+              (msg) =>
+                String(msg.id) !== String(tempMessage.id) &&
+                String(msg.id) !== String(newMessage.id),
+            ),
             newMessage,
           ].sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
           // Update cache
           setCachedMessages(ticket.id, updated);
           return updated;
         });
+        const sentCommentId = Number(newMessage.id);
+        if (Number.isFinite(sentCommentId) && sentCommentId > 0) {
+          setStreamCursorId((current) =>
+            Math.max(Number(current) || 0, sentCommentId),
+          );
+        }
       } catch (err) {
         clearTimeout(timeoutId);
 
@@ -779,6 +883,8 @@ const SingleTicket = ({
           });
           setError("Failed to send message. Please try again.");
         }
+      } finally {
+        sendInFlightRef.current = false;
       }
     }
   };
@@ -1043,7 +1149,7 @@ const SingleTicket = ({
                           className="rd-body-text single-message"
                           style={{ opacity: msg.isPending ? 0.7 : 1 }}
                           dangerouslySetInnerHTML={{
-                            __html: normalizeMessageText(msg.text),
+                            __html: msg.text,
                           }}
                         />
                       ) : (
@@ -1058,7 +1164,7 @@ const SingleTicket = ({
                                 .filter(Boolean)
                                 .join(" ")}
                               dangerouslySetInnerHTML={{
-                                __html: normalizeMessageText(msg.text),
+                                __html: msg.text,
                               }}
                             />
                           )}
