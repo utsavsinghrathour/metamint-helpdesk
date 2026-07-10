@@ -273,29 +273,12 @@ const SingleTicket = ({
   const beep = useRef(null);
   const isAtTop = useRef(false);
   const [streamCursorId, setStreamCursorId] = useState(null);
-  const [tick, setTick] = useState(0);
 
-  useEffect(() => {
-    const interval = setInterval(() => setTick((t) => t + 1), 30000);
-    return () => clearInterval(interval);
-  }, []);
-
-  const getRelativeTime = (timestamp) => {
-    if (!timestamp) return "";
-    const now = Date.now();
-    const then = new Date(timestamp).getTime();
-    const diffMs = now - then;
-    const diffSec = Math.floor(diffMs / 1000);
-    if (diffSec < 10) return "Just now";
-    if (diffSec < 60) return `${diffSec}s ago`;
-    const diffMin = Math.floor(diffSec / 60);
-    if (diffMin < 60) return `${diffMin}m ago`;
-    const diffHour = Math.floor(diffMin / 60);
-    if (diffHour < 24) return `${diffHour}h ago`;
-    const diffDay = Math.floor(diffHour / 24);
-    if (diffDay < 7) return `${diffDay}d ago`;
-    return new Date(timestamp).toLocaleDateString();
-  };
+  const formatTimestamp = (timestamp) =>
+    new Date(timestamp).toLocaleTimeString([], {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
 
   const {
     loggedinContext,
@@ -1207,7 +1190,7 @@ const SingleTicket = ({
                           ? ""
                           : msg.isPending
                           ? "Pending..."
-                          : getRelativeTime(msg.created_at)}
+                          : formatTimestamp(msg.created_at)}
                       </div>
                     </div>
                   </div>
