@@ -966,12 +966,6 @@ const SingleTicket = ({
   };
   const triggerFileInput = () => fileInputRef.current.click();
 
-  const formatTimestamp = (timestamp) =>
-    new Date(timestamp).toLocaleTimeString([], {
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-
   return (
     <div className="rd-single-ticket rd-flex rd-flex-col rd-h-full">
       <div className="single-ticket-header rd-search-header rd-bg-blue rd-flex rd-items-center rd-justify-between rd-flex-col rd-message-list-header">
