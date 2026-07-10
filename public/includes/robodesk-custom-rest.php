@@ -1628,6 +1628,37 @@ function robodesk_handle_reply_receive($data)
         return new WP_Error('user_not_found', 'User not found', array('status' => 404));
     }
 
+    $base64_image = $data['data']['image'] ?? '';
+    $attachment_url = '';
+    if ($base64_image && preg_match('/^data:image\/(\w+);base64,/', $base64_image, $matches)) {
+        $image_type = $matches[1];
+        $image_data = substr($base64_image, strpos($base64_image, ',') + 1);
+        $image_data = base64_decode($image_data, true);
+        if ($image_data !== false) {
+            $upload_dir = wp_upload_dir();
+            $filename = 'ticket-' . $ticket_id . '-' . time() . '.' . $image_type;
+            $file_path = $upload_dir['path'] . '/' . $filename;
+            if (file_put_contents($file_path, $image_data) !== false) {
+                $filetype = wp_check_filetype($filename, null);
+                $attachment = array(
+                    'post_mime_type' => $filetype['type'],
+                    'post_title' => sanitize_file_name($filename),
+                    'post_content' => '',
+                    'post_status' => 'inherit',
+                );
+                $attach_id = wp_insert_attachment($attachment, $file_path, $ticket_id);
+                if (!is_wp_error($attach_id)) {
+                    require_once ABSPATH . 'wp-admin/includes/image.php';
+                    $attach_data = wp_generate_attachment_metadata($attach_id, $file_path);
+                    wp_update_attachment_metadata($attach_id, $attach_data);
+                    $attachment_url = wp_get_attachment_url($attach_id);
+                    $image_html = '<a href="' . esc_url($attachment_url) . '" target="_blank"><img src="' . esc_url($attachment_url) . '" alt="" class="rd-comment-img" /></a>';
+                    $reply .= '<br>' . $image_html;
+                }
+            }
+        }
+    }
+
     $comment_data = array(
         'comment_post_ID' => $ticket_id,
         'comment_author' => $user_object->display_name,
@@ -1672,8 +1703,7 @@ function robodesk_handle_reply_receive($data)
         'content' => $comment->comment_content,
         'created_at' => function_exists('robodesk_comment_utc_iso') ? robodesk_comment_utc_iso($comment) : $comment->comment_date,
         'is_bot_response' => $is_bot_response,
-        // 'attachment_id' => $attachment_id,
-        // 'attachment_url' => $attachment_url
+        'attachment_url' => $attachment_url,
     ];
 
     rbd_log(sprintf(
