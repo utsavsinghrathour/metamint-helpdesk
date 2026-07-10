@@ -51,6 +51,39 @@ document.addEventListener("DOMContentLoaded", () => {
   localizeRobodeskTimes();
 });
 
+// Prime the browser audio engine on the first user gesture so that
+// programmatic notification sounds (fired from SSE/poll callbacks) are not
+// blocked by the browser autoplay policy.
+function robodeskUnlockAudio() {
+  let url =
+    typeof robodeskNotificationSound !== "undefined" && robodeskNotificationSound
+      ? robodeskNotificationSound
+      : "";
+  if (!url) {
+    const repliesList = document.getElementById("replies-list");
+    if (repliesList) url = repliesList.getAttribute("data-audio") || "";
+  }
+  if (url) {
+    try {
+      const audio = new Audio(url);
+      audio.muted = false;
+      const p = audio.play();
+      if (p && typeof p.then === "function") {
+        p.then(() => audio.pause()).catch(() => {});
+      }
+    } catch (e) {
+      /* no-op */
+    }
+  }
+  window.removeEventListener("pointerdown", robodeskUnlockAudio);
+  window.removeEventListener("keydown", robodeskUnlockAudio);
+  window.removeEventListener("touchstart", robodeskUnlockAudio);
+}
+
+window.addEventListener("pointerdown", robodeskUnlockAudio);
+window.addEventListener("keydown", robodeskUnlockAudio);
+window.addEventListener("touchstart", robodeskUnlockAudio);
+
 function loadDashboardTickets() {
   const tableBody = document.getElementById("dashboard-tickets-table");
   let filteredTickets = [];
