@@ -1766,6 +1766,55 @@ function loadTicketDetail() {
   document.getElementById("notes-count").textContent =
     currentTicket.notes?.length || 0;
 
+  // Enforce assignment restriction for Support Staff:
+  // Staff can only reply to tickets assigned to them.
+  // Admins, Editors, and Support Managers can reply to any ticket.
+  const staffOnlyRoles = ["robodesk_support_staff"];
+  const isStaffOnly = staffOnlyRoles.includes(robodeskCurrentUser?.role);
+
+  if (isStaffOnly) {
+    const assigneeId = currentTicket?.assignee_id;
+    const currentUserId = robodeskCurrentUser?.id;
+    const isAssigned = assigneeId && currentUserId && assigneeId === currentUserId;
+
+    const replyEditor    = document.getElementById("new-reply");
+    const sendReplyBtn   = document.getElementById("send-reply-btn");
+    const replyNotice    = document.getElementById("rbd-reply-not-assigned-notice");
+
+    if (!isAssigned) {
+      // Disable the reply editor
+      if (replyEditor) {
+        replyEditor.contentEditable = "false";
+        replyEditor.style.opacity = "0.5";
+        replyEditor.style.cursor  = "not-allowed";
+      }
+      if (sendReplyBtn) {
+        sendReplyBtn.disabled = true;
+        sendReplyBtn.title    = "This ticket is not assigned to you.";
+      }
+      // Show an inline notice if not already present
+      if (!replyNotice && sendReplyBtn) {
+        const notice = document.createElement("p");
+        notice.id        = "rbd-reply-not-assigned-notice";
+        notice.className = "text-sm text-amber-600 mt-1";
+        notice.textContent = "You can only reply to tickets assigned to you.";
+        sendReplyBtn.insertAdjacentElement("afterend", notice);
+      }
+    } else {
+      // Ticket IS assigned to this staff — ensure editor is active
+      if (replyEditor) {
+        replyEditor.contentEditable = "true";
+        replyEditor.style.opacity = "";
+        replyEditor.style.cursor  = "";
+      }
+      if (sendReplyBtn) {
+        sendReplyBtn.disabled = false;
+        sendReplyBtn.title    = "";
+      }
+      if (replyNotice) replyNotice.remove();
+    }
+  }
+
   loadRepliesAndNotes();
 }
 
@@ -3245,7 +3294,18 @@ function resolveTemplateVariables(content, ticket) {
 
 function addReply() {
   if (isReplySending) return; // Prevent double send
+
+  // Client-side assignment guard — mirrors server-side restriction
   const userRole = robodeskCurrentUser?.role;
+  if (userRole === "robodesk_support_staff") {
+    const assigneeId    = currentTicket?.assignee_id;
+    const currentUserId = robodeskCurrentUser?.id;
+    if (!assigneeId || !currentUserId || assigneeId !== currentUserId) {
+      showToast("You can only reply to tickets assigned to you.", "error");
+      return;
+    }
+  }
+
   const replyBox = document.getElementById("new-reply");
   const replyHtml = replyBox ? replyBox.innerHTML : "";
   // Use textContent to detect actual visible text, normalize NBSP and trim

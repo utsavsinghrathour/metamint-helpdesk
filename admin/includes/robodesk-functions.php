@@ -1183,7 +1183,7 @@ function robodesk_get_ticket_detail()
         wp_send_json_error(['message' => 'Ticket not found']);
     }
 
-    if (!current_user_can('read_post', $ticket_id) && !current_user_can('edit_post', $ticket_id)) {
+    if (!current_user_can('robodesk_access_dashboard')) {
         wp_send_json_error(['message' => 'Permission denied']);
     }
 
@@ -1546,6 +1546,11 @@ function robodesk_handle_add_ticket_reply()
         wp_send_json_error(['message' => 'Nonce verification failed']);
     }
 
+    // Ensure only dashboard-capable users (admins, managers, staff) can add replies
+    if (!current_user_can('robodesk_access_dashboard')) {
+        wp_send_json_error(['message' => 'Permission denied']);
+    }
+
     $ticket_id = isset($_POST['ticket_id']) ? intval($_POST['ticket_id']) : 0;
     $reply = isset($_POST['reply']) ? wp_kses_post(wp_unslash($_POST['reply'])) : '';
 
@@ -1563,6 +1568,20 @@ function robodesk_handle_add_ticket_reply()
 
     if (!$user_id || !$user_object) {
         wp_send_json_error(['message' => 'User not logged in']);
+    }
+
+    // Restrict Support Staff to only reply to tickets assigned to them.
+    // Admins, Editors, and Support Managers can reply to any ticket.
+    $user_roles = (array) $user_object->roles;
+    $is_privileged = in_array('administrator', $user_roles, true)
+        || in_array('editor', $user_roles, true)
+        || in_array('robodesk_support_manager', $user_roles, true);
+
+    if (!$is_privileged) {
+        $assignee_id = (int) get_post_meta($ticket_id, 'ticket_assignee_id', true);
+        if ($assignee_id !== $user_id) {
+            wp_send_json_error(['message' => 'You can only reply to tickets assigned to you.']);
+        }
     }
 
     $comment_id = wp_insert_comment([
