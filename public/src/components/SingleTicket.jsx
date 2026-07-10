@@ -11,6 +11,7 @@ import { sendReply } from "../utils/modules";
 import { useAppData } from "../utils/AppDataContext";
 import DefaultAvatar from "../images/default-avatar.jpg";
 import { sseManager } from "../Hooks/sseManager";
+import { playRobodeskBeep } from "../utils/notificationSound.js";
 
 // Helper to escape HTML in plain text
 const escapeHtml = (unsafe) =>
@@ -270,7 +271,6 @@ const SingleTicket = ({
   const configuredBotName =
     window.robodeskData?.robodesk_bot_title_name || "Bot";
   const previousScrollHeight = useRef(0);
-  const beep = useRef(null);
   const isAtTop = useRef(false);
   const [streamCursorId, setStreamCursorId] = useState(null);
 
@@ -287,6 +287,7 @@ const SingleTicket = ({
     updateTicketNotifications,
     isSingleTicketPage,
     setSingleTicketPage,
+    setOpenTicketId,
   } = useAppData();
 
   //   console.log('A single ticket data', ticket);
@@ -303,10 +304,12 @@ const SingleTicket = ({
 
   useEffect(() => {
     setSingleTicketPage(true);
-    sseManager.disconnect();
+    setOpenTicketId(ticket.id);
+    sseManager.disconnect("comments");
 
     return () => {
       setSingleTicketPage(false);
+      setOpenTicketId(null);
     };
   }, []);
 
@@ -314,14 +317,6 @@ const SingleTicket = ({
     if (ticket.notifications) {
       updateTicketNotifications(ticket.id, "yes");
     }
-  }, []);
-
-  useEffect(() => {
-    if (!beep.current) {
-      beep.current = new Audio(wpAuth.notificationSound);
-    }
-
-    beep.current.load();
   }, []);
 
   // Prime the browser audio engine on the first user gesture so that
@@ -516,7 +511,7 @@ const SingleTicket = ({
     });
 
     if (isNew && play) {
-      beep.current?.play();
+      playRobodeskBeep();
     }
   };
 
@@ -705,30 +700,30 @@ const SingleTicket = ({
   useEffect(() => {
     if (!url) return undefined;
 
-    sseManager.connect(url);
+    sseManager.connect(url, "comments");
 
     const unsubscribeNewComment = sseManager.on("new_comment", (commentData) => {
       handleNewComment(commentData);
-    });
+    }, "comments");
 
     const unsubscribeNewMineComment = sseManager.on("new_mine_comment", (commentData) => {
       handleNewComment(commentData, false);
-    });
+    }, "comments");
 
     const unsubscribeTicketOpen = sseManager.on("ticket_open", () => {
       setTicketClosed(false);
-    });
+    }, "comments");
 
     const unsubscribeTicketClosed = sseManager.on("ticket_closed", () => {
       setTicketClosed(true);
-    });
+    }, "comments");
 
     return () => {
       unsubscribeNewComment();
       unsubscribeNewMineComment();
       unsubscribeTicketOpen();
       unsubscribeTicketClosed();
-      sseManager.disconnect();
+      sseManager.disconnect("comments");
     };
   }, [url]);
 
@@ -752,6 +747,7 @@ const SingleTicket = ({
 
         const formattedComments = formatTicketComments(data);
 
+        let hasIncomingFromOther = false;
         setChatMessages((prev) => {
           const merged = new Map(prev.map((msg) => [String(msg.id), msg]));
           let hasNewMessages = false;
@@ -761,6 +757,15 @@ const SingleTicket = ({
             if (!merged.has(key)) {
               merged.set(key, msg);
               hasNewMessages = true;
+              // Only beep for replies that arrived after this ticket was
+              // opened, not for messages already loaded on open.
+              if (
+                msg.sender === "other" &&
+                streamCursorId &&
+                getMessageSortId(msg) > Number(streamCursorId)
+              ) {
+                hasIncomingFromOther = true;
+              }
             }
           });
 
@@ -783,6 +788,12 @@ const SingleTicket = ({
 
           return sorted;
         });
+
+        // The SSE new_comment handler also beeps, but the poll can add the
+        // message first; this ensures the sound still plays in that case.
+        if (hasIncomingFromOther) {
+          playRobodeskBeep();
+        }
       } catch (error) {
         console.error("Failed to poll latest comments:", error);
       }
