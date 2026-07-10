@@ -773,8 +773,11 @@ const SingleTicket = ({
               hasNewMessages = true;
               // Beep (once) for new replies from other people. The beepedIds
               // guard prevents double-beeping regardless of delivery order.
+              // Only beep once the conversation is already on screen, so the
+              // initial batch loaded when the ticket is opened never beeps.
               const cid = getMessageSortId(msg);
               if (
+                prev.size > 0 &&
                 msg.sender === "other" &&
                 cid &&
                 !beepedIds.current.has(cid)
