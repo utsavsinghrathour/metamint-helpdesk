@@ -273,6 +273,10 @@ const SingleTicket = ({
   const previousScrollHeight = useRef(0);
   const isAtTop = useRef(false);
   const [streamCursorId, setStreamCursorId] = useState(null);
+  // Tracks message ids we've already beeped so the sound plays exactly once
+  // per new reply, regardless of whether SSE or the polling fallback delivers
+  // it first (and regardless of stale closure values).
+  const beepedIds = useRef(new Set());
 
   const formatTimestamp = (timestamp) =>
     new Date(timestamp).toLocaleTimeString([], {
@@ -511,7 +515,17 @@ const SingleTicket = ({
     });
 
     if (isNew && play) {
-      playRobodeskBeep();
+      const cid = Number(commentData?.id);
+      const authorId = commentData?.author_id || commentData?.author_data?.id;
+      // Only beep for replies from other people, not the viewer's own messages.
+      if (
+        cid &&
+        String(authorId) !== String(loggedInUserId) &&
+        !beepedIds.current.has(cid)
+      ) {
+        beepedIds.current.add(cid);
+        playRobodeskBeep();
+      }
     }
   };
 
@@ -757,13 +771,15 @@ const SingleTicket = ({
             if (!merged.has(key)) {
               merged.set(key, msg);
               hasNewMessages = true;
-              // Only beep for replies that arrived after this ticket was
-              // opened, not for messages already loaded on open.
+              // Beep (once) for new replies from other people. The beepedIds
+              // guard prevents double-beeping regardless of delivery order.
+              const cid = getMessageSortId(msg);
               if (
                 msg.sender === "other" &&
-                streamCursorId &&
-                getMessageSortId(msg) > Number(streamCursorId)
+                cid &&
+                !beepedIds.current.has(cid)
               ) {
+                beepedIds.current.add(cid);
                 hasIncomingFromOther = true;
               }
             }
@@ -789,8 +805,8 @@ const SingleTicket = ({
           return sorted;
         });
 
-        // The SSE new_comment handler also beeps, but the poll can add the
-        // message first; this ensures the sound still plays in that case.
+        // The SSE new_comment handler also beeps; this covers the case where
+        // the poll delivers the message first.
         if (hasIncomingFromOther) {
           playRobodeskBeep();
         }
