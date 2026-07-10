@@ -212,6 +212,34 @@ const AppContent = ({ imageUrls = { logo: "" } }) => {
     // useSSE(url, handlers);
   }, []);
 
+  // Prime the browser audio engine on the first user gesture so that
+  // programmatic notification sounds (fired from SSE callbacks) are not
+  // blocked by the browser autoplay policy.
+  useEffect(() => {
+    const unlock = () => {
+      const sound = window.wpAuth?.notificationSound;
+      if (sound && notificationAudio.current) {
+        const audio = new Audio(sound);
+        const p = audio.play();
+        if (p && typeof p.then === "function") {
+          p.then(() => audio.pause()).catch(() => {});
+        }
+      }
+      window.removeEventListener("pointerdown", unlock);
+      window.removeEventListener("keydown", unlock);
+      window.removeEventListener("touchstart", unlock);
+    };
+
+    window.addEventListener("pointerdown", unlock);
+    window.addEventListener("keydown", unlock);
+    window.addEventListener("touchstart", unlock);
+    return () => {
+      window.removeEventListener("pointerdown", unlock);
+      window.removeEventListener("keydown", unlock);
+      window.removeEventListener("touchstart", unlock);
+    };
+  }, []);
+
   useEffect(() => {
     if (selectedTicket || isSingleTicketPage) {
       sseManager.disconnect();

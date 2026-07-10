@@ -324,6 +324,33 @@ const SingleTicket = ({
     beep.current.load();
   }, []);
 
+  // Prime the browser audio engine on the first user gesture so that
+  // programmatic notification beeps are not blocked by the autoplay policy.
+  useEffect(() => {
+    const unlock = () => {
+      const sound = wpAuth?.notificationSound;
+      if (sound) {
+        const audio = new Audio(sound);
+        const p = audio.play();
+        if (p && typeof p.then === "function") {
+          p.then(() => audio.pause()).catch(() => {});
+        }
+      }
+      window.removeEventListener("pointerdown", unlock);
+      window.removeEventListener("keydown", unlock);
+      window.removeEventListener("touchstart", unlock);
+    };
+
+    window.addEventListener("pointerdown", unlock);
+    window.addEventListener("keydown", unlock);
+    window.addEventListener("touchstart", unlock);
+    return () => {
+      window.removeEventListener("pointerdown", unlock);
+      window.removeEventListener("keydown", unlock);
+      window.removeEventListener("touchstart", unlock);
+    };
+  }, []);
+
   const fetchComments = async (fetchOffset = 0, prepend = false) => {
     if (isFetching) return;
     setIsFetching(true);
