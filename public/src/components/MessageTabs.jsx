@@ -128,7 +128,7 @@ const MessageTabs = ({
 
   const url = useMemo(() => {
     if (!loggedinContext && !loggedInUsrId) return null;
-    const nonce = window.wpAuth?.restNonce || '';
+    const nonce = window.wpAuth?.restNonce || window.wpApiSettings?.nonce || '';
     return `wp-json/robodesk/v1/stream/tickets/0/${firstMessageId}/${loggedInUsrId}/?ticket=1&_wpnonce=${nonce}`;
   }, [firstMessageId]);
 

@@ -293,6 +293,10 @@ const Login = ({
       const loginResponse = await loginUser(formData.email, formData.password);
 
       updateLoginStatus(true, loginResponse.user_id);
+      if (loginResponse.rest_nonce) {
+        window.wpAuth = window.wpAuth || {};
+        window.wpAuth.restNonce = loginResponse.rest_nonce;
+      }
 
       try {
         const ticketResponse = await handleTempTicketCreation(

@@ -707,7 +707,7 @@ const SingleTicket = ({
     if (!ticket?.id) return null;
     if (!loggedinContext && !loggedInUsrId) return null;
     if (!streamCursorId) return null;
-    const nonce = window.wpAuth?.restNonce || '';
+    const nonce = window.wpAuth?.restNonce || window.wpApiSettings?.nonce || '';
     return `/wp-json/robodesk/v1/stream/comments/${ticket.id}/${streamCursorId}/${loggedInUsrId}?_wpnonce=${nonce}`;
   }, [streamCursorId, ticket.id, loggedInUsrId, loggedinContext]);
 

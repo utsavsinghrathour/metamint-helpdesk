@@ -1087,6 +1087,7 @@ function robodesk_secure_login_endpoint(WP_REST_Request $request)
         'user_email' => $user->user_email,
         'user_display_name' => $user->display_name,
         'expires_at' => time() + (DAY_IN_SECONDS * 7),
+        'rest_nonce' => wp_create_nonce('wp_rest'),
     );
 }
 
