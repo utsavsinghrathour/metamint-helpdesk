@@ -104,6 +104,9 @@ const MessageTabs = ({
     setSingleTicketPage,
     isSingleTicketPage,
     refreshTickets,
+    loadMoreTickets,
+    ticketPagination,
+    isLoadingMore,
   } = useAppData();
 
   const image_urls = window.robodeskData?.imageUrls || {};
@@ -169,13 +172,12 @@ const MessageTabs = ({
   };
 
   const handleScroll = (e) => {
-    e.preventDefault();
     const wrapper = messageWrapperRef.current;
     if (!wrapper) return;
 
     const { scrollTop, scrollHeight, clientHeight } = wrapper;
-    if (scrollTop + clientHeight >= scrollHeight) {
-      // console.log("now");
+    if (scrollTop + clientHeight >= scrollHeight - 10) {
+      loadMoreTickets();
     }
   };
 
@@ -374,6 +376,11 @@ const MessageTabs = ({
                         <p className="rd-text-center rd-text-gray rd-m-5">
                           No tickets found
                         </p>
+                      )}
+                      {isLoadingMore && (
+                        <div className="rd-text-center rd-py-10">
+                          <img src={Preloader} alt="Loading" className="rd-preloader" />
+                        </div>
                       )}
                     </div>
                   </div>
