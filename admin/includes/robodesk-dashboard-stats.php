@@ -412,6 +412,7 @@ $dashboard_hidden = ($current_tab !== '' && $current_tab !== 'dashboard') || $ha
                 </tbody>
             </table>
         </div>
+        <div id="dashboard-pagination" class="py-4"></div>
         <script>
             const dashboard_tickets = <?php echo wp_json_encode($dashboard_tickets); ?>;
         </script>

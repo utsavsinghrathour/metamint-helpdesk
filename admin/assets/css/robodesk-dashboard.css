@@ -800,3 +800,38 @@ CONVERSATION
   }
 
 }
+
+/* Pagination styles */
+.dashboard-page-btn {
+  padding: 0.375rem 0.75rem;
+  font-size: 0.875rem;
+  border: 1px solid var(--color-border);
+  background-color: var(--color-white);
+  color: var(--color-text);
+  border-radius: 0.25rem;
+  cursor: pointer;
+  transition: all 0.15s ease-in-out;
+  line-height: 1.25;
+}
+
+.dashboard-page-btn:hover:not(:disabled):not(.active) {
+  background-color: var(--color-background);
+  color: var(--color-text-hover);
+}
+
+.dashboard-page-btn.active {
+  background-color: var(--color-main);
+  color: var(--color-white);
+  border-color: var(--color-main);
+  cursor: default;
+}
+
+.dashboard-page-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+#dashboard-pagination {
+  border-top: 1px solid var(--color-border);
+  margin-top: 0;
+}
