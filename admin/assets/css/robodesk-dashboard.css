@@ -835,3 +835,10 @@ CONVERSATION
   border-top: 1px solid var(--color-border);
   margin-top: 0;
 }
+
+/* Override global .hidden for desktop pagination */
+@media (min-width: 640px) {
+  #cpm-nav .hidden {
+    display: flex;
+  }
+}
