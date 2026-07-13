@@ -17,6 +17,7 @@ export const AppDataProvider = ({ children }) => {
     noticesContext: [],
     isSingleTicketPage: false,
     openTicketId: null,
+    isLoadingMore: false,
   });
 
   const setSingleTicketPage = (val) => {
@@ -101,6 +102,7 @@ export const AppDataProvider = ({ children }) => {
         ...prevData.ticketPagination,
         totalTickets,
         totalPages,
+        currentPage,
       },
     }));
   }
@@ -206,6 +208,64 @@ export const AppDataProvider = ({ children }) => {
     }
   };
 
+  const loadMoreTickets = async () => {
+    const { currentPage, totalPages } = data.ticketPagination;
+    if (!data.loggedInUsrId || currentPage >= totalPages || data.isLoadingMore) return;
+
+    setData((prev) => ({ ...prev, isLoadingMore: true }));
+    const nextPage = currentPage + 1;
+    const ppp = 5;
+
+    try {
+      let url = `/wp-json/wp/v2/robodesk_ticket?author=${data.loggedInUsrId}&page=${nextPage}&per_page=${ppp}&orderby=date&order=desc`;
+
+      const response = await fetch(url);
+      if (!response.ok) throw new Error(`Failed to load more tickets: ${response.status}`);
+
+      const totalPagesHeader = response.headers.get('X-WP-TotalPages');
+      const totalTicketsHeader = response.headers.get('X-WP-Total');
+      const tickets = await response.json();
+
+      const mappedTickets = tickets.map((ticket) => {
+        const resolvedPriority =
+          ticket.ticket_priority ??
+          ticket.priority ??
+          ticket._embedded?.['wp:term']?.[0]?.[0]?.name ??
+          'N/A';
+
+        return {
+          id: ticket.id,
+          ticketNumber: ticket.ticket_number,
+          title: ticket.ticket_title,
+          source: ticket.ticket_origin && ticket.ticket_origin !== 'N/A' ? ticket.ticket_origin : 'Web',
+          timeAgo: ticket.ticket_time_ago + ' ago',
+          authorImage: ticket.ticket_author_image ?? Author1,
+          status: ticket.ticket_status ?? 'New',
+          priority: resolvedPriority,
+          author: ticket.ticket_author,
+          lastReply: ticket.ticket_last_reply,
+          totalComments: ticket.ticket_total_comments,
+          notifications: ticket.ticket_notifications,
+          comments: ticket.ticket_comments,
+        };
+      });
+
+      setData((prev) => ({
+        ...prev,
+        isLoadingMore: false,
+        ticketsContext: [...prev.ticketsContext, ...mappedTickets],
+        ticketPagination: {
+          ...prev.ticketPagination,
+          totalTickets: totalTicketsHeader,
+          totalPages: totalPagesHeader,
+          currentPage: nextPage,
+        },
+      }));
+    } catch (error) {
+      setData((prev) => ({ ...prev, isLoadingMore: false }));
+    }
+  };
+
   useEffect(() => {
     const checkLoginStatus = () => {
       const storedData = sessionStorage.getItem('wpUserData');
@@ -280,6 +340,7 @@ export const AppDataProvider = ({ children }) => {
         ...data,
         updateLoginStatus,
         refreshTickets,
+        loadMoreTickets,
         updateTicketNotifications,
         updateTicket,
         updateNewCommentNotification,
