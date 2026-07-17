@@ -591,11 +591,14 @@ function robodesk_imap_settings_callback()
         $username = isset($_POST['robodesk_imap_username']) ? sanitize_email(wp_unslash($_POST['robodesk_imap_username'])) : '';
         $password = isset($_POST['robodesk_imap_password']) ? sanitize_text_field(wp_unslash($_POST['robodesk_imap_password'])) : '';
 
+        $inbox_name = isset($_POST['robodesk_imap_inbox_name']) ? sanitize_text_field(wp_unslash($_POST['robodesk_imap_inbox_name'])) : '';
+
         $settings = array(
             'hostname' => $hostname,
             'port'     => $port,
             'username' => $username,
             'password' => $password,
+            'inbox_name' => $inbox_name,
         );
 
         update_option('robodesk_imap_settings', $settings);
@@ -632,12 +635,14 @@ function robodesk_imap_settings_callback()
         'port'     => 993,
         'username' => 'password',
         'password' => '', // Avoid hardcoding password
+        'inbox_name' => '',
     ));
 
-    $hostname = $settings['hostname'];
-    $port     = $settings['port'];
-    $username = $settings['username'];
-    $password = $settings['password'];
+    $hostname   = $settings['hostname'];
+    $port       = $settings['port'];
+    $username   = $settings['username'];
+    $password   = $settings['password'];
+    $inbox_name = isset($settings['inbox_name']) ? $settings['inbox_name'] : '';
 ?>
 
     <div class="wrap">
@@ -668,6 +673,12 @@ function robodesk_imap_settings_callback()
                     <th scope="row"><label for="robodesk_imap_password">IMAP Password</label></th>
                     <td><input type="password" name="robodesk_imap_password" id="robodesk_imap_password" value="<?php echo esc_attr($password); ?>" class="regular-text">
                         <p class="description"> Password</p>
+                    </td>
+                </tr>
+                <tr>
+                    <th scope="row"><label for="robodesk_imap_inbox_name">Inbox Name</label></th>
+                    <td><input type="text" name="robodesk_imap_inbox_name" id="robodesk_imap_inbox_name" value="<?php echo esc_attr($inbox_name); ?>" class="regular-text" placeholder="e.g. Sales, Support, General">
+                        <p class="description">A name to identify this inbox in the dashboard.</p>
                     </td>
                 </tr>
             </table>

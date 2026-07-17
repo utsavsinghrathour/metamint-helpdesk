@@ -144,6 +144,7 @@ function robodesk_activate()
         'robodesk_access_dashboard' => true,
         'create_tickets' => true,
         'edit_tickets' => true,
+        'edit_others_tickets' => true,
         'read_ticket' => true
     ));
 

@@ -11,6 +11,7 @@ import { sendReply } from "../utils/modules";
 import { useAppData } from "../utils/AppDataContext";
 import DefaultAvatar from "../images/default-avatar.jpg";
 import { sseManager } from "../Hooks/sseManager";
+import { playRobodeskBeep } from "../utils/notificationSound.js";
 
 // Helper to escape HTML in plain text
 const escapeHtml = (unsafe) =>
@@ -269,9 +270,12 @@ const SingleTicket = ({
   const configuredBotName =
     window.robodeskData?.robodesk_bot_title_name || "Bot";
   const previousScrollHeight = useRef(0);
-  const beep = useRef(null);
   const isAtTop = useRef(false);
   const [streamCursorId, setStreamCursorId] = useState(null);
+  // Tracks message ids we've already beeped so the sound plays exactly once
+  // per new reply, regardless of whether SSE or the polling fallback delivers
+  // it first (and regardless of stale closure values).
+  const beepedIds = useRef(new Set());
 
   const formatTimestamp = (timestamp) =>
     new Date(timestamp).toLocaleTimeString([], {
@@ -286,6 +290,7 @@ const SingleTicket = ({
     updateTicketNotifications,
     isSingleTicketPage,
     setSingleTicketPage,
+    setOpenTicketId,
   } = useAppData();
 
 
@@ -301,10 +306,12 @@ const SingleTicket = ({
 
   useEffect(() => {
     setSingleTicketPage(true);
-    sseManager.disconnect();
+    setOpenTicketId(ticket.id);
+    sseManager.disconnect("comments");
 
     return () => {
       setSingleTicketPage(false);
+      setOpenTicketId(null);
     };
   }, []);
 
@@ -314,12 +321,31 @@ const SingleTicket = ({
     }
   }, []);
 
+  // Prime the browser audio engine on the first user gesture so that
+  // programmatic notification beeps are not blocked by the autoplay policy.
   useEffect(() => {
-    if (!beep.current) {
-      beep.current = new Audio(wpAuth.notificationSound);
-    }
+    const unlock = () => {
+      const sound = wpAuth?.notificationSound;
+      if (sound) {
+        const audio = new Audio(sound);
+        const p = audio.play();
+        if (p && typeof p.then === "function") {
+          p.then(() => audio.pause()).catch(() => {});
+        }
+      }
+      window.removeEventListener("pointerdown", unlock);
+      window.removeEventListener("keydown", unlock);
+      window.removeEventListener("touchstart", unlock);
+    };
 
-    beep.current.load();
+    window.addEventListener("pointerdown", unlock);
+    window.addEventListener("keydown", unlock);
+    window.addEventListener("touchstart", unlock);
+    return () => {
+      window.removeEventListener("pointerdown", unlock);
+      window.removeEventListener("keydown", unlock);
+      window.removeEventListener("touchstart", unlock);
+    };
   }, []);
 
   const fetchComments = async (fetchOffset = 0, prepend = false) => {
@@ -486,7 +512,17 @@ const SingleTicket = ({
     });
 
     if (isNew && play) {
-      beep.current?.play();
+      const cid = Number(commentData?.id);
+      const authorId = commentData?.author_id || commentData?.author_data?.id;
+      // Only beep for replies from other people, not the viewer's own messages.
+      if (
+        cid &&
+        String(authorId) !== String(loggedInUserId) &&
+        !beepedIds.current.has(cid)
+      ) {
+        beepedIds.current.add(cid);
+        playRobodeskBeep();
+      }
     }
   };
 
@@ -668,37 +704,37 @@ const SingleTicket = ({
     if (!ticket?.id) return null;
     if (!loggedinContext && !loggedInUsrId) return null;
     if (!streamCursorId) return null;
-    const nonce = window.wpAuth?.restNonce || '';
+    const nonce = window.wpAuth?.restNonce || window.wpApiSettings?.nonce || '';
     return `/wp-json/robodesk/v1/stream/comments/${ticket.id}/${streamCursorId}/${loggedInUsrId}?_wpnonce=${nonce}`;
   }, [streamCursorId, ticket.id, loggedInUsrId, loggedinContext]);
 
   useEffect(() => {
     if (!url) return undefined;
 
-    sseManager.connect(url);
+    sseManager.connect(url, "comments");
 
     const unsubscribeNewComment = sseManager.on("new_comment", (commentData) => {
       handleNewComment(commentData);
-    });
+    }, "comments");
 
     const unsubscribeNewMineComment = sseManager.on("new_mine_comment", (commentData) => {
       handleNewComment(commentData, false);
-    });
+    }, "comments");
 
     const unsubscribeTicketOpen = sseManager.on("ticket_open", () => {
       setTicketClosed(false);
-    });
+    }, "comments");
 
     const unsubscribeTicketClosed = sseManager.on("ticket_closed", () => {
       setTicketClosed(true);
-    });
+    }, "comments");
 
     return () => {
       unsubscribeNewComment();
       unsubscribeNewMineComment();
       unsubscribeTicketOpen();
       unsubscribeTicketClosed();
-      sseManager.disconnect();
+      sseManager.disconnect("comments");
     };
   }, [url]);
 
@@ -722,6 +758,7 @@ const SingleTicket = ({
 
         const formattedComments = formatTicketComments(data);
 
+        let hasIncomingFromOther = false;
         setChatMessages((prev) => {
           const merged = new Map(prev.map((msg) => [String(msg.id), msg]));
           let hasNewMessages = false;
@@ -731,6 +768,20 @@ const SingleTicket = ({
             if (!merged.has(key)) {
               merged.set(key, msg);
               hasNewMessages = true;
+              // Beep (once) for new replies from other people. The beepedIds
+              // guard prevents double-beeping regardless of delivery order.
+              // Only beep once the conversation is already on screen, so the
+              // initial batch loaded when the ticket is opened never beeps.
+              const cid = getMessageSortId(msg);
+              if (
+                prev.size > 0 &&
+                msg.sender === "other" &&
+                cid &&
+                !beepedIds.current.has(cid)
+              ) {
+                beepedIds.current.add(cid);
+                hasIncomingFromOther = true;
+              }
             }
           });
 
@@ -753,6 +804,12 @@ const SingleTicket = ({
 
           return sorted;
         });
+
+        // The SSE new_comment handler also beeps; this covers the case where
+        // the poll delivers the message first.
+        if (hasIncomingFromOther) {
+          playRobodeskBeep();
+        }
       } catch (error) {
         console.error("Failed to poll latest comments:", error);
       }
@@ -962,12 +1019,6 @@ const SingleTicket = ({
     reader.readAsDataURL(file);
   };
   const triggerFileInput = () => fileInputRef.current.click();
-
-  const formatTimestamp = (timestamp) =>
-    new Date(timestamp).toLocaleTimeString([], {
-      hour: "2-digit",
-      minute: "2-digit",
-    });
 
   return (
     <div className="rd-single-ticket rd-flex rd-flex-col rd-h-full">
