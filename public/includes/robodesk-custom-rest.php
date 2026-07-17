@@ -29,9 +29,55 @@ if (file_exists($robodesk_jwt_file) && file_exists($robodesk_key_file)) {
 use \Firebase\JWT\JWT;
 use \Firebase\JWT\Key;
 
-// Defining JWT secret keys
-if (!defined('JWT_AUTH_SECRET_KEY')) {
-    define('JWT_AUTH_SECRET_KEY', 'robodesk-secret');
+/**
+ * Get the JWT secret key from wp-config.
+ *
+ * Uses SECURE_AUTH_KEY when available, otherwise falls back to AUTH_KEY.
+ * This avoids persisting the key in the database.
+ *
+ * @return string
+ */
+function robodesk_get_jwt_secret_key()
+{
+    if (defined('SECURE_AUTH_KEY') && SECURE_AUTH_KEY !== '') {
+        if (!defined('JWT_AUTH_SECRET_KEY')) {
+            define('JWT_AUTH_SECRET_KEY', SECURE_AUTH_KEY);
+        }
+
+        return SECURE_AUTH_KEY;
+    }
+
+    if (defined('AUTH_KEY') && AUTH_KEY !== '') {
+        if (!defined('JWT_AUTH_SECRET_KEY')) {
+            define('JWT_AUTH_SECRET_KEY', AUTH_KEY);
+        }
+
+        return AUTH_KEY;
+    }
+
+    if (defined('JWT_AUTH_SECRET_KEY') && JWT_AUTH_SECRET_KEY !== '') {
+        return JWT_AUTH_SECRET_KEY;
+    }
+
+    $key = wp_generate_password(64, true, true);
+    if (!defined('JWT_AUTH_SECRET_KEY')) {
+        define('JWT_AUTH_SECRET_KEY', $key);
+    }
+
+    return $key;
+}
+
+/**
+ * Write a debug message to the WP debug log when logging is enabled.
+ *
+ * @param string $message Log message.
+ * @return void
+ */
+function robodesk_log_debug($message)
+{
+    if (defined('WP_DEBUG') && WP_DEBUG && defined('WP_DEBUG_LOG') && WP_DEBUG_LOG) {
+        error_log('[Robodesk] ' . $message);
+    }
 }
 
 /**
@@ -212,16 +258,10 @@ function robodesk_generate_token($user, $expiration_in_days = 7)
         return new WP_Error('invalid_user', 'Invalid user object.');
     }
 
-    // Generate or retrieve the secret key
-    $secret_key = defined('JWT_AUTH_SECRET_KEY')
-        ? JWT_AUTH_SECRET_KEY
-        : wp_generate_password(64, true, true);
-
-    // Set issued and expiration timestamps
+    $secret_key = robodesk_get_jwt_secret_key();
     $issued_at = time();
     $expire = $issued_at + (DAY_IN_SECONDS * $expiration_in_days);
 
-    // Token payload
     $token = array(
         'iss' => get_site_url(),
         'iat' => $issued_at,
@@ -233,9 +273,9 @@ function robodesk_generate_token($user, $expiration_in_days = 7)
     );
 
     try {
-        $jwt = JWT::encode($token, $secret_key, 'HS256');
-        return $jwt;
+        return JWT::encode($token, $secret_key, 'HS256');
     } catch (Exception $e) {
+        robodesk_log_debug('JWT generation failed for user ' . $user->ID . ': ' . $e->getMessage());
         return new WP_Error('jwt_generation_failed', 'Failed to generate JWT: ' . $e->getMessage());
     }
 }
@@ -270,6 +310,31 @@ add_filter('rest_pre_serve_request', function ($value, $result, $request, $serve
 //     }, 10, 4);
 
 
+function robodesk_can_view_ticket(WP_REST_Request $request)
+{
+    if (!is_user_logged_in()) {
+        return false;
+    }
+
+    $user_id = (int) $request->get_param('user_id');
+    $post_id = (int) $request->get_param('post_id');
+
+    if ($user_id !== get_current_user_id()) {
+        return false;
+    }
+
+    $post = get_post($post_id);
+    if (!$post || $post->post_type !== 'robodesk_ticket') {
+        return false;
+    }
+
+    if ((int) $post->post_author === $user_id) {
+        return true;
+    }
+
+    return current_user_can('robodesk_access_dashboard');
+}
+
 /* Public Rest Api registration hooks */
 
 add_action('rest_api_init', function () {
@@ -278,12 +343,6 @@ add_action('rest_api_init', function () {
         'methods' => 'POST',
         'callback' => 'robodesk_secure_login_endpoint',
         'permission_callback' => '__return_true', // Public access for login
-    ));
-
-    register_rest_route('custom/v1', '/protected', array(
-        'methods' => 'GET',
-        'callback' => 'robodesk_protected_endpoint',
-        'permission_callback' => 'robodesk_validate_token',
     ));
 
     // Robodesk Registration Rest Api Registration
@@ -302,7 +361,9 @@ add_action('rest_api_init', function () {
     register_rest_route('robodesk/selected', '/staff', array(
         'methods' => 'GET',
         'callback' => 'robodesk_handle_selected_staff',
-        'permission_callback' => '__return_true',
+        'permission_callback' => function () {
+            return is_user_logged_in();
+        },
     ));
 
     register_rest_route('robodesk-bot/v1', '/wa-settings', array(
@@ -314,7 +375,7 @@ add_action('rest_api_init', function () {
     register_rest_route('robodesk/v1', '/messaging/(?P<post_id>\d+)(?:/(?P<last_comment_id>\d+))?(?:/(?P<user_id>\d+))?', array(
         'methods' => 'GET',
         'callback' => 'robodesk_live_comments',
-        'permission_callback' => '__return_true',
+        'permission_callback' => 'robodesk_can_view_ticket',
         'args' => array(
             'post_id' => array(
                 'validate_callback' => function ($param) {
@@ -341,7 +402,16 @@ add_action('rest_api_init', function () {
             array(
                 'methods' => 'GET',
                 'callback' => 'robodesk_stream',
-                'permission_callback' => '__return_true',
+                'permission_callback' => function (WP_REST_Request $request) {
+                    if (!is_user_logged_in()) {
+                        return false;
+                    }
+                    $user_id = (int) $request->get_param('user_id');
+                    if ($user_id > 0 && $user_id !== get_current_user_id()) {
+                        return false;
+                    }
+                    return true;
+                },
                 'args' => array(
                     'type' => array(
                         'validate_callback' => function ($param) {
@@ -382,7 +452,7 @@ function robodesk_stream($request)
     header('Content-Type: text/event-stream');
     header('Cache-Control: no-cache');
     header('Connection: keep-alive');
-    header('Access-Control-Allow-Origin: *');
+    header('Access-Control-Allow-Origin: ' . esc_url(home_url()));
     header('Access-Control-Allow-Headers: Cache-Control');
     header('X-Accel-Buffering: no');
 
@@ -411,11 +481,27 @@ function robodesk_stream($request)
 
             $ticket_id = (int) $request->get_param('post_id');
             if ($ticket_id > 0) {
+                $last_comment_client = (int) $request->get_param('last_id');
+                $last_seen_comment_id = $last_comment_client;
+
+                echo "retry: 3000\n\n";
+                flush();
+
+                // Keep this endpoint short-lived. Browser EventSource reconnects
+                // automatically, avoiding proxy/PHP-FPM 502s from long REST requests.
+                wp_cache_delete('last_changed', 'comment_queries');
+                clean_post_cache($ticket_id);
+
                 $ticket_status = get_post_meta($ticket_id, '_robodesk_ticket_status', true);
-                $last_comment_client = $request->get_param('last_id');
-                $new_conversations = robodesk_live_conversations($ticket_id, $last_comment_client, $user_id);
+
+                $new_conversations = robodesk_live_conversations($ticket_id, $last_seen_comment_id, $user_id);
                 if (!empty($new_conversations)) {
                     foreach ($new_conversations as $c) {
+                        $comment_id = isset($c['id']) ? (int) $c['id'] : 0;
+                        if ($comment_id > $last_seen_comment_id) {
+                            $last_seen_comment_id = $comment_id;
+                        }
+
                         echo "event: new_comment\n";
                         echo "data: " . json_encode($c) . "\n\n";
                         flush();
@@ -423,10 +509,14 @@ function robodesk_stream($request)
                     update_post_meta($ticket_id, 'rbd_all_seen', 'yes');
                 }
 
-                $my_own_conversations = robodesk_my_own_conversations($ticket_id, $last_comment_client);
-
+                $my_own_conversations = robodesk_my_own_conversations($ticket_id, $last_seen_comment_id);
                 if (!empty($my_own_conversations)) {
                     foreach ($my_own_conversations as $moc) {
+                        $comment_id = isset($moc['id']) ? (int) $moc['id'] : 0;
+                        if ($comment_id > $last_seen_comment_id) {
+                            $last_seen_comment_id = $comment_id;
+                        }
+
                         echo "event: new_mine_comment\n";
                         echo "data: " . json_encode($moc) . "\n\n";
                         flush();
@@ -439,12 +529,15 @@ function robodesk_stream($request)
                     flush();
                 }
 
-
                 if ($ticket_status == 'open') {
                     echo "event: ticket_open\n";
                     echo "data: " . json_encode(array('reason' => 'ticket_open')) . "\n\n";
                     flush();
                 }
+
+                echo ": heartbeat\n\n";
+                flush();
+                exit;
             }
 
             break;
@@ -455,9 +548,25 @@ function robodesk_stream($request)
             if ($ticket_id == 0) {
 
                 $last_ticket_id = (int) $request->get_param('last_id');
-                $new_ticket = robodesk_get_new_tickets($last_ticket_id, $user_id);
-                if ($last_ticket_id > 0 && !empty($new_ticket)) {
+                $last_seen_ticket_id = $last_ticket_id;
+
+                // Short-lived: run once and exit. Browser EventSource reconnects
+                // automatically via the retry directive, avoiding long-running
+                // PHP-FPM workers that exhaust the pool.
+                echo "retry: 5000\n\n";
+                flush();
+
+                wp_cache_delete('last_changed', 'comment_queries');
+                wp_cache_delete('last_changed', 'posts');
+
+                $new_ticket = robodesk_get_new_tickets($last_seen_ticket_id, $user_id);
+                if (!empty($new_ticket)) {
                     foreach ($new_ticket as $ticket) {
+                        $nt_id = isset($ticket['id']) ? (int) $ticket['id'] : 0;
+                        if ($nt_id > $last_seen_ticket_id) {
+                            $last_seen_ticket_id = $nt_id;
+                        }
+
                         echo "event: new_ticket\n";
                         echo "data: " . json_encode($ticket) . "\n\n";
                         flush();
@@ -470,6 +579,10 @@ function robodesk_stream($request)
                     echo "data: " . json_encode($notifications) . "\n\n";
                     flush();
                 }
+
+                echo ": heartbeat\n\n";
+                flush();
+                exit;
             }
 
             break;
@@ -482,24 +595,21 @@ function robodesk_stream($request)
             exit;
     }
 
-    echo "retry: 6000\n";
-    flush();
     exit;
 }
 
 //For new notifications
 function robodesk_get_new_notifications($user_id)
 {
-    // Get all tickets newer than last_id_client
     // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query
-    $notifications_data = get_posts(array(
+    $tickets = get_posts(array(
         'post_type' => 'robodesk_ticket',
         'post_status' => 'publish',
         'author' => $user_id,
         'orderby' => 'date',
         'order' => 'DESC',
         'fields' => 'ids',
-        'posts_per_page' => 4,
+        'posts_per_page' => 10,
         'meta_query' => array(
             array(
                 'key' => 'rbd_all_seen',
@@ -509,7 +619,27 @@ function robodesk_get_new_notifications($user_id)
         )
     ));
 
-    return $notifications_data;
+    // Return each ticket with its latest reply id so the client can detect a
+    // genuinely NEW message (rather than just an already-unread one) and beep
+    // for every new reply regardless of how many are still unread.
+    $result = array();
+    foreach ($tickets as $ticket_id) {
+        $latest = get_comments(array(
+            'post_id' => $ticket_id,
+            'number' => 1,
+            'orderby' => 'comment_ID',
+            'order' => 'DESC',
+            'type' => 'ticket_replies',
+            'status' => 'approve',
+            'fields' => 'ids',
+        ));
+        $result[] = array(
+            'id' => (int) $ticket_id,
+            'last_comment_id' => !empty($latest) ? (int) $latest[0] : 0,
+        );
+    }
+
+    return $result;
 }
 
 
@@ -565,30 +695,25 @@ function robodesk_live_conversations($ticket_id, $last_comment_client, $loggedin
         // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query
         $comments = get_comments($args);
         foreach ($comments as $comment) {
-            $user = get_userdata($comment->user_id);
-            if ($user && (
-                in_array('administrator', $user->roles, true) ||
-                in_array('robodesk_support_manager', $user->roles, true) ||
-                in_array('robodesk_support_staff', $user->roles, true)
-            )) {
-                $new_admin_comments[] = array(
-                    'id' => (int) $comment->comment_ID,
-                    'content' => array(
-                        'rendered' => wpautop($comment->comment_content)
-                    ),
-                    'date' => function_exists('robodesk_comment_utc_iso') ? robodesk_comment_utc_iso($comment) : $comment->comment_date,
-                    'date_utc' => function_exists('robodesk_comment_utc_iso') ? robodesk_comment_utc_iso($comment) : $comment->comment_date_gmt,
-                    'author_data' => array(
-                        'id' => (int) $comment->user_id
-                    ),
-                    'author_name' => function_exists('robodesk_get_ticket_comment_author_name') ? robodesk_get_ticket_comment_author_name($comment) : ($comment->display_name ?: $comment->comment_author),
-                    'author_image' => function_exists('robodesk_get_ticket_comment_avatar_url') ? robodesk_get_ticket_comment_avatar_url($comment, 32) : robodesk_get_comment_avatar($comment->user_id ?: 0, 32),
-                    'is_bot_response' => function_exists('robodesk_is_bot_comment') ? robodesk_is_bot_comment($comment->comment_ID) : false,
-                    'time_ago' => human_time_diff(strtotime($comment->comment_date), current_time('timestamp')) . ' ago',
-                    'author_id' => (int) $comment->user_id,
-                    'post_author_id' => (int) $ticket_id ? get_post_field('post_author', $ticket_id) : 0,
-                );
-            }
+            // The meta_query above already ensures admin_comment = 'yes'.
+            // No secondary role check needed — trust the stored meta.
+            $new_admin_comments[] = array(
+                'id' => (int) $comment->comment_ID,
+                'content' => array(
+                    'rendered' => wpautop($comment->comment_content)
+                ),
+                'date' => function_exists('robodesk_comment_utc_iso') ? robodesk_comment_utc_iso($comment) : $comment->comment_date,
+                'date_utc' => function_exists('robodesk_comment_utc_iso') ? robodesk_comment_utc_iso($comment) : $comment->comment_date_gmt,
+                'author_data' => array(
+                    'id' => (int) $comment->user_id
+                ),
+                'author_name' => function_exists('robodesk_get_ticket_comment_author_name') ? robodesk_get_ticket_comment_author_name($comment) : ($comment->display_name ?: $comment->comment_author),
+                'author_image' => function_exists('robodesk_get_ticket_comment_avatar_url') ? robodesk_get_ticket_comment_avatar_url($comment, 32) : robodesk_get_comment_avatar($comment->user_id ?: 0, 32),
+                'is_bot_response' => function_exists('robodesk_is_bot_comment') ? robodesk_is_bot_comment($comment->comment_ID) : false,
+                'time_ago' => human_time_diff(strtotime($comment->comment_date), current_time('timestamp')) . ' ago',
+                'author_id' => (int) $comment->user_id,
+                'post_author_id' => (int) $ticket_id ? get_post_field('post_author', $ticket_id) : 0,
+            );
         }
     }
 
@@ -770,7 +895,7 @@ function robodesk_live_comments($request)
     header('Content-Type: text/event-stream');
     header('Cache-Control: no-cache');
     header('Connection: keep-alive');
-    header('Access-Control-Allow-Origin: *');
+    header('Access-Control-Allow-Origin: ' . esc_url(home_url()));
     header('Access-Control-Allow-Headers: Cache-Control');
     header('X-Accel-Buffering: no');
 
@@ -914,130 +1039,143 @@ function robodesk_live_comments($request)
 
 function robodesk_secure_login_endpoint(WP_REST_Request $request)
 {
-
-    $emailAddr = sanitize_email($request->get_param('email'));
+    $login = $request->get_param('email');
     $password = $request->get_param('password');
 
-    // Input validation
-    if (empty($emailAddr) || empty($password)) {
+    if (empty($login) || empty($password)) {
+        robodesk_log_debug('Login failed: missing username/email or password.');
         return new WP_Error('missing_credentials', 'Username and password are required.', array('status' => 400));
     }
 
-    // Check if username is email
-    if (is_email($emailAddr)) {
-        $user = get_user_by('email', $emailAddr);
+    $login = sanitize_text_field($login);
+    $password = sanitize_text_field($password);
+
+    if (is_email($login)) {
+        $user = get_user_by('email', $login);
         if (!$user) {
+            robodesk_log_debug('Login failed: no user found for email ' . $login);
             return new WP_Error('invalid_email', 'No user found with this email.', array('status' => 404));
         }
-        $username = $user->user_login;
+        $login = $user->user_login;
     }
 
-    // Authenticate user
     $creds = array(
-        'user_login' => $username,
+        'user_login' => $login,
         'user_password' => $password,
         'remember' => false,
     );
 
-
-    // Sign in the user
     $user = wp_signon($creds, false);
 
-    if (!is_wp_error($user)) {
-
-        wp_set_current_user($user->ID);
-        wp_set_auth_cookie($user->ID);
-    }
-
-
     if (is_wp_error($user)) {
+        robodesk_log_debug('Login failed for login ' . $login . ': ' . $user->get_error_message());
         return new WP_Error('invalid_credentials', 'Invalid username or password.', array('status' => 401));
     }
 
-    // Generate JWT
-    $secret_key = defined('JWT_AUTH_SECRET_KEY') ? JWT_AUTH_SECRET_KEY : wp_generate_password(64, true, true);
-    $issued_at = time();
-    $expire = $issued_at + (DAY_IN_SECONDS * 7); // Token valid for 7 days
+    wp_set_current_user($user->ID);
+    wp_set_auth_cookie($user->ID);
 
-    $token = array(
-        'iss' => get_site_url(),
-        'iat' => $issued_at,
-        'exp' => $expire,
-        'data' => array(
-            'user_id' => $user->ID,
-            'user_email' => $user->user_email,
-        ),
-    );
-
-    try {
-        $jwt = JWT::encode($token, $secret_key, 'HS256');
-        return array(
-            'success' => true,
-            'token' => $jwt,
-            'user_id' => $user->ID,
-            'user_email' => $user->user_email,
-            'user_display_name' => $user->display_name,
-            'expires_at' => $expire,
-        );
-    } catch (Exception $e) {
-        return new WP_Error('jwt_error', 'Error generating token: ' . $e->getMessage(), array('status' => 500));
+    $token = robodesk_generate_token($user);
+    if (is_wp_error($token)) {
+        return new WP_Error('jwt_error', 'Error generating token: ' . $token->get_error_message(), array('status' => 500));
     }
+
+    return array(
+        'success' => true,
+        'token' => $token,
+        'user_id' => $user->ID,
+        'user_email' => $user->user_email,
+        'user_display_name' => $user->display_name,
+        'expires_at' => time() + (DAY_IN_SECONDS * 7),
+        'rest_nonce' => wp_create_nonce('wp_rest'),
+    );
 }
 
 function robodesk_validate_token(WP_REST_Request $request)
 {
-    $auth_header = $request->get_header(key: 'Authorization');
+    $current_user = wp_get_current_user();
+    if ($current_user instanceof WP_User && $current_user->ID > 0) {
+        return true;
+    }
 
+    $auth_header = $request->get_header('authorization');
     if (!$auth_header) {
         return new WP_Error('no_token', 'Authorization header missing.', array('status' => 401));
     }
 
-    // Extract token from "Bearer <token>"
     $token = str_replace('Bearer ', '', trim($auth_header));
-    $secret_key = defined('JWT_AUTH_SECRET_KEY') ? JWT_AUTH_SECRET_KEY : wp_generate_password(64, true, true);
+    $secret_key = robodesk_get_jwt_secret_key();
 
     try {
         $decoded = JWT::decode($token, new Key($secret_key, 'HS256'));
 
-        // Verify issuer
         if ($decoded->iss !== get_site_url()) {
+            robodesk_log_debug('Token validation failed: invalid issuer.');
             return new WP_Error('invalid_token', 'Invalid token issuer.', array('status' => 401));
         }
 
-        // Verify expiration
         if ($decoded->exp < time()) {
+            robodesk_log_debug('Token validation failed: token expired.');
             return new WP_Error('expired_token', 'Token has expired.', array('status' => 401));
         }
 
-        // Verify user exists
         $user = get_user_by('id', $decoded->data->user_id);
         if (!$user) {
+            robodesk_log_debug('Token validation failed: user not found for ID ' . ($decoded->data->user_id ?? 'unknown'));
             return new WP_Error('invalid_user', 'User not found.', array('status' => 401));
         }
 
-        // Set current user for the request
         wp_set_current_user($user->ID);
         return true;
     } catch (Exception $e) {
+        robodesk_log_debug('Token validation exception: ' . $e->getMessage());
         return new WP_Error('invalid_token', 'Invalid token: ' . $e->getMessage(), array('status' => 401));
     }
 }
 
-function robodesk_protected_endpoint(WP_REST_Request $request)
-{
-    $user = wp_get_current_user();
-    return array(
-        'success' => true,
-        'message' => 'Access granted to protected endpoint.',
-        'user_id' => $user->ID,
-        'user_email' => $user->user_email,
-    );
-}
-
-
 //Registers the new user
 function robodesk_user_signup(WP_REST_Request $request)
 {
+    $advanced_settings = get_option('robodesk_advanced_settings', array());
+    if (!empty($advanced_settings['enable_signup_rate_limiting'])) {
+        $ip = robodesk_get_client_ip();
+        $blocked = get_option('robodesk_blocked_ips', array());
+        if (in_array($ip, $blocked, true)) {
+            return new WP_Error(
+                'ip_blocked',
+                __('Your IP has been permanently blocked due to repeated abuse.', 'robodesk'),
+                array('status' => 403)
+            );
+        }
+
+        $rate_key = 'robodesk_signup_rate_' . md5($ip);
+        $attempts = get_transient($rate_key);
+        if ($attempts === false) {
+            $attempts = 0;
+        }
+        $attempts++;
+        set_transient($rate_key, $attempts, 2 * HOUR_IN_SECONDS);
+        if ($attempts >= 5) {
+            $strike_key = 'robodesk_signup_strike_' . md5($ip);
+            $has_strike = get_transient($strike_key);
+            if ($has_strike !== false) {
+                $blocked[] = $ip;
+                update_option('robodesk_blocked_ips', $blocked, false);
+                return new WP_Error(
+                    'ip_blocked',
+                    __('Your IP has been permanently blocked due to repeated abuse.', 'robodesk'),
+                    array('status' => 403)
+                );
+            }
+            set_transient($strike_key, 1, DAY_IN_SECONDS);
+            return new WP_Error(
+                'rate_limited',
+                __('Too many signup attempts. Please try again later.', 'robodesk'),
+                array('status' => 429)
+            );
+        }
+    }
+
     $params = $request->get_json_params();
     $email = sanitize_email($params['email']);
 
@@ -1088,17 +1226,19 @@ function robodesk_user_signup(WP_REST_Request $request)
     // Sign in the user
     $user = wp_signon($creds, false);
 
-    if (!is_wp_error($user)) {
-
-        wp_set_current_user($user->ID);
-        wp_set_auth_cookie($user->ID);
+    if (is_wp_error($user)) {
+        robodesk_log_debug('Signup login failed for new user ' . $email . ': ' . $user->get_error_message());
+        return new WP_Error('login_failed', 'Failed to sign in newly created user.', array('status' => 500));
     }
+
+    wp_set_current_user($user->ID);
+    wp_set_auth_cookie($user->ID);
 
     // Send default WordPress user notification email
     wp_new_user_notification($user_id, null, 'both'); // Sends email to user and admin
 
     // Generate JWT token
-    $token = robodesk_generate_token($user_id);
+    $token = robodesk_generate_token($user);
 
     if (is_wp_error($token)) {
         return new WP_Error(
@@ -1279,6 +1419,7 @@ function robodesk_handle_ticket_creation($data)
     $title = sanitize_text_field($data['data']['title'] ?? '');
     $content = sanitize_textarea_field($data['data']['description'] ?? '');
     $author = sanitize_text_field($data['data']['uid'] ?? '');
+    $timestamp = $data['data']['timestamp'] ?? null;
 
     $ticket = wp_insert_post(array(
         'post_type' => 'robodesk_ticket',
@@ -1339,7 +1480,7 @@ function robodesk_handle_ticket_creation($data)
     }
 
     // Add initial comment
-    $comment_id = wp_insert_comment(array(
+    $comment_data = array(
         'comment_post_ID' => $ticket,
         'user_id' => $author,
         'comment_content' => $title,
@@ -1347,18 +1488,36 @@ function robodesk_handle_ticket_creation($data)
         'comment_author_email' => $email_address,
         'comment_approved' => 1,
         'comment_type' => 'ticket_replies'
-    ));
+    );
+
+    if ($timestamp) {
+        $mysql_date = date('Y-m-d H:i:s', strtotime($timestamp));
+        $comment_data['comment_date'] = $mysql_date;
+        $comment_data['comment_date_gmt'] = get_gmt_from_date($mysql_date);
+    }
+
+    $comment_id = wp_insert_comment($comment_data);
 
     if (!is_wp_error($comment_id)) {
+        $author_type = robodesk_get_author_type($author);
         add_comment_meta($comment_id, 'comment_source', 'chat', true);
-        add_comment_meta($comment_id, 'author_type', robodesk_get_author_type($author), true);
+        add_comment_meta($comment_id, 'author_type', $author_type, true);
         add_comment_meta($comment_id, 'is_bot_response', '0', true);
+        add_comment_meta($comment_id, 'admin_comment', $author_type === 'agent' ? 'yes' : 'no', true);
         add_comment_meta($comment_id, 'rbd_suppress_notification', 1, true);
     }
 
     $reply_id = !is_wp_error($comment_id) ? $comment_id : false;
 
     $response_data = robodesk_build_ticket_response_data($ticket, $user_object, $reply_id);
+
+    // Auto-assign if enabled in Advanced Settings
+    $settings = get_option('robodesk_advanced_settings', []);
+    if (!empty($settings['enable_auto_assign'])) {
+        $assigned = auto_assign_ticket_to_support_staff();
+        update_post_meta($ticket, 'ticket_assignee', $assigned);
+        robodesk_store_ticket_assignee_id($ticket, $assigned);
+    }
 
     robodesk_notify_ticket_created($ticket, 'chat');
 
@@ -1489,8 +1648,38 @@ function robodesk_handle_reply_receive($data)
         return new WP_Error('user_not_found', 'User not found', array('status' => 404));
     }
 
-    // Add reply to ticket
-    $comment_id = wp_insert_comment(array(
+    $base64_image = $data['data']['image'] ?? '';
+    $attachment_url = '';
+    if ($base64_image && preg_match('/^data:image\/(\w+);base64,/', $base64_image, $matches)) {
+        $image_type = $matches[1];
+        $image_data = substr($base64_image, strpos($base64_image, ',') + 1);
+        $image_data = base64_decode($image_data, true);
+        if ($image_data !== false) {
+            $upload_dir = wp_upload_dir();
+            $filename = 'ticket-' . $ticket_id . '-' . time() . '.' . $image_type;
+            $file_path = $upload_dir['path'] . '/' . $filename;
+            if (file_put_contents($file_path, $image_data) !== false) {
+                $filetype = wp_check_filetype($filename, null);
+                $attachment = array(
+                    'post_mime_type' => $filetype['type'],
+                    'post_title' => sanitize_file_name($filename),
+                    'post_content' => '',
+                    'post_status' => 'inherit',
+                );
+                $attach_id = wp_insert_attachment($attachment, $file_path, $ticket_id);
+                if (!is_wp_error($attach_id)) {
+                    require_once ABSPATH . 'wp-admin/includes/image.php';
+                    $attach_data = wp_generate_attachment_metadata($attach_id, $file_path);
+                    wp_update_attachment_metadata($attach_id, $attach_data);
+                    $attachment_url = wp_get_attachment_url($attach_id);
+                    $image_html = '<a href="' . esc_url($attachment_url) . '" target="_blank"><img src="' . esc_url($attachment_url) . '" alt="" class="rd-comment-img" /></a>';
+                    $reply .= '<br>' . $image_html;
+                }
+            }
+        }
+    }
+
+    $comment_data = array(
         'comment_post_ID' => $ticket_id,
         'comment_author' => $user_object->display_name,
         'comment_author_email' => $user_object->user_email,
@@ -1498,15 +1687,27 @@ function robodesk_handle_reply_receive($data)
         'comment_content' => $reply,
         'comment_approved' => 1,
         'comment_type' => 'ticket_replies'
-    ));
+    );
+
+    $timestamp = $data['data']['timestamp'] ?? null;
+    if ($timestamp) {
+        $mysql_date = date('Y-m-d H:i:s', strtotime($timestamp));
+        $comment_data['comment_date'] = $mysql_date;
+        $comment_data['comment_date_gmt'] = get_gmt_from_date($mysql_date);
+    }
+
+    // Add reply to ticket
+    $comment_id = wp_insert_comment($comment_data);
 
     if (!$comment_id) {
         return new WP_Error('comment_failed', 'Failed to add reply', array('status' => 500));
     }
 
+    $author_type = robodesk_get_author_type($user_id);
     add_comment_meta($comment_id, 'comment_source', 'chat', true);
-    add_comment_meta($comment_id, 'author_type', robodesk_get_author_type($user_id), true);
+    add_comment_meta($comment_id, 'author_type', $author_type, true);
     add_comment_meta($comment_id, 'is_bot_response', $is_bot_response ? '1' : '0', true);
+    add_comment_meta($comment_id, 'admin_comment', $author_type === 'agent' ? 'yes' : 'no', true);
 
     // Trigger action for integrations (Slack, Discord, etc.)
     do_action('robodesk_after_reply_added', $ticket_id, $comment_id, $reply, $user_object);
@@ -1522,8 +1723,7 @@ function robodesk_handle_reply_receive($data)
         'content' => $comment->comment_content,
         'created_at' => function_exists('robodesk_comment_utc_iso') ? robodesk_comment_utc_iso($comment) : $comment->comment_date,
         'is_bot_response' => $is_bot_response,
-        // 'attachment_id' => $attachment_id,
-        // 'attachment_url' => $attachment_url
+        'attachment_url' => $attachment_url,
     ];
 
     rbd_log(sprintf(
@@ -1607,6 +1807,24 @@ add_action('rest_api_init', function () {
 
 function robodesk_custom_lost_password(WP_REST_Request $request)
 {
+    $advanced_settings = get_option('robodesk_advanced_settings', array());
+    if (!empty($advanced_settings['enable_signup_rate_limiting'])) {
+        $ip = robodesk_get_client_ip();
+        $rate_key = 'robodesk_lost_password_rate_' . md5($ip);
+        $attempts = get_transient($rate_key);
+        if ($attempts === false) {
+            $attempts = 0;
+        }
+        if ($attempts >= 5) {
+            return new WP_Error(
+                'rate_limited',
+                __('Too many password reset requests. Please try again later.', 'robodesk'),
+                array('status' => 429)
+            );
+        }
+        set_transient($rate_key, $attempts + 1, HOUR_IN_SECONDS);
+    }
+
     $user_login = $request->get_param('user_login');
     if (empty($user_login)) {
         return new WP_Error('invalid_input', 'Username or email is required.', array('status' => 400));
@@ -1617,11 +1835,11 @@ function robodesk_custom_lost_password(WP_REST_Request $request)
     $result = retrieve_password($user_login);
 
     if (is_wp_error($result)) {
-        return new WP_Error('reset_failed', $result->get_error_message(), array('status' => 400));
+        rbd_log('Lost password request failed for: ' . $user_login . ' — ' . $result->get_error_message());
     }
 
     return new WP_REST_Response(array(
-        'message' => __('A password reset link has been sent to your email address.', 'robodesk')
+        'message' => __('If the username or email exists, a password reset link has been sent.', 'robodesk')
     ), 200);
 }
 

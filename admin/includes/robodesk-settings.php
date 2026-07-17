@@ -280,20 +280,21 @@ $settings_hidden = ($current_tab === 'settings') ? '' : ' hidden';
              <!----------------------- IMAP Settings load saved settings ------------------->
              <?php
                 // Load saved settings
-                $robodesk_imap_settings = get_option('robodesk_imap_settings', array(
-                    'hostname' => 'email.example.com',
-                    'port'     => 993,
-                    'username' => '',
-                    'password' => '',
-                    'auth'     => true,
+                 $robodesk_imap_settings = get_option('robodesk_imap_settings', array(
+                     'hostname' => 'email.example.com',
+                     'port'     => 993,
+                     'username' => '',
+                     'password' => '',
+                     'auth'     => true,
+                     'inbox_name' => '',
+                 ));
 
-                ));
-
-                $robodesk_imap_hostname = $robodesk_imap_settings['hostname'];
-                $robodesk_imap_port     = $robodesk_imap_settings['port'];
-                $robodesk_imap_username = $robodesk_imap_settings['username'];
-                $robodesk_imap_password = $robodesk_imap_settings['password'];
-                $robodesk_imap_auth     = isset($robodesk_imap_settings['auth']) ? $robodesk_imap_settings['auth'] : true;
+                 $robodesk_imap_hostname   = $robodesk_imap_settings['hostname'];
+                 $robodesk_imap_port       = $robodesk_imap_settings['port'];
+                 $robodesk_imap_username   = $robodesk_imap_settings['username'];
+                 $robodesk_imap_password   = $robodesk_imap_settings['password'];
+                 $robodesk_imap_auth       = isset($robodesk_imap_settings['auth']) ? $robodesk_imap_settings['auth'] : true;
+                 $robodesk_imap_inbox_name = isset($robodesk_imap_settings['inbox_name']) ? $robodesk_imap_settings['inbox_name'] : '';
 
                 $robodesk_smtp_settings = get_option('robodesk_smtp_settings', array(
                     'enabled' => false,
@@ -352,17 +353,26 @@ $settings_hidden = ($current_tab === 'settings') ? '' : ' hidden';
                                  value="<?php echo esc_attr($robodesk_imap_password); ?>"
                                  class="styled-input mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
                          </div>
-                         <div>
-                             <label for="robodesk_imap_auth"
-                                 class="block text-sm font-medium text-gray-700"><?php esc_html_e('Encryption', 'robodesk'); ?></label>
-                             <select name="robodesk_imap_auth" id="robodesk_imap_auth"
-                                 class="styled-select mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
-                                 <option value="1" <?php selected($robodesk_imap_auth, true); ?>>
-                                     <?php esc_html_e('SSL', 'robodesk'); ?></option>
-                                 <option value="0" <?php selected($robodesk_imap_auth, false); ?>>
-                                     <?php esc_html_e('TLS', 'robodesk'); ?></option>
-                             </select>
-                         </div>
+                          <div>
+                              <label for="robodesk_imap_inbox_name"
+                                  class="block text-sm font-medium text-gray-700"><?php esc_html_e('Inbox Name', 'robodesk'); ?></label>
+                              <input type="text" name="robodesk_imap_inbox_name" id="robodesk_imap_inbox_name"
+                                  value="<?php echo esc_attr($robodesk_imap_inbox_name); ?>"
+                                  placeholder="e.g. Sales, Support, General"
+                                  class="styled-input mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                              <p class="text-xs text-gray-500 mt-1"><?php esc_html_e('A name to identify this inbox in the dashboard.', 'robodesk'); ?></p>
+                          </div>
+                          <div>
+                              <label for="robodesk_imap_auth"
+                                  class="block text-sm font-medium text-gray-700"><?php esc_html_e('Encryption', 'robodesk'); ?></label>
+                              <select name="robodesk_imap_auth" id="robodesk_imap_auth"
+                                  class="styled-select mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                                  <option value="1" <?php selected($robodesk_imap_auth, true); ?>>
+                                      <?php esc_html_e('SSL', 'robodesk'); ?></option>
+                                  <option value="0" <?php selected($robodesk_imap_auth, false); ?>>
+                                      <?php esc_html_e('TLS', 'robodesk'); ?></option>
+                              </select>
+                          </div>
                      </div>
                      <div class="mt-6 flex gap-4">
                          <button type="button" id="robodesk-imap-test" onclick="testConnection()"
@@ -688,12 +698,14 @@ $settings_hidden = ($current_tab === 'settings') ? '' : ' hidden';
 
 
              <?php
-                $robodesk_advanced_settings = get_option('robodesk_advanced_settings', [
+                 $robodesk_advanced_settings = get_option('robodesk_advanced_settings', [
                     'enable_auto_assign' => false,
                     'enable_notifications' => true,
                     'enable_customer_portal' => true,
+                    'enable_signup_rate_limiting' => false,
                     'max_file_upload_size' => 10,
-                    'reply_unseen_email_minutes' => 15
+                    'reply_unseen_email_minutes' => 15,
+                    'polling_interval' => 30,
                 ]);
                 ?>
              <div id="advanced-tab" class="settings-tab-content hidden">
@@ -743,26 +755,64 @@ $settings_hidden = ($current_tab === 'settings') ? '' : ' hidden';
                                         }
                                         ?>
                                  </select>
-                                 <span class="text-sm text-gray-600"><?php esc_html_e('minutes', 'robodesk'); ?></span>
-                             </div>
-                         </div>
-                         <div class="flex items-center">
-                             <input id="enable-customer-portal" type="checkbox"
+                                  <span class="text-sm text-gray-600"><?php esc_html_e('minutes', 'robodesk'); ?></span>
+                              </div>
+                          </div>
+                          <div>
+                              <label for="polling-interval"
+                                  class="block text-sm font-medium text-gray-700 mb-1">
+                                  <?php esc_html_e('Dashboard polling interval', 'robodesk'); ?>
+                              </label>
+                              <p class="text-xs text-gray-500 mb-2">
+                                  <?php esc_html_e('How often the dashboard checks for new replies and notifications. Shorter intervals feel more real-time but increase server load.', 'robodesk'); ?>
+                              </p>
+                              <select id="polling-interval" name="polling_interval"
+                                  class="styled-select block w-40 border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                                  <?php
+                                     $robodesk_polling_options = [15, 30, 45, 60, 120];
+                                     foreach ($robodesk_polling_options as $robodesk_poll_sec) {
+                                         echo '<option value="' . esc_attr($robodesk_poll_sec) . '" ' . selected($robodesk_advanced_settings['polling_interval'], $robodesk_poll_sec, false) . '>' . esc_html($robodesk_poll_sec) . ' ' . esc_html__('seconds', 'robodesk') . '</option>';
+                                     }
+                                     ?>
+                              </select>
+                          </div>
+                          <div class="flex items-center">
+                              <input id="enable-customer-portal" type="checkbox"
                                  <?php checked($robodesk_advanced_settings['enable_customer_portal'], true); ?>
                                  class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
                              <label for="enable-customer-portal" class="ml-2 block text-sm text-gray-900">
                                  <?php esc_html_e('Enable customer portal', 'robodesk'); ?>
                              </label>
                          </div>
-                         <div>
-                             <label
-                                 class="block text-sm font-medium text-gray-700"><?php esc_html_e('Maximum file upload size (MB)', 'robodesk'); ?></label>
-                             <input type="number" name="max_file_upload_size"
-                                 value="<?php echo esc_attr($robodesk_advanced_settings['max_file_upload_size']); ?>"
-                                 min="1" max="100"
-                                 class="styled-input mt-1 block w-32 border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
-                         </div>
-                     </div>
+                          <div>
+                              <label
+                                  class="block text-sm font-medium text-gray-700"><?php esc_html_e('Maximum file upload size (MB)', 'robodesk'); ?></label>
+                              <input type="number" name="max_file_upload_size"
+                                  value="<?php echo esc_attr($robodesk_advanced_settings['max_file_upload_size']); ?>"
+                                  min="1" max="100"
+                                  class="styled-input mt-1 block w-32 border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                          </div>
+                          <div class="flex items-start">
+                              <input type="checkbox" id="enable-signup-rate-limiting" name="enable_signup_rate_limiting" value="1"
+                                  <?php checked($robodesk_advanced_settings['enable_signup_rate_limiting'] ?? false, true); ?>
+                                  class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded mt-1">
+                              <label for="enable-signup-rate-limiting" class="ml-2 block text-sm text-gray-900">
+                                  <?php esc_html_e('Enable signup rate limiting &amp; IP blocking', 'robodesk'); ?>
+                              </label>
+                          </div>
+                          <div>
+                                <label for="blocked-ips"
+                                    class="block text-sm font-medium text-gray-700"><?php esc_html_e('Blocked IPs', 'robodesk'); ?></label>
+                                <p class="text-xs text-gray-500 mb-2">
+                                    <?php esc_html_e('One IP per line. These IPs are blocked from signing up. Add or remove IPs manually.', 'robodesk'); ?>
+                                </p>
+                                <textarea id="blocked-ips" name="blocked_ips" rows="5"
+                                    class="mt-1 block w-full max-w-md border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 font-mono text-sm"><?php
+                                      $robodesk_blocked_ips = get_option('robodesk_blocked_ips', array());
+                                      echo esc_textarea(implode("\n", $robodesk_blocked_ips));
+                                    ?></textarea>
+                            </div>
+                      </div>
                      <hr class="my-6 border-gray-200">
                      <button type="button" id="save-advanced-settings"
                          class="mt-6 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">

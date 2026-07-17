@@ -10,8 +10,8 @@ import "../styles/MessageTabs.css";
 import { sendReply } from "../utils/modules";
 import { useAppData } from "../utils/AppDataContext";
 import DefaultAvatar from "../images/default-avatar.jpg";
-
 import { sseManager } from "../Hooks/sseManager";
+import { playRobodeskBeep } from "../utils/notificationSound.js";
 
 // Helper to escape HTML in plain text
 const escapeHtml = (unsafe) =>
@@ -263,6 +263,7 @@ const SingleTicket = ({
   const textareaRef = useRef(null);
   const fileInputRef = useRef(null);
   const chatContainerRef = useRef(null);
+  const sendInFlightRef = useRef(false);
   const image_urls = window.robodeskData?.imageUrls || {};
   const customerAvatar = ticket?.authorImage || DefaultAvatar;
   const configuredBotAvatar =
@@ -270,9 +271,19 @@ const SingleTicket = ({
   const configuredBotName =
     window.robodeskData?.robodesk_bot_title_name || "Bot";
   const previousScrollHeight = useRef(0);
-  const beep = useRef(new Audio(wpAuth.notificationSound));
   const isAtTop = useRef(false);
-  const hasConnected = useRef(false);
+  const [streamCursorId, setStreamCursorId] = useState(null);
+  // Tracks message ids we've already beeped so the sound plays exactly once
+  // per new reply, regardless of whether SSE or the polling fallback delivers
+  // it first (and regardless of stale closure values).
+  const beepedIds = useRef(new Set());
+
+  const formatTimestamp = (timestamp) =>
+    new Date(timestamp).toLocaleTimeString([], {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+
   const {
     loggedinContext,
     loggedInUsrId,
@@ -280,6 +291,7 @@ const SingleTicket = ({
     updateTicketNotifications,
     isSingleTicketPage,
     setSingleTicketPage,
+    setOpenTicketId,
   } = useAppData();
 
   //   console.log('A single ticket data', ticket);
@@ -296,9 +308,12 @@ const SingleTicket = ({
 
   useEffect(() => {
     setSingleTicketPage(true);
+    setOpenTicketId(ticket.id);
+    sseManager.disconnect("comments");
 
     return () => {
       setSingleTicketPage(false);
+      setOpenTicketId(null);
     };
   }, []);
 
@@ -308,13 +323,30 @@ const SingleTicket = ({
     }
   }, []);
 
+  // Prime the browser audio engine on the first user gesture so that
+  // programmatic notification beeps are not blocked by the autoplay policy.
   useEffect(() => {
-    beep.current.load();
-
-    return () => {
-      if (hasConnected.current) {
-        hasConnected.current = false;
+    const unlock = () => {
+      const sound = wpAuth?.notificationSound;
+      if (sound) {
+        const audio = new Audio(sound);
+        const p = audio.play();
+        if (p && typeof p.then === "function") {
+          p.then(() => audio.pause()).catch(() => {});
+        }
       }
+      window.removeEventListener("pointerdown", unlock);
+      window.removeEventListener("keydown", unlock);
+      window.removeEventListener("touchstart", unlock);
+    };
+
+    window.addEventListener("pointerdown", unlock);
+    window.addEventListener("keydown", unlock);
+    window.addEventListener("touchstart", unlock);
+    return () => {
+      window.removeEventListener("pointerdown", unlock);
+      window.removeEventListener("keydown", unlock);
+      window.removeEventListener("touchstart", unlock);
     };
   }, []);
 
@@ -421,20 +453,25 @@ const SingleTicket = ({
 
   const handleNewComment = (commentData, play = true) => {
     updateTicketNotifications(ticket.id, "yes");
+    const incomingCommentId = Number(commentData?.id);
+    if (Number.isFinite(incomingCommentId) && incomingCommentId > 0) {
+      setStreamCursorId((current) =>
+        Math.max(Number(current) || 0, incomingCommentId),
+      );
+    }
+
+    let isNew = false;
+
     setChatMessages((prev) => {
-      const messageExists = prev.some((msg) => msg.id === commentData.id);
+      const messageExists = prev.some(
+        (msg) => String(msg.id) === String(commentData.id),
+      );
 
       if (messageExists) {
         return prev;
       }
-      if (play) {
-        beep.current.play();
-      }
 
-      console.log("The author id is ", commentData.author_id);
-      console.log("The actual authorid is", loggedInUserId);
-      console.log(typeof commentData.author_id, typeof loggedInUserId);
-      console.log(String(commentData.author_id) === String(loggedInUserId));
+      isNew = true;
 
       const isBotMessage =
         commentData.is_bot_response === true ||
@@ -460,6 +497,7 @@ const SingleTicket = ({
         isBot: isBotMessage,
         author_id: commentData.author_id || commentData.author_data?.id || 0,
         created_at: commentData.created_at || new Date().toISOString(),
+        time_ago: commentData.time_ago,
         isAdmin: commentData.author_id !== ticket.author_id,
       };
 
@@ -475,6 +513,20 @@ const SingleTicket = ({
 
       return sorted;
     });
+
+    if (isNew && play) {
+      const cid = Number(commentData?.id);
+      const authorId = commentData?.author_id || commentData?.author_data?.id;
+      // Only beep for replies from other people, not the viewer's own messages.
+      if (
+        cid &&
+        String(authorId) !== String(loggedInUserId) &&
+        !beepedIds.current.has(cid)
+      ) {
+        beepedIds.current.add(cid);
+        playRobodeskBeep();
+      }
+    }
   };
 
   const formatTicketComments = (comments) => {
@@ -519,6 +571,8 @@ const SingleTicket = ({
   // Initial fetch to get total comments and latest messages
   useEffect(() => {
     const fetchInitialComments = async () => {
+      setStreamCursorId(null);
+
       // If we have cached messages, display them immediately
       const cached = getCachedMessages(ticket.id);
       if (cached && cached.length > 0) {
@@ -588,6 +642,15 @@ const SingleTicket = ({
     fetchInitialComments();
   }, [ticket.id]);
 
+  useEffect(() => {
+    if (initialLoadComplete && !streamCursorId && chatMessages.length > 0) {
+      const latestMessageId = chatMessages[chatMessages.length - 1]?.id;
+      if (latestMessageId) {
+        setStreamCursorId(latestMessageId);
+      }
+    }
+  }, [initialLoadComplete, chatMessages, streamCursorId]);
+
   // Handle scrolling to load older messages
 
   useEffect(() => {
@@ -640,73 +703,155 @@ const SingleTicket = ({
     }
   }, [chatMessages.length]);
 
-  const lastMessageId = useMemo(() => {
-    if (!chatMessages || chatMessages.length === 0) return false;
-    return chatMessages[chatMessages.length - 1].id;
-  }, [chatMessages]);
-
   const url = useMemo(() => {
     if (!ticket?.id) return null;
     if (!loggedinContext && !loggedInUsrId) return null;
-    if (!lastMessageId) return null;
-    return `/wp-json/robodesk/v1/stream/comments/${ticket.id}/${lastMessageId}/${loggedInUsrId}`;
-  }, [lastMessageId, ticket.id]);
-
-  const prevUrl = useMemo(() => {
-    if (!ticketsContext[0]?.id) return null;
-    if (!loggedinContext && !loggedInUsrId) return null;
-    return `/wp-json/robodesk/v1/stream/tickets/0/${ticketsContext[0]?.id}/${loggedInUsrId}`;
-  }, [ticketsContext[0]?.id, loggedInUsrId]);
+    if (!streamCursorId) return null;
+    const nonce = window.wpAuth?.restNonce || window.wpApiSettings?.nonce || '';
+    return `/wp-json/robodesk/v1/stream/comments/${ticket.id}/${streamCursorId}/${loggedInUsrId}?_wpnonce=${nonce}`;
+  }, [streamCursorId, ticket.id, loggedInUsrId, loggedinContext]);
 
   useEffect(() => {
-    sseManager.connect(url);
+    if (!url) return undefined;
 
-    const unsubscribeNewComment = sseManager.on("new_comment", (data) => {
-      const commentData = data;
+    sseManager.connect(url, "comments");
+
+    const unsubscribeNewComment = sseManager.on("new_comment", (commentData) => {
       handleNewComment(commentData);
-    });
+    }, "comments");
 
-    const unsubscribeTicketOpen = sseManager.on("ticket_open", (data) => {
+    const unsubscribeNewMineComment = sseManager.on("new_mine_comment", (commentData) => {
+      handleNewComment(commentData, false);
+    }, "comments");
+
+    const unsubscribeTicketOpen = sseManager.on("ticket_open", () => {
       setTicketClosed(false);
-    });
+    }, "comments");
 
-    const unsubscribeTicketClosed = sseManager.on("ticket_closed", (data) => {
+    const unsubscribeTicketClosed = sseManager.on("ticket_closed", () => {
       setTicketClosed(true);
-    });
-
-    const unsubscribeNewMineTicket = sseManager.on(
-      "new_mine_comment",
-      (data) => {
-        handleNewComment(data, false);
-      },
-    );
+    }, "comments");
 
     return () => {
       unsubscribeNewComment();
+      unsubscribeNewMineComment();
       unsubscribeTicketOpen();
       unsubscribeTicketClosed();
-      unsubscribeNewMineTicket();
-      sseManager.connect(prevUrl);
+      sseManager.disconnect("comments");
     };
   }, [url]);
 
+  useEffect(() => {
+    if (!initialLoadComplete || !ticket?.id) return undefined;
+
+    let cancelled = false;
+
+    const pollLatestComments = async () => {
+      if (sendInFlightRef.current) return;
+      try {
+        const response = await fetch(
+          `/wp-json/wp/v2/comments?post=${ticket.id}&per_page=20&order=desc&comment_type=ticket_replies&_fields=id,content,date,author_data,time_ago,author_name,author_image,comment_action,is_bot_response`,
+          { cache: "no-store" },
+        );
+
+        if (!response.ok) return;
+
+        const data = await response.json();
+        if (cancelled || !Array.isArray(data) || data.length === 0) return;
+
+        const formattedComments = formatTicketComments(data);
+
+        let hasIncomingFromOther = false;
+        setChatMessages((prev) => {
+          const merged = new Map(prev.map((msg) => [String(msg.id), msg]));
+          let hasNewMessages = false;
+
+          formattedComments.forEach((msg) => {
+            const key = String(msg.id);
+            if (!merged.has(key)) {
+              merged.set(key, msg);
+              hasNewMessages = true;
+              // Beep (once) for new replies from other people. The beepedIds
+              // guard prevents double-beeping regardless of delivery order.
+              // Only beep once the conversation is already on screen, so the
+              // initial batch loaded when the ticket is opened never beeps.
+              const cid = getMessageSortId(msg);
+              if (
+                prev.size > 0 &&
+                msg.sender === "other" &&
+                cid &&
+                !beepedIds.current.has(cid)
+              ) {
+                beepedIds.current.add(cid);
+                hasIncomingFromOther = true;
+              }
+            }
+          });
+
+          if (!hasNewMessages) return prev;
+
+          const sorted = Array.from(merged.values()).sort(
+            (a, b) => getMessageSortId(a) - getMessageSortId(b),
+          );
+          setCachedMessages(ticket.id, sorted);
+
+          const latestId = sorted.reduce(
+            (max, msg) => Math.max(max, getMessageSortId(msg)),
+            0,
+          );
+          if (latestId > 0) {
+            setStreamCursorId((current) =>
+              Math.max(Number(current) || 0, latestId),
+            );
+          }
+
+          return sorted;
+        });
+
+        // The SSE new_comment handler also beeps; this covers the case where
+        // the poll delivers the message first.
+        if (hasIncomingFromOther) {
+          playRobodeskBeep();
+        }
+      } catch (error) {
+        console.error("Failed to poll latest comments:", error);
+      }
+    };
+
+    pollLatestComments();
+    const intervalId = setInterval(pollLatestComments, 4000);
+
+    return () => {
+      cancelled = true;
+      clearInterval(intervalId);
+    };
+  }, [initialLoadComplete, ticket.id, loggedInUserId]);
+
   const handleSend = async () => {
     // console.log('From handle send', message);
-    if (message.trim() || previewImage) {
-      const imageHTML = previewImage
-        ? `<a href="${previewImage}" target="_blank"><img src="${previewImage}" alt="Preview" class="rd-comment-img"  /></a>`
+    const outgoingMessage = message;
+    const outgoingPreviewImage = previewImage;
+
+    if (sendInFlightRef.current) return;
+
+    if (outgoingMessage.trim() || outgoingPreviewImage) {
+      sendInFlightRef.current = true;
+
+      const imageHTML = outgoingPreviewImage
+        ? `<a href="${outgoingPreviewImage}" target="_blank"><img src="${outgoingPreviewImage}" alt="Preview" class="rd-comment-img"  /></a>`
         : false;
       const tempMessage = {
         id: `temp-${Date.now()}`,
         text:
-          normalizeMessageText(message) + (imageHTML ? "<br>" + imageHTML : ""),
+          normalizeMessageText(outgoingMessage) +
+          (imageHTML ? "<br>" + imageHTML : ""),
         sender: "me",
         senderName: "Me",
         image: customerAvatar,
         created_at: new Date().toISOString(),
         isSending: true,
         isOptimistic: true, // Mark as optimistic update
-        ...(previewImage && { imageUrl: previewImage }),
+        ...(outgoingPreviewImage && { imageUrl: outgoingPreviewImage }),
       };
 
       // Optimistically add the message immediately
@@ -728,8 +873,8 @@ const SingleTicket = ({
         const result = await sendReply(
           ticket.id,
           loggedInUserId,
-          message,
-          previewImage,
+          outgoingMessage,
+          outgoingPreviewImage,
           false,
           controller.signal,
         );
@@ -750,19 +895,29 @@ const SingleTicket = ({
           isAdmin: result.data.author_id
             ? result.data.author_id !== ticket.author_id
             : false,
-          ...(previewImage && { imageUrl: previewImage }),
+          ...(outgoingPreviewImage && { imageUrl: outgoingPreviewImage }),
         };
 
         // Replace temp message with real one
         setChatMessages((prev) => {
           const updated = [
-            ...prev.filter((msg) => msg.id !== tempMessage.id),
+            ...prev.filter(
+              (msg) =>
+                String(msg.id) !== String(tempMessage.id) &&
+                String(msg.id) !== String(newMessage.id),
+            ),
             newMessage,
           ].sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
           // Update cache
           setCachedMessages(ticket.id, updated);
           return updated;
         });
+        const sentCommentId = Number(newMessage.id);
+        if (Number.isFinite(sentCommentId) && sentCommentId > 0) {
+          setStreamCursorId((current) =>
+            Math.max(Number(current) || 0, sentCommentId),
+          );
+        }
       } catch (err) {
         clearTimeout(timeoutId);
 
@@ -788,6 +943,8 @@ const SingleTicket = ({
           });
           setError("Failed to send message. Please try again.");
         }
+      } finally {
+        sendInFlightRef.current = false;
       }
     }
   };
@@ -865,12 +1022,6 @@ const SingleTicket = ({
     reader.readAsDataURL(file);
   };
   const triggerFileInput = () => fileInputRef.current.click();
-
-  const formatTimestamp = (timestamp) =>
-    new Date(timestamp).toLocaleTimeString([], {
-      hour: "2-digit",
-      minute: "2-digit",
-    });
 
   return (
     <div className="rd-single-ticket rd-flex rd-flex-col rd-h-full">
@@ -1054,7 +1205,7 @@ const SingleTicket = ({
                           className="rd-body-text single-message"
                           style={{ opacity: msg.isPending ? 0.7 : 1 }}
                           dangerouslySetInnerHTML={{
-                            __html: normalizeMessageText(msg.text),
+                            __html: msg.text,
                           }}
                         />
                       ) : (
@@ -1069,7 +1220,7 @@ const SingleTicket = ({
                                 .filter(Boolean)
                                 .join(" ")}
                               dangerouslySetInnerHTML={{
-                                __html: normalizeMessageText(msg.text),
+                                __html: msg.text,
                               }}
                             />
                           )}

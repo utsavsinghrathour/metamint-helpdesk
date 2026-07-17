@@ -51,6 +51,39 @@ document.addEventListener("DOMContentLoaded", () => {
   localizeRobodeskTimes();
 });
 
+// Prime the browser audio engine on the first user gesture so that
+// programmatic notification sounds (fired from SSE/poll callbacks) are not
+// blocked by the browser autoplay policy.
+function robodeskUnlockAudio() {
+  let url =
+    typeof robodeskNotificationSound !== "undefined" && robodeskNotificationSound
+      ? robodeskNotificationSound
+      : "";
+  if (!url) {
+    const repliesList = document.getElementById("replies-list");
+    if (repliesList) url = repliesList.getAttribute("data-audio") || "";
+  }
+  if (url) {
+    try {
+      const audio = new Audio(url);
+      audio.muted = false;
+      const p = audio.play();
+      if (p && typeof p.then === "function") {
+        p.then(() => audio.pause()).catch(() => {});
+      }
+    } catch (e) {
+      /* no-op */
+    }
+  }
+  window.removeEventListener("pointerdown", robodeskUnlockAudio);
+  window.removeEventListener("keydown", robodeskUnlockAudio);
+  window.removeEventListener("touchstart", robodeskUnlockAudio);
+}
+
+window.addEventListener("pointerdown", robodeskUnlockAudio);
+window.addEventListener("keydown", robodeskUnlockAudio);
+window.addEventListener("touchstart", robodeskUnlockAudio);
+
 function loadDashboardTickets() {
   const tableBody = document.getElementById("dashboard-tickets-table");
   let filteredTickets = [];
@@ -159,13 +192,23 @@ function loadDashboardTickets() {
   // Update table header based on filter
   updateTableHeader(showAssigneeColumn);
 
+  // Pagination logic
+  const totalItems = filteredTickets.length;
+  const totalPages = Math.max(1, Math.ceil(totalItems / dashboardItemsPerPage));
+  if (dashboardCurrentPage > totalPages) {
+    dashboardCurrentPage = totalPages;
+  }
+  const startIndex = (dashboardCurrentPage - 1) * dashboardItemsPerPage;
+  const endIndex = Math.min(startIndex + dashboardItemsPerPage, totalItems);
+  const pageTickets = filteredTickets.slice(startIndex, endIndex);
+
   // Build the table HTML
   tableBody.innerHTML =
     filteredTickets.length === 0
       ? `<tr><td colspan="${
           showAssigneeColumn ? 8 : 7
         }" class="px-6 py-4 text-center text-gray-500">No tickets found for this filter.</td></tr>`
-      : filteredTickets
+      : pageTickets
           .map(
             (ticket) => `
             <tr class="table-row cursor-pointer" data-ticketid="${ticket.id}">
@@ -294,6 +337,9 @@ function loadDashboardTickets() {
       }
     }
   });
+
+  // Render pagination controls
+  renderDashboardPagination(dashboard_tickets.length, filteredTickets.length, dashboardCurrentPage, totalPages);
 }
 
 function updateDashboardFilterCounts(currentUserName) {
@@ -330,6 +376,74 @@ function updateDashboardFilterCounts(currentUserName) {
       }
     }
   });
+}
+
+function renderDashboardPagination(totalItems, filteredItems, currentPage, totalPages) {
+  const container = document.getElementById("dashboard-pagination");
+  if (!container) return;
+
+  if (totalItems === 0 || filteredItems === 0) {
+    container.innerHTML = "";
+    return;
+  }
+
+  const start = (currentPage - 1) * dashboardItemsPerPage + 1;
+  const end = Math.min(currentPage * dashboardItemsPerPage, filteredItems);
+
+  let html = '<div class="flex items-center justify-between flex-wrap gap-4">';
+
+  // Info text
+  html += `<div class="text-sm text-gray-500">Showing ${start} to ${end} of ${filteredItems} entries</div>`;
+
+  // Page controls
+  html += '<div class="flex items-center space-x-1">';
+
+  // Previous button
+  const prevDisabled = currentPage <= 1;
+  html += `<button type="button" class="dashboard-page-btn" onclick="changeDashboardPage(${currentPage - 1})"${prevDisabled ? ' disabled' : ''}>&laquo; Prev</button>`;
+
+  // Page numbers
+  const maxVisiblePages = 5;
+  let pageStart = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
+  let pageEnd = Math.min(totalPages, pageStart + maxVisiblePages - 1);
+  if (pageEnd - pageStart + 1 < maxVisiblePages) {
+    pageStart = Math.max(1, pageEnd - maxVisiblePages + 1);
+  }
+
+  if (pageStart > 1) {
+    html += `<button type="button" class="dashboard-page-btn" onclick="changeDashboardPage(1)">1</button>`;
+    if (pageStart > 2) {
+      html += '<span class="px-1 text-gray-400">...</span>';
+    }
+  }
+
+  for (let i = pageStart; i <= pageEnd; i++) {
+    const activeClass = i === currentPage ? ' active' : '';
+    html += `<button type="button" class="dashboard-page-btn${activeClass}" onclick="changeDashboardPage(${i})">${i}</button>`;
+  }
+
+  if (pageEnd < totalPages) {
+    if (pageEnd < totalPages - 1) {
+      html += '<span class="px-1 text-gray-400">...</span>';
+    }
+    html += `<button type="button" class="dashboard-page-btn" onclick="changeDashboardPage(${totalPages})">${totalPages}</button>`;
+  }
+
+  // Next button
+  const nextDisabled = currentPage >= totalPages;
+  html += `<button type="button" class="dashboard-page-btn" onclick="changeDashboardPage(${currentPage + 1})"${nextDisabled ? ' disabled' : ''}>Next &raquo;</button>`;
+
+  html += '</div></div>';
+
+  container.innerHTML = html;
+}
+
+function changeDashboardPage(page) {
+  const totalItems = dashboard_tickets.length;
+  const totalPages = Math.max(1, Math.ceil(totalItems / dashboardItemsPerPage));
+  if (page < 1 || page > totalPages || page === dashboardCurrentPage) return;
+  dashboardCurrentPage = page;
+  loadDashboardTickets();
 }
 
 // Helper function to update table header based on whether assignee column should be shown
@@ -1045,6 +1159,8 @@ let currentTicket = null;
 let currentTicketTab = "replies";
 let currentSettingsTab = "basic";
 let currentDashboardFilter = "my_conversation"; // Default filter for dashboard
+let dashboardCurrentPage = 1;
+const dashboardItemsPerPage = 10;
 
 // Initialize the application
 document.addEventListener("DOMContentLoaded", function () {
@@ -1431,7 +1547,8 @@ function showPage(pageName, fromClick = false) {
     resetTicketComposeEditors();
     loadTicketDetail();
   } else if (pageName === "settings") {
-    showSettingsTab("basic");
+    const settingsParams = new URLSearchParams(window.location.search);
+    showSettingsTab(settingsParams.get("settings_tab") || "basic");
   } else if (pageName === "dashboard") {
     loadDashboardTickets();
   }
@@ -1447,6 +1564,7 @@ function filterDashboardTickets(filterType) {
     .classList.add("active");
 
   currentDashboardFilter = filterType;
+  dashboardCurrentPage = 1;
   loadDashboardTickets();
 }
 
@@ -1457,6 +1575,8 @@ function isValidEmail(email) {
 
 // Ticket detail functions
 function viewTicket(ticketId) {
+  _rbd_firstTicketScroll = true;
+
   // Convert ticketId to number to ensure type consistency
   ticketId = parseInt(ticketId, 10);
 
@@ -1763,6 +1883,55 @@ function loadTicketDetail() {
   document.getElementById("notes-count").textContent =
     currentTicket.notes?.length || 0;
 
+  // Enforce assignment restriction for Support Staff:
+  // Staff can only reply to tickets assigned to them.
+  // Admins, Editors, and Support Managers can reply to any ticket.
+  const staffOnlyRoles = ["robodesk_support_staff"];
+  const isStaffOnly = staffOnlyRoles.includes(robodeskCurrentUser?.role);
+
+  if (isStaffOnly) {
+    const assigneeId = currentTicket?.assignee_id;
+    const currentUserId = robodeskCurrentUser?.id;
+    const isAssigned = assigneeId && currentUserId && assigneeId === currentUserId;
+
+    const replyEditor    = document.getElementById("new-reply");
+    const sendReplyBtn   = document.getElementById("send-reply-btn");
+    const replyNotice    = document.getElementById("rbd-reply-not-assigned-notice");
+
+    if (!isAssigned) {
+      // Disable the reply editor
+      if (replyEditor) {
+        replyEditor.contentEditable = "false";
+        replyEditor.style.opacity = "0.5";
+        replyEditor.style.cursor  = "not-allowed";
+      }
+      if (sendReplyBtn) {
+        sendReplyBtn.disabled = true;
+        sendReplyBtn.title    = "This ticket is not assigned to you.";
+      }
+      // Show an inline notice if not already present
+      if (!replyNotice && sendReplyBtn) {
+        const notice = document.createElement("p");
+        notice.id        = "rbd-reply-not-assigned-notice";
+        notice.className = "text-sm text-amber-600 mt-1";
+        notice.textContent = "You can only reply to tickets assigned to you.";
+        sendReplyBtn.insertAdjacentElement("afterend", notice);
+      }
+    } else {
+      // Ticket IS assigned to this staff — ensure editor is active
+      if (replyEditor) {
+        replyEditor.contentEditable = "true";
+        replyEditor.style.opacity = "";
+        replyEditor.style.cursor  = "";
+      }
+      if (sendReplyBtn) {
+        sendReplyBtn.disabled = false;
+        sendReplyBtn.title    = "";
+      }
+      if (replyNotice) replyNotice.remove();
+    }
+  }
+
   loadRepliesAndNotes();
 }
 
@@ -1936,6 +2105,11 @@ function showTicketTab(tabName) {
 
 // Settings functions
 function showSettingsTab(tabName) {
+  // Update URL so refresh stays on the same tab
+  const url = new URL(window.location);
+  url.searchParams.set("settings_tab", tabName);
+  window.history.replaceState({}, "", url);
+
   // Update tab buttons
   document.querySelectorAll(".settings-tab").forEach((tab) => {
     tab.classList.remove("active");
@@ -2271,10 +2445,12 @@ jQuery(document).ready(function ($) {
       enable_auto_assign: $("#enable-auto-assign").is(":checked"),
       enable_notifications: $("#enable-notifications").is(":checked"),
       enable_customer_portal: $("#enable-customer-portal").is(":checked"),
+      enable_signup_rate_limiting: $("#enable-signup-rate-limiting").is(":checked"),
       max_file_upload_size: $form.find('input[type="number"]').val(),
       reply_unseen_email_minutes: unseenEnabled
         ? $("#reply-unseen-email-minutes").val()
         : 0,
+      blocked_ips: $("#blocked-ips").val(),
     };
 
     $.ajax({
@@ -3235,7 +3411,18 @@ function resolveTemplateVariables(content, ticket) {
 
 function addReply() {
   if (isReplySending) return; // Prevent double send
+
+  // Client-side assignment guard — mirrors server-side restriction
   const userRole = robodeskCurrentUser?.role;
+  if (userRole === "robodesk_support_staff") {
+    const assigneeId    = currentTicket?.assignee_id;
+    const currentUserId = robodeskCurrentUser?.id;
+    if (!assigneeId || !currentUserId || assigneeId !== currentUserId) {
+      showToast("You can only reply to tickets assigned to you.", "error");
+      return;
+    }
+  }
+
   const replyBox = document.getElementById("new-reply");
   const replyHtml = replyBox ? replyBox.innerHTML : "";
   // Use textContent to detect actual visible text, normalize NBSP and trim
@@ -3401,8 +3588,14 @@ function renderReplies(replies) {
     })
     .join("");
 
-  // Scroll to bottom of the page
-  window.scrollTo({ top: document.body.scrollHeight, behavior: "smooth" });
+  // Scroll to send-reply-btn on first ticket load only
+  if (_rbd_firstTicketScroll) {
+    _rbd_firstTicketScroll = false;
+    const btn = document.getElementById("send-reply-btn");
+    if (btn) {
+      btn.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+  }
 }
 
 function closeTicket() {
@@ -3913,76 +4106,86 @@ document.addEventListener("DOMContentLoaded", function () {
 });
 
 jQuery(document).ready(function ($) {
-  function createSSE(ticketId, lastCid, userId = "142", parentElement) {
+  function createSSE(ticketId) {
     let eventSource = null;
+    let lastKnownReplyIds = new Set();
 
     function connect() {
-      const sseUrl = `${
-        window.location.origin
-      }/wp-json/robodesk/v1/adminstream/${ticketId}/${lastCid || ""}/${"42"}`;
-      console.log("🔌 Connecting to SSE:", sseUrl);
+      const nonce = window.robodeskAjax?.rest_nonce || "";
+      const sseUrl = `${window.location.origin}/wp-json/robodesk/v1/ticket-stream/${ticketId}?_wpnonce=${nonce}`;
+      console.log("🔌 Connecting to ticket-stream SSE:", sseUrl);
 
       eventSource = new EventSource(sseUrl);
 
-      eventSource.addEventListener("new_admin_comment", function (event) {
-        const comment = JSON.parse(event.data);
-        let index = 12;
-        const isAction = comment.comment_meta?.is_action === true;
-        const actionClass = isAction ? "reply-action bg-blue-200" : "";
-        const commentRole =
-          comment.role ||
-          (comment.is_bot_response || comment.comment_meta?.is_bot_response
-            ? "AI BOT"
-            : comment.type === "customer"
-              ? "Customer"
-              : userRole.toUpperCase());
-        const content = `
-                      <div
-                        data-cid="${comment.id}"
-                        class="p-4 rounded-lg replys reply-${
-                          comment.type
-                        } ${actionClass}"
-                        id="reply-${index}"
-                      >
-                        <div class="flex justify-between items-center mb-2">
-                          <span class="font-medium text-sm text-gray-900">
-                            ${escapeHTML(comment.author)} (${escapeHTML(commentRole)})
-                          </span>
-                          <span class="text-xs text-gray-500">
-                            ${formatDate(comment.timestamp)}
-                          </span>
-                        </div>
-                        <p class="text-sm text-gray-700">
-                          ${isAction ? comment.message : comment.message}
-                        </p>
-                      </div>
-                    `;
-        const repliesList = document.getElementById("replies-list");
+      // The ticket-stream endpoint sends a 'sync' event with full replies list
+      // whenever a new reply, note, or status change is detected (polls every 3s)
+      eventSource.addEventListener("sync", function (event) {
+        try {
+          const data = JSON.parse(event.data);
+          const replies = data.replies || [];
+          const status = data.status;
+          const repliesList = document.getElementById("replies-list");
 
-        // Insert new reply
-        repliesList.insertAdjacentHTML("beforeend", content);
+          // Detect if there are genuinely new replies
+          const incomingIds = new Set(replies.map((r) => String(r.id)));
+          const hasNewReplies = replies.some((r) => !lastKnownReplyIds.has(String(r.id)));
 
-        const audioUrl = repliesList.getAttribute("data-audio");
-        const audio = new Audio(audioUrl);
-        audio.play().catch((err) => {
-          console.warn("Autoplay blocked by browser:", err);
-        });
+          if (hasNewReplies && lastKnownReplyIds.size > 0 && repliesList) {
+            // Play notification sound for new replies from others
+            const audioUrl = repliesList.getAttribute("data-audio");
+            if (audioUrl) {
+              const audio = new Audio(audioUrl);
+              audio.play().catch((err) => {
+                console.warn("Autoplay blocked by browser:", err);
+              });
+            }
+          }
 
-        // Scroll to the last reply
-        const lastReply = repliesList.querySelector(".replys:last-child");
-        if (lastReply) {
-          lastReply.scrollIntoView({ behavior: "smooth", block: "end" });
+          lastKnownReplyIds = incomingIds;
+
+          // Re-render the replies list with fresh data
+          renderReplies(replies);
+
+          const repliesCountEl = document.getElementById("replies-count");
+          if (repliesCountEl) {
+            repliesCountEl.textContent = data.replies_count || replies.length;
+          }
+
+          // Update status badge if status changed
+          if (status && currentTicket) {
+            currentTicket.status = status;
+            const statusBadge = document.getElementById("ticket-status-badge");
+            if (statusBadge) {
+              statusBadge.textContent = status.charAt(0).toUpperCase() + status.slice(1);
+            }
+          }
+
+          // Scroll to bottom only if user is near the bottom
+          if (repliesList) {
+            const scrollThreshold = 150;
+            const isNearBottom =
+              repliesList.scrollHeight - repliesList.scrollTop - repliesList.clientHeight <
+              scrollThreshold;
+            if (isNearBottom) {
+              const lastReply = repliesList.querySelector(".replys:last-child");
+              if (lastReply) {
+                lastReply.scrollIntoView({ behavior: "smooth", block: "end" });
+              }
+            }
+          }
+        } catch (err) {
+          console.error("SSE sync parse error:", err);
         }
       });
 
       eventSource.onerror = function (err) {
-        // console.error('❌ SSE error:', err);
+        // SSE auto-reconnects on error; no manual action needed
       };
     }
 
     function disconnect() {
       if (eventSource) {
-        console.log("🔌 Disconnecting SSE...");
+        console.log("🔌 Disconnecting ticket-stream SSE...");
         eventSource.close();
         eventSource = null;
       }
@@ -4028,46 +4231,17 @@ jQuery(document).ready(function ($) {
     params.ticket
   ) {
     setTimeout(() => {
-      //run sse event
-      //
       const ticketId = params.ticket;
 
-      const repliesList = document.getElementById("replies-list");
-      const replyElements = repliesList.getElementsByClassName("replys");
-      const lastReply = replyElements[replyElements.length - 1];
-
-      let lastCid = lastReply ? lastReply.getAttribute("data-cid") : null;
-
-      let sse = createSSE(ticketId, lastCid, repliesList);
+      // Use ticket-stream which continuously polls every 3s and sends full sync events
+      let sse = createSSE(ticketId);
       sse.connect();
 
-      const observer = new MutationObserver((mutationsList) => {
-        for (let mutation of mutationsList) {
-          if (mutation.type === "childList" && mutation.addedNodes.length > 0) {
-            const newReplies = Array.from(mutation.addedNodes).filter(
-              (node) =>
-                node.nodeType === 1 && node.classList.contains("replys"),
-            );
-
-            if (newReplies.length > 0) {
-              const recentlyAddedItem = newReplies[newReplies.length - 1];
-              lastCid = recentlyAddedItem
-                ? recentlyAddedItem.getAttribute("data-cid")
-                : null;
-
-              sse.disconnect();
-              sse = createSSE(ticketId, lastCid, repliesList);
-              sse.connect();
-            }
-          }
-        }
+      // Clean up SSE when navigating away
+      window.addEventListener("beforeunload", function () {
+        sse.disconnect();
       });
-
-      observer.observe(repliesList, {
-        childList: true,
-        subtree: false,
-      });
-    }, 3000);
+    }, 1000);
   }
 });
 
@@ -4076,6 +4250,7 @@ let dashboardRefreshInterval = null;
 let notificationCount = 0;
 let notificationItems = [];
 let _notifFirstFetch = true;
+let _rbd_firstTicketScroll = true;
 let shouldRefreshTicketsPage = false;
 let lastTicketsPageReloadAt = 0;
 
@@ -4286,6 +4461,7 @@ function fetchNotifications() {
       updateNotificationBadge(notificationCount);
 
       var hasNewOrUpdatedNotification = notificationCount > prevCount;
+      var isForCurrentTicket = false;
       if (!hasNewOrUpdatedNotification && prevCount > 0) {
         for (var i = 0; i < notificationItems.length; i++) {
           var newItem = notificationItems[i];
@@ -4305,18 +4481,18 @@ function fetchNotifications() {
         }
       }
 
-      if (hasNewOrUpdatedNotification && !_notifFirstFetch) {
-        const audioUrl =
-          typeof robodeskNotificationSound !== "undefined"
-            ? robodeskNotificationSound
-            : null;
-        if (audioUrl) {
-          const audio = new Audio(audioUrl);
-          audio.play().catch((err) => {
-            console.warn("Autoplay blocked by browser:", err);
-          });
+      if (hasNewOrUpdatedNotification && !_notifFirstFetch && currentPage !== "ticket-detail") {
+          const audioUrl =
+            typeof robodeskNotificationSound !== "undefined"
+              ? robodeskNotificationSound
+              : null;
+          if (audioUrl) {
+            const audio = new Audio(audioUrl);
+            audio.play().catch((err) => {
+              console.warn("Autoplay blocked by browser:", err);
+            });
+          }
         }
-      }
       _notifFirstFetch = false;
 
       const dropdown = document.getElementById("notification-dropdown");
@@ -4639,7 +4815,7 @@ function startRepliesPolling() {
         }
       })
       .catch(() => {});
-  }, 30000);
+  }, (typeof robodeskAdvancedSettings !== "undefined" ? robodeskAdvancedSettings.polling_interval : 30) * 1000);
 }
 
 function stopRepliesPolling() {
@@ -4651,7 +4827,7 @@ function stopRepliesPolling() {
 
 function startNotificationPolling() {
   if (notificationPollInterval) return;
-  notificationPollInterval = setInterval(fetchNotifications, 30000);
+  notificationPollInterval = setInterval(fetchNotifications, (typeof robodeskAdvancedSettings !== "undefined" ? robodeskAdvancedSettings.polling_interval : 30) * 1000);
 }
 
 function stopNotificationPolling() {

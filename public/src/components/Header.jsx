@@ -6,6 +6,8 @@ import { sendReply } from '../utils/modules';
 import { useAppData } from '../utils/AppDataContext';
 import { createTicket } from "../utils/modules";
 
+let staffFetched = false;
+
 const Header = ({ logo, onClose, setActiveTab, setShowLogin, updateSelectedTicket }) => {
   const [talkToHuman, setTalkToHuman] = useState(false);
   const [messageCount, setMessageCount] = useState(0);
@@ -13,6 +15,10 @@ const Header = ({ logo, onClose, setActiveTab, setShowLogin, updateSelectedTicke
   const [selectedStaff, setSelectedStaff] = useState(null);
   const { loggedinContext, loggedInUsrId, refreshTickets } = useAppData();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const canLoadWidgetConfig = Boolean(
+    window.robodeskData?.robodesk_addon_active &&
+      window.robodeskData?.robodesk_ai_bot_active,
+  );
   // null = unknown, true = available, false = unavailable
   const [sendWhatsappMessage, setSendWhatsappMessage] = useState(null);
   const [whatsappPhone, setWhatsappPhone] = useState(null);
@@ -22,6 +28,10 @@ const Header = ({ logo, onClose, setActiveTab, setShowLogin, updateSelectedTicke
   };
 
   const fetchApiKey = async () => {
+    if (!canLoadWidgetConfig) {
+      setTalkToHuman(false);
+      return;
+    }
     try {
       const response = await fetch("/wp-json/robodesk-bot/v1/widget-config");
       const data = await response.json();
@@ -37,20 +47,11 @@ const Header = ({ logo, onClose, setActiveTab, setShowLogin, updateSelectedTicke
   };
 
   const fetchDefaultStaff = async () => {
-    try {
-      const response = await fetch("/wp-json/robodesk/selected/staff");
-      const data = await response.json();
-      // console.log('API Response:', response.status, data);
-
-      if (response.ok && data?.staff_user_id) {
-        // console.log('Setting staff ID:', data.staff_user_id);
-        setSelectedStaff(data.staff_user_id);
-      } else {
-        // console.log('No default staff configured or error:', data);
-        setSelectedStaff(null);
-      }
-    } catch (error) {
-      console.error("Error fetching default staff:", error);
+    if (staffFetched) return;
+    staffFetched = true;
+    if (window.wpAuth?.defaultStaffId) {
+      setSelectedStaff(window.wpAuth.defaultStaffId);
+    } else {
       setSelectedStaff(null);
     }
   };
@@ -109,7 +110,8 @@ const Header = ({ logo, onClose, setActiveTab, setShowLogin, updateSelectedTicke
     }
 
     try {
-      const result = await createTicket(loggedInUsrId, ticketTitle, ticketDescription);
+      const firstUserTimestamp = userMessages[0]?.timestamp || null;
+      const result = await createTicket(loggedInUsrId, ticketTitle, ticketDescription, firstUserTimestamp);
 
       const newTicket = {
         id: result.data.id,
@@ -126,7 +128,20 @@ const Header = ({ logo, onClose, setActiveTab, setShowLogin, updateSelectedTicke
         messages: [],
       };
 
-      // Add a single transition reply the first time a human ticket is created from the chat
+      if (messagesExceptFirst.length > 0) {
+        for (const message of messagesExceptFirst) {
+          const messageText = message.text || message.message || '';
+          if (!messageText.trim()) continue;
+
+          if (message.role === 'user') {
+            await sendReply(newTicket.id, loggedInUsrId, messageText, false, false, undefined, message.timestamp);
+          } else if (message.role === 'assistant') {
+            await sendReply(newTicket.id, selectedStaff || loggedInUsrId, messageText, false, true, undefined, message.timestamp);
+          }
+        }
+      }
+
+      // Add a single transition reply at the end so it follows the original chat order
       if (newTicket.id) {
         await sendReply(
           newTicket.id,
@@ -135,19 +150,6 @@ const Header = ({ logo, onClose, setActiveTab, setShowLogin, updateSelectedTicke
           false,
           true
         );
-      }
-
-      if (messagesExceptFirst.length > 0) {
-        for (const message of messagesExceptFirst) {
-          const messageText = message.text || message.message || '';
-          if (!messageText.trim()) continue;
-
-          if (message.role === 'user') {
-            await sendReply(newTicket.id, loggedInUsrId, messageText);
-          } else if (message.role === 'assistant') {
-            await sendReply(newTicket.id, selectedStaff || loggedInUsrId, messageText, false, true);
-          }
-        }
       }
 
       refreshTickets();
@@ -169,6 +171,11 @@ const Header = ({ logo, onClose, setActiveTab, setShowLogin, updateSelectedTicke
   };
 
   const sendWhatsappMessageClick = async() => {
+    if (!canLoadWidgetConfig) {
+      setSendWhatsappMessage(false);
+      setWhatsappPhone(null);
+      return;
+    }
     try {
       const response = await fetch("/wp-json/robodesk-bot/v1/wa-settings");
       const data = await response.json();
@@ -199,7 +206,11 @@ const Header = ({ logo, onClose, setActiveTab, setShowLogin, updateSelectedTicke
 
   useEffect(() => {
     fetchDefaultStaff();
-    fetchApiKey();
+    if (canLoadWidgetConfig) {
+      fetchApiKey();
+    } else {
+      setTalkToHuman(false);
+    }
     // Check WhatsApp availability on mount
     sendWhatsappMessageClick();
     const saved = sessionStorage.getItem(CHAT_KEY);

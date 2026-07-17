@@ -11,6 +11,7 @@ import { AppDataProvider, useAppData } from "./utils/AppDataContext.jsx";
 // import useExclusiveServerEvents from './Hooks/useExclusiveServerEvents.js';
 // import useSSE from './Hooks/useSSE.js';
 import { sseManager } from "./Hooks/sseManager.js";
+import { playRobodeskBeep } from "./utils/notificationSound.js";
 
 const AppContent = ({ imageUrls = { logo: "" } }) => {
   const {
@@ -22,6 +23,7 @@ const AppContent = ({ imageUrls = { logo: "" } }) => {
     updateNewCommentNotification,
     errorContext,
     isSingleTicketPage,
+    openTicketId,
   } = useAppData();
 
   const [isOpen, setIsOpen] = useState(false);
@@ -31,14 +33,11 @@ const AppContent = ({ imageUrls = { logo: "" } }) => {
   const [showActiveFeatured, setShowActiveFeatured] = useState(true);
   const [selectedTicket, setSelectedTicket] = useState();
   const [focusedTextArea, setFocusedTextArea] = useState(false);
+  const [initialCursorId, setInitialCursorId] = useState(null);
   const hasAutoOpenedTicket = useRef(false);
   const hasAttemptedDeepLinkFetch = useRef(false);
 
   const isSupportPage = window.location.pathname.includes("/robodesk-support");
-
-  const notificationAudio = useRef(
-    new Audio(window.wpAuth?.notificationSound || ""),
-  );
 
   const handleFocusedTextArea = (focus) => setFocusedTextArea(focus);
 
@@ -189,50 +188,107 @@ const AppContent = ({ imageUrls = { logo: "" } }) => {
     setSelectedTicket(newValue);
   };
 
-  const url = useMemo(() => {
-    if (!ticketsContext[0]?.id) return null;
-    if (!loggedinContext && !loggedInUsrId) return null;
-    // console.log('The url from memo change');
-    // console.log(window.location.origin);
-    return `${window.location.origin}/wp-json/robodesk/v1/stream/tickets/0/${ticketsContext[0]?.id}/${loggedInUsrId}`;
-  }, [ticketsContext[0]?.id, loggedInUsrId]);
-
   useEffect(() => {
-    notificationAudio.current.load();
-    // useSSE(url, handlers);
+    if (!initialCursorId && ticketsContext?.length > 0 && ticketsContext[0]?.id) {
+      setInitialCursorId(ticketsContext[0]?.id);
+    }
+  }, [ticketsContext]);
+
+  const url = useMemo(() => {
+    if (!initialCursorId) return null;
+    if (!loggedinContext && !loggedInUsrId) return null;
+    const nonce = window.wpAuth?.restNonce || window.wpApiSettings?.nonce || '';
+    return `${window.location.origin}/wp-json/robodesk/v1/stream/tickets/0/${initialCursorId}/${loggedInUsrId}?_wpnonce=${nonce}`;
+  }, [initialCursorId, loggedInUsrId]);
+
+  // Tracks the latest reply id already accounted for, per ticket, so we beep
+  // only for genuinely NEW messages (not already-unread ones) and beep again
+  // for every subsequent new reply even when older ones are still unread.
+  const lastNotifiedCommentId = useRef({});
+
+  // Prime the browser audio engine on the first user gesture so that
+  // programmatic notification sounds (fired from SSE callbacks) are not
+  // blocked by the browser autoplay policy.
+  useEffect(() => {
+    const unlock = () => {
+      const sound = window.wpAuth?.notificationSound;
+      if (sound) {
+        const audio = new Audio(sound);
+        const p = audio.play();
+        if (p && typeof p.then === "function") {
+          p.then(() => audio.pause()).catch(() => {});
+        }
+      }
+      window.removeEventListener("pointerdown", unlock);
+      window.removeEventListener("keydown", unlock);
+      window.removeEventListener("touchstart", unlock);
+    };
+
+    window.addEventListener("pointerdown", unlock);
+    window.addEventListener("keydown", unlock);
+    window.addEventListener("touchstart", unlock);
+    return () => {
+      window.removeEventListener("pointerdown", unlock);
+      window.removeEventListener("keydown", unlock);
+      window.removeEventListener("touchstart", unlock);
+    };
   }, []);
 
   useEffect(() => {
-    if (!url && !loggedinContext && !loggedInUsrId) return;
-    // console.info('I am executed first');
-    sseManager.connect(url);
+    if (!url) return undefined;
+
+    // Keep the global "tickets" channel connected even when a single ticket is
+    // open, so unread replies on ANY ticket still trigger the beep. The open
+    // ticket's own replies are beeped via the comments channel.
+    sseManager.connect(url, "tickets");
 
     const unsubscribeNewTicket = sseManager.on("new_ticket", (data) => {
       //   console.log('Executed From new Ticket');
       updateTicket(data);
-    });
+    }, "tickets");
 
     const unsubscribeNotification = sseManager.on(
       "new_notification",
       (data) => {
-        const ids = Array.isArray(data)
-          ? data.map((item) => (typeof item === "object" ? item.id : item))
-          : [];
+        const items = Array.isArray(data) ? data : [];
+        const ids = items.map((it) =>
+          typeof it === "object" ? it.id : it,
+        );
 
         // console.info("Executed From new notif");
         //   console.log('We ant here')
         handleSelectedTicketUpdate(null);
-        if (updateNewCommentNotification(ids)) {
-          notificationAudio.current.play();
+        updateNewCommentNotification(ids);
+
+        // Beep only for tickets with a reply newer than what we've already
+        // seen, and never for the ticket currently being viewed (it beeps via
+        // the comments channel instead).
+        let shouldBeep = false;
+        items.forEach((it) => {
+          const tid = typeof it === "object" ? it.id : it;
+          const cid = typeof it === "object" ? Number(it.last_comment_id) || 0 : 0;
+          const prev = lastNotifiedCommentId.current[tid];
+          if (cid > 0 && prev !== undefined && cid > prev && tid !== openTicketId) {
+            shouldBeep = true;
+          }
+          if (cid > 0) {
+            lastNotifiedCommentId.current[tid] = cid;
+          }
+        });
+
+        if (shouldBeep) {
+          playRobodeskBeep();
         }
       },
+      "tickets",
     );
     return () => {
       console.info("closing");
       unsubscribeNewTicket();
       unsubscribeNotification();
+      sseManager.disconnect("tickets");
     };
-  }, [url]);
+  }, [url, selectedTicket, isSingleTicketPage, loggedinContext, loggedInUsrId, openTicketId]);
 
   useEffect(() => {
     if (selectedTicket) {

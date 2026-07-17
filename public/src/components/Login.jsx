@@ -187,22 +187,9 @@ const Login = ({
   }, []);
 
   useEffect(() => {
-    const fetchDefaultStaff = async () => {
-      try {
-        const response = await fetch("/wp-json/robodesk/selected/staff");
-        const data = await response.json();
-
-        if (response.ok && data?.staff_user_id) {
-          setDefaultStaffId(data.staff_user_id);
-        } else {
-          setDefaultStaffId(null);
-        }
-      } catch (error) {
-        setDefaultStaffId(null);
-      }
-    };
-
-    fetchDefaultStaff();
+    if (window.wpAuth?.defaultStaffId) {
+      setDefaultStaffId(window.wpAuth.defaultStaffId);
+    }
   }, []);
 
   const handleStateUpdate = (ticket) => {
@@ -264,6 +251,11 @@ const Login = ({
 
       if (result.success) {
         setShowPasswordField(result.data.exists);
+      } else if (result.data && result.data.message) {
+        setErrors({
+          ...errors,
+          email: result.data.message,
+        });
       } else {
         await createUserAndLogin();
       }
@@ -286,7 +278,10 @@ const Login = ({
       await handleTempTicketCreation(user_id);
       updateLoginStatus(true, user_id);
     } catch (err) {
-      console.error("Failed to create ticket:", err);
+      setErrors({
+        ...errors,
+        email: err.message || "Signup failed. Please try again.",
+      });
     }
   };
 
@@ -298,6 +293,10 @@ const Login = ({
       const loginResponse = await loginUser(formData.email, formData.password);
 
       updateLoginStatus(true, loginResponse.user_id);
+      if (loginResponse.rest_nonce) {
+        window.wpAuth = window.wpAuth || {};
+        window.wpAuth.restNonce = loginResponse.rest_nonce;
+      }
 
       try {
         const ticketResponse = await handleTempTicketCreation(
