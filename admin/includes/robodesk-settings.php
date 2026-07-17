@@ -280,20 +280,21 @@ $settings_hidden = ($current_tab === 'settings') ? '' : ' hidden';
              <!----------------------- IMAP Settings load saved settings ------------------->
              <?php
                 // Load saved settings
-                $robodesk_imap_settings = get_option('robodesk_imap_settings', array(
-                    'hostname' => 'email.example.com',
-                    'port'     => 993,
-                    'username' => '',
-                    'password' => '',
-                    'auth'     => true,
+                 $robodesk_imap_settings = get_option('robodesk_imap_settings', array(
+                     'hostname' => 'email.example.com',
+                     'port'     => 993,
+                     'username' => '',
+                     'password' => '',
+                     'auth'     => true,
+                     'inbox_name' => '',
+                 ));
 
-                ));
-
-                $robodesk_imap_hostname = $robodesk_imap_settings['hostname'];
-                $robodesk_imap_port     = $robodesk_imap_settings['port'];
-                $robodesk_imap_username = $robodesk_imap_settings['username'];
-                $robodesk_imap_password = $robodesk_imap_settings['password'];
-                $robodesk_imap_auth     = isset($robodesk_imap_settings['auth']) ? $robodesk_imap_settings['auth'] : true;
+                 $robodesk_imap_hostname   = $robodesk_imap_settings['hostname'];
+                 $robodesk_imap_port       = $robodesk_imap_settings['port'];
+                 $robodesk_imap_username   = $robodesk_imap_settings['username'];
+                 $robodesk_imap_password   = $robodesk_imap_settings['password'];
+                 $robodesk_imap_auth       = isset($robodesk_imap_settings['auth']) ? $robodesk_imap_settings['auth'] : true;
+                 $robodesk_imap_inbox_name = isset($robodesk_imap_settings['inbox_name']) ? $robodesk_imap_settings['inbox_name'] : '';
 
                 $robodesk_smtp_settings = get_option('robodesk_smtp_settings', array(
                     'enabled' => false,
@@ -352,17 +353,26 @@ $settings_hidden = ($current_tab === 'settings') ? '' : ' hidden';
                                  value="<?php echo esc_attr($robodesk_imap_password); ?>"
                                  class="styled-input mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
                          </div>
-                         <div>
-                             <label for="robodesk_imap_auth"
-                                 class="block text-sm font-medium text-gray-700"><?php esc_html_e('Encryption', 'robodesk'); ?></label>
-                             <select name="robodesk_imap_auth" id="robodesk_imap_auth"
-                                 class="styled-select mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
-                                 <option value="1" <?php selected($robodesk_imap_auth, true); ?>>
-                                     <?php esc_html_e('SSL', 'robodesk'); ?></option>
-                                 <option value="0" <?php selected($robodesk_imap_auth, false); ?>>
-                                     <?php esc_html_e('TLS', 'robodesk'); ?></option>
-                             </select>
-                         </div>
+                          <div>
+                              <label for="robodesk_imap_inbox_name"
+                                  class="block text-sm font-medium text-gray-700"><?php esc_html_e('Inbox Name', 'robodesk'); ?></label>
+                              <input type="text" name="robodesk_imap_inbox_name" id="robodesk_imap_inbox_name"
+                                  value="<?php echo esc_attr($robodesk_imap_inbox_name); ?>"
+                                  placeholder="e.g. Sales, Support, General"
+                                  class="styled-input mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                              <p class="text-xs text-gray-500 mt-1"><?php esc_html_e('A name to identify this inbox in the dashboard.', 'robodesk'); ?></p>
+                          </div>
+                          <div>
+                              <label for="robodesk_imap_auth"
+                                  class="block text-sm font-medium text-gray-700"><?php esc_html_e('Encryption', 'robodesk'); ?></label>
+                              <select name="robodesk_imap_auth" id="robodesk_imap_auth"
+                                  class="styled-select mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                                  <option value="1" <?php selected($robodesk_imap_auth, true); ?>>
+                                      <?php esc_html_e('SSL', 'robodesk'); ?></option>
+                                  <option value="0" <?php selected($robodesk_imap_auth, false); ?>>
+                                      <?php esc_html_e('TLS', 'robodesk'); ?></option>
+                              </select>
+                          </div>
                      </div>
                      <div class="mt-6 flex gap-4">
                          <button type="button" id="robodesk-imap-test" onclick="testConnection()"
