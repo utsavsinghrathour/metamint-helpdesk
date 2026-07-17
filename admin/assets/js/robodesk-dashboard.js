@@ -51,6 +51,39 @@ document.addEventListener("DOMContentLoaded", () => {
   localizeRobodeskTimes();
 });
 
+// Prime the browser audio engine on the first user gesture so that
+// programmatic notification sounds (fired from SSE/poll callbacks) are not
+// blocked by the browser autoplay policy.
+function robodeskUnlockAudio() {
+  let url =
+    typeof robodeskNotificationSound !== "undefined" && robodeskNotificationSound
+      ? robodeskNotificationSound
+      : "";
+  if (!url) {
+    const repliesList = document.getElementById("replies-list");
+    if (repliesList) url = repliesList.getAttribute("data-audio") || "";
+  }
+  if (url) {
+    try {
+      const audio = new Audio(url);
+      audio.muted = false;
+      const p = audio.play();
+      if (p && typeof p.then === "function") {
+        p.then(() => audio.pause()).catch(() => {});
+      }
+    } catch (e) {
+      /* no-op */
+    }
+  }
+  window.removeEventListener("pointerdown", robodeskUnlockAudio);
+  window.removeEventListener("keydown", robodeskUnlockAudio);
+  window.removeEventListener("touchstart", robodeskUnlockAudio);
+}
+
+window.addEventListener("pointerdown", robodeskUnlockAudio);
+window.addEventListener("keydown", robodeskUnlockAudio);
+window.addEventListener("touchstart", robodeskUnlockAudio);
+
 function loadDashboardTickets() {
   const tableBody = document.getElementById("dashboard-tickets-table");
   let filteredTickets = [];
@@ -159,13 +192,23 @@ function loadDashboardTickets() {
   // Update table header based on filter
   updateTableHeader(showAssigneeColumn);
 
+  // Pagination logic
+  const totalItems = filteredTickets.length;
+  const totalPages = Math.max(1, Math.ceil(totalItems / dashboardItemsPerPage));
+  if (dashboardCurrentPage > totalPages) {
+    dashboardCurrentPage = totalPages;
+  }
+  const startIndex = (dashboardCurrentPage - 1) * dashboardItemsPerPage;
+  const endIndex = Math.min(startIndex + dashboardItemsPerPage, totalItems);
+  const pageTickets = filteredTickets.slice(startIndex, endIndex);
+
   // Build the table HTML
   tableBody.innerHTML =
     filteredTickets.length === 0
       ? `<tr><td colspan="${
           showAssigneeColumn ? 8 : 7
         }" class="px-6 py-4 text-center text-gray-500">No tickets found for this filter.</td></tr>`
-      : filteredTickets
+      : pageTickets
           .map(
             (ticket) => `
             <tr class="table-row cursor-pointer" data-ticketid="${ticket.id}">
@@ -294,6 +337,9 @@ function loadDashboardTickets() {
       }
     }
   });
+
+  // Render pagination controls
+  renderDashboardPagination(dashboard_tickets.length, filteredTickets.length, dashboardCurrentPage, totalPages);
 }
 
 function updateDashboardFilterCounts(currentUserName) {
@@ -330,6 +376,74 @@ function updateDashboardFilterCounts(currentUserName) {
       }
     }
   });
+}
+
+function renderDashboardPagination(totalItems, filteredItems, currentPage, totalPages) {
+  const container = document.getElementById("dashboard-pagination");
+  if (!container) return;
+
+  if (totalItems === 0 || filteredItems === 0) {
+    container.innerHTML = "";
+    return;
+  }
+
+  const start = (currentPage - 1) * dashboardItemsPerPage + 1;
+  const end = Math.min(currentPage * dashboardItemsPerPage, filteredItems);
+
+  let html = '<div class="flex items-center justify-between flex-wrap gap-4">';
+
+  // Info text
+  html += `<div class="text-sm text-gray-500">Showing ${start} to ${end} of ${filteredItems} entries</div>`;
+
+  // Page controls
+  html += '<div class="flex items-center space-x-1">';
+
+  // Previous button
+  const prevDisabled = currentPage <= 1;
+  html += `<button type="button" class="dashboard-page-btn" onclick="changeDashboardPage(${currentPage - 1})"${prevDisabled ? ' disabled' : ''}>&laquo; Prev</button>`;
+
+  // Page numbers
+  const maxVisiblePages = 5;
+  let pageStart = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
+  let pageEnd = Math.min(totalPages, pageStart + maxVisiblePages - 1);
+  if (pageEnd - pageStart + 1 < maxVisiblePages) {
+    pageStart = Math.max(1, pageEnd - maxVisiblePages + 1);
+  }
+
+  if (pageStart > 1) {
+    html += `<button type="button" class="dashboard-page-btn" onclick="changeDashboardPage(1)">1</button>`;
+    if (pageStart > 2) {
+      html += '<span class="px-1 text-gray-400">...</span>';
+    }
+  }
+
+  for (let i = pageStart; i <= pageEnd; i++) {
+    const activeClass = i === currentPage ? ' active' : '';
+    html += `<button type="button" class="dashboard-page-btn${activeClass}" onclick="changeDashboardPage(${i})">${i}</button>`;
+  }
+
+  if (pageEnd < totalPages) {
+    if (pageEnd < totalPages - 1) {
+      html += '<span class="px-1 text-gray-400">...</span>';
+    }
+    html += `<button type="button" class="dashboard-page-btn" onclick="changeDashboardPage(${totalPages})">${totalPages}</button>`;
+  }
+
+  // Next button
+  const nextDisabled = currentPage >= totalPages;
+  html += `<button type="button" class="dashboard-page-btn" onclick="changeDashboardPage(${currentPage + 1})"${nextDisabled ? ' disabled' : ''}>Next &raquo;</button>`;
+
+  html += '</div></div>';
+
+  container.innerHTML = html;
+}
+
+function changeDashboardPage(page) {
+  const totalItems = dashboard_tickets.length;
+  const totalPages = Math.max(1, Math.ceil(totalItems / dashboardItemsPerPage));
+  if (page < 1 || page > totalPages || page === dashboardCurrentPage) return;
+  dashboardCurrentPage = page;
+  loadDashboardTickets();
 }
 
 // Helper function to update table header based on whether assignee column should be shown
@@ -1045,6 +1159,8 @@ let currentTicket = null;
 let currentTicketTab = "replies";
 let currentSettingsTab = "basic";
 let currentDashboardFilter = "my_conversation"; // Default filter for dashboard
+let dashboardCurrentPage = 1;
+const dashboardItemsPerPage = 10;
 
 // Initialize the application
 document.addEventListener("DOMContentLoaded", function () {
@@ -1448,6 +1564,7 @@ function filterDashboardTickets(filterType) {
     .classList.add("active");
 
   currentDashboardFilter = filterType;
+  dashboardCurrentPage = 1;
   loadDashboardTickets();
 }
 
@@ -1765,6 +1882,55 @@ function loadTicketDetail() {
     currentTicket.replies?.length || 0;
   document.getElementById("notes-count").textContent =
     currentTicket.notes?.length || 0;
+
+  // Enforce assignment restriction for Support Staff:
+  // Staff can only reply to tickets assigned to them.
+  // Admins, Editors, and Support Managers can reply to any ticket.
+  const staffOnlyRoles = ["robodesk_support_staff"];
+  const isStaffOnly = staffOnlyRoles.includes(robodeskCurrentUser?.role);
+
+  if (isStaffOnly) {
+    const assigneeId = currentTicket?.assignee_id;
+    const currentUserId = robodeskCurrentUser?.id;
+    const isAssigned = assigneeId && currentUserId && assigneeId === currentUserId;
+
+    const replyEditor    = document.getElementById("new-reply");
+    const sendReplyBtn   = document.getElementById("send-reply-btn");
+    const replyNotice    = document.getElementById("rbd-reply-not-assigned-notice");
+
+    if (!isAssigned) {
+      // Disable the reply editor
+      if (replyEditor) {
+        replyEditor.contentEditable = "false";
+        replyEditor.style.opacity = "0.5";
+        replyEditor.style.cursor  = "not-allowed";
+      }
+      if (sendReplyBtn) {
+        sendReplyBtn.disabled = true;
+        sendReplyBtn.title    = "This ticket is not assigned to you.";
+      }
+      // Show an inline notice if not already present
+      if (!replyNotice && sendReplyBtn) {
+        const notice = document.createElement("p");
+        notice.id        = "rbd-reply-not-assigned-notice";
+        notice.className = "text-sm text-amber-600 mt-1";
+        notice.textContent = "You can only reply to tickets assigned to you.";
+        sendReplyBtn.insertAdjacentElement("afterend", notice);
+      }
+    } else {
+      // Ticket IS assigned to this staff — ensure editor is active
+      if (replyEditor) {
+        replyEditor.contentEditable = "true";
+        replyEditor.style.opacity = "";
+        replyEditor.style.cursor  = "";
+      }
+      if (sendReplyBtn) {
+        sendReplyBtn.disabled = false;
+        sendReplyBtn.title    = "";
+      }
+      if (replyNotice) replyNotice.remove();
+    }
+  }
 
   loadRepliesAndNotes();
 }
@@ -3245,7 +3411,18 @@ function resolveTemplateVariables(content, ticket) {
 
 function addReply() {
   if (isReplySending) return; // Prevent double send
+
+  // Client-side assignment guard — mirrors server-side restriction
   const userRole = robodeskCurrentUser?.role;
+  if (userRole === "robodesk_support_staff") {
+    const assigneeId    = currentTicket?.assignee_id;
+    const currentUserId = robodeskCurrentUser?.id;
+    if (!assigneeId || !currentUserId || assigneeId !== currentUserId) {
+      showToast("You can only reply to tickets assigned to you.", "error");
+      return;
+    }
+  }
+
   const replyBox = document.getElementById("new-reply");
   const replyHtml = replyBox ? replyBox.innerHTML : "";
   // Use textContent to detect actual visible text, normalize NBSP and trim

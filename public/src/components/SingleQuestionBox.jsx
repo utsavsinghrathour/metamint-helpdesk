@@ -363,10 +363,31 @@ const SingleQuestionBox = ({
                   <div className="rd-loader"></div>
                 </div>
               ) : shouldShowBotWidget ? (
-                <RobodeskBotChatWidgetMain
-                  widgetConfig={widgetConfig}
-                  activeAIMode={activeAIMode}
-                />
+                <>
+                  <RobodeskBotChatWidgetMain
+                    widgetConfig={widgetConfig}
+                    activeAIMode={activeAIMode}
+                  />
+                  <div className="rd-px-18 rd-mt-20 rd-mb-15 rd-single-message-faq-field">
+                    <div className="rd-flex rd-flex-col rd-gap-20">
+                      {isLoading ? (
+                        <p className="rd-body-text rd-text-center">
+                          Loading FAQs...
+                        </p>
+                      ) : error ? (
+                        <p className="rd-text-red rd-body-text">
+                          Error: {error}
+                        </p>
+                      ) : questions.length === 0 ? (
+                        <p className="err_msg">No FAQs found.</p>
+                      ) : (
+                        questions.map((question) => (
+                          <QuestionItem key={question.id} question={question} />
+                        ))
+                      )}
+                    </div>
+                  </div>
+                </>
               ) : (
                 <>
                   <SendMessageField

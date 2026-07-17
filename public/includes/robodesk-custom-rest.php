@@ -601,16 +601,15 @@ function robodesk_stream($request)
 //For new notifications
 function robodesk_get_new_notifications($user_id)
 {
-    // Get all tickets newer than last_id_client
     // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query
-    $notifications_data = get_posts(array(
+    $tickets = get_posts(array(
         'post_type' => 'robodesk_ticket',
         'post_status' => 'publish',
         'author' => $user_id,
         'orderby' => 'date',
         'order' => 'DESC',
         'fields' => 'ids',
-        'posts_per_page' => 4,
+        'posts_per_page' => 10,
         'meta_query' => array(
             array(
                 'key' => 'rbd_all_seen',
@@ -620,7 +619,27 @@ function robodesk_get_new_notifications($user_id)
         )
     ));
 
-    return $notifications_data;
+    // Return each ticket with its latest reply id so the client can detect a
+    // genuinely NEW message (rather than just an already-unread one) and beep
+    // for every new reply regardless of how many are still unread.
+    $result = array();
+    foreach ($tickets as $ticket_id) {
+        $latest = get_comments(array(
+            'post_id' => $ticket_id,
+            'number' => 1,
+            'orderby' => 'comment_ID',
+            'order' => 'DESC',
+            'type' => 'ticket_replies',
+            'status' => 'approve',
+            'fields' => 'ids',
+        ));
+        $result[] = array(
+            'id' => (int) $ticket_id,
+            'last_comment_id' => !empty($latest) ? (int) $latest[0] : 0,
+        );
+    }
+
+    return $result;
 }
 
 
@@ -1068,6 +1087,7 @@ function robodesk_secure_login_endpoint(WP_REST_Request $request)
         'user_email' => $user->user_email,
         'user_display_name' => $user->display_name,
         'expires_at' => time() + (DAY_IN_SECONDS * 7),
+        'rest_nonce' => wp_create_nonce('wp_rest'),
     );
 }
 
@@ -1628,6 +1648,37 @@ function robodesk_handle_reply_receive($data)
         return new WP_Error('user_not_found', 'User not found', array('status' => 404));
     }
 
+    $base64_image = $data['data']['image'] ?? '';
+    $attachment_url = '';
+    if ($base64_image && preg_match('/^data:image\/(\w+);base64,/', $base64_image, $matches)) {
+        $image_type = $matches[1];
+        $image_data = substr($base64_image, strpos($base64_image, ',') + 1);
+        $image_data = base64_decode($image_data, true);
+        if ($image_data !== false) {
+            $upload_dir = wp_upload_dir();
+            $filename = 'ticket-' . $ticket_id . '-' . time() . '.' . $image_type;
+            $file_path = $upload_dir['path'] . '/' . $filename;
+            if (file_put_contents($file_path, $image_data) !== false) {
+                $filetype = wp_check_filetype($filename, null);
+                $attachment = array(
+                    'post_mime_type' => $filetype['type'],
+                    'post_title' => sanitize_file_name($filename),
+                    'post_content' => '',
+                    'post_status' => 'inherit',
+                );
+                $attach_id = wp_insert_attachment($attachment, $file_path, $ticket_id);
+                if (!is_wp_error($attach_id)) {
+                    require_once ABSPATH . 'wp-admin/includes/image.php';
+                    $attach_data = wp_generate_attachment_metadata($attach_id, $file_path);
+                    wp_update_attachment_metadata($attach_id, $attach_data);
+                    $attachment_url = wp_get_attachment_url($attach_id);
+                    $image_html = '<a href="' . esc_url($attachment_url) . '" target="_blank"><img src="' . esc_url($attachment_url) . '" alt="" class="rd-comment-img" /></a>';
+                    $reply .= '<br>' . $image_html;
+                }
+            }
+        }
+    }
+
     $comment_data = array(
         'comment_post_ID' => $ticket_id,
         'comment_author' => $user_object->display_name,
@@ -1672,8 +1723,7 @@ function robodesk_handle_reply_receive($data)
         'content' => $comment->comment_content,
         'created_at' => function_exists('robodesk_comment_utc_iso') ? robodesk_comment_utc_iso($comment) : $comment->comment_date,
         'is_bot_response' => $is_bot_response,
-        // 'attachment_id' => $attachment_id,
-        // 'attachment_url' => $attachment_url
+        'attachment_url' => $attachment_url,
     ];
 
     rbd_log(sprintf(
