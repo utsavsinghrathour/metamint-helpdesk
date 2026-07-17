@@ -365,8 +365,8 @@ function robodesk_get_formatted_comments($post_id)
         $rendered_content = wpautop($comment->comment_content);
         $plain_content = wp_strip_all_tags($rendered_content);
 
-        $comment_time_local = strtotime(get_date_from_gmt($comment->comment_date_gmt));
-        $now_local = current_time('timestamp');
+        $comment_time_local = strtotime($comment->comment_date_gmt . ' UTC');
+        $now_local = time();
 
         $diff = $now_local - $comment_time_local;
         $time_ago = $diff < 5 ? 'just now' : human_time_diff($comment_time_local, $now_local) . ' ago';
@@ -453,13 +453,21 @@ function robodesk_customize_ticket_response($response, $post, $request)
     $ticket_number = 'TCKT-' . str_pad($ticket_id, 3, '0', STR_PAD_LEFT);
 
 
-    $local_time = get_date_from_gmt($post->post_date_gmt);
+    $post_timestamp = strtotime($post->post_date_gmt . ' UTC');
 
-    // Get the UNIX timestamp of the local time
-    $post_timestamp = strtotime($local_time);
+    // Use the last reply timestamp if available
+    $formatted_comments = robodesk_get_formatted_comments($post->ID);
+    if (!empty($formatted_comments)) {
+        $last_comment_utc = $formatted_comments[0]['date_utc'] ?? null;
+        if ($last_comment_utc) {
+            $last_reply_ts = strtotime($last_comment_utc);
+            if ($last_reply_ts) {
+                $post_timestamp = $last_reply_ts;
+            }
+        }
+    }
 
-    // Get the current time in site's timezone
-    $current_timestamp = current_time('timestamp');
+    $current_timestamp = time();
 
     // Get the human-readable time difference
     $time_diff = human_time_diff($post_timestamp, $current_timestamp);
@@ -481,7 +489,7 @@ function robodesk_customize_ticket_response($response, $post, $request)
     }
     $last_reply =  get_post_meta($post->ID, 'rbd_last_reply_id', true);
 
-    $formatted_comments = robodesk_get_formatted_comments($post->ID);
+    // $formatted_comments already fetched above
 
     $total_comments = get_comments([
         'post_id'      => $post->ID,
@@ -539,12 +547,24 @@ function robodesk_handle_tickets_webhook(WP_REST_Request $request)
         );
     }
 
+    // HMAC verification using SECURE_AUTH_KEY
+    $signature = $_SERVER['HTTP_X_WEBHOOK_SIGNATURE'] ?? '';
+    $expected = hash_hmac('sha256', $payload, SECURE_AUTH_KEY);
+    if (!hash_equals($expected, $signature)) {
+        return new WP_Error(
+            'unauthorized',
+            'Invalid webhook signature',
+            array('status' => 401)
+        );
+    }
+
     // Handle ticket creation event
     if (isset($data['event']) && 'ticket.created' === $data['event']) {
 
         $title    = sanitize_text_field($data['data']['title'] ?? '');
         $content  = sanitize_textarea_field($data['data']['description'] ?? '');
         $author   = sanitize_text_field($data['data']['uid'] ?? '');
+        $timestamp = $data['data']['timestamp'] ?? null;
 
         $ticket = wp_insert_post(array(
             'post_type'   => 'robodesk_ticket',
@@ -568,7 +588,11 @@ function robodesk_handle_tickets_webhook(WP_REST_Request $request)
             delete_user_meta($author, 'robodesk_openai_conversation_id');
             wp_set_object_terms($ticket, 'medium', 'robodesk_ticket_priority', false);
 
-            $assigned = auto_assign_ticket_to_support_staff();
+            $assigned = false;
+            $settings = get_option('robodesk_advanced_settings', []);
+            if (!empty($settings['enable_auto_assign'])) {
+                $assigned = auto_assign_ticket_to_support_staff();
+            }
 
             update_post_meta($ticket, 'ticket_assignee', $assigned);
             robodesk_store_ticket_assignee_id($ticket, $assigned);
@@ -581,7 +605,7 @@ function robodesk_handle_tickets_webhook(WP_REST_Request $request)
                 update_post_meta($ticket, '_robodesk_customer_email', $email_address);
             }
 
-            $comment_id = wp_insert_comment(array(
+            $comment_data = array(
                 'comment_post_ID' => $ticket,
                 'user_id'  => $author,
                 'comment_content' => $title,
@@ -589,7 +613,15 @@ function robodesk_handle_tickets_webhook(WP_REST_Request $request)
                 'comment_author_email' => $email_address,
                 'comment_approved' => 1,
                 'comment_type' => 'ticket_replies'
-            ));
+            );
+
+            if ($timestamp) {
+                $mysql_date = date('Y-m-d H:i:s', strtotime($timestamp));
+                $comment_data['comment_date'] = $mysql_date;
+                $comment_data['comment_date_gmt'] = get_gmt_from_date($mysql_date);
+            }
+
+            $comment_id = wp_insert_comment($comment_data);
 
             if (!is_wp_error($comment_id)) {
                 add_comment_meta($comment_id, 'comment_source', 'chat', true);
@@ -685,6 +717,7 @@ function robodesk_handle_tickets_webhook(WP_REST_Request $request)
         $reply     = sanitize_textarea_field($data['data']['message'] ?? '');
         $base64_image = $data['data']['image'] ?? '';
         $is_bot_response = isset($data['data']['is_bot_response']) ? (bool) $data['data']['is_bot_response'] : false;
+        $timestamp = $data['data']['timestamp'] ?? null;
         $user_object =  get_user_by('id', $user_id);
         $user_name = $user_object->display_name;
         $email_address = $user_object->user_email;
@@ -716,7 +749,7 @@ function robodesk_handle_tickets_webhook(WP_REST_Request $request)
         }
 
         // Add reply to ticket
-        $comment_id = wp_insert_comment(array(
+        $comment_data = array(
             'comment_post_ID' => $ticket_id,
             'comment_author' => $user_name,
             'comment_author_email' => $email_address,
@@ -724,7 +757,15 @@ function robodesk_handle_tickets_webhook(WP_REST_Request $request)
             'comment_content' => $content,
             'comment_approved' => 1,
             'comment_type' => 'ticket_replies'
-        ));
+        );
+
+        if ($timestamp) {
+            $mysql_date = date('Y-m-d H:i:s', strtotime($timestamp));
+            $comment_data['comment_date'] = $mysql_date;
+            $comment_data['comment_date_gmt'] = get_gmt_from_date($mysql_date);
+        }
+
+        $comment_id = wp_insert_comment($comment_data);
 
 
         if ($comment_id) {

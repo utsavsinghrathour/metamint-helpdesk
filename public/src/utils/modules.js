@@ -1,6 +1,6 @@
 //create ticket
-export const createTicket = async (userId, title, message = "") => {
-  const webhookUrl = "/wp-json/chat/v1/tickets";
+export const createTicket = async (userId, title, message = "", timestamp = null) => {
+  const webhookUrl = "/wp-json/robodesk/chat/v1/tickets";
 
   const ticketData = {
     event: "ticket.created",
@@ -8,6 +8,7 @@ export const createTicket = async (userId, title, message = "") => {
       title: title,
       description: message,
       uid: userId,
+      ...(timestamp ? { timestamp } : {}),
     },
   };
 
@@ -33,7 +34,7 @@ export const createTicket = async (userId, title, message = "") => {
 
 //get all messages
 export const getMessages = async (ticketId, userId) => {
-  const webhookUrl = "/wp-json/chat/v1/tickets/";
+  const webhookUrl = "/wp-json/robodesk/chat/v1/tickets/";
 
   const messageData = {
     event: "comments.get",
@@ -120,6 +121,7 @@ export async function sendReply(
   img = false,
   isBotResponse = false,
   signal = undefined,
+  timestamp = null,
 ) {
   const payload = {
     event: "replies.receive",
@@ -129,12 +131,13 @@ export async function sendReply(
       message: message,
       image: img,
       is_bot_response: isBotResponse,
+      ...(timestamp ? { timestamp } : {}),
     },
   };
 
   // console.log('From modules', payload);
   try {
-    const response = await fetch("/wp-json/chat/v1/tickets", {
+    const response = await fetch("/wp-json/robodesk/chat/v1/tickets", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -214,7 +217,7 @@ export async function getAllTickets(userId) {
         uid: userId,
       },
     };
-    const response = await fetch("/wp-json/chat/v1/tickets", {
+    const response = await fetch("/wp-json/robodesk/chat/v1/tickets", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

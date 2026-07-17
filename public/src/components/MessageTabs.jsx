@@ -11,7 +11,6 @@ import Preloader from "../images/preloader.svg";
 import { useAppData } from "../utils/AppDataContext";
 import defaultLogo from "../images/robodesk-logo.png";
 // import ChangePassword from './ChangePassword';
-import { sseManager } from "../Hooks/sseManager";
 
 const SingleTicket = React.lazy(() => import("./SingleTicket"));
 
@@ -105,27 +104,21 @@ const MessageTabs = ({
     setSingleTicketPage,
     isSingleTicketPage,
     refreshTickets,
+    loadMoreTickets,
+    ticketPagination,
+    isLoadingMore,
   } = useAppData();
 
   const image_urls = window.robodeskData?.imageUrls || {};
   const messageWrapperRef = useRef(null);
 
-  const beep = useRef(new Audio(wpAuth.notificationSound));
-
-  useEffect(() => {
-    if (!loggedInUsrId) {
-      return;
-    }
-
-    if (beep.current) {
-      beep.current.volume = 1.0;
-      beep.current.preload = "auto";
-    }
-  }, []);
-
   useEffect(() => {
     setSingleTicketPage(false);
   }, []);
+
+  useEffect(() => {
+    refreshTickets(searchTerm, priorityFilter, currentTab);
+  }, [currentTab]);
 
   const firstMessageId = useMemo(() => {
     if (!ticketsContext || ticketsContext.length === 0) return false;
@@ -135,7 +128,8 @@ const MessageTabs = ({
 
   const url = useMemo(() => {
     if (!loggedinContext && !loggedInUsrId) return null;
-    return `wp-json/robodesk/v1/stream/tickets/0/${firstMessageId}/${loggedInUsrId}/?ticket=1`;
+    const nonce = window.wpAuth?.restNonce || window.wpApiSettings?.nonce || '';
+    return `wp-json/robodesk/v1/stream/tickets/0/${firstMessageId}/${loggedInUsrId}/?ticket=1&_wpnonce=${nonce}`;
   }, [firstMessageId]);
 
   useEffect(() => {
@@ -178,13 +172,12 @@ const MessageTabs = ({
   };
 
   const handleScroll = (e) => {
-    e.preventDefault();
     const wrapper = messageWrapperRef.current;
     if (!wrapper) return;
 
     const { scrollTop, scrollHeight, clientHeight } = wrapper;
-    if (scrollTop + clientHeight >= scrollHeight) {
-      console.log("now");
+    if (scrollTop + clientHeight >= scrollHeight - 10) {
+      loadMoreTickets();
     }
   };
 
@@ -383,6 +376,11 @@ const MessageTabs = ({
                         <p className="rd-text-center rd-text-gray rd-m-5">
                           No tickets found
                         </p>
+                      )}
+                      {isLoadingMore && (
+                        <div className="rd-text-center rd-py-10">
+                          <img src={Preloader} alt="Loading" className="rd-preloader" />
+                        </div>
                       )}
                     </div>
                   </div>

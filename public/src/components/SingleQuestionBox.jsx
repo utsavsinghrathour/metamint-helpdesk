@@ -45,6 +45,10 @@ const SingleQuestionBox = ({
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const image_urls = window.robodeskData?.imageUrls || {};
+  const canLoadWidgetConfig = Boolean(
+    window.robodeskData?.robodesk_addon_active &&
+      window.robodeskData?.robodesk_ai_bot_active,
+  );
   const [isAddonActive, setIsAddonActive] = useState(false);
   const [loadingAddon, setLoadingAddon] = useState(true);
   const [loadingWidgetConfig, setLoadingWidgetConfig] = useState(true);
@@ -113,17 +117,17 @@ const SingleQuestionBox = ({
   };
 
   useEffect(() => {
-    fetch("/wp-json/robodesk-addon/v1/status")
-      .then((res) => res.json())
-      .then((data) => {
-        setIsAddonActive(!!data?.activated);
-      })
-      .catch((error) => {
-        setIsAddonActive(false);
-      })
-      .finally(() => {
-        setLoadingAddon(false);
-      });
+    setIsAddonActive(canLoadWidgetConfig);
+    setLoadingAddon(false);
+
+    if (canLoadWidgetConfig) {
+      fetchApiKey();
+    } else {
+      setPrimaryBot(false);
+      setWidgetConfig(null);
+      setActiveAIMode("");
+      setLoadingWidgetConfig(false);
+    }
   }, []);
 
   const handleDislike = () => {
@@ -147,6 +151,13 @@ const SingleQuestionBox = ({
   };
 
   const fetchApiKey = async () => {
+    if (!canLoadWidgetConfig) {
+      setPrimaryBot(false);
+      setWidgetConfig(null);
+      setActiveAIMode("");
+      setLoadingWidgetConfig(false);
+      return;
+    }
     try {
       const response = await fetch("/wp-json/robodesk-bot/v1/widget-config");
       const data = await response.json();
@@ -164,10 +175,6 @@ const SingleQuestionBox = ({
       setLoadingWidgetConfig(false);
     }
   };
-
-  useEffect(() => {
-    fetchApiKey();
-  }, []);
 
   const QuestionItem = ({ question }) => (
     <div
@@ -356,10 +363,31 @@ const SingleQuestionBox = ({
                   <div className="rd-loader"></div>
                 </div>
               ) : shouldShowBotWidget ? (
-                <RobodeskBotChatWidgetMain
-                  widgetConfig={widgetConfig}
-                  activeAIMode={activeAIMode}
-                />
+                <>
+                  <RobodeskBotChatWidgetMain
+                    widgetConfig={widgetConfig}
+                    activeAIMode={activeAIMode}
+                  />
+                  <div className="rd-px-18 rd-mt-20 rd-mb-15 rd-single-message-faq-field">
+                    <div className="rd-flex rd-flex-col rd-gap-20">
+                      {isLoading ? (
+                        <p className="rd-body-text rd-text-center">
+                          Loading FAQs...
+                        </p>
+                      ) : error ? (
+                        <p className="rd-text-red rd-body-text">
+                          Error: {error}
+                        </p>
+                      ) : questions.length === 0 ? (
+                        <p className="err_msg">No FAQs found.</p>
+                      ) : (
+                        questions.map((question) => (
+                          <QuestionItem key={question.id} question={question} />
+                        ))
+                      )}
+                    </div>
+                  </div>
+                </>
               ) : (
                 <>
                   <SendMessageField

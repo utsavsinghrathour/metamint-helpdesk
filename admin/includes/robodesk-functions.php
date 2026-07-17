@@ -228,7 +228,7 @@ if (!function_exists('robodesk_debug_log_page_callback')) {
                 '</textarea>';
         } else {
             echo '<div class="notice notice-error"><p>'
-                . esc_html__('Debug log file was not found or is not readable at logs/debug.log.', 'robodesk') .
+                . esc_html__('Debug log file was not found or is not readable.', 'robodesk') .
                 '</p></div>';
         }
 
@@ -244,6 +244,12 @@ function robodesk_imap_test_connection()
     // Verify nonce
     if (!isset($_POST['nonce']) || !wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['nonce'])), 'robodesk_imap_settings_action')) {
         wp_send_json_error(['message' => 'Security check failed']);
+        exit;
+    }
+
+    // Verify capability
+    if (!current_user_can('manage_options')) {
+        wp_send_json_error(['message' => 'Insufficient permissions']);
         exit;
     }
 
@@ -292,6 +298,12 @@ function robodesk_imap_save_settings()
         exit;
     }
 
+    // Verify capability
+    if (!current_user_can('manage_options')) {
+        wp_send_json_error(['message' => 'Insufficient permissions']);
+        exit;
+    }
+
     // Validate inputs
     if (empty($_POST['robodesk_imap_hostname']) || empty($_POST['robodesk_imap_port']) || empty($_POST['robodesk_imap_username']) || empty($_POST['robodesk_imap_password'])) {
         wp_send_json_error(['message' => 'Missing required fields']);
@@ -323,7 +335,7 @@ function robodesk_imap_save_settings()
             'username' => sanitize_email(wp_unslash($_POST['robodesk_imap_username'])),
             'password' => sanitize_text_field(wp_unslash($_POST['robodesk_imap_password'])),
             'auth' => isset($_POST['robodesk_imap_auth']) ? sanitize_text_field(wp_unslash($_POST['robodesk_imap_auth'])) : '',
-
+            'inbox_name' => isset($_POST['robodesk_imap_inbox_name']) ? sanitize_text_field(wp_unslash($_POST['robodesk_imap_inbox_name'])) : '',
         );
 
         update_option('robodesk_imap_settings', $settings); // Save the settings to the database
@@ -336,12 +348,10 @@ function robodesk_imap_save_settings()
     }
 }
 
-function robodesk_get_smtp_settings_from_request()
+function robodesk_get_smtp_settings_from_request($data)
 {
-    // phpcs:ignore WordPress.Security.NonceVerification.Missing
-    $enabled = isset($_POST['robodesk_smtp_enabled']) ? sanitize_text_field(wp_unslash($_POST['robodesk_smtp_enabled'])) : '0';
-    // phpcs:ignore WordPress.Security.NonceVerification.Missing
-    $encryption = isset($_POST['robodesk_smtp_encryption']) ? sanitize_text_field(wp_unslash($_POST['robodesk_smtp_encryption'])) : 'tls';
+    $enabled = isset($data['robodesk_smtp_enabled']) ? sanitize_text_field(wp_unslash($data['robodesk_smtp_enabled'])) : '0';
+    $encryption = isset($data['robodesk_smtp_encryption']) ? sanitize_text_field(wp_unslash($data['robodesk_smtp_encryption'])) : 'tls';
     $allowed_encryption = ['none', 'ssl', 'tls'];
 
     if (!in_array($encryption, $allowed_encryption, true)) {
@@ -350,19 +360,13 @@ function robodesk_get_smtp_settings_from_request()
 
     return [
         'enabled' => $enabled === '1' || $enabled === 'true',
-        // phpcs:ignore WordPress.Security.NonceVerification.Missing
-        'host' => isset($_POST['robodesk_smtp_host']) ? sanitize_text_field(wp_unslash($_POST['robodesk_smtp_host'])) : '',
-        // phpcs:ignore WordPress.Security.NonceVerification.Missing
-        'port' => isset($_POST['robodesk_smtp_port']) ? absint(wp_unslash($_POST['robodesk_smtp_port'])) : 587,
-        // phpcs:ignore WordPress.Security.NonceVerification.Missing
-        'username' => isset($_POST['robodesk_smtp_username']) ? sanitize_text_field(wp_unslash($_POST['robodesk_smtp_username'])) : '',
-        // phpcs:ignore WordPress.Security.NonceVerification.Missing
-        'password' => isset($_POST['robodesk_smtp_password']) ? sanitize_text_field(wp_unslash($_POST['robodesk_smtp_password'])) : '',
+        'host' => isset($data['robodesk_smtp_host']) ? sanitize_text_field(wp_unslash($data['robodesk_smtp_host'])) : '',
+        'port' => isset($data['robodesk_smtp_port']) ? absint(wp_unslash($data['robodesk_smtp_port'])) : 587,
+        'username' => isset($data['robodesk_smtp_username']) ? sanitize_text_field(wp_unslash($data['robodesk_smtp_username'])) : '',
+        'password' => isset($data['robodesk_smtp_password']) ? sanitize_text_field(wp_unslash($data['robodesk_smtp_password'])) : '',
         'encryption' => $encryption,
-        // phpcs:ignore WordPress.Security.NonceVerification.Missing
-        'from_email' => isset($_POST['robodesk_smtp_from_email']) ? sanitize_email(wp_unslash($_POST['robodesk_smtp_from_email'])) : '',
-        // phpcs:ignore WordPress.Security.NonceVerification.Missing
-        'from_name' => isset($_POST['robodesk_smtp_from_name']) ? sanitize_text_field(wp_unslash($_POST['robodesk_smtp_from_name'])) : '',
+        'from_email' => isset($data['robodesk_smtp_from_email']) ? sanitize_email(wp_unslash($data['robodesk_smtp_from_email'])) : '',
+        'from_name' => isset($data['robodesk_smtp_from_name']) ? sanitize_text_field(wp_unslash($data['robodesk_smtp_from_name'])) : '',
     ];
 }
 
@@ -414,7 +418,7 @@ function robodesk_smtp_save_settings()
         exit;
     }
 
-    $settings = robodesk_get_smtp_settings_from_request();
+    $settings = robodesk_get_smtp_settings_from_request($_POST);
     $validation = robodesk_validate_smtp_settings($settings);
 
     if ($validation !== true) {
@@ -434,7 +438,7 @@ function robodesk_smtp_test_connection()
         exit;
     }
 
-    $settings = robodesk_get_smtp_settings_from_request();
+    $settings = robodesk_get_smtp_settings_from_request($_POST);
     $validation = robodesk_validate_smtp_settings($settings);
 
     if ($validation !== true) {
@@ -615,8 +619,11 @@ function robodesk_save_advanced_settings()
         'enable_auto_assign',
         'enable_notifications',
         'enable_customer_portal',
+        'enable_signup_rate_limiting',
         'max_file_upload_size',
-        'reply_unseen_email_minutes'
+        'reply_unseen_email_minutes',
+        'polling_interval',
+        'blocked_ips',
     ];
 
     $sanitized_settings = [];
@@ -643,6 +650,60 @@ function robodesk_save_advanced_settings()
                 continue;
             }
             $sanitized_settings[$key] = $value;
+        } elseif ($key === 'polling_interval') {
+            $value = absint($settings[$key]);
+            $allowed_intervals = [15, 30, 45, 60, 120];
+            if (!in_array($value, $allowed_intervals)) {
+                $value = 30;
+            }
+            $sanitized_settings[$key] = $value;
+        } elseif ($key === 'blocked_ips') {
+            $raw = sanitize_textarea_field($settings[$key]);
+            $lines = explode("\n", $raw);
+            $valid_ips = array();
+            foreach ($lines as $line) {
+                $ip = trim($line);
+                if ($ip === '') {
+                    continue;
+                }
+                if (filter_var($ip, FILTER_VALIDATE_IP)) {
+                    $valid_ips[] = $ip;
+                }
+            }
+            //testing 
+            global $wpdb;
+            $wpdb->query(
+                $wpdb->prepare(
+                    "DELETE FROM {$wpdb->options} WHERE option_name LIKE %s OR option_name LIKE %s",
+                    $wpdb->esc_like('_transient_robodesk_signup_rate_') . '%',
+                    $wpdb->esc_like('_transient_robodesk_signup_strike_') . '%'
+                )
+            );
+            $wpdb->query(
+                $wpdb->prepare(
+                    "DELETE FROM {$wpdb->options} WHERE option_name LIKE %s OR option_name LIKE %s OR option_name LIKE %s",
+                    $wpdb->esc_like('_transient_robodesk_email_check_rate_') . '%',
+                    $wpdb->esc_like('_transient_robodesk_reset_rate_') . '%',
+                    $wpdb->esc_like('_transient_robodesk_lost_password_rate_') . '%'
+                )
+            );
+            $wpdb->query(
+                $wpdb->prepare(
+                    "DELETE FROM {$wpdb->options} WHERE option_name LIKE %s OR option_name LIKE %s",
+                    $wpdb->esc_like('_transient_timeout_robodesk_signup_rate_') . '%',
+                    $wpdb->esc_like('_transient_timeout_robodesk_signup_strike_') . '%'
+                )
+            );
+            $wpdb->query(
+                $wpdb->prepare(
+                    "DELETE FROM {$wpdb->options} WHERE option_name LIKE %s OR option_name LIKE %s OR option_name LIKE %s",
+                    $wpdb->esc_like('_transient_timeout_robodesk_email_check_rate_') . '%',
+                    $wpdb->esc_like('_transient_timeout_robodesk_reset_rate_') . '%',
+                    $wpdb->esc_like('_transient_timeout_robodesk_lost_password_rate_') . '%'
+                )
+            );
+            //testing
+            update_option('robodesk_blocked_ips', $valid_ips, false);
         } else {
             // Sanitize boolean inputs
             $sanitized_settings[$key] = filter_var($settings[$key], FILTER_VALIDATE_BOOLEAN);
@@ -750,10 +811,15 @@ function robodesk_save_basic_settings()
         $urls[$option_key] = $existing_url;
 
         if (!empty($_FILES[$file_key]['name'])) {
-            // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- type checked against allowlist below
+            // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
             $file = $_FILES[$file_key];
-            $allowed_types = ['image/jpeg', 'image/png', 'image/gif'];
-            if (!in_array($file['type'], $allowed_types)) {
+            $allowed_types = array(
+                'jpg|jpeg' => 'image/jpeg',
+                'png'      => 'image/png',
+                'gif'      => 'image/gif',
+            );
+            $filetype = wp_check_filetype(basename(sanitize_file_name($file['name'])), $allowed_types);
+            if (!$filetype['type']) {
                 $results[$file_key] = ['status' => 'error', 'message' => 'Invalid file type for ' . str_replace('_', ' ', $file_key) . '. Only JPEG, PNG, and GIF are allowed'];
                 continue;
             }
@@ -1055,9 +1121,10 @@ function robodesk_create_ticket()
             wp_send_json_error(['message' => 'Failed to add comment to ticket']);
             wp_die();
         } else {
-            add_comment_meta($comment_id, 'comment_source', 'admin', true);
-            add_comment_meta($comment_id, 'author_type', 'agent', true);
-            add_comment_meta($comment_id, 'rbd_suppress_notification', 1, true);
+            update_comment_meta($comment_id, 'comment_source', 'admin');
+            update_comment_meta($comment_id, 'author_type', 'agent');
+            update_comment_meta($comment_id, 'admin_comment', 'yes');
+            update_comment_meta($comment_id, 'rbd_suppress_notification', 1);
         }
     }
 
@@ -1116,7 +1183,7 @@ function robodesk_get_ticket_detail()
         wp_send_json_error(['message' => 'Ticket not found']);
     }
 
-    if (!current_user_can('read_post', $ticket_id) && !current_user_can('edit_post', $ticket_id)) {
+    if (!current_user_can('robodesk_access_dashboard')) {
         wp_send_json_error(['message' => 'Permission denied']);
     }
 
@@ -1221,7 +1288,6 @@ function robodesk_get_ticket_detail()
 
 //for search of username and email in create ticket form
 add_action('wp_ajax_robodesk_user_lookup', 'robodesk_user_lookup');
-add_action('wp_ajax_nopriv_robodesk_user_lookup', 'robodesk_user_lookup');
 
 function robodesk_user_lookup()
 {
@@ -1274,6 +1340,7 @@ function robodesk_update_ticket_status()
     $current_user = wp_get_current_user();
     $roles = (array) $current_user->roles;
     $is_support_role = in_array('administrator', $roles, true) ||
+        in_array('editor', $roles, true) ||
         in_array('robodesk_support_manager', $roles, true) ||
         in_array('robodesk_support_staff', $roles, true);
 
@@ -1332,6 +1399,7 @@ function robodesk_update_ticket_priority()
     $current_user = wp_get_current_user();
     $roles = (array) $current_user->roles;
     $is_support_role = in_array('administrator', $roles, true) ||
+        in_array('editor', $roles, true) ||
         in_array('robodesk_support_manager', $roles, true) ||
         in_array('robodesk_support_staff', $roles, true);
 
@@ -1373,8 +1441,9 @@ function robodesk_update_ticket_priority()
         ]);
 
         if (!is_wp_error($comment_id)) {
-            add_comment_meta($comment_id, 'comment_source', 'admin', true);
-            add_comment_meta($comment_id, 'author_type', 'agent', true);
+            update_comment_meta($comment_id, 'comment_source', 'admin');
+            update_comment_meta($comment_id, 'author_type', 'agent');
+            update_comment_meta($comment_id, 'admin_comment', 'yes');
         }
     }
     wp_send_json_success([
@@ -1401,6 +1470,7 @@ function robodesk_update_ticket_assignee()
     $current_user = wp_get_current_user();
     $roles = (array) $current_user->roles;
     $is_support_role = in_array('administrator', $roles, true) ||
+        in_array('editor', $roles, true) ||
         in_array('robodesk_support_manager', $roles, true) ||
         in_array('robodesk_support_staff', $roles, true);
 
@@ -1450,8 +1520,9 @@ function robodesk_update_ticket_assignee()
         ]);
 
         if (!is_wp_error($comment_id)) {
-            add_comment_meta($comment_id, 'comment_source', 'admin', true);
-            add_comment_meta($comment_id, 'author_type', 'agent', true);
+            update_comment_meta($comment_id, 'comment_source', 'admin');
+            update_comment_meta($comment_id, 'author_type', 'agent');
+            update_comment_meta($comment_id, 'admin_comment', 'yes');
         }
     }
     wp_send_json_success([
@@ -1475,6 +1546,11 @@ function robodesk_handle_add_ticket_reply()
         wp_send_json_error(['message' => 'Nonce verification failed']);
     }
 
+    // Ensure only dashboard-capable users (admins, managers, staff) can add replies
+    if (!current_user_can('robodesk_access_dashboard')) {
+        wp_send_json_error(['message' => 'Permission denied']);
+    }
+
     $ticket_id = isset($_POST['ticket_id']) ? intval($_POST['ticket_id']) : 0;
     $reply = isset($_POST['reply']) ? wp_kses_post(wp_unslash($_POST['reply'])) : '';
 
@@ -1494,6 +1570,20 @@ function robodesk_handle_add_ticket_reply()
         wp_send_json_error(['message' => 'User not logged in']);
     }
 
+    // Restrict Support Staff to only reply to tickets assigned to them.
+    // Admins, Editors, and Support Managers can reply to any ticket.
+    $user_roles = (array) $user_object->roles;
+    $is_privileged = in_array('administrator', $user_roles, true)
+        || in_array('editor', $user_roles, true)
+        || in_array('robodesk_support_manager', $user_roles, true);
+
+    if (!$is_privileged) {
+        $assignee_id = (int) get_post_meta($ticket_id, 'ticket_assignee_id', true);
+        if ($assignee_id !== $user_id) {
+            wp_send_json_error(['message' => 'You can only reply to tickets assigned to you.']);
+        }
+    }
+
     $comment_id = wp_insert_comment([
         'comment_post_ID'      => $ticket_id,
         'comment_author'       => $user_object->display_name,
@@ -1509,8 +1599,9 @@ function robodesk_handle_add_ticket_reply()
         wp_send_json_error(['message' => 'Failed to insert comment']);
     }
 
-    add_comment_meta($comment_id, 'comment_source', 'admin', true);
-    add_comment_meta($comment_id, 'author_type', 'agent', true);
+    update_comment_meta($comment_id, 'comment_source', 'admin');
+    update_comment_meta($comment_id, 'author_type', 'agent');
+    update_comment_meta($comment_id, 'admin_comment', 'yes');
 
     // Trigger action for integrations (Slack, Discord, etc.)
     do_action('robodesk_after_reply_added', $ticket_id, $comment_id, $reply, $user_object);
@@ -1587,8 +1678,9 @@ function robodesk_handle_close_ticket()
         if (is_wp_error($comment_id)) {
             wp_send_json_error(['message' => 'Failed to insert comment']);
         } else {
-            add_comment_meta($comment_id, 'comment_source', 'admin', true);
-            add_comment_meta($comment_id, 'author_type', 'agent', true);
+            update_comment_meta($comment_id, 'comment_source', 'admin');
+            update_comment_meta($comment_id, 'author_type', 'agent');
+            update_comment_meta($comment_id, 'admin_comment', 'yes');
         }
     }
 
@@ -1610,8 +1702,9 @@ function robodesk_handle_close_ticket()
     if (is_wp_error($close_comment_id)) {
         wp_send_json_error(['message' => 'Failed to add close comment']);
     } else {
-        add_comment_meta($close_comment_id, 'comment_source', 'admin', true);
-        add_comment_meta($close_comment_id, 'author_type', 'agent', true);
+        update_comment_meta($close_comment_id, 'comment_source', 'admin');
+        update_comment_meta($close_comment_id, 'author_type', 'agent');
+        update_comment_meta($close_comment_id, 'admin_comment', 'yes');
     }
     //if successful send email notification to the customer
     $customer_email = get_post_meta($ticket_id, '_robodesk_customer_email', true);
@@ -2129,6 +2222,7 @@ function handle_update_ticket_category()
     $current_user = wp_get_current_user();
     $roles = (array) $current_user->roles;
     $is_support_role = in_array('administrator', $roles, true) ||
+        in_array('editor', $roles, true) ||
         in_array('robodesk_support_manager', $roles, true) ||
         in_array('robodesk_support_staff', $roles, true);
 
@@ -2565,8 +2659,9 @@ function robodesk_handle_bulk_action()
                 if (is_wp_error($comment_id)) {
                     $errors[] = "Failed to add comment for ticket ID: $ticket_id";
                 } elseif ($action_type === 'priority' || $action_type === 'assignee') {
-                    add_comment_meta($comment_id, 'comment_source', 'admin', true);
-                    add_comment_meta($comment_id, 'author_type', 'agent', true);
+                    update_comment_meta($comment_id, 'comment_source', 'admin');
+                    update_comment_meta($comment_id, 'author_type', 'agent');
+                    update_comment_meta($comment_id, 'admin_comment', 'yes');
                 }
             }
         }
