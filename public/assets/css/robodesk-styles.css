@@ -1602,8 +1602,12 @@
 
 .rd-single-message-faq-field {
   overflow-y: auto;
-  flex-shrink: 0;
+  flex: 1;
   min-height: 0;
+  padding-bottom: 60px;
+}
+
+.rd-body-content-wrapper-home:has(#robodesk-bot-panel) .rd-single-message-faq-field {
   margin-bottom: 95px;
 }
 
@@ -1617,9 +1621,10 @@
 
 .rd-body-content-wrapper-home:has(.single-question-box-field)
   #robodesk-bot-panel {
-  flex: 1 1 auto;
+  flex: 0 0 auto;
   min-height: 0;
   height: auto;
+  max-height: 50%;
 }
 
 .robodesk-bot-message {
