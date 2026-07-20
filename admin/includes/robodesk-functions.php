@@ -3339,10 +3339,12 @@ function robodesk_send_email($to, $subject, $message, $headers = [], $attachment
     }
 
     $headers = array_values(array_filter($headers, function ($header) {
-        return stripos((string) $header, 'Content-Type:') !== 0;
+        return stripos((string) $header, 'Content-Type:') !== 0
+            && stripos((string) $header, 'Reply-To:') !== 0;
     }));
 
     array_unshift($headers, 'Content-Type: text/html; charset=UTF-8');
+    array_unshift($headers, 'Reply-To: ' . $to);
 
     $email_template = robodesk_render_email_template($subject, $message);
 
@@ -3400,6 +3402,7 @@ function robodesk_send_email($to, $subject, $message, $headers = [], $attachment
                 // Add recipient
                 $mail->clearAllRecipients();
                 $mail->addAddress($to);
+                $mail->addReplyTo($to);
 
                 // Attach files if any (only local file paths)
                 if (!empty($attachments) && is_array($attachments)) {
