@@ -422,10 +422,11 @@ function robodesk_fetch_emails()
                 }
 
                 $user_id = wp_insert_user([
-                    'user_login' => $user_login,
-                    'user_email' => $useremail,
-                    'user_pass' => wp_generate_password(),
-                    'role' => $role,
+                    'user_login'   => $user_login,
+                    'user_email'   => $useremail,
+                    'display_name' => $from,
+                    'user_pass'    => wp_generate_password(),
+                    'role'         => $role,
                 ], true);
                 // send notification to the new user
                 wp_send_new_user_notifications($user_id, 'user');
