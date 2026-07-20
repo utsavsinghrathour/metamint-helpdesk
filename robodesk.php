@@ -2051,7 +2051,8 @@ function robodesk_send_unseen_reply_email($comment_id)
     $send_error_message = '';
 
     try {
-        $sent = robodesk_send_email($customer_email, $subject, $message);
+        $reply_to = robodesk_get_inbox_email_for_ticket($ticket_id);
+        $sent = robodesk_send_email($customer_email, $subject, $message, [], [], $reply_to);
         if (!$sent && $mail_failed_message !== '') {
             $send_error_message = $mail_failed_message;
         }

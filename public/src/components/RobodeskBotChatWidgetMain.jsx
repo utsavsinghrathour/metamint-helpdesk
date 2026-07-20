@@ -242,9 +242,10 @@ export default function RobodeskBotChatWidgetMain({
       { role: "assistant", text: "...", thinking: true },
     ]);
 
+    const restNonce = window.RobodeskBotConfig?.restNonce || window.wpApiSettings?.nonce || "";
     const headers = { "Content-Type": "application/json" };
-    if (window.RobodeskBotConfig?.restNonce) {
-      headers["X-WP-Nonce"] = RobodeskBotConfig.restNonce;
+    if (restNonce) {
+      headers["X-WP-Nonce"] = restNonce;
     }
 
     try {
@@ -297,9 +298,10 @@ export default function RobodeskBotChatWidgetMain({
     setIsStreaming(true);
     setLoadingText("...");
 
+    const restNonce = window.RobodeskBotConfig?.restNonce || window.wpApiSettings?.nonce || "";
     const headers = { "Content-Type": "application/json" };
-    if (window.RobodeskBotConfig?.restNonce) {
-      headers["X-WP-Nonce"] = RobodeskBotConfig.restNonce;
+    if (restNonce) {
+      headers["X-WP-Nonce"] = restNonce;
     }
 
     try {
