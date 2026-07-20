@@ -1718,7 +1718,8 @@ function robodesk_handle_close_ticket()
         $subject = 'Your ticket has been closed';
         $ticket_link = robodesk_build_ticket_deeplink($ticket_id);
         $message = 'Hello, your ticket #' . $ticket_id . ' has been closed. If you have any further questions, feel free to reply to this email or visit: ' . $ticket_link;
-        robodesk_send_email($customer_email, $subject, $message);
+        $reply_to = robodesk_get_inbox_email_for_ticket($ticket_id);
+        robodesk_send_email($customer_email, $subject, $message, [], [], $reply_to);
     }
     wp_send_json_success(['message' => 'Conversation closed successfully']);
 }
@@ -2781,7 +2782,8 @@ function robodesk_send_ticket_creation_email($post_id, $post, $update)
     $message .= '<p>If the button above does not work, please use this link: <a href="' . esc_url($ticket_link) . '">' . esc_html($ticket_link) . '</a></p>';
 
     // Send email
-    robodesk_send_email($customer_email, $subject, $message);
+    $reply_to = robodesk_get_inbox_email_for_ticket($post_id);
+    robodesk_send_email($customer_email, $subject, $message, [], [], $reply_to);
     rbd_log("Robodesk: Ticket creation email sent to $customer_email for ticket ID: $post_id");
 }
 
@@ -3332,17 +3334,50 @@ function robodesk_render_email_template($subject, $message)
     return $email_header . $email_content . $email_footer;
 }
 
-function robodesk_send_email($to, $subject, $message, $headers = [], $attachments = [])
+function robodesk_get_inbox_email_for_ticket($ticket_id)
+{
+    if (defined('ROBODESK_ADDON_VERSION')) {
+        $multi_status = get_option('robodesk_addon_multi_inbox_status', 'inactive');
+        if ($multi_status === 'active') {
+            $inbox_name = get_post_meta($ticket_id, 'inbox_name', true);
+            if (!empty($inbox_name)) {
+                $multi_settings = get_option('robodesk_multi_inbox_settings', []);
+                foreach ($multi_settings as $inbox) {
+                    if (!empty($inbox['username']) && ($inbox['inbox_name'] ?? '') === $inbox_name) {
+                        return $inbox['username'];
+                    }
+                }
+                if (!empty($multi_settings[0]['username'])) {
+                    return $multi_settings[0]['username'];
+                }
+            }
+            return '';
+        }
+    }
+
+    $imap_settings = get_option('robodesk_imap_settings', []);
+    if (!empty($imap_settings['username'])) {
+        return $imap_settings['username'];
+    }
+
+    return '';
+}
+
+function robodesk_send_email($to, $subject, $message, $headers = [], $attachments = [], $reply_to = '')
 {
     if (!is_array($headers)) {
         $headers = [$headers];
     }
 
     $headers = array_values(array_filter($headers, function ($header) {
-        return stripos((string) $header, 'Content-Type:') !== 0;
+        return stripos((string) $header, 'Content-Type:') !== 0
+            && stripos((string) $header, 'Reply-To:') !== 0;
     }));
 
     array_unshift($headers, 'Content-Type: text/html; charset=UTF-8');
+    if (!empty($reply_to)) {
+        array_unshift($headers, 'Reply-To: ' . $reply_to);
+    }
 
     $email_template = robodesk_render_email_template($subject, $message);
 
@@ -3400,6 +3435,9 @@ function robodesk_send_email($to, $subject, $message, $headers = [], $attachment
                 // Add recipient
                 $mail->clearAllRecipients();
                 $mail->addAddress($to);
+                if (!empty($reply_to)) {
+                    $mail->addReplyTo($reply_to);
+                }
 
                 // Attach files if any (only local file paths)
                 if (!empty($attachments) && is_array($attachments)) {
