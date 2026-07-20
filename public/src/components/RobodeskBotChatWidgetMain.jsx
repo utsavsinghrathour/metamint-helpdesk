@@ -26,6 +26,7 @@ const normalizeMessageText = (text) => {
 export default function RobodeskBotChatWidgetMain({
   widgetConfig,
   activeAIMode,
+  onChatStart,
 }) {
   // console.log("test tse");
   const rootRef = useRef(null);
@@ -210,6 +211,12 @@ export default function RobodeskBotChatWidgetMain({
       rootRef.current.scrollTop = rootRef.current.scrollHeight;
     }
   }, [messages, isStreaming, loadingText]);
+
+  useEffect(() => {
+    if (messages.length > 0 && onChatStart) {
+      onChatStart();
+    }
+  }, [messages.length, onChatStart]);
 
   if (!enabled) return null;
 
