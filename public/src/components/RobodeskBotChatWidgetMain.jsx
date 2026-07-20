@@ -26,6 +26,7 @@ const normalizeMessageText = (text) => {
 export default function RobodeskBotChatWidgetMain({
   widgetConfig,
   activeAIMode,
+  onChatStart,
 }) {
   const rootRef = useRef(null);
   const CHAT_KEY = "robodesk_chat_session";
@@ -230,6 +231,12 @@ export default function RobodeskBotChatWidgetMain({
       rootRef.current.scrollTop = rootRef.current.scrollHeight;
     }
   }, [messages, isStreaming, loadingText]);
+
+  useEffect(() => {
+    if (messages.length > 0 && onChatStart) {
+      onChatStart();
+    }
+  }, [messages.length, onChatStart]);
 
   if (!enabled) return null;
 
