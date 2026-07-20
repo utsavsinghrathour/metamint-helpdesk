@@ -44,6 +44,14 @@ const SingleQuestionBox = ({
   const [questions, setQuestions] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [hasChatStarted, setHasChatStarted] = useState(() => {
+    try {
+      const saved = sessionStorage.getItem("robodesk_chat_session");
+      return saved ? JSON.parse(saved).length > 0 : false;
+    } catch {
+      return false;
+    }
+  });
   const image_urls = window.robodeskData?.imageUrls || {};
   const canLoadWidgetConfig = Boolean(
     window.robodeskData?.robodesk_addon_active &&
@@ -367,26 +375,29 @@ const SingleQuestionBox = ({
                   <RobodeskBotChatWidgetMain
                     widgetConfig={widgetConfig}
                     activeAIMode={activeAIMode}
+                    onChatStart={() => setHasChatStarted(true)}
                   />
-                  <div className="rd-px-18 rd-mt-20 rd-mb-15 rd-single-message-faq-field">
-                    <div className="rd-flex rd-flex-col rd-gap-20">
-                      {isLoading ? (
-                        <p className="rd-body-text rd-text-center">
-                          Loading FAQs...
-                        </p>
-                      ) : error ? (
-                        <p className="rd-text-red rd-body-text">
-                          Error: {error}
-                        </p>
-                      ) : questions.length === 0 ? (
-                        <p className="err_msg">No FAQs found.</p>
-                      ) : (
-                        questions.map((question) => (
-                          <QuestionItem key={question.id} question={question} />
-                        ))
-                      )}
+                  {!hasChatStarted && (
+                    <div className="rd-px-18 rd-mt-20 rd-mb-15 rd-single-message-faq-field">
+                      <div className="rd-flex rd-flex-col rd-gap-20">
+                        {isLoading ? (
+                          <p className="rd-body-text rd-text-center">
+                            Loading FAQs...
+                          </p>
+                        ) : error ? (
+                          <p className="rd-text-red rd-body-text">
+                            Error: {error}
+                          </p>
+                        ) : questions.length === 0 ? (
+                          <p className="err_msg">No FAQs found.</p>
+                        ) : (
+                          questions.map((question) => (
+                            <QuestionItem key={question.id} question={question} />
+                          ))
+                        )}
+                      </div>
                     </div>
-                  </div>
+                  )}
                 </>
               ) : (
                 <>

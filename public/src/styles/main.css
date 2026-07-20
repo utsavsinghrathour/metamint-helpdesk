@@ -866,3 +866,59 @@ button.no-bg,
   border-radius: 50px;
   aspect-ratio: 1;
 }
+
+.rd-body-content-wrapper-home {
+  max-height: calc(100% - 200px);
+  overflow: auto;
+}
+
+.rd-body-content-wrapper-home:has(.single-question-box-field) {
+  max-height: calc(100% - 150px);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.rd-single-message-faq-field {
+  overflow-y: auto;
+  flex: 1;
+  min-height: 0;
+  padding-bottom: 60px;
+}
+
+.rd-body-content-wrapper-home:has(#robodesk-bot-panel) .rd-single-message-faq-field {
+  margin-bottom: 95px;
+}
+
+.rd-body-content-wrapper-home:has(.single-question-box-field)
+  #robodesk-bot-panel {
+  flex: 0 0 auto;
+  min-height: 0;
+  height: auto;
+  max-height: 50%;
+}
+
+.rd-body-content-wrapper-home:has(.rd-single-question-view) {
+  max-height: calc(100% - 30px);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.robodesk-bot-message {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-height: 0;
+}
+
+#robodesk-bot-panel {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+}
