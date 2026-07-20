@@ -158,6 +158,11 @@ const SingleQuestionBox = ({
     console.error("Image failed to load:", e.target.src);
   };
 
+  const getRestNonce = () =>
+    window.RobodeskBotConfig?.restNonce ||
+    window.wpApiSettings?.nonce ||
+    "";
+
   const fetchApiKey = async () => {
     if (!canLoadWidgetConfig) {
       setPrimaryBot(false);
@@ -167,7 +172,10 @@ const SingleQuestionBox = ({
       return;
     }
     try {
-      const response = await fetch("/wp-json/robodesk-bot/v1/widget-config");
+      const headers = { "Content-Type": "application/json" };
+      const nonce = getRestNonce();
+      if (nonce) headers["X-WP-Nonce"] = nonce;
+      const response = await fetch("/wp-json/robodesk-bot/v1/widget-config", { headers });
       const data = await response.json();
       if (response.ok) {
         setPrimaryBot(!!data?.primaryBot);
