@@ -216,7 +216,7 @@ const AppContent = ({ imageUrls = { logo: "" } }) => {
         const audio = new Audio(sound);
         const p = audio.play();
         if (p && typeof p.then === "function") {
-          p.then(() => audio.pause()).catch(() => {});
+          p.then(() => audio.pause()).catch(() => { });
         }
       }
       window.removeEventListener("pointerdown", unlock);
@@ -243,7 +243,6 @@ const AppContent = ({ imageUrls = { logo: "" } }) => {
     sseManager.connect(url, "tickets");
 
     const unsubscribeNewTicket = sseManager.on("new_ticket", (data) => {
-      //   console.log('Executed From new Ticket');
       updateTicket(data);
     }, "tickets");
 
@@ -442,20 +441,18 @@ const AppContent = ({ imageUrls = { logo: "" } }) => {
       )}
 
       <div
-        className={`robodesk-popup rd-flex rd-flex-col rd-border-none rd-border-radius-md ${
-          isOpen ? "open" : "closed"
-        } ${isExpanded ? "expanded" : ""}`}
+        className={`robodesk-popup rd-flex rd-flex-col rd-border-none rd-border-radius-md ${isOpen ? "open" : "closed"
+          } ${isExpanded ? "expanded" : ""}`}
       >
         {tabs[activeTab].component}
       </div>
 
       <div
-        className={` rd-popup-top-icon-container ${
-          isOpen ? "rd-hidden " : ""
-        } ${hasNotificationOff && !isOpen ? "rd-title-with-dot" : ""}`}
+        className={` rd-popup-top-icon-container ${isOpen ? "rd-hidden " : ""
+          } ${hasNotificationOff && !isOpen ? "rd-title-with-dot" : ""}`}
       >
         {imageUrls.popover_top_icon &&
-        imageUrls.popover_top_icon.trim() !== "" ? (
+          imageUrls.popover_top_icon.trim() !== "" ? (
           <img
             src={imageUrls.popover_top_icon}
             alt="Popup Top Icon"
@@ -468,9 +465,8 @@ const AppContent = ({ imageUrls = { logo: "" } }) => {
       </div>
 
       <button
-        className={`robodesk-toggle-btn rd-bg-blue rd-rounded-border rd-border-none rd-cursor-pointer ${
-          isOpen ? "rotatedssss" : ""
-        }`}
+        className={`robodesk-toggle-btn rd-bg-blue rd-rounded-border rd-border-none rd-cursor-pointer ${isOpen ? "rotatedssss" : ""
+          }`}
         onClick={handlePopupToggle}
       >
         {isOpen ? (

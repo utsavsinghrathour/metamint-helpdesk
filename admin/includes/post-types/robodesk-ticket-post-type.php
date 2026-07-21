@@ -566,7 +566,7 @@ function robodesk_handle_tickets_webhook(WP_REST_Request $request)
         $author   = sanitize_text_field($data['data']['uid'] ?? '');
         $timestamp = $data['data']['timestamp'] ?? null;
 
-        $ticket = wp_insert_post(array(
+        $ticket_args = array(
             'post_type'   => 'robodesk_ticket',
             'post_title' => $title,
             'post_content' => $content,
@@ -575,13 +575,21 @@ function robodesk_handle_tickets_webhook(WP_REST_Request $request)
             'meta_input'   => array(
                 '_robodesk_ticket_status' => 'open',
                 'robodesk_ticket_origin' => 'chat',
-
-
             ),
             'tax_input' => array(
                 'robodesk_ticket_priority' => array('medium'), // Default priority
             )
-        ));
+        );
+
+        if (!empty($created_at)) {
+            $timestamp = strtotime($created_at);
+            if ($timestamp) {
+                $ticket_args['post_date'] = date('Y-m-d H:i:s', $timestamp);
+                $ticket_args['post_date_gmt'] = gmdate('Y-m-d H:i:s', $timestamp);
+            }
+        }
+
+        $ticket = wp_insert_post($ticket_args);
 
         if (!is_wp_error($ticket)) {
 
@@ -747,6 +755,8 @@ function robodesk_handle_tickets_webhook(WP_REST_Request $request)
             $attachment_url = wp_get_attachment_url($attachment_id);
             $content = $reply . '<br/><a href="' . $attachment_url . '" target="_blank"><img alt="' . get_the_title($ticket_id) . '" class="rd-comment-img"  src="' . $attachment_url . '"></a>';
         }
+
+        $created_at = isset($data['data']['created_at']) ? sanitize_text_field($data['data']['created_at']) : '';
 
         // Add reply to ticket
         $comment_data = array(
