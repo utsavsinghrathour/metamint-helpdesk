@@ -194,7 +194,9 @@ const Login = ({
 
   const handleStateUpdate = (ticket) => {
     updateSelectedTicket(ticket);
-    setActiveTab(1);
+    if (window.robodeskData?.enable_chat === "1") {
+      setActiveTab(1);
+    }
   };
 
   const validateEmail = () => {

@@ -199,7 +199,7 @@ const FAQDetail = memo(
           </div>
           <div
             ref={contentRef}
-            className="rd-px-20 rd-py-15 single-faq-content"
+            className={`rd-px-20 rd-py-15 single-faq-content${window.robodeskData?.enable_chat !== "1" ? " chat-disabled" : ""}`}
           >
             <div>
               <h4 className="rd-faq-title heading-4">{faq.question}</h4>
@@ -246,22 +246,24 @@ const FAQDetail = memo(
               </div>
             )}
           </div>
-          <div className="rd-conversation-fixed-bottm">
-            <h4 className="heading-4 rd-fw-semi rd-mb-8">
-              Still have questions?
-            </h4>
-            <button
-              type="button"
-              className="button no-bg rd-flex rd-align-center rd-gap-10 rd-cursor-pointer"
-              onClick={() => {
-                setActiveTab(0);
-                handleFocusedTextArea(true);
-              }}
-            >
-              Start a conversation
-              <RiPencilFill />
-            </button>
-          </div>
+          {window.robodeskData?.enable_chat === "1" && (
+            <div className="rd-conversation-fixed-bottm">
+              <h4 className="heading-4 rd-fw-semi rd-mb-8">
+                Still have questions?
+              </h4>
+              <button
+                type="button"
+                className="button no-bg rd-flex rd-align-center rd-gap-10 rd-cursor-pointer"
+                onClick={() => {
+                  setActiveTab(0);
+                  handleFocusedTextArea(true);
+                }}
+              >
+                Start a conversation
+                <RiPencilFill />
+              </button>
+            </div>
+          )}
         </div>
         <div className="rd-border-top-light">
           <Footer showCopyrightOnly={true} />
