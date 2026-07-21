@@ -245,20 +245,20 @@ function loadDashboardTickets() {
                           parseRobodeskDate(lastReplyDate),
                         );
                         return `
-                          <div class="text-sm font-medium text-gray-900">${escapeHTML(
+                          <div class="text-sm font-medium text-gray-900 ticket-col-text">${escapeHTML(
                             lastReplyAuthor,
                           )}</div>
-                          <div class="text-sm text-gray-500">${timeAgo}</div>
+                          <div class="text-sm text-gray-500 ticket-col-text">${timeAgo}</div>
                         `;
                       })()
                     : `<div class="text-sm text-gray-500">No replies yet</div>`
                 }
               </td>
               <td class="px-6 py-4 whitespace-nowrap">
-                <div class="text-sm font-medium text-gray-900">${escapeHTML(
+                <div class="text-sm font-medium text-gray-900 ticket-col-text">${escapeHTML(
                   ticket.customer,
                 )}</div>
-                <div class="text-sm text-gray-500 truncate max-w-xs">${escapeHTML(
+                <div class="text-sm text-gray-500 ticket-col-text">${escapeHTML(
                   ticket.email,
                 )}</div>
               </td>
