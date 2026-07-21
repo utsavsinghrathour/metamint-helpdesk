@@ -66,7 +66,8 @@ const SingleQuestionBox = ({
   const [activeAIMode, setActiveAIMode] = useState("");
   const contentRef = useRef(null);
 
-  const shouldShowBotWidget = isAddonActive && activeAIMode && primaryBot;
+  const chatEnabled = window.robodeskData?.enable_chat === "1";
+  const shouldShowBotWidget = chatEnabled && isAddonActive && activeAIMode && primaryBot;
 
   useEffect(() => {
     const fetchFAQs = async () => {
@@ -345,21 +346,23 @@ const SingleQuestionBox = ({
                       ),
                   )}
               </div>
+              {chatEnabled && (
               <div className="rd-my-30">
                 <h4 className="heading-4 rd-fw-semi rd-mb-8">
                   Still have questions?
                 </h4>
-                <a
-                  href="#"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    handleBackClick();
-                    handleFocusedTextArea(true);
-                  }}
-                >
-                  Start a conversation
-                </a>
+                  <a
+                    href="#"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      handleBackClick();
+                      handleFocusedTextArea(true);
+                    }}
+                  >
+                    Start a conversation
+                  </a>
               </div>
+              )}
             </div>
           </div>
           <Footer showCopyrightOnly={true} />
@@ -374,7 +377,27 @@ const SingleQuestionBox = ({
                   Have any questions or need a quote? Leave us a message.
                 </h5>
               </div> */}
-              {loadingAddonStatus ? (
+              {!chatEnabled ? (
+                <div className="rd-px-18 rd-mt-20 rd-mb-15 rd-single-message-faq-field">
+                  <div className="rd-flex rd-flex-col rd-gap-20">
+                    {isLoading ? (
+                      <p className="rd-body-text rd-text-center">
+                        Loading FAQs...
+                      </p>
+                    ) : error ? (
+                      <p className="rd-text-red rd-body-text">
+                        Error: {error}
+                      </p>
+                    ) : questions.length === 0 ? (
+                      <p className="err_msg">No FAQs found.</p>
+                    ) : (
+                      questions.map((question) => (
+                        <QuestionItem key={question.id} question={question} />
+                      ))
+                    )}
+                  </div>
+                </div>
+              ) : loadingAddonStatus ? (
                 <div className="rd-loader-container">
                   <div className="rd-loader"></div>
                 </div>
