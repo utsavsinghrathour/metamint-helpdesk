@@ -103,7 +103,17 @@ register_activation_hook(__FILE__, 'robodesk_activate');
 register_deactivation_hook(__FILE__, 'robodesk_deactivate');
 
 add_filter('map_meta_cap', function ($caps, $cap, $user_id) {
-    if ($cap === 'robodesk_access_dashboard') {
+    $robodesk_caps = [
+        'robodesk_access_dashboard',
+        'create_tickets',
+        'edit_tickets',
+        'edit_others_tickets',
+        'publish_tickets',
+        'read_private_tickets',
+        'read_ticket',
+        'delete_ticket',
+    ];
+    if (in_array($cap, $robodesk_caps, true)) {
         $user = get_userdata($user_id);
         if ($user && (user_can($user, 'manage_options') || user_can($user, 'edit_others_posts'))) {
             return ['exist'];
