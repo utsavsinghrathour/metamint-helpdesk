@@ -102,6 +102,16 @@ if (!function_exists('robodesk_post_utc_iso')) {
 register_activation_hook(__FILE__, 'robodesk_activate');
 register_deactivation_hook(__FILE__, 'robodesk_deactivate');
 
+add_filter('map_meta_cap', function ($caps, $cap, $user_id) {
+    if ($cap === 'robodesk_access_dashboard') {
+        $user = get_userdata($user_id);
+        if ($user && (user_can($user, 'manage_options') || user_can($user, 'edit_others_posts'))) {
+            return ['exist'];
+        }
+    }
+    return $caps;
+}, 10, 3);
+
 require_once ROBODESK_PLUGIN_PATH . 'public/includes/robodesk-shortcodes.php';
 
 function robodesk_activate()
