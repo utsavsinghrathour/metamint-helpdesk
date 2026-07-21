@@ -38,6 +38,7 @@ const AppContent = ({ imageUrls = { logo: "" } }) => {
   const hasAttemptedDeepLinkFetch = useRef(false);
 
   const isSupportPage = window.location.pathname.includes("/robodesk-support");
+  const chatEnabled = window.robodeskData?.enable_chat === "1";
 
   const handleFocusedTextArea = (focus) => setFocusedTextArea(focus);
 
@@ -71,7 +72,7 @@ const AppContent = ({ imageUrls = { logo: "" } }) => {
     if (isRobodeskPopupIntent()) {
       setShowActiveFeatured(false);
       setIsOpen(true);
-      setActiveTab(1);
+      setActiveTab(chatEnabled ? 1 : 0);
     }
   }, []);
 
@@ -96,7 +97,7 @@ const AppContent = ({ imageUrls = { logo: "" } }) => {
       return byId || byTicketNumber || byTicketNumberSuffix;
     });
 
-    if (matchedTicket) {
+    if (matchedTicket && chatEnabled) {
       setSelectedTicket(matchedTicket);
       setShowActiveFeatured(false);
       setIsOpen(true);
@@ -170,6 +171,7 @@ const AppContent = ({ imageUrls = { logo: "" } }) => {
           return;
         }
 
+        if (!chatEnabled) return;
         const mappedTicket = mapTicketPayload(ticket);
         setSelectedTicket(mappedTicket);
         setShowActiveFeatured(false);
@@ -298,7 +300,7 @@ const AppContent = ({ imageUrls = { logo: "" } }) => {
   const handleNoticeSelect = (notice) => {
     setSelectedNotice(notice);
     setShowActiveFeatured(false);
-    setActiveTab(1);
+    setActiveTab(chatEnabled ? 1 : 2);
     setIsOpen(true);
   };
 
@@ -449,7 +451,7 @@ const AppContent = ({ imageUrls = { logo: "" } }) => {
 
       <div
         className={` rd-popup-top-icon-container ${isOpen ? "rd-hidden " : ""
-          } ${hasNotificationOff && !isOpen ? "rd-title-with-dot" : ""}`}
+          } ${chatEnabled && hasNotificationOff && !isOpen ? "rd-title-with-dot" : ""}`}
       >
         {imageUrls.popover_top_icon &&
           imageUrls.popover_top_icon.trim() !== "" ? (
