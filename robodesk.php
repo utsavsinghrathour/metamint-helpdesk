@@ -102,7 +102,7 @@ if (!function_exists('robodesk_post_utc_iso')) {
 register_activation_hook(__FILE__, 'robodesk_activate');
 register_deactivation_hook(__FILE__, 'robodesk_deactivate');
 
-add_filter('map_meta_cap', function ($caps, $cap, $user_id) {
+add_filter('user_has_cap', function ($allcaps, $caps, $args) {
     $robodesk_caps = [
         'robodesk_access_dashboard',
         'create_tickets',
@@ -113,13 +113,12 @@ add_filter('map_meta_cap', function ($caps, $cap, $user_id) {
         'read_ticket',
         'delete_ticket',
     ];
-    if (in_array($cap, $robodesk_caps, true)) {
-        $user = get_userdata($user_id);
-        if ($user && (user_can($user, 'manage_options') || user_can($user, 'edit_others_posts'))) {
-            return ['exist'];
+    if (!empty($args[0]) && in_array($args[0], $robodesk_caps, true)) {
+        if (!empty($allcaps['manage_options']) || !empty($allcaps['edit_others_posts'])) {
+            $allcaps[$args[0]] = true;
         }
     }
-    return $caps;
+    return $allcaps;
 }, 10, 3);
 
 require_once ROBODESK_PLUGIN_PATH . 'public/includes/robodesk-shortcodes.php';
