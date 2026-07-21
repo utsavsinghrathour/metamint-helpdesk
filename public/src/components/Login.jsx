@@ -322,13 +322,27 @@ const Login = ({
       ? JSON.parse(savedConversation)
       : [];
 
-    const transcriptMessages = Array.isArray(conversationMessages)
+    let transcriptMessages = Array.isArray(conversationMessages)
       ? conversationMessages.filter(
           (message) =>
             (message.role === "user" || message.role === "assistant") &&
             !message.thinking,
         )
       : [];
+
+    // Stably sort transcriptMessages chronologically by timestamp
+    const withIndex = transcriptMessages.map((msg, idx) => ({ msg, idx }));
+    withIndex.sort((a, b) => {
+      const timeA = a.msg.timestamp ? new Date(a.msg.timestamp).getTime() : null;
+      const timeB = b.msg.timestamp ? new Date(b.msg.timestamp).getTime() : null;
+      if (timeA !== null && timeB !== null) {
+        if (timeA !== timeB) {
+          return timeA - timeB;
+        }
+      }
+      return a.idx - b.idx;
+    });
+    transcriptMessages = withIndex.map(item => item.msg);
 
     const userMessages = transcriptMessages.filter(
       (message) => message.role === "user",
@@ -353,6 +367,7 @@ const Login = ({
         userId,
         ticketTitle,
         ticketDescription,
+        userMessages[0]?.timestamp || new Date().toISOString()
       );
 
       const newTicket = {
@@ -378,7 +393,7 @@ const Login = ({
           }
 
           if (message.role === "user") {
-            await sendReply(newTicket.id, userId, messageText);
+            await sendReply(newTicket.id, userId, messageText, false, false, undefined, message.timestamp);
           } else if (message.role === "assistant") {
             await sendReply(
               newTicket.id,
@@ -386,6 +401,8 @@ const Login = ({
               messageText,
               false,
               true,
+              undefined,
+              message.timestamp,
             );
           }
         }

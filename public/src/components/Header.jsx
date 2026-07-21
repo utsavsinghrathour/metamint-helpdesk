@@ -17,7 +17,7 @@ const Header = ({ logo, onClose, setActiveTab, setShowLogin, updateSelectedTicke
   const [isSubmitting, setIsSubmitting] = useState(false);
   const canLoadWidgetConfig = Boolean(
     window.robodeskData?.robodesk_addon_active &&
-      window.robodeskData?.robodesk_ai_bot_active,
+    window.robodeskData?.robodesk_ai_bot_active,
   );
   // null = unknown, true = available, false = unavailable
   const [sendWhatsappMessage, setSendWhatsappMessage] = useState(null);
@@ -60,7 +60,7 @@ const Header = ({ logo, onClose, setActiveTab, setShowLogin, updateSelectedTicke
   const handleTalkToHumanClick = async () => {
     if (isSubmitting) return; // ← guard against multiple clicks
     setIsSubmitting(true);
-    
+
     // Dispatch event to show loader in chat window
     window.dispatchEvent(
       new CustomEvent("robodesk:creatingTicket", {
@@ -69,7 +69,22 @@ const Header = ({ logo, onClose, setActiveTab, setShowLogin, updateSelectedTicke
     );
 
     const saved = sessionStorage.getItem(CHAT_KEY);
-    const messages = saved ? JSON.parse(saved) : [];
+    let messages = saved ? JSON.parse(saved) : [];
+
+    // Stably sort messages chronologically by timestamp
+    const withIndex = messages.map((msg, idx) => ({ msg, idx }));
+    withIndex.sort((a, b) => {
+      const timeA = a.msg.timestamp ? new Date(a.msg.timestamp).getTime() : null;
+      const timeB = b.msg.timestamp ? new Date(b.msg.timestamp).getTime() : null;
+      if (timeA !== null && timeB !== null) {
+        if (timeA !== timeB) {
+          return timeA - timeB;
+        }
+      }
+      return a.idx - b.idx;
+    });
+    messages = withIndex.map(item => item.msg);
+
     const messagesExceptFirst = messages.slice(1);
 
     if (!messages || messages.length === 0) {
@@ -148,7 +163,9 @@ const Header = ({ logo, onClose, setActiveTab, setShowLogin, updateSelectedTicke
           selectedStaff || loggedInUsrId,
           'Transitioned conversations from AI to human agent.',
           false,
-          true
+          true,
+          undefined,
+          messages[0]?.timestamp || new Date().toISOString()
         );
       }
 
@@ -170,7 +187,7 @@ const Header = ({ logo, onClose, setActiveTab, setShowLogin, updateSelectedTicke
     }
   };
 
-  const sendWhatsappMessageClick = async() => {
+  const sendWhatsappMessageClick = async () => {
     if (!canLoadWidgetConfig) {
       setSendWhatsappMessage(false);
       setWhatsappPhone(null);
@@ -247,20 +264,20 @@ const Header = ({ logo, onClose, setActiveTab, setShowLogin, updateSelectedTicke
           </div>
         )}
         {sendWhatsappMessage === true &&
-        <button
-          className="rd-m-5 rd-border-none rd-bg-transparent rd-p-0"
-          onClick={handleWhatsappClick}
-        >
-          <div className="icon-dark custom-svg rd-cursor-pointer">
-            <IoLogoWhatsapp />
-          </div>
-        </button>
+          <button
+            className="rd-m-5 rd-border-none rd-bg-transparent rd-p-0"
+            onClick={handleWhatsappClick}
+          >
+            <div className="icon-dark custom-svg rd-cursor-pointer">
+              <IoLogoWhatsapp />
+            </div>
+          </button>
         }
         {talkToHuman && messageCount > 0 && (
           <button
             className="rd-m-5"
             onClick={handleTalkToHumanClick}
-            disabled={isSubmitting} 
+            disabled={isSubmitting}
           >
             <div className="icon-dark custom-svg rd-cursor-pointer">
               <IoAddCircle />

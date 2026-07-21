@@ -588,9 +588,9 @@ $tickets_hidden = ($current_tab === 'tickets' && $has_ticket === 0) ? '' : ' hid
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap cursor-pointer"
                         onclick="viewTicket(<?php echo esc_js($ticket['id']); ?>)">
-                        <div class="text-sm font-medium text-gray-900"><?php echo esc_html($ticket['customer']); ?>
+                        <div class="text-sm font-medium text-gray-900 ticket-col-text"><?php echo esc_html($ticket['customer']); ?>
                         </div>
-                        <div class="text-sm text-gray-500 truncate max-w-xs"><?php echo esc_html($ticket['email']); ?>
+                        <div class="text-sm text-gray-500 ticket-col-text"><?php echo esc_html($ticket['email']); ?>
                         </div>
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap cursor-pointer"

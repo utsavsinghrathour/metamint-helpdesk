@@ -46,7 +46,7 @@ const NoticeItem = memo(({ notice, onSelect }) => {
     return parse(notice.excerpt);
   }, [notice.excerpt]);
 
-  // console.log(notice);
+
   return (
     <div
       className="rd-notice-item rd-flex rd-gap-10 rd-border-light single-notice-box-field rd-border-radius-md rd-faq-item"
@@ -191,9 +191,8 @@ const SingleNoticeView = memo(
             </div>
           )}
           <button
-            className={`expand-popup rd-bg-transparent rd-border-none rd-cursor-pointer rd-p-0 ${
-              isExpanded ? "expanded" : ""
-            }`}
+            className={`expand-popup rd-bg-transparent rd-border-none rd-cursor-pointer rd-p-0 ${isExpanded ? "expanded" : ""
+              }`}
             onClick={() => setIsExpanded(!isExpanded)}
           >
             <svg
