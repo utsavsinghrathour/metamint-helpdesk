@@ -167,25 +167,17 @@ $settings_hidden = ($current_tab === 'settings') ? '' : ' hidden';
                              </div>
                          </section>
 
-                          <section class="rounded-xl border border-gray-200 bg-gray-50 p-6">
-                              <div class="mb-5">
-                                  <h4 class="text-base font-semibold text-gray-900">
-                                      <?php esc_html_e('Defaults', 'robodesk'); ?></h4>
-                                  <p class="text-sm text-gray-500">
-                                      <?php esc_html_e('Set the default category and notification audio.', 'robodesk'); ?>
-                                  </p>
-                              </div>
-                              <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                  <div class="flex items-center">
-                                      <input type="checkbox" id="enable_chat" name="enable_chat" value="1"
-                                          <?php checked(get_option('robodesk_enable_chat', '1'), '1'); ?>
-                                          class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
-                                      <label for="enable_chat" class="ml-2 block text-sm text-gray-900">
-                                          <?php esc_html_e('Enable chat', 'robodesk'); ?>
-                                      </label>
-                                  </div>
-                                  <div>
-                                      <label for="robodesk_default_ticket_category"
+                         <section class="rounded-xl border border-gray-200 bg-gray-50 p-6">
+                             <div class="mb-5">
+                                 <h4 class="text-base font-semibold text-gray-900">
+                                     <?php esc_html_e('Defaults', 'robodesk'); ?></h4>
+                                 <p class="text-sm text-gray-500">
+                                     <?php esc_html_e('Set the default category and notification audio.', 'robodesk'); ?>
+                                 </p>
+                             </div>
+                             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                 <div>
+                                     <label for="robodesk_default_ticket_category"
                                          class="block text-sm font-medium text-gray-700"><?php esc_html_e('Default Ticket Categories', 'robodesk'); ?></label>
                                      <select name="robodesk_default_ticket_category"
                                          id="robodesk_default_ticket_category"

@@ -25,21 +25,15 @@ const Footer = ({
     setShowRedDot(hasNotification);
   }, [ticketsContext]);
 
-  const chatEnabled = window.robodeskData?.enable_chat === "1";
-
   const tabs = [
     { id: 0, icon: GoHomeFill, label: '', tooltip: 'Home' },
-    ...(chatEnabled
-      ? [
-          {
-            id: 1,
-            icon: RiMessage2Fill,
-            label: '',
-            tooltip: 'Conversations',
-            notification: showRedDot,
-          },
-        ]
-      : []),
+    {
+      id: 1,
+      icon: RiMessage2Fill,
+      label: '',
+      tooltip: 'Conversations',
+      notification: showRedDot,
+    },
     { id: 2, icon: RiInformation2Fill, label: '', tooltip: 'Notice Board' },
     { id: 3, icon: FaQuestionCircle, label: '', tooltip: 'Wiki' },
   ];
