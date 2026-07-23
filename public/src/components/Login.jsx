@@ -385,25 +385,35 @@ const Login = ({
         priority: ticketResponse.data.ticket_priority,
         messages: [],
       };
-      if (transcriptMessages.length > 1) {
-        for (const message of transcriptMessages.slice(1)) {
-          const messageText = message.text || message.message || "";
-          if (!messageText.trim()) {
-            continue;
-          }
+      if (transcriptMessages.length > 0) {
+        const firstUserMsg = userMessages[0];
+        for (const m of transcriptMessages) {
+          if (m === firstUserMsg) continue;
 
-          if (message.role === "user") {
-            await sendReply(newTicket.id, userId, messageText, false, false, undefined, message.timestamp);
-          } else if (message.role === "assistant") {
-            await sendReply(
-              newTicket.id,
-              defaultStaffId || userId,
-              messageText,
-              false,
-              true,
-              undefined,
-              message.timestamp,
-            );
+          const text = m.text || m.message || '';
+          if (!text.trim()) continue;
+
+          const isBot = m.role === 'assistant';
+
+          for (let attempt = 0; attempt < 3; attempt++) {
+            try {
+              await sendReply(
+                newTicket.id,
+                userId,
+                text,
+                false,
+                isBot,
+                undefined,
+                m.timestamp || new Date().toISOString()
+              );
+              break;
+            } catch (e) {
+              if (attempt === 2) {
+                console.error('Failed to transfer message:', e);
+              } else {
+                await new Promise(r => setTimeout(r, 500));
+              }
+            }
           }
         }
       }
