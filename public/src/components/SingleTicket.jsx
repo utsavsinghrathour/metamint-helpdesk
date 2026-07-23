@@ -1095,9 +1095,7 @@ const SingleTicket = ({
             <p className="err_msg rd-text-center">{error}</p>
           ) : chatMessages.length === 0 ? (
             <p className="rd-text-center rd-body-text">
-              {window.robodeskData?.enable_chat === "1"
-                ? 'No conversations yet. Start a conversation below.'
-                : 'No conversations yet.'}
+              No conversations yet. Start a conversation below.
             </p>
           ) : (
             <>
@@ -1327,12 +1325,12 @@ const SingleTicket = ({
                 </button>
               </div>
             </>
-          ) : window.robodeskData?.enable_chat === "1" ? (
+          ) : (
             <TicketClosed
               handleFocusedTextArea={handleFocusedTextArea}
               setActiveTab={setActiveTab}
             />
-          ) : null}
+          )}
         </div>
       </div>
     </div>

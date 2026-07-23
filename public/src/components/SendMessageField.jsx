@@ -64,9 +64,7 @@ const SendMessageField = ({ setShowLogin, setActiveTab, updateSelectedTicket, ha
         if (!trimmedMessage || submitLockRef.current || isSubmitting) return;
         if (!loggedinContext) {
             localStorage.setItem('temp_ticket_title', trimmedMessage);
-            if (window.robodeskData?.enable_chat === "1") {
-                setActiveTab(1);
-            }
+            setActiveTab(1);
             setShowLogin(true);
 
             return;
@@ -82,9 +80,9 @@ const SendMessageField = ({ setShowLogin, setActiveTab, updateSelectedTicket, ha
                 id: result.data.id,
                 ticketNumber: result.data.ticket_number,
                 title: result.data.ticket_title,
-                description:
-                    result.data.ticket_description && result.data.ticket_description !== 'N/A'
-                        ? result.data.ticket_description
+                source:
+                    result.data.ticket_origin && result.data.ticket_origin !== 'N/A'
+                        ? result.data.ticket_origin
                         : 'Web',
                 timeAgo: result.data.ticket_time_ago,
                 authorImage: result.data.ticket_author_image,
@@ -95,9 +93,7 @@ const SendMessageField = ({ setShowLogin, setActiveTab, updateSelectedTicket, ha
             refreshTickets();
             updateSelectedTicket(newTicket);
 
-            if (window.robodeskData?.enable_chat === "1") {
-                setActiveTab(1);
-            }
+            setActiveTab(1);
             setMessage("");
 
         } catch (error) {

@@ -16,7 +16,6 @@ const Header = ({ logo, onClose, setActiveTab, setShowLogin, updateSelectedTicke
   const { loggedinContext, loggedInUsrId, refreshTickets } = useAppData();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const canLoadWidgetConfig = Boolean(
-    window.robodeskData?.enable_chat === "1" &&
     window.robodeskData?.robodesk_addon_active &&
     window.robodeskData?.robodesk_ai_bot_active,
   );
@@ -114,9 +113,7 @@ const Header = ({ logo, onClose, setActiveTab, setShowLogin, updateSelectedTicke
 
     if (!loggedinContext) {
       localStorage.setItem('temp_ticket_title', ticketTitle);
-      if (window.robodeskData?.enable_chat === "1") {
-        setActiveTab(1);
-      }
+      setActiveTab(1);
       setShowLogin(true);
       setIsSubmitting(false);
       window.dispatchEvent(
@@ -174,9 +171,7 @@ const Header = ({ logo, onClose, setActiveTab, setShowLogin, updateSelectedTicke
 
       refreshTickets();
       updateSelectedTicket(newTicket);
-      if (window.robodeskData?.enable_chat === "1") {
-        setActiveTab(1);
-      }
+      setActiveTab(1);
 
       sessionStorage.removeItem(CHAT_KEY);
     } catch (error) {
