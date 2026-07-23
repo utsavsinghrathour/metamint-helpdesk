@@ -397,6 +397,7 @@ function robodesk_configure_phpmailer_for_smtp($phpmailer, array $settings)
     $phpmailer->Host = $settings['host'];
     $phpmailer->Port = (int) $settings['port'];
     $phpmailer->SMTPAuth = !empty($settings['username']) && !empty($settings['password']);
+    $phpmailer->Timeout = 10;
 
     if ($phpmailer->SMTPAuth) {
         $phpmailer->Username = $settings['username'];
