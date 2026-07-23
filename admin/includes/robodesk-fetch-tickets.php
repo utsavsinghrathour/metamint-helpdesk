@@ -141,7 +141,8 @@ function robodesk_fetch_emails()
     ));
 
     // Construct the IMAP connection string
-    $hostname = '{' . $settings['hostname'] . ':' . $settings['port'] . '/imap/ssl}INBOX';
+    $auth_type = !empty($settings['auth']) ? 'ssl' : 'tls';
+    $hostname = '{' . $settings['hostname'] . ':' . $settings['port'] . '/imap/' . $auth_type . '/novalidate-cert}INBOX';
     $username = $settings['username'];
     $password = $settings['password'];
 
@@ -616,7 +617,7 @@ function robodesk_imap_settings_callback()
         $username     = isset($_POST['robodesk_imap_username']) ? sanitize_email(wp_unslash($_POST['robodesk_imap_username'])) : '';
         $password     = isset($_POST['robodesk_imap_password']) ? sanitize_text_field(wp_unslash($_POST['robodesk_imap_password'])) : '';
 
-        $hostname = '{' . $hostname_val . ':' . $port_val . '/imap/ssl}INBOX';
+        $hostname = '{' . $hostname_val . ':' . $port_val . '/imap/ssl/novalidate-cert}INBOX';
 
         $mailbox = @imap_open($hostname, $username, $password);
         if ($mailbox) {
