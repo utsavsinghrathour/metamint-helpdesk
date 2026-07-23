@@ -2231,6 +2231,7 @@ jQuery(document).ready(function ($) {
         robodesk_imap_username: $form.find("#robodesk_imap_username").val(),
         robodesk_imap_password: $form.find("#robodesk_imap_password").val(),
         robodesk_imap_auth: $form.find("#robodesk_imap_auth").val(),
+        robodesk_imap_inbox_name: $form.find("#robodesk_imap_inbox_name").val(),
       },
       success: function (response) {
         if (response.success) {

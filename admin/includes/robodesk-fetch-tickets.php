@@ -604,6 +604,19 @@ function robodesk_imap_settings_callback()
 
         update_option('robodesk_imap_settings', $settings);
 
+        if (defined('ROBODESK_ADDON_VERSION') && get_option('robodesk_addon_multi_inbox_status', 'inactive') === 'active') {
+            $multi_settings = get_option('robodesk_multi_inbox_settings', []);
+            $multi_settings[0] = [
+                'hostname'   => $settings['hostname'],
+                'port'       => $settings['port'],
+                'username'   => $settings['username'],
+                'password'   => $settings['password'],
+                'auth'       => true,
+                'inbox_name' => $settings['inbox_name'] ?? '',
+            ];
+            update_option('robodesk_multi_inbox_settings', $multi_settings);
+        }
+
         echo '<div class="updated"><p>IMAP settings saved successfully.</p></div>';
     }
 
