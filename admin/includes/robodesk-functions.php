@@ -338,7 +338,21 @@ function robodesk_imap_save_settings()
             'inbox_name' => isset($_POST['robodesk_imap_inbox_name']) ? sanitize_text_field(wp_unslash($_POST['robodesk_imap_inbox_name'])) : '',
         );
 
-        update_option('robodesk_imap_settings', $settings); // Save the settings to the database
+        update_option('robodesk_imap_settings', $settings);
+
+        if (defined('ROBODESK_ADDON_VERSION') && get_option('robodesk_addon_multi_inbox_status', 'inactive') === 'active') {
+            $multi_settings = get_option('robodesk_multi_inbox_settings', []);
+            $multi_settings[0] = [
+                'hostname'   => $settings['hostname'],
+                'port'       => $settings['port'],
+                'username'   => $settings['username'],
+                'password'   => $settings['password'],
+                'auth'       => !empty($settings['auth']) && $settings['auth'] !== '0',
+                'inbox_name' => $settings['inbox_name'] ?? '',
+            ];
+            update_option('robodesk_multi_inbox_settings', $multi_settings);
+        }
+
         imap_close($mailbox);
         wp_send_json_success(['message' => $message]);
     } else {
