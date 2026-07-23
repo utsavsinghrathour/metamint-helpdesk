@@ -2730,15 +2730,28 @@ function robodesk_get_available_priorities()
 
 
 // function to send email notifications when a ticket is created of posttype robodesk_ticket
-add_action('save_post', 'robodesk_send_ticket_creation_email', 10, 3);
-function robodesk_send_ticket_creation_email($post_id, $post, $update)
+add_action('save_post', 'robodesk_schedule_ticket_creation_email', 10, 3);
+function robodesk_schedule_ticket_creation_email($post_id, $post, $update)
 {
-    // Only send email for new tickets
     if ($post->post_type !== 'robodesk_ticket' || $update) {
         return;
     }
 
-    // Get customer email from post meta
+    if (wp_next_scheduled('robodesk_send_ticket_creation_email_async', [$post_id])) {
+        return;
+    }
+
+    wp_schedule_single_event(time(), 'robodesk_send_ticket_creation_email_async', [$post_id]);
+}
+
+add_action('robodesk_send_ticket_creation_email_async', 'robodesk_send_ticket_creation_email', 10, 1);
+function robodesk_send_ticket_creation_email($post_id)
+{
+    $post = get_post($post_id);
+    if (!$post || $post->post_type !== 'robodesk_ticket') {
+        return;
+    }
+
     $customer_email = get_post_meta($post_id, '_robodesk_customer_email', true);
     if (!$customer_email || !is_email($customer_email)) {
         $author = get_userdata($post->post_author);
@@ -2753,7 +2766,6 @@ function robodesk_send_ticket_creation_email($post_id, $post, $update)
         }
     }
 
-    // Prepare email content
     $subject = 'Your support ticket has been created.';
     $ticket_link = robodesk_build_ticket_deeplink($post_id);
     $theme_color = robodesk_get_email_theme_color();
@@ -2781,7 +2793,6 @@ function robodesk_send_ticket_creation_email($post_id, $post, $update)
     $message .= '<p><a href="' . esc_url($ticket_link) . '" style="display:inline-block;padding:12px 18px;background-color:' . esc_attr($theme_color) . ';color:#ffffff;text-decoration:none;border-radius:6px;font-weight:600;">View your conversation</a></p> <br>';
     $message .= '<p>If the button above does not work, please use this link: <a href="' . esc_url($ticket_link) . '">' . esc_html($ticket_link) . '</a></p>';
 
-    // Send email
     $reply_to = robodesk_get_inbox_email_for_ticket($post_id);
     robodesk_send_email($customer_email, $subject, $message, [], [], $reply_to);
     rbd_log("Robodesk: Ticket creation email sent to $customer_email for ticket ID: $post_id");
