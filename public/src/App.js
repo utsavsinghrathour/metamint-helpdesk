@@ -38,10 +38,11 @@ const AppContent = ({ imageUrls = { logo: "" } }) => {
   const hasAttemptedDeepLinkFetch = useRef(false);
 
   const isSupportPage = window.location.pathname.includes("/robodesk-support");
+  const chatEnabled = window.robodeskData?.enable_chat === "1";
 
   const handleFocusedTextArea = (focus) => setFocusedTextArea(focus);
 
-  const hasNotificationOff = ticketsContext?.some(
+  const hasNotificationOff = chatEnabled && ticketsContext?.some(
     (ticket) => ticket.notifications === "no",
   );
 
@@ -71,7 +72,7 @@ const AppContent = ({ imageUrls = { logo: "" } }) => {
     if (isRobodeskPopupIntent()) {
       setShowActiveFeatured(false);
       setIsOpen(true);
-      setActiveTab(1);
+      if (chatEnabled) setActiveTab(1);
     }
   }, []);
 
@@ -100,7 +101,7 @@ const AppContent = ({ imageUrls = { logo: "" } }) => {
       setSelectedTicket(matchedTicket);
       setShowActiveFeatured(false);
       setIsOpen(true);
-      setActiveTab(1);
+      if (chatEnabled) setActiveTab(1);
       hasAutoOpenedTicket.current = true;
     }
   }, [isSupportPage, requestedTicketId, ticketsContext]);
@@ -174,7 +175,7 @@ const AppContent = ({ imageUrls = { logo: "" } }) => {
         setSelectedTicket(mappedTicket);
         setShowActiveFeatured(false);
         setIsOpen(true);
-        setActiveTab(1);
+        if (chatEnabled) setActiveTab(1);
         hasAutoOpenedTicket.current = true;
       } catch (error) {
         console.error("Unable to fetch requested deep-link ticket", error);
@@ -298,7 +299,7 @@ const AppContent = ({ imageUrls = { logo: "" } }) => {
   const handleNoticeSelect = (notice) => {
     setSelectedNotice(notice);
     setShowActiveFeatured(false);
-    setActiveTab(1);
+    if (chatEnabled) setActiveTab(1);
     setIsOpen(true);
   };
 
