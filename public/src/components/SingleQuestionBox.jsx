@@ -401,7 +401,7 @@ const SingleQuestionBox = ({
                             Error: {error}
                           </p>
                         ) : questions.length === 0 ? (
-                          <p className="err_msg">No FAQs found.</p>
+<p className="err_msg single-question-box-field">No FAQs found.</p>
                         ) : (
                           questions.map((question) => (
                             <QuestionItem key={question.id} question={question} />
@@ -441,7 +441,7 @@ const SingleQuestionBox = ({
                     </div>
                   </div>
                 </>
-              ) : !chatEnabled && questions.length === 0 ? null : (
+              ) : (
                 <div className="rd-px-18 rd-mt-20 rd-mb-15 rd-single-message-faq-field">
                   <div className="rd-flex rd-flex-col rd-gap-20">
                     {isLoading ? (
