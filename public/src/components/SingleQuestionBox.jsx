@@ -53,6 +53,7 @@ const SingleQuestionBox = ({
     }
   });
   const image_urls = window.robodeskData?.imageUrls || {};
+  const chatEnabled = window.robodeskData?.enable_chat === "1";
   const canLoadWidgetConfig = Boolean(
     window.robodeskData?.robodesk_addon_active &&
       window.robodeskData?.robodesk_ai_bot_active,
@@ -345,21 +346,23 @@ const SingleQuestionBox = ({
                       ),
                   )}
               </div>
-              <div className="rd-my-30">
-                <h4 className="heading-4 rd-fw-semi rd-mb-8">
-                  Still have questions?
-                </h4>
-                <a
-                  href="#"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    handleBackClick();
-                    handleFocusedTextArea(true);
-                  }}
-                >
-                  Start a conversation
-                </a>
-              </div>
+              {chatEnabled && (
+                <div className="rd-my-30">
+                  <h4 className="heading-4 rd-fw-semi rd-mb-8">
+                    Still have questions?
+                  </h4>
+                  <a
+                    href="#"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      handleBackClick();
+                      handleFocusedTextArea(true);
+                    }}
+                  >
+                    Start a conversation
+                  </a>
+                </div>
+              )}
             </div>
           </div>
           <Footer showCopyrightOnly={true} />
@@ -374,11 +377,12 @@ const SingleQuestionBox = ({
                   Have any questions or need a quote? Leave us a message.
                 </h5>
               </div> */}
-              {loadingAddonStatus ? (
+              {chatEnabled && loadingAddonStatus ? (
                 <div className="rd-loader-container">
                   <div className="rd-loader"></div>
                 </div>
-              ) : shouldShowBotWidget ? (
+              ) : null}
+              {chatEnabled && shouldShowBotWidget ? (
                 <>
                   <RobodeskBotChatWidgetMain
                     widgetConfig={widgetConfig}
@@ -397,7 +401,7 @@ const SingleQuestionBox = ({
                             Error: {error}
                           </p>
                         ) : questions.length === 0 ? (
-                          <p className="err_msg">No FAQs found.</p>
+<p className="err_msg single-question-box-field">No FAQs found.</p>
                         ) : (
                           questions.map((question) => (
                             <QuestionItem key={question.id} question={question} />
@@ -407,7 +411,7 @@ const SingleQuestionBox = ({
                     </div>
                   )}
                 </>
-              ) : (
+              ) : chatEnabled ? (
                 <>
                   <SendMessageField
                     primaryBot={primaryBot}
@@ -437,6 +441,26 @@ const SingleQuestionBox = ({
                     </div>
                   </div>
                 </>
+              ) : (
+                <div className="rd-px-18 rd-mt-20 rd-mb-15 rd-single-message-faq-field">
+                  <div className="rd-flex rd-flex-col rd-gap-20">
+                    {isLoading ? (
+                      <p className="rd-body-text rd-text-center">
+                        Loading FAQs...
+                      </p>
+                    ) : error ? (
+                      <p className="rd-text-red rd-body-text">
+                        Error: {error}
+                      </p>
+                    ) : questions.length === 0 ? (
+                      <p className="err_msg">No FAQs found.</p>
+                    ) : (
+                      questions.map((question) => (
+                        <QuestionItem key={question.id} question={question} />
+                      ))
+                    )}
+                  </div>
+                </div>
               )}
             </>
           )}
