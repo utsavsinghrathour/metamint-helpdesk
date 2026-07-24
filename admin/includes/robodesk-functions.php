@@ -237,6 +237,41 @@ if (!function_exists('robodesk_debug_log_page_callback')) {
 }
 
 // Ajax handler for testing credential for IMAP connection
+/**
+ * Attempt an IMAP connection with SSL validation, falling back to
+ * /novalidate-cert only when the error is certificate-related.
+ */
+function robodesk_imap_connect($hostname, $port, $auth_type, $username, $password)
+{
+    $cert_phrases = array(
+        'certificate', 'SSL certificate', 'hostname mismatch',
+        'self-signed', 'unable to verify', 'not signed',
+    );
+
+    // Try with full validation first
+    $mailbox = '{' . $hostname . ':' . $port . '/imap/' . $auth_type . '}INBOX';
+    $conn = @imap_open($mailbox, $username, $password);
+    if ($conn) {
+        return $conn;
+    }
+
+    $error = imap_last_error();
+    $is_cert_issue = false;
+    foreach ($cert_phrases as $phrase) {
+        if (stripos($error, $phrase) !== false) {
+            $is_cert_issue = true;
+            break;
+        }
+    }
+
+    if ($is_cert_issue) {
+        $mailbox = '{' . $hostname . ':' . $port . '/imap/' . $auth_type . '/novalidate-cert}INBOX';
+        $conn = @imap_open($mailbox, $username, $password);
+    }
+
+    return $conn;
+}
+
 // This function will be called via AJAX to test the IMAP connection
 add_action('wp_ajax_robodesk_imap_test_connection', 'robodesk_imap_test_connection');
 function robodesk_imap_test_connection()
@@ -266,23 +301,21 @@ function robodesk_imap_test_connection()
     }
 
     $auth_type = (isset($_POST['robodesk_imap_auth']) && sanitize_text_field(wp_unslash($_POST['robodesk_imap_auth'])) == '1') ? 'ssl' : 'tls';
-    $hostname = '{' . sanitize_text_field(wp_unslash($_POST['robodesk_imap_hostname'])) . ':' . intval($_POST['robodesk_imap_port']) . '/imap/' . $auth_type . '/novalidate-cert}INBOX';
+    $hostname_val = sanitize_text_field(wp_unslash($_POST['robodesk_imap_hostname']));
+    $port_val = intval($_POST['robodesk_imap_port']);
     $username = sanitize_text_field(wp_unslash($_POST['robodesk_imap_username']));
     $password = sanitize_text_field(wp_unslash($_POST['robodesk_imap_password']));
 
-    // Clear previous errors
     imap_errors();
 
-    $mailbox = @imap_open($hostname, $username, $password);
+    $conn = robodesk_imap_connect($hostname_val, $port_val, $auth_type, $username, $password);
 
-    if ($mailbox) {
-        $message = ' IMAP connection successful!';
-        imap_close($mailbox);
-        wp_send_json_success(['message' => $message]);
+    if ($conn) {
+        imap_close($conn);
+        wp_send_json_success(['message' => 'IMAP connection successful!']);
     } else {
         $error = imap_last_error();
-        $message = ' IMAP connection failed: ' . esc_html($error);
-        wp_send_json_error(['message' => $message]);
+        wp_send_json_error(['message' => 'IMAP connection failed: ' . esc_html($error)]);
     }
 }
 
@@ -317,16 +350,17 @@ function robodesk_imap_save_settings()
     }
 
     $auth_type = (isset($_POST['robodesk_imap_auth']) && sanitize_text_field(wp_unslash($_POST['robodesk_imap_auth'])) == '1') ? 'ssl' : 'tls';
-    $hostname = '{' . sanitize_text_field(wp_unslash($_POST['robodesk_imap_hostname'])) . ':' . intval($_POST['robodesk_imap_port']) . '/imap/' . $auth_type . '/novalidate-cert}INBOX';
+    $hostname_val = sanitize_text_field(wp_unslash($_POST['robodesk_imap_hostname']));
+    $port_val = intval($_POST['robodesk_imap_port']);
     $username = sanitize_text_field(wp_unslash($_POST['robodesk_imap_username']));
     $password = sanitize_text_field(wp_unslash($_POST['robodesk_imap_password']));
 
-    // Clear previous errors
     imap_errors();
 
-    $mailbox = @imap_open($hostname, $username, $password);
+    $conn = robodesk_imap_connect($hostname_val, $port_val, $auth_type, $username, $password);
 
-    if ($mailbox) {
+    if ($conn) {
+        imap_close($conn);
         $message = 'IMAP connection settings saved successfully!';
         // Save settings to the database
         $settings = array(
@@ -752,7 +786,7 @@ function robodesk_save_basic_settings()
 
     // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- sanitized per-key in loop below
     $settings = wp_unslash($_POST['settings']);
-    $valid_settings = ['site_name', 'admin_email', 'theme_color', 'default_ticket_category', 'chat_heading', 'welcome_message', 'ticket_intro_message'];
+    $valid_settings = ['site_name', 'admin_email', 'theme_color', 'default_ticket_category', 'chat_heading', 'welcome_message', 'ticket_intro_message', 'enable_chat'];
     $image_fields = [
         'popover_icon' => 'robodesk_popover_icon',
         'popover_top_icon' => 'robodesk_popover_top_icon',
@@ -802,6 +836,8 @@ function robodesk_save_basic_settings()
             $sanitized_settings[$key] = sanitize_textarea_field($settings[$key]);
         } elseif ($key === 'welcome_message') {
             $sanitized_settings[$key] = sanitize_textarea_field($settings[$key]);
+        } elseif ($key === 'enable_chat') {
+            $sanitized_settings[$key] = $settings[$key] === '1' ? '1' : '0';
         }
         $results[$key] = ['status' => 'success', 'message' => ucfirst(str_replace('_', ' ', $key)) . ' saved successfully'];
     }

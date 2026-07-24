@@ -2854,6 +2854,10 @@ jQuery(document).ready(function ($) {
       "settings[ticket_intro_message]",
       $form.find("#ticket_intro_message").val(),
     );
+    formData.append(
+      "settings[enable_chat]",
+      $form.find("#enable_chat").is(":checked") ? "1" : "0",
+    );
 
     // Append media URLs and files
     mediaFields.forEach(function (field) {
