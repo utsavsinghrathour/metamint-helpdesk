@@ -786,7 +786,7 @@ function robodesk_save_basic_settings()
 
     // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- sanitized per-key in loop below
     $settings = wp_unslash($_POST['settings']);
-    $valid_settings = ['site_name', 'admin_email', 'theme_color', 'default_ticket_category', 'chat_heading', 'welcome_message', 'ticket_intro_message'];
+    $valid_settings = ['site_name', 'admin_email', 'theme_color', 'default_ticket_category', 'chat_heading', 'welcome_message', 'ticket_intro_message', 'enable_chat'];
     $image_fields = [
         'popover_icon' => 'robodesk_popover_icon',
         'popover_top_icon' => 'robodesk_popover_top_icon',
@@ -836,6 +836,8 @@ function robodesk_save_basic_settings()
             $sanitized_settings[$key] = sanitize_textarea_field($settings[$key]);
         } elseif ($key === 'welcome_message') {
             $sanitized_settings[$key] = sanitize_textarea_field($settings[$key]);
+        } elseif ($key === 'enable_chat') {
+            $sanitized_settings[$key] = $settings[$key] === '1' ? '1' : '0';
         }
         $results[$key] = ['status' => 'success', 'message' => ucfirst(str_replace('_', ' ', $key)) . ' saved successfully'];
     }

@@ -17,6 +17,8 @@ const Footer = ({
 
   const [showRedDot, setShowRedDot] = useState(false);
 
+  const chatEnabled = window.robodeskData?.enable_chat !== "1" ? false : true;
+
   useEffect(() => {
     const hasNotification = ticketsContext?.some(
       (ticket) => ticket.notifications === 'no'
@@ -27,13 +29,15 @@ const Footer = ({
 
   const tabs = [
     { id: 0, icon: GoHomeFill, label: '', tooltip: 'Home' },
-    {
-      id: 1,
-      icon: RiMessage2Fill,
-      label: '',
-      tooltip: 'Conversations',
-      notification: showRedDot,
-    },
+    ...(chatEnabled
+      ? [{
+          id: 1,
+          icon: RiMessage2Fill,
+          label: '',
+          tooltip: 'Conversations',
+          notification: showRedDot,
+        }]
+      : []),
     { id: 2, icon: RiInformation2Fill, label: '', tooltip: 'Notice Board' },
     { id: 3, icon: FaQuestionCircle, label: '', tooltip: 'Wiki' },
   ];

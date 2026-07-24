@@ -64,7 +64,7 @@ const SendMessageField = ({ setShowLogin, setActiveTab, updateSelectedTicket, ha
         if (!trimmedMessage || submitLockRef.current || isSubmitting) return;
         if (!loggedinContext) {
             localStorage.setItem('temp_ticket_title', trimmedMessage);
-            setActiveTab(1);
+            if (window.robodeskData?.enable_chat === "1") setActiveTab(1);
             setShowLogin(true);
 
             return;
@@ -93,7 +93,7 @@ const SendMessageField = ({ setShowLogin, setActiveTab, updateSelectedTicket, ha
             refreshTickets();
             updateSelectedTicket(newTicket);
 
-            setActiveTab(1);
+            if (window.robodeskData?.enable_chat === "1") setActiveTab(1);
             setMessage("");
 
         } catch (error) {

@@ -15,7 +15,9 @@ const Header = ({ logo, onClose, setActiveTab, setShowLogin, updateSelectedTicke
   const [selectedStaff, setSelectedStaff] = useState(null);
   const { loggedinContext, loggedInUsrId, refreshTickets } = useAppData();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const chatEnabled = window.robodeskData?.enable_chat === "1";
   const canLoadWidgetConfig = Boolean(
+    chatEnabled &&
     window.robodeskData?.robodesk_addon_active &&
     window.robodeskData?.robodesk_ai_bot_active,
   );
