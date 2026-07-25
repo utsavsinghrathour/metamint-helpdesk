@@ -1521,6 +1521,8 @@ function robodesk_handle_ticket_creation($data)
 
     robodesk_notify_ticket_created($ticket, 'chat');
 
+    do_action('robodesk_after_ticket_created', $ticket, $data, $author);
+
     return rest_ensure_response(array(
         'status' => 'success',
         'message' => 'Ticket created successfully',

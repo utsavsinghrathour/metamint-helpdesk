@@ -16,6 +16,7 @@ function robodesk_change_ticket_status_callback()
     if ($ticket_id > 0 && in_array($new_status, $allowed_statuses)) {
         $updated = update_post_meta($ticket_id, '_robodesk_ticket_status', $new_status);
         if ($updated !== false) {
+            do_action('robodesk_after_ticket_status_change', $ticket_id, $old_status, $new_status, get_current_user_id());
             if ($old_status !== $new_status && function_exists('robodesk_notify_status_changed')) {
                 robodesk_notify_status_changed($ticket_id, $new_status, get_current_user_id(), 'chat');
             }
@@ -173,6 +174,8 @@ function robodesk_handle_ticket_submission()
         }
 
         robodesk_notify_ticket_created($post_id, 'chat');
+
+        do_action('robodesk_after_ticket_created', $post_id, $post_data, $user_id);
 
         wp_send_json_success(array('message' => 'Ticket created successfully!'));
     }

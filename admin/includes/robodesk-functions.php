@@ -244,8 +244,12 @@ if (!function_exists('robodesk_debug_log_page_callback')) {
 function robodesk_imap_connect($hostname, $port, $auth_type, $username, $password)
 {
     $cert_phrases = array(
-        'certificate', 'SSL certificate', 'hostname mismatch',
-        'self-signed', 'unable to verify', 'not signed',
+        'certificate',
+        'SSL certificate',
+        'hostname mismatch',
+        'self-signed',
+        'unable to verify',
+        'not signed',
     );
 
     // Try with full validation first
@@ -1197,6 +1201,7 @@ function robodesk_create_ticket()
 
     if (!is_wp_error($ticket_id)) {
         robodesk_notify_ticket_created($ticket_id, 'admin');
+        do_action('robodesk_after_ticket_created', $ticket_id, $_POST, $user_id);
     }
 
     wp_send_json_success(['message' => 'Conversation created successfully', 'ticket_id' => $ticket_id]);
@@ -1387,6 +1392,8 @@ function robodesk_update_ticket_status()
 
     update_post_meta($ticket_id, '_robodesk_ticket_status', $new_status);
     $updated = function_exists('robodesk_datetime_to_utc_iso') ? robodesk_datetime_to_utc_iso(current_time('mysql')) : current_time('mysql');
+
+    do_action('robodesk_after_ticket_status_change', $ticket_id, $old_status, $new_status, get_current_user_id());
 
     if ($old_status !== $new_status && function_exists('robodesk_notify_status_changed')) {
         robodesk_notify_status_changed($ticket_id, $new_status, get_current_user_id(), 'admin');
@@ -1683,6 +1690,8 @@ function robodesk_handle_close_ticket()
         wp_send_json_error(['message' => 'Invalid ticket ID']);
     }
 
+    $old_status = (string) get_post_meta($ticket_id, '_robodesk_ticket_status', true);
+
     // Update ticket status to closed
     $status_updated = update_post_meta($ticket_id, '_robodesk_ticket_status', 'closed');
 
@@ -1691,6 +1700,9 @@ function robodesk_handle_close_ticket()
     }
 
     $user_id = get_current_user_id();
+
+    do_action('robodesk_after_ticket_closed', $ticket_id, $user_id);
+    do_action('robodesk_after_ticket_status_change', $ticket_id, $old_status, 'closed', $user_id);
     $user_object = get_userdata($user_id);
 
     if (!$user_id || !$user_object) {
@@ -2567,6 +2579,7 @@ function robodesk_handle_bulk_action()
                 } else {
                     // Update status meta
                     if (update_post_meta($ticket_id, '_robodesk_ticket_status', $action_value)) {
+                        do_action('robodesk_after_ticket_status_change', $ticket_id, $current_status, $action_value, $user_id);
                         // Update modified date to reflect the change
                         wp_update_post(array(
                             'ID' => $ticket_id,
