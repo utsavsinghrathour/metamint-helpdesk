@@ -648,6 +648,7 @@ function robodesk_handle_tickets_webhook(WP_REST_Request $request)
 
             robodesk_notify_ticket_created($ticket, 'chat');
 
+            do_action('robodesk_after_ticket_created', $ticket, $ticket_args, $author);
 
             return rest_ensure_response(array(
                 'status'  => 'success',

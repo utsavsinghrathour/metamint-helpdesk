@@ -551,6 +551,8 @@ function robodesk_fetch_emails()
 
             robodesk_notify_ticket_created($post_id, 'email');
 
+            do_action('robodesk_after_ticket_created', $post_id, [], $user_id);
+
             $processed_count++;
 
             // Update last fetched date

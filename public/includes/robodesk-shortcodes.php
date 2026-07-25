@@ -80,6 +80,9 @@ function robodesk_ticket_form_shortcode()
                 if ($ticket_priority) {
                     wp_set_object_terms($post_id, $ticket_priority, 'robodesk_ticket_priority');
                 }
+
+                do_action('robodesk_after_ticket_created', $post_id, ['title' => $ticket_title, 'content' => $ticket_content, 'origin' => $ticket_origin, 'priority' => $ticket_priority], $user_id);
+
                 echo "<div class='robodesk-container'><p>Ticket submitted successfully!</p></div>";
             } else {
                 echo "<div class='robodesk-container'><p>Error submitting ticket.</p></div>";
