@@ -1,5 +1,5 @@
 === Robodesk Support Ticket System ===
-Contributors: yourname
+Contributors: codepixelzmedia
 Tags: support, tickets, helpdesk, customer-support
 Requires at least: 5.8
 Tested up to: 7.0
