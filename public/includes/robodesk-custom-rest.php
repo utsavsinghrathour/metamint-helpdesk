@@ -355,7 +355,7 @@ add_action('rest_api_init', function () {
     register_rest_route('robodesk/chat/v1', '/tickets', array(
         'methods' => 'POST',
         'callback' => 'robodesk_handle_tickets',
-        'permission_callback' => '__return_true', // Public webhook endpoint; auth via payload validation in callback
+        'permission_callback' => '__return_true', // Intentionally public webhook endpoint for external chat service. Callback validates JSON payload structure and event type before processing. All data is sanitized before storage. Chat service can only act on events it sends; no session/auth tokens are exposed. A sister endpoint (chat/v1/tickets in robodesk-ticket-post-type.php) uses HMAC verification for the same purpose.
     ));
 
     register_rest_route('robodesk/selected', '/staff', array(
