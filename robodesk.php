@@ -318,7 +318,6 @@ function robodesk_enqueue_scripts()
             ]
         );
 
-        // Existing wp_localize_script for wpAuth
         // Build priority colors array
         $priority_terms = get_terms(array(
             'taxonomy' => 'robodesk_ticket_priority',
