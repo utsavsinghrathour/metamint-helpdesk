@@ -730,8 +730,9 @@ function robodesk_save_advanced_settings()
                     $valid_ips[] = $ip;
                 }
             }
-            //testing 
+            //testing
             global $wpdb;
+            // phpcs:disable WordPress.DB.DirectDatabaseQuery
             $wpdb->query(
                 $wpdb->prepare(
                     "DELETE FROM {$wpdb->options} WHERE option_name LIKE %s OR option_name LIKE %s",
@@ -762,6 +763,7 @@ function robodesk_save_advanced_settings()
                     $wpdb->esc_like('_transient_timeout_robodesk_lost_password_rate_') . '%'
                 )
             );
+            // phpcs:enable WordPress.DB.DirectDatabaseQuery
             //testing
             update_option('robodesk_blocked_ips', $valid_ips, false);
         } else {

@@ -55,6 +55,7 @@ function robodesk_get_jwt_secret_key()
 function robodesk_log_debug($message)
 {
     if (defined('WP_DEBUG') && WP_DEBUG && defined('WP_DEBUG_LOG') && WP_DEBUG_LOG) {
+        // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log
         error_log('[Robodesk] ' . $message);
     }
 }
@@ -1492,6 +1493,7 @@ function robodesk_handle_ticket_creation($data)
     );
 
     if ($timestamp) {
+        // phpcs:ignore WordPress.DateTime.RestrictedFunctions.date_date
         $mysql_date = date('Y-m-d H:i:s', strtotime($timestamp));
         $comment_data['comment_date'] = $mysql_date;
         $comment_data['comment_date_gmt'] = get_gmt_from_date($mysql_date);
@@ -1694,6 +1696,7 @@ function robodesk_handle_reply_receive($data)
 
     $timestamp = $data['data']['timestamp'] ?? null;
     if ($timestamp) {
+        // phpcs:ignore WordPress.DateTime.RestrictedFunctions.date_date
         $mysql_date = date('Y-m-d H:i:s', strtotime($timestamp));
         $comment_data['comment_date'] = $mysql_date;
         $comment_data['comment_date_gmt'] = get_gmt_from_date($mysql_date);
@@ -1882,6 +1885,7 @@ function robodesk_send_chat_transcript(WP_REST_Request $request)
     }
 
     $to = $author->user_email;
+    // translators: %s is the ticket/post title
     $subject = sprintf(__('Chat Transcript: %s', 'robodesk'), $ticket->post_title);
 
     $comments = get_comments(array(

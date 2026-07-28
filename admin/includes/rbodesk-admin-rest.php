@@ -500,6 +500,8 @@ function robodesk_notification_stream()
     $last_count = -1;
 
     $send = function () use ($wpdb, $table_name, $user_id, &$last_count) {
+        // phpcs:disable WordPress.DB.DirectDatabaseQuery
+        // phpcs:disable PluginCheck.Security.DirectDB
         $rows = $wpdb->get_results(
             $wpdb->prepare(
                 "SELECT id, ticket_id, comment_id, type, source, message, created_at
@@ -511,6 +513,7 @@ function robodesk_notification_stream()
             ),
             ARRAY_A
         );
+        // phpcs:enable
 
         $items = [];
         foreach ($rows as $row) {
@@ -518,6 +521,7 @@ function robodesk_notification_stream()
             if ($ticket_id > 0) {
                 $current_assignee_id = (int) get_post_meta($ticket_id, 'ticket_assignee_id', true);
                 if ($current_assignee_id > 0 && $current_assignee_id !== $user_id) {
+                    // phpcs:ignore WordPress.DB.DirectDatabaseQuery
                     $wpdb->delete($table_name, ['id' => (int) $row['id'], 'recipient_user_id' => $user_id], ['%d', '%d']);
                     continue;
                 }

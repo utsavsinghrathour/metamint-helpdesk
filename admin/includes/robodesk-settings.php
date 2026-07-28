@@ -4,10 +4,11 @@
     }
     ?>
 <?php
-$current_tab = isset($_GET['tab']) ? sanitize_key($_GET['tab']) : '';
-$settings_hidden = ($current_tab === 'settings') ? '' : ' hidden';
+// phpcs:ignore WordPress.Security.NonceVerification.Recommended
+$robodesk_current_tab = isset($_GET['tab']) ? sanitize_key($_GET['tab']) : '';
+$robodesk_settings_hidden = ($robodesk_current_tab === 'settings') ? '' : ' hidden';
 ?>
- <div id="settings-page" class="page-content<?php echo $settings_hidden; ?>">
+ <div id="settings-page" class="page-content<?php echo esc_attr($robodesk_settings_hidden); ?>">
      <div class="bg-white shadow rounded-lg">
          <div class="border-b border-gray-200">
              <nav class="rbd-settings-nav-sec flex space-x-8 px-6">

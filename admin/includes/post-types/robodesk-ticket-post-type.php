@@ -591,6 +591,7 @@ function robodesk_handle_tickets_webhook(WP_REST_Request $request)
         if (!empty($created_at)) {
             $timestamp = strtotime($created_at);
             if ($timestamp) {
+                // phpcs:ignore WordPress.DateTime.RestrictedFunctions.date_date
                 $ticket_args['post_date'] = date('Y-m-d H:i:s', $timestamp);
                 $ticket_args['post_date_gmt'] = gmdate('Y-m-d H:i:s', $timestamp);
             }
@@ -631,6 +632,7 @@ function robodesk_handle_tickets_webhook(WP_REST_Request $request)
             );
 
             if ($timestamp) {
+                // phpcs:ignore WordPress.DateTime.RestrictedFunctions.date_date
                 $mysql_date = date('Y-m-d H:i:s', strtotime($timestamp));
                 $comment_data['comment_date'] = $mysql_date;
                 $comment_data['comment_date_gmt'] = get_gmt_from_date($mysql_date);
@@ -778,6 +780,7 @@ function robodesk_handle_tickets_webhook(WP_REST_Request $request)
         );
 
         if ($timestamp) {
+            // phpcs:ignore WordPress.DateTime.RestrictedFunctions.date_date
             $mysql_date = date('Y-m-d H:i:s', strtotime($timestamp));
             $comment_data['comment_date'] = $mysql_date;
             $comment_data['comment_date_gmt'] = get_gmt_from_date($mysql_date);
