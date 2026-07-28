@@ -5,11 +5,12 @@ if (! defined('ABSPATH')) {
 }
 ?>
 <?php
-$current_tab    = isset($_GET['tab']) ? sanitize_key($_GET['tab']) : '';
-$has_ticket     = isset($_GET['ticket']) ? intval($_GET['ticket']) : 0;
-$dashboard_hidden = ($current_tab !== '' && $current_tab !== 'dashboard') || $has_ticket > 0 ? ' hidden' : '';
+// phpcs:ignore WordPress.Security.NonceVerification.Recommended
+$robodesk_current_tab    = isset($_GET['tab']) ? sanitize_key($_GET['tab']) : '';
+$robodesk_has_ticket     = isset($_GET['ticket']) ? intval($_GET['ticket']) : 0;
+$robodesk_dashboard_hidden = ($robodesk_current_tab !== '' && $robodesk_current_tab !== 'dashboard') || $robodesk_has_ticket > 0 ? ' hidden' : '';
 ?>
-<div id="dashboard-page" class="page-content<?php echo $dashboard_hidden; ?>">
+<div id="dashboard-page" class="page-content<?php echo esc_attr($robodesk_dashboard_hidden); ?>">
     <!-- Statistics Cards -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
         <div class="bg-white overflow-hidden shadow rounded-lg">

@@ -33,11 +33,12 @@ foreach ($robodesk_terms as $term) {
 ?>
 
 <?php
-$current_tab    = isset($_GET['tab']) ? sanitize_key($_GET['tab']) : '';
-$has_ticket     = isset($_GET['ticket']) ? intval($_GET['ticket']) : 0;
-$td_hidden      = ($current_tab === 'ticket-detail' || $has_ticket > 0) ? '' : ' hidden';
+// phpcs:ignore WordPress.Security.NonceVerification.Recommended
+$robodesk_current_tab    = isset($_GET['tab']) ? sanitize_key($_GET['tab']) : '';
+$robodesk_has_ticket     = isset($_GET['ticket']) ? intval($_GET['ticket']) : 0;
+$robodesk_td_hidden      = ($robodesk_current_tab === 'ticket-detail' || $robodesk_has_ticket > 0) ? '' : ' hidden';
 ?>
-<div id="ticket-detail-page" class="page-content<?php echo $td_hidden; ?>">
+<div id="ticket-detail-page" class="page-content<?php echo esc_attr($robodesk_td_hidden); ?>">
     <div class="bg-white shadow rounded-lg">
         <div class="converstaion-wrapper">
 
