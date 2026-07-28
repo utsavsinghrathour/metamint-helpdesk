@@ -115,7 +115,7 @@ const AppContent = ({ imageUrls = { logo: "" } }) => {
       return;
     }
 
-    if (!loggedInUsrId && wpAuth.isLoggedIn !== "true") {
+    if (!loggedInUsrId && robodeskAuth.isLoggedIn !== "true") {
       return;
     }
 
@@ -198,7 +198,7 @@ const AppContent = ({ imageUrls = { logo: "" } }) => {
   const url = useMemo(() => {
     if (!initialCursorId) return null;
     if (!loggedinContext && !loggedInUsrId) return null;
-    const nonce = window.wpAuth?.restNonce || window.wpApiSettings?.nonce || '';
+    const nonce = window.robodeskAuth?.restNonce || window.wpApiSettings?.nonce || '';
     return `${window.location.origin}/wp-json/robodesk/v1/stream/tickets/0/${initialCursorId}/${loggedInUsrId}?_wpnonce=${nonce}`;
   }, [initialCursorId, loggedInUsrId]);
 
@@ -212,7 +212,7 @@ const AppContent = ({ imageUrls = { logo: "" } }) => {
   // blocked by the browser autoplay policy.
   useEffect(() => {
     const unlock = () => {
-      const sound = window.wpAuth?.notificationSound;
+      const sound = window.robodeskAuth?.notificationSound;
       if (sound) {
         const audio = new Audio(sound);
         const p = audio.play();
@@ -346,13 +346,13 @@ const AppContent = ({ imageUrls = { logo: "" } }) => {
   };
 
   const handlePopupToggle = async () => {
-    console.log("Toggle Clicked", wpAuth.isLoggedIn, typeof wpAuth.isLoggedIn);
+    console.log("Toggle Clicked", robodeskAuth.isLoggedIn, typeof robodeskAuth.isLoggedIn);
     if (isOpen) {
       setIsOpen(false);
       setShowActiveFeatured(true);
       setSelectedNotice(null);
     } else {
-      if (wpAuth.isLoggedIn === "true") {
+      if (robodeskAuth.isLoggedIn === "true") {
         await generateToken(); // Generate token on popup toggle open
       }
       setIsOpen(true);

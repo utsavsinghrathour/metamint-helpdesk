@@ -327,7 +327,7 @@ const SingleTicket = ({
   // programmatic notification beeps are not blocked by the autoplay policy.
   useEffect(() => {
     const unlock = () => {
-      const sound = wpAuth?.notificationSound;
+      const sound = robodeskAuth?.notificationSound;
       if (sound) {
         const audio = new Audio(sound);
         const p = audio.play();
@@ -706,7 +706,7 @@ const SingleTicket = ({
     if (!ticket?.id) return null;
     if (!loggedinContext && !loggedInUsrId) return null;
     if (!streamCursorId) return null;
-    const nonce = window.wpAuth?.restNonce || window.wpApiSettings?.nonce || '';
+    const nonce = window.robodeskAuth?.restNonce || window.wpApiSettings?.nonce || '';
     return `/wp-json/robodesk/v1/stream/comments/${ticket.id}/${streamCursorId}/${loggedInUsrId}?_wpnonce=${nonce}`;
   }, [streamCursorId, ticket.id, loggedInUsrId, loggedinContext]);
 
@@ -1026,7 +1026,7 @@ const SingleTicket = ({
     if (emailSending || emailSent || !ticket?.id) return;
     setEmailSending(true);
     try {
-      const nonce = window.wpAuth?.restNonce || window.wpApiSettings?.nonce || '';
+      const nonce = window.robodeskAuth?.restNonce || window.wpApiSettings?.nonce || '';
       const res = await fetch('/wp-json/robodesk/v1/send-chat-transcript', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'X-WP-Nonce': nonce },

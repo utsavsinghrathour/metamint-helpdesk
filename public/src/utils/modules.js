@@ -71,10 +71,10 @@ export const getMessages = async (ticketId, userId) => {
 };
 
 export const userStatus = () => {
-  if (typeof wpAuth !== "undefined" && wpAuth.isLoggedIn === "true") {
+  if (typeof robodeskAuth !== "undefined" && robodeskAuth.isLoggedIn === "true") {
     return {
       isLoggedIn: true,
-      loggedInUserId: wpAuth.loggedInUserId || false,
+      loggedInUserId: robodeskAuth.loggedInUserId || false,
     };
   }
 

@@ -51,8 +51,8 @@ const Header = ({ logo, onClose, setActiveTab, setShowLogin, updateSelectedTicke
   const fetchDefaultStaff = async () => {
     if (staffFetched) return;
     staffFetched = true;
-    if (window.wpAuth?.defaultStaffId) {
-      setSelectedStaff(window.wpAuth.defaultStaffId);
+    if (window.robodeskAuth?.defaultStaffId) {
+      setSelectedStaff(window.robodeskAuth.defaultStaffId);
     } else {
       setSelectedStaff(null);
     }

@@ -110,17 +110,17 @@ export default function ChangePassword({ onReset }) {
 
     try {
       // WordPress Ajax request
-      const response = await fetch(wpAuth?.wpAjax?.ajaxUrl, {
+      const response = await fetch(robodeskAuth?.wpAjax?.ajaxUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded',
         },
         body: new URLSearchParams({
-          action: 'change_password',
+          action: 'robodesk_change_password',
           password: formData.password,
           reset_key: resetKey,
           user: resetUser,
-          nonce: wpAuth?.wpAjax?.passwordResetNonce,
+          nonce: robodeskAuth?.wpAjax?.passwordResetNonce,
         }),
       });
 
