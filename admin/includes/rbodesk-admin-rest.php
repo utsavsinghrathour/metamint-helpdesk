@@ -85,9 +85,13 @@ function robodesk_live_admin_comments($request)
     }
 
     // Set execution limits
-    // phpcs:ignore Squiz.PHP.DiscouragedFunctions.Discouraged
-    set_time_limit(0);
-    ignore_user_abort(false);
+    if (function_exists('set_time_limit')) {
+        // phpcs:ignore Squiz.PHP.DiscouragedFunctions.Discouraged
+        set_time_limit(0);
+    }
+    if (function_exists('ignore_user_abort')) {
+        ignore_user_abort(false);
+    }
 
 
     // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query
@@ -241,8 +245,13 @@ function robodesk_ticket_stream($request)
     }
     ob_implicit_flush(true);
 
-    set_time_limit(0);
-    ignore_user_abort(false);
+    if (function_exists('set_time_limit')) {
+        // phpcs:ignore Squiz.PHP.DiscouragedFunctions.Discouraged
+        set_time_limit(0);
+    }
+    if (function_exists('ignore_user_abort')) {
+        ignore_user_abort(false);
+    }
 
     $imap_settings = get_option('robodesk_imap_settings', []);
     $support_inbox = strtolower(trim($imap_settings['username'] ?? ''));
@@ -478,8 +487,13 @@ function robodesk_notification_stream()
     }
     ob_implicit_flush(true);
 
-    set_time_limit(0);
-    ignore_user_abort(false);
+    if (function_exists('set_time_limit')) {
+        // phpcs:ignore Squiz.PHP.DiscouragedFunctions.Discouraged
+        set_time_limit(0);
+    }
+    if (function_exists('ignore_user_abort')) {
+        ignore_user_abort(false);
+    }
 
     global $wpdb;
     $table_name = $wpdb->prefix . 'robodesk_notifications';
