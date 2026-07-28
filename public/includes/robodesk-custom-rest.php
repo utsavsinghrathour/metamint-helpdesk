@@ -30,41 +30,20 @@ use \Firebase\JWT\JWT;
 use \Firebase\JWT\Key;
 
 /**
- * Get the JWT secret key from wp-config.
+ * Get the JWT secret key.
  *
- * Uses SECURE_AUTH_KEY when available, otherwise falls back to AUTH_KEY.
- * This avoids persisting the key in the database.
+ * Uses a dedicated constant when defined, otherwise derives a site-unique
+ * secret via wp_hash() instead of directly using WordPress auth constants.
  *
  * @return string
  */
 function robodesk_get_jwt_secret_key()
 {
-    if (defined('SECURE_AUTH_KEY') && SECURE_AUTH_KEY !== '') {
-        if (!defined('JWT_AUTH_SECRET_KEY')) {
-            define('JWT_AUTH_SECRET_KEY', SECURE_AUTH_KEY);
-        }
-
-        return SECURE_AUTH_KEY;
+    if (defined('ROBODESK_JWT_SECRET') && ROBODESK_JWT_SECRET !== '') {
+        return ROBODESK_JWT_SECRET;
     }
 
-    if (defined('AUTH_KEY') && AUTH_KEY !== '') {
-        if (!defined('JWT_AUTH_SECRET_KEY')) {
-            define('JWT_AUTH_SECRET_KEY', AUTH_KEY);
-        }
-
-        return AUTH_KEY;
-    }
-
-    if (defined('JWT_AUTH_SECRET_KEY') && JWT_AUTH_SECRET_KEY !== '') {
-        return JWT_AUTH_SECRET_KEY;
-    }
-
-    $key = wp_generate_password(64, true, true);
-    if (!defined('JWT_AUTH_SECRET_KEY')) {
-        define('JWT_AUTH_SECRET_KEY', $key);
-    }
-
-    return $key;
+    return wp_hash('robodesk-jwt-secret');
 }
 
 /**
