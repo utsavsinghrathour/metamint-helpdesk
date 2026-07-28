@@ -464,10 +464,12 @@ function robodesk_stream($request)
     if (ob_get_level())
         ob_end_clean();
 
-    // phpcs:ignore Squiz.PHP.DiscouragedFunctions.Discouraged
-    ini_set('zlib.output_compression', 0);
-    // phpcs:ignore Squiz.PHP.DiscouragedFunctions.Discouraged
-    ini_set('output_buffering', 0);
+    if (function_exists('ini_set')) {
+        // phpcs:ignore Squiz.PHP.DiscouragedFunctions.Discouraged
+        @ini_set('zlib.output_compression', 0);
+        // phpcs:ignore Squiz.PHP.DiscouragedFunctions.Discouraged
+        @ini_set('output_buffering', 0);
+    }
 
     // phpcs:ignore Squiz.PHP.DiscouragedFunctions.Discouraged
     set_time_limit(0);
@@ -904,10 +906,12 @@ function robodesk_live_comments($request)
         ob_end_clean();
 
     // Disable WordPress output compression
-    // phpcs:ignore Squiz.PHP.DiscouragedFunctions.Discouraged
-    ini_set('zlib.output_compression', 0);
-    // phpcs:ignore Squiz.PHP.DiscouragedFunctions.Discouraged
-    ini_set('output_buffering', 0);
+    if (function_exists('ini_set')) {
+        // phpcs:ignore Squiz.PHP.DiscouragedFunctions.Discouraged
+        @ini_set('zlib.output_compression', 0);
+        // phpcs:ignore Squiz.PHP.DiscouragedFunctions.Discouraged
+        @ini_set('output_buffering', 0);
+    }
 
     // Set execution limits
     // phpcs:ignore Squiz.PHP.DiscouragedFunctions.Discouraged

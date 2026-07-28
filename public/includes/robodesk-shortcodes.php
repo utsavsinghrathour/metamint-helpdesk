@@ -91,7 +91,7 @@ function robodesk_ticket_form_shortcode()
 
         return ob_get_clean();
     } else {
-        return '<div class="robodesk-container"><p>Please <a href="' . wp_login_url(get_permalink('login')) . '">login</a> to submit a ticket.</p></div>';
+        return '<div class="robodesk-container"><p>Please <a href="' . esc_url(wp_login_url(get_permalink('login'))) . '">login</a> to submit a ticket.</p></div>';
     }
 }
 
@@ -358,8 +358,7 @@ function robodesk_my_tickets_shortcode()
     ));
 
     if ($pagination) {
-        // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
-        echo '<div class="pagination">' . $pagination . '</div>';
+        echo '<div class="pagination">' . wp_kses_post($pagination) . '</div>';
     }
     return ob_get_clean();
 }
@@ -478,11 +477,9 @@ function robodesk_frontend_dashboard_shortcode()
                     echo do_shortcode('[robodesk_single_ticket id="' . $ticket_id . '"]');
                 } else if (array_key_exists($current_page, $menu_items)) {
                     if ($current_page == 'dashboard') {
-                        // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
-                        echo $menu_items[$current_page]['function']($notification_count, $open_tickets, $total_tickets);
+                        echo wp_kses_post($menu_items[$current_page]['function']($notification_count, $open_tickets, $total_tickets));
                     } else {
-                        // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
-                        echo $menu_items[$current_page]['function']();
+                        echo wp_kses_post($menu_items[$current_page]['function']());
                     }
                 } else {
                     echo "Invalid Page";
@@ -493,7 +490,7 @@ function robodesk_frontend_dashboard_shortcode()
 <?php
         return ob_get_clean();
     } else {
-        return '<div class="robodesk-container"><p>Please <a href="' . wp_login_url(get_permalink()) . '">login</a> to view your tickets.</p></div>';
+        return '<div class="robodesk-container"><p>Please <a href="' . esc_url(wp_login_url(get_permalink())) . '">login</a> to view your tickets.</p></div>';
     }
 }
 
@@ -1551,8 +1548,7 @@ function robodesk_login_form_shortcode()
 <div class="robodesk-login-form robodesk-container">
     <h2>Login</h2>
     <?php
-        // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
-        echo $error_message;
+        echo wp_kses_post($error_message);
         ?>
     <form name="robodesk-login-form" id="robodesk-login-form" action="<?php echo esc_url(site_url('wp-login.php')); ?>"
         method="post">
