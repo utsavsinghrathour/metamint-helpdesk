@@ -1209,7 +1209,7 @@ function robodesk_create_ticket()
     wp_die();
 }
 
-add_action('wp_ajax_get_ticket_detail', 'robodesk_get_ticket_detail');
+add_action('wp_ajax_robodesk_get_ticket_detail', 'robodesk_get_ticket_detail');
 function robodesk_get_ticket_detail()
 {
     if (!isset($_POST['nonce']) || !wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['nonce'])), 'robodesk_get_ticket_detail_action')) {
@@ -1366,7 +1366,7 @@ function robodesk_user_lookup()
 
 // Ajax handler to update ticket status
 // This function will be called via AJAX to update the status of a ticket
-add_action('wp_ajax_update_ticket_status', 'robodesk_update_ticket_status');
+add_action('wp_ajax_robodesk_update_ticket_status', 'robodesk_update_ticket_status');
 
 function robodesk_update_ticket_status()
 {
@@ -1428,7 +1428,7 @@ function robodesk_update_ticket_status()
 
 
 // Ajax handler to update ticket priority
-add_action('wp_ajax_update_ticket_priority', 'robodesk_update_ticket_priority');
+add_action('wp_ajax_robodesk_update_ticket_priority', 'robodesk_update_ticket_priority');
 
 function robodesk_update_ticket_priority()
 {
@@ -1499,7 +1499,7 @@ function robodesk_update_ticket_priority()
 
 
 // Ajax handler to assign a ticket to an agent
-add_action('wp_ajax_update_ticket_assignee', 'robodesk_update_ticket_assignee');
+add_action('wp_ajax_robodesk_update_ticket_assignee', 'robodesk_update_ticket_assignee');
 
 function robodesk_update_ticket_assignee()
 {
@@ -1582,7 +1582,7 @@ function robodesk_update_ticket_assignee()
 
 
 // ADD REPLY TO TICKET
-add_action('wp_ajax_add_ticket_reply', 'robodesk_handle_add_ticket_reply');
+add_action('wp_ajax_robodesk_add_ticket_reply', 'robodesk_handle_add_ticket_reply');
 
 function robodesk_handle_add_ticket_reply()
 {
@@ -1677,7 +1677,7 @@ function robodesk_handle_add_ticket_reply()
 
 
 // add a ticket reply if onclick="closeTicket()" is clicked also change the status of the ticket to closed
-add_action('wp_ajax_close_ticket', 'robodesk_handle_close_ticket');
+add_action('wp_ajax_robodesk_close_ticket', 'robodesk_handle_close_ticket');
 function robodesk_handle_close_ticket()
 {
     // Verify nonce for security
@@ -1779,7 +1779,7 @@ function robodesk_handle_close_ticket()
 
 
 // GET TICKET REPLIES
-add_action('wp_ajax_get_ticket_replies', 'robodesk_handle_get_ticket_replies');
+add_action('wp_ajax_robodesk_get_ticket_replies', 'robodesk_handle_get_ticket_replies');
 
 function robodesk_handle_get_ticket_replies()
 {
@@ -1931,7 +1931,7 @@ function robodesk_handle_get_ticket_replies()
 
 
 // ADD TICKET NOTE
-add_action('wp_ajax_add_ticket_note', 'robodesk_handle_add_ticket_note');
+add_action('wp_ajax_robodesk_add_ticket_note', 'robodesk_handle_add_ticket_note');
 
 function robodesk_handle_add_ticket_note()
 {
@@ -1994,7 +1994,7 @@ function robodesk_handle_add_ticket_note()
 }
 
 // GET TICKET NOTES
-add_action('wp_ajax_get_ticket_notes', 'robodesk_handle_get_ticket_notes');
+add_action('wp_ajax_robodesk_get_ticket_notes', 'robodesk_handle_get_ticket_notes');
 
 function robodesk_handle_get_ticket_notes()
 {
@@ -2062,7 +2062,7 @@ function robodesk_handle_get_ticket_notes()
 }
 
 // GET TICKET REPLIES AND NOTES (combined)
-add_action('wp_ajax_get_ticket_replies_and_notes', 'robodesk_handle_get_ticket_replies_and_notes');
+add_action('wp_ajax_robodesk_get_ticket_replies_and_notes', 'robodesk_handle_get_ticket_replies_and_notes');
 
 function robodesk_handle_get_ticket_replies_and_notes()
 {
@@ -2259,7 +2259,7 @@ function robodesk_fetch_emails_handler()
 // cron job to fetch emails
 
 
-add_action('wp_ajax_update_ticket_category', 'handle_update_ticket_category');
+add_action('wp_ajax_robodesk_update_ticket_category', 'handle_update_ticket_category');
 
 // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedFunctionFound
 function handle_update_ticket_category()

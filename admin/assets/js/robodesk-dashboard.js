@@ -1596,7 +1596,7 @@ function viewTicket(ticketId) {
         "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
       },
       body: new URLSearchParams({
-        action: "get_ticket_detail",
+        action: "robodesk_get_ticket_detail",
         ticket_id: ticketId,
         nonce: robodeskAjax.nonces.get_ticket_detail,
       }),
@@ -1707,7 +1707,7 @@ function updateTicketCategory(ticketId, categoryId) {
     url: robodeskAjax.ajax_url, // Use your existing AJAX URL structure
     type: "POST",
     data: {
-      action: "update_ticket_category",
+      action: "robodesk_update_ticket_category",
       ticket_id: ticketId,
       category_id: categoryId,
       nonce: robodeskAjax.nonces.update_ticket_category, // Use your existing nonce structure
@@ -3177,7 +3177,7 @@ function updateTicketStatus(ticketId, newStatus) {
       "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
     },
     body: new URLSearchParams({
-      action: "update_ticket_status",
+      action: "robodesk_update_ticket_status",
       security: robodeskAjax.nonces.ticket_status,
       ticket_id: ticketId,
       status: newStatus,
@@ -3253,7 +3253,7 @@ function updateTicketPriority(ticketId, newPriority) {
       "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
     },
     body: new URLSearchParams({
-      action: "update_ticket_priority",
+      action: "robodesk_update_ticket_priority",
       security: robodeskAjax.nonces.ticket_priority, // nonce key
       ticket_id: ticketId,
       priority: newPriority,
@@ -3322,7 +3322,7 @@ function updateTicketAssignee(ticketId, newAssignee) {
       "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
     },
     body: new URLSearchParams({
-      action: "update_ticket_assignee",
+      action: "robodesk_update_ticket_assignee",
       security: robodeskAjax.nonces.ticket_assignment, // nonce key
       ticket_id: ticketId,
       assignee: newAssignee,
@@ -3460,7 +3460,7 @@ function addReply() {
   }
 
   const data = {
-    action: "add_ticket_reply",
+    action: "robodesk_add_ticket_reply",
     ticket_id: currentTicket.id,
     reply: resolvedReplyText,
     nonce: robodeskAjax.nonces.add_ticket_reply,
@@ -3527,7 +3527,7 @@ async function loadReplies() {
 
   try {
     const data = {
-      action: "get_ticket_replies",
+      action: "robodesk_get_ticket_replies",
       ticket_id: currentTicket.id,
       nonce: robodeskAjax.nonces.get_ticket_replies,
     };
@@ -3654,7 +3654,7 @@ function closeTicket() {
       url: robodeskAjax.ajax_url,
       type: "POST",
       data: {
-        action: "close_ticket",
+        action: "robodesk_close_ticket",
         nonce: robodeskAjax.nonces.close_ticket,
         ticket_id: ticketId,
         reply: resolvedReplyText,
@@ -3702,7 +3702,7 @@ function addNote() {
   userRole = robodeskCurrentUser?.role || "Support Staff";
 
   const data = {
-    action: "add_ticket_note",
+    action: "robodesk_add_ticket_note",
     ticket_id: currentTicket.id,
     note: resolvedNoteText,
     nonce: robodeskAjax.nonces.add_ticket_note,
@@ -3755,7 +3755,7 @@ async function loadNotes() {
 
   try {
     const data = {
-      action: "get_ticket_notes",
+      action: "robodesk_get_ticket_notes",
       ticket_id: currentTicket.id,
       nonce: robodeskAjax.nonces.get_ticket_notes,
     };
@@ -3793,7 +3793,7 @@ function loadRepliesAndNotes() {
     method: "POST",
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
     body: new URLSearchParams({
-      action: "get_ticket_replies_and_notes",
+      action: "robodesk_get_ticket_replies_and_notes",
       ticket_id: currentTicket.id,
       nonce: robodeskAjax.nonces.get_ticket_replies_and_notes,
     }),
@@ -4798,7 +4798,7 @@ function startRepliesPolling() {
       method: "POST",
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
       body: new URLSearchParams({
-        action: "get_ticket_replies_and_notes",
+        action: "robodesk_get_ticket_replies_and_notes",
         ticket_id: currentTicket.id,
         nonce: robodeskAjax.nonces.get_ticket_replies_and_notes,
       }),

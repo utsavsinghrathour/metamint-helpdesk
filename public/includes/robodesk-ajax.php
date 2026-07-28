@@ -713,5 +713,5 @@ function robodesk_handle_change_password()
 
     wp_die();
 }
-add_action('wp_ajax_change_password', 'robodesk_handle_change_password');
-add_action('wp_ajax_nopriv_change_password', 'robodesk_handle_change_password'); // if not logged in
+add_action('wp_ajax_robodesk_change_password', 'robodesk_handle_change_password');
+add_action('wp_ajax_nopriv_robodesk_change_password', 'robodesk_handle_change_password'); // if not logged in

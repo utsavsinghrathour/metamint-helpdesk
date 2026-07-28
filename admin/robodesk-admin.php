@@ -134,7 +134,7 @@ function robodesk_update_taxonomy_order()
 
     wp_send_json_success('Order updated');
 }
-add_action('wp_ajax_update_taxonomy_order', 'robodesk_update_taxonomy_order');
+add_action('wp_ajax_robodesk_update_taxonomy_order', 'robodesk_update_taxonomy_order');
 
 function robodesk_modify_taxonomy_query($query)
 {

@@ -21,8 +21,8 @@ const TicketItem = ({ ticket, onSelect }) => {
     setShowNotification(ticket.notifications === "no" ? true : false);
   }, [ticket]);
 
-  // Get priority colors from wpAuth
-  const priorityColors = window.wpAuth?.priorityColors || {};
+  // Get priority colors from robodeskAuth
+  const priorityColors = window.robodeskAuth?.priorityColors || {};
   const priorityColor = priorityColors[ticket.priority] || "#000000";
   const displayTicketNumber = String(ticket.ticketNumber || "").replace(
     /^TCKT/i,
@@ -128,7 +128,7 @@ const MessageTabs = ({
 
   const url = useMemo(() => {
     if (!loggedinContext && !loggedInUsrId) return null;
-    const nonce = window.wpAuth?.restNonce || window.wpApiSettings?.nonce || '';
+    const nonce = window.robodeskAuth?.restNonce || window.wpApiSettings?.nonce || '';
     return `wp-json/robodesk/v1/stream/tickets/0/${firstMessageId}/${loggedInUsrId}/?ticket=1&_wpnonce=${nonce}`;
   }, [firstMessageId]);
 
@@ -199,7 +199,7 @@ const MessageTabs = ({
           }
 
           const ticketPriorityName = ticket.priority?.toLowerCase() || "";
-          const matchingTerm = window.wpAuth?.priorityTerms?.find(
+          const matchingTerm = window.robodeskAuth?.priorityTerms?.find(
             (term) =>
               term.name?.toLowerCase() === ticketPriorityName ||
               term.slug?.toLowerCase() === ticketPriorityName,
@@ -319,7 +319,7 @@ const MessageTabs = ({
                     className="rd-border-light rd-p-10 rd-body-text rd-border-radius-md rd-color-gray rd-fw-medium flex-1"
                   >
                     <option value="all">All</option>
-                    {wpAuth?.priorityTerms?.map((priority) => (
+                    {robodeskAuth?.priorityTerms?.map((priority) => (
                       <option
                         key={priority.term_id}
                         value={priority.slug || priority.name?.toLowerCase()}
@@ -338,7 +338,7 @@ const MessageTabs = ({
                     }}
                     className="rd-p-10 rd-py-5 rd-border-light rd-border-radius-md rd-body-text ticket-tab rd-color-gray rd-fw-medium"
                   >
-                    {Object.entries(wpAuth?.status).map(([key, label]) => (
+                    {Object.entries(robodeskAuth?.status).map(([key, label]) => (
                       <option key={key} value={key}>
                         {key === "active-conversations" ? "Active" : label}
                       </option>

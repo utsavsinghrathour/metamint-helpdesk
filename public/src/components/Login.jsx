@@ -187,8 +187,8 @@ const Login = ({
   }, []);
 
   useEffect(() => {
-    if (window.wpAuth?.defaultStaffId) {
-      setDefaultStaffId(window.wpAuth.defaultStaffId);
+    if (window.robodeskAuth?.defaultStaffId) {
+      setDefaultStaffId(window.robodeskAuth.defaultStaffId);
     }
   }, []);
 
@@ -236,14 +236,14 @@ const Login = ({
 
     setIsSubmitting(true);
     try {
-      const response = await fetch(wpAuth.wpAjax.ajaxUrl, {
+      const response = await fetch(robodeskAuth.wpAjax.ajaxUrl, {
         method: "POST",
         headers: {
           "Content-Type": "application/x-www-form-urlencoded",
         },
         body: new URLSearchParams({
           action: "robodesk_check_email",
-          security: wpAuth.wpAjax.nonce,
+          security: robodeskAuth.wpAjax.nonce,
           email: formData.email,
         }),
       });
@@ -294,8 +294,8 @@ const Login = ({
 
       updateLoginStatus(true, loginResponse.user_id);
       if (loginResponse.rest_nonce) {
-        window.wpAuth = window.wpAuth || {};
-        window.wpAuth.restNonce = loginResponse.rest_nonce;
+        window.robodeskAuth = window.robodeskAuth || {};
+        window.robodeskAuth.restNonce = loginResponse.rest_nonce;
       }
 
       try {

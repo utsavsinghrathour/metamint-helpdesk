@@ -1854,7 +1854,7 @@ function robodesk_custom_lost_password(WP_REST_Request $request)
         return new WP_Error('invalid_input', 'Username or email is required.', array('status' => 400));
     }
 
-    set_transient('is_rest_password_reset_' . md5($user_login), true, 120);
+    set_transient('robodesk_rest_password_reset_' . md5($user_login), true, 120);
 
     $result = retrieve_password($user_login);
 
@@ -2077,7 +2077,7 @@ function robodesk_send_chat_transcript(WP_REST_Request $request)
 add_filter('retrieve_password_message', 'robodesk_add_param_to_reset_link', 10, 4);
 function robodesk_add_param_to_reset_link($message, $key, $user_login, $user_data)
 {
-    if (get_transient('is_rest_password_reset_' . md5($user_login))) {
+    if (get_transient('robodesk_rest_password_reset_' . md5($user_login))) {
 
         $custom_reset_url = add_query_arg(
             array(

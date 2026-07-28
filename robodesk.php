@@ -332,7 +332,7 @@ function robodesk_enqueue_scripts()
             }
         }
 
-        wp_localize_script('robodesk-react-script', 'wpAuth', array(
+        wp_localize_script('robodesk-react-script', 'robodeskAuth', array(
             'isLoggedIn' => is_user_logged_in() ? 'true' : 'false',
             'loggedInUserId' => is_user_logged_in() ? get_current_user_id() : 'false',
 
@@ -441,8 +441,8 @@ function robodesk_enqueue_admin_scripts($hook)
 
     if ($taxonomy === 'robodesk_ticket_priority' && $post_type === 'robodesk_ticket') {
         wp_enqueue_script('jquery-ui-sortable');
-        wp_enqueue_script('custom-taxonomy-order', ROBODESK_PLUGIN_URL . 'admin/assets/js/custom-taxonomy-order.js', array('jquery', 'jquery-ui-sortable'), time(), true);
-        wp_localize_script('custom-taxonomy-order', 'taxonomyOrderData', array(
+        wp_enqueue_script('robodesk-custom-taxonomy-order', ROBODESK_PLUGIN_URL . 'admin/assets/js/custom-taxonomy-order.js', array('jquery', 'jquery-ui-sortable'), time(), true);
+        wp_localize_script('robodesk-custom-taxonomy-order', 'taxonomyOrderData', array(
             'ajax_url' => admin_url('admin-ajax.php'),
             'nonce' => wp_create_nonce('taxonomy_order_nonce')
         ));
