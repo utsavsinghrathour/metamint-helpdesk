@@ -503,7 +503,7 @@ function robodesk_stream($request)
                         }
 
                         echo "event: new_comment\n";
-                        echo "data: " . json_encode($c) . "\n\n";
+                        echo "data: " . wp_json_encode($c) . "\n\n";
                         flush();
                     }
                     update_post_meta($ticket_id, 'rbd_all_seen', 'yes');
@@ -518,20 +518,20 @@ function robodesk_stream($request)
                         }
 
                         echo "event: new_mine_comment\n";
-                        echo "data: " . json_encode($moc) . "\n\n";
+                        echo "data: " . wp_json_encode($moc) . "\n\n";
                         flush();
                     }
                 }
 
                 if ($ticket_status == 'closed') {
                     echo "event: ticket_closed\n";
-                    echo "data: " . json_encode(array('reason' => 'ticket_closed')) . "\n\n";
+                    echo "data: " . wp_json_encode(array('reason' => 'ticket_closed')) . "\n\n";
                     flush();
                 }
 
                 if ($ticket_status == 'open') {
                     echo "event: ticket_open\n";
-                    echo "data: " . json_encode(array('reason' => 'ticket_open')) . "\n\n";
+                    echo "data: " . wp_json_encode(array('reason' => 'ticket_open')) . "\n\n";
                     flush();
                 }
 
@@ -568,7 +568,7 @@ function robodesk_stream($request)
                         }
 
                         echo "event: new_ticket\n";
-                        echo "data: " . json_encode($ticket) . "\n\n";
+                        echo "data: " . wp_json_encode($ticket) . "\n\n";
                         flush();
                     }
                 }
@@ -576,7 +576,7 @@ function robodesk_stream($request)
                 $notifications = robodesk_get_new_notifications($user_id);
                 if (!empty($notifications)) {
                     echo "event: new_notification\n";
-                    echo "data: " . json_encode($notifications) . "\n\n";
+                    echo "data: " . wp_json_encode($notifications) . "\n\n";
                     flush();
                 }
 
@@ -590,7 +590,7 @@ function robodesk_stream($request)
 
         default:
             echo "event: error\n";
-            echo "data: " . json_encode(array('message' => 'Invalid stream type')) . "\n\n";
+            echo "data: " . wp_json_encode(array('message' => 'Invalid stream type')) . "\n\n";
             flush();
             exit;
     }
@@ -938,7 +938,7 @@ function robodesk_live_comments($request)
 
     //Handshake
     echo "event: handshake\n";
-    echo "data: " . json_encode(array(
+    echo "data: " . wp_json_encode(array(
         'status' => 'connected',
         'timestamp' => time(),
         'server_comment' => $last_comment_server,
@@ -1003,13 +1003,13 @@ function robodesk_live_comments($request)
             foreach ($new_admin_comments as $comment) {
 
                 echo "event: new_comment\n";
-                echo "data: " . json_encode($comment) . "\n\n";
+                echo "data: " . wp_json_encode($comment) . "\n\n";
                 flush();
             }
             update_post_meta($ticket_id, 'rbd_all_seen', 'yes');
         } else {
             echo "event: disconnect\n";
-            echo "data: " . json_encode(array('reason' => 'timeout')) . "\n\n";
+            echo "data: " . wp_json_encode(array('reason' => 'timeout')) . "\n\n";
             flush();
         }
     }
@@ -1018,7 +1018,7 @@ function robodesk_live_comments($request)
     if ($ticket_status == 'closed') {
         // If the ticket is closed, send a disconnect event
         echo "event: ticket_closed\n";
-        echo "data: " . json_encode(array('reason' => 'ticket_closed')) . "\n\n";
+        echo "data: " . wp_json_encode(array('reason' => 'ticket_closed')) . "\n\n";
         flush();
         exit;
     }
@@ -1027,7 +1027,7 @@ function robodesk_live_comments($request)
     if ($ticket_status == 'open') {
 
         echo "event: ticket_open\n";
-        echo "data: " . json_encode(array('reason' => 'ticket_open')) . "\n\n";
+        echo "data: " . wp_json_encode(array('reason' => 'ticket_open')) . "\n\n";
         flush();
     }
 

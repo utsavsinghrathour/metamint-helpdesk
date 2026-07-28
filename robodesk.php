@@ -2224,7 +2224,11 @@ function robodesk_enqueue_custom_styles()
     wp_enqueue_style('robodesk-style', get_stylesheet_uri(), array(), '1.0.0');
 
     // Get the theme color from the options
-    $theme_color = get_option('robodesk_theme_color', '#0073aa'); // fallback to default
+    $theme_color = sanitize_hex_color((string) get_option('robodesk_theme_color', ''));
+
+    if (empty($theme_color)) {
+        $theme_color = '#0073aa';
+    }
 
     // Prepare inline CSS
     $custom_css = "

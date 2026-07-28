@@ -305,19 +305,14 @@ function robodesk_enqueue_color_picker_scripts($taxonomy)
         wp_enqueue_style('wp-color-picker');
         wp_enqueue_script('wp-color-picker');
 
-        add_action('admin_footer', 'robodesk_initialize_color_picker');
+        wp_add_inline_script('wp-color-picker', '
+            jQuery(document).ready(function($) {
+                $(\'.color-picker-field\').wpColorPicker();
+            });
+        ');
     }
 }
 add_action('admin_enqueue_scripts', 'robodesk_enqueue_color_picker_scripts');
-
-function robodesk_initialize_color_picker()
-{
-    wp_add_inline_script('wp-color-picker', '
-        jQuery(document).ready(function($) {
-            $(\'.color-picker-field\').wpColorPicker();
-        });
-    ');
-}
 
 // Step 4: Save the color value when the term is created or updated
 function robodesk_save_priority_color_meta($term_id)
@@ -876,7 +871,8 @@ function robodesk_user_data_to_session_storage()
         }
     ');
 }
-add_action('wp_footer', 'robodesk_user_data_to_session_storage');
+add_action('wp_enqueue_scripts', 'robodesk_user_data_to_session_storage');
+add_action('admin_enqueue_scripts', 'robodesk_user_data_to_session_storage');
 
 
 function robodesk_is_ticket_kses_context()
