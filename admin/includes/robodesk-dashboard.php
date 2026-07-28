@@ -31,14 +31,15 @@ function robodesk_dashboard_callback()
     $current_user_role = $current_user->roles ? $current_user->roles[0] : 'Support Staff';
     // var_dump($current_user_role); // Debugging line to check current user role
 
-    // Pass current user info to JS
-    echo '<script>
-        const robodeskCurrentUser = {
-            id: ' . intval($current_user_id) . ',
-            name: ' . json_encode($current_user_name) . ',
-            role: ' . json_encode($current_user_role) . '
-        };
-    </script>';
+    add_action('admin_footer', function () use ($current_user_id, $current_user_name, $current_user_role) {
+        wp_add_inline_script('robodesk-dashboard-script', '
+            const robodeskCurrentUser = {
+                id: ' . intval($current_user_id) . ',
+                name: ' . wp_json_encode($current_user_name) . ',
+                role: ' . wp_json_encode($current_user_role) . '
+            };
+        ', 'before');
+    }, 100);
 
     // var_dump($current_user_id); // Debugging line to check current user ID and name
     // var_dump($current_user_name); // Debugging line to check current user name
@@ -47,10 +48,6 @@ function robodesk_dashboard_callback()
 ?>
 
 <div class="bg-gray-100">
-    <!-- Ensure hidden class works immediately, before Tailwind CDN runtime processes -->
-    <style>
-        .hidden { display: none; }
-    </style>
     <!-- Navigation -->
     <nav class="bg-white shadow-lg border-b border-gray-200">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
