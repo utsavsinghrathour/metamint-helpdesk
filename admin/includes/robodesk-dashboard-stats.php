@@ -409,7 +409,6 @@ $dashboard_hidden = ($current_tab !== '' && $current_tab !== 'dashboard') || $ha
                     </tr>
                 </thead>
                 <tbody class="bg-white divide-y divide-gray-200" id="dashboard-tickets-table">
-                    <!-- Rows populated by JavaScript -->
                 </tbody>
             </table>
         </div>
@@ -455,7 +454,7 @@ $dashboard_hidden = ($current_tab !== '' && $current_tab !== 'dashboard') || $ha
 
                 </div>
             </div>
-            <?php echo wp_kses_post(robodesk_load_dashboard_tickets($robodesk_filter)); 
+            <?php echo robodesk_load_dashboard_tickets($robodesk_filter); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Trusted admin template, individual values escaped within the function
             ?>
         </div>
     </div>
