@@ -12,6 +12,10 @@ function robodesk_change_ticket_status_callback()
     $new_status = isset($_POST['new_status']) ? sanitize_text_field(wp_unslash($_POST['new_status'])) : '';
     $old_status = $ticket_id > 0 ? (string) get_post_meta($ticket_id, '_robodesk_ticket_status', true) : '';
 
+    if (!current_user_can('edit_post', $ticket_id) && !current_user_can('robodesk_access_dashboard')) {
+        wp_send_json_error('Insufficient permissions');
+    }
+
     $allowed_statuses = array('new', 'in-progress', 'archived', 'completed'); // Valid statuses
     if ($ticket_id > 0 && in_array($new_status, $allowed_statuses)) {
         $updated = update_post_meta($ticket_id, '_robodesk_ticket_status', $new_status);
@@ -492,6 +496,10 @@ function robodesk_add_ticket_note_callback()
         wp_send_json_error(array('message' => 'Invalid ticket ID.'));
     }
 
+    if (!current_user_can('edit_post', $ticket_id) && !current_user_can('robodesk_access_dashboard')) {
+        wp_send_json_error(array('message' => 'Insufficient permissions'));
+    }
+
     $uploaded_files = array();
     if (!empty($_FILES['note_content_ifr'])) {
         require_once(ABSPATH . 'wp-admin/includes/file.php');
@@ -634,7 +642,10 @@ add_action('wp_ajax_robodesk_register_user', 'robodesk_register_user');
 add_action('wp_ajax_nopriv_robodesk_register_user', 'robodesk_register_user');
 function robodesk_register_user()
 {
-    // phpcs:ignore WordPress.Security.NonceVerification.Missing
+    if (!isset($_POST['nonce']) || !wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['nonce'])), 'robodesk_register_user_action')) {
+        wp_send_json_error(['message' => 'Security check failed']);
+    }
+
     $email = isset($_POST['email']) ? sanitize_email(wp_unslash($_POST['email'])) : '';
     if (empty($email) || ! is_email($email)) {
         wp_send_json_error([
