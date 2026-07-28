@@ -587,11 +587,7 @@ function robodesk_get_encryption_key()
         return ROBODESK_ENCRYPTION_KEY;
     }
 
-    if (defined('AUTH_KEY') && AUTH_KEY !== '') {
-        return AUTH_KEY;
-    }
-
-    return 'robodesk';
+    return wp_hash('robodesk-encryption-key');
 }
 
 function robodesk_encrypt($plaintext, $key = null)
@@ -619,7 +615,13 @@ function robodesk_decrypt($ciphertext, $key = null)
     }
 
     list($encrypted_data, $iv) = explode('::', $decoded, 2);
-    return openssl_decrypt($encrypted_data, "AES-256-CBC", $key, $options = 0, $iv);
+    $plaintext = openssl_decrypt($encrypted_data, "AES-256-CBC", $key, $options = 0, $iv);
+
+    if ($plaintext === false && defined('AUTH_KEY') && AUTH_KEY !== '') {
+        $plaintext = openssl_decrypt($encrypted_data, "AES-256-CBC", AUTH_KEY, $options = 0, $iv);
+    }
+
+    return $plaintext;
 }
 
 function robodesk_build_ticket_deeplink($ticket_id)

@@ -526,6 +526,20 @@ add_action('rest_api_init', function () {
 
 
 
+function robodesk_get_webhook_secret()
+{
+    if (defined('ROBODESK_WEBHOOK_SECRET') && ROBODESK_WEBHOOK_SECRET !== '') {
+        return ROBODESK_WEBHOOK_SECRET;
+    }
+
+    $option = get_option('robodesk_webhook_secret', '');
+    if (!empty($option)) {
+        return $option;
+    }
+
+    return wp_hash('robodesk-webhook-secret');
+}
+
 function robodesk_handle_tickets_webhook(WP_REST_Request $request)
 {
     $payload = $request->get_body();
@@ -540,9 +554,9 @@ function robodesk_handle_tickets_webhook(WP_REST_Request $request)
         );
     }
 
-    // HMAC verification using SECURE_AUTH_KEY
+    // HMAC verification using site-specific secret
     $signature = isset($_SERVER['HTTP_X_WEBHOOK_SIGNATURE']) ? sanitize_text_field(wp_unslash($_SERVER['HTTP_X_WEBHOOK_SIGNATURE'])) : '';
-    $expected = hash_hmac('sha256', $payload, SECURE_AUTH_KEY);
+    $expected = hash_hmac('sha256', $payload, robodesk_get_webhook_secret());
     if (!hash_equals($expected, $signature)) {
         return new WP_Error(
             'unauthorized',
