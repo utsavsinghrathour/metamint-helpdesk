@@ -458,6 +458,11 @@ function robodesk_smtp_save_settings()
         exit;
     }
 
+    if (!current_user_can('manage_options')) {
+        wp_send_json_error(['message' => 'Insufficient permissions']);
+        exit;
+    }
+
     $settings = robodesk_get_smtp_settings_from_request($_POST);
     $validation = robodesk_validate_smtp_settings($settings);
 
@@ -475,6 +480,11 @@ function robodesk_smtp_test_connection()
 {
     if (!isset($_POST['nonce']) || !wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['nonce'])), 'robodesk_smtp_settings_action')) {
         wp_send_json_error(['message' => 'Security check failed']);
+        exit;
+    }
+
+    if (!current_user_can('manage_options')) {
+        wp_send_json_error(['message' => 'Insufficient permissions']);
         exit;
     }
 
@@ -537,6 +547,11 @@ function robodesk_email_template_save()
     // Verify nonce
     if (!isset($_POST['nonce']) || !wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['nonce'])), 'robodesk_email_template_action')) {
         wp_send_json_error(['message' => 'Security check failed']);
+        exit;
+    }
+
+    if (!current_user_can('manage_options')) {
+        wp_send_json_error(['message' => 'Insufficient permissions']);
         exit;
     }
 
@@ -642,6 +657,11 @@ function robodesk_save_advanced_settings()
     // Verify nonce
     if (!isset($_POST['nonce']) || !wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['nonce'])), 'robodesk_advanced_settings_action')) {
         wp_send_json_error(['message' => 'Security check failed']);
+        exit;
+    }
+
+    if (!current_user_can('manage_options')) {
+        wp_send_json_error(['message' => 'Insufficient permissions']);
         exit;
     }
 
@@ -773,6 +793,11 @@ function robodesk_save_basic_settings()
     // Verify nonce
     if (!isset($_POST['nonce']) || !wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['nonce'])), 'robodesk_basic_settings_action')) {
         wp_send_json_error(['message' => 'Security check failed']);
+        exit;
+    }
+
+    if (!current_user_can('manage_options')) {
+        wp_send_json_error(['message' => 'Insufficient permissions']);
         exit;
     }
 
@@ -930,6 +955,11 @@ function robodesk_save_cropped_logo()
         exit;
     }
 
+    if (!current_user_can('manage_options')) {
+        wp_send_json_error(['message' => 'Insufficient permissions']);
+        exit;
+    }
+
     $option_key = isset($_POST['option_key']) ? sanitize_key($_POST['option_key']) : '';
     $cropped_url = isset($_POST['cropped_url']) ? esc_url_raw(wp_unslash($_POST['cropped_url'])) : '';
 
@@ -970,6 +1000,11 @@ function robodesk_save_ticket_assignment_settings()
     // Verify nonce
     if (!isset($_POST['nonce']) || !wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['nonce'])), 'robodesk_ticket_assignment_action')) {
         wp_send_json_error(['message' => 'Security check failed']);
+        exit;
+    }
+
+    if (!current_user_can('manage_options')) {
+        wp_send_json_error(['message' => 'Insufficient permissions']);
         exit;
     }
 
@@ -1021,6 +1056,11 @@ function robodesk_create_ticket()
 
     if (!$valid_nonce) {
         wp_send_json_error(['message' => 'Security check failed']);
+        wp_die();
+    }
+
+    if (!current_user_can('robodesk_access_dashboard')) {
+        wp_send_json_error(['message' => 'Insufficient permissions']);
         wp_die();
     }
 
@@ -1335,6 +1375,11 @@ add_action('wp_ajax_robodesk_user_lookup', 'robodesk_user_lookup');
 function robodesk_user_lookup()
 {
     check_ajax_referer('robodesk_user_lookup_action', 'nonce');
+
+    if (!current_user_can('robodesk_access_dashboard')) {
+        wp_send_json_error(['message' => 'Insufficient permissions']);
+        return;
+    }
 
     if (!isset($_POST['type'], $_POST['value'])) {
         wp_send_json_error(['message' => 'Missing required fields']);
@@ -1685,6 +1730,10 @@ function robodesk_handle_close_ticket()
         wp_send_json_error(['message' => 'Nonce verification failed']);
     }
 
+    if (!current_user_can('robodesk_access_dashboard')) {
+        wp_send_json_error(['message' => 'Insufficient permissions']);
+    }
+
     $ticket_id = isset($_POST['ticket_id']) ? intval($_POST['ticket_id']) : 0;
 
     if (!$ticket_id) {
@@ -1786,6 +1835,10 @@ function robodesk_handle_get_ticket_replies()
     // Verify nonce
     if (!isset($_POST['nonce']) || !wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['nonce'])), 'robodesk_get_ticket_replies_action')) {
         wp_send_json_error(['message' => 'Nonce verification failed']);
+    }
+
+    if (!current_user_can('robodesk_access_dashboard')) {
+        wp_send_json_error(['message' => 'Insufficient permissions']);
     }
 
     $ticket_id = isset($_POST['ticket_id']) ? intval($_POST['ticket_id']) : 0;
@@ -1940,6 +1993,10 @@ function robodesk_handle_add_ticket_note()
         wp_send_json_error(['message' => 'Nonce verification failed']);
     }
 
+    if (!current_user_can('robodesk_access_dashboard')) {
+        wp_send_json_error(['message' => 'Insufficient permissions']);
+    }
+
     $ticket_id = isset($_POST['ticket_id']) ? intval($_POST['ticket_id']) : 0;
     $note = isset($_POST['note']) ? wp_kses_post(wp_unslash($_POST['note'])) : '';
 
@@ -2001,6 +2058,10 @@ function robodesk_handle_get_ticket_notes()
     // Verify nonce
     if (!isset($_POST['nonce']) || !wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['nonce'])), 'robodesk_get_ticket_notes_action')) {
         wp_send_json_error(['message' => 'Nonce verification failed']);
+    }
+
+    if (!current_user_can('robodesk_access_dashboard')) {
+        wp_send_json_error(['message' => 'Insufficient permissions']);
     }
 
     $ticket_id = isset($_POST['ticket_id']) ? intval($_POST['ticket_id']) : 0;
@@ -2068,6 +2129,10 @@ function robodesk_handle_get_ticket_replies_and_notes()
 {
     if (!isset($_POST['nonce']) || !wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['nonce'])), 'robodesk_get_ticket_replies_and_notes_action')) {
         wp_send_json_error(['message' => 'Nonce verification failed']);
+    }
+
+    if (!current_user_can('robodesk_access_dashboard')) {
+        wp_send_json_error(['message' => 'Insufficient permissions']);
     }
 
     $ticket_id = isset($_POST['ticket_id']) ? intval($_POST['ticket_id']) : 0;
@@ -2245,6 +2310,10 @@ add_action('wp_ajax_robodesk_fetch_emails', 'robodesk_fetch_emails_handler');
 function robodesk_fetch_emails_handler()
 {
     check_ajax_referer('robodesk_fetch_emails_action', 'nonce');
+
+    if (!current_user_can('manage_options')) {
+        wp_send_json_error(['message' => 'Insufficient permissions']);
+    }
 
     try {
         $summary = robodesk_fetch_emails(); // returns the string
@@ -2859,7 +2928,7 @@ function robodesk_refresh_dashboard_tickets()
     }
 
     // Check user capabilities
-    if (!current_user_can('read')) {
+    if (!current_user_can('robodesk_access_dashboard')) {
         wp_send_json_error(array('message' => 'You do not have permission to perform this action.'));
     }
 

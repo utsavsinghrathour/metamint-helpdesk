@@ -120,6 +120,10 @@ function robodesk_update_taxonomy_order()
         wp_send_json_error('Invalid nonce');
     }
 
+    if (!current_user_can('manage_categories')) {
+        wp_send_json_error('Insufficient permissions');
+    }
+
     if (!isset($_POST['order']) || !is_array($_POST['order'])) {
         wp_send_json_error('Invalid order data');
     }

@@ -355,7 +355,7 @@ add_action('rest_api_init', function () {
     register_rest_route('robodesk/chat/v1', '/tickets', array(
         'methods' => 'POST',
         'callback' => 'robodesk_handle_tickets',
-        'permission_callback' => '__return_true', // Intentionally public webhook endpoint for external chat service. Callback validates JSON payload structure and event type before processing. All data is sanitized before storage. Chat service can only act on events it sends; no session/auth tokens are exposed. A sister endpoint (chat/v1/tickets in robodesk-ticket-post-type.php) uses HMAC verification for the same purpose.
+        'permission_callback' => '__return_true', // Public webhook endpoint for external chat service. Callback validates JSON payload and verifies HMAC signature (X-Webhook-Signature header) before processing.
     ));
 
     register_rest_route('robodesk/selected', '/staff', array(
@@ -1316,6 +1316,17 @@ function robodesk_handle_tickets(WP_REST_Request $request)
             'invalid_payload',
             'Invalid JSON payload',
             array('status' => 400)
+        );
+    }
+
+    // HMAC verification using SECURE_AUTH_KEY
+    $signature = isset($_SERVER['HTTP_X_WEBHOOK_SIGNATURE']) ? sanitize_text_field(wp_unslash($_SERVER['HTTP_X_WEBHOOK_SIGNATURE'])) : '';
+    $expected = hash_hmac('sha256', $payload, SECURE_AUTH_KEY);
+    if (!hash_equals($expected, $signature)) {
+        return new WP_Error(
+            'unauthorized',
+            'Invalid webhook signature',
+            array('status' => 401)
         );
     }
 
