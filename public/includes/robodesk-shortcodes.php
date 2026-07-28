@@ -1312,131 +1312,136 @@ function robodesk_single_ticket_shortcode($atts)
     </div>
 
     <div class="robodesk-ticket-meta">
-
-
-        <script type="text/javascript">
-        jQuery(document).ready(function($) {
-            var originalFormParent = $('#respond').parent();
-            var originalFormSibling = $('#respond').next();
-
-            function scrollToLatestReply() {
-                var commentList = $('.robodesk-ticket-comments .comment-list');
-
-                if (!commentList.length) {
-                    return;
-                }
-
-                commentList.scrollTop(commentList[0].scrollHeight);
-            }
-
-            function hasReplyContent(content) {
-                var hasMedia = /<(img|iframe|video|audio|embed|object)\b/i.test(content);
-                var text = $('<div>').html(content).text().replace(/\u00a0/g, ' ').trim();
-
-                return hasMedia || text.length > 0;
-            }
-
-            setTimeout(scrollToLatestReply, 100);
-
-            $('.robodesk-ticket-comments #commentform').on('submit', function(e) {
-                if (typeof tinymce !== 'undefined' && tinymce.get('comment')) {
-                    tinymce.triggerSave();
-                    setTimeout(function() {}, 100);
-                }
-                var button = $(this).find('input[type="submit"]');
-                e.preventDefault();
-                var form = $(this);
-                var commentField = form.find('[name="comment"]');
-                var commentContent = commentField.val();
-
-                if (!hasReplyContent(commentContent)) {
-                    alert('Please enter a reply before submitting.');
-                    return;
-                }
-
-                var formData = new FormData(this);
-
-                formData.append('action', 'robodesk_submit_comment');
-                $.ajax({
-                    url: '<?php echo esc_url(admin_url('admin-ajax.php')); ?>',
-                    type: 'POST',
-                    data: formData,
-                    processData: false,
-                    contentType: false,
-                    beforeSend: function() {
-                        button.val('Posting...');
-                        button.prop('disabled', true);
-                    },
-                    success: function(response) {
-                        if (response.success) {
-                            location.reload();
-                        } else {
-                            alert('Error: ' + response.data.message);
-                        }
-                    },
-                    error: function() {
-                        alert('An error occurred while submitting the comment.');
-                    },
-
-                    complete: function() {
-                        setTimeout(function() {
-                            button.val('Submit');
-                            button.prop('disabled', false);
-                        }, 3000);
-                    }
-                });
-            });
-
-            $('.robodesk-ticket-comments .comment-reply-link').on('click', function(e) {
-                e.preventDefault();
-                var commentId = $(this).data('commentid');
-                $('#comment_parent').val(commentId);
-                $('#respond').insertAfter($(this).closest('.comment-body'));
-                $('#cancel-comment-reply-link').show();
-                var commentId = $(this).data('commentid');
-                var postId = $(this).data('postid');
-                var belowElement = $(this).data('belowelement');
-                var respondElement = $(this).data('respondelement');
-
-                if (typeof tinymce !== 'undefined' && tinymce.get('comment')) {
-                    tinymce.EditorManager.execCommand('mceRemoveEditor', true, 'comment');
-                }
-
-                if (typeof addComment !== 'undefined' && addComment.moveForm) {
-                    addComment.moveForm(belowElement, commentId, respondElement, postId);
-                }
-
-                if (typeof tinymce !== 'undefined') {
-                    tinymce.EditorManager.execCommand('mceAddEditor', true, 'comment');
-                }
-            });
-
-            $('#cancel-comment-reply-link').on('click', function(e) {
-                e.preventDefault();
-
-                if (typeof tinymce !== 'undefined' && tinymce.get('comment')) {
-                    tinymce.EditorManager.execCommand('mceRemoveEditor', true, 'comment');
-                }
-
-                if (originalFormSibling.length) {
-                    originalFormParent.insertBefore($('#respond'), originalFormSibling);
-                } else {
-                    originalFormParent.append($('#respond'));
-                }
-
-
-                $(this).hide();
-                $('#comment_parent').val('');
-
-                if (typeof tinymce !== 'undefined') {
-                    tinymce.EditorManager.execCommand('mceAddEditor', true, 'comment');
-                }
-            });
-        });
-        </script>
     </div>
 </div>
 <?php
+    static $single_ticket_js_enqueued = false;
+    if (!$single_ticket_js_enqueued) {
+        $single_ticket_js_enqueued = true;
+        $ajax_url = esc_url(admin_url('admin-ajax.php'));
+        add_action('wp_footer', function () use ($ajax_url) {
+            wp_add_inline_script('jquery', '
+jQuery(document).ready(function($) {
+    var originalFormParent = $(\'#respond\').parent();
+    var originalFormSibling = $(\'#respond\').next();
+
+    function scrollToLatestReply() {
+        var commentList = $(\'.robodesk-ticket-comments .comment-list\');
+
+        if (!commentList.length) {
+            return;
+        }
+
+        commentList.scrollTop(commentList[0].scrollHeight);
+    }
+
+    function hasReplyContent(content) {
+        var hasMedia = /<(img|iframe|video|audio|embed|object)\b/i.test(content);
+        var text = $(\'<div>\').html(content).text().replace(/\u00a0/g, \' \').trim();
+
+        return hasMedia || text.length > 0;
+    }
+
+    setTimeout(scrollToLatestReply, 100);
+
+    $(\'.robodesk-ticket-comments #commentform\').on(\'submit\', function(e) {
+        if (typeof tinymce !== \'undefined\' && tinymce.get(\'comment\')) {
+            tinymce.triggerSave();
+            setTimeout(function() {}, 100);
+        }
+        var button = $(this).find(\'input[type="submit"]\');
+        e.preventDefault();
+        var form = $(this);
+        var commentField = form.find(\'[name="comment"]\');
+        var commentContent = commentField.val();
+
+        if (!hasReplyContent(commentContent)) {
+            alert(\'Please enter a reply before submitting.\');
+            return;
+        }
+
+        var formData = new FormData(this);
+
+        formData.append(\'action\', \'robodesk_submit_comment\');
+        $.ajax({
+            url: \'' . $ajax_url . '\',
+            type: \'POST\',
+            data: formData,
+            processData: false,
+            contentType: false,
+            beforeSend: function() {
+                button.val(\'Posting...\');
+                button.prop(\'disabled\', true);
+            },
+            success: function(response) {
+                if (response.success) {
+                    location.reload();
+                } else {
+                    alert(\'Error: \' + response.data.message);
+                }
+            },
+            error: function() {
+                alert(\'An error occurred while submitting the comment.\');
+            },
+
+            complete: function() {
+                setTimeout(function() {
+                    button.val(\'Submit\');
+                    button.prop(\'disabled\', false);
+                }, 3000);
+            }
+        });
+    });
+
+    $(\'.robodesk-ticket-comments .comment-reply-link\').on(\'click\', function(e) {
+        e.preventDefault();
+        var commentId = $(this).data(\'commentid\');
+        $(\'#comment_parent\').val(commentId);
+        $(\'#respond\').insertAfter($(this).closest(\'.comment-body\'));
+        $(\'#cancel-comment-reply-link\').show();
+        var commentId = $(this).data(\'commentid\');
+        var postId = $(this).data(\'postid\');
+        var belowElement = $(this).data(\'belowelement\');
+        var respondElement = $(this).data(\'respondelement\');
+
+        if (typeof tinymce !== \'undefined\' && tinymce.get(\'comment\')) {
+            tinymce.EditorManager.execCommand(\'mceRemoveEditor\', true, \'comment\');
+        }
+
+        if (typeof addComment !== \'undefined\' && addComment.moveForm) {
+            addComment.moveForm(belowElement, commentId, respondElement, postId);
+        }
+
+        if (typeof tinymce !== \'undefined\') {
+            tinymce.EditorManager.execCommand(\'mceAddEditor\', true, \'comment\');
+        }
+    });
+
+    $(\'#cancel-comment-reply-link\').on(\'click\', function(e) {
+        e.preventDefault();
+
+        if (typeof tinymce !== \'undefined\' && tinymce.get(\'comment\')) {
+            tinymce.EditorManager.execCommand(\'mceRemoveEditor\', true, \'comment\');
+        }
+
+        if (originalFormSibling.length) {
+            originalFormParent.insertBefore($(\'#respond\'), originalFormSibling);
+        } else {
+            originalFormParent.append($(\'#respond\'));
+        }
+
+
+        $(this).hide();
+        $(\'#comment_parent\').val(\'\');
+
+        if (typeof tinymce !== \'undefined\') {
+            tinymce.EditorManager.execCommand(\'mceAddEditor\', true, \'comment\');
+        }
+    });
+});
+            ', 'after');
+        });
+    }
     $output = ob_get_clean();
     $post = $original_post;
     return $output;

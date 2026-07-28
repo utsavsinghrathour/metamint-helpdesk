@@ -379,10 +379,11 @@ $dashboard_hidden = ($current_tab !== '' && $current_tab !== 'dashboard') || $ha
             }
         }
 
-        // Pass priority colors to JavaScript
-        echo '<script>
-                        const robodeskPriorityColors = ' . wp_json_encode($priority_colors) . ';
-                    </script>';
+        add_action('admin_footer', function () use ($priority_colors) {
+            wp_add_inline_script('robodesk-dashboard-script', '
+                const robodeskPriorityColors = ' . wp_json_encode($priority_colors) . ';
+            ', 'before');
+        }, 100);
 
         // Generate table HTML
         ob_start();
@@ -413,9 +414,13 @@ $dashboard_hidden = ($current_tab !== '' && $current_tab !== 'dashboard') || $ha
             </table>
         </div>
         <div id="dashboard-pagination" class="py-4"></div>
-        <script>
-            const dashboard_tickets = <?php echo wp_json_encode($dashboard_tickets); ?>;
-        </script>
+        <?php
+        add_action('admin_footer', function () use ($dashboard_tickets) {
+            wp_add_inline_script('robodesk-dashboard-script', '
+                const dashboard_tickets = ' . wp_json_encode($dashboard_tickets) . ';
+            ', 'before');
+        }, 100);
+        ?>
     <?php
         return ob_get_clean();
     }

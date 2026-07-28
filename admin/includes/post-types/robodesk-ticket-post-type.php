@@ -312,13 +312,11 @@ add_action('admin_enqueue_scripts', 'robodesk_enqueue_color_picker_scripts');
 
 function robodesk_initialize_color_picker()
 {
-?>
-    <script type="text/javascript">
+    wp_add_inline_script('wp-color-picker', '
         jQuery(document).ready(function($) {
-            $('.color-picker-field').wpColorPicker();
+            $(\'.color-picker-field\').wpColorPicker();
         });
-    </script>
-<?php
+    ');
 }
 
 // Step 4: Save the color value when the term is created or updated
@@ -870,14 +868,13 @@ function robodesk_user_data_to_session_storage()
         'isLoggedIn'     => is_user_logged_in(),
         'loggedInUserId' => is_user_logged_in() ? get_current_user_id() : '',
     ];
-?>
-    <script type="text/javascript">
+
+    wp_add_inline_script('jquery', '
         if (typeof(Storage) !== "undefined") {
-            var userData = <?php echo wp_json_encode($user_data); ?>;
-            sessionStorage.setItem('wpUserData', JSON.stringify(userData));
+            var userData = ' . wp_json_encode($user_data) . ';
+            sessionStorage.setItem(\'wpUserData\', JSON.stringify(userData));
         }
-    </script>
-<?php
+    ');
 }
 add_action('wp_footer', 'robodesk_user_data_to_session_storage');
 

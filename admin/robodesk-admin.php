@@ -255,6 +255,7 @@ function robodesk_enqueue_tailwind_and_styles()
         [],
         '1.0.0'
     );
+    wp_add_inline_style('robodesk-dashboard-styles', '.hidden { display: none; }');
 
     // Enqueue custom JavaScript
     wp_enqueue_script(
