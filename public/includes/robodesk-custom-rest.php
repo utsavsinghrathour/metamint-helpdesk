@@ -412,6 +412,10 @@ add_action('rest_api_init', function () {
                     if ($user_id > 0 && $user_id !== get_current_user_id()) {
                         return false;
                     }
+                    $type = $request->get_param('type');
+                    if ($type === 'tickets' || $type === 'comments') {
+                        return robodesk_can_view_ticket($request);
+                    }
                     return true;
                 },
                 'args' => array(
