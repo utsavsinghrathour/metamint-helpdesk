@@ -1119,8 +1119,6 @@ function robodesk_collect_source_context($request = null, $overrides = array())
     );
 }
 
-function robodesk_collect_email_source_context
-
 function robodesk_collect_email_source_context($raw_headers)
 {
     $headers = array();
