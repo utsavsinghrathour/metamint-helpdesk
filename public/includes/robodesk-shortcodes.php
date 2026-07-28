@@ -1320,7 +1320,7 @@ function robodesk_single_ticket_shortcode($atts)
         $single_ticket_js_enqueued = true;
         $ajax_url = esc_url(admin_url('admin-ajax.php'));
         add_action('wp_footer', function () use ($ajax_url) {
-            wp_add_inline_script('jquery', '
+            wp_add_inline_script('robodesk-scripts', '
 jQuery(document).ready(function($) {
     var originalFormParent = $(\'#respond\').parent();
     var originalFormSibling = $(\'#respond\').next();

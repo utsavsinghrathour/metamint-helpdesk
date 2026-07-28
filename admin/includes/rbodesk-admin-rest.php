@@ -201,13 +201,13 @@ function robodesk_live_admin_comments($request)
         if (!empty($new_admin_comments)) {
             foreach ($new_admin_comments as $comment) {
                 echo "event: new_admin_comment\n";
-                echo "data: " . json_encode($comment) . "\n\n";
+                echo "data: " . wp_json_encode($comment) . "\n\n";
                 flush();
             }
             update_post_meta($ticket_id, 'rbd_all_seen', 'yes');
         } else {
             echo "event: disconnect\n";
-            echo "data: " . json_encode(array('reason' => 'timeout')) . "\n\n";
+            echo "data: " . wp_json_encode(array('reason' => 'timeout')) . "\n\n";
             flush();
         }
     }
@@ -387,7 +387,7 @@ function robodesk_ticket_stream($request)
         $notes      = $build_notes();
         $status     = get_post_meta($ticket_id, '_robodesk_ticket_status', true) ?: 'open';
         echo "event: sync\n";
-        echo "data: " . json_encode([
+        echo "data: " . wp_json_encode([
             'replies'       => $replies,
             'replies_count' => count($replies),
             'notes'         => $notes,
@@ -522,7 +522,7 @@ function robodesk_notification_stream()
         if ($count !== $last_count) {
             $last_count = $count;
             echo "event: notifications\n";
-            echo "data: " . json_encode(['items' => $items, 'count' => $count]) . "\n\n";
+            echo "data: " . wp_json_encode(['items' => $items, 'count' => $count]) . "\n\n";
             flush();
         }
     };
