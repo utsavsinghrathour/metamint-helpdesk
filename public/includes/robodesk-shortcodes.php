@@ -600,7 +600,7 @@ function robodesk_frontend_dashboard_shortcode()
 <?php
         return ob_get_clean();
     } else {
-        return '<div class="robodesk-container"><p>Please <a href="' . wp_login_url(get_permalink()) . '">login</a> to access your dashboard.</p></div>';
+        return '<div class="robodesk-container"><p>Please <a href="' . esc_url(wp_login_url(get_permalink())) . '">login</a> to access your dashboard.</p></div>';
     }
 }
 
@@ -1011,7 +1011,7 @@ function robodesk_create_ticket_page()
 <?php
         return ob_get_clean();
     } else {
-        return '<div class="robodesk-container"><p>Please <a href="' . wp_login_url(get_permalink()) . '">login</a> to create a ticket.</p></div>';
+        return '<div class="robodesk-container"><p>Please <a href="' . esc_url(wp_login_url(get_permalink())) . '">login</a> to create a ticket.</p></div>';
     }
 }
 
