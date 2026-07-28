@@ -7,7 +7,8 @@ if (!defined('ABSPATH')) {
 if (!function_exists('robodesk_get_debug_log_path')) {
     function robodesk_get_debug_log_path()
     {
-        return ROBODESK_PLUGIN_PATH . 'logs/debug.log';
+        $upload_dir = wp_upload_dir();
+        return $upload_dir['basedir'] . '/robodesk/debug.log';
     }
 }
 

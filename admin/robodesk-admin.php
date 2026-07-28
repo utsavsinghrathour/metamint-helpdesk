@@ -23,7 +23,7 @@ function robodesk_add_admin_menu()
         'robodesk-dashboard',
         'robodesk_dashboard_callback',
         'dashicons-email-alt',
-        25
+        30
     );
 
     // Dashboard (default submenu)

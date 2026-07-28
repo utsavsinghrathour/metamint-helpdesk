@@ -16,12 +16,6 @@ if (!defined('ABSPATH')) {
     exit; // Exit if accessed directly
 }
 
-if (function_exists('ini_set')) {
-    // phpcs:ignore Squiz.PHP.DiscouragedFunctions.Discouraged
-    @ini_set('display_errors', '0');
-    // phpcs:ignore Squiz.PHP.DiscouragedFunctions.Discouraged
-    @ini_set('display_startup_errors', '0');
-}
 // Define constants
 define('ROBODESK_PLUGIN_PATH', plugin_dir_path(__FILE__));
 define('ROBODESK_PLUGIN_URL', plugin_dir_url(__FILE__));
@@ -186,10 +180,10 @@ function robodesk_deactivate()
  */
 function robodesk_init_debug_log()
 {
-    $logs_dir = ROBODESK_PLUGIN_PATH . 'logs';
+    $upload_dir = wp_upload_dir();
+    $logs_dir = $upload_dir['basedir'] . '/robodesk';
     $debug_log = $logs_dir . '/debug.log';
 
-    // Check if logs directory exists, create if not
     if (!is_dir($logs_dir)) {
         // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_mkdir
         if (!mkdir($logs_dir, 0755, true)) {
@@ -198,18 +192,14 @@ function robodesk_init_debug_log()
         }
     }
 
-    // Check if debug.log file exists, create if not
     if (!file_exists($debug_log)) {
         $initial_content = "[DEBUG LOG]\n";
-
-
 
         if (!file_put_contents($debug_log, $initial_content)) {
             rbd_log('Failed to create Robodesk debug.log file');
             return false;
         }
 
-        // Set file permissions
         // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_chmod
         chmod($debug_log, 0644);
     }
@@ -723,7 +713,8 @@ function robodesk_get_requested_ticket_id_from_query()
 // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedFunctionFound
 function rbd_log($message)
 {
-    $log_file = ROBODESK_PLUGIN_PATH . 'logs/debug.log';
+    $upload_dir = wp_upload_dir();
+    $log_file = $upload_dir['basedir'] . '/robodesk/debug.log';
     $log_dir  = dirname($log_file);
 
     if (!file_exists($log_dir)) {
@@ -1071,40 +1062,6 @@ function robodesk_parse_browser_label($value)
     return $value;
 }
 
-function robodesk_lookup_country_by_ip($ip)
-{
-    $ip = trim((string) $ip);
-    if ($ip === '' || !robodesk_is_public_ip($ip)) {
-        return '';
-    }
-
-    $cache_key = 'robodesk_country_' . md5($ip);
-    $cached_country = get_transient($cache_key);
-    if ($cached_country !== false) {
-        return (string) $cached_country;
-    }
-
-    $response = wp_remote_get(
-        'https://ipapi.co/' . rawurlencode($ip) . '/country_name/',
-        array(
-            'timeout' => 2,
-            'redirection' => 1,
-            'user-agent' => 'Robodesk/' . (defined('ROBODESK_VERSION') ? ROBODESK_VERSION : '1.0.6'),
-        )
-    );
-
-    if (is_wp_error($response)) {
-        return '';
-    }
-
-    $country = trim((string) wp_remote_retrieve_body($response));
-    if ($country !== '') {
-        set_transient($cache_key, $country, DAY_IN_SECONDS);
-    }
-
-    return $country;
-}
-
 function robodesk_collect_source_context($request = null, $overrides = array())
 {
     $headers = robodesk_get_request_header_values($request);
@@ -1147,10 +1104,6 @@ function robodesk_collect_source_context($request = null, $overrides = array())
         }
     }
 
-    if ($country === '' && $ip !== '') {
-        $country = robodesk_lookup_country_by_ip($ip);
-    }
-
     $browser_source = '';
     foreach (array('user-agent', 'x-mailer') as $header_key) {
         if (!empty($headers[$header_key])) {
@@ -1165,6 +1118,8 @@ function robodesk_collect_source_context($request = null, $overrides = array())
         'browser' => robodesk_parse_browser_label($browser_source),
     );
 }
+
+function robodesk_collect_email_source_context
 
 function robodesk_collect_email_source_context($raw_headers)
 {
@@ -1229,10 +1184,6 @@ function robodesk_collect_email_source_context($raw_headers)
         $country = strtoupper(trim((string) $headers['x-originating-country']));
     } elseif (!empty($headers['x-country-code'])) {
         $country = strtoupper(trim((string) $headers['x-country-code']));
-    }
-
-    if ($country === '' && $ip !== '') {
-        $country = robodesk_lookup_country_by_ip($ip);
     }
 
     return array(
