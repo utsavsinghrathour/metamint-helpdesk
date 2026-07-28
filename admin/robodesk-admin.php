@@ -237,18 +237,13 @@ function robodesk_enqueue_tailwind_and_styles()
     // Needed for the native WordPress crop modal.
     wp_enqueue_media();
 
-    // Load Tailwind CDN browser runtime thats why wp_enqueue_script is used not style
-    // phpcs:disable PluginCheck.CodeAnalysis.EnqueuedResourceOffloading.OffloadedContent
-    wp_enqueue_script(
-        'tailwind-browser-cdn',
-        'https://cdn.tailwindcss.com',
-        [], // No dependencies
-        '3.4.15',
-        false // Load in header
+    wp_enqueue_style(
+        'tailwind-css',
+        plugin_dir_url(__FILE__) . 'assets/css/tailwind/tailwind.min.css',
+        [],
+        '3.4.15'
     );
-    // phpcs:enable PluginCheck.CodeAnalysis.EnqueuedResourceOffloading.OffloadedContent
 
-    // Load custom CSS
     wp_enqueue_style(
         'robodesk-dashboard-styles',
         plugin_dir_url(__FILE__) . 'assets/css/robodesk-dashboard.css',
@@ -257,7 +252,6 @@ function robodesk_enqueue_tailwind_and_styles()
     );
     wp_add_inline_style('robodesk-dashboard-styles', '.hidden { display: none; }');
 
-    // Enqueue custom JavaScript
     wp_enqueue_script(
         'robodesk-dashboard-script',
         plugin_dir_url(__FILE__) . 'assets/js/robodesk-dashboard.js',
@@ -269,19 +263,12 @@ function robodesk_enqueue_tailwind_and_styles()
     // Note: Slack and Discord integration scripts have been moved to the robodesk-addon plugin
     // They will be enqueued automatically when the respective addons are activated
 
-    // Enqueue Font Awesome for icons
-    // phpcs:disable PluginCheck.CodeAnalysis.EnqueuedResourceOffloading.OffloadedContent
-    add_action('wp_head', function () {
-        echo '<link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>';
-        echo '<link rel="preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">';
-    }, 1);
     wp_enqueue_style(
         'font-awesome',
-        'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css',
+        plugin_dir_url(__FILE__) . 'assets/css/font-awesome.min.css',
         [],
         '6.0.0'
     );
-    // phpcs:enable PluginCheck.CodeAnalysis.EnqueuedResourceOffloading.OffloadedContent
 
     // Localize script with all necessary nonces
     wp_localize_script('robodesk-dashboard-script', 'robodeskAjax', [
