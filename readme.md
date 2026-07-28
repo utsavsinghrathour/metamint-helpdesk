@@ -14,6 +14,16 @@ A support ticket and FAQ system for WordPress.
 
 Robodesk is a simple and efficient support plugin for WordPress that enables users to submit support tickets, track their status, and communicate with the support team directly from the WordPress dashboard.
 
+== External Services ==
+
+This plugin uses the following external services:
+
+**jsdelivr CDN** — Used by the frontend emoji picker to load emoji sprite images (PNG). Data sent: emoji image URLs requested. No personal data is transmitted. Service URL: https://www.jsdelivr.com/ | Privacy policy: https://www.jsdelivr.com/terms/privacy-policy-jsdelivr-net
+
+== Source Code & Build Tools ==
+
+The frontend assets in `public/build/` are generated from source files located in `public/src/` using webpack. The source code for these build artifacts is included in the plugin at `public/src/`. Build configuration: `public/webpack.config.js`. Public source repository: https://github.com/utsavsinghrathour/robodesk
+
 == Installation ==
 
 1. Upload the plugin files to `/wp-content/plugins/robodesk`
