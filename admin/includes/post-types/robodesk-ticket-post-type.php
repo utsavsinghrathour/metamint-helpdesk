@@ -520,7 +520,7 @@ add_action('rest_api_init', function () {
     register_rest_route('chat/v1', '/tickets', array(
         'methods'  => 'POST',
         'callback' => 'robodesk_handle_tickets_webhook',
-        'permission_callback' => '__return_true',
+        'permission_callback' => '__return_true', // Webhook; auth via HMAC signature in callback
     ));
 });
 
@@ -541,7 +541,7 @@ function robodesk_handle_tickets_webhook(WP_REST_Request $request)
     }
 
     // HMAC verification using SECURE_AUTH_KEY
-    $signature = $_SERVER['HTTP_X_WEBHOOK_SIGNATURE'] ?? '';
+    $signature = isset($_SERVER['HTTP_X_WEBHOOK_SIGNATURE']) ? sanitize_text_field(wp_unslash($_SERVER['HTTP_X_WEBHOOK_SIGNATURE'])) : '';
     $expected = hash_hmac('sha256', $payload, SECURE_AUTH_KEY);
     if (!hash_equals($expected, $signature)) {
         return new WP_Error(

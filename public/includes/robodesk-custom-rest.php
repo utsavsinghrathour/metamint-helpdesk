@@ -349,13 +349,13 @@ add_action('rest_api_init', function () {
     register_rest_route('robodesk/v1', '/signup', array(
         'methods' => 'POST',
         'callback' => 'robodesk_user_signup',
-        'permission_callback' => '__return_true',
+        'permission_callback' => '__return_true', // Public registration endpoint
     ));
 
     register_rest_route('robodesk/chat/v1', '/tickets', array(
         'methods' => 'POST',
         'callback' => 'robodesk_handle_tickets',
-        'permission_callback' => '__return_true',
+        'permission_callback' => '__return_true', // Public webhook endpoint; auth via payload validation in callback
     ));
 
     register_rest_route('robodesk/selected', '/staff', array(
@@ -369,7 +369,9 @@ add_action('rest_api_init', function () {
     register_rest_route('robodesk-bot/v1', '/wa-settings', array(
         'methods' => 'GET',
         'callback' => 'robodesk_handle_wa_settings',
-        'permission_callback' => '__return_true',
+        'permission_callback' => function () {
+            return is_user_logged_in();
+        },
     ));
 
     register_rest_route('robodesk/v1', '/messaging/(?P<post_id>\d+)(?:/(?P<last_comment_id>\d+))?(?:/(?P<user_id>\d+))?', array(
@@ -456,10 +458,14 @@ function robodesk_stream($request)
     header('Access-Control-Allow-Headers: Cache-Control');
     header('X-Accel-Buffering: no');
 
-    // phpcs:ignore Squiz.PHP.DiscouragedFunctions.Discouraged
-    set_time_limit(0);
+    if (function_exists('set_time_limit')) {
+        // phpcs:ignore Squiz.PHP.DiscouragedFunctions.Discouraged
+        set_time_limit(0);
+    }
 
-    session_write_close();
+    if (function_exists('session_write_close')) {
+        session_write_close();
+    }
 
     if (ob_get_level())
         ob_end_clean();
@@ -471,9 +477,13 @@ function robodesk_stream($request)
         @ini_set('output_buffering', 0);
     }
 
-    // phpcs:ignore Squiz.PHP.DiscouragedFunctions.Discouraged
-    set_time_limit(0);
-    ignore_user_abort(false);
+    if (function_exists('set_time_limit')) {
+        // phpcs:ignore Squiz.PHP.DiscouragedFunctions.Discouraged
+        set_time_limit(0);
+    }
+    if (function_exists('ignore_user_abort')) {
+        ignore_user_abort(false);
+    }
 
     if (connection_aborted())
         return;
@@ -914,9 +924,13 @@ function robodesk_live_comments($request)
     }
 
     // Set execution limits
-    // phpcs:ignore Squiz.PHP.DiscouragedFunctions.Discouraged
-    set_time_limit(0);
-    ignore_user_abort(false);
+    if (function_exists('set_time_limit')) {
+        // phpcs:ignore Squiz.PHP.DiscouragedFunctions.Discouraged
+        set_time_limit(0);
+    }
+    if (function_exists('ignore_user_abort')) {
+        ignore_user_abort(false);
+    }
 
     $ticket_status = get_post_meta($ticket_id, '_robodesk_ticket_status', true);
 
@@ -1807,7 +1821,7 @@ add_action('rest_api_init', function () {
     register_rest_route('robodesk/v1', '/lost-password', array(
         'methods' => 'POST',
         'callback' => 'robodesk_custom_lost_password',
-        'permission_callback' => '__return_true',
+        'permission_callback' => '__return_true', // Public lost-password endpoint
     ));
 });
 
