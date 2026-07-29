@@ -236,14 +236,14 @@ const Login = ({
 
     setIsSubmitting(true);
     try {
-      const response = await fetch(robodeskAuth.wpAjax.ajaxUrl, {
+      const response = await fetch(window.robodeskAuth?.wpAjax?.ajaxUrl, {
         method: "POST",
         headers: {
           "Content-Type": "application/x-www-form-urlencoded",
         },
         body: new URLSearchParams({
           action: "robodesk_check_email",
-          security: robodeskAuth.wpAjax.nonce,
+          security: window.robodeskAuth?.wpAjax?.nonce,
           email: formData.email,
         }),
       });

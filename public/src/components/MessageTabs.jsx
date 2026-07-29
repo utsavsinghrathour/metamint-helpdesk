@@ -319,7 +319,7 @@ const MessageTabs = ({
                     className="rd-border-light rd-p-10 rd-body-text rd-border-radius-md rd-color-gray rd-fw-medium flex-1"
                   >
                     <option value="all">All</option>
-                    {robodeskAuth?.priorityTerms?.map((priority) => (
+                    {window.robodeskAuth?.priorityTerms?.map((priority) => (
                       <option
                         key={priority.term_id}
                         value={priority.slug || priority.name?.toLowerCase()}
@@ -338,7 +338,7 @@ const MessageTabs = ({
                     }}
                     className="rd-p-10 rd-py-5 rd-border-light rd-border-radius-md rd-body-text ticket-tab rd-color-gray rd-fw-medium"
                   >
-                    {Object.entries(robodeskAuth?.status).map(([key, label]) => (
+                    {Object.entries(window.robodeskAuth?.status || {}).map(([key, label]) => (
                       <option key={key} value={key}>
                         {key === "active-conversations" ? "Active" : label}
                       </option>

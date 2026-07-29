@@ -303,6 +303,11 @@ function robodesk_can_view_ticket(WP_REST_Request $request)
         return false;
     }
 
+    // post_id=0 means streaming all tickets (no specific ticket)
+    if ($post_id === 0) {
+        return true;
+    }
+
     $post = get_post($post_id);
     if (!$post || $post->post_type !== 'robodesk_ticket') {
         return false;
@@ -349,9 +354,7 @@ add_action('rest_api_init', function () {
     register_rest_route('robodesk-bot/v1', '/wa-settings', array(
         'methods' => 'GET',
         'callback' => 'robodesk_handle_wa_settings',
-        'permission_callback' => function () {
-            return is_user_logged_in();
-        },
+        'permission_callback' => '__return_true',
     ));
 
     register_rest_route('robodesk/v1', '/messaging/(?P<post_id>\d+)(?:/(?P<last_comment_id>\d+))?(?:/(?P<user_id>\d+))?', array(

@@ -327,7 +327,7 @@ const SingleTicket = ({
   // programmatic notification beeps are not blocked by the autoplay policy.
   useEffect(() => {
     const unlock = () => {
-      const sound = robodeskAuth?.notificationSound;
+      const sound = window.robodeskAuth?.notificationSound;
       if (sound) {
         const audio = new Audio(sound);
         const p = audio.play();

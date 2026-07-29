@@ -110,7 +110,7 @@ export default function ChangePassword({ onReset }) {
 
     try {
       // WordPress Ajax request
-      const response = await fetch(robodeskAuth?.wpAjax?.ajaxUrl, {
+      const response = await fetch(window.robodeskAuth?.wpAjax?.ajaxUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded',
@@ -120,7 +120,7 @@ export default function ChangePassword({ onReset }) {
           password: formData.password,
           reset_key: resetKey,
           user: resetUser,
-          nonce: robodeskAuth?.wpAjax?.passwordResetNonce,
+          nonce: window.robodeskAuth?.wpAjax?.passwordResetNonce,
         }),
       });
 
