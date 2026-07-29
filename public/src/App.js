@@ -115,7 +115,7 @@ const AppContent = ({ imageUrls = { logo: "" } }) => {
       return;
     }
 
-    if (!loggedInUsrId && robodeskAuth.isLoggedIn !== "true") {
+    if (!loggedInUsrId && window.robodeskAuth?.isLoggedIn !== "true") {
       return;
     }
 
@@ -346,13 +346,13 @@ const AppContent = ({ imageUrls = { logo: "" } }) => {
   };
 
   const handlePopupToggle = async () => {
-    console.log("Toggle Clicked", robodeskAuth.isLoggedIn, typeof robodeskAuth.isLoggedIn);
+    console.log("Toggle Clicked", window.robodeskAuth?.isLoggedIn, typeof window.robodeskAuth?.isLoggedIn);
     if (isOpen) {
       setIsOpen(false);
       setShowActiveFeatured(true);
       setSelectedNotice(null);
     } else {
-      if (robodeskAuth.isLoggedIn === "true") {
+      if (window.robodeskAuth?.isLoggedIn === "true") {
         await generateToken(); // Generate token on popup toggle open
       }
       setIsOpen(true);
