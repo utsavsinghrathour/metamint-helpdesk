@@ -54,12 +54,12 @@ function robodesk_dashboard_callback()
             <div class="flex justify-between h-16">
                 <div class="flex items-center">
                     <div class="flex-shrink-0 flex items-center">
-                        <button onclick="showPage('dashboard')" class="text-blue-600 hover:text-blue-800">
+                        <button onclick="showPage('dashboard')" class="bg-transparent p-0 m-0 cursor-pointer" style="background: transparent; border: none; outline: none; box-shadow: none; -webkit-appearance: none; appearance: none;">
                             <?php
                                 $plugin_base_url = plugin_dir_url(dirname(__FILE__, 2));
                                 $logo_url        = $plugin_base_url . 'admin/assets/images/robodesk-black.png';
 
-                                echo '<img src="' . esc_url($logo_url) . '" alt="Company Logo" width="130" height="100">';
+                                echo '<img src="' . esc_url($logo_url) . '" alt="Company Logo" width="130" height="100" style="border: none;">';
                                 ?>
                         </button>
                     </div>
