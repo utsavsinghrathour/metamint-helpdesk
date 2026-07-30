@@ -12,7 +12,7 @@ function robodesk_ticket_form_shortcode()
         ob_start();
 ?>
 <div class="robodesk-ticket-form robodesk-container">
-    < <h2>Submit a Ticket</h2>
+    <h2>Submit a Ticket</h2>
         <form method="post" id="robodesk_submit_ticket">
             <label for="ticket_title">Title:</label>
             <input type="text" name="ticket_title" id="ticket_title" required><br><br>
@@ -477,9 +477,9 @@ function robodesk_frontend_dashboard_shortcode()
                     echo do_shortcode('[robodesk_single_ticket id="' . $ticket_id . '"]');
                 } else if (array_key_exists($current_page, $menu_items)) {
                     if ($current_page == 'dashboard') {
-                        echo wp_kses_post($menu_items[$current_page]['function']($notification_count, $open_tickets, $total_tickets));
+                        echo $menu_items[$current_page]['function']($notification_count, $open_tickets, $total_tickets);
                     } else {
-                        echo wp_kses_post($menu_items[$current_page]['function']());
+                        echo $menu_items[$current_page]['function']();
                     }
                 } else {
                     echo "Invalid Page";
