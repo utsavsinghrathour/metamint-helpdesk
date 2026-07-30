@@ -560,8 +560,7 @@
 }
 
 .reply-action {
-  background-color: #00265e;
-  /* blue background */
+  background-color: rgb(191 219 254 / var(--tw-bg-opacity, 1));
 }
 
 .blinking-red {
@@ -750,7 +749,6 @@ CONVERSATION
 .rbd-break-all {
   word-break: break-all;
 }
-
 @media (min-width: 1025px) {
   .rbd-desktop-hidden {
     display: none;
@@ -758,7 +756,7 @@ CONVERSATION
 }
 
 @media (max-width: 1024px) {
-  .rbd-settings-nav-sec {
+.rbd-settings-nav-sec {
     flex-wrap: wrap;
     justify-content: flex-start;
   }
