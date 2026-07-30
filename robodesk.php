@@ -17,7 +17,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Define constants
-define('ROBODESK_VERSION', '1.4.0');
+define('ROBODESK_VERSION', '1.4.1');
 define('ROBODESK_PLUGIN_PATH', plugin_dir_path(__FILE__));
 define('ROBODESK_PLUGIN_URL', plugin_dir_url(__FILE__));
 
