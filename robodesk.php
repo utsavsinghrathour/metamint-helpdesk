@@ -17,6 +17,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Define constants
+define('ROBODESK_VERSION', '1.4.0');
 define('ROBODESK_PLUGIN_PATH', plugin_dir_path(__FILE__));
 define('ROBODESK_PLUGIN_URL', plugin_dir_url(__FILE__));
 
@@ -246,10 +247,10 @@ function robodesk_enqueue_scripts()
     wp_enqueue_script('jquery');
 
     // Enqueue styles (already existing)
-    wp_enqueue_style('robodesk-styles', ROBODESK_PLUGIN_URL . 'public/assets/css/robodesk-styles.css', array(), time());
+    wp_enqueue_style('robodesk-styles', ROBODESK_PLUGIN_URL . 'public/assets/css/robodesk-styles.css', array(), ROBODESK_VERSION);
 
     // Enqueue scripts (already existing)
-    wp_enqueue_script('robodesk-scripts', ROBODESK_PLUGIN_URL . 'public/assets/js/robodesk-scripts.js', array('jquery'), time(), true);
+    wp_enqueue_script('robodesk-scripts', ROBODESK_PLUGIN_URL . 'public/assets/js/robodesk-scripts.js', array('jquery'), ROBODESK_VERSION, true);
 
     if (is_admin()) {
         add_action('admin_enqueue_scripts', 'robodesk_enqueue_admin_scripts');
@@ -258,9 +259,9 @@ function robodesk_enqueue_scripts()
         wp_enqueue_script('tinymce');
 
         // Re-enqueue styles (already existing, adjust if needed)
-        wp_enqueue_style('robodesk-styles', ROBODESK_PLUGIN_URL . 'public/assets/css/robodesk-styles.css', array(), time());
+        wp_enqueue_style('robodesk-styles', ROBODESK_PLUGIN_URL . 'public/assets/css/robodesk-styles.css', array(), ROBODESK_VERSION);
         // Re-enqueue scripts with TinyMCE dependency
-        wp_enqueue_script('robodesk-scripts', ROBODESK_PLUGIN_URL . 'public/assets/js/robodesk-scripts.js', array('jquery', 'tinymce', 'wp-api', 'wp-data', 'wp-core-data'), time(), true);
+        wp_enqueue_script('robodesk-scripts', ROBODESK_PLUGIN_URL . 'public/assets/js/robodesk-scripts.js', array('jquery', 'tinymce', 'wp-api', 'wp-data', 'wp-core-data'), ROBODESK_VERSION, true);
 
         // Existing wp_localize_script for AJAX
         wp_localize_script('robodesk-scripts', 'robodesk_ajax_object', array(
@@ -286,7 +287,7 @@ function robodesk_enqueue_scripts()
             'robodesk-react-script',
             ROBODESK_PLUGIN_URL . 'public/build/index.js',
             array_merge(array('jquery'), $asset_file['dependencies']),
-            time(),
+            ROBODESK_VERSION,
             true
         );
 
@@ -440,7 +441,7 @@ function robodesk_enqueue_admin_scripts($hook)
 
     if ($taxonomy === 'robodesk_ticket_priority' && $post_type === 'robodesk_ticket') {
         wp_enqueue_script('jquery-ui-sortable');
-        wp_enqueue_script('robodesk-custom-taxonomy-order', ROBODESK_PLUGIN_URL . 'admin/assets/js/custom-taxonomy-order.js', array('jquery', 'jquery-ui-sortable'), time(), true);
+        wp_enqueue_script('robodesk-custom-taxonomy-order', ROBODESK_PLUGIN_URL . 'admin/assets/js/custom-taxonomy-order.js', array('jquery', 'jquery-ui-sortable'), ROBODESK_VERSION, true);
         wp_localize_script('robodesk-custom-taxonomy-order', 'taxonomyOrderData', array(
             'ajax_url' => admin_url('admin-ajax.php'),
             'nonce' => wp_create_nonce('taxonomy_order_nonce')
