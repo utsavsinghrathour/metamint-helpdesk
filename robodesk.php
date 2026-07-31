@@ -4,7 +4,7 @@
  * Plugin Name: Robodesk Support Ticket System
  * Plugin URI: https://robodesk.io
  * Description: A support ticket and FAQ system.
- * Version: 1.0.0
+ * Version: 1.4.1
  * Author: Code Pixelz Media
  * Author URI: https://codepixelzmedia.com
  * License: GPL2
@@ -16,13 +16,8 @@ if (!defined('ABSPATH')) {
     exit; // Exit if accessed directly
 }
 
-if (function_exists('ini_set')) {
-    // phpcs:ignore Squiz.PHP.DiscouragedFunctions.Discouraged
-    @ini_set('display_errors', '0');
-    // phpcs:ignore Squiz.PHP.DiscouragedFunctions.Discouraged
-    @ini_set('display_startup_errors', '0');
-}
 // Define constants
+define('ROBODESK_VERSION', '1.4.1');
 define('ROBODESK_PLUGIN_PATH', plugin_dir_path(__FILE__));
 define('ROBODESK_PLUGIN_URL', plugin_dir_url(__FILE__));
 
@@ -186,10 +181,10 @@ function robodesk_deactivate()
  */
 function robodesk_init_debug_log()
 {
-    $logs_dir = ROBODESK_PLUGIN_PATH . 'logs';
+    $upload_dir = wp_upload_dir();
+    $logs_dir = $upload_dir['basedir'] . '/robodesk';
     $debug_log = $logs_dir . '/debug.log';
 
-    // Check if logs directory exists, create if not
     if (!is_dir($logs_dir)) {
         // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_mkdir
         if (!mkdir($logs_dir, 0755, true)) {
@@ -198,18 +193,14 @@ function robodesk_init_debug_log()
         }
     }
 
-    // Check if debug.log file exists, create if not
     if (!file_exists($debug_log)) {
         $initial_content = "[DEBUG LOG]\n";
-
-
 
         if (!file_put_contents($debug_log, $initial_content)) {
             rbd_log('Failed to create Robodesk debug.log file');
             return false;
         }
 
-        // Set file permissions
         // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_chmod
         chmod($debug_log, 0644);
     }
@@ -256,10 +247,10 @@ function robodesk_enqueue_scripts()
     wp_enqueue_script('jquery');
 
     // Enqueue styles (already existing)
-    wp_enqueue_style('robodesk-styles', ROBODESK_PLUGIN_URL . 'public/assets/css/robodesk-styles.css', array(), time());
+    wp_enqueue_style('robodesk-styles', ROBODESK_PLUGIN_URL . 'public/assets/css/robodesk-styles.css', array(), ROBODESK_VERSION);
 
     // Enqueue scripts (already existing)
-    wp_enqueue_script('robodesk-scripts', ROBODESK_PLUGIN_URL . 'public/assets/js/robodesk-scripts.js', array('jquery'), time(), true);
+    wp_enqueue_script('robodesk-scripts', ROBODESK_PLUGIN_URL . 'public/assets/js/robodesk-scripts.js', array('jquery'), ROBODESK_VERSION, true);
 
     if (is_admin()) {
         add_action('admin_enqueue_scripts', 'robodesk_enqueue_admin_scripts');
@@ -268,9 +259,9 @@ function robodesk_enqueue_scripts()
         wp_enqueue_script('tinymce');
 
         // Re-enqueue styles (already existing, adjust if needed)
-        wp_enqueue_style('robodesk-styles', ROBODESK_PLUGIN_URL . 'public/assets/css/robodesk-styles.css', array(), time());
+        wp_enqueue_style('robodesk-styles', ROBODESK_PLUGIN_URL . 'public/assets/css/robodesk-styles.css', array(), ROBODESK_VERSION);
         // Re-enqueue scripts with TinyMCE dependency
-        wp_enqueue_script('robodesk-scripts', ROBODESK_PLUGIN_URL . 'public/assets/js/robodesk-scripts.js', array('jquery', 'tinymce', 'wp-api', 'wp-data', 'wp-core-data'), time(), true);
+        wp_enqueue_script('robodesk-scripts', ROBODESK_PLUGIN_URL . 'public/assets/js/robodesk-scripts.js', array('jquery', 'tinymce', 'wp-api', 'wp-data', 'wp-core-data'), ROBODESK_VERSION, true);
 
         // Existing wp_localize_script for AJAX
         wp_localize_script('robodesk-scripts', 'robodesk_ajax_object', array(
@@ -296,7 +287,7 @@ function robodesk_enqueue_scripts()
             'robodesk-react-script',
             ROBODESK_PLUGIN_URL . 'public/build/index.js',
             array_merge(array('jquery'), $asset_file['dependencies']),
-            time(),
+            ROBODESK_VERSION,
             true
         );
 
@@ -324,10 +315,10 @@ function robodesk_enqueue_scripts()
                 'robodesk_bot_title_name' => get_option('robodesk_bot_title_name', ''),
                 'robodesk_addon_active' => defined('ROBODESK_ADDON_VERSION'),
                 'robodesk_ai_bot_active' => get_option('robodesk_addon_ai_bot_status', 'inactive') === 'active',
+                'enable_chat' => get_option('robodesk_enable_chat', '1'),
             ]
         );
 
-        // Existing wp_localize_script for wpAuth
         // Build priority colors array
         $priority_terms = get_terms(array(
             'taxonomy' => 'robodesk_ticket_priority',
@@ -341,7 +332,7 @@ function robodesk_enqueue_scripts()
             }
         }
 
-        wp_localize_script('robodesk-react-script', 'wpAuth', array(
+        wp_localize_script('robodesk-react-script', 'robodeskAuth', array(
             'isLoggedIn' => is_user_logged_in() ? 'true' : 'false',
             'loggedInUserId' => is_user_logged_in() ? get_current_user_id() : 'false',
 
@@ -450,8 +441,8 @@ function robodesk_enqueue_admin_scripts($hook)
 
     if ($taxonomy === 'robodesk_ticket_priority' && $post_type === 'robodesk_ticket') {
         wp_enqueue_script('jquery-ui-sortable');
-        wp_enqueue_script('custom-taxonomy-order', ROBODESK_PLUGIN_URL . 'admin/assets/js/custom-taxonomy-order.js', array('jquery', 'jquery-ui-sortable'), time(), true);
-        wp_localize_script('custom-taxonomy-order', 'taxonomyOrderData', array(
+        wp_enqueue_script('robodesk-custom-taxonomy-order', ROBODESK_PLUGIN_URL . 'admin/assets/js/custom-taxonomy-order.js', array('jquery', 'jquery-ui-sortable'), ROBODESK_VERSION, true);
+        wp_localize_script('robodesk-custom-taxonomy-order', 'taxonomyOrderData', array(
             'ajax_url' => admin_url('admin-ajax.php'),
             'nonce' => wp_create_nonce('taxonomy_order_nonce')
         ));
@@ -597,11 +588,7 @@ function robodesk_get_encryption_key()
         return ROBODESK_ENCRYPTION_KEY;
     }
 
-    if (defined('AUTH_KEY') && AUTH_KEY !== '') {
-        return AUTH_KEY;
-    }
-
-    return 'robodesk';
+    return wp_hash('robodesk-encryption-key');
 }
 
 function robodesk_encrypt($plaintext, $key = null)
@@ -629,7 +616,13 @@ function robodesk_decrypt($ciphertext, $key = null)
     }
 
     list($encrypted_data, $iv) = explode('::', $decoded, 2);
-    return openssl_decrypt($encrypted_data, "AES-256-CBC", $key, $options = 0, $iv);
+    $plaintext = openssl_decrypt($encrypted_data, "AES-256-CBC", $key, $options = 0, $iv);
+
+    if ($plaintext === false && defined('AUTH_KEY') && AUTH_KEY !== '') {
+        $plaintext = openssl_decrypt($encrypted_data, "AES-256-CBC", AUTH_KEY, $options = 0, $iv);
+    }
+
+    return $plaintext;
 }
 
 function robodesk_build_ticket_deeplink($ticket_id)
@@ -722,7 +715,8 @@ function robodesk_get_requested_ticket_id_from_query()
 // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedFunctionFound
 function rbd_log($message)
 {
-    $log_file = ROBODESK_PLUGIN_PATH . 'logs/debug.log';
+    $upload_dir = wp_upload_dir();
+    $log_file = $upload_dir['basedir'] . '/robodesk/debug.log';
     $log_dir  = dirname($log_file);
 
     if (!file_exists($log_dir)) {
@@ -1070,40 +1064,6 @@ function robodesk_parse_browser_label($value)
     return $value;
 }
 
-function robodesk_lookup_country_by_ip($ip)
-{
-    $ip = trim((string) $ip);
-    if ($ip === '' || !robodesk_is_public_ip($ip)) {
-        return '';
-    }
-
-    $cache_key = 'robodesk_country_' . md5($ip);
-    $cached_country = get_transient($cache_key);
-    if ($cached_country !== false) {
-        return (string) $cached_country;
-    }
-
-    $response = wp_remote_get(
-        'https://ipapi.co/' . rawurlencode($ip) . '/country_name/',
-        array(
-            'timeout' => 2,
-            'redirection' => 1,
-            'user-agent' => 'Robodesk/' . (defined('ROBODESK_VERSION') ? ROBODESK_VERSION : '1.0.6'),
-        )
-    );
-
-    if (is_wp_error($response)) {
-        return '';
-    }
-
-    $country = trim((string) wp_remote_retrieve_body($response));
-    if ($country !== '') {
-        set_transient($cache_key, $country, DAY_IN_SECONDS);
-    }
-
-    return $country;
-}
-
 function robodesk_collect_source_context($request = null, $overrides = array())
 {
     $headers = robodesk_get_request_header_values($request);
@@ -1144,10 +1104,6 @@ function robodesk_collect_source_context($request = null, $overrides = array())
             $country = strtoupper(trim((string) $headers[$header_key]));
             break;
         }
-    }
-
-    if ($country === '' && $ip !== '') {
-        $country = robodesk_lookup_country_by_ip($ip);
     }
 
     $browser_source = '';
@@ -1228,10 +1184,6 @@ function robodesk_collect_email_source_context($raw_headers)
         $country = strtoupper(trim((string) $headers['x-originating-country']));
     } elseif (!empty($headers['x-country-code'])) {
         $country = strtoupper(trim((string) $headers['x-country-code']));
-    }
-
-    if ($country === '' && $ip !== '') {
-        $country = robodesk_lookup_country_by_ip($ip);
     }
 
     return array(
@@ -2223,7 +2175,11 @@ function robodesk_enqueue_custom_styles()
     wp_enqueue_style('robodesk-style', get_stylesheet_uri(), array(), '1.0.0');
 
     // Get the theme color from the options
-    $theme_color = get_option('robodesk_theme_color', '#0073aa'); // fallback to default
+    $theme_color = sanitize_hex_color((string) get_option('robodesk_theme_color', ''));
+
+    if (empty($theme_color)) {
+        $theme_color = '#0073aa';
+    }
 
     // Prepare inline CSS
     $custom_css = "

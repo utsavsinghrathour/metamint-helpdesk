@@ -10,7 +10,7 @@ let beepAudio = null;
 let pendingBeep = false;
 
 function ensureAudio() {
-  const sound = window.wpAuth?.notificationSound;
+  const sound = window.robodeskAuth?.notificationSound;
   if (!sound) {
     return null;
   }

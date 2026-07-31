@@ -12,7 +12,7 @@ function robodesk_ticket_form_shortcode()
         ob_start();
 ?>
 <div class="robodesk-ticket-form robodesk-container">
-    < <h2>Submit a Ticket</h2>
+    <h2>Submit a Ticket</h2>
         <form method="post" id="robodesk_submit_ticket">
             <label for="ticket_title">Title:</label>
             <input type="text" name="ticket_title" id="ticket_title" required><br><br>
@@ -80,6 +80,9 @@ function robodesk_ticket_form_shortcode()
                 if ($ticket_priority) {
                     wp_set_object_terms($post_id, $ticket_priority, 'robodesk_ticket_priority');
                 }
+
+                do_action('robodesk_after_ticket_created', $post_id, ['title' => $ticket_title, 'content' => $ticket_content, 'origin' => $ticket_origin, 'priority' => $ticket_priority], $user_id);
+
                 echo "<div class='robodesk-container'><p>Ticket submitted successfully!</p></div>";
             } else {
                 echo "<div class='robodesk-container'><p>Error submitting ticket.</p></div>";
@@ -88,7 +91,7 @@ function robodesk_ticket_form_shortcode()
 
         return ob_get_clean();
     } else {
-        return '<div class="robodesk-container"><p>Please <a href="' . wp_login_url(get_permalink('login')) . '">login</a> to submit a ticket.</p></div>';
+        return '<div class="robodesk-container"><p>Please <a href="' . esc_url(wp_login_url(get_permalink('login'))) . '">login</a> to submit a ticket.</p></div>';
     }
 }
 
@@ -355,8 +358,7 @@ function robodesk_my_tickets_shortcode()
     ));
 
     if ($pagination) {
-        // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
-        echo '<div class="pagination">' . $pagination . '</div>';
+        echo '<div class="pagination">' . wp_kses_post($pagination) . '</div>';
     }
     return ob_get_clean();
 }
@@ -475,10 +477,8 @@ function robodesk_frontend_dashboard_shortcode()
                     echo do_shortcode('[robodesk_single_ticket id="' . $ticket_id . '"]');
                 } else if (array_key_exists($current_page, $menu_items)) {
                     if ($current_page == 'dashboard') {
-                        // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
                         echo $menu_items[$current_page]['function']($notification_count, $open_tickets, $total_tickets);
                     } else {
-                        // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
                         echo $menu_items[$current_page]['function']();
                     }
                 } else {
@@ -490,7 +490,7 @@ function robodesk_frontend_dashboard_shortcode()
 <?php
         return ob_get_clean();
     } else {
-        return '<div class="robodesk-container"><p>Please <a href="' . wp_login_url(get_permalink()) . '">login</a> to view your tickets.</p></div>';
+        return '<div class="robodesk-container"><p>Please <a href="' . esc_url(wp_login_url(get_permalink())) . '">login</a> to view your tickets.</p></div>';
     }
 }
 
@@ -600,7 +600,7 @@ function robodesk_frontend_dashboard_shortcode()
 <?php
         return ob_get_clean();
     } else {
-        return '<div class="robodesk-container"><p>Please <a href="' . wp_login_url(get_permalink()) . '">login</a> to access your dashboard.</p></div>';
+        return '<div class="robodesk-container"><p>Please <a href="' . esc_url(wp_login_url(get_permalink())) . '">login</a> to access your dashboard.</p></div>';
     }
 }
 
@@ -1011,7 +1011,7 @@ function robodesk_create_ticket_page()
 <?php
         return ob_get_clean();
     } else {
-        return '<div class="robodesk-container"><p>Please <a href="' . wp_login_url(get_permalink()) . '">login</a> to create a ticket.</p></div>';
+        return '<div class="robodesk-container"><p>Please <a href="' . esc_url(wp_login_url(get_permalink())) . '">login</a> to create a ticket.</p></div>';
     }
 }
 
@@ -1309,131 +1309,136 @@ function robodesk_single_ticket_shortcode($atts)
     </div>
 
     <div class="robodesk-ticket-meta">
-
-
-        <script type="text/javascript">
-        jQuery(document).ready(function($) {
-            var originalFormParent = $('#respond').parent();
-            var originalFormSibling = $('#respond').next();
-
-            function scrollToLatestReply() {
-                var commentList = $('.robodesk-ticket-comments .comment-list');
-
-                if (!commentList.length) {
-                    return;
-                }
-
-                commentList.scrollTop(commentList[0].scrollHeight);
-            }
-
-            function hasReplyContent(content) {
-                var hasMedia = /<(img|iframe|video|audio|embed|object)\b/i.test(content);
-                var text = $('<div>').html(content).text().replace(/\u00a0/g, ' ').trim();
-
-                return hasMedia || text.length > 0;
-            }
-
-            setTimeout(scrollToLatestReply, 100);
-
-            $('.robodesk-ticket-comments #commentform').on('submit', function(e) {
-                if (typeof tinymce !== 'undefined' && tinymce.get('comment')) {
-                    tinymce.triggerSave();
-                    setTimeout(function() {}, 100);
-                }
-                var button = $(this).find('input[type="submit"]');
-                e.preventDefault();
-                var form = $(this);
-                var commentField = form.find('[name="comment"]');
-                var commentContent = commentField.val();
-
-                if (!hasReplyContent(commentContent)) {
-                    alert('Please enter a reply before submitting.');
-                    return;
-                }
-
-                var formData = new FormData(this);
-
-                formData.append('action', 'robodesk_submit_comment');
-                $.ajax({
-                    url: '<?php echo esc_url(admin_url('admin-ajax.php')); ?>',
-                    type: 'POST',
-                    data: formData,
-                    processData: false,
-                    contentType: false,
-                    beforeSend: function() {
-                        button.val('Posting...');
-                        button.prop('disabled', true);
-                    },
-                    success: function(response) {
-                        if (response.success) {
-                            location.reload();
-                        } else {
-                            alert('Error: ' + response.data.message);
-                        }
-                    },
-                    error: function() {
-                        alert('An error occurred while submitting the comment.');
-                    },
-
-                    complete: function() {
-                        setTimeout(function() {
-                            button.val('Submit');
-                            button.prop('disabled', false);
-                        }, 3000);
-                    }
-                });
-            });
-
-            $('.robodesk-ticket-comments .comment-reply-link').on('click', function(e) {
-                e.preventDefault();
-                var commentId = $(this).data('commentid');
-                $('#comment_parent').val(commentId);
-                $('#respond').insertAfter($(this).closest('.comment-body'));
-                $('#cancel-comment-reply-link').show();
-                var commentId = $(this).data('commentid');
-                var postId = $(this).data('postid');
-                var belowElement = $(this).data('belowelement');
-                var respondElement = $(this).data('respondelement');
-
-                if (typeof tinymce !== 'undefined' && tinymce.get('comment')) {
-                    tinymce.EditorManager.execCommand('mceRemoveEditor', true, 'comment');
-                }
-
-                if (typeof addComment !== 'undefined' && addComment.moveForm) {
-                    addComment.moveForm(belowElement, commentId, respondElement, postId);
-                }
-
-                if (typeof tinymce !== 'undefined') {
-                    tinymce.EditorManager.execCommand('mceAddEditor', true, 'comment');
-                }
-            });
-
-            $('#cancel-comment-reply-link').on('click', function(e) {
-                e.preventDefault();
-
-                if (typeof tinymce !== 'undefined' && tinymce.get('comment')) {
-                    tinymce.EditorManager.execCommand('mceRemoveEditor', true, 'comment');
-                }
-
-                if (originalFormSibling.length) {
-                    originalFormParent.insertBefore($('#respond'), originalFormSibling);
-                } else {
-                    originalFormParent.append($('#respond'));
-                }
-
-
-                $(this).hide();
-                $('#comment_parent').val('');
-
-                if (typeof tinymce !== 'undefined') {
-                    tinymce.EditorManager.execCommand('mceAddEditor', true, 'comment');
-                }
-            });
-        });
-        </script>
     </div>
 </div>
 <?php
+    static $single_ticket_js_enqueued = false;
+    if (!$single_ticket_js_enqueued) {
+        $single_ticket_js_enqueued = true;
+        $ajax_url = esc_url(admin_url('admin-ajax.php'));
+        add_action('wp_footer', function () use ($ajax_url) {
+            wp_add_inline_script('robodesk-scripts', '
+jQuery(document).ready(function($) {
+    var originalFormParent = $(\'#respond\').parent();
+    var originalFormSibling = $(\'#respond\').next();
+
+    function scrollToLatestReply() {
+        var commentList = $(\'.robodesk-ticket-comments .comment-list\');
+
+        if (!commentList.length) {
+            return;
+        }
+
+        commentList.scrollTop(commentList[0].scrollHeight);
+    }
+
+    function hasReplyContent(content) {
+        var hasMedia = /<(img|iframe|video|audio|embed|object)\b/i.test(content);
+        var text = $(\'<div>\').html(content).text().replace(/\u00a0/g, \' \').trim();
+
+        return hasMedia || text.length > 0;
+    }
+
+    setTimeout(scrollToLatestReply, 100);
+
+    $(\'.robodesk-ticket-comments #commentform\').on(\'submit\', function(e) {
+        if (typeof tinymce !== \'undefined\' && tinymce.get(\'comment\')) {
+            tinymce.triggerSave();
+            setTimeout(function() {}, 100);
+        }
+        var button = $(this).find(\'input[type="submit"]\');
+        e.preventDefault();
+        var form = $(this);
+        var commentField = form.find(\'[name="comment"]\');
+        var commentContent = commentField.val();
+
+        if (!hasReplyContent(commentContent)) {
+            alert(\'Please enter a reply before submitting.\');
+            return;
+        }
+
+        var formData = new FormData(this);
+
+        formData.append(\'action\', \'robodesk_submit_comment\');
+        $.ajax({
+            url: \'' . $ajax_url . '\',
+            type: \'POST\',
+            data: formData,
+            processData: false,
+            contentType: false,
+            beforeSend: function() {
+                button.val(\'Posting...\');
+                button.prop(\'disabled\', true);
+            },
+            success: function(response) {
+                if (response.success) {
+                    location.reload();
+                } else {
+                    alert(\'Error: \' + response.data.message);
+                }
+            },
+            error: function() {
+                alert(\'An error occurred while submitting the comment.\');
+            },
+
+            complete: function() {
+                setTimeout(function() {
+                    button.val(\'Submit\');
+                    button.prop(\'disabled\', false);
+                }, 3000);
+            }
+        });
+    });
+
+    $(\'.robodesk-ticket-comments .comment-reply-link\').on(\'click\', function(e) {
+        e.preventDefault();
+        var commentId = $(this).data(\'commentid\');
+        $(\'#comment_parent\').val(commentId);
+        $(\'#respond\').insertAfter($(this).closest(\'.comment-body\'));
+        $(\'#cancel-comment-reply-link\').show();
+        var commentId = $(this).data(\'commentid\');
+        var postId = $(this).data(\'postid\');
+        var belowElement = $(this).data(\'belowelement\');
+        var respondElement = $(this).data(\'respondelement\');
+
+        if (typeof tinymce !== \'undefined\' && tinymce.get(\'comment\')) {
+            tinymce.EditorManager.execCommand(\'mceRemoveEditor\', true, \'comment\');
+        }
+
+        if (typeof addComment !== \'undefined\' && addComment.moveForm) {
+            addComment.moveForm(belowElement, commentId, respondElement, postId);
+        }
+
+        if (typeof tinymce !== \'undefined\') {
+            tinymce.EditorManager.execCommand(\'mceAddEditor\', true, \'comment\');
+        }
+    });
+
+    $(\'#cancel-comment-reply-link\').on(\'click\', function(e) {
+        e.preventDefault();
+
+        if (typeof tinymce !== \'undefined\' && tinymce.get(\'comment\')) {
+            tinymce.EditorManager.execCommand(\'mceRemoveEditor\', true, \'comment\');
+        }
+
+        if (originalFormSibling.length) {
+            originalFormParent.insertBefore($(\'#respond\'), originalFormSibling);
+        } else {
+            originalFormParent.append($(\'#respond\'));
+        }
+
+
+        $(this).hide();
+        $(\'#comment_parent\').val(\'\');
+
+        if (typeof tinymce !== \'undefined\') {
+            tinymce.EditorManager.execCommand(\'mceAddEditor\', true, \'comment\');
+        }
+    });
+});
+            ', 'after');
+        });
+    }
     $output = ob_get_clean();
     $post = $original_post;
     return $output;
@@ -1543,8 +1548,7 @@ function robodesk_login_form_shortcode()
 <div class="robodesk-login-form robodesk-container">
     <h2>Login</h2>
     <?php
-        // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
-        echo $error_message;
+        echo wp_kses_post($error_message);
         ?>
     <form name="robodesk-login-form" id="robodesk-login-form" action="<?php echo esc_url(site_url('wp-login.php')); ?>"
         method="post">

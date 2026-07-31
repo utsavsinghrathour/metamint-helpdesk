@@ -175,3 +175,11 @@
   border-top: 1px solid var(--border-light-gray);
   margin-bottom: 15px;
 }
+
+.chat-disabled .rd-conversation-fixed-bottm {
+  display: none;
+}
+
+.chat-disabled .rd-main-content {
+  padding-bottom: 100px;
+}

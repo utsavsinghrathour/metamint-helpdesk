@@ -4,10 +4,11 @@
     }
     ?>
 <?php
-$current_tab = isset($_GET['tab']) ? sanitize_key($_GET['tab']) : '';
-$settings_hidden = ($current_tab === 'settings') ? '' : ' hidden';
+// phpcs:ignore WordPress.Security.NonceVerification.Recommended
+$robodesk_current_tab = isset($_GET['tab']) ? sanitize_key($_GET['tab']) : '';
+$robodesk_settings_hidden = ($robodesk_current_tab === 'settings') ? '' : ' hidden';
 ?>
- <div id="settings-page" class="page-content<?php echo $settings_hidden; ?>">
+ <div id="settings-page" class="page-content<?php echo esc_attr($robodesk_settings_hidden); ?>">
      <div class="bg-white shadow rounded-lg">
          <div class="border-b border-gray-200">
              <nav class="rbd-settings-nav-sec flex space-x-8 px-6">
@@ -73,13 +74,17 @@ $settings_hidden = ($current_tab === 'settings') ? '' : ' hidden';
                                          value="<?php echo esc_attr(get_option('robodesk_admin_email', 'admin@example.com')); ?>"
                                          class="styled-input mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
                                  </div>
-                             </div>
-                         </section>
+                            <div class="mt-6 flex items-center">
+                                <input type="checkbox" name="enable_chat" id="enable_chat" value="1" <?php checked(get_option('robodesk_enable_chat', '1'), '1'); ?> class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                                <label for="enable_chat" class="ml-2 block text-sm text-gray-900 font-medium"><?php esc_html_e('Enable Chat', 'robodesk'); ?></label>
+                            </div>
+                            <p class="text-sm text-gray-500 ml-7"><?php esc_html_e('When disabled, the Conversations tab, "Start a conversation" buttons, and the AI bot chat are hidden from the frontend. FAQ and other tabs remain visible.', 'robodesk'); ?></p>
+                        </section>
 
-                         <section class="rounded-xl border border-gray-200 bg-gray-50 p-6">
-                             <div class="mb-5">
-                                 <h4 class="text-base font-semibold text-gray-900">
-                                     <?php esc_html_e('Logos', 'robodesk'); ?></h4>
+                        <section class="rounded-xl border border-gray-200 bg-gray-50 p-6">
+                            <div class="mb-5">
+                                <h4 class="text-base font-semibold text-gray-900">
+                                    <?php esc_html_e('Logos', 'robodesk'); ?></h4>
                                  <p class="text-sm text-gray-500">
                                      <?php esc_html_e('Upload the visuals that define the widget and brand colors.', 'robodesk'); ?>
                                  </p>
@@ -164,13 +169,13 @@ $settings_hidden = ($current_tab === 'settings') ? '' : ' hidden';
                                      <input type="hidden" name="robodesk_wide_logo" id="robodesk_wide_logo"
                                          value="<?php echo esc_attr(get_option('robodesk_wide_logo', '')); ?>">
                                  </div>
-                             </div>
-                         </section>
+                            </div>
+                        </section>
 
-                         <section class="rounded-xl border border-gray-200 bg-gray-50 p-6">
-                             <div class="mb-5">
-                                 <h4 class="text-base font-semibold text-gray-900">
-                                     <?php esc_html_e('Defaults', 'robodesk'); ?></h4>
+                        <section class="rounded-xl border border-gray-200 bg-gray-50 p-6">
+                            <div class="mb-5">
+                                <h4 class="text-base font-semibold text-gray-900">
+                                    <?php esc_html_e('Defaults', 'robodesk'); ?></h4>
                                  <p class="text-sm text-gray-500">
                                      <?php esc_html_e('Set the default category and notification audio.', 'robodesk'); ?>
                                  </p>

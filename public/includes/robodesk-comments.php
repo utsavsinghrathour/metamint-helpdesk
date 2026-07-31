@@ -90,6 +90,8 @@ function robodesk_save_custom_comment_field($comment_id)
             $old_status = (string) get_post_meta($comment_post_id, '_robodesk_ticket_status', true);
             update_post_meta($comment_post_id, '_robodesk_ticket_status', $dropdown_value);
 
+        do_action('robodesk_after_ticket_status_change', $comment_post_id, $old_status, $dropdown_value, get_current_user_id());
+
         if ($old_status !== $dropdown_value && function_exists('robodesk_notify_status_changed')) {
             $comment = get_comment($comment_id);
             $source = is_admin() ? 'admin' : 'chat';

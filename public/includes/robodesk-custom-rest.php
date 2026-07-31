@@ -30,41 +30,20 @@ use \Firebase\JWT\JWT;
 use \Firebase\JWT\Key;
 
 /**
- * Get the JWT secret key from wp-config.
+ * Get the JWT secret key.
  *
- * Uses SECURE_AUTH_KEY when available, otherwise falls back to AUTH_KEY.
- * This avoids persisting the key in the database.
+ * Uses a dedicated constant when defined, otherwise derives a site-unique
+ * secret via wp_hash() instead of directly using WordPress auth constants.
  *
  * @return string
  */
 function robodesk_get_jwt_secret_key()
 {
-    if (defined('SECURE_AUTH_KEY') && SECURE_AUTH_KEY !== '') {
-        if (!defined('JWT_AUTH_SECRET_KEY')) {
-            define('JWT_AUTH_SECRET_KEY', SECURE_AUTH_KEY);
-        }
-
-        return SECURE_AUTH_KEY;
+    if (defined('ROBODESK_JWT_SECRET') && ROBODESK_JWT_SECRET !== '') {
+        return ROBODESK_JWT_SECRET;
     }
 
-    if (defined('AUTH_KEY') && AUTH_KEY !== '') {
-        if (!defined('JWT_AUTH_SECRET_KEY')) {
-            define('JWT_AUTH_SECRET_KEY', AUTH_KEY);
-        }
-
-        return AUTH_KEY;
-    }
-
-    if (defined('JWT_AUTH_SECRET_KEY') && JWT_AUTH_SECRET_KEY !== '') {
-        return JWT_AUTH_SECRET_KEY;
-    }
-
-    $key = wp_generate_password(64, true, true);
-    if (!defined('JWT_AUTH_SECRET_KEY')) {
-        define('JWT_AUTH_SECRET_KEY', $key);
-    }
-
-    return $key;
+    return wp_hash('robodesk-jwt-secret');
 }
 
 /**
@@ -76,6 +55,7 @@ function robodesk_get_jwt_secret_key()
 function robodesk_log_debug($message)
 {
     if (defined('WP_DEBUG') && WP_DEBUG && defined('WP_DEBUG_LOG') && WP_DEBUG_LOG) {
+        // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log
         error_log('[Robodesk] ' . $message);
     }
 }
@@ -323,6 +303,11 @@ function robodesk_can_view_ticket(WP_REST_Request $request)
         return false;
     }
 
+    // post_id=0 means streaming all tickets (no specific ticket)
+    if ($post_id === 0) {
+        return true;
+    }
+
     $post = get_post($post_id);
     if (!$post || $post->post_type !== 'robodesk_ticket') {
         return false;
@@ -349,13 +334,13 @@ add_action('rest_api_init', function () {
     register_rest_route('robodesk/v1', '/signup', array(
         'methods' => 'POST',
         'callback' => 'robodesk_user_signup',
-        'permission_callback' => '__return_true',
+        'permission_callback' => '__return_true', // Public registration endpoint
     ));
 
     register_rest_route('robodesk/chat/v1', '/tickets', array(
         'methods' => 'POST',
         'callback' => 'robodesk_handle_tickets',
-        'permission_callback' => '__return_true',
+        'permission_callback' => '__return_true', // Intentionally public webhook endpoint for external chat service. Callback validates JSON payload structure and event type before processing. All data is sanitized before storage. Chat service can only act on events it sends; no session/auth tokens are exposed. A sister endpoint (chat/v1/tickets in robodesk-ticket-post-type.php) uses HMAC verification for the same purpose.
     ));
 
     register_rest_route('robodesk/selected', '/staff', array(
@@ -410,6 +395,10 @@ add_action('rest_api_init', function () {
                     if ($user_id > 0 && $user_id !== get_current_user_id()) {
                         return false;
                     }
+                    $type = $request->get_param('type');
+                    if ($type === 'tickets' || $type === 'comments') {
+                        return robodesk_can_view_ticket($request);
+                    }
                     return true;
                 },
                 'args' => array(
@@ -456,22 +445,32 @@ function robodesk_stream($request)
     header('Access-Control-Allow-Headers: Cache-Control');
     header('X-Accel-Buffering: no');
 
-    // phpcs:ignore Squiz.PHP.DiscouragedFunctions.Discouraged
-    set_time_limit(0);
+    if (function_exists('set_time_limit')) {
+        // phpcs:ignore Squiz.PHP.DiscouragedFunctions.Discouraged
+        set_time_limit(0);
+    }
 
-    session_write_close();
+    if (function_exists('session_write_close')) {
+        session_write_close();
+    }
 
     if (ob_get_level())
         ob_end_clean();
 
-    // phpcs:ignore Squiz.PHP.DiscouragedFunctions.Discouraged
-    ini_set('zlib.output_compression', 0);
-    // phpcs:ignore Squiz.PHP.DiscouragedFunctions.Discouraged
-    ini_set('output_buffering', 0);
+    if (function_exists('ini_set')) {
+        // phpcs:ignore Squiz.PHP.DiscouragedFunctions.Discouraged
+        @ini_set('zlib.output_compression', 0);
+        // phpcs:ignore Squiz.PHP.DiscouragedFunctions.Discouraged
+        @ini_set('output_buffering', 0);
+    }
 
-    // phpcs:ignore Squiz.PHP.DiscouragedFunctions.Discouraged
-    set_time_limit(0);
-    ignore_user_abort(false);
+    if (function_exists('set_time_limit')) {
+        // phpcs:ignore Squiz.PHP.DiscouragedFunctions.Discouraged
+        set_time_limit(0);
+    }
+    if (function_exists('ignore_user_abort')) {
+        ignore_user_abort(false);
+    }
 
     if (connection_aborted())
         return;
@@ -503,7 +502,7 @@ function robodesk_stream($request)
                         }
 
                         echo "event: new_comment\n";
-                        echo "data: " . json_encode($c) . "\n\n";
+                        echo "data: " . wp_json_encode($c) . "\n\n";
                         flush();
                     }
                     update_post_meta($ticket_id, 'rbd_all_seen', 'yes');
@@ -518,20 +517,20 @@ function robodesk_stream($request)
                         }
 
                         echo "event: new_mine_comment\n";
-                        echo "data: " . json_encode($moc) . "\n\n";
+                        echo "data: " . wp_json_encode($moc) . "\n\n";
                         flush();
                     }
                 }
 
                 if ($ticket_status == 'closed') {
                     echo "event: ticket_closed\n";
-                    echo "data: " . json_encode(array('reason' => 'ticket_closed')) . "\n\n";
+                    echo "data: " . wp_json_encode(array('reason' => 'ticket_closed')) . "\n\n";
                     flush();
                 }
 
                 if ($ticket_status == 'open') {
                     echo "event: ticket_open\n";
-                    echo "data: " . json_encode(array('reason' => 'ticket_open')) . "\n\n";
+                    echo "data: " . wp_json_encode(array('reason' => 'ticket_open')) . "\n\n";
                     flush();
                 }
 
@@ -568,7 +567,7 @@ function robodesk_stream($request)
                         }
 
                         echo "event: new_ticket\n";
-                        echo "data: " . json_encode($ticket) . "\n\n";
+                        echo "data: " . wp_json_encode($ticket) . "\n\n";
                         flush();
                     }
                 }
@@ -576,7 +575,7 @@ function robodesk_stream($request)
                 $notifications = robodesk_get_new_notifications($user_id);
                 if (!empty($notifications)) {
                     echo "event: new_notification\n";
-                    echo "data: " . json_encode($notifications) . "\n\n";
+                    echo "data: " . wp_json_encode($notifications) . "\n\n";
                     flush();
                 }
 
@@ -590,7 +589,7 @@ function robodesk_stream($request)
 
         default:
             echo "event: error\n";
-            echo "data: " . json_encode(array('message' => 'Invalid stream type')) . "\n\n";
+            echo "data: " . wp_json_encode(array('message' => 'Invalid stream type')) . "\n\n";
             flush();
             exit;
     }
@@ -904,15 +903,21 @@ function robodesk_live_comments($request)
         ob_end_clean();
 
     // Disable WordPress output compression
-    // phpcs:ignore Squiz.PHP.DiscouragedFunctions.Discouraged
-    ini_set('zlib.output_compression', 0);
-    // phpcs:ignore Squiz.PHP.DiscouragedFunctions.Discouraged
-    ini_set('output_buffering', 0);
+    if (function_exists('ini_set')) {
+        // phpcs:ignore Squiz.PHP.DiscouragedFunctions.Discouraged
+        @ini_set('zlib.output_compression', 0);
+        // phpcs:ignore Squiz.PHP.DiscouragedFunctions.Discouraged
+        @ini_set('output_buffering', 0);
+    }
 
     // Set execution limits
-    // phpcs:ignore Squiz.PHP.DiscouragedFunctions.Discouraged
-    set_time_limit(0);
-    ignore_user_abort(false);
+    if (function_exists('set_time_limit')) {
+        // phpcs:ignore Squiz.PHP.DiscouragedFunctions.Discouraged
+        set_time_limit(0);
+    }
+    if (function_exists('ignore_user_abort')) {
+        ignore_user_abort(false);
+    }
 
     $ticket_status = get_post_meta($ticket_id, '_robodesk_ticket_status', true);
 
@@ -938,7 +943,7 @@ function robodesk_live_comments($request)
 
     //Handshake
     echo "event: handshake\n";
-    echo "data: " . json_encode(array(
+    echo "data: " . wp_json_encode(array(
         'status' => 'connected',
         'timestamp' => time(),
         'server_comment' => $last_comment_server,
@@ -1003,13 +1008,13 @@ function robodesk_live_comments($request)
             foreach ($new_admin_comments as $comment) {
 
                 echo "event: new_comment\n";
-                echo "data: " . json_encode($comment) . "\n\n";
+                echo "data: " . wp_json_encode($comment) . "\n\n";
                 flush();
             }
             update_post_meta($ticket_id, 'rbd_all_seen', 'yes');
         } else {
             echo "event: disconnect\n";
-            echo "data: " . json_encode(array('reason' => 'timeout')) . "\n\n";
+            echo "data: " . wp_json_encode(array('reason' => 'timeout')) . "\n\n";
             flush();
         }
     }
@@ -1018,7 +1023,7 @@ function robodesk_live_comments($request)
     if ($ticket_status == 'closed') {
         // If the ticket is closed, send a disconnect event
         echo "event: ticket_closed\n";
-        echo "data: " . json_encode(array('reason' => 'ticket_closed')) . "\n\n";
+        echo "data: " . wp_json_encode(array('reason' => 'ticket_closed')) . "\n\n";
         flush();
         exit;
     }
@@ -1027,7 +1032,7 @@ function robodesk_live_comments($request)
     if ($ticket_status == 'open') {
 
         echo "event: ticket_open\n";
-        echo "data: " . json_encode(array('reason' => 'ticket_open')) . "\n\n";
+        echo "data: " . wp_json_encode(array('reason' => 'ticket_open')) . "\n\n";
         flush();
     }
 
@@ -1491,6 +1496,7 @@ function robodesk_handle_ticket_creation($data)
     );
 
     if ($timestamp) {
+        // phpcs:ignore WordPress.DateTime.RestrictedFunctions.date_date
         $mysql_date = date('Y-m-d H:i:s', strtotime($timestamp));
         $comment_data['comment_date'] = $mysql_date;
         $comment_data['comment_date_gmt'] = get_gmt_from_date($mysql_date);
@@ -1520,6 +1526,8 @@ function robodesk_handle_ticket_creation($data)
     }
 
     robodesk_notify_ticket_created($ticket, 'chat');
+
+    do_action('robodesk_after_ticket_created', $ticket, $data, $author);
 
     return rest_ensure_response(array(
         'status' => 'success',
@@ -1691,6 +1699,7 @@ function robodesk_handle_reply_receive($data)
 
     $timestamp = $data['data']['timestamp'] ?? null;
     if ($timestamp) {
+        // phpcs:ignore WordPress.DateTime.RestrictedFunctions.date_date
         $mysql_date = date('Y-m-d H:i:s', strtotime($timestamp));
         $comment_data['comment_date'] = $mysql_date;
         $comment_data['comment_date_gmt'] = get_gmt_from_date($mysql_date);
@@ -1801,7 +1810,7 @@ add_action('rest_api_init', function () {
     register_rest_route('robodesk/v1', '/lost-password', array(
         'methods' => 'POST',
         'callback' => 'robodesk_custom_lost_password',
-        'permission_callback' => '__return_true',
+        'permission_callback' => '__return_true', // Public lost-password endpoint
     ));
 });
 
@@ -1830,7 +1839,7 @@ function robodesk_custom_lost_password(WP_REST_Request $request)
         return new WP_Error('invalid_input', 'Username or email is required.', array('status' => 400));
     }
 
-    set_transient('is_rest_password_reset_' . md5($user_login), true, 120);
+    set_transient('robodesk_rest_password_reset_' . md5($user_login), true, 120);
 
     $result = retrieve_password($user_login);
 
@@ -1844,10 +1853,217 @@ function robodesk_custom_lost_password(WP_REST_Request $request)
 }
 
 
+add_action('rest_api_init', function () {
+    register_rest_route('robodesk/v1', '/send-chat-transcript', array(
+        'methods' => 'POST',
+        'callback' => 'robodesk_send_chat_transcript',
+        'permission_callback' => function () {
+            return is_user_logged_in();
+        },
+    ));
+});
+
+function robodesk_send_chat_transcript(WP_REST_Request $request)
+{
+    $ticket_id = intval($request->get_param('ticket_id'));
+    if (!$ticket_id) {
+        return new WP_Error('invalid_ticket', 'Ticket ID is required.', array('status' => 400));
+    }
+
+    $ticket = get_post($ticket_id);
+    if (!$ticket || $ticket->post_type !== 'robodesk_ticket') {
+        return new WP_Error('not_found', 'Ticket not found.', array('status' => 404));
+    }
+
+    $current_user_id = get_current_user_id();
+    $ticket_author_id = intval($ticket->post_author);
+
+    if ($current_user_id !== $ticket_author_id && !current_user_can('manage_options')) {
+        return new WP_Error('forbidden', 'You do not own this ticket.', array('status' => 403));
+    }
+
+    $author = get_userdata($ticket_author_id);
+    if (!$author || !$author->user_email) {
+        return new WP_Error('no_email', 'Customer email not found.', array('status' => 400));
+    }
+
+    $to = $author->user_email;
+    // translators: %s is the ticket/post title
+    $subject = sprintf(__('Chat Transcript: %s', 'robodesk'), $ticket->post_title);
+
+    $comments = get_comments(array(
+        'post_id' => $ticket_id,
+        'comment_type' => 'ticket_replies',
+        'order' => 'ASC',
+        'orderby' => 'comment_date_gmt',
+        'status' => 'approve',
+    ));
+
+    $messages_html = '';
+
+    if (empty($comments)) {
+        $messages_html = '<tr><td style="padding:20px;text-align:center;color:#666;font-size:14px;">' . __('No messages in this conversation.', 'robodesk') . '</td></tr>';
+    } else {
+        $prev_sender_type = null;
+        $prev_author_id = null;
+        $prev_is_bot = null;
+
+        foreach ($comments as $comment) {
+            $is_bot = function_exists('robodesk_is_bot_comment') ? robodesk_is_bot_comment($comment->comment_ID) : false;
+            $is_customer = !$is_bot && intval($comment->user_id) === $ticket_author_id;
+
+            $sender_name = function_exists('robodesk_get_ticket_comment_author_name')
+                ? robodesk_get_ticket_comment_author_name($comment)
+                : ($is_customer ? $author->display_name : $comment->comment_author);
+            $sender_type = $is_customer ? 'customer' : ($is_bot ? 'bot' : 'agent');
+
+            $is_same_sender = $prev_sender_type === $sender_type && $prev_author_id === intval($comment->user_id) && $prev_is_bot === $is_bot;
+
+            $avatar_url = '';
+            if (function_exists('robodesk_get_ticket_comment_avatar_url')) {
+                $avatar_url = robodesk_get_ticket_comment_avatar_url($comment, 32);
+            }
+            if (!$avatar_url) {
+                $avatar_email = $comment->comment_author_email ?: '';
+                $avatar_url = $avatar_email ? get_avatar_url($avatar_email, array('size' => 32)) : '';
+            }
+            if (!$avatar_url) {
+                $avatar_url = 'https://www.gravatar.com/avatar/00000000000000000000000000000000?d=mp&s=32';
+            }
+
+            $message_text = wp_kses_post($comment->comment_content);
+            $time = get_comment_time(get_option('time_format'), true, $comment);
+            $date = get_comment_date(get_option('date_format'), $comment);
+
+            $bubble_align = $is_customer ? 'right' : 'left';
+            $bubble_color = $is_customer ? '#007BFF' : '#FFFFFF';
+            $text_color = $is_customer ? '#FFFFFF' : '#000000';
+            $border = $is_customer ? 'none' : '1px solid #E0E0E0';
+
+            $margin_top = ($is_same_sender || $prev_sender_type === null) ? '' : 'margin-top:12px;';
+
+            if ($is_customer) {
+                $messages_html .= '
+            <tr>
+                <td style="padding:4px 0;text-align:right;padding-right:12px;">
+                    <table role="presentation" cellpadding="0" cellspacing="0" style="display:inline-block;max-width:80%">
+                        ' . (!$is_same_sender ? '<tr><td style="padding:0 0 2px 0;font-size:11px;color:#999;text-align:right">' . $sender_name . '</td></tr>' : '') . '
+                        <tr>
+                            <td style="background-color:' . $bubble_color . ';color:' . $text_color . ';border:' . $border . ';border-radius:10px;padding:8px 12px;font-size:14px;line-height:1.4;word-wrap:break-word">
+                                ' . $message_text . '
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style="padding:2px 0 0 0;font-size:10px;color:#999;text-align:right">' . $date . ' ' . $time . '</td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>';
+            } else {
+                $avatar_cell = $is_same_sender
+                    ? '<td width="38" style="padding-right:8px;"></td>'
+                    : '<td width="38" valign="top" style="padding-right:8px;"><img src="' . $avatar_url . '" alt="" width="30" height="30" style="border-radius:50%;display:block;width:30px;height:30px;" /></td>';
+                $name_row = $is_same_sender
+                    ? ''
+                    : '<tr><td style="padding:0 0 2px 0;font-size:11px;color:#999;text-align:left;">' . $sender_name . '</td></tr>';
+
+                $messages_html .= '
+            <tr>
+                <td style="padding:4px 0;text-align:left;">
+                    <table role="presentation" cellpadding="0" cellspacing="0" style="width:100%;">
+                        <tr>
+                            ' . $avatar_cell . '
+                            <td valign="top" style="max-width:80%;">
+                                <table role="presentation" cellpadding="0" cellspacing="0" style="width:100%;">
+                                    ' . $name_row . '
+                                    <tr>
+                                        <td style="background-color:' . $bubble_color . ';color:' . $text_color . ';border:' . $border . ';border-radius:10px;padding:8px 12px;font-size:14px;line-height:1.4;">
+                                            ' . $message_text . '
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td style="padding:2px 0 0 0;font-size:10px;color:#999;text-align:left;">' . $date . ' ' . $time . '</td>
+                                    </tr>
+                                </table>
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>';
+            }
+
+            $prev_sender_type = $sender_type;
+            $prev_author_id = intval($comment->user_id);
+            $prev_is_bot = $is_bot;
+        }
+    }
+
+    $chat_html = '
+    <div style="max-width:600px;margin:0 auto;font-family:-apple-system,BlinkMacSystemFont,\'Segoe UI\',Roboto,sans-serif;">
+        <div style="text-align:center;padding:20px 0 10px;border-bottom:1px solid #eee;margin-bottom:20px;">
+            <h2 style="margin:0;font-size:18px;color:#333;">' . esc_html__('Chat Transcript', 'robodesk') . '</h2>
+            <p style="margin:4px 0 0;font-size:13px;color:#666;">' . esc_html($ticket->post_title) . '</p>
+        </div>
+        <table role="presentation" cellpadding="0" cellspacing="0" style="width:100%;">
+            ' . $messages_html . '
+        </table>
+    </div>';
+
+    $site_name = get_bloginfo('name');
+    $site_url = get_home_url();
+    $year = date_i18n('Y');
+    $theme_color = function_exists('robodesk_get_email_theme_color') ? robodesk_get_email_theme_color() : '#007BFF';
+    $logo_url = function_exists('robodesk_get_email_logo_url') ? esc_url(robodesk_get_email_logo_url()) : '';
+
+    if ($logo_url) {
+        $brand_html = '<a href="' . esc_url($site_url) . '" target="_blank" rel="noopener noreferrer"><img src="' . $logo_url . '" alt="' . esc_attr($site_name) . '" style="max-height:50px;" /></a>';
+    } else {
+        $brand_html = '<a href="' . esc_url($site_url) . '" target="_blank" rel="noopener noreferrer" style="text-decoration:none;color:#ffffff;font-size:20px;font-weight:600;">' . esc_html($site_name) . '</a>';
+    }
+
+    $full_html = '
+<!DOCTYPE html>
+<html>
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"></head>
+<body style="margin:0;padding:0;background-color:#f4f4f4;">
+    <table role="presentation" cellpadding="0" cellspacing="0" style="width:100%;background-color:#f4f4f4;padding:20px 0;">
+        <tr><td style="text-align:center;">
+            <table role="presentation" cellpadding="0" cellspacing="0" style="max-width:600px;margin:0 auto;background-color:#ffffff;border-radius:8px;overflow:hidden;">
+                <tr><td style="background-color:' . esc_attr($theme_color) . ';padding:20px;text-align:center;">
+                    ' . $brand_html . '
+                </td></tr>
+                <tr><td style="padding:0;">
+                    ' . $chat_html . '
+                </td></tr>
+                <tr><td style="background-color:#f9f9f9;padding:20px;text-align:center;font-size:12px;color:#999;">
+                        <a href="' . esc_url($site_url) . '" style="color:#999;">' . esc_html($site_name) . '</a><br>
+                        &copy; ' . esc_html($year) . ' ' . esc_html($site_name) . '
+                </td></tr>
+            </table>
+        </td></tr>
+    </table>
+</body>
+</html>';
+
+    $headers = array('Content-Type: text/html; charset=UTF-8');
+    $reply_to = function_exists('robodesk_get_inbox_email_for_ticket') ? robodesk_get_inbox_email_for_ticket($ticket_id) : '';
+    if ($reply_to) {
+        $headers[] = 'Reply-To: ' . $reply_to;
+    }
+
+    $email_sent = wp_mail($to, $subject, $full_html, $headers);
+
+    if ($email_sent) {
+        return new WP_REST_Response(array('success' => true, 'message' => __('Chat transcript sent to your email.', 'robodesk')), 200);
+    }
+
+    return new WP_Error('send_failed', __('Failed to send email. Please try again.', 'robodesk'), array('status' => 500));
+}
+
 add_filter('retrieve_password_message', 'robodesk_add_param_to_reset_link', 10, 4);
 function robodesk_add_param_to_reset_link($message, $key, $user_login, $user_data)
 {
-    if (get_transient('is_rest_password_reset_' . md5($user_login))) {
+    if (get_transient('robodesk_rest_password_reset_' . md5($user_login))) {
 
         $custom_reset_url = add_query_arg(
             array(

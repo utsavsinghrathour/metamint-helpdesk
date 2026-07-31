@@ -15,7 +15,9 @@ const Header = ({ logo, onClose, setActiveTab, setShowLogin, updateSelectedTicke
   const [selectedStaff, setSelectedStaff] = useState(null);
   const { loggedinContext, loggedInUsrId, refreshTickets } = useAppData();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const chatEnabled = window.robodeskData?.enable_chat === "1";
   const canLoadWidgetConfig = Boolean(
+    chatEnabled &&
     window.robodeskData?.robodesk_addon_active &&
     window.robodeskData?.robodesk_ai_bot_active,
   );
@@ -49,8 +51,8 @@ const Header = ({ logo, onClose, setActiveTab, setShowLogin, updateSelectedTicke
   const fetchDefaultStaff = async () => {
     if (staffFetched) return;
     staffFetched = true;
-    if (window.wpAuth?.defaultStaffId) {
-      setSelectedStaff(window.wpAuth.defaultStaffId);
+    if (window.robodeskAuth?.defaultStaffId) {
+      setSelectedStaff(window.robodeskAuth.defaultStaffId);
     } else {
       setSelectedStaff(null);
     }
@@ -85,8 +87,6 @@ const Header = ({ logo, onClose, setActiveTab, setShowLogin, updateSelectedTicke
     });
     messages = withIndex.map(item => item.msg);
 
-    const messagesExceptFirst = messages.slice(1);
-
     if (!messages || messages.length === 0) {
       setIsSubmitting(false);
       window.dispatchEvent(
@@ -109,7 +109,9 @@ const Header = ({ logo, onClose, setActiveTab, setShowLogin, updateSelectedTicke
     }
 
     const ticketTitle = userMessages[0].text;
-    const ticketDescription = userMessages.map(msg => msg.text).join('\n\n');
+    const ticketDescription = messages
+      .map(m => `${m.role === 'user' ? 'User' : 'AI Bot'}: ${m.text || m.message || ''}`)
+      .join('\n\n');
 
     if (!loggedinContext) {
       localStorage.setItem('temp_ticket_title', ticketTitle);
@@ -143,30 +145,51 @@ const Header = ({ logo, onClose, setActiveTab, setShowLogin, updateSelectedTicke
         messages: [],
       };
 
-      if (messagesExceptFirst.length > 0) {
-        for (const message of messagesExceptFirst) {
-          const messageText = message.text || message.message || '';
-          if (!messageText.trim()) continue;
+      if (messages.length > 0) {
+        const firstUserMsg = userMessages[0];
+        for (const m of messages) {
+          if (m === firstUserMsg) continue;
 
-          if (message.role === 'user') {
-            await sendReply(newTicket.id, loggedInUsrId, messageText, false, false, undefined, message.timestamp);
-          } else if (message.role === 'assistant') {
-            await sendReply(newTicket.id, selectedStaff || loggedInUsrId, messageText, false, true, undefined, message.timestamp);
+          const text = m.text || m.message || '';
+          if (!text.trim()) continue;
+
+          const isBot = m.role === 'assistant';
+
+          for (let attempt = 0; attempt < 3; attempt++) {
+            try {
+              await sendReply(
+                newTicket.id,
+                loggedInUsrId,
+                text,
+                false,
+                isBot,
+                undefined,
+                m.timestamp || new Date().toISOString()
+              );
+              break;
+            } catch (e) {
+              if (attempt === 2) {
+                console.error('Failed to transfer message:', e);
+              } else {
+                await new Promise(r => setTimeout(r, 500));
+              }
+            }
           }
         }
-      }
 
-      // Add a single transition reply at the end so it follows the original chat order
-      if (newTicket.id) {
-        await sendReply(
-          newTicket.id,
-          selectedStaff || loggedInUsrId,
-          'Transitioned conversations from AI to human agent.',
-          false,
-          true,
-          undefined,
-          messages[0]?.timestamp || new Date().toISOString()
-        );
+        try {
+          await sendReply(
+            newTicket.id,
+            loggedInUsrId,
+            'Transitioned conversations from AI to human agent.',
+            false,
+            true,
+            undefined,
+            new Date().toISOString()
+          );
+        } catch (e) {
+          console.error('Failed to send transition reply:', e);
+        }
       }
 
       refreshTickets();
