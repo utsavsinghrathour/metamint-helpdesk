@@ -316,6 +316,7 @@ function robodesk_enqueue_scripts()
                 'robodesk_addon_active' => defined('ROBODESK_ADDON_VERSION'),
                 'robodesk_ai_bot_active' => get_option('robodesk_addon_ai_bot_status', 'inactive') === 'active',
                 'enable_chat' => get_option('robodesk_enable_chat', '1'),
+                'hide_credits' => get_option('robodesk_hide_credits', '0'),
             ]
         );
 

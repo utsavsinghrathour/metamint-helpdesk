@@ -41,6 +41,10 @@
   flex-direction: column;
 }
 
+.rd-single-question-view.rd-no-credits {
+  margin: 0;
+}
+
 .rd-back-button {
   color: #004aff;
 }

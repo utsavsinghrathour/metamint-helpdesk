@@ -5,7 +5,7 @@ import parse from "html-react-parser";
 import DOMPurify from "dompurify";
 import he from "he";
 
-import Footer from "./Footer";
+import Footer, { robodeskShowCredits } from "./Footer";
 import Author1 from "../images/person1.jpeg";
 import Author2 from "../images/person2.jpeg";
 import "../styles/FAQ.css";
@@ -119,7 +119,7 @@ const FAQDetail = memo(
     };
 
     return (
-      <div className="rd-faq-detail rd-h-full">
+      <div className={`rd-faq-detail rd-h-full${robodeskShowCredits() ? "" : " rd-no-credits"}`}>
         <div className="rd-main-content no-footer rd-h-full">
           <div className="single-faq-header rd-flex rd-align-center rd-justify-between rd-cursor-pointer rd-border-bottom-light rd-p-10 rd-bg-primary ">
             <button
@@ -265,9 +265,11 @@ const FAQDetail = memo(
             </div>
           )}
         </div>
-        <div className="rd-border-top-light">
-          <Footer showCopyrightOnly={true} />
-        </div>
+        {robodeskShowCredits() && (
+          <div className="rd-border-top-light">
+            <Footer showCopyrightOnly={true} />
+          </div>
+        )}
       </div>
     );
   },
