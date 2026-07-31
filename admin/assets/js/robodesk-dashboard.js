@@ -1176,6 +1176,18 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   const tab = params.get("tab") || "dashboard";
+
+  const urlFilter = params.get("filter");
+  const validFilters = [
+    "my_conversation",
+    "unassigned_conversation",
+    "open_conversation",
+    "chat_conversation",
+  ];
+  if (urlFilter && validFilters.includes(urlFilter)) {
+    currentDashboardFilter = urlFilter;
+  }
+
   showPage(tab);
 
   // Note: loadDashboardTickets() will be called by showPage() if tab is 'dashboard'
