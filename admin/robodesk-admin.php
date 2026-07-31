@@ -337,3 +337,92 @@ function robodesk_enqueue_tailwind_and_styles()
         'polling_interval' => isset($robodesk_adv_settings['polling_interval']) ? absint($robodesk_adv_settings['polling_interval']) : 30,
     ]);
 }
+
+/**
+ * Counts active (open + in-progress) tickets.
+ *
+ * @param int $assignee_id Optional user ID to limit count to assigned tickets.
+ * @return int
+ */
+function robodesk_get_active_ticket_count($assignee_id = 0)
+{
+    $meta_query = array(
+        'relation' => 'AND',
+        array(
+            'relation' => 'OR',
+            array(
+                'key'     => '_robodesk_ticket_status',
+                'value'   => 'open',
+                'compare' => '=',
+            ),
+            array(
+                'key'     => '_robodesk_ticket_status',
+                'value'   => 'in-progress',
+                'compare' => '=',
+            ),
+        ),
+    );
+
+    if ($assignee_id > 0) {
+        $meta_query[] = array(
+            'key'   => 'ticket_assignee_id',
+            'value' => (int) $assignee_id,
+        );
+    }
+
+    // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query
+    $args = array(
+        'post_type'      => 'robodesk_ticket',
+        'post_status'    => 'publish',
+        'posts_per_page' => -1,
+        'fields'         => 'ids',
+        'meta_query'     => $meta_query,
+    );
+    $query = new WP_Query($args);
+    return (int) $query->post_count;
+}
+
+/**
+ * Displays the active tickets count on the WordPress admin toolbar.
+ *
+ * @param WP_Admin_Bar $wp_admin_bar The admin bar object.
+ */
+function robodesk_admin_bar_active_tickets($wp_admin_bar)
+{
+    if (!current_user_can('robodesk_access_dashboard')) {
+        return;
+    }
+
+    $total_count = robodesk_get_active_ticket_count();
+    $my_count    = robodesk_get_active_ticket_count(get_current_user_id());
+
+    $wp_admin_bar->add_node(array(
+        'id'    => 'robodesk-active-tickets',
+        'title' => '<span class="ab-icon dashicons dashicons-email-alt"></span><span class="ab-label">' . esc_html__('Active Tickets', 'robodesk') . ': ' . esc_html($total_count) . '</span>',
+        'href'  => admin_url('admin.php?page=robodesk-dashboard&tab=tickets'),
+        'meta'  => array(
+            'title' => esc_html__('View Conversations', 'robodesk'),
+        ),
+    ));
+
+    $wp_admin_bar->add_node(array(
+        'parent' => 'robodesk-active-tickets',
+        'id'     => 'robodesk-active-tickets-total',
+        'title'  => esc_html__('All Active Tickets', 'robodesk') . ': ' . esc_html($total_count),
+        'href'   => admin_url('admin.php?page=robodesk-dashboard&tab=tickets&status=all'),
+        'meta'   => array(
+            'title' => esc_html__('View all active tickets', 'robodesk'),
+        ),
+    ));
+
+    $wp_admin_bar->add_node(array(
+        'parent' => 'robodesk-active-tickets',
+        'id'     => 'robodesk-active-tickets-mine',
+        'title'  => sprintf(esc_html__('My Tickets (%s): %d', 'robodesk'), esc_html(wp_get_current_user()->display_name), $my_count),
+        'href'   => admin_url('admin.php?page=robodesk-dashboard&filter=my_conversation'),
+        'meta'   => array(
+            'title' => esc_html__('View my active tickets', 'robodesk'),
+        ),
+    ));
+}
+add_action('admin_bar_menu', 'robodesk_admin_bar_active_tickets', 999);
