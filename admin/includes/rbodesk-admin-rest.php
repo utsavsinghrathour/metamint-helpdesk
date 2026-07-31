@@ -77,15 +77,21 @@ function robodesk_live_admin_comments($request)
     if (ob_get_level()) ob_end_clean();
 
     // Disable WordPress output compression
-    // phpcs:ignore Squiz.PHP.DiscouragedFunctions.Discouraged
-    ini_set('zlib.output_compression', 0);
-    // phpcs:ignore Squiz.PHP.DiscouragedFunctions.Discouraged
-    ini_set('output_buffering', 0);
+    if (function_exists('ini_set')) {
+        // phpcs:ignore Squiz.PHP.DiscouragedFunctions.Discouraged
+        @ini_set('zlib.output_compression', 0);
+        // phpcs:ignore Squiz.PHP.DiscouragedFunctions.Discouraged
+        @ini_set('output_buffering', 0);
+    }
 
     // Set execution limits
-    // phpcs:ignore Squiz.PHP.DiscouragedFunctions.Discouraged
-    set_time_limit(0);
-    ignore_user_abort(false);
+    if (function_exists('set_time_limit')) {
+        // phpcs:ignore Squiz.PHP.DiscouragedFunctions.Discouraged
+        set_time_limit(0);
+    }
+    if (function_exists('ignore_user_abort')) {
+        ignore_user_abort(false);
+    }
 
 
     // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query
@@ -201,13 +207,13 @@ function robodesk_live_admin_comments($request)
         if (!empty($new_admin_comments)) {
             foreach ($new_admin_comments as $comment) {
                 echo "event: new_admin_comment\n";
-                echo "data: " . json_encode($comment) . "\n\n";
+                echo "data: " . wp_json_encode($comment) . "\n\n";
                 flush();
             }
             update_post_meta($ticket_id, 'rbd_all_seen', 'yes');
         } else {
             echo "event: disconnect\n";
-            echo "data: " . json_encode(array('reason' => 'timeout')) . "\n\n";
+            echo "data: " . wp_json_encode(array('reason' => 'timeout')) . "\n\n";
             flush();
         }
     }
@@ -239,8 +245,13 @@ function robodesk_ticket_stream($request)
     }
     ob_implicit_flush(true);
 
-    set_time_limit(0);
-    ignore_user_abort(false);
+    if (function_exists('set_time_limit')) {
+        // phpcs:ignore Squiz.PHP.DiscouragedFunctions.Discouraged
+        set_time_limit(0);
+    }
+    if (function_exists('ignore_user_abort')) {
+        ignore_user_abort(false);
+    }
 
     $imap_settings = get_option('robodesk_imap_settings', []);
     $support_inbox = strtolower(trim($imap_settings['username'] ?? ''));
@@ -387,7 +398,7 @@ function robodesk_ticket_stream($request)
         $notes      = $build_notes();
         $status     = get_post_meta($ticket_id, '_robodesk_ticket_status', true) ?: 'open';
         echo "event: sync\n";
-        echo "data: " . json_encode([
+        echo "data: " . wp_json_encode([
             'replies'       => $replies,
             'replies_count' => count($replies),
             'notes'         => $notes,
@@ -476,14 +487,21 @@ function robodesk_notification_stream()
     }
     ob_implicit_flush(true);
 
-    set_time_limit(0);
-    ignore_user_abort(false);
+    if (function_exists('set_time_limit')) {
+        // phpcs:ignore Squiz.PHP.DiscouragedFunctions.Discouraged
+        set_time_limit(0);
+    }
+    if (function_exists('ignore_user_abort')) {
+        ignore_user_abort(false);
+    }
 
     global $wpdb;
     $table_name = $wpdb->prefix . 'robodesk_notifications';
     $last_count = -1;
 
     $send = function () use ($wpdb, $table_name, $user_id, &$last_count) {
+        // phpcs:disable WordPress.DB.DirectDatabaseQuery
+        // phpcs:disable PluginCheck.Security.DirectDB
         $rows = $wpdb->get_results(
             $wpdb->prepare(
                 "SELECT id, ticket_id, comment_id, type, source, message, created_at
@@ -495,6 +513,7 @@ function robodesk_notification_stream()
             ),
             ARRAY_A
         );
+        // phpcs:enable
 
         $items = [];
         foreach ($rows as $row) {
@@ -502,6 +521,7 @@ function robodesk_notification_stream()
             if ($ticket_id > 0) {
                 $current_assignee_id = (int) get_post_meta($ticket_id, 'ticket_assignee_id', true);
                 if ($current_assignee_id > 0 && $current_assignee_id !== $user_id) {
+                    // phpcs:ignore WordPress.DB.DirectDatabaseQuery
                     $wpdb->delete($table_name, ['id' => (int) $row['id'], 'recipient_user_id' => $user_id], ['%d', '%d']);
                     continue;
                 }
@@ -522,7 +542,7 @@ function robodesk_notification_stream()
         if ($count !== $last_count) {
             $last_count = $count;
             echo "event: notifications\n";
-            echo "data: " . json_encode(['items' => $items, 'count' => $count]) . "\n\n";
+            echo "data: " . wp_json_encode(['items' => $items, 'count' => $count]) . "\n\n";
             flush();
         }
     };

@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useMemo } from "react";
-import { FaChevronLeft } from "react-icons/fa";
+import { FaChevronLeft, FaEnvelope } from "react-icons/fa";
 import { FaRegFaceSmileBeam } from "react-icons/fa6";
 import { PiPaperPlaneRightFill } from "react-icons/pi";
 import { FiPaperclip } from "react-icons/fi";
@@ -303,6 +303,8 @@ const SingleTicket = ({
   });
 
   const [isMessagingActive, setIsisMessagingActive] = useState(true);
+  const [emailSending, setEmailSending] = useState(false);
+  const [emailSent, setEmailSent] = useState(false);
 
   useEffect(() => {
     setSingleTicketPage(true);
@@ -325,7 +327,7 @@ const SingleTicket = ({
   // programmatic notification beeps are not blocked by the autoplay policy.
   useEffect(() => {
     const unlock = () => {
-      const sound = wpAuth?.notificationSound;
+      const sound = window.robodeskAuth?.notificationSound;
       if (sound) {
         const audio = new Audio(sound);
         const p = audio.play();
@@ -704,7 +706,7 @@ const SingleTicket = ({
     if (!ticket?.id) return null;
     if (!loggedinContext && !loggedInUsrId) return null;
     if (!streamCursorId) return null;
-    const nonce = window.wpAuth?.restNonce || window.wpApiSettings?.nonce || '';
+    const nonce = window.robodeskAuth?.restNonce || window.wpApiSettings?.nonce || '';
     return `/wp-json/robodesk/v1/stream/comments/${ticket.id}/${streamCursorId}/${loggedInUsrId}?_wpnonce=${nonce}`;
   }, [streamCursorId, ticket.id, loggedInUsrId, loggedinContext]);
 
@@ -1020,6 +1022,26 @@ const SingleTicket = ({
   };
   const triggerFileInput = () => fileInputRef.current.click();
 
+  const handleEmailTranscript = async () => {
+    if (emailSending || emailSent || !ticket?.id) return;
+    setEmailSending(true);
+    try {
+      const nonce = window.robodeskAuth?.restNonce || window.wpApiSettings?.nonce || '';
+      const res = await fetch('/wp-json/robodesk/v1/send-chat-transcript', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-WP-Nonce': nonce },
+        body: JSON.stringify({ ticket_id: ticket.id }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data?.message || 'Failed to send email');
+      setEmailSent(true);
+    } catch (err) {
+      alert(err.message || 'Failed to send email. Please try again.');
+    } finally {
+      setEmailSending(false);
+    }
+  };
+
   return (
     <div className="rd-single-ticket rd-flex rd-flex-col rd-h-full">
       <div className="single-ticket-header rd-search-header rd-bg-blue rd-flex rd-items-center rd-justify-between rd-flex-col rd-message-list-header">
@@ -1028,6 +1050,20 @@ const SingleTicket = ({
           onClick={onBack}
         >
           <FaChevronLeft />
+        </button>
+        <button
+          onClick={handleEmailTranscript}
+          disabled={emailSending || emailSent}
+          className="rd-flex rd-items-center rd-gap-1 rd-border-none rd-bg-transparent rd-m-0 rd-p-0 rd-cursor-pointer"
+          title={emailSent ? "Email sent" : "Email me this conversation"}
+            style={{
+              position: "absolute",
+              right: "18px",
+              top: "20px",
+              color: emailSent ? "#4CAF50" : "#fff",
+            }}
+        >
+          <FaEnvelope size={16} />
         </button>
         {image_urls.wide_logo && image_urls.wide_logo.trim() !== "" ? (
           <img

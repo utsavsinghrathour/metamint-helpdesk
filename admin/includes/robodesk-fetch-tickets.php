@@ -140,18 +140,17 @@ function robodesk_fetch_emails()
         'password' => '',
     ));
 
-    // Construct the IMAP connection string
-    $hostname = '{' . $settings['hostname'] . ':' . $settings['port'] . '/imap/ssl}INBOX';
+    $auth_type = !empty($settings['auth']) ? 'ssl' : 'tls';
+    $hostname = $settings['hostname'];
+    $port = $settings['port'];
     $username = $settings['username'];
     $password = $settings['password'];
 
+    rbd_log('Attempting IMAP connection: ' . $hostname . ':' . $port);
 
-    rbd_log('Attempting to connect to IMAP server: ' . $hostname);
-
-    // Connect to email with error handling
-    $email = @imap_open($hostname, $username, $password);
+    $email = robodesk_imap_connect($hostname, $port, $auth_type, $username, $password);
     if (!$email) {
-        $error_message = 'Cannot connect to email: ' . imap_last_error();
+        $error_message = 'Cannot connect to IMAP: ' . imap_last_error();
         rbd_log($error_message);
         return 'Error: ' . $error_message;
     }
@@ -552,6 +551,8 @@ function robodesk_fetch_emails()
 
             robodesk_notify_ticket_created($post_id, 'email');
 
+            do_action('robodesk_after_ticket_created', $post_id, [], $user_id);
+
             $processed_count++;
 
             // Update last fetched date
@@ -616,12 +617,10 @@ function robodesk_imap_settings_callback()
         $username     = isset($_POST['robodesk_imap_username']) ? sanitize_email(wp_unslash($_POST['robodesk_imap_username'])) : '';
         $password     = isset($_POST['robodesk_imap_password']) ? sanitize_text_field(wp_unslash($_POST['robodesk_imap_password'])) : '';
 
-        $hostname = '{' . $hostname_val . ':' . $port_val . '/imap/ssl}INBOX';
-
-        $mailbox = @imap_open($hostname, $username, $password);
-        if ($mailbox) {
+        $conn = robodesk_imap_connect($hostname_val, $port_val, 'ssl', $username, $password);
+        if ($conn) {
             echo '<div class="updated"><p>IMAP connection successful!</p></div>';
-            imap_close($mailbox);
+            imap_close($conn);
         } else {
             echo '<div class="error"><p>' .
                 esc_html__('IMAP connection failed: ', 'robodesk') .

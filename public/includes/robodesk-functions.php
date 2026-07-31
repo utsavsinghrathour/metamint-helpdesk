@@ -176,7 +176,7 @@ function robodesk_get_credential_password_value($stored_password)
 function robodesk_credentials_page()
 {
     if (!is_user_logged_in()) {
-        return '<div class="robodesk-container"><p>Please <a href="' . wp_login_url(get_permalink('login')) . '">login</a> to view your credentials.</p></div>';
+        return '<div class="robodesk-container"><p>Please <a href="' . esc_url(wp_login_url(get_permalink('login'))) . '">login</a> to view your credentials.</p></div>';
     }
 
     global $wpdb;

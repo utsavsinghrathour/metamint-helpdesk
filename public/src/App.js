@@ -38,10 +38,11 @@ const AppContent = ({ imageUrls = { logo: "" } }) => {
   const hasAttemptedDeepLinkFetch = useRef(false);
 
   const isSupportPage = window.location.pathname.includes("/robodesk-support");
+  const chatEnabled = window.robodeskData?.enable_chat === "1";
 
   const handleFocusedTextArea = (focus) => setFocusedTextArea(focus);
 
-  const hasNotificationOff = ticketsContext?.some(
+  const hasNotificationOff = chatEnabled && ticketsContext?.some(
     (ticket) => ticket.notifications === "no",
   );
 
@@ -71,7 +72,7 @@ const AppContent = ({ imageUrls = { logo: "" } }) => {
     if (isRobodeskPopupIntent()) {
       setShowActiveFeatured(false);
       setIsOpen(true);
-      setActiveTab(1);
+      if (chatEnabled) setActiveTab(1);
     }
   }, []);
 
@@ -100,7 +101,7 @@ const AppContent = ({ imageUrls = { logo: "" } }) => {
       setSelectedTicket(matchedTicket);
       setShowActiveFeatured(false);
       setIsOpen(true);
-      setActiveTab(1);
+      if (chatEnabled) setActiveTab(1);
       hasAutoOpenedTicket.current = true;
     }
   }, [isSupportPage, requestedTicketId, ticketsContext]);
@@ -114,7 +115,7 @@ const AppContent = ({ imageUrls = { logo: "" } }) => {
       return;
     }
 
-    if (!loggedInUsrId && wpAuth.isLoggedIn !== "true") {
+    if (!loggedInUsrId && window.robodeskAuth?.isLoggedIn !== "true") {
       return;
     }
 
@@ -174,7 +175,7 @@ const AppContent = ({ imageUrls = { logo: "" } }) => {
         setSelectedTicket(mappedTicket);
         setShowActiveFeatured(false);
         setIsOpen(true);
-        setActiveTab(1);
+        if (chatEnabled) setActiveTab(1);
         hasAutoOpenedTicket.current = true;
       } catch (error) {
         console.error("Unable to fetch requested deep-link ticket", error);
@@ -197,7 +198,7 @@ const AppContent = ({ imageUrls = { logo: "" } }) => {
   const url = useMemo(() => {
     if (!initialCursorId) return null;
     if (!loggedinContext && !loggedInUsrId) return null;
-    const nonce = window.wpAuth?.restNonce || window.wpApiSettings?.nonce || '';
+    const nonce = window.robodeskAuth?.restNonce || window.wpApiSettings?.nonce || '';
     return `${window.location.origin}/wp-json/robodesk/v1/stream/tickets/0/${initialCursorId}/${loggedInUsrId}?_wpnonce=${nonce}`;
   }, [initialCursorId, loggedInUsrId]);
 
@@ -211,7 +212,7 @@ const AppContent = ({ imageUrls = { logo: "" } }) => {
   // blocked by the browser autoplay policy.
   useEffect(() => {
     const unlock = () => {
-      const sound = window.wpAuth?.notificationSound;
+      const sound = window.robodeskAuth?.notificationSound;
       if (sound) {
         const audio = new Audio(sound);
         const p = audio.play();
@@ -298,7 +299,7 @@ const AppContent = ({ imageUrls = { logo: "" } }) => {
   const handleNoticeSelect = (notice) => {
     setSelectedNotice(notice);
     setShowActiveFeatured(false);
-    setActiveTab(1);
+    if (chatEnabled) setActiveTab(1);
     setIsOpen(true);
   };
 
@@ -345,13 +346,13 @@ const AppContent = ({ imageUrls = { logo: "" } }) => {
   };
 
   const handlePopupToggle = async () => {
-    console.log("Toggle Clicked", wpAuth.isLoggedIn, typeof wpAuth.isLoggedIn);
+    console.log("Toggle Clicked", window.robodeskAuth?.isLoggedIn, typeof window.robodeskAuth?.isLoggedIn);
     if (isOpen) {
       setIsOpen(false);
       setShowActiveFeatured(true);
       setSelectedNotice(null);
     } else {
-      if (wpAuth.isLoggedIn === "true") {
+      if (window.robodeskAuth?.isLoggedIn === "true") {
         await generateToken(); // Generate token on popup toggle open
       }
       setIsOpen(true);

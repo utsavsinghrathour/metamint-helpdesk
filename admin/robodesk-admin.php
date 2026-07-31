@@ -23,7 +23,7 @@ function robodesk_add_admin_menu()
         'robodesk-dashboard',
         'robodesk_dashboard_callback',
         'dashicons-email-alt',
-        25
+        30
     );
 
     // Dashboard (default submenu)
@@ -120,6 +120,10 @@ function robodesk_update_taxonomy_order()
         wp_send_json_error('Invalid nonce');
     }
 
+    if (!current_user_can('manage_categories')) {
+        wp_send_json_error('Insufficient permissions');
+    }
+
     if (!isset($_POST['order']) || !is_array($_POST['order'])) {
         wp_send_json_error('Invalid order data');
     }
@@ -134,7 +138,7 @@ function robodesk_update_taxonomy_order()
 
     wp_send_json_success('Order updated');
 }
-add_action('wp_ajax_update_taxonomy_order', 'robodesk_update_taxonomy_order');
+add_action('wp_ajax_robodesk_update_taxonomy_order', 'robodesk_update_taxonomy_order');
 
 function robodesk_modify_taxonomy_query($query)
 {
@@ -237,26 +241,21 @@ function robodesk_enqueue_tailwind_and_styles()
     // Needed for the native WordPress crop modal.
     wp_enqueue_media();
 
-    // Load Tailwind CDN browser runtime thats why wp_enqueue_script is used not style
-    // phpcs:disable PluginCheck.CodeAnalysis.EnqueuedResourceOffloading.OffloadedContent
-    wp_enqueue_script(
-        'tailwind-browser-cdn',
-        'https://cdn.tailwindcss.com',
-        [], // No dependencies
-        '3.4.15',
-        false // Load in header
+    wp_enqueue_style(
+        'tailwind-css',
+        plugin_dir_url(__FILE__) . 'assets/css/tailwind/tailwind.min.css',
+        [],
+        '3.4.15'
     );
-    // phpcs:enable PluginCheck.CodeAnalysis.EnqueuedResourceOffloading.OffloadedContent
 
-    // Load custom CSS
     wp_enqueue_style(
         'robodesk-dashboard-styles',
         plugin_dir_url(__FILE__) . 'assets/css/robodesk-dashboard.css',
         [],
         '1.0.0'
     );
+    wp_add_inline_style('robodesk-dashboard-styles', '.hidden { display: none; }');
 
-    // Enqueue custom JavaScript
     wp_enqueue_script(
         'robodesk-dashboard-script',
         plugin_dir_url(__FILE__) . 'assets/js/robodesk-dashboard.js',
@@ -268,19 +267,12 @@ function robodesk_enqueue_tailwind_and_styles()
     // Note: Slack and Discord integration scripts have been moved to the robodesk-addon plugin
     // They will be enqueued automatically when the respective addons are activated
 
-    // Enqueue Font Awesome for icons
-    // phpcs:disable PluginCheck.CodeAnalysis.EnqueuedResourceOffloading.OffloadedContent
-    add_action('wp_head', function () {
-        echo '<link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>';
-        echo '<link rel="preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">';
-    }, 1);
     wp_enqueue_style(
         'font-awesome',
-        'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css',
+        plugin_dir_url(__FILE__) . 'assets/css/font-awesome.min.css',
         [],
         '6.0.0'
     );
-    // phpcs:enable PluginCheck.CodeAnalysis.EnqueuedResourceOffloading.OffloadedContent
 
     // Localize script with all necessary nonces
     wp_localize_script('robodesk-dashboard-script', 'robodeskAjax', [
@@ -345,3 +337,92 @@ function robodesk_enqueue_tailwind_and_styles()
         'polling_interval' => isset($robodesk_adv_settings['polling_interval']) ? absint($robodesk_adv_settings['polling_interval']) : 30,
     ]);
 }
+
+/**
+ * Counts active (open + in-progress) tickets.
+ *
+ * @param int $assignee_id Optional user ID to limit count to assigned tickets.
+ * @return int
+ */
+function robodesk_get_active_ticket_count($assignee_id = 0)
+{
+    $meta_query = array(
+        'relation' => 'AND',
+        array(
+            'relation' => 'OR',
+            array(
+                'key'     => '_robodesk_ticket_status',
+                'value'   => 'open',
+                'compare' => '=',
+            ),
+            array(
+                'key'     => '_robodesk_ticket_status',
+                'value'   => 'in-progress',
+                'compare' => '=',
+            ),
+        ),
+    );
+
+    if ($assignee_id > 0) {
+        $meta_query[] = array(
+            'key'   => 'ticket_assignee_id',
+            'value' => (int) $assignee_id,
+        );
+    }
+
+    // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query
+    $args = array(
+        'post_type'      => 'robodesk_ticket',
+        'post_status'    => 'publish',
+        'posts_per_page' => -1,
+        'fields'         => 'ids',
+        'meta_query'     => $meta_query,
+    );
+    $query = new WP_Query($args);
+    return (int) $query->post_count;
+}
+
+/**
+ * Displays the active tickets count on the WordPress admin toolbar.
+ *
+ * @param WP_Admin_Bar $wp_admin_bar The admin bar object.
+ */
+function robodesk_admin_bar_active_tickets($wp_admin_bar)
+{
+    if (!current_user_can('robodesk_access_dashboard')) {
+        return;
+    }
+
+    $total_count = robodesk_get_active_ticket_count();
+    $my_count    = robodesk_get_active_ticket_count(get_current_user_id());
+
+    $wp_admin_bar->add_node(array(
+        'id'    => 'robodesk-active-tickets',
+        'title' => '<span class="ab-icon dashicons dashicons-email-alt"></span><span class="ab-label">' . esc_html__('Active Tickets', 'robodesk') . ': ' . esc_html($total_count) . '</span>',
+        'href'  => admin_url('admin.php?page=robodesk-dashboard&tab=tickets'),
+        'meta'  => array(
+            'title' => esc_html__('View Conversations', 'robodesk'),
+        ),
+    ));
+
+    $wp_admin_bar->add_node(array(
+        'parent' => 'robodesk-active-tickets',
+        'id'     => 'robodesk-active-tickets-total',
+        'title'  => esc_html__('All Active Tickets', 'robodesk') . ': ' . esc_html($total_count),
+        'href'   => admin_url('admin.php?page=robodesk-dashboard&tab=tickets&status=all'),
+        'meta'   => array(
+            'title' => esc_html__('View all active tickets', 'robodesk'),
+        ),
+    ));
+
+    $wp_admin_bar->add_node(array(
+        'parent' => 'robodesk-active-tickets',
+        'id'     => 'robodesk-active-tickets-mine',
+        'title'  => sprintf(esc_html__('My Tickets (%s): %d', 'robodesk'), esc_html(wp_get_current_user()->display_name), $my_count),
+        'href'   => admin_url('admin.php?page=robodesk-dashboard&filter=my_conversation'),
+        'meta'   => array(
+            'title' => esc_html__('View my active tickets', 'robodesk'),
+        ),
+    ));
+}
+add_action('admin_bar_menu', 'robodesk_admin_bar_active_tickets', 999);

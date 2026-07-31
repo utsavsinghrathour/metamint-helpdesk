@@ -338,11 +338,12 @@ $priority_terms = get_terms(array(
 ));
 ?>
 <?php
-$current_tab = isset($_GET['tab']) ? sanitize_key($_GET['tab']) : '';
-$has_ticket  = isset($_GET['ticket']) ? intval($_GET['ticket']) : 0;
-$tickets_hidden = ($current_tab === 'tickets' && $has_ticket === 0) ? '' : ' hidden';
+// phpcs:ignore WordPress.Security.NonceVerification.Recommended
+$robodesk_current_tab = isset($_GET['tab']) ? sanitize_key($_GET['tab']) : '';
+$robodesk_has_ticket  = isset($_GET['ticket']) ? intval($_GET['ticket']) : 0;
+$robodesk_tickets_hidden = ($robodesk_current_tab === 'tickets' && $robodesk_has_ticket === 0) ? '' : ' hidden';
 ?>
-<div id="tickets-page" class="page-content<?php echo $tickets_hidden; ?>">
+<div id="tickets-page" class="page-content<?php echo esc_attr($robodesk_tickets_hidden); ?>">
     <!-- Search and Filter Bar -->
     <div class="bg-white shadow rounded-lg mb-6">
         <div class="px-4 py-5 sm:p-6">
@@ -445,12 +446,16 @@ $tickets_hidden = ($current_tab === 'tickets' && $has_ticket === 0) ? '' : ' hid
         </div>
     </div>
 
-    <script>
-    const robodeskConversationCustomerOptions = <?php echo wp_json_encode($customer_filter_options); ?>;
-    const robodeskConversationAgentOptions = <?php echo wp_json_encode($agent_filter_options); ?>;
-    const robodeskSelectedCustomers = <?php echo wp_json_encode($customer_filters); ?>;
-    const robodeskSelectedAgents = <?php echo wp_json_encode($agent_filters); ?>;
-    </script>
+    <?php
+    add_action('admin_footer', function () use ($customer_filter_options, $agent_filter_options, $customer_filters, $agent_filters) {
+        wp_add_inline_script('robodesk-dashboard-script', '
+            const robodeskConversationCustomerOptions = ' . wp_json_encode($customer_filter_options) . ';
+            const robodeskConversationAgentOptions = ' . wp_json_encode($agent_filter_options) . ';
+            const robodeskSelectedCustomers = ' . wp_json_encode($customer_filters) . ';
+            const robodeskSelectedAgents = ' . wp_json_encode($agent_filters) . ';
+        ', 'before');
+    }, 100);
+    ?>
 
     <!-- Filter Results Summary -->
     <?php if (!empty($search_term) || !empty($customer_filter) || !empty($agent_filter) || $status_filter !== 'all'): ?>
@@ -564,12 +569,15 @@ $tickets_hidden = ($current_tab === 'tickets' && $has_ticket === 0) ? '' : ' hid
                 </tr>
             </thead>
             <tbody class="bg-white divide-y divide-gray-200" id="tickets-table">
-                <!-- JavaScript for tickets (now only for viewing, not filtering) -->
-                <script>
-                const tickets = <?php echo wp_json_encode($tickets); ?>;
-                const ajaxUrl = '<?php echo esc_url(admin_url('admin-ajax.php')); ?>';
-                const bulkActionNonce = '<?php echo esc_js(wp_create_nonce('robodesk_bulk_action')); ?>';
-                </script>
+                <?php
+                add_action('admin_footer', function () use ($tickets) {
+                    wp_add_inline_script('robodesk-dashboard-script', '
+                        const tickets = ' . wp_json_encode($tickets) . ';
+                        const ajaxUrl = \'' . esc_url(admin_url('admin-ajax.php')) . '\';
+                        const bulkActionNonce = \'' . esc_js(wp_create_nonce('robodesk_bulk_action')) . '\';
+                    ', 'before');
+                }, 100);
+                ?>
                 <?php if (!empty($tickets)): ?>
                 <?php foreach ($tickets as $ticket): ?>
                 <tr class="table-row">
@@ -803,9 +811,13 @@ $tickets_hidden = ($current_tab === 'tickets' && $has_ticket === 0) ? '' : ' hid
 // phpcs:enable WordPress.NamingConventions.PrefixAllGlobals
 ?>
 
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Intentionally no auto-submit search here.
-    // Filtering only runs when user clicks the Filter button.
-});
-</script>
+<?php
+add_action('admin_footer', function () {
+    wp_add_inline_script('robodesk-dashboard-script', '
+        document.addEventListener(\'DOMContentLoaded\', function() {
+            // Intentionally no auto-submit search here.
+            // Filtering only runs when user clicks the Filter button.
+        });
+    ');
+}, 100);
+?>

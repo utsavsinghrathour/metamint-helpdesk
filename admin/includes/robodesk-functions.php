@@ -7,7 +7,8 @@ if (!defined('ABSPATH')) {
 if (!function_exists('robodesk_get_debug_log_path')) {
     function robodesk_get_debug_log_path()
     {
-        return ROBODESK_PLUGIN_PATH . 'logs/debug.log';
+        $upload_dir = wp_upload_dir();
+        return $upload_dir['basedir'] . '/robodesk/debug.log';
     }
 }
 
@@ -237,6 +238,45 @@ if (!function_exists('robodesk_debug_log_page_callback')) {
 }
 
 // Ajax handler for testing credential for IMAP connection
+/**
+ * Attempt an IMAP connection with SSL validation, falling back to
+ * /novalidate-cert only when the error is certificate-related.
+ */
+function robodesk_imap_connect($hostname, $port, $auth_type, $username, $password)
+{
+    $cert_phrases = array(
+        'certificate',
+        'SSL certificate',
+        'hostname mismatch',
+        'self-signed',
+        'unable to verify',
+        'not signed',
+    );
+
+    // Try with full validation first
+    $mailbox = '{' . $hostname . ':' . $port . '/imap/' . $auth_type . '}INBOX';
+    $conn = @imap_open($mailbox, $username, $password);
+    if ($conn) {
+        return $conn;
+    }
+
+    $error = imap_last_error();
+    $is_cert_issue = false;
+    foreach ($cert_phrases as $phrase) {
+        if (stripos($error, $phrase) !== false) {
+            $is_cert_issue = true;
+            break;
+        }
+    }
+
+    if ($is_cert_issue) {
+        $mailbox = '{' . $hostname . ':' . $port . '/imap/' . $auth_type . '/novalidate-cert}INBOX';
+        $conn = @imap_open($mailbox, $username, $password);
+    }
+
+    return $conn;
+}
+
 // This function will be called via AJAX to test the IMAP connection
 add_action('wp_ajax_robodesk_imap_test_connection', 'robodesk_imap_test_connection');
 function robodesk_imap_test_connection()
@@ -266,23 +306,21 @@ function robodesk_imap_test_connection()
     }
 
     $auth_type = (isset($_POST['robodesk_imap_auth']) && sanitize_text_field(wp_unslash($_POST['robodesk_imap_auth'])) == '1') ? 'ssl' : 'tls';
-    $hostname = '{' . sanitize_text_field(wp_unslash($_POST['robodesk_imap_hostname'])) . ':' . intval($_POST['robodesk_imap_port']) . '/imap/' . $auth_type . '/novalidate-cert}INBOX';
+    $hostname_val = sanitize_text_field(wp_unslash($_POST['robodesk_imap_hostname']));
+    $port_val = intval($_POST['robodesk_imap_port']);
     $username = sanitize_text_field(wp_unslash($_POST['robodesk_imap_username']));
     $password = sanitize_text_field(wp_unslash($_POST['robodesk_imap_password']));
 
-    // Clear previous errors
     imap_errors();
 
-    $mailbox = @imap_open($hostname, $username, $password);
+    $conn = robodesk_imap_connect($hostname_val, $port_val, $auth_type, $username, $password);
 
-    if ($mailbox) {
-        $message = ' IMAP connection successful!';
-        imap_close($mailbox);
-        wp_send_json_success(['message' => $message]);
+    if ($conn) {
+        imap_close($conn);
+        wp_send_json_success(['message' => 'IMAP connection successful!']);
     } else {
         $error = imap_last_error();
-        $message = ' IMAP connection failed: ' . esc_html($error);
-        wp_send_json_error(['message' => $message]);
+        wp_send_json_error(['message' => 'IMAP connection failed: ' . esc_html($error)]);
     }
 }
 
@@ -317,16 +355,17 @@ function robodesk_imap_save_settings()
     }
 
     $auth_type = (isset($_POST['robodesk_imap_auth']) && sanitize_text_field(wp_unslash($_POST['robodesk_imap_auth'])) == '1') ? 'ssl' : 'tls';
-    $hostname = '{' . sanitize_text_field(wp_unslash($_POST['robodesk_imap_hostname'])) . ':' . intval($_POST['robodesk_imap_port']) . '/imap/' . $auth_type . '/novalidate-cert}INBOX';
+    $hostname_val = sanitize_text_field(wp_unslash($_POST['robodesk_imap_hostname']));
+    $port_val = intval($_POST['robodesk_imap_port']);
     $username = sanitize_text_field(wp_unslash($_POST['robodesk_imap_username']));
     $password = sanitize_text_field(wp_unslash($_POST['robodesk_imap_password']));
 
-    // Clear previous errors
     imap_errors();
 
-    $mailbox = @imap_open($hostname, $username, $password);
+    $conn = robodesk_imap_connect($hostname_val, $port_val, $auth_type, $username, $password);
 
-    if ($mailbox) {
+    if ($conn) {
+        imap_close($conn);
         $message = 'IMAP connection settings saved successfully!';
         // Save settings to the database
         $settings = array(
@@ -338,7 +377,7 @@ function robodesk_imap_save_settings()
             'inbox_name' => isset($_POST['robodesk_imap_inbox_name']) ? sanitize_text_field(wp_unslash($_POST['robodesk_imap_inbox_name'])) : '',
         );
 
-        update_option('robodesk_imap_settings', $settings); // Save the settings to the database
+        update_option('robodesk_imap_settings', $settings);
         imap_close($mailbox);
         wp_send_json_success(['message' => $message]);
     } else {
@@ -397,6 +436,7 @@ function robodesk_configure_phpmailer_for_smtp($phpmailer, array $settings)
     $phpmailer->Host = $settings['host'];
     $phpmailer->Port = (int) $settings['port'];
     $phpmailer->SMTPAuth = !empty($settings['username']) && !empty($settings['password']);
+    $phpmailer->Timeout = 10;
 
     if ($phpmailer->SMTPAuth) {
         $phpmailer->Username = $settings['username'];
@@ -418,6 +458,11 @@ function robodesk_smtp_save_settings()
         exit;
     }
 
+    if (!current_user_can('manage_options')) {
+        wp_send_json_error(['message' => 'Insufficient permissions']);
+        exit;
+    }
+
     $settings = robodesk_get_smtp_settings_from_request($_POST);
     $validation = robodesk_validate_smtp_settings($settings);
 
@@ -435,6 +480,11 @@ function robodesk_smtp_test_connection()
 {
     if (!isset($_POST['nonce']) || !wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['nonce'])), 'robodesk_smtp_settings_action')) {
         wp_send_json_error(['message' => 'Security check failed']);
+        exit;
+    }
+
+    if (!current_user_can('manage_options')) {
+        wp_send_json_error(['message' => 'Insufficient permissions']);
         exit;
     }
 
@@ -497,6 +547,11 @@ function robodesk_email_template_save()
     // Verify nonce
     if (!isset($_POST['nonce']) || !wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['nonce'])), 'robodesk_email_template_action')) {
         wp_send_json_error(['message' => 'Security check failed']);
+        exit;
+    }
+
+    if (!current_user_can('manage_options')) {
+        wp_send_json_error(['message' => 'Insufficient permissions']);
         exit;
     }
 
@@ -605,6 +660,11 @@ function robodesk_save_advanced_settings()
         exit;
     }
 
+    if (!current_user_can('manage_options')) {
+        wp_send_json_error(['message' => 'Insufficient permissions']);
+        exit;
+    }
+
     // Check if settings array is provided
     if (empty($_POST['settings']) || !is_array($_POST['settings'])) {
         wp_send_json_error(['message' => 'No settings provided']);
@@ -670,8 +730,9 @@ function robodesk_save_advanced_settings()
                     $valid_ips[] = $ip;
                 }
             }
-            //testing 
+            //testing
             global $wpdb;
+            // phpcs:disable WordPress.DB.DirectDatabaseQuery
             $wpdb->query(
                 $wpdb->prepare(
                     "DELETE FROM {$wpdb->options} WHERE option_name LIKE %s OR option_name LIKE %s",
@@ -702,6 +763,7 @@ function robodesk_save_advanced_settings()
                     $wpdb->esc_like('_transient_timeout_robodesk_lost_password_rate_') . '%'
                 )
             );
+            // phpcs:enable WordPress.DB.DirectDatabaseQuery
             //testing
             update_option('robodesk_blocked_ips', $valid_ips, false);
         } else {
@@ -736,6 +798,11 @@ function robodesk_save_basic_settings()
         exit;
     }
 
+    if (!current_user_can('manage_options')) {
+        wp_send_json_error(['message' => 'Insufficient permissions']);
+        exit;
+    }
+
     // Check if settings array is provided
     if (empty($_POST['settings']) || !is_array($_POST['settings'])) {
         wp_send_json_error(['message' => 'No settings provided']);
@@ -751,7 +818,7 @@ function robodesk_save_basic_settings()
 
     // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- sanitized per-key in loop below
     $settings = wp_unslash($_POST['settings']);
-    $valid_settings = ['site_name', 'admin_email', 'theme_color', 'default_ticket_category', 'chat_heading', 'welcome_message', 'ticket_intro_message'];
+    $valid_settings = ['site_name', 'admin_email', 'theme_color', 'default_ticket_category', 'chat_heading', 'welcome_message', 'ticket_intro_message', 'enable_chat'];
     $image_fields = [
         'popover_icon' => 'robodesk_popover_icon',
         'popover_top_icon' => 'robodesk_popover_top_icon',
@@ -801,6 +868,8 @@ function robodesk_save_basic_settings()
             $sanitized_settings[$key] = sanitize_textarea_field($settings[$key]);
         } elseif ($key === 'welcome_message') {
             $sanitized_settings[$key] = sanitize_textarea_field($settings[$key]);
+        } elseif ($key === 'enable_chat') {
+            $sanitized_settings[$key] = $settings[$key] === '1' ? '1' : '0';
         }
         $results[$key] = ['status' => 'success', 'message' => ucfirst(str_replace('_', ' ', $key)) . ' saved successfully'];
     }
@@ -888,6 +957,11 @@ function robodesk_save_cropped_logo()
         exit;
     }
 
+    if (!current_user_can('manage_options')) {
+        wp_send_json_error(['message' => 'Insufficient permissions']);
+        exit;
+    }
+
     $option_key = isset($_POST['option_key']) ? sanitize_key($_POST['option_key']) : '';
     $cropped_url = isset($_POST['cropped_url']) ? esc_url_raw(wp_unslash($_POST['cropped_url'])) : '';
 
@@ -928,6 +1002,11 @@ function robodesk_save_ticket_assignment_settings()
     // Verify nonce
     if (!isset($_POST['nonce']) || !wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['nonce'])), 'robodesk_ticket_assignment_action')) {
         wp_send_json_error(['message' => 'Security check failed']);
+        exit;
+    }
+
+    if (!current_user_can('manage_options')) {
+        wp_send_json_error(['message' => 'Insufficient permissions']);
         exit;
     }
 
@@ -979,6 +1058,11 @@ function robodesk_create_ticket()
 
     if (!$valid_nonce) {
         wp_send_json_error(['message' => 'Security check failed']);
+        wp_die();
+    }
+
+    if (!current_user_can('robodesk_access_dashboard')) {
+        wp_send_json_error(['message' => 'Insufficient permissions']);
         wp_die();
     }
 
@@ -1160,13 +1244,14 @@ function robodesk_create_ticket()
 
     if (!is_wp_error($ticket_id)) {
         robodesk_notify_ticket_created($ticket_id, 'admin');
+        do_action('robodesk_after_ticket_created', $ticket_id, $_POST, $user_id);
     }
 
     wp_send_json_success(['message' => 'Conversation created successfully', 'ticket_id' => $ticket_id]);
     wp_die();
 }
 
-add_action('wp_ajax_get_ticket_detail', 'robodesk_get_ticket_detail');
+add_action('wp_ajax_robodesk_get_ticket_detail', 'robodesk_get_ticket_detail');
 function robodesk_get_ticket_detail()
 {
     if (!isset($_POST['nonce']) || !wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['nonce'])), 'robodesk_get_ticket_detail_action')) {
@@ -1293,6 +1378,11 @@ function robodesk_user_lookup()
 {
     check_ajax_referer('robodesk_user_lookup_action', 'nonce');
 
+    if (!current_user_can('robodesk_access_dashboard')) {
+        wp_send_json_error(['message' => 'Insufficient permissions']);
+        return;
+    }
+
     if (!isset($_POST['type'], $_POST['value'])) {
         wp_send_json_error(['message' => 'Missing required fields']);
         return;
@@ -1323,7 +1413,7 @@ function robodesk_user_lookup()
 
 // Ajax handler to update ticket status
 // This function will be called via AJAX to update the status of a ticket
-add_action('wp_ajax_update_ticket_status', 'robodesk_update_ticket_status');
+add_action('wp_ajax_robodesk_update_ticket_status', 'robodesk_update_ticket_status');
 
 function robodesk_update_ticket_status()
 {
@@ -1350,6 +1440,8 @@ function robodesk_update_ticket_status()
 
     update_post_meta($ticket_id, '_robodesk_ticket_status', $new_status);
     $updated = function_exists('robodesk_datetime_to_utc_iso') ? robodesk_datetime_to_utc_iso(current_time('mysql')) : current_time('mysql');
+
+    do_action('robodesk_after_ticket_status_change', $ticket_id, $old_status, $new_status, get_current_user_id());
 
     if ($old_status !== $new_status && function_exists('robodesk_notify_status_changed')) {
         robodesk_notify_status_changed($ticket_id, $new_status, get_current_user_id(), 'admin');
@@ -1383,7 +1475,7 @@ function robodesk_update_ticket_status()
 
 
 // Ajax handler to update ticket priority
-add_action('wp_ajax_update_ticket_priority', 'robodesk_update_ticket_priority');
+add_action('wp_ajax_robodesk_update_ticket_priority', 'robodesk_update_ticket_priority');
 
 function robodesk_update_ticket_priority()
 {
@@ -1454,7 +1546,7 @@ function robodesk_update_ticket_priority()
 
 
 // Ajax handler to assign a ticket to an agent
-add_action('wp_ajax_update_ticket_assignee', 'robodesk_update_ticket_assignee');
+add_action('wp_ajax_robodesk_update_ticket_assignee', 'robodesk_update_ticket_assignee');
 
 function robodesk_update_ticket_assignee()
 {
@@ -1537,7 +1629,7 @@ function robodesk_update_ticket_assignee()
 
 
 // ADD REPLY TO TICKET
-add_action('wp_ajax_add_ticket_reply', 'robodesk_handle_add_ticket_reply');
+add_action('wp_ajax_robodesk_add_ticket_reply', 'robodesk_handle_add_ticket_reply');
 
 function robodesk_handle_add_ticket_reply()
 {
@@ -1632,7 +1724,7 @@ function robodesk_handle_add_ticket_reply()
 
 
 // add a ticket reply if onclick="closeTicket()" is clicked also change the status of the ticket to closed
-add_action('wp_ajax_close_ticket', 'robodesk_handle_close_ticket');
+add_action('wp_ajax_robodesk_close_ticket', 'robodesk_handle_close_ticket');
 function robodesk_handle_close_ticket()
 {
     // Verify nonce for security
@@ -1640,11 +1732,17 @@ function robodesk_handle_close_ticket()
         wp_send_json_error(['message' => 'Nonce verification failed']);
     }
 
+    if (!current_user_can('robodesk_access_dashboard')) {
+        wp_send_json_error(['message' => 'Insufficient permissions']);
+    }
+
     $ticket_id = isset($_POST['ticket_id']) ? intval($_POST['ticket_id']) : 0;
 
     if (!$ticket_id) {
         wp_send_json_error(['message' => 'Invalid ticket ID']);
     }
+
+    $old_status = (string) get_post_meta($ticket_id, '_robodesk_ticket_status', true);
 
     // Update ticket status to closed
     $status_updated = update_post_meta($ticket_id, '_robodesk_ticket_status', 'closed');
@@ -1654,6 +1752,9 @@ function robodesk_handle_close_ticket()
     }
 
     $user_id = get_current_user_id();
+
+    do_action('robodesk_after_ticket_closed', $ticket_id, $user_id);
+    do_action('robodesk_after_ticket_status_change', $ticket_id, $old_status, 'closed', $user_id);
     $user_object = get_userdata($user_id);
 
     if (!$user_id || !$user_object) {
@@ -1729,13 +1830,17 @@ function robodesk_handle_close_ticket()
 
 
 // GET TICKET REPLIES
-add_action('wp_ajax_get_ticket_replies', 'robodesk_handle_get_ticket_replies');
+add_action('wp_ajax_robodesk_get_ticket_replies', 'robodesk_handle_get_ticket_replies');
 
 function robodesk_handle_get_ticket_replies()
 {
     // Verify nonce
     if (!isset($_POST['nonce']) || !wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['nonce'])), 'robodesk_get_ticket_replies_action')) {
         wp_send_json_error(['message' => 'Nonce verification failed']);
+    }
+
+    if (!current_user_can('robodesk_access_dashboard')) {
+        wp_send_json_error(['message' => 'Insufficient permissions']);
     }
 
     $ticket_id = isset($_POST['ticket_id']) ? intval($_POST['ticket_id']) : 0;
@@ -1881,13 +1986,17 @@ function robodesk_handle_get_ticket_replies()
 
 
 // ADD TICKET NOTE
-add_action('wp_ajax_add_ticket_note', 'robodesk_handle_add_ticket_note');
+add_action('wp_ajax_robodesk_add_ticket_note', 'robodesk_handle_add_ticket_note');
 
 function robodesk_handle_add_ticket_note()
 {
     // Verify nonce for security
     if (!isset($_POST['nonce']) || !wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['nonce'])), 'robodesk_add_ticket_note_action')) {
         wp_send_json_error(['message' => 'Nonce verification failed']);
+    }
+
+    if (!current_user_can('robodesk_access_dashboard')) {
+        wp_send_json_error(['message' => 'Insufficient permissions']);
     }
 
     $ticket_id = isset($_POST['ticket_id']) ? intval($_POST['ticket_id']) : 0;
@@ -1944,13 +2053,17 @@ function robodesk_handle_add_ticket_note()
 }
 
 // GET TICKET NOTES
-add_action('wp_ajax_get_ticket_notes', 'robodesk_handle_get_ticket_notes');
+add_action('wp_ajax_robodesk_get_ticket_notes', 'robodesk_handle_get_ticket_notes');
 
 function robodesk_handle_get_ticket_notes()
 {
     // Verify nonce
     if (!isset($_POST['nonce']) || !wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['nonce'])), 'robodesk_get_ticket_notes_action')) {
         wp_send_json_error(['message' => 'Nonce verification failed']);
+    }
+
+    if (!current_user_can('robodesk_access_dashboard')) {
+        wp_send_json_error(['message' => 'Insufficient permissions']);
     }
 
     $ticket_id = isset($_POST['ticket_id']) ? intval($_POST['ticket_id']) : 0;
@@ -2012,12 +2125,16 @@ function robodesk_handle_get_ticket_notes()
 }
 
 // GET TICKET REPLIES AND NOTES (combined)
-add_action('wp_ajax_get_ticket_replies_and_notes', 'robodesk_handle_get_ticket_replies_and_notes');
+add_action('wp_ajax_robodesk_get_ticket_replies_and_notes', 'robodesk_handle_get_ticket_replies_and_notes');
 
 function robodesk_handle_get_ticket_replies_and_notes()
 {
     if (!isset($_POST['nonce']) || !wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['nonce'])), 'robodesk_get_ticket_replies_and_notes_action')) {
         wp_send_json_error(['message' => 'Nonce verification failed']);
+    }
+
+    if (!current_user_can('robodesk_access_dashboard')) {
+        wp_send_json_error(['message' => 'Insufficient permissions']);
     }
 
     $ticket_id = isset($_POST['ticket_id']) ? intval($_POST['ticket_id']) : 0;
@@ -2196,6 +2313,10 @@ function robodesk_fetch_emails_handler()
 {
     check_ajax_referer('robodesk_fetch_emails_action', 'nonce');
 
+    if (!current_user_can('manage_options')) {
+        wp_send_json_error(['message' => 'Insufficient permissions']);
+    }
+
     try {
         $summary = robodesk_fetch_emails(); // returns the string
         wp_send_json_success($summary); // ✅ send summary as success data
@@ -2209,7 +2330,7 @@ function robodesk_fetch_emails_handler()
 // cron job to fetch emails
 
 
-add_action('wp_ajax_update_ticket_category', 'handle_update_ticket_category');
+add_action('wp_ajax_robodesk_update_ticket_category', 'handle_update_ticket_category');
 
 // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedFunctionFound
 function handle_update_ticket_category()
@@ -2530,6 +2651,7 @@ function robodesk_handle_bulk_action()
                 } else {
                     // Update status meta
                     if (update_post_meta($ticket_id, '_robodesk_ticket_status', $action_value)) {
+                        do_action('robodesk_after_ticket_status_change', $ticket_id, $current_status, $action_value, $user_id);
                         // Update modified date to reflect the change
                         wp_update_post(array(
                             'ID' => $ticket_id,
@@ -2730,15 +2852,28 @@ function robodesk_get_available_priorities()
 
 
 // function to send email notifications when a ticket is created of posttype robodesk_ticket
-add_action('save_post', 'robodesk_send_ticket_creation_email', 10, 3);
-function robodesk_send_ticket_creation_email($post_id, $post, $update)
+add_action('save_post', 'robodesk_schedule_ticket_creation_email', 10, 3);
+function robodesk_schedule_ticket_creation_email($post_id, $post, $update)
 {
-    // Only send email for new tickets
     if ($post->post_type !== 'robodesk_ticket' || $update) {
         return;
     }
 
-    // Get customer email from post meta
+    if (wp_next_scheduled('robodesk_send_ticket_creation_email_async', [$post_id])) {
+        return;
+    }
+
+    wp_schedule_single_event(time(), 'robodesk_send_ticket_creation_email_async', [$post_id]);
+}
+
+add_action('robodesk_send_ticket_creation_email_async', 'robodesk_send_ticket_creation_email', 10, 1);
+function robodesk_send_ticket_creation_email($post_id)
+{
+    $post = get_post($post_id);
+    if (!$post || $post->post_type !== 'robodesk_ticket') {
+        return;
+    }
+
     $customer_email = get_post_meta($post_id, '_robodesk_customer_email', true);
     if (!$customer_email || !is_email($customer_email)) {
         $author = get_userdata($post->post_author);
@@ -2753,7 +2888,6 @@ function robodesk_send_ticket_creation_email($post_id, $post, $update)
         }
     }
 
-    // Prepare email content
     $subject = 'Your support ticket has been created.';
     $ticket_link = robodesk_build_ticket_deeplink($post_id);
     $theme_color = robodesk_get_email_theme_color();
@@ -2781,7 +2915,6 @@ function robodesk_send_ticket_creation_email($post_id, $post, $update)
     $message .= '<p><a href="' . esc_url($ticket_link) . '" style="display:inline-block;padding:12px 18px;background-color:' . esc_attr($theme_color) . ';color:#ffffff;text-decoration:none;border-radius:6px;font-weight:600;">View your conversation</a></p> <br>';
     $message .= '<p>If the button above does not work, please use this link: <a href="' . esc_url($ticket_link) . '">' . esc_html($ticket_link) . '</a></p>';
 
-    // Send email
     $reply_to = robodesk_get_inbox_email_for_ticket($post_id);
     robodesk_send_email($customer_email, $subject, $message, [], [], $reply_to);
     rbd_log("Robodesk: Ticket creation email sent to $customer_email for ticket ID: $post_id");
@@ -2797,7 +2930,7 @@ function robodesk_refresh_dashboard_tickets()
     }
 
     // Check user capabilities
-    if (!current_user_can('read')) {
+    if (!current_user_can('robodesk_access_dashboard')) {
         wp_send_json_error(array('message' => 'You do not have permission to perform this action.'));
     }
 
@@ -3381,82 +3514,5 @@ function robodesk_send_email($to, $subject, $message, $headers = [], $attachment
 
     $email_template = robodesk_render_email_template($subject, $message);
 
-    // Try to embed logo as a CID attachment when possible for reliable display
-    $logo_file = robodesk_get_email_logo_file_path();
-    $logo_url = robodesk_get_email_logo_url();
-
-    if ($logo_file !== '') {
-        // Ensure PHPMailer classes are available
-        if (!class_exists('PHPMailer\\PHPMailer\\PHPMailer')) {
-            if (file_exists(ABSPATH . WPINC . '/PHPMailer/PHPMailer.php')) {
-                require_once ABSPATH . WPINC . '/PHPMailer/PHPMailer.php';
-            }
-            if (file_exists(ABSPATH . WPINC . '/PHPMailer/SMTP.php')) {
-                require_once ABSPATH . WPINC . '/PHPMailer/SMTP.php';
-            }
-            if (file_exists(ABSPATH . WPINC . '/PHPMailer/Exception.php')) {
-                require_once ABSPATH . WPINC . '/PHPMailer/Exception.php';
-            }
-        }
-
-        if (class_exists('PHPMailer\\PHPMailer\\PHPMailer')) {
-            try {
-                $mail = new \PHPMailer\PHPMailer\PHPMailer(true);
-
-                // Apply SMTP settings if configured
-                if (function_exists('robodesk_apply_smtp_to_phpmailer')) {
-                    robodesk_apply_smtp_to_phpmailer($mail);
-                }
-
-                // Ensure From is set
-                if (empty($mail->From)) {
-                    $from_email = get_option('robodesk_smtp_settings', [])['from_email'] ?? get_option('admin_email');
-                    $from_name = get_option('robodesk_smtp_settings', [])['from_name'] ?? get_bloginfo('name');
-                    $mail->setFrom($from_email, $from_name);
-                }
-
-                $mail->isHTML(true);
-                $mail->Subject = $subject;
-
-                // Embed the logo and replace URL references with CID
-                $cid = 'robodesk_logo_' . md5($logo_file);
-                try {
-                    $mail->addEmbeddedImage($logo_file, $cid, basename($logo_file));
-                    if (!empty($logo_url)) {
-                        $email_template = str_replace($logo_url, 'cid:' . $cid, $email_template);
-                    }
-                } catch (Exception $e) {
-                    // ignore embedding errors and continue to send without CID
-                }
-
-                $mail->Body = $email_template;
-                $mail->AltBody = wp_strip_all_tags($message);
-
-                // Add recipient
-                $mail->clearAllRecipients();
-                $mail->addAddress($to);
-                if (!empty($reply_to)) {
-                    $mail->addReplyTo($reply_to);
-                }
-
-                // Attach files if any (only local file paths)
-                if (!empty($attachments) && is_array($attachments)) {
-                    foreach ($attachments as $att) {
-                        if (is_string($att) && file_exists($att)) {
-                            $mail->addAttachment($att);
-                        }
-                    }
-                }
-
-                $sent = $mail->send();
-                return (bool) $sent;
-            } catch (\Exception $e) {
-                rbd_log('PHPMailer send failed: ' . $e->getMessage());
-                // Fall back to wp_mail below
-            }
-        }
-    }
-
-    // Fallback to WordPress mail.
     return wp_mail($to, $subject, $email_template, $headers, $attachments);
 }

@@ -5,11 +5,12 @@ if (! defined('ABSPATH')) {
 }
 ?>
 <?php
-$current_tab    = isset($_GET['tab']) ? sanitize_key($_GET['tab']) : '';
-$has_ticket     = isset($_GET['ticket']) ? intval($_GET['ticket']) : 0;
-$dashboard_hidden = ($current_tab !== '' && $current_tab !== 'dashboard') || $has_ticket > 0 ? ' hidden' : '';
+// phpcs:ignore WordPress.Security.NonceVerification.Recommended
+$robodesk_current_tab    = isset($_GET['tab']) ? sanitize_key($_GET['tab']) : '';
+$robodesk_has_ticket     = isset($_GET['ticket']) ? intval($_GET['ticket']) : 0;
+$robodesk_dashboard_hidden = ($robodesk_current_tab !== '' && $robodesk_current_tab !== 'dashboard') || $robodesk_has_ticket > 0 ? ' hidden' : '';
 ?>
-<div id="dashboard-page" class="page-content<?php echo $dashboard_hidden; ?>">
+<div id="dashboard-page" class="page-content<?php echo esc_attr($robodesk_dashboard_hidden); ?>">
     <!-- Statistics Cards -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
         <div class="bg-white overflow-hidden shadow rounded-lg">
@@ -379,10 +380,11 @@ $dashboard_hidden = ($current_tab !== '' && $current_tab !== 'dashboard') || $ha
             }
         }
 
-        // Pass priority colors to JavaScript
-        echo '<script>
-                        const robodeskPriorityColors = ' . wp_json_encode($priority_colors) . ';
-                    </script>';
+        add_action('admin_footer', function () use ($priority_colors) {
+            wp_add_inline_script('robodesk-dashboard-script', '
+                const robodeskPriorityColors = ' . wp_json_encode($priority_colors) . ';
+            ', 'before');
+        }, 100);
 
         // Generate table HTML
         ob_start();
@@ -408,14 +410,17 @@ $dashboard_hidden = ($current_tab !== '' && $current_tab !== 'dashboard') || $ha
                     </tr>
                 </thead>
                 <tbody class="bg-white divide-y divide-gray-200" id="dashboard-tickets-table">
-                    <!-- Rows populated by JavaScript -->
                 </tbody>
             </table>
         </div>
         <div id="dashboard-pagination" class="py-4"></div>
-        <script>
-            const dashboard_tickets = <?php echo wp_json_encode($dashboard_tickets); ?>;
-        </script>
+        <?php
+        add_action('admin_footer', function () use ($dashboard_tickets) {
+            wp_add_inline_script('robodesk-dashboard-script', '
+                const dashboard_tickets = ' . wp_json_encode($dashboard_tickets) . ';
+            ', 'before');
+        }, 100);
+        ?>
     <?php
         return ob_get_clean();
     }
@@ -450,7 +455,7 @@ $dashboard_hidden = ($current_tab !== '' && $current_tab !== 'dashboard') || $ha
 
                 </div>
             </div>
-            <?php echo robodesk_load_dashboard_tickets($robodesk_filter); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped 
+            <?php echo robodesk_load_dashboard_tickets($robodesk_filter); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Trusted admin template, individual values escaped within the function
             ?>
         </div>
     </div>

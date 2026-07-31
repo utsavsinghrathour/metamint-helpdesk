@@ -1,3 +1,12 @@
+const parseJSON = async (response) => {
+  const text = await response.text();
+  try {
+    return JSON.parse(text);
+  } catch {
+    throw new Error(`Expected JSON but got HTML (${response.status}). Check that the REST endpoint is accessible.`);
+  }
+};
+
 //create ticket
 export const createTicket = async (userId, title, message = "", timestamp = null) => {
   const webhookUrl = "/wp-json/robodesk/chat/v1/tickets";
@@ -22,7 +31,7 @@ export const createTicket = async (userId, title, message = "", timestamp = null
       body: JSON.stringify(ticketData),
     });
 
-    const responseData = await response.json();
+    const responseData = await parseJSON(response);
 
     return responseData;
   } catch (error) {
@@ -53,19 +62,19 @@ export const getMessages = async (ticketId, userId) => {
       body: JSON.stringify(messageData),
     });
 
-    const responseData = await response.json();
+    const responseData = await parseJSON(response);
     return responseData;
   } catch (error) {
-    console.error("Error in createTicket:", error);
+    console.error("Error in getMessages:", error);
     throw error;
   }
 };
 
 export const userStatus = () => {
-  if (typeof wpAuth !== "undefined" && wpAuth.isLoggedIn === "true") {
+  if (typeof robodeskAuth !== "undefined" && robodeskAuth.isLoggedIn === "true") {
     return {
       isLoggedIn: true,
-      loggedInUserId: wpAuth.loggedInUserId || false,
+      loggedInUserId: robodeskAuth.loggedInUserId || false,
     };
   }
 
@@ -144,7 +153,7 @@ export async function sendReply(
       signal,
     });
 
-    const result = await response.json();
+    const result = await parseJSON(response);
 
     if (!response.ok) {
       throw new Error(result.message || "Failed to send reply");
@@ -170,13 +179,13 @@ export async function registerUser(email) {
       },
       body: JSON.stringify(payload),
     });
-    const result = await response.json();
+    const result = await parseJSON(response);
     if (!response.ok) {
       throw new Error(result.message || "Failed register");
     }
     return result;
   } catch (error) {
-    console.error("Error sending reply:", error.message);
+    console.error("Error in registerUser:", error.message);
     throw error;
   }
 }
@@ -195,13 +204,13 @@ export async function loginUser(email, password) {
       },
       body: JSON.stringify(payload),
     });
-    const result = await response.json();
+    const result = await parseJSON(response);
     if (!response.ok) {
       throw new Error(result.message || "Failed login");
     }
     return result;
   } catch (error) {
-    console.error("Error sending reply:", error.message);
+    console.error("Error in loginUser:", error.message);
     throw error;
   }
 }
@@ -223,7 +232,7 @@ export async function getAllTickets(userId) {
       body: JSON.stringify(payload),
     });
 
-    const result = await response.json();
+    const result = await parseJSON(response);
 
     if (!response.ok) {
       throw new Error(result.message || "Failed to fetch tickets");

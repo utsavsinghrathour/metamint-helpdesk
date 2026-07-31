@@ -305,21 +305,14 @@ function robodesk_enqueue_color_picker_scripts($taxonomy)
         wp_enqueue_style('wp-color-picker');
         wp_enqueue_script('wp-color-picker');
 
-        add_action('admin_footer', 'robodesk_initialize_color_picker');
+        wp_add_inline_script('wp-color-picker', '
+            jQuery(document).ready(function($) {
+                $(\'.color-picker-field\').wpColorPicker();
+            });
+        ');
     }
 }
 add_action('admin_enqueue_scripts', 'robodesk_enqueue_color_picker_scripts');
-
-function robodesk_initialize_color_picker()
-{
-?>
-    <script type="text/javascript">
-        jQuery(document).ready(function($) {
-            $('.color-picker-field').wpColorPicker();
-        });
-    </script>
-<?php
-}
 
 // Step 4: Save the color value when the term is created or updated
 function robodesk_save_priority_color_meta($term_id)
@@ -527,11 +520,25 @@ add_action('rest_api_init', function () {
     register_rest_route('chat/v1', '/tickets', array(
         'methods'  => 'POST',
         'callback' => 'robodesk_handle_tickets_webhook',
-        'permission_callback' => '__return_true',
+        'permission_callback' => '__return_true', // Webhook; auth via HMAC signature in callback
     ));
 });
 
 
+
+function robodesk_get_webhook_secret()
+{
+    if (defined('ROBODESK_WEBHOOK_SECRET') && ROBODESK_WEBHOOK_SECRET !== '') {
+        return ROBODESK_WEBHOOK_SECRET;
+    }
+
+    $option = get_option('robodesk_webhook_secret', '');
+    if (!empty($option)) {
+        return $option;
+    }
+
+    return wp_hash('robodesk-webhook-secret');
+}
 
 function robodesk_handle_tickets_webhook(WP_REST_Request $request)
 {
@@ -547,9 +554,9 @@ function robodesk_handle_tickets_webhook(WP_REST_Request $request)
         );
     }
 
-    // HMAC verification using SECURE_AUTH_KEY
-    $signature = $_SERVER['HTTP_X_WEBHOOK_SIGNATURE'] ?? '';
-    $expected = hash_hmac('sha256', $payload, SECURE_AUTH_KEY);
+    // HMAC verification using site-specific secret
+    $signature = isset($_SERVER['HTTP_X_WEBHOOK_SIGNATURE']) ? sanitize_text_field(wp_unslash($_SERVER['HTTP_X_WEBHOOK_SIGNATURE'])) : '';
+    $expected = hash_hmac('sha256', $payload, robodesk_get_webhook_secret());
     if (!hash_equals($expected, $signature)) {
         return new WP_Error(
             'unauthorized',
@@ -584,6 +591,7 @@ function robodesk_handle_tickets_webhook(WP_REST_Request $request)
         if (!empty($created_at)) {
             $timestamp = strtotime($created_at);
             if ($timestamp) {
+                // phpcs:ignore WordPress.DateTime.RestrictedFunctions.date_date
                 $ticket_args['post_date'] = date('Y-m-d H:i:s', $timestamp);
                 $ticket_args['post_date_gmt'] = gmdate('Y-m-d H:i:s', $timestamp);
             }
@@ -624,6 +632,7 @@ function robodesk_handle_tickets_webhook(WP_REST_Request $request)
             );
 
             if ($timestamp) {
+                // phpcs:ignore WordPress.DateTime.RestrictedFunctions.date_date
                 $mysql_date = date('Y-m-d H:i:s', strtotime($timestamp));
                 $comment_data['comment_date'] = $mysql_date;
                 $comment_data['comment_date_gmt'] = get_gmt_from_date($mysql_date);
@@ -648,6 +657,7 @@ function robodesk_handle_tickets_webhook(WP_REST_Request $request)
 
             robodesk_notify_ticket_created($ticket, 'chat');
 
+            do_action('robodesk_after_ticket_created', $ticket, $ticket_args, $author);
 
             return rest_ensure_response(array(
                 'status'  => 'success',
@@ -770,6 +780,7 @@ function robodesk_handle_tickets_webhook(WP_REST_Request $request)
         );
 
         if ($timestamp) {
+            // phpcs:ignore WordPress.DateTime.RestrictedFunctions.date_date
             $mysql_date = date('Y-m-d H:i:s', strtotime($timestamp));
             $comment_data['comment_date'] = $mysql_date;
             $comment_data['comment_date_gmt'] = get_gmt_from_date($mysql_date);
@@ -869,16 +880,16 @@ function robodesk_user_data_to_session_storage()
         'isLoggedIn'     => is_user_logged_in(),
         'loggedInUserId' => is_user_logged_in() ? get_current_user_id() : '',
     ];
-?>
-    <script type="text/javascript">
+
+    wp_add_inline_script('jquery', '
         if (typeof(Storage) !== "undefined") {
-            var userData = <?php echo wp_json_encode($user_data); ?>;
-            sessionStorage.setItem('wpUserData', JSON.stringify(userData));
+            var userData = ' . wp_json_encode($user_data) . ';
+            sessionStorage.setItem(\'wpUserData\', JSON.stringify(userData));
         }
-    </script>
-<?php
+    ');
 }
-add_action('wp_footer', 'robodesk_user_data_to_session_storage');
+add_action('wp_enqueue_scripts', 'robodesk_user_data_to_session_storage');
+add_action('admin_enqueue_scripts', 'robodesk_user_data_to_session_storage');
 
 
 function robodesk_is_ticket_kses_context()

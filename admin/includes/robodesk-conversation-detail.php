@@ -33,11 +33,12 @@ foreach ($robodesk_terms as $term) {
 ?>
 
 <?php
-$current_tab    = isset($_GET['tab']) ? sanitize_key($_GET['tab']) : '';
-$has_ticket     = isset($_GET['ticket']) ? intval($_GET['ticket']) : 0;
-$td_hidden      = ($current_tab === 'ticket-detail' || $has_ticket > 0) ? '' : ' hidden';
+// phpcs:ignore WordPress.Security.NonceVerification.Recommended
+$robodesk_current_tab    = isset($_GET['tab']) ? sanitize_key($_GET['tab']) : '';
+$robodesk_has_ticket     = isset($_GET['ticket']) ? intval($_GET['ticket']) : 0;
+$robodesk_td_hidden      = ($robodesk_current_tab === 'ticket-detail' || $robodesk_has_ticket > 0) ? '' : ' hidden';
 ?>
-<div id="ticket-detail-page" class="page-content<?php echo $td_hidden; ?>">
+<div id="ticket-detail-page" class="page-content<?php echo esc_attr($robodesk_td_hidden); ?>">
     <div class="bg-white shadow rounded-lg">
         <div class="converstaion-wrapper">
 
@@ -291,88 +292,94 @@ $td_hidden      = ($current_tab === 'ticket-detail' || $has_ticket > 0) ? '' : '
                 </div>
             </div>
 
-            <script>
-            const robodeskTicketCategories = <?php echo wp_json_encode($robodesk_terms); ?>;
-            const robodeskDefaultCategory = <?php echo wp_json_encode($robodesk_default_category); ?>;
-            const robodeskDefaultCategoryObj = <?php echo wp_json_encode($robodesk_default_category_obj); ?>;
-            </script>
+            <?php
+            add_action('admin_footer', function () use ($robodesk_terms, $robodesk_default_category, $robodesk_default_category_obj) {
+                wp_add_inline_script('robodesk-dashboard-script', '
+                    const robodeskTicketCategories = ' . wp_json_encode($robodesk_terms) . ';
+                    const robodeskDefaultCategory = ' . wp_json_encode($robodesk_default_category) . ';
+                    const robodeskDefaultCategoryObj = ' . wp_json_encode($robodesk_default_category_obj) . ';
+                ', 'before');
+            }, 100);
+            ?>
         </div>
     </div>
 </div>
 
-<script>
+<?php
+add_action('admin_footer', function () {
+    wp_add_inline_script('robodesk-dashboard-script', '
 function showVariablesPopup() {
-    const popup = document.getElementById('variables-popup');
-    const backdrop = document.getElementById('variables-backdrop');
-    popup.style.display = 'block';
-    backdrop.style.display = 'block';
+    const popup = document.getElementById(\'variables-popup\');
+    const backdrop = document.getElementById(\'variables-backdrop\');
+    popup.style.display = \'block\';
+    backdrop.style.display = \'block\';
     updateVariablesDisplay();
 }
 
 function hideVariablesPopup() {
-    const popup = document.getElementById('variables-popup');
-    const backdrop = document.getElementById('variables-backdrop');
-    popup.style.display = 'none';
-    backdrop.style.display = 'none';
+    const popup = document.getElementById(\'variables-popup\');
+    const backdrop = document.getElementById(\'variables-backdrop\');
+    popup.style.display = \'none\';
+    backdrop.style.display = \'none\';
 }
 
 function updateVariablesDisplay() {
     if (!window.currentTicket) {
-        const variablesList = document.getElementById('variables-list');
+        const variablesList = document.getElementById(\'variables-list\');
         variablesList.innerHTML =
-            '<div style="padding: 1rem; color: #dc2626; text-align: center;">No ticket data available. Please reload the page.</div>';
+            \'<div style="padding: 1rem; color: #dc2626; text-align: center;">No ticket data available. Please reload the page.</div>\';
         return;
     }
 
     const ticket = window.currentTicket;
-    const fullName = ticket.customer || '';
-    const nameParts = fullName.split(' ');
-    const fname = nameParts[0] || '';
-    const lname = nameParts.slice(1).join(' ') || '';
-    const email = ticket.email || '';
-    const ticketId = ticket.id || '';
-    const ticketStatus = ticket.status || '';
-    const ticketTitle = ticket.title || '';
+    const fullName = ticket.customer || \'\';
+    const nameParts = fullName.split(\' \');
+    const fname = nameParts[0] || \'\';
+    const lname = nameParts.slice(1).join(\' \') || \'\';
+    const email = ticket.email || \'\';
+    const ticketId = ticket.id || \'\';
+    const ticketStatus = ticket.status || \'\';
+    const ticketTitle = ticket.title || \'\';
 
     const variables = [{
-        var: 'fname',
-        label: 'First Name',
+        var: \'fname\',
+        label: \'First Name\',
         value: fname
     }, {
-        var: 'lname',
-        label: 'Last Name',
+        var: \'lname\',
+        label: \'Last Name\',
         value: lname
     }, {
-        var: 'email',
-        label: 'Email',
+        var: \'email\',
+        label: \'Email\',
         value: email
     }, {
-        var: 'ticket_id',
-        label: 'Ticket ID',
+        var: \'ticket_id\',
+        label: \'Ticket ID\',
         value: ticketId
     }, {
-        var: 'ticket_status',
-        label: 'Ticket Status',
+        var: \'ticket_status\',
+        label: \'Ticket Status\',
         value: ticketStatus
     }, {
-        var: 'ticket_title',
-        label: 'Ticket Title',
+        var: \'ticket_title\',
+        label: \'Ticket Title\',
         value: ticketTitle
     }];
 
     window.robodeskVariableValues = variables.reduce((acc, variable) => {
-        acc[variable.var] = variable.value || '';
+        acc[variable.var] = variable.value || \'\';
         return acc;
     }, {});
 
-    const variablesList = document.getElementById('variables-list');
-    variablesList.innerHTML = '';
+    const variablesList = document.getElementById(\'variables-list\');
+    variablesList.innerHTML = \'\';
 
     variables.forEach(variable => {
-        const displayValue = variable.value || '(empty)';
-        const card = document.createElement('div');
+        const displayValue = variable.value || \'(empty)\';
+        const card = document.createElement(\'div\');
         card.innerHTML = `
-            <div style="padding: 0.75rem; background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 0.375rem; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='#f3f4f6'; this.style.borderColor='#d1d5db';" onmouseout="this.style.background='#f9fafb'; this.style.borderColor='#e5e7eb';" onclick="insertVariable('${variable.var}')">
+            <div style="padding: 0.75rem; background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 0.375rem; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background=\'#f3f4f6\'; this.style.borderColor=\'#d1d5db\';" onmouseout="this.style.background=\'#f9fafb\'; this.style.borderColor=\'#e5e7eb\';" onclick="insertVariable(\'${variable.var}\')">
                 <div style="font-weight: 500; font-size: 0.875rem; color: #111827; margin-bottom: 0.25rem;">{{${variable.var}}}</div>
                 <div style="font-size: 0.75rem; color: #6b7280;">Value: ${displayValue}</div>
             </div>
@@ -383,13 +390,13 @@ function updateVariablesDisplay() {
 
 function insertVariable(variableKey) {
     const valueMap = window.robodeskVariableValues || {};
-    const resolvedValue = valueMap[variableKey] != null ? String(valueMap[variableKey]).trim() : '';
-    const textToInsert = resolvedValue ? `${resolvedValue}\u00A0` : '\u00A0';
+    const resolvedValue = valueMap[variableKey] != null ? String(valueMap[variableKey]).trim() : \'\';
+    const textToInsert = resolvedValue ? `${resolvedValue}\u00A0` : \'\u00A0\';
 
-    const notesTab = document.getElementById('notes-tab');
-    let editorId = 'new-reply';
-    if (notesTab && !notesTab.classList.contains('hidden')) {
-        editorId = 'new-note';
+    const notesTab = document.getElementById(\'notes-tab\');
+    let editorId = \'new-reply\';
+    if (notesTab && !notesTab.classList.contains(\'hidden\')) {
+        editorId = \'new-note\';
     }
 
     const editor = document.getElementById(editorId);
@@ -426,18 +433,18 @@ function placeCaretAtEnd(element) {
     selection.addRange(range);
 }
 
-document.addEventListener('DOMContentLoaded', function() {
-    const popoverTriggers = document.querySelectorAll('.robodesk-popover-trigger');
+document.addEventListener(\'DOMContentLoaded\', function() {
+    const popoverTriggers = document.querySelectorAll(\'.robodesk-popover-trigger\');
     let activePopover = null;
     popoverTriggers.forEach(trigger => {
-        trigger.addEventListener('mouseenter', function() {
-            const text = this.getAttribute('data-popover-text');
+        trigger.addEventListener(\'mouseenter\', function() {
+            const text = this.getAttribute(\'data-popover-text\');
             if (!text) return;
             if (activePopover) {
                 activePopover.remove();
             }
-            const popover = document.createElement('div');
-            popover.className = 'rb-popover';
+            const popover = document.createElement(\'div\');
+            popover.className = \'rb-popover\';
             popover.innerHTML =
                 `<div class="arrow"></div><div class="popover-body">${text}</div>`;
             document.body.appendChild(popover);
@@ -448,16 +455,16 @@ document.addEventListener('DOMContentLoaded', function() {
             const left = rect.left + window.scrollX + (rect.width / 2) - (popover.offsetWidth /
                 2);
 
-            popover.style.top = top + 'px';
-            popover.style.left = left + 'px';
+            popover.style.top = top + \'px\';
+            popover.style.left = left + \'px\';
             requestAnimationFrame(() => {
-                popover.classList.add('show');
+                popover.classList.add(\'show\');
             });
         });
 
-        trigger.addEventListener('mouseleave', function() {
+        trigger.addEventListener(\'mouseleave\', function() {
             if (activePopover) {
-                activePopover.classList.remove('show');
+                activePopover.classList.remove(\'show\');
                 const popoverToRemove = activePopover;
                 activePopover = null;
                 setTimeout(() => {
@@ -469,4 +476,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 });
-</script>
+    ', 'after');
+});
+?>
