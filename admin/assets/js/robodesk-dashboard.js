@@ -2870,6 +2870,10 @@ jQuery(document).ready(function ($) {
       "settings[enable_chat]",
       $form.find("#enable_chat").is(":checked") ? "1" : "0",
     );
+    formData.append(
+      "settings[hide_credits]",
+      $form.find("#hide_credits").is(":checked") ? "1" : "0",
+    );
 
     // Append media URLs and files
     mediaFields.forEach(function (field) {
