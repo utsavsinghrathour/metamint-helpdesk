@@ -4,7 +4,7 @@ import SendMessageField from "./SendMessageField";
 import parse from "html-react-parser";
 import DOMPurify from "dompurify";
 import he from "he";
-import Footer from "./Footer";
+import Footer, { robodeskShowCredits } from "./Footer";
 import "../styles/SingleQuestionBox.css";
 import RobodeskBotChatWidgetMain from "./RobodeskBotChatWidgetMain";
 
@@ -225,7 +225,7 @@ const SingleQuestionBox = ({
   return (
     <>
       {selectedQuestion ? (
-        <div className="rd-single-question-view">
+        <div className={`rd-single-question-view${robodeskShowCredits() ? "" : " rd-no-credits"}`}>
           <div className="rd-faq-header rd-flex rd-align-center rd-justify-between rd-cursor-pointer rd-border-bottom-light rd-py-15 rd-px-20">
             <button
               className="rd-back-button rd-flex rd-items-center rd-bg-transparent rd-border-none icon-dark rd-text-blue rd-p-0 rd-m-0 rd-cursor-pointer"

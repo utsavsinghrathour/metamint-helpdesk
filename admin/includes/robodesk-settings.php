@@ -79,6 +79,11 @@ $robodesk_settings_hidden = ($robodesk_current_tab === 'settings') ? '' : ' hidd
                                 <label for="enable_chat" class="ml-2 block text-sm text-gray-900 font-medium"><?php esc_html_e('Enable Chat', 'robodesk'); ?></label>
                             </div>
                             <p class="text-sm text-gray-500 ml-7"><?php esc_html_e('When disabled, the Conversations tab, "Start a conversation" buttons, and the AI bot chat are hidden from the frontend. FAQ and other tabs remain visible.', 'robodesk'); ?></p>
+                            <div class="mt-6 flex items-center">
+                                <input type="checkbox" name="hide_credits" id="hide_credits" value="1" <?php checked(get_option('robodesk_hide_credits', '0'), '1'); ?> class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                                <label for="hide_credits" class="ml-2 block text-sm text-gray-900 font-medium"><?php esc_html_e('Hide Credits', 'robodesk'); ?></label>
+                            </div>
+                            <p class="text-sm text-gray-500 ml-7"><?php esc_html_e('When checked, the "Powered by Robodesk" text is hidden from the chat widget footer.', 'robodesk'); ?></p>
                         </section>
 
                         <section class="rounded-xl border border-gray-200 bg-gray-50 p-6">
