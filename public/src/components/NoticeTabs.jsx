@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo, memo } from "react";
 import { FaChevronLeft } from "react-icons/fa";
 import Header from "./Header.jsx";
-import Footer from "./Footer.jsx";
+import Footer, { robodeskShowCredits } from "./Footer.jsx";
 import parse from "html-react-parser";
 import DOMPurify from "dompurify";
 import "../styles/NoticeTabs.css";
@@ -235,9 +235,11 @@ const SingleNoticeView = memo(
           <h4 className="heading-4 rd-mb-10">{title}</h4>
           <div className="rd-body-text">{parsedContent}</div>
         </div>
-        <div className="rd-border-top-light">
-          <Footer showCopyrightOnly={true} />
-        </div>
+        {robodeskShowCredits() && (
+          <div className="rd-border-top-light">
+            <Footer showCopyrightOnly={true} />
+          </div>
+        )}
       </div>
     );
   },
