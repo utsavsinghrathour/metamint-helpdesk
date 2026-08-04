@@ -340,6 +340,7 @@ $priority_terms = get_terms(array(
 <?php
 // phpcs:ignore WordPress.Security.NonceVerification.Recommended
 $robodesk_current_tab = isset($_GET['tab']) ? sanitize_key($_GET['tab']) : '';
+// phpcs:ignore WordPress.Security.NonceVerification.Recommended
 $robodesk_has_ticket  = isset($_GET['ticket']) ? intval($_GET['ticket']) : 0;
 $robodesk_tickets_hidden = ($robodesk_current_tab === 'tickets' && $robodesk_has_ticket === 0) ? '' : ' hidden';
 ?>

@@ -3055,8 +3055,7 @@ function robodesk_get_notifications()
     global $wpdb;
     $table_name = $wpdb->prefix . 'robodesk_notifications';
 
-    // phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter
-    // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+    // phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter
     $rows = $wpdb->get_results(
         $wpdb->prepare(
             "SELECT id, ticket_id, comment_id, type, source, message, created_at
@@ -3068,7 +3067,7 @@ function robodesk_get_notifications()
         ),
         ARRAY_A
     );
-    // phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter
+    // phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter
 
     $items = [];
     foreach ($rows as $row) {
@@ -3077,12 +3076,13 @@ function robodesk_get_notifications()
         if ($ticket_id > 0) {
             $current_assignee_id = (int) get_post_meta($ticket_id, 'ticket_assignee_id', true);
             if ($current_assignee_id > 0 && $current_assignee_id !== $user_id) {
-                // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, PluginCheck.Security.DirectDB.UnescapedDBParameter
+                // phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, PluginCheck.Security.DirectDB.UnescapedDBParameter
                 $wpdb->delete(
                     $table_name,
                     ['id' => (int) $row['id'], 'recipient_user_id' => $user_id],
                     ['%d', '%d']
                 );
+                // phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, PluginCheck.Security.DirectDB.UnescapedDBParameter
                 continue;
             }
         }
@@ -3128,8 +3128,7 @@ function robodesk_mark_notification_read()
     global $wpdb;
     $table_name = $wpdb->prefix . 'robodesk_notifications';
 
-    // phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter
-    // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+    // phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter
     $row = $wpdb->get_row(
         $wpdb->prepare(
             "SELECT id, ticket_id FROM {$table_name} WHERE id = %d AND recipient_user_id = %d LIMIT 1",
@@ -3138,7 +3137,7 @@ function robodesk_mark_notification_read()
         ),
         ARRAY_A
     );
-    // phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter
+    // phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter
 
     if (!$row) {
         wp_send_json_error(['message' => 'Notification not found.']);
@@ -3152,12 +3151,13 @@ function robodesk_mark_notification_read()
         }
     }
 
-    // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, PluginCheck.Security.DirectDB.UnescapedDBParameter
+    // phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, PluginCheck.Security.DirectDB.UnescapedDBParameter
     $deleted = $wpdb->delete(
         $table_name,
         ['id' => $notification_id, 'recipient_user_id' => $user_id],
         ['%d', '%d']
     );
+    // phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, PluginCheck.Security.DirectDB.UnescapedDBParameter
 
     if ($deleted === false) {
         wp_send_json_error(['message' => 'Failed to remove notification.']);
@@ -3185,15 +3185,14 @@ function robodesk_clear_notifications()
     global $wpdb;
     $table_name = $wpdb->prefix . 'robodesk_notifications';
 
-    // phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter
-    // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+    // phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter
     $deleted = $wpdb->query(
         $wpdb->prepare(
             "DELETE FROM {$table_name} WHERE recipient_user_id = %d AND read_at IS NULL",
             $user_id
         )
     );
-    // phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter
+    // phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter
 
     if ($deleted === false) {
         wp_send_json_error(['message' => 'Failed to clear notifications.']);

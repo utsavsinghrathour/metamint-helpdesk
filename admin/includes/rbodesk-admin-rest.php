@@ -505,7 +505,7 @@ function robodesk_notification_stream()
         $rows = $wpdb->get_results(
             $wpdb->prepare(
                 "SELECT id, ticket_id, comment_id, type, source, message, created_at
-                 FROM {$table_name}
+                 FROM " . esc_sql($table_name) . "
                  WHERE recipient_user_id = %d AND read_at IS NULL
                  ORDER BY created_at DESC
                  LIMIT 50",

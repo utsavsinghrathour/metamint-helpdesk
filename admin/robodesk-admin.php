@@ -418,7 +418,12 @@ function robodesk_admin_bar_active_tickets($wp_admin_bar)
     $wp_admin_bar->add_node(array(
         'parent' => 'robodesk-active-tickets',
         'id'     => 'robodesk-active-tickets-mine',
-        'title'  => sprintf(esc_html__('My Tickets (%s): %d', 'robodesk'), esc_html(wp_get_current_user()->display_name), $my_count),
+        'title'  => sprintf(
+            /* translators: %1$s: display name of the current user, %2$d: number of active tickets assigned to them. */
+            esc_html__('My Tickets (%1$s): %2$d', 'robodesk'),
+            esc_html(wp_get_current_user()->display_name),
+            $my_count
+        ),
         'href'   => admin_url('admin.php?page=robodesk-dashboard&filter=my_conversation'),
         'meta'   => array(
             'title' => esc_html__('View my active tickets', 'robodesk'),
