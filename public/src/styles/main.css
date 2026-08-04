@@ -20,6 +20,19 @@
   /* min-height: 468px; */
 }
 
+.rd-no-credits .single-faq-content {
+  display: flex;
+  flex-direction: column;
+}
+
+.rd-no-credits .single-faq-content > :last-child {
+  margin-top: auto;
+}
+
+.rd-no-credits .rd-main-content .rd-conversation-fixed-bottm {
+  margin-bottom: 0;
+}
+
 .rd-main-content.no-footer {
   /* min-height: 530px; */
 }

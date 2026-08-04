@@ -7,6 +7,9 @@ import '../styles/footer.css';
 import { useAppData } from '../utils/AppDataContext';
 import { useEffect, useState } from 'react';
 
+export const robodeskShowCredits = () =>
+  window.robodeskData?.hide_credits !== "1";
+
 const Footer = ({
   activeTab,
   setActiveTab,
@@ -18,6 +21,8 @@ const Footer = ({
   const [showRedDot, setShowRedDot] = useState(false);
 
   const chatEnabled = window.robodeskData?.enable_chat !== "1" ? false : true;
+
+  const hideCredits = !robodeskShowCredits();
 
   useEffect(() => {
     const hasNotification = ticketsContext?.some(
@@ -48,6 +53,9 @@ const Footer = ({
     }
   };
   if (showCopyrightOnly) {
+    if (hideCredits) {
+      return null;
+    }
     return (
       <footer className='robodesk-footer'>
         <div className='robodesk-footer-text rd-text-center rd-py-10'>
@@ -106,18 +114,20 @@ const Footer = ({
           </button>
         ))}
       </div>
-      <div className='robodesk-footer-text rd-text-center rd-py-10'>
-        <h6 className='rd-m-0'>
-          Powered by{' '}
-          <a
-            href='https://robodesk.io/'
-            target='_blank'
-            className='rd-decoration-none'
-          >
-            <span className='rd-text-blue rd-decoration-none'>Robodesk</span>
-          </a>
-        </h6>
-      </div>
+      {!hideCredits && (
+        <div className='robodesk-footer-text rd-text-center rd-py-10'>
+          <h6 className='rd-m-0'>
+            Powered by{' '}
+            <a
+              href='https://robodesk.io/'
+              target='_blank'
+              className='rd-decoration-none'
+            >
+              <span className='rd-text-blue rd-decoration-none'>Robodesk</span>
+            </a>
+          </h6>
+        </div>
+      )}
     </footer>
   );
 };

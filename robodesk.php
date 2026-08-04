@@ -4,7 +4,7 @@
  * Plugin Name: Robodesk Support Ticket System
  * Plugin URI: https://robodesk.io
  * Description: A support ticket and FAQ system.
- * Version: 1.4.1
+ * Version: 1.4.4
  * Author: Code Pixelz Media
  * Author URI: https://codepixelzmedia.com
  * License: GPL2
@@ -17,7 +17,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Define constants
-define('ROBODESK_VERSION', '1.4.1');
+define('ROBODESK_VERSION', '1.4.4');
 define('ROBODESK_PLUGIN_PATH', plugin_dir_path(__FILE__));
 define('ROBODESK_PLUGIN_URL', plugin_dir_url(__FILE__));
 
@@ -316,6 +316,7 @@ function robodesk_enqueue_scripts()
                 'robodesk_addon_active' => defined('ROBODESK_ADDON_VERSION'),
                 'robodesk_ai_bot_active' => get_option('robodesk_addon_ai_bot_status', 'inactive') === 'active',
                 'enable_chat' => get_option('robodesk_enable_chat', '1'),
+                'hide_credits' => get_option('robodesk_hide_credits', '0'),
             ]
         );
 
