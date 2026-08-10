@@ -323,6 +323,7 @@ function robodesk_enqueue_tailwind_and_styles()
             'update_ticket_category' => wp_create_nonce('robodesk_update_ticket_category_action'),
             'bulk_action' => wp_create_nonce('robodesk_bulk_action'),
             'refresh_dashboard_tickets' => wp_create_nonce('robodesk_refresh_dashboard_tickets_action'),
+            'customer_tickets' => wp_create_nonce('robodesk_customer_tickets_action'),
             'notifications' => wp_create_nonce('robodesk_notifications_action'),
 
         ]
