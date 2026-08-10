@@ -50,7 +50,6 @@ function robodesk_build_dashboard_tickets_payload($filter = 'my_conversation', $
     );
 
     if (empty($ticket_rows)) {
-        // phpcs:enable WordPress.DB.DirectDatabaseQuery, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
         return $empty_payload;
     }
 
@@ -58,6 +57,7 @@ function robodesk_build_dashboard_tickets_payload($filter = 'my_conversation', $
     $id_placeholders = implode(',', array_fill(0, count($ids), '%d'));
 
     // Bulk-fetch all relevant meta for every ticket in a single query.
+    // phpcs:disable WordPress.DB.DirectDatabaseQuery, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQLPlaceholders
     $meta_rows = $wpdb->get_results(
         $wpdb->prepare(
             "SELECT post_id, meta_key, meta_value FROM {$wpdb->postmeta}
@@ -77,7 +77,7 @@ function robodesk_build_dashboard_tickets_payload($filter = 'my_conversation', $
             'robodesk_ticket_origin'
         )
     );
-    // phpcs:enable WordPress.DB.DirectDatabaseQuery, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+    // phpcs:enable WordPress.DB.DirectDatabaseQuery, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQLPlaceholders
 
     $meta_map = [];
     foreach ($meta_rows as $row) {
@@ -211,7 +211,7 @@ function robodesk_build_dashboard_ticket_records($light_records)
     $author_type_map = [];
     if (!empty($comment_ids)) {
         $id_placeholders = implode(',', array_fill(0, count($comment_ids), '%d'));
-        // phpcs:disable WordPress.DB.DirectDatabaseQuery, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+        // phpcs:disable WordPress.DB.DirectDatabaseQuery, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQLPlaceholders
         $author_type_rows = $wpdb->get_results(
             $wpdb->prepare(
                 "SELECT comment_id, meta_value FROM {$wpdb->commentmeta}
@@ -219,7 +219,7 @@ function robodesk_build_dashboard_ticket_records($light_records)
                 $comment_ids
             )
         );
-        // phpcs:enable WordPress.DB.DirectDatabaseQuery, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+        // phpcs:enable WordPress.DB.DirectDatabaseQuery, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQLPlaceholders
         foreach ($author_type_rows as $row) {
             $author_type_map[(int) $row->comment_id] = $row->meta_value;
         }
