@@ -84,59 +84,86 @@ window.addEventListener("pointerdown", robodeskUnlockAudio);
 window.addEventListener("keydown", robodeskUnlockAudio);
 window.addEventListener("touchstart", robodeskUnlockAudio);
 
+// Guards against out-of-order AJAX responses (e.g. a filter click racing the
+// 30s auto-refresh) so an older response can never overwrite newer data.
+let dashboardLoadSeq = 0;
+
 function loadDashboardTickets() {
   const tableBody = document.getElementById("dashboard-tickets-table");
-  let filteredTickets = [];
-  const current_user_name =
-    robodeskCurrentUser?.name || robodeskCurrentUser?.display_name || "";
+  if (!tableBody) return Promise.resolve([]);
 
-  updateDashboardFilterCounts(current_user_name);
+  updateTableHeader(
+    currentDashboardFilter === "open_conversation" ||
+      currentDashboardFilter === "chat_conversation",
+  );
 
-  // Filter dashboard_tickets based on currentDashboardFilter
-  switch (currentDashboardFilter) {
-    case "my_conversation":
-      filteredTickets = dashboard_tickets
-        .filter(
-          (t) => t.assignee === current_user_name && t.status !== "closed",
-        )
-        .sort(
-          (a, b) => getRobodeskTime(b.updated) - getRobodeskTime(a.updated),
-        );
-      break;
-    case "unassigned_conversation":
-      filteredTickets = dashboard_tickets
-        .filter((t) => t.assignee === "N/A" || !t.assignee)
-        .sort(
-          (a, b) => getRobodeskTime(b.updated) - getRobodeskTime(a.updated),
-        );
-      break;
-    case "open_conversation":
-      filteredTickets = dashboard_tickets
-        .filter((t) => t.status === "open" || t.status === "in-progress")
-        .sort(
-          (a, b) => getRobodeskTime(b.updated) - getRobodeskTime(a.updated),
-        );
-      break;
-    case "chat_conversation":
-      filteredTickets = dashboard_tickets
-        .filter((t) => t.source === "chat" && t.status !== "closed")
-        .sort(
-          (a, b) => getRobodeskTime(b.updated) - getRobodeskTime(a.updated),
-        );
-      break;
-    default:
-      filteredTickets = dashboard_tickets
-        .slice()
-        .sort(
-          (a, b) => getRobodeskTime(b.updated) - getRobodeskTime(a.updated),
-        );
-      break;
+  // Only show a loading placeholder when nothing is rendered yet. When the
+  // table already has rows (filter switch, page change, auto-refresh) keep
+  // them visible until the new data arrives so the page does not flicker.
+  const requestSeq = ++dashboardLoadSeq;
+  if (!tableBody.querySelector("tr")) {
+    tableBody.innerHTML =
+      '<tr><td colspan="8" class="px-6 py-4 text-center text-gray-500">Loading...</td></tr>';
   }
 
-  // Check if we need to show assignee column
-  const showAssigneeColumn =
-    currentDashboardFilter === "open_conversation" ||
-    currentDashboardFilter === "chat_conversation";
+  return fetch(robodeskAjax.ajax_url, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
+    },
+    body: new URLSearchParams({
+      action: "robodesk_refresh_dashboard_tickets",
+      nonce: robodeskAjax.nonces.refresh_dashboard_tickets,
+      filter: currentDashboardFilter,
+      page: dashboardCurrentPage,
+      per_page: dashboardItemsPerPage,
+    }),
+  })
+    .then((res) => res.json())
+    .then((response) => {
+      if (requestSeq !== dashboardLoadSeq) return []; // stale response, ignore
+      if (!response.success) {
+        console.error("Failed to load dashboard tickets:", response.data);
+        renderDashboardTable([]);
+        return [];
+      }
+
+      const data = response.data || {};
+      const tickets = Array.isArray(data.tickets) ? data.tickets : [];
+
+      // Keep the global in sync for ticket detail caching, notifications, etc.
+      dashboard_tickets.length = 0;
+      Array.prototype.push.apply(dashboard_tickets, tickets);
+
+      dashboardTotalItems = Number(data.total) || 0;
+      dashboardCurrentPage = Number(data.page) || dashboardCurrentPage;
+
+      updateDashboardFilterCounts(data.counts);
+      updateDashboardStats(data.stats);
+
+      renderDashboardTable(tickets);
+
+      const totalPages = Math.max(
+        1,
+        Math.ceil(dashboardTotalItems / dashboardItemsPerPage),
+      );
+      renderDashboardPagination(
+        dashboardTotalItems,
+        dashboardTotalItems,
+        dashboardCurrentPage,
+        totalPages,
+      );
+
+      return tickets;
+    })
+    .catch((error) => {
+      console.error("Error loading dashboard tickets:", error);
+      if (requestSeq === dashboardLoadSeq) {
+        renderDashboardTable([]);
+      }
+      return [];
+    });
+}
 
   function getBlinkingClass(ticket) {
     // Ensure ticket is from chat and status is open/in-progress
@@ -189,18 +216,16 @@ function loadDashboardTickets() {
     return "blinking-green";
   }
 
-  // Update table header based on filter
-  updateTableHeader(showAssigneeColumn);
+function renderDashboardTable(filteredTickets) {
+  const tableBody = document.getElementById("dashboard-tickets-table");
+  if (!tableBody) return;
 
-  // Pagination logic
-  const totalItems = filteredTickets.length;
-  const totalPages = Math.max(1, Math.ceil(totalItems / dashboardItemsPerPage));
-  if (dashboardCurrentPage > totalPages) {
-    dashboardCurrentPage = totalPages;
-  }
-  const startIndex = (dashboardCurrentPage - 1) * dashboardItemsPerPage;
-  const endIndex = Math.min(startIndex + dashboardItemsPerPage, totalItems);
-  const pageTickets = filteredTickets.slice(startIndex, endIndex);
+  // Check if we need to show assignee column
+  const showAssigneeColumn =
+    currentDashboardFilter === "open_conversation" ||
+    currentDashboardFilter === "chat_conversation";
+
+  const pageTickets = Array.isArray(filteredTickets) ? filteredTickets : [];
 
   // Build the table HTML
   tableBody.innerHTML =
@@ -337,33 +362,18 @@ function loadDashboardTickets() {
       }
     }
   });
-
-  // Render pagination controls
-  renderDashboardPagination(dashboard_tickets.length, filteredTickets.length, dashboardCurrentPage, totalPages);
 }
 
-function updateDashboardFilterCounts(currentUserName) {
-  const myCount = dashboard_tickets.filter(
-    (t) => t.assignee === currentUserName && t.status !== "closed",
-  ).length;
-  const unassignedCount = dashboard_tickets.filter(
-    (t) => t.assignee === "N/A" || !t.assignee,
-  ).length;
-  const openCount = dashboard_tickets.filter(
-    (t) => t.status === "open" || t.status === "in-progress",
-  ).length;
-  const chatCount = dashboard_tickets.filter(
-    (t) => t.source === "chat" && t.status !== "closed",
-  ).length;
-
-  const countTargets = {
-    "dashboard-count-my-conversation": myCount,
-    "dashboard-count-unassigned-conversation": unassignedCount,
-    "dashboard-count-open-conversation": openCount,
-    "dashboard-count-chat-conversation": chatCount,
+function updateDashboardFilterCounts(counts) {
+  counts = counts || {};
+  const countValues = {
+    "dashboard-count-my-conversation": counts.my,
+    "dashboard-count-unassigned-conversation": counts.unassigned,
+    "dashboard-count-open-conversation": counts.open,
+    "dashboard-count-chat-conversation": counts.chat,
   };
 
-  Object.entries(countTargets).forEach(([id, value]) => {
+  Object.entries(countValues).forEach(([id, value]) => {
     const el = document.getElementById(id);
     if (el) {
       const count = Number(value) || 0;
@@ -439,8 +449,10 @@ function renderDashboardPagination(totalItems, filteredItems, currentPage, total
 }
 
 function changeDashboardPage(page) {
-  const totalItems = dashboard_tickets.length;
-  const totalPages = Math.max(1, Math.ceil(totalItems / dashboardItemsPerPage));
+  const totalPages = Math.max(
+    1,
+    Math.ceil(dashboardTotalItems / dashboardItemsPerPage),
+  );
   if (page < 1 || page > totalPages || page === dashboardCurrentPage) return;
   dashboardCurrentPage = page;
   loadDashboardTickets();
@@ -1000,7 +1012,6 @@ function formatDate(dateString) {
 function setDashboardFilter(filter) {
   currentDashboardFilter = filter;
   loadDashboardTickets();
-  conssole.log("clicked", filter);
   // Update active filter button styling
   document.querySelectorAll(".filter-button").forEach((btn) => {
     btn.classList.remove("active");
@@ -1160,6 +1171,7 @@ let currentTicketTab = "replies";
 let currentSettingsTab = "basic";
 let currentDashboardFilter = "my_conversation"; // Default filter for dashboard
 let dashboardCurrentPage = 1;
+let dashboardTotalItems = 0; // Total items in the current filter (server-computed)
 const dashboardItemsPerPage = 10;
 
 // Initialize the application
@@ -2001,13 +2013,52 @@ function bindPopoverTriggers(scope) {
 }
 
 // Customer tickets functions
+let customerTicketsCache = [];
+
 function showCustomerTickets() {
   if (!currentTicket) return;
 
-  // Use dashboard_tickets instead of undefined 'tickets' variable
-  const customerTickets = dashboard_tickets.filter(
-    (t) => t.customer === currentTicket.customer,
-  );
+  // Update modal title
+  document.getElementById("customer-tickets-title").textContent =
+    `${currentTicket.customer}'s Tickets`;
+
+  // Show loading state
+  document.getElementById("customer-tickets-stats").innerHTML = "";
+  document.getElementById("customer-tickets-list").innerHTML =
+    '<div class="text-sm text-gray-500 px-4 py-6">Loading...</div>';
+  document.getElementById("customer-tickets-modal").classList.remove("hidden");
+
+  // Fetch all tickets for this customer from the server (the dashboard global
+  // only holds the current page of tickets).
+  fetch(robodeskAjax.ajax_url, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
+    },
+    body: new URLSearchParams({
+      action: "robodesk_get_customer_tickets",
+      nonce: robodeskAjax.nonces.customer_tickets,
+      author_id: currentTicket.author_id || 0,
+    }),
+  })
+    .then((res) => res.json())
+    .then((response) => {
+      if (!response.success) {
+        showToast("Failed to load customer tickets", "error");
+        return;
+      }
+      customerTicketsCache = Array.isArray(response.data.tickets)
+        ? response.data.tickets
+        : [];
+      renderCustomerTicketsStats(customerTicketsCache);
+      loadCustomerTicketsList(customerTicketsCache);
+    })
+    .catch(() => {
+      showToast("Failed to load customer tickets", "error");
+    });
+}
+
+function renderCustomerTicketsStats(customerTickets) {
   const stats = {
     total: customerTickets.length,
     open: customerTickets.filter((t) => t.status === "open").length,
@@ -2016,11 +2067,6 @@ function showCustomerTickets() {
     closed: customerTickets.filter((t) => t.status === "closed").length,
   };
 
-  // Update modal title
-  document.getElementById("customer-tickets-title").textContent =
-    `${currentTicket.customer}'s Tickets`;
-
-  // Update stats
   const statsContainer = document.getElementById("customer-tickets-stats");
   statsContainer.innerHTML = `
         <div class="customer-stat-card" onclick="filterCustomerTickets('open')">
@@ -2037,12 +2083,6 @@ function showCustomerTickets() {
             <div class="customer-stat-label">Closed</div>
         </div>
     `;
-
-  // Load all tickets initially
-  loadCustomerTicketsList(customerTickets);
-
-  // Show modal
-  document.getElementById("customer-tickets-modal").classList.remove("hidden");
 }
 
 function hideCustomerTickets() {
@@ -2050,12 +2090,9 @@ function hideCustomerTickets() {
 }
 
 function filterCustomerTickets(status) {
-  const customerTickets = dashboard_tickets.filter(
-    (t) => t.customer === currentTicket.customer,
-  );
   const filtered = status
-    ? customerTickets.filter((t) => t.status === status)
-    : customerTickets;
+    ? customerTicketsCache.filter((t) => t.status === status)
+    : customerTicketsCache;
   loadCustomerTicketsList(filtered);
 }
 // shows the customer tickets in the modal  ie view all customer tickets
@@ -4275,15 +4312,8 @@ let _rbd_firstTicketScroll = true;
 let shouldRefreshTicketsPage = false;
 let lastTicketsPageReloadAt = 0;
 
-function updateDashboardStatsFromTickets(ticketsData) {
-  const allTickets = Array.isArray(ticketsData) ? ticketsData : [];
-  const stats = {
-    total: allTickets.length,
-    open: allTickets.filter((t) => t.status === "open").length,
-    inProgress: allTickets.filter((t) => t.status === "in-progress").length,
-    closed: allTickets.filter((t) => t.status === "closed").length,
-  };
-
+function updateDashboardStats(stats) {
+  stats = stats || {};
   const statsTargets = {
     "total-tickets": stats.total,
     "open-tickets": stats.open,
@@ -4294,7 +4324,7 @@ function updateDashboardStatsFromTickets(ticketsData) {
   Object.entries(statsTargets).forEach(([id, value]) => {
     const el = document.getElementById(id);
     if (el) {
-      el.textContent = String(value);
+      el.textContent = String(Number(value) || 0);
     }
   });
 }
@@ -4730,54 +4760,25 @@ window.testDashboardNotification = function () {
   showToast("Test notification added", "success");
 };
 
-// Function to refresh dashboard tickets via AJAX
+// Function to refresh dashboard tickets via AJAX (server-side paginated)
 function refreshDashboardTicketsData() {
   // Refresh on all dashboard views to keep notifications updated
+  const previousTickets = Array.isArray(dashboard_tickets)
+    ? [...dashboard_tickets]
+    : [];
 
-  return fetch(robodeskAjax.ajax_url, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
-    },
-    body: new URLSearchParams({
-      action: "robodesk_refresh_dashboard_tickets",
-      nonce: robodeskAjax.nonces.refresh_dashboard_tickets,
-    }),
-  })
-    .then((res) => res.json())
-    .then((response) => {
-      if (response.success) {
-        const previousTickets = Array.isArray(dashboard_tickets)
-          ? [...dashboard_tickets]
-          : [];
-        const refreshedTickets = Array.isArray(response.data.tickets)
-          ? response.data.tickets
-          : [];
-        const changes = detectTicketChanges(previousTickets, refreshedTickets);
+  return loadDashboardTickets().then((refreshedTickets) => {
+    const currentTickets = Array.isArray(refreshedTickets)
+      ? refreshedTickets
+      : [];
+    const changes = detectTicketChanges(previousTickets, currentTickets);
 
-        // Update the global dashboard_tickets array with fresh data
-        dashboard_tickets.length = 0; // Clear the array
-        Array.prototype.push.apply(dashboard_tickets, refreshedTickets);
+    if (changes.new.length > 0) {
+      markConversationsTabStale();
+    }
 
-        // Keep dashboard stat cards in sync with latest ticket data.
-        updateDashboardStatsFromTickets(dashboard_tickets);
-
-        if (changes.new.length > 0) {
-          markConversationsTabStale();
-        }
-
-        // Re-render the table with updated data
-        loadDashboardTickets();
-        return refreshedTickets;
-      } else {
-        console.error("Failed to refresh dashboard tickets:", response.data);
-        return [];
-      }
-    })
-    .catch((error) => {
-      console.error("Error refreshing dashboard tickets:", error);
-      return [];
-    });
+    return currentTickets;
+  });
 }
 
 // Function to start auto-refresh
