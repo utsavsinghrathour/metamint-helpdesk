@@ -13,7 +13,20 @@ function robodesk_add_note_callback()
     $ticket_id = isset($_POST['ticket_id']) ? (int) $_POST['ticket_id'] : 0;
     $note_content = isset($_POST['note_content']) ? sanitize_textarea_field(wp_unslash($_POST['note_content'])) : '';
 
-    if (!current_user_can('edit_post', $ticket_id) && !current_user_can('read_post', $ticket_id)) {
+    $ticket = get_post($ticket_id);
+    if (!$ticket || $ticket->post_type !== 'robodesk_ticket') {
+        wp_send_json_error(array('message' => 'Invalid ticket.'));
+    }
+
+    $current_user_id = get_current_user_id();
+    $customer_user_id = 0;
+    if (function_exists('robodesk_get_ticket_customer_user_id')) {
+        $customer_user_id = (int) robodesk_get_ticket_customer_user_id($ticket_id);
+    }
+
+    $is_owner = $current_user_id > 0 && ((int) $ticket->post_author === $current_user_id || ($customer_user_id > 0 && $customer_user_id === $current_user_id));
+
+    if (!current_user_can('robodesk_access_dashboard') && !current_user_can('manage_options') && !$is_owner) {
         wp_send_json_error(array('message' => 'You are not authorized to add notes to this ticket.'));
     }
     $user = wp_get_current_user();

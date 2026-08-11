@@ -977,14 +977,14 @@ function robodesk_base64_image_upload($base64_data)
     // Extract the image data
 
 
-    if (preg_match('/^data:image\/(\w+);base64,/', $base64_data, $matches)) {
+    if (preg_match('/^data:image\/(png|jpe?g|gif|webp);base64,/i', $base64_data, $matches)) {
 
-        $image_type = $matches[1]; // png, jpg, etc.
+        $image_type = $matches[1] === 'jpeg' ? 'jpg' : $matches[1]; // png, jpg, etc.
         $image_data = substr($base64_data, strpos($base64_data, ',') + 1);
         $image_data = base64_decode($image_data);
 
-        if (!$image_data) {
-            return new WP_Error('invalid_image', 'Invalid base64 image data');
+        if (!$image_data || @getimagesizefromstring($image_data) === false) {
+            return new WP_Error('invalid_image', 'Invalid image data');
         }
 
         $upload_dir = wp_upload_dir();
