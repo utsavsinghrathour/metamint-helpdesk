@@ -1,0 +1,76 @@
+# Robodesk Security Audit 2 — Change Log
+
+All changes below are uncommitted hardening work applied on top of the last `security` PR (integration), validated with a role-based test matrix (guest / customer / customer2 / staff / manager) — 32/32 checks pass. All touched files pass `php -l`.
+
+## robodesk.php
+
+| Change | Why |
+|---|---|
+| Settings save gated on `robodesk_access_dashboard` instead of `manage_options` (`robodesk_handle_settings_save`) | Dashboard users (staff/editors/managers/admins) previously saw the settings form but the POST was a silent no-op for anyone without `manage_options`. Now dashboard access = settings access. |
+| `rest_robodesk_ticket_query` — non-staff collection queries forced to `post__in => [0]` | Any logged-in user could list all tickets via `/wp/v2/robodesk_ticket`. |
+| `rest_request_before_callbacks` gate for `/wp/v2/robodesk_ticket` single items — owner or staff only, otherwise 403/404 | Idle deep-links for ticket owners must keep working, but non-owners could read any ticket's data. Note: implemented on `rest_request_before_callbacks` (not `rest_pre_dispatch`) because `rest_pre_dispatch` fires before the route `{id}` param is resolved — testing proved the param was never visible there. |
+| `rest_comment_query` (`robodesk_include_ticket_replies_in_rest_comments`) now normalizes the `post` param to an ID list | WP REST delivers `post` as an array (`[150]`), so the old `absint()` produced `1` and the guard silently bailed. Consequence found in testing: customers could leak any ticket's replies via `?type=ticket_replies`. Non-staff now locked to `post__in => [0]`; staff see only `ticket_replies` type comments. |
+| `robodesk_build_ticket_deeplink` / `robodesk_get_requested_ticket_id_from_query` use `robodesk_encrypt`/`robodesk_decrypt` without the hardcoded `'robodesk'` key | Encryption previously used a known public key; now uses the plugin's derived default key. |
+
+## public/includes/robodesk-custom-rest.php
+
+| Change | Why |
+|---|---|
+| Webhook authorization in `robodesk_handle_tickets()`: unsigned calls must come from the authenticated session user and match the payload `uid`; `tickets.get` allows staff any uid; new helpers `robodesk_chat_request_is_signed()` (HMAC-SHA256 over the raw body vs `X-Webhook-Signature`) and `robodesk_chat_user_can_access_ticket()` (owner via post_author / customer meta, or staff) | Any guest could create tickets as any user, or read/reply to any ticket by sending arbitrary `uid` / `ticket_id`. Trusted HMAC-signed traffic (external chat service) retains full bypass, as intended. |
+| Login: IP rate limit (10/hour, `robodesk_login_rate_*` transient, cleared on success) | Brute-force / credential spraying protection. |
+| Login: unknown-email response changed from `404 "No user found with this email."` to uniform `401 invalid_credentials` | User enumeration — the old message revealed account existence. |
+| Signup (`robodesk_user_signup`): `users_can_register` gate + always-on IP rate limit (5 per 2h, strike → permanent IP ban) — no longer behind the opt-in advanced setting | Registration abuse; the self-registered account previously returned `loggedIn: true` (auto-login). |
+| Lost password: rate limit no longer opt-in, plus a real 10-minute per-user cooldown transient (checked before send) | Password-reset email bombing; previously the cooldown was written but never verified. |
+| Reply images / ticket media: MIME whitelist `png|jpe?g|gif|webp` + real content sniff via `@getimagesizefromstring()` | SVGs (XSS vectors) and other non-image payloads were accepted as base64 uploads. |
+| Staff email masked (`ab***@domain`) for non-staff viewers in `robodesk_handle_selected_staff` | Minimal information disclosure. |
+
+## public/includes/robodesk-ajax.php
+
+| Change | Why |
+|---|---|
+| FAQ vote: one vote per user via `_robodesk_faq_voted_{faq_id}` user meta | Repeated votes could inflate counts. |
+| Notes upload: `$allowed_types` mapped to real MIME types via `wp_get_mime_types()` and passed as a `mimes` override to `wp_handle_upload` | The extension-only list was bypassable; whitelist now enforced. |
+| Registration AJAX: `users_can_register` gate + IP rate limit (5/hr) + sends `wp_new_user_notification($user_id, $password)` + `loggedIn: false` | Same abuse surface as the REST signup; previously no email was ever sent. |
+
+## public/includes/robodesk-notes.php
+
+| Change | Why |
+|---|---|
+| Notes ownership: validates the post is a ticket, then allows staff or the ticket owner (post_author / customer meta) only | Previous `edit_post`/`read_post` check let any customer (who has `read_ticket`) add notes to anyone's ticket. |
+
+## public/includes/robodesk-comments.php
+
+| Change | Why |
+|---|---|
+| Status save in `robodesk_save_custom_comment_field`: staff-only + status whitelist `['open','in-progress','closed']` + post-type check | Anyone posting a comment could overwrite ticket status with arbitrary values (e.g. force-closing tickets). Original notifier logic preserved. |
+
+## public/includes/robodesk-shortcodes.php
+
+| Change | Why |
+|---|---|
+| Reply gate: `$current_user->ID > 0` guard + staff check via caps/roles — dead `support_agent`/`support_manager` roles replaced with `robodesk_support_staff`/`robodesk_support_manager` | Guests could reply to any ticket (0-uid author match), and the staff check referenced roles that no longer exist. |
+
+## admin/includes/post-types/robodesk-ticket-post-type.php
+
+| Change | Why |
+|---|---|
+| Base64 uploads: same MIME whitelist (`png|jpe?g|gif|webp`) + `getimagesizefromstring()` check | Same SVG / non-image upload vector as the REST reply path. |
+
+## Validation
+
+- Role-based matrix (guest, tstcust=7, tstcust2=10, tststaff=8, tstmgr=9): **32 PASS / 0 FAIL**
+  - Guest impersonation (create, tickets.get) -> 403
+  - Guest wp/v2 collection -> 403
+  - Login enumeration (unknown email / wrong password) -> uniform 401
+  - Brute force 11th attempt -> 429 (login limiter)
+  - Signup while `users_can_register=0` -> 403
+  - Customer create own / tickets.get own / comments.get own / reply own -> 200
+  - Customer create as staff, tickets.get staff, reply as manager, spoof uid -> 403
+  - Customer2 cross-ticket comments.get / reply / wp/v2 single -> 403
+  - Staff any-uid webhook reads/replies -> 200; wp/v2 collection + comments -> 200
+  - HMAC-signed webhook (ticket.created as any uid, comments.get any) -> 200; unsigned -> 403
+  - AJAX notes: customer on other's ticket denied, own ok, staff any ok
+  - Guest shortcode reply -> denied
+  - SVG attachment rejected (no `attachment_url` produced)
+  - Settings save: staff (dashboard access, no `manage_options`) can save; customer cannot
+- `php -l` clean on all 7 modified files.

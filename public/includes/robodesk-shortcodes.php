@@ -1480,9 +1480,9 @@ function robodesk_submit_comment()
 
     $ticket = get_post($ticket_id);
     $current_user = wp_get_current_user();
-    $allowed_roles = array('administrator', 'editor', 'support_agent', 'support_manager');
-    $is_author = (int) $ticket->post_author === $current_user->ID;
-    $is_staff = array_intersect($allowed_roles, $current_user->roles);
+    $allowed_roles = array('administrator', 'editor', 'robodesk_support_staff', 'robodesk_support_manager');
+    $is_author = $current_user->ID > 0 && (int) $ticket->post_author === $current_user->ID;
+    $is_staff = current_user_can('robodesk_access_dashboard') || current_user_can('manage_options') || (bool) array_intersect($allowed_roles, $current_user->roles);
 
     if (!$is_author && empty($is_staff)) {
         wp_send_json_error(array(
