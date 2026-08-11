@@ -1052,6 +1052,17 @@ function robodesk_secure_login_endpoint(WP_REST_Request $request)
         return new WP_Error('missing_credentials', 'Username and password are required.', array('status' => 400));
     }
 
+    $ip = robodesk_get_client_ip();
+    $rate_key = 'robodesk_login_rate_' . md5($ip);
+    $attempts = get_transient($rate_key);
+    if ($attempts === false) {
+        $attempts = 0;
+    }
+    if ($attempts >= 10) {
+        return new WP_Error('rate_limited', 'Too many login attempts. Please try again later.', array('status' => 429));
+    }
+    set_transient($rate_key, $attempts + 1, HOUR_IN_SECONDS);
+
     $login = sanitize_text_field($login);
     $password = sanitize_text_field($password);
 
@@ -1059,7 +1070,7 @@ function robodesk_secure_login_endpoint(WP_REST_Request $request)
         $user = get_user_by('email', $login);
         if (!$user) {
             robodesk_log_debug('Login failed: no user found for email ' . $login);
-            return new WP_Error('invalid_email', 'No user found with this email.', array('status' => 404));
+            return new WP_Error('invalid_credentials', 'Invalid username or password.', array('status' => 401));
         }
         $login = $user->user_login;
     }
@@ -1076,6 +1087,8 @@ function robodesk_secure_login_endpoint(WP_REST_Request $request)
         robodesk_log_debug('Login failed for login ' . $login . ': ' . $user->get_error_message());
         return new WP_Error('invalid_credentials', 'Invalid username or password.', array('status' => 401));
     }
+
+    delete_transient($rate_key);
 
     wp_set_current_user($user->ID);
     wp_set_auth_cookie($user->ID);
@@ -1141,44 +1154,49 @@ function robodesk_validate_token(WP_REST_Request $request)
 //Registers the new user
 function robodesk_user_signup(WP_REST_Request $request)
 {
-    $advanced_settings = get_option('robodesk_advanced_settings', array());
-    if (!empty($advanced_settings['enable_signup_rate_limiting'])) {
-        $ip = robodesk_get_client_ip();
-        $blocked = get_option('robodesk_blocked_ips', array());
-        if (in_array($ip, $blocked, true)) {
+    if (get_option('users_can_register') != '1') {
+        return new WP_Error(
+            'registration_disabled',
+            __('Registration is currently disabled.', 'robodesk'),
+            array('status' => 403)
+        );
+    }
+
+    $ip = robodesk_get_client_ip();
+    $blocked = get_option('robodesk_blocked_ips', array());
+    if (in_array($ip, $blocked, true)) {
+        return new WP_Error(
+            'ip_blocked',
+            __('Your IP has been permanently blocked due to repeated abuse.', 'robodesk'),
+            array('status' => 403)
+        );
+    }
+
+    $rate_key = 'robodesk_signup_rate_' . md5($ip);
+    $attempts = get_transient($rate_key);
+    if ($attempts === false) {
+        $attempts = 0;
+    }
+    $attempts++;
+    set_transient($rate_key, $attempts, 2 * HOUR_IN_SECONDS);
+    if ($attempts >= 5) {
+        $strike_key = 'robodesk_signup_strike_' . md5($ip);
+        $has_strike = get_transient($strike_key);
+        if ($has_strike !== false) {
+            $blocked[] = $ip;
+            update_option('robodesk_blocked_ips', $blocked, false);
             return new WP_Error(
                 'ip_blocked',
                 __('Your IP has been permanently blocked due to repeated abuse.', 'robodesk'),
                 array('status' => 403)
             );
         }
-
-        $rate_key = 'robodesk_signup_rate_' . md5($ip);
-        $attempts = get_transient($rate_key);
-        if ($attempts === false) {
-            $attempts = 0;
-        }
-        $attempts++;
-        set_transient($rate_key, $attempts, 2 * HOUR_IN_SECONDS);
-        if ($attempts >= 5) {
-            $strike_key = 'robodesk_signup_strike_' . md5($ip);
-            $has_strike = get_transient($strike_key);
-            if ($has_strike !== false) {
-                $blocked[] = $ip;
-                update_option('robodesk_blocked_ips', $blocked, false);
-                return new WP_Error(
-                    'ip_blocked',
-                    __('Your IP has been permanently blocked due to repeated abuse.', 'robodesk'),
-                    array('status' => 403)
-                );
-            }
-            set_transient($strike_key, 1, DAY_IN_SECONDS);
-            return new WP_Error(
-                'rate_limited',
-                __('Too many signup attempts. Please try again later.', 'robodesk'),
-                array('status' => 429)
-            );
-        }
+        set_transient($strike_key, 1, DAY_IN_SECONDS);
+        return new WP_Error(
+            'rate_limited',
+            __('Too many signup attempts. Please try again later.', 'robodesk'),
+            array('status' => 429)
+        );
     }
 
     $params = $request->get_json_params();
@@ -1311,17 +1329,65 @@ function robodesk_handle_tickets(WP_REST_Request $request)
         );
     }
 
+    // Trusted integration calls (external chat service) prove authenticity
+    // with an HMAC signature. Browser calls from the chat widget must come
+    // from the authenticated session user and are scoped to their own data.
+    $signed = robodesk_chat_request_is_signed($request, $payload);
+    $actor_id = get_current_user_id();
+
     switch ($data['event']) {
         case 'ticket.created':
+            if (!$signed) {
+                $uid = sanitize_text_field($data['data']['uid'] ?? '');
+                if ($actor_id <= 0 || (int) $uid !== $actor_id) {
+                    return new WP_Error(
+                        'forbidden',
+                        'You are not allowed to create tickets for another user.',
+                        array('status' => 403)
+                    );
+                }
+            }
             return robodesk_handle_ticket_creation($data);
 
         case 'tickets.get':
+            if (!$signed) {
+                $uid = sanitize_text_field($data['data']['uid'] ?? '');
+                $is_staff = $actor_id > 0 && (current_user_can('robodesk_access_dashboard') || current_user_can('manage_options'));
+                if ($actor_id <= 0 || ((int) $uid !== $actor_id && !$is_staff)) {
+                    return new WP_Error(
+                        'forbidden',
+                        'You are not allowed to view these tickets.',
+                        array('status' => 403)
+                    );
+                }
+            }
             return robodesk_handle_tickets_get($data);
 
         case 'replies.receive':
+            if (!$signed) {
+                $ticket_id = sanitize_text_field($data['data']['ticket_id'] ?? '');
+                $user_id = sanitize_text_field($data['data']['user_id'] ?? '');
+                if ($actor_id <= 0 || (int) $user_id !== $actor_id || !robodesk_chat_user_can_access_ticket($ticket_id, $actor_id)) {
+                    return new WP_Error(
+                        'forbidden',
+                        'You are not allowed to reply to this ticket.',
+                        array('status' => 403)
+                    );
+                }
+            }
             return robodesk_handle_reply_receive($data);
 
         case 'comments.get':
+            if (!$signed) {
+                $ticket_id = sanitize_text_field($data['data']['ticket_id'] ?? '');
+                if ($actor_id <= 0 || !robodesk_chat_user_can_access_ticket($ticket_id, $actor_id)) {
+                    return new WP_Error(
+                        'forbidden',
+                        'You are not allowed to view these comments.',
+                        array('status' => 403)
+                    );
+                }
+            }
             return robodesk_handle_comments_get($data);
 
         default:
@@ -1331,6 +1397,46 @@ function robodesk_handle_tickets(WP_REST_Request $request)
                 array('status' => 400)
             );
     }
+}
+
+function robodesk_chat_request_is_signed(WP_REST_Request $request, $payload)
+{
+    $signature = isset($_SERVER['HTTP_X_WEBHOOK_SIGNATURE']) ? sanitize_text_field(wp_unslash($_SERVER['HTTP_X_WEBHOOK_SIGNATURE'])) : '';
+    if ($signature === '') {
+        return false;
+    }
+
+    $secret = function_exists('robodesk_get_webhook_secret') ? robodesk_get_webhook_secret() : wp_hash('robodesk-webhook-secret');
+
+    return hash_equals(hash_hmac('sha256', $payload, $secret), $signature);
+}
+
+function robodesk_chat_user_can_access_ticket($ticket_id, $actor_id)
+{
+    if ($actor_id <= 0) {
+        return false;
+    }
+
+    $ticket = get_post((int) $ticket_id);
+    if (!$ticket || $ticket->post_type !== 'robodesk_ticket') {
+        return false;
+    }
+
+    if ((int) $ticket->post_author === $actor_id) {
+        return true;
+    }
+
+    $customer_user_id = (int) robodesk_get_ticket_customer_user_id($ticket->ID);
+    if ($customer_user_id > 0 && $customer_user_id === $actor_id) {
+        return true;
+    }
+
+    $actor = get_userdata($actor_id);
+    if ($actor instanceof WP_User && ($actor->has_cap('robodesk_access_dashboard') || $actor->has_cap('manage_options'))) {
+        return true;
+    }
+
+    return false;
 }
 
 function robodesk_handle_selected_staff(WP_REST_Request $request)
@@ -1398,10 +1504,16 @@ function robodesk_handle_selected_staff(WP_REST_Request $request)
         ), 200);
     }
 
+    $viewer_is_staff = is_user_logged_in() && (current_user_can('robodesk_access_dashboard') || current_user_can('manage_options'));
+    $staff_email = $staff_user->user_email;
+    if (!$viewer_is_staff && is_email($staff_email)) {
+        $staff_email = preg_replace('/(^.{1,2}).+(@.+)$/', '$1***$2', $staff_email);
+    }
+
     return new WP_REST_Response(array(
         'staff_display_name' => $staff_user->display_name,
         'staff_user_image' => robodesk_get_comment_avatar($staff_user->ID, 96),
-        'staff_user_email' => $staff_user->user_email,
+        'staff_user_email' => $staff_email,
         'staff_user_id' => $staff_user->ID,
     ), 200);
 }
@@ -1658,11 +1770,11 @@ function robodesk_handle_reply_receive($data)
 
     $base64_image = $data['data']['image'] ?? '';
     $attachment_url = '';
-    if ($base64_image && preg_match('/^data:image\/(\w+);base64,/', $base64_image, $matches)) {
-        $image_type = $matches[1];
+    if ($base64_image && preg_match('/^data:image\/(png|jpe?g|gif|webp);base64,/i', $base64_image, $matches)) {
+        $image_type = $matches[1] === 'jpeg' ? 'jpg' : $matches[1];
         $image_data = substr($base64_image, strpos($base64_image, ',') + 1);
         $image_data = base64_decode($image_data, true);
-        if ($image_data !== false) {
+        if ($image_data !== false && @getimagesizefromstring($image_data) !== false) {
             $upload_dir = wp_upload_dir();
             $filename = 'ticket-' . $ticket_id . '-' . time() . '.' . $image_type;
             $file_path = $upload_dir['path'] . '/' . $filename;
@@ -1816,30 +1928,40 @@ add_action('rest_api_init', function () {
 
 function robodesk_custom_lost_password(WP_REST_Request $request)
 {
-    $advanced_settings = get_option('robodesk_advanced_settings', array());
-    if (!empty($advanced_settings['enable_signup_rate_limiting'])) {
-        $ip = robodesk_get_client_ip();
-        $rate_key = 'robodesk_lost_password_rate_' . md5($ip);
-        $attempts = get_transient($rate_key);
-        if ($attempts === false) {
-            $attempts = 0;
-        }
-        if ($attempts >= 5) {
-            return new WP_Error(
-                'rate_limited',
-                __('Too many password reset requests. Please try again later.', 'robodesk'),
-                array('status' => 429)
-            );
-        }
-        set_transient($rate_key, $attempts + 1, HOUR_IN_SECONDS);
+    $ip = robodesk_get_client_ip();
+    $rate_key = 'robodesk_lost_password_rate_' . md5($ip);
+    $attempts = get_transient($rate_key);
+    if ($attempts === false) {
+        $attempts = 0;
     }
+    if ($attempts >= 5) {
+        return new WP_Error(
+            'rate_limited',
+            __('Too many password reset requests. Please try again later.', 'robodesk'),
+            array('status' => 429)
+        );
+    }
+    set_transient($rate_key, $attempts + 1, HOUR_IN_SECONDS);
 
     $user_login = $request->get_param('user_login');
+    if (!is_string($user_login)) {
+        $user_login = '';
+    }
+    $user_login = trim(wp_unslash($user_login));
     if (empty($user_login)) {
         return new WP_Error('invalid_input', 'Username or email is required.', array('status' => 400));
     }
+    $user_login = sanitize_user($user_login);
 
-    set_transient('robodesk_rest_password_reset_' . md5($user_login), true, 120);
+    $cooldown_key = 'robodesk_rest_password_reset_' . md5($user_login);
+    if (get_transient($cooldown_key)) {
+        return new WP_Error(
+            'rate_limited',
+            __('A password reset link was already sent recently. Please check your email.', 'robodesk'),
+            array('status' => 429)
+        );
+    }
+    set_transient($cooldown_key, true, 10 * MINUTE_IN_SECONDS);
 
     $result = retrieve_password($user_login);
 

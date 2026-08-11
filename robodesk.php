@@ -427,6 +427,10 @@ function robodesk_add_plugin()
 add_action('wp_footer', 'robodesk_add_plugin');
 function robodesk_handle_settings_save()
 {
+    if (!current_user_can('robodesk_access_dashboard')) {
+        return;
+    }
+
     if (!isset($_POST['_wpnonce']) || !wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['_wpnonce'])), 'robodesk_save_settings')) {
         return;
     }
@@ -677,7 +681,7 @@ function robodesk_build_ticket_deeplink($ticket_id)
         return home_url('/');
     }
 
-    $encrypted_ticket = robodesk_encrypt((string) $ticket_id, 'robodesk');
+    $encrypted_ticket = robodesk_encrypt((string) $ticket_id);
 
     return add_query_arg(
         [
@@ -725,7 +729,7 @@ function robodesk_get_requested_ticket_id_from_query()
         $encrypted_ticket = trim((string) $encrypted_ticket);
         if ($encrypted_ticket !== '') {
             $encrypted_ticket = str_replace(' ', '+', $encrypted_ticket);
-            $decrypted_ticket = robodesk_decrypt($encrypted_ticket, 'robodesk');
+            $decrypted_ticket = robodesk_decrypt($encrypted_ticket);
             if ($decrypted_ticket !== false) {
                 $ticket_id = absint($decrypted_ticket);
             }
@@ -2242,11 +2246,68 @@ add_action('wp_enqueue_scripts', 'robodesk_enqueue_custom_styles');
 add_filter('rest_comment_query', 'robodesk_include_ticket_replies_in_rest_comments', 10, 2);
 function robodesk_include_ticket_replies_in_rest_comments($args, $request)
 {
+    // WP REST hands 'post' over as a scalar or a list depending on the route;
+    // normalize to a list of IDs so the guard works in both shapes.
+    $post_param = $request->get_param('post');
+    $post_ids = is_array($post_param) ? array_map('absint', $post_param) : array(absint($post_param));
+    $ticket_ids = array_values(array_filter($post_ids, function ($id) {
+        return $id > 0 && get_post_type($id) === 'robodesk_ticket';
+    }));
+    if (empty($ticket_ids)) {
+        return $args;
+    }
+
+    $is_staff = current_user_can('robodesk_access_dashboard') || current_user_can('manage_options');
+    if (!$is_staff) {
+        $args['post__in'] = array(0);
+        return $args;
+    }
 
     $args['type__in'] = array('ticket_replies');
 
     return $args;
 }
+
+// Restrict the robodesk_ticket REST collection to staff and single-item
+// reads to the ticket owner or staff. The chat widget deep-link relies on
+// the single-item route for ticket owners.
+add_filter('rest_robodesk_ticket_query', function ($args, $request) {
+    if (!current_user_can('robodesk_access_dashboard') && !current_user_can('manage_options')) {
+        $args['post__in'] = array(0);
+    }
+    return $args;
+}, 10, 2);
+
+// Runs after URL params are resolved (rest_pre_dispatch fires too early to
+// see the route's {id} param), so item-level authorization is reliable here.
+add_filter('rest_request_before_callbacks', function ($response, $handler, $request) {
+    $route = $request->get_route();
+    if (0 !== strpos($route, '/wp/v2/robodesk_ticket')) {
+        return $response;
+    }
+
+    $target_id = (int) $request->get_param('id');
+    $current_id = get_current_user_id();
+    $is_staff = $current_id > 0 && (current_user_can('robodesk_access_dashboard') || current_user_can('manage_options'));
+
+    if ($target_id > 0) {
+        $post = get_post($target_id);
+        if (!$post || get_post_type($post) !== 'robodesk_ticket') {
+            return new WP_Error('rest_not_found', 'Ticket not found.', array('status' => 404));
+        }
+
+        $customer_user_id = (int) robodesk_get_ticket_customer_user_id($target_id);
+        $is_owner = $current_id > 0 && ((int) $post->post_author === $current_id || ($customer_user_id > 0 && $customer_user_id === $current_id));
+
+        if (!$is_owner && !$is_staff) {
+            return new WP_Error('rest_forbidden', 'Sorry, you are not allowed to view this ticket.', array('status' => 403));
+        }
+    } elseif (!$is_staff) {
+        return new WP_Error('rest_forbidden', 'Sorry, you are not allowed to view tickets.', array('status' => 403));
+    }
+
+    return $response;
+}, 10, 3);
 
 
 add_filter('rest_prepare_comment', function ($response, $comment, $request) {

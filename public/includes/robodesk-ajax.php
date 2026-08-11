@@ -238,6 +238,16 @@ function robodesk_faq_vote_callback()
         wp_send_json_error('Invalid FAQ ID or vote type.');
     }
 
+    $user_id = get_current_user_id();
+    $vote_key = '_robodesk_faq_voted_' . absint($faq_id);
+    if ($user_id > 0) {
+        $existing_vote = get_user_meta($user_id, $vote_key, true);
+        if ($existing_vote !== '') {
+            wp_send_json_error('You have already voted on this FAQ.');
+        }
+        update_user_meta($user_id, $vote_key, $vote_type);
+    }
+
     $upvotes = (int) get_post_meta($faq_id, '_robodesk_faq_upvotes', true);
     $downvotes = (int) get_post_meta($faq_id, '_robodesk_faq_downvotes', true);
 
@@ -504,7 +514,16 @@ function robodesk_add_ticket_note_callback()
     if (!empty($_FILES['note_content_ifr'])) {
         require_once(ABSPATH . 'wp-admin/includes/file.php');
         $allowed_types = array('jpg', 'jpeg', 'png', 'gif', 'webp', 'svg', 'zip', 'pdf', 'docx', 'xlsx', 'rar');
-        $upload_overrides = array('test_form' => false);
+        $mime_map = wp_get_mime_types();
+        $mimes = array();
+        foreach ($allowed_types as $ext) {
+            foreach ($mime_map as $pattern => $mime) {
+                if (preg_match('/(^|[\s|])' . preg_quote($ext, '/') . '[\s|]|\$/i', $pattern)) {
+                    $mimes[$pattern] = $mime;
+                }
+            }
+        }
+        $upload_overrides = array('test_form' => false, 'mimes' => $mimes);
         $movefile = wp_handle_upload($_FILES['note_content_ifr'], $upload_overrides);
 
         if ($movefile && ! isset($movefile['error'])) {
@@ -646,6 +665,22 @@ function robodesk_register_user()
         wp_send_json_error(['message' => 'Security check failed']);
     }
 
+    if (get_option('users_can_register') != '1') {
+        wp_send_json_error(['message' => 'Registration is currently disabled.']);
+    }
+
+    $ip = isset($_SERVER['REMOTE_ADDR']) ? sanitize_text_field(wp_unslash($_SERVER['REMOTE_ADDR'])) : '0.0.0.0';
+    $rate_key = 'robodesk_register_rate_' . md5($ip);
+    $attempts = get_transient($rate_key);
+    if ($attempts === false) {
+        $attempts = 0;
+    }
+    if ($attempts >= 5) {
+        wp_send_json_error(['message' => 'Too many registration attempts. Please try again later.']);
+        wp_die();
+    }
+    set_transient($rate_key, $attempts + 1, HOUR_IN_SECONDS);
+
     $email = isset($_POST['email']) ? sanitize_email(wp_unslash($_POST['email'])) : '';
     if (empty($email) || ! is_email($email)) {
         wp_send_json_error([
@@ -658,11 +693,12 @@ function robodesk_register_user()
     $user_id = wp_create_user($username, $password, $email);
 
     if (!is_wp_error($user_id)) {
+        wp_new_user_notification($user_id, $password);
 
         wp_send_json_success([
             'message' => __('Account created! Check your email for your password.', 'robodesk'),
             'userId' => $user_id,
-            'loggedIn' => true
+            'loggedIn' => false
         ]);
     }
     wp_send_json_error([
