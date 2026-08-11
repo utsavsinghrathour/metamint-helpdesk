@@ -125,7 +125,7 @@ function robodesk_build_dashboard_tickets_payload($filter = 'my_conversation', $
             case 'open_conversation':
                 return in_array($t['status'], ['open', 'in-progress'], true);
             case 'chat_conversation':
-                return $t['source'] === 'chat';
+                return $t['source'] === 'chat' && $t['status'] !== 'closed';
             default:
                 return false;
         }
@@ -144,7 +144,7 @@ function robodesk_build_dashboard_tickets_payload($filter = 'my_conversation', $
             return in_array($t['status'], ['open', 'in-progress'], true);
         })),
         'chat' => count(array_filter($light_tickets, function ($t) {
-            return $t['source'] === 'chat';
+            return $t['source'] === 'chat' && $t['status'] !== 'closed';
         })),
     ];
 
