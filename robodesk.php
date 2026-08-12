@@ -623,6 +623,11 @@ function robodesk_decrypt($ciphertext, $key = null)
     list($encrypted_data, $iv) = explode('::', $decoded, 2);
     $plaintext = openssl_decrypt($encrypted_data, "AES-256-CBC", $key, $options = 0, $iv);
 
+    // Legacy links were encrypted with a hardcoded 'robodesk' key.
+    if ($plaintext === false) {
+        $plaintext = openssl_decrypt($encrypted_data, "AES-256-CBC", 'robodesk', $options = 0, $iv);
+    }
+
     if ($plaintext === false && defined('AUTH_KEY') && AUTH_KEY !== '') {
         $plaintext = openssl_decrypt($encrypted_data, "AES-256-CBC", AUTH_KEY, $options = 0, $iv);
     }
@@ -1023,23 +1028,92 @@ function robodesk_is_public_ip($ip)
 
 function robodesk_get_client_ip()
 {
-    $headers = robodesk_get_request_header_values();
-    $priority = array('cf-connecting-ip', 'x-forwarded-for', 'x-real-ip', 'x-client-ip', 'remote-addr');
-    foreach ($priority as $key) {
-        if (!empty($headers[$key])) {
-            $ip = robodesk_get_first_ip_from_value($headers[$key]);
-            if ($ip !== '') {
-                return $ip;
+    $remote_addr = '';
+    if (!empty($_SERVER['REMOTE_ADDR'])) {
+        $remote_addr = sanitize_text_field(wp_unslash((string) $_SERVER['REMOTE_ADDR']));
+        if (!filter_var($remote_addr, FILTER_VALIDATE_IP)) {
+            $remote_addr = '';
+        }
+    }
+
+    // Proxy-supplied headers (Cloudflare, X-Forwarded-For, etc.) are only
+    // trustworthy when the direct peer is a known reverse proxy. Otherwise
+    // anyone can forge them and spoof rate-limit and blocklist identity.
+    // Add your proxy IPs/ranges via the 'robodesk_trusted_proxy_ips' filter.
+    if ($remote_addr !== '' && robodesk_is_trusted_proxy($remote_addr)) {
+        $headers = robodesk_get_request_header_values();
+        $priority = array('cf-connecting-ip', 'x-forwarded-for', 'x-real-ip', 'x-client-ip');
+        foreach ($priority as $key) {
+            if (!empty($headers[$key])) {
+                $ip = robodesk_get_first_ip_from_value($headers[$key]);
+                if ($ip !== '') {
+                    return $ip;
+                }
             }
         }
     }
-    if (!empty($_SERVER['REMOTE_ADDR'])) {
-        $ip = sanitize_text_field(wp_unslash((string) $_SERVER['REMOTE_ADDR']));
-        if (filter_var($ip, FILTER_VALIDATE_IP)) {
-            return $ip;
+
+    if ($remote_addr !== '') {
+        return $remote_addr;
+    }
+
+    return '0.0.0.0';
+}
+
+function robodesk_is_trusted_proxy($ip)
+{
+    $trusted = apply_filters('robodesk_trusted_proxy_ips', array());
+    if (!is_array($trusted)) {
+        $trusted = array();
+    }
+
+    foreach ($trusted as $proxy) {
+        $proxy = strtolower(trim((string) $proxy));
+        if ($proxy === '') {
+            continue;
+        }
+
+        if (strpos($proxy, '/') !== false) {
+            list($range_ip, $prefix) = explode('/', $proxy, 2);
+            if (robodesk_ip_in_range($ip, $range_ip, (int) $prefix)) {
+                return true;
+            }
+        } elseif ($proxy === strtolower($ip)) {
+            return true;
         }
     }
-    return '0.0.0.0';
+
+    return false;
+}
+
+function robodesk_ip_in_range($ip, $range_ip, $prefix)
+{
+    if ($prefix < 0 || $prefix > 128) {
+        return false;
+    }
+
+    $ip_bin = inet_pton($ip);
+    $range_bin = inet_pton($range_ip);
+    if ($ip_bin === false || $range_bin === false || strlen($ip_bin) !== strlen($range_bin)) {
+        return false;
+    }
+
+    $bits = min($prefix, strlen($ip_bin) * 8);
+    $full_bytes = intdiv($bits, 8);
+    $rem_bits = $bits % 8;
+
+    if ($full_bytes > 0 && substr($ip_bin, 0, $full_bytes) !== substr($range_bin, 0, $full_bytes)) {
+        return false;
+    }
+
+    if ($rem_bits > 0) {
+        $mask = chr(0xFF << (8 - $rem_bits));
+        if ((ord($ip_bin[$full_bytes]) & ord($mask)) !== (ord($range_bin[$full_bytes]) & ord($mask))) {
+            return false;
+        }
+    }
+
+    return true;
 }
 
 function robodesk_parse_browser_label($value)

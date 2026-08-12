@@ -1061,7 +1061,6 @@ function robodesk_secure_login_endpoint(WP_REST_Request $request)
     if ($attempts >= 10) {
         return new WP_Error('rate_limited', 'Too many login attempts. Please try again later.', array('status' => 429));
     }
-    set_transient($rate_key, $attempts + 1, HOUR_IN_SECONDS);
 
     $login = sanitize_text_field($login);
     $password = sanitize_text_field($password);
@@ -1070,6 +1069,7 @@ function robodesk_secure_login_endpoint(WP_REST_Request $request)
         $user = get_user_by('email', $login);
         if (!$user) {
             robodesk_log_debug('Login failed: no user found for email ' . $login);
+            set_transient($rate_key, (int) get_transient($rate_key) + 1, HOUR_IN_SECONDS);
             return new WP_Error('invalid_credentials', 'Invalid username or password.', array('status' => 401));
         }
         $login = $user->user_login;
@@ -1085,6 +1085,7 @@ function robodesk_secure_login_endpoint(WP_REST_Request $request)
 
     if (is_wp_error($user)) {
         robodesk_log_debug('Login failed for login ' . $login . ': ' . $user->get_error_message());
+        set_transient($rate_key, (int) get_transient($rate_key) + 1, HOUR_IN_SECONDS);
         return new WP_Error('invalid_credentials', 'Invalid username or password.', array('status' => 401));
     }
 
