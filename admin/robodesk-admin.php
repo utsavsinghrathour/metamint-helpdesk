@@ -22,7 +22,7 @@ function robodesk_add_admin_menu()
         'robodesk_access_dashboard',
         'robodesk-dashboard',
         'robodesk_dashboard_callback',
-        'dashicons-email-alt',
+        plugin_dir_url(__FILE__) . 'assets/images/robodesk-icon.png',
         30
     );
 
