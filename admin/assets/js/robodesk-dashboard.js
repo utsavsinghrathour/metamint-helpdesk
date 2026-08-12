@@ -774,7 +774,7 @@ function editStatus(ticketId, element) {
     dropdown.setDisabled(true);
     updateTicketStatus(ticketId, newStatus).then((result) => {
       if (result && result.success) {
-        if (isDashboardTicketsTableElement(element)) {
+        if (isDashboardTicketsTableElement(dropdown.container)) {
           dropdown.destroy();
           loadDashboardTickets();
           return;
@@ -844,7 +844,7 @@ function editPriority(ticketId, element) {
     dropdown.setDisabled(true);
     updateTicketPriority(ticketId, newPriority).then((result) => {
       if (result && result.success) {
-        if (isDashboardTicketsTableElement(element)) {
+        if (isDashboardTicketsTableElement(dropdown.container)) {
           dropdown.destroy();
           loadDashboardTickets();
           return;
@@ -931,7 +931,7 @@ function editAssignee(ticketId, element) {
     dropdown.setDisabled(true);
     updateTicketAssignee(ticketId, newAssigneeId).then((result) => {
       if (result && result.success) {
-        if (isDashboardTicketsTableElement(element)) {
+        if (isDashboardTicketsTableElement(dropdown.container)) {
           dropdown.destroy();
           loadDashboardTickets();
           return;
@@ -3289,6 +3289,8 @@ function updateTicketStatus(ticketId, newStatus) {
 
         showToast(`Ticket status updated to ${updatedStatus}`);
         // updateDashboardStats();
+        recalculateDashboardStats();
+        markConversationsTabStale();
         return { success: true, data: response.data };
       } catch (error) {
         console.error("Error inside .then:", error);
@@ -3354,6 +3356,8 @@ function updateTicketPriority(ticketId, newPriority) {
         }
 
         showToast(`Ticket priority updated to ${updatedPriority}`);
+        recalculateDashboardStats();
+        markConversationsTabStale();
         return { success: true, data: response.data };
       } else {
         showToast(
@@ -3428,6 +3432,8 @@ function updateTicketAssignee(ticketId, newAssignee) {
         }
 
         showToast(`Ticket assigned to ${updatedAssignee}`);
+        recalculateDashboardStats();
+        markConversationsTabStale();
         return { success: true, data: response.data };
       } else {
         showToast(
@@ -4343,6 +4349,43 @@ function markConversationsTabStale() {
   if (currentPage === "tickets") {
     reloadConversationsPageIfVisible();
   }
+}
+
+function recalculateDashboardStats() {
+  if (typeof dashboard_tickets === "undefined" || !Array.isArray(dashboard_tickets)) {
+    return;
+  }
+
+  const stats = {
+    total: dashboard_tickets.length,
+    open: 0,
+    inProgress: 0,
+    closed: 0,
+  };
+
+  const counts = {
+    my: 0,
+    unassigned: 0,
+    open: 0,
+    chat: 0,
+  };
+
+  const currentUserId = (typeof robodeskCurrentUser !== "undefined" && robodeskCurrentUser.id) ? parseInt(robodeskCurrentUser.id, 10) : 0;
+
+  dashboard_tickets.forEach((ticket) => {
+    const status = ticket.status;
+    if (status === "open") stats.open++;
+    else if (status === "in-progress") stats.inProgress++;
+    else if (status === "closed") stats.closed++;
+
+    if (ticket.assignee_id === currentUserId) counts.my++;
+    if (!ticket.assignee_id || ticket.assignee_id === 0) counts.unassigned++;
+    if (["open", "in-progress"].includes(status)) counts.open++;
+    if (ticket.source === "chat") counts.chat++;
+  });
+
+  updateDashboardStats(stats);
+  updateDashboardFilterCounts(counts);
 }
 
 function reloadConversationsPageIfVisible() {
