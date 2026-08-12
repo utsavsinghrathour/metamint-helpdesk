@@ -38,6 +38,7 @@ function robodesk_dashboard_callback()
                 name: ' . wp_json_encode($current_user_name) . ',
                 role: ' . wp_json_encode($current_user_role) . '
             };
+            const robodeskCanManageSettings = ' . (current_user_can('robodesk_manage_settings') ? 'true' : 'false') . ';
         ', 'before');
     }, 100);
 
@@ -82,13 +83,15 @@ function robodesk_dashboard_callback()
                             <i class="fas fa-plus mr-2"></i>
                             <?php esc_html_e('New Conversation', 'robodesk'); ?>
                         </button>
+                        <?php if (current_user_can('robodesk_manage_settings')): ?>
                         <button onclick="showPage('settings')"
                             class="nav-link inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
                             data-page="settings">
                             <i class="fas fa-cog mr-2"></i>
                             <?php esc_html_e('Settings', 'robodesk'); ?>
                         </button>
-                        <?php if (defined('ROBODESK_ADDON_VERSION')): ?>
+                        <?php endif; ?>
+                        <?php if (defined('ROBODESK_ADDON_VERSION') && current_user_can('robodesk_manage_settings')): ?>
                         <button onclick="showPage('addons')"
                             class="nav-link inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
                             data-page="addons">
@@ -162,13 +165,15 @@ function robodesk_dashboard_callback()
 
         <!---------------------- Settings Page ---------------------->
         <?php
-            include ROBODESK_PLUGIN_PATH . 'admin/includes/robodesk-settings.php';
+            if (current_user_can('robodesk_manage_settings')) {
+                include ROBODESK_PLUGIN_PATH . 'admin/includes/robodesk-settings.php';
+            }
             ?>
 
         <!---------------------- Addons Page ---------------------->
         <?php
             // Include Addons page if Robodesk Addon plugin is active
-            if (defined('ROBODESK_ADDON_PLUGIN_PATH')) {
+            if (defined('ROBODESK_ADDON_PLUGIN_PATH') && current_user_can('robodesk_manage_settings')) {
                 $addons_file = ROBODESK_ADDON_PLUGIN_PATH . 'admin/includes/robodesk-addons.php';
                 if (file_exists($addons_file)) {
                     include $addons_file;

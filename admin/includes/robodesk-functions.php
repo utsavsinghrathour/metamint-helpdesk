@@ -288,7 +288,7 @@ function robodesk_imap_test_connection()
     }
 
     // Verify capability
-    if (!current_user_can('manage_options')) {
+    if (!current_user_can('robodesk_manage_settings')) {
         wp_send_json_error(['message' => 'Insufficient permissions']);
         exit;
     }
@@ -337,7 +337,7 @@ function robodesk_imap_save_settings()
     }
 
     // Verify capability
-    if (!current_user_can('manage_options')) {
+    if (!current_user_can('robodesk_manage_settings')) {
         wp_send_json_error(['message' => 'Insufficient permissions']);
         exit;
     }
@@ -458,7 +458,7 @@ function robodesk_smtp_save_settings()
         exit;
     }
 
-    if (!current_user_can('manage_options')) {
+    if (!current_user_can('robodesk_manage_settings')) {
         wp_send_json_error(['message' => 'Insufficient permissions']);
         exit;
     }
@@ -483,7 +483,7 @@ function robodesk_smtp_test_connection()
         exit;
     }
 
-    if (!current_user_can('manage_options')) {
+    if (!current_user_can('robodesk_manage_settings')) {
         wp_send_json_error(['message' => 'Insufficient permissions']);
         exit;
     }
@@ -550,7 +550,7 @@ function robodesk_email_template_save()
         exit;
     }
 
-    if (!current_user_can('manage_options')) {
+    if (!current_user_can('robodesk_manage_settings')) {
         wp_send_json_error(['message' => 'Insufficient permissions']);
         exit;
     }
@@ -660,7 +660,7 @@ function robodesk_save_advanced_settings()
         exit;
     }
 
-    if (!current_user_can('manage_options')) {
+    if (!current_user_can('robodesk_manage_settings')) {
         wp_send_json_error(['message' => 'Insufficient permissions']);
         exit;
     }
@@ -798,7 +798,7 @@ function robodesk_save_basic_settings()
         exit;
     }
 
-    if (!current_user_can('manage_options')) {
+    if (!current_user_can('robodesk_manage_settings')) {
         wp_send_json_error(['message' => 'Insufficient permissions']);
         exit;
     }
@@ -959,7 +959,7 @@ function robodesk_save_cropped_logo()
         exit;
     }
 
-    if (!current_user_can('manage_options')) {
+    if (!current_user_can('robodesk_manage_settings')) {
         wp_send_json_error(['message' => 'Insufficient permissions']);
         exit;
     }
@@ -1007,7 +1007,7 @@ function robodesk_save_ticket_assignment_settings()
         exit;
     }
 
-    if (!current_user_can('manage_options')) {
+    if (!current_user_can('robodesk_manage_settings')) {
         wp_send_json_error(['message' => 'Insufficient permissions']);
         exit;
     }
@@ -2315,7 +2315,7 @@ function robodesk_fetch_emails_handler()
 {
     check_ajax_referer('robodesk_fetch_emails_action', 'nonce');
 
-    if (!current_user_can('manage_options')) {
+    if (!current_user_can('robodesk_manage_settings')) {
         wp_send_json_error(['message' => 'Insufficient permissions']);
     }
 

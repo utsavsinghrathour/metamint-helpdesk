@@ -372,7 +372,13 @@ const SingleTicket = ({
 
       const response = await fetch(
         `/wp-json/wp/v2/comments?post=${ticket.id}&per_page=${perPage}&offset=${fetchOffset}&order=asc&comment_type=ticket_replies&_fields=id,content,date,author_data,time_ago,author_name,author_image,comment_action,is_bot_response`,
-        { signal: controller.signal },
+        {
+          signal: controller.signal,
+          headers: {
+            "X-WP-Nonce":
+              window.robodeskAuth?.restNonce || window.wpApiSettings?.nonce || "",
+          },
+        },
       );
 
       clearTimeout(timeoutId);
@@ -597,6 +603,10 @@ const SingleTicket = ({
           `/wp-json/wp/v2/comments?post=${ticket.id}&per_page=1&order=asc&_fields=id`,
           {
             signal: controller.signal,
+            headers: {
+              "X-WP-Nonce":
+                window.robodeskAuth?.restNonce || window.wpApiSettings?.nonce || "",
+            },
           },
         );
 
@@ -750,7 +760,13 @@ const SingleTicket = ({
       try {
         const response = await fetch(
           `/wp-json/wp/v2/comments?post=${ticket.id}&per_page=20&order=desc&comment_type=ticket_replies&_fields=id,content,date,author_data,time_ago,author_name,author_image,comment_action,is_bot_response`,
-          { cache: "no-store" },
+          {
+            cache: "no-store",
+            headers: {
+              "X-WP-Nonce":
+                window.robodeskAuth?.restNonce || window.wpApiSettings?.nonce || "",
+            },
+          },
         );
 
         if (!response.ok) return;

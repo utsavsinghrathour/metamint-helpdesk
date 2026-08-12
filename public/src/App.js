@@ -160,6 +160,12 @@ const AppContent = ({ imageUrls = { logo: "" } }) => {
           `/wp-json/wp/v2/robodesk_ticket/${encodeURIComponent(
             requestedTicketId,
           )}`,
+          {
+            headers: {
+              "X-WP-Nonce":
+                window.robodeskAuth?.restNonce || window.wpApiSettings?.nonce || "",
+            },
+          },
         );
 
         if (!response.ok) {

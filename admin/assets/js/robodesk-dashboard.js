@@ -1527,6 +1527,15 @@ document.addEventListener("DOMContentLoaded", initConversationMultiFilters);
 
 // Navigation functions
 function showPage(pageName, fromClick = false) {
+  // Settings and Addons are restricted to roles with robodesk_manage_settings
+  if (
+    typeof robodeskCanManageSettings === "boolean" &&
+    !robodeskCanManageSettings &&
+    (pageName === "settings" || pageName === "addons")
+  ) {
+    return;
+  }
+
   // Update the currentPage variable
   currentPage = pageName;
 
