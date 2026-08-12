@@ -109,7 +109,19 @@ add_filter('user_has_cap', function ($allcaps, $caps, $args) {
         'delete_ticket',
     ];
     if (!empty($args[0]) && in_array($args[0], $robodesk_caps, true)) {
-        if (!empty($allcaps['manage_options']) || !empty($allcaps['edit_others_posts'])) {
+        // manage_options: administrator, robodesk_support_manager
+        // edit_others_posts: editor, shop_manager
+        // edit_published_posts: author
+        if (!empty($allcaps['manage_options']) || !empty($allcaps['edit_others_posts']) || !empty($allcaps['edit_published_posts'])) {
+            $allcaps[$args[0]] = true;
+        }
+    }
+    // Settings/Addons access is limited to the four full-access roles only.
+    if (!empty($args[0]) && $args[0] === 'robodesk_manage_settings') {
+        $manage_settings_roles = array('administrator', 'editor', 'robodesk_support_manager', 'shop_manager');
+        $user_id = !empty($args[1]) ? intval($args[1]) : get_current_user_id();
+        $user = $user_id ? get_userdata($user_id) : wp_get_current_user();
+        if ($user && array_intersect($manage_settings_roles, (array) $user->roles)) {
             $allcaps[$args[0]] = true;
         }
     }
@@ -135,6 +147,7 @@ function robodesk_activate()
         $admin_role->add_cap('read_ticket');
         $admin_role->add_cap('delete_ticket');
         $admin_role->add_cap('robodesk_access_dashboard');
+        $admin_role->add_cap('robodesk_manage_settings');
     }
 
     $editor_role = get_role('editor');
@@ -147,9 +160,37 @@ function robodesk_activate()
         $editor_role->add_cap('read_ticket');
         $editor_role->add_cap('delete_ticket');
         $editor_role->add_cap('robodesk_access_dashboard');
+        $editor_role->add_cap('robodesk_manage_settings');
     }
 
-    add_role('robodesk_support_manager', 'Support Manager', array('read' => true, 'manage_options' => true, 'edit_posts' => true, 'manage_categories' => true, 'robodesk_access_dashboard' => true, 'create_tickets' => true, 'edit_tickets' => true, 'edit_others_tickets' => true, 'publish_tickets' => true, 'read_private_tickets' => true, 'read_ticket' => true, 'delete_ticket' => true));
+    // WooCommerce shop manager - full dashboard access (settings included)
+    $shop_manager_role = get_role('shop_manager');
+    if ($shop_manager_role) {
+        $shop_manager_role->add_cap('create_tickets');
+        $shop_manager_role->add_cap('edit_tickets');
+        $shop_manager_role->add_cap('edit_others_tickets');
+        $shop_manager_role->add_cap('publish_tickets');
+        $shop_manager_role->add_cap('read_private_tickets');
+        $shop_manager_role->add_cap('read_ticket');
+        $shop_manager_role->add_cap('delete_ticket');
+        $shop_manager_role->add_cap('robodesk_access_dashboard');
+        $shop_manager_role->add_cap('robodesk_manage_settings');
+    }
+
+    // Author - dashboard access, no settings/addons tabs
+    $author_role = get_role('author');
+    if ($author_role) {
+        $author_role->add_cap('create_tickets');
+        $author_role->add_cap('edit_tickets');
+        $author_role->add_cap('edit_others_tickets');
+        $author_role->add_cap('publish_tickets');
+        $author_role->add_cap('read_private_tickets');
+        $author_role->add_cap('read_ticket');
+        $author_role->add_cap('delete_ticket');
+        $author_role->add_cap('robodesk_access_dashboard');
+    }
+
+    add_role('robodesk_support_manager', 'Support Manager', array('read' => true, 'manage_options' => true, 'edit_posts' => true, 'manage_categories' => true, 'robodesk_access_dashboard' => true, 'robodesk_manage_settings' => true, 'create_tickets' => true, 'edit_tickets' => true, 'edit_others_tickets' => true, 'publish_tickets' => true, 'read_private_tickets' => true, 'read_ticket' => true, 'delete_ticket' => true));
 
     add_role('robodesk_support_staff', 'Support Staff', array(
         'read' => true,
@@ -159,7 +200,10 @@ function robodesk_activate()
         'create_tickets' => true,
         'edit_tickets' => true,
         'edit_others_tickets' => true,
-        'read_ticket' => true
+        'publish_tickets' => true,
+        'read_private_tickets' => true,
+        'read_ticket' => true,
+        'delete_ticket' => true
     ));
 
     add_role('robodesk_support_customer', 'Support Customer', array('read' => true, 'create_tickets' => true, 'read_ticket' => true));
