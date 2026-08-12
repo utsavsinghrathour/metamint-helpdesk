@@ -32,7 +32,8 @@ function robodesk_add_tinymce_to_comments($defaults)
 
     // phpcs:ignore WordPress.Security.NonceVerification.Recommended
     $tid = sanitize_text_field(wp_unslash($_GET['tid']));
-    if (!is_wp_error(get_post_type($tid))) {
+    $is_staff = current_user_can('robodesk_access_dashboard') || current_user_can('manage_options');
+    if ($is_staff && !is_wp_error(get_post_type($tid))) {
         $value = get_post_meta($tid, '_robodesk_ticket_status', true);
 ?>
 <div class="robodesk-status-selector">
