@@ -246,6 +246,13 @@ function robodesk_faq_vote_callback()
             wp_send_json_error('You have already voted on this FAQ.');
         }
         update_user_meta($user_id, $vote_key, $vote_type);
+    } else {
+        $ip = isset($_SERVER['REMOTE_ADDR']) ? sanitize_text_field(wp_unslash($_SERVER['REMOTE_ADDR'])) : '0.0.0.0';
+        $guest_key = 'robodesk_faq_vote_' . md5($ip . '|' . absint($faq_id));
+        if (get_transient($guest_key)) {
+            wp_send_json_error('You have already voted on this FAQ.');
+        }
+        set_transient($guest_key, 1, 15 * MINUTE_IN_SECONDS);
     }
 
     $upvotes = (int) get_post_meta($faq_id, '_robodesk_faq_upvotes', true);
@@ -513,7 +520,7 @@ function robodesk_add_ticket_note_callback()
     $uploaded_files = array();
     if (!empty($_FILES['note_content_ifr'])) {
         require_once(ABSPATH . 'wp-admin/includes/file.php');
-        $allowed_types = array('jpg', 'jpeg', 'png', 'gif', 'webp', 'svg', 'zip', 'pdf', 'docx', 'xlsx', 'rar');
+        $allowed_types = array('jpg', 'jpeg', 'png', 'gif', 'webp', 'zip', 'pdf', 'docx', 'xlsx', 'rar');
         $mime_map = wp_get_mime_types();
         $mimes = array();
         foreach ($allowed_types as $ext) {
