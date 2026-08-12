@@ -17,7 +17,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Define constants
-define('ROBODESK_VERSION', '1.4.9');
+define('ROBODESK_VERSION', '1.4.10');
 define('ROBODESK_PLUGIN_PATH', plugin_dir_path(__FILE__));
 define('ROBODESK_PLUGIN_URL', plugin_dir_url(__FILE__));
 
@@ -2333,8 +2333,19 @@ function robodesk_include_ticket_replies_in_rest_comments($args, $request)
 
     $is_staff = current_user_can('robodesk_access_dashboard') || current_user_can('manage_options');
     if (!$is_staff) {
-        $args['post__in'] = array(0);
-        return $args;
+        // Non-staff may only read the comments of tickets they own.
+        $user_id = get_current_user_id();
+        if ($user_id <= 0) {
+            $args['post__in'] = array(0);
+            return $args;
+        }
+        foreach ($ticket_ids as $ticket_id) {
+            $ticket = get_post($ticket_id);
+            if (!$ticket || (int) $ticket->post_author !== $user_id) {
+                $args['post__in'] = array(0);
+                return $args;
+            }
+        }
     }
 
     $args['type__in'] = array('ticket_replies');
@@ -2344,9 +2355,32 @@ function robodesk_include_ticket_replies_in_rest_comments($args, $request)
 
 // Restrict the robodesk_ticket REST collection to staff and single-item
 // reads to the ticket owner or staff. The chat widget deep-link relies on
-// the single-item route for ticket owners.
+// the single-item route for ticket owners, and the widget ticket list
+// fetches the collection filtered by the current user's author ID.
 add_filter('rest_robodesk_ticket_query', function ($args, $request) {
-    if (!current_user_can('robodesk_access_dashboard') && !current_user_can('manage_options')) {
+    $is_staff = current_user_can('robodesk_access_dashboard') || current_user_can('manage_options');
+    if ($is_staff) {
+        return $args;
+    }
+
+    $user_id = get_current_user_id();
+    if ($user_id <= 0) {
+        $args['post__in'] = array(0);
+        return $args;
+    }
+
+    $ticket_id = (int) $request->get_param('id');
+    if ($ticket_id > 0) {
+        $ticket = get_post($ticket_id);
+        if (!$ticket || $ticket->post_type !== 'robodesk_ticket' || (int) $ticket->post_author !== $user_id) {
+            $args['post__in'] = array(0);
+        }
+        return $args;
+    }
+
+    $author_param = $request->get_param('author');
+    $requested_author = is_array($author_param) ? (int) end($author_param) : (int) $author_param;
+    if ($requested_author !== $user_id) {
         $args['post__in'] = array(0);
     }
     return $args;
@@ -2377,7 +2411,12 @@ add_filter('rest_request_before_callbacks', function ($response, $handler, $requ
             return new WP_Error('rest_forbidden', 'Sorry, you are not allowed to view this ticket.', array('status' => 403));
         }
     } elseif (!$is_staff) {
-        return new WP_Error('rest_forbidden', 'Sorry, you are not allowed to view tickets.', array('status' => 403));
+        // The chat widget lists the customer's own tickets via ?author=<current user>.
+        $author_param = $request->get_param('author');
+        $requested_author = is_array($author_param) ? (int) end($author_param) : (int) $author_param;
+        if ($requested_author <= 0 || $requested_author !== $current_id) {
+            return new WP_Error('rest_forbidden', 'Sorry, you are not allowed to view tickets.', array('status' => 403));
+        }
     }
 
     return $response;

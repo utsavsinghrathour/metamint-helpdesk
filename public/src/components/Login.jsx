@@ -275,6 +275,11 @@ const Login = ({
       const ticketResponse = await registerUser(formData.email);
       const user_id = ticketResponse.user_id;
 
+      if (ticketResponse.rest_nonce) {
+        window.robodeskAuth = window.robodeskAuth || {};
+        window.robodeskAuth.restNonce = ticketResponse.rest_nonce;
+      }
+
       await handleTempTicketCreation(user_id);
       updateLoginStatus(true, user_id);
     } catch (err) {

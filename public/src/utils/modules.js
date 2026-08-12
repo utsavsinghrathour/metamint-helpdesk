@@ -7,6 +7,15 @@ const parseJSON = async (response) => {
   }
 };
 
+const getRestHeaders = (extraHeaders = {}) => {
+  const nonce = window.robodeskAuth?.restNonce || window.wpApiSettings?.nonce || '';
+  return {
+    "Content-Type": "application/json",
+    ...(nonce ? { "X-WP-Nonce": nonce } : {}),
+    ...extraHeaders,
+  };
+};
+
 //create ticket
 export const createTicket = async (userId, title, message = "", timestamp = null) => {
   const webhookUrl = "/wp-json/robodesk/chat/v1/tickets";
@@ -24,10 +33,7 @@ export const createTicket = async (userId, title, message = "", timestamp = null
   try {
     const response = await fetch(webhookUrl, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Accept: "application/json",
-      },
+      headers: getRestHeaders({ Accept: "application/json" }),
       body: JSON.stringify(ticketData),
     });
 
@@ -55,10 +61,7 @@ export const getMessages = async (ticketId, userId) => {
   try {
     const response = await fetch(webhookUrl, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Accept: "application/json",
-      },
+      headers: getRestHeaders({ Accept: "application/json" }),
       body: JSON.stringify(messageData),
     });
 
@@ -146,9 +149,7 @@ export async function sendReply(
   try {
     const response = await fetch("/wp-json/robodesk/chat/v1/tickets", {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
+      headers: getRestHeaders(),
       body: JSON.stringify(payload),
       signal,
     });
@@ -226,9 +227,7 @@ export async function getAllTickets(userId) {
     };
     const response = await fetch("/wp-json/robodesk/chat/v1/tickets", {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
+      headers: getRestHeaders(),
       body: JSON.stringify(payload),
     });
 

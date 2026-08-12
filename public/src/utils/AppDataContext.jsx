@@ -2,6 +2,11 @@ import { createContext, useEffect, useState, useContext } from 'react';
 
 const AppDataContext = createContext();
 
+const getRestHeaders = () => {
+  const nonce = window.robodeskAuth?.restNonce || window.wpApiSettings?.nonce || '';
+  return nonce ? { 'X-WP-Nonce': nonce } : {};
+};
+
 export const AppDataProvider = ({ children }) => {
   const [data, setData] = useState({
     loadingContext: true,
@@ -144,7 +149,7 @@ export const AppDataProvider = ({ children }) => {
         }
       }
 
-      const response = await fetch(url);
+      const response = await fetch(url, { headers: getRestHeaders() });
       if (!response.ok) {
         throw new Error(
           `Failed to fetch ticketsContext: ${response.status} ${response.statusText}`
@@ -219,7 +224,7 @@ export const AppDataProvider = ({ children }) => {
     try {
       let url = `/wp-json/wp/v2/robodesk_ticket?author=${data.loggedInUsrId}&page=${nextPage}&per_page=${ppp}&orderby=date&order=desc`;
 
-      const response = await fetch(url);
+      const response = await fetch(url, { headers: getRestHeaders() });
       if (!response.ok) throw new Error(`Failed to load more tickets: ${response.status}`);
 
       const totalPagesHeader = response.headers.get('X-WP-TotalPages');

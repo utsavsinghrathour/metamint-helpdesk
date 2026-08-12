@@ -330,6 +330,12 @@ add_action('rest_api_init', function () {
         'permission_callback' => '__return_true', // Public access for login
     ));
 
+    register_rest_route('robodesk/v1', '/validate-token', array(
+        'methods' => 'GET',
+        'callback' => 'robodesk_validate_token',
+        'permission_callback' => '__return_true', // Auth handled by callback via Authorization header
+    ));
+
     // Robodesk Registration Rest Api Registration
     register_rest_route('robodesk/v1', '/signup', array(
         'methods' => 'POST',
@@ -1042,6 +1048,26 @@ function robodesk_live_comments($request)
 }
 
 
+/**
+ * Sets a fresh auth cookie for the user and returns a REST nonce that is
+ * bound to the session token carried by that cookie. Nonces created while
+ * the user has no cookie yet are bound to an empty session token and would
+ * fail verification on the browser's next request.
+ */
+function robodesk_create_session_nonce($user_id)
+{
+    $expiration = time() + 30 * DAY_IN_SECONDS;
+    $token = WP_Session_Tokens::get_instance($user_id)->create($expiration);
+
+    wp_set_auth_cookie($user_id, true, '', $token);
+
+    // Stage the logged_in cookie so wp_create_nonce() picks up the token
+    // that the response cookie will carry.
+    $_COOKIE[LOGGED_IN_COOKIE] = wp_generate_auth_cookie($user_id, $expiration, 'logged_in', $token);
+
+    return wp_create_nonce('wp_rest');
+}
+
 function robodesk_secure_login_endpoint(WP_REST_Request $request)
 {
     $login = $request->get_param('email');
@@ -1058,9 +1084,6 @@ function robodesk_secure_login_endpoint(WP_REST_Request $request)
     if ($attempts === false) {
         $attempts = 0;
     }
-    if ($attempts >= 10) {
-        return new WP_Error('rate_limited', 'Too many login attempts. Please try again later.', array('status' => 429));
-    }
 
     $login = sanitize_text_field($login);
     $password = sanitize_text_field($password);
@@ -1069,7 +1092,7 @@ function robodesk_secure_login_endpoint(WP_REST_Request $request)
         $user = get_user_by('email', $login);
         if (!$user) {
             robodesk_log_debug('Login failed: no user found for email ' . $login);
-            set_transient($rate_key, (int) get_transient($rate_key) + 1, HOUR_IN_SECONDS);
+            set_transient($rate_key, $attempts + 1, HOUR_IN_SECONDS);
             return new WP_Error('invalid_credentials', 'Invalid username or password.', array('status' => 401));
         }
         $login = $user->user_login;
@@ -1085,14 +1108,18 @@ function robodesk_secure_login_endpoint(WP_REST_Request $request)
 
     if (is_wp_error($user)) {
         robodesk_log_debug('Login failed for login ' . $login . ': ' . $user->get_error_message());
-        set_transient($rate_key, (int) get_transient($rate_key) + 1, HOUR_IN_SECONDS);
+        set_transient($rate_key, $attempts + 1, HOUR_IN_SECONDS);
+        if ($attempts + 1 >= 10) {
+            return new WP_Error('rate_limited', 'Too many login attempts. Please try again later.', array('status' => 429));
+        }
         return new WP_Error('invalid_credentials', 'Invalid username or password.', array('status' => 401));
     }
 
     delete_transient($rate_key);
 
     wp_set_current_user($user->ID);
-    wp_set_auth_cookie($user->ID);
+
+    $rest_nonce = robodesk_create_session_nonce($user->ID);
 
     $token = robodesk_generate_token($user);
     if (is_wp_error($token)) {
@@ -1106,7 +1133,7 @@ function robodesk_secure_login_endpoint(WP_REST_Request $request)
         'user_email' => $user->user_email,
         'user_display_name' => $user->display_name,
         'expires_at' => time() + (DAY_IN_SECONDS * 7),
-        'rest_nonce' => wp_create_nonce('wp_rest'),
+        'rest_nonce' => $rest_nonce,
     );
 }
 
@@ -1256,7 +1283,8 @@ function robodesk_user_signup(WP_REST_Request $request)
     }
 
     wp_set_current_user($user->ID);
-    wp_set_auth_cookie($user->ID);
+
+    $rest_nonce = robodesk_create_session_nonce($user->ID);
 
     // Send default WordPress user notification email
     wp_new_user_notification($user_id, null, 'both'); // Sends email to user and admin
@@ -1276,6 +1304,7 @@ function robodesk_user_signup(WP_REST_Request $request)
         'message' => __('User created successfully', 'robodesk'),
         'token' => $token,
         'user_id' => $user_id,
+        'rest_nonce' => $rest_nonce,
     ), 201);
 }
 //build arrays of ticket data to return in rest response
