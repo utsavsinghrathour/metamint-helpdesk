@@ -427,6 +427,10 @@ function robodesk_add_plugin()
 add_action('wp_footer', 'robodesk_add_plugin');
 function robodesk_handle_settings_save()
 {
+    if (!current_user_can('robodesk_access_dashboard')) {
+        return;
+    }
+
     if (!isset($_POST['_wpnonce']) || !wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['_wpnonce'])), 'robodesk_save_settings')) {
         return;
     }
@@ -663,6 +667,11 @@ function robodesk_decrypt($ciphertext, $key = null)
     list($encrypted_data, $iv) = explode('::', $decoded, 2);
     $plaintext = openssl_decrypt($encrypted_data, "AES-256-CBC", $key, $options = 0, $iv);
 
+    // Legacy links were encrypted with a hardcoded 'robodesk' key.
+    if ($plaintext === false) {
+        $plaintext = openssl_decrypt($encrypted_data, "AES-256-CBC", 'robodesk', $options = 0, $iv);
+    }
+
     if ($plaintext === false && defined('AUTH_KEY') && AUTH_KEY !== '') {
         $plaintext = openssl_decrypt($encrypted_data, "AES-256-CBC", AUTH_KEY, $options = 0, $iv);
     }
@@ -677,7 +686,7 @@ function robodesk_build_ticket_deeplink($ticket_id)
         return home_url('/');
     }
 
-    $encrypted_ticket = robodesk_encrypt((string) $ticket_id, 'robodesk');
+    $encrypted_ticket = robodesk_encrypt((string) $ticket_id);
 
     return add_query_arg(
         [
@@ -725,7 +734,7 @@ function robodesk_get_requested_ticket_id_from_query()
         $encrypted_ticket = trim((string) $encrypted_ticket);
         if ($encrypted_ticket !== '') {
             $encrypted_ticket = str_replace(' ', '+', $encrypted_ticket);
-            $decrypted_ticket = robodesk_decrypt($encrypted_ticket, 'robodesk');
+            $decrypted_ticket = robodesk_decrypt($encrypted_ticket);
             if ($decrypted_ticket !== false) {
                 $ticket_id = absint($decrypted_ticket);
             }
@@ -1063,23 +1072,92 @@ function robodesk_is_public_ip($ip)
 
 function robodesk_get_client_ip()
 {
-    $headers = robodesk_get_request_header_values();
-    $priority = array('cf-connecting-ip', 'x-forwarded-for', 'x-real-ip', 'x-client-ip', 'remote-addr');
-    foreach ($priority as $key) {
-        if (!empty($headers[$key])) {
-            $ip = robodesk_get_first_ip_from_value($headers[$key]);
-            if ($ip !== '') {
-                return $ip;
+    $remote_addr = '';
+    if (!empty($_SERVER['REMOTE_ADDR'])) {
+        $remote_addr = sanitize_text_field(wp_unslash((string) $_SERVER['REMOTE_ADDR']));
+        if (!filter_var($remote_addr, FILTER_VALIDATE_IP)) {
+            $remote_addr = '';
+        }
+    }
+
+    // Proxy-supplied headers (Cloudflare, X-Forwarded-For, etc.) are only
+    // trustworthy when the direct peer is a known reverse proxy. Otherwise
+    // anyone can forge them and spoof rate-limit and blocklist identity.
+    // Add your proxy IPs/ranges via the 'robodesk_trusted_proxy_ips' filter.
+    if ($remote_addr !== '' && robodesk_is_trusted_proxy($remote_addr)) {
+        $headers = robodesk_get_request_header_values();
+        $priority = array('cf-connecting-ip', 'x-forwarded-for', 'x-real-ip', 'x-client-ip');
+        foreach ($priority as $key) {
+            if (!empty($headers[$key])) {
+                $ip = robodesk_get_first_ip_from_value($headers[$key]);
+                if ($ip !== '') {
+                    return $ip;
+                }
             }
         }
     }
-    if (!empty($_SERVER['REMOTE_ADDR'])) {
-        $ip = sanitize_text_field(wp_unslash((string) $_SERVER['REMOTE_ADDR']));
-        if (filter_var($ip, FILTER_VALIDATE_IP)) {
-            return $ip;
+
+    if ($remote_addr !== '') {
+        return $remote_addr;
+    }
+
+    return '0.0.0.0';
+}
+
+function robodesk_is_trusted_proxy($ip)
+{
+    $trusted = apply_filters('robodesk_trusted_proxy_ips', array());
+    if (!is_array($trusted)) {
+        $trusted = array();
+    }
+
+    foreach ($trusted as $proxy) {
+        $proxy = strtolower(trim((string) $proxy));
+        if ($proxy === '') {
+            continue;
+        }
+
+        if (strpos($proxy, '/') !== false) {
+            list($range_ip, $prefix) = explode('/', $proxy, 2);
+            if (robodesk_ip_in_range($ip, $range_ip, (int) $prefix)) {
+                return true;
+            }
+        } elseif ($proxy === strtolower($ip)) {
+            return true;
         }
     }
-    return '0.0.0.0';
+
+    return false;
+}
+
+function robodesk_ip_in_range($ip, $range_ip, $prefix)
+{
+    if ($prefix < 0 || $prefix > 128) {
+        return false;
+    }
+
+    $ip_bin = inet_pton($ip);
+    $range_bin = inet_pton($range_ip);
+    if ($ip_bin === false || $range_bin === false || strlen($ip_bin) !== strlen($range_bin)) {
+        return false;
+    }
+
+    $bits = min($prefix, strlen($ip_bin) * 8);
+    $full_bytes = intdiv($bits, 8);
+    $rem_bits = $bits % 8;
+
+    if ($full_bytes > 0 && substr($ip_bin, 0, $full_bytes) !== substr($range_bin, 0, $full_bytes)) {
+        return false;
+    }
+
+    if ($rem_bits > 0) {
+        $mask = chr(0xFF << (8 - $rem_bits));
+        if ((ord($ip_bin[$full_bytes]) & ord($mask)) !== (ord($range_bin[$full_bytes]) & ord($mask))) {
+            return false;
+        }
+    }
+
+    return true;
 }
 
 function robodesk_parse_browser_label($value)
@@ -2242,11 +2320,68 @@ add_action('wp_enqueue_scripts', 'robodesk_enqueue_custom_styles');
 add_filter('rest_comment_query', 'robodesk_include_ticket_replies_in_rest_comments', 10, 2);
 function robodesk_include_ticket_replies_in_rest_comments($args, $request)
 {
+    // WP REST hands 'post' over as a scalar or a list depending on the route;
+    // normalize to a list of IDs so the guard works in both shapes.
+    $post_param = $request->get_param('post');
+    $post_ids = is_array($post_param) ? array_map('absint', $post_param) : array(absint($post_param));
+    $ticket_ids = array_values(array_filter($post_ids, function ($id) {
+        return $id > 0 && get_post_type($id) === 'robodesk_ticket';
+    }));
+    if (empty($ticket_ids)) {
+        return $args;
+    }
+
+    $is_staff = current_user_can('robodesk_access_dashboard') || current_user_can('manage_options');
+    if (!$is_staff) {
+        $args['post__in'] = array(0);
+        return $args;
+    }
 
     $args['type__in'] = array('ticket_replies');
 
     return $args;
 }
+
+// Restrict the robodesk_ticket REST collection to staff and single-item
+// reads to the ticket owner or staff. The chat widget deep-link relies on
+// the single-item route for ticket owners.
+add_filter('rest_robodesk_ticket_query', function ($args, $request) {
+    if (!current_user_can('robodesk_access_dashboard') && !current_user_can('manage_options')) {
+        $args['post__in'] = array(0);
+    }
+    return $args;
+}, 10, 2);
+
+// Runs after URL params are resolved (rest_pre_dispatch fires too early to
+// see the route's {id} param), so item-level authorization is reliable here.
+add_filter('rest_request_before_callbacks', function ($response, $handler, $request) {
+    $route = $request->get_route();
+    if (0 !== strpos($route, '/wp/v2/robodesk_ticket')) {
+        return $response;
+    }
+
+    $target_id = (int) $request->get_param('id');
+    $current_id = get_current_user_id();
+    $is_staff = $current_id > 0 && (current_user_can('robodesk_access_dashboard') || current_user_can('manage_options'));
+
+    if ($target_id > 0) {
+        $post = get_post($target_id);
+        if (!$post || get_post_type($post) !== 'robodesk_ticket') {
+            return new WP_Error('rest_not_found', 'Ticket not found.', array('status' => 404));
+        }
+
+        $customer_user_id = (int) robodesk_get_ticket_customer_user_id($target_id);
+        $is_owner = $current_id > 0 && ((int) $post->post_author === $current_id || ($customer_user_id > 0 && $customer_user_id === $current_id));
+
+        if (!$is_owner && !$is_staff) {
+            return new WP_Error('rest_forbidden', 'Sorry, you are not allowed to view this ticket.', array('status' => 403));
+        }
+    } elseif (!$is_staff) {
+        return new WP_Error('rest_forbidden', 'Sorry, you are not allowed to view tickets.', array('status' => 403));
+    }
+
+    return $response;
+}, 10, 3);
 
 
 add_filter('rest_prepare_comment', function ($response, $comment, $request) {

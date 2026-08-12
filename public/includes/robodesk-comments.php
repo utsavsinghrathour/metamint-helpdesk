@@ -32,7 +32,8 @@ function robodesk_add_tinymce_to_comments($defaults)
 
     // phpcs:ignore WordPress.Security.NonceVerification.Recommended
     $tid = sanitize_text_field(wp_unslash($_GET['tid']));
-    if (!is_wp_error(get_post_type($tid))) {
+    $is_staff = current_user_can('robodesk_access_dashboard') || current_user_can('manage_options');
+    if ($is_staff && !is_wp_error(get_post_type($tid))) {
         $value = get_post_meta($tid, '_robodesk_ticket_status', true);
 ?>
 <div class="robodesk-status-selector">
@@ -80,31 +81,44 @@ function robodesk_restore_editor_styles()
 function robodesk_save_custom_comment_field($comment_id)
 {
     // phpcs:ignore WordPress.Security.NonceVerification.Missing
-    if (!empty($_POST['robodesk_ticket_status_comment'])) {
-        // phpcs:ignore WordPress.Security.NonceVerification.Missing
-        $dropdown_value = sanitize_text_field(wp_unslash($_POST['robodesk_ticket_status_comment']));
-        // phpcs:ignore WordPress.Security.NonceVerification.Missing
-        $comment_post_id = isset($_POST['comment_post_ID']) ? sanitize_text_field(wp_unslash($_POST['comment_post_ID'])) : '';
-        
-        if ($comment_post_id) {
-            $old_status = (string) get_post_meta($comment_post_id, '_robodesk_ticket_status', true);
-            update_post_meta($comment_post_id, '_robodesk_ticket_status', $dropdown_value);
+    $dropdown_value = isset($_POST['robodesk_ticket_status_comment']) ? sanitize_text_field(wp_unslash($_POST['robodesk_ticket_status_comment'])) : '';
+    // phpcs:ignore WordPress.Security.NonceVerification.Missing
+    $comment_post_id = isset($_POST['comment_post_ID']) ? (int) $_POST['comment_post_ID'] : 0;
 
-        do_action('robodesk_after_ticket_status_change', $comment_post_id, $old_status, $dropdown_value, get_current_user_id());
+    if ($dropdown_value === '' || $comment_post_id <= 0) {
+        return;
+    }
 
-        if ($old_status !== $dropdown_value && function_exists('robodesk_notify_status_changed')) {
-            $comment = get_comment($comment_id);
-            $source = is_admin() ? 'admin' : 'chat';
-            if ($comment && !is_wp_error($comment)) {
-                $comment_source = (string) get_comment_meta($comment_id, 'comment_source', true);
-                if ($comment_source !== '') {
-                    $source = $comment_source;
-                }
+    $ticket = get_post($comment_post_id);
+    if (!$ticket || $ticket->post_type !== 'robodesk_ticket') {
+        return;
+    }
+
+    if (!current_user_can('robodesk_access_dashboard') && !current_user_can('manage_options')) {
+        return;
+    }
+
+    $allowed_statuses = array('open', 'in-progress', 'closed');
+    if (!in_array($dropdown_value, $allowed_statuses, true)) {
+        return;
+    }
+
+    $old_status = (string) get_post_meta($comment_post_id, '_robodesk_ticket_status', true);
+    update_post_meta($comment_post_id, '_robodesk_ticket_status', $dropdown_value);
+
+    do_action('robodesk_after_ticket_status_change', $comment_post_id, $old_status, $dropdown_value, get_current_user_id());
+
+    if ($old_status !== $dropdown_value && function_exists('robodesk_notify_status_changed')) {
+        $comment = get_comment($comment_id);
+        $source = is_admin() ? 'admin' : 'chat';
+        if ($comment && !is_wp_error($comment)) {
+            $comment_source = (string) get_comment_meta($comment_id, 'comment_source', true);
+            if ($comment_source !== '') {
+                $source = $comment_source;
             }
+        }
 
-            robodesk_notify_status_changed($comment_post_id, $dropdown_value, get_current_user_id(), $source);
-        }
-        }
+        robodesk_notify_status_changed($comment_post_id, $dropdown_value, get_current_user_id(), $source);
     }
 }
 
