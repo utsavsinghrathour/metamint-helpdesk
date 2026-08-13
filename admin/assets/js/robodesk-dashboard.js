@@ -774,7 +774,7 @@ function editStatus(ticketId, element) {
     dropdown.setDisabled(true);
     updateTicketStatus(ticketId, newStatus).then((result) => {
       if (result && result.success) {
-        if (isDashboardTicketsTableElement(element)) {
+        if (isDashboardTicketsTableElement(dropdown.container)) {
           dropdown.destroy();
           loadDashboardTickets();
           return;
@@ -844,7 +844,7 @@ function editPriority(ticketId, element) {
     dropdown.setDisabled(true);
     updateTicketPriority(ticketId, newPriority).then((result) => {
       if (result && result.success) {
-        if (isDashboardTicketsTableElement(element)) {
+        if (isDashboardTicketsTableElement(dropdown.container)) {
           dropdown.destroy();
           loadDashboardTickets();
           return;
@@ -931,7 +931,7 @@ function editAssignee(ticketId, element) {
     dropdown.setDisabled(true);
     updateTicketAssignee(ticketId, newAssigneeId).then((result) => {
       if (result && result.success) {
-        if (isDashboardTicketsTableElement(element)) {
+        if (isDashboardTicketsTableElement(dropdown.container)) {
           dropdown.destroy();
           loadDashboardTickets();
           return;
@@ -1169,6 +1169,7 @@ let currentPage = "dashboard";
 let currentTicket = null;
 let currentTicketTab = "replies";
 let currentSettingsTab = "basic";
+let ticketDetailOrigin = "tickets"; // Where ticket detail was opened from (dashboard | tickets)
 let currentDashboardFilter = "my_conversation"; // Default filter for dashboard
 let dashboardCurrentPage = 1;
 let dashboardTotalItems = 0; // Total items in the current filter (server-computed)
@@ -1610,6 +1611,14 @@ function isValidEmail(email) {
 function viewTicket(ticketId) {
   _rbd_firstTicketScroll = true;
 
+  // Record where the ticket was opened from so the detail page's Back button
+  // can return to the right place (dashboard vs conversations list).
+  if (currentPage === "dashboard") {
+    ticketDetailOrigin = "dashboard";
+  } else {
+    ticketDetailOrigin = "tickets";
+  }
+
   // Convert ticketId to number to ensure type consistency
   ticketId = parseInt(ticketId, 10);
 
@@ -1660,6 +1669,11 @@ function navigateToTicket(ticketId) {
 
   showPage("ticket-detail");
   showTicketTab("replies");
+}
+
+// Back button on the ticket detail page - return to where the ticket was opened from.
+function backFromTicketDetail() {
+  showPage(ticketDetailOrigin || "tickets");
 }
 
 // On page load, check for ticket param and show ticket if present
@@ -3289,6 +3303,8 @@ function updateTicketStatus(ticketId, newStatus) {
 
         showToast(`Ticket status updated to ${updatedStatus}`);
         // updateDashboardStats();
+        recalculateDashboardStats();
+        markConversationsTabStale();
         return { success: true, data: response.data };
       } catch (error) {
         console.error("Error inside .then:", error);
@@ -3354,6 +3370,8 @@ function updateTicketPriority(ticketId, newPriority) {
         }
 
         showToast(`Ticket priority updated to ${updatedPriority}`);
+        recalculateDashboardStats();
+        markConversationsTabStale();
         return { success: true, data: response.data };
       } else {
         showToast(
@@ -3428,6 +3446,8 @@ function updateTicketAssignee(ticketId, newAssignee) {
         }
 
         showToast(`Ticket assigned to ${updatedAssignee}`);
+        recalculateDashboardStats();
+        markConversationsTabStale();
         return { success: true, data: response.data };
       } else {
         showToast(
@@ -4343,6 +4363,43 @@ function markConversationsTabStale() {
   if (currentPage === "tickets") {
     reloadConversationsPageIfVisible();
   }
+}
+
+function recalculateDashboardStats() {
+  if (typeof dashboard_tickets === "undefined" || !Array.isArray(dashboard_tickets)) {
+    return;
+  }
+
+  const stats = {
+    total: dashboard_tickets.length,
+    open: 0,
+    inProgress: 0,
+    closed: 0,
+  };
+
+  const counts = {
+    my: 0,
+    unassigned: 0,
+    open: 0,
+    chat: 0,
+  };
+
+  const currentUserId = (typeof robodeskCurrentUser !== "undefined" && robodeskCurrentUser.id) ? parseInt(robodeskCurrentUser.id, 10) : 0;
+
+  dashboard_tickets.forEach((ticket) => {
+    const status = ticket.status;
+    if (status === "open") stats.open++;
+    else if (status === "in-progress") stats.inProgress++;
+    else if (status === "closed") stats.closed++;
+
+    if (ticket.assignee_id === currentUserId) counts.my++;
+    if (!ticket.assignee_id || ticket.assignee_id === 0) counts.unassigned++;
+    if (["open", "in-progress"].includes(status)) counts.open++;
+    if (ticket.source === "chat") counts.chat++;
+  });
+
+  updateDashboardStats(stats);
+  updateDashboardFilterCounts(counts);
 }
 
 function reloadConversationsPageIfVisible() {

@@ -305,7 +305,7 @@ export const AppDataProvider = ({ children }) => {
           errorContext: null,
         }));
         const response = await fetch(
-          '/wp-json/wp/v2/notice?_fields=id,title.rendered,excerpt.rendered,content.rendered'
+          '/wp-json/wp/v2/notice?_fields=id,title.rendered,excerpt.rendered,content.rendered,notice_action,initial_message'
         );
         if (!response.ok) {
           throw new Error(

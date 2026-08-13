@@ -13,6 +13,25 @@ import defaultLogo from "../images/robodesk-logo.png";
 const faqCache = {};
 // const wpHomeUrl = window.robodeskData?.home_url || '';
 
+const WIDGET_CONFIG_CACHE_KEY = "robodesk_widget_config_cache";
+
+const readWidgetConfigCache = () => {
+  try {
+    const raw = sessionStorage.getItem(WIDGET_CONFIG_CACHE_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+};
+
+const writeWidgetConfigCache = (data) => {
+  try {
+    sessionStorage.setItem(WIDGET_CONFIG_CACHE_KEY, JSON.stringify(data));
+  } catch {
+    // ignore storage failures
+  }
+};
+
 const decodeTitle = (title = "") => he.decode(String(title)).trim();
 
 const normalizeImagePaths = (html, baseUrl = wpHomeUrl) => {
@@ -60,11 +79,20 @@ const SingleQuestionBox = ({
   );
   const [isAddonActive, setIsAddonActive] = useState(false);
   const [loadingAddon, setLoadingAddon] = useState(true);
-  const [loadingWidgetConfig, setLoadingWidgetConfig] = useState(true);
+  const [cachedWidgetConfig] = useState(readWidgetConfigCache);
+  const [loadingWidgetConfig, setLoadingWidgetConfig] = useState(
+    () => !cachedWidgetConfig,
+  );
   const loadingAddonStatus = loadingAddon || loadingWidgetConfig;
-  const [primaryBot, setPrimaryBot] = useState(false);
-  const [widgetConfig, setWidgetConfig] = useState(null);
-  const [activeAIMode, setActiveAIMode] = useState("");
+  const [primaryBot, setPrimaryBot] = useState(
+    () => Boolean(cachedWidgetConfig?.primaryBot),
+  );
+  const [widgetConfig, setWidgetConfig] = useState(
+    () => cachedWidgetConfig?.widgetConfig || null,
+  );
+  const [activeAIMode, setActiveAIMode] = useState(
+    () => cachedWidgetConfig?.enabled || "",
+  );
   const contentRef = useRef(null);
 
   const shouldShowBotWidget = isAddonActive && activeAIMode && primaryBot;
@@ -164,7 +192,7 @@ const SingleQuestionBox = ({
     window.wpApiSettings?.nonce ||
     "";
 
-  const fetchApiKey = async () => {
+  const fetchApiKey = async (attempt = 0) => {
     if (!canLoadWidgetConfig) {
       setPrimaryBot(false);
       setWidgetConfig(null);
@@ -178,18 +206,34 @@ const SingleQuestionBox = ({
       if (nonce) headers["X-WP-Nonce"] = nonce;
       const response = await fetch("/wp-json/robodesk-bot/v1/widget-config", { headers });
       const data = await response.json();
-      if (response.ok) {
+      if (response.ok && data) {
+        writeWidgetConfigCache(data);
         setPrimaryBot(!!data?.primaryBot);
         setWidgetConfig(data?.widgetConfig || { enabled: true });
         setActiveAIMode(data?.enabled);
-      } else {
+        setLoadingWidgetConfig(false);
+      } else if (attempt < 2) {
+        setTimeout(() => fetchApiKey(attempt + 1), 500 * (attempt + 1));
+      } else if (!cachedWidgetConfig) {
         setPrimaryBot(false);
+        setLoadingWidgetConfig(false);
+      } else {
+        setLoadingWidgetConfig(false);
       }
     } catch (error) {
-      console.error("Error fetching widget config:", error);
-      setPrimaryBot(false);
-    } finally {
-      setLoadingWidgetConfig(false);
+      // A transient network hiccup must not permanently switch to the
+      // normal chat - retry before giving up.
+      if (attempt < 2) {
+        setTimeout(() => fetchApiKey(attempt + 1), 500 * (attempt + 1));
+      } else if (cachedWidgetConfig) {
+        // AI enablement is already known for this session: keep it even
+        // if the background refresh fails.
+        setLoadingWidgetConfig(false);
+      } else {
+        console.error("Error fetching widget config:", error);
+        setPrimaryBot(false);
+        setLoadingWidgetConfig(false);
+      }
     }
   };
 
@@ -411,7 +455,7 @@ const SingleQuestionBox = ({
                     </div>
                   )}
                 </>
-              ) : chatEnabled ? (
+              ) : chatEnabled && !loadingAddonStatus ? (
                 <>
                   <SendMessageField
                     primaryBot={primaryBot}

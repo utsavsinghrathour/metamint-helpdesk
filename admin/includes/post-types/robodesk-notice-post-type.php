@@ -89,6 +89,61 @@ function robodesk_notice_feature_callback($post)
     echo '<label><input type="checkbox" name="_robodesk_notice_feature" value="true" ' . checked($value, 'true', false) . ' /> Feature?</label>';
 }
 
+// Add meta box for 'Action' (Open notice / Start a conversation)
+function robodesk_add_notice_action_meta_box()
+{
+    add_meta_box(
+        'notice_action_box',
+        'Action',
+        'robodesk_notice_action_callback',
+        'notice',
+        'side',
+        'default'
+    );
+}
+add_action('add_meta_boxes', 'robodesk_add_notice_action_meta_box');
+
+// Callback function for 'Action' meta box
+function robodesk_notice_action_callback($post)
+{
+    wp_nonce_field('save_notice_action', 'notice_action_nonce');
+    $action = get_post_meta($post->ID, '_robodesk_notice_action', true);
+    if (empty($action)) {
+        $action = 'open';
+    }
+    $initial_message = get_post_meta($post->ID, '_robodesk_notice_initial_message', true);
+    ?>
+    <p class="description" style="margin-top:0;">What happens when a visitor clicks this notice?</p>
+    <label style="display:block;margin-bottom:6px;">
+        <input type="radio" name="_robodesk_notice_action" value="open" <?php checked($action, 'open'); ?> />
+        Open the notice
+    </label>
+    <label style="display:block;margin-bottom:6px;">
+        <input type="radio" name="_robodesk_notice_action" value="start_conversation" <?php checked($action, 'start_conversation'); ?> />
+        Start a conversation
+    </label>
+    <div id="robodesk-notice-initial-message-wrap" style="margin-top:10px;<?php echo $action === 'start_conversation' ? '' : 'display:none;'; ?>">
+        <label for="_robodesk_notice_initial_message" style="display:block;margin-bottom:4px;">
+            <strong>Initial message</strong>
+        </label>
+        <textarea name="_robodesk_notice_initial_message" id="_robodesk_notice_initial_message" rows="3" style="width:100%;"><?php echo esc_textarea($initial_message); ?></textarea>
+        <p class="description">Sent to the AI bot (or to a human conversation when the AI bot is off) when the visitor clicks this notice.</p>
+    </div>
+    <script>
+        (function () {
+            var radios = document.querySelectorAll('input[name="_robodesk_notice_action"]');
+            var wrap = document.getElementById('robodesk-notice-initial-message-wrap');
+            if (!radios.length || !wrap) return;
+            var toggle = function () {
+                var checked = document.querySelector('input[name="_robodesk_notice_action"]:checked');
+                wrap.style.display = checked && checked.value === 'start_conversation' ? '' : 'none';
+            };
+            radios.forEach(function (r) { r.addEventListener('change', toggle); });
+        })();
+    </script>
+    <?php
+}
+
 // Save the meta data when the post is saved
 function robodesk_save_notice_meta($post_id)
 {
@@ -121,6 +176,18 @@ function robodesk_save_notice_meta($post_id)
         } else {
             update_post_meta($post_id, '_robodesk_notice_feature', 'false');
         }
+    }
+
+    // Save 'Action' radio
+    if (isset($_POST['notice_action_nonce']) && wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['notice_action_nonce'])), 'save_notice_action')) {
+        $action = isset($_POST['_robodesk_notice_action']) ? sanitize_text_field(wp_unslash($_POST['_robodesk_notice_action'])) : 'open';
+        if (!in_array($action, array('open', 'start_conversation'), true)) {
+            $action = 'open';
+        }
+        update_post_meta($post_id, '_robodesk_notice_action', $action);
+
+        $initial_message = isset($_POST['_robodesk_notice_initial_message']) ? sanitize_textarea_field(wp_unslash($_POST['_robodesk_notice_initial_message'])) : '';
+        update_post_meta($post_id, '_robodesk_notice_initial_message', $initial_message);
     }
 }
 add_action('save_post', 'robodesk_save_notice_meta');
@@ -159,3 +226,23 @@ function robodesk_filter_notice_by_featured_and_active($args, $request)
 
     return $args;
 }
+
+// Expose notice action + initial message through the REST API
+register_rest_field('notice', 'notice_action', array(
+    'get_callback' => function ($post_arr) {
+        $action = get_post_meta($post_arr['id'], '_robodesk_notice_action', true);
+        return empty($action) ? 'open' : $action;
+    },
+    'schema' => array(
+        'type' => 'string',
+    ),
+));
+
+register_rest_field('notice', 'initial_message', array(
+    'get_callback' => function ($post_arr) {
+        return (string) get_post_meta($post_arr['id'], '_robodesk_notice_initial_message', true);
+    },
+    'schema' => array(
+        'type' => 'string',
+    ),
+));

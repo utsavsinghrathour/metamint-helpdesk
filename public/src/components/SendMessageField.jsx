@@ -2,6 +2,10 @@ import { useState, useEffect, useRef } from "react";
 import { createTicket } from "../utils/modules";
 import "../styles/SendMessageField.css";
 import { useAppData } from '../utils/AppDataContext';
+import {
+  START_CONVERSATION_EVENT,
+  consumePendingInitialMessage,
+} from "../utils/startConversation";
 
 const SendMessageField = ({ setShowLogin, setActiveTab, updateSelectedTicket, handleFocusedTextArea, focused }) => {
     const [message, setMessage] = useState("");
@@ -37,6 +41,28 @@ const SendMessageField = ({ setShowLogin, setActiveTab, updateSelectedTicket, ha
         setUserId(loggedInUsrId);
     }, []);
 
+    /**
+     * Action-2 notices: "Start a conversation with this message".
+     */
+    useEffect(() => {
+        const handleStartConversation = (e) => {
+            const nextMessage = consumePendingInitialMessage() || e.detail?.message;
+            if (!nextMessage) return;
+            setMessage(nextMessage);
+            handleSend(nextMessage);
+        };
+
+        const pendingMessage = consumePendingInitialMessage();
+        if (pendingMessage) {
+            setMessage(pendingMessage);
+            handleSend(pendingMessage);
+        }
+
+        window.addEventListener(START_CONVERSATION_EVENT, handleStartConversation);
+        return () =>
+            window.removeEventListener(START_CONVERSATION_EVENT, handleStartConversation);
+    }, []);
+
     const formatTicketComments = (comments) => {
 
         const formattedComments = comments.map((comment) => {
@@ -58,8 +84,8 @@ const SendMessageField = ({ setShowLogin, setActiveTab, updateSelectedTicket, ha
     };
 
 
-    const handleSend = async () => {
-        const trimmedMessage = message.trim();
+    const handleSend = async (overrideMessage = null) => {
+        const trimmedMessage = (overrideMessage ?? message).trim();
 
         if (!trimmedMessage || submitLockRef.current || isSubmitting) return;
         if (!loggedinContext) {
