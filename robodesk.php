@@ -268,6 +268,7 @@ require_once ROBODESK_PLUGIN_PATH . 'public/includes/robodesk-notes.php';
 require_once ROBODESK_PLUGIN_PATH . 'public/includes/robodesk-custom-rest.php';
 
 require_once ROBODESK_PLUGIN_PATH . 'admin/includes/rbodesk-admin-rest.php';
+require_once ROBODESK_PLUGIN_PATH . 'admin/includes/robodesk-notice-context.php';
 
 
 // }
@@ -361,6 +362,7 @@ function robodesk_enqueue_scripts()
                 'robodesk_ai_bot_active' => get_option('robodesk_addon_ai_bot_status', 'inactive') === 'active',
                 'enable_chat' => get_option('robodesk_enable_chat', '1'),
                 'hide_credits' => get_option('robodesk_hide_credits', '0'),
+                'noticeContext' => robodesk_get_current_notice_context(),
             ]
         );
 

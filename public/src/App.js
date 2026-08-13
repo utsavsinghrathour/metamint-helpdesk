@@ -4,7 +4,8 @@ import HomeTabs from "./components/HomeTabs.jsx";
 import MessageTabs from "./components/MessageTabs.jsx";
 import NoticeTabs from "./components/NoticeTabs.jsx";
 import HelpTabs from "./components/HelpTabs.jsx";
-import ActiveFeatured from "./components/ActiveFeatured.jsx";
+import ContextualNotices from "./components/ContextualNotices.jsx";
+import { requestStartConversation } from "./utils/startConversation.js";
 import "./styles/main.css";
 import defaultLogo from "./images/robodesk-logo.png";
 import { AppDataProvider, useAppData } from "./utils/AppDataContext.jsx";
@@ -305,8 +306,16 @@ const AppContent = ({ imageUrls = { logo: "" } }) => {
   const handleNoticeSelect = (notice) => {
     setSelectedNotice(notice);
     setShowActiveFeatured(false);
-    if (chatEnabled) setActiveTab(1);
+    setActiveTab(2);
     setIsOpen(true);
+  };
+
+  const handleStartConversation = (initialMessage) => {
+    setSelectedNotice(null);
+    setShowActiveFeatured(false);
+    setIsOpen(true);
+    setActiveTab(0);
+    requestStartConversation(initialMessage);
   };
 
   const generateToken = async () => {
@@ -417,6 +426,7 @@ const AppContent = ({ imageUrls = { logo: "" } }) => {
           activeTab={activeTab}
           selectedNotice={selectedNotice}
           setShowActiveFeatured={setShowActiveFeatured}
+          onStartConversation={handleStartConversation}
           logo={imageUrls.logo}
           wideLogo={imageUrls.wide_logo}
         />
@@ -444,7 +454,10 @@ const AppContent = ({ imageUrls = { logo: "" } }) => {
   return (
     <div className="robodesk-plugin rd-flex rd-flex-col rd-align-end ">
       {showActiveFeatured && (
-        <ActiveFeatured onNoticeSelect={handleNoticeSelect} />
+        <ContextualNotices
+          onNoticeSelect={handleNoticeSelect}
+          onStartConversation={handleStartConversation}
+        />
       )}
 
       <div

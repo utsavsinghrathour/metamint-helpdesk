@@ -41,16 +41,27 @@ class ErrorBoundary extends React.Component {
   }
 }
 
-const NoticeItem = memo(({ notice, onSelect }) => {
+const NoticeItem = memo(({ notice, onSelect, onStartConversation }) => {
   const parsedExcerpt = useMemo(() => {
     return parse(notice.excerpt);
   }, [notice.excerpt]);
+
+  const startsConversation =
+    notice.notice_action === "start_conversation" && notice.initial_message;
+
+  const handleClick = () => {
+    if (startsConversation) {
+      onStartConversation(notice.initial_message);
+    } else {
+      onSelect(notice);
+    }
+  };
 
 
   return (
     <div
       className="rd-notice-item rd-flex rd-gap-10 rd-border-light single-notice-box-field rd-border-radius-md rd-faq-item"
-      onClick={() => onSelect(notice)}
+      onClick={handleClick}
       style={{ cursor: "pointer" }}
     >
       <div className="rd-text-blue">
@@ -70,13 +81,18 @@ const NoticeItem = memo(({ notice, onSelect }) => {
       <div>
         <h4 className="rd-title-text">{notice.title}</h4>
         <div className="rd-body-text truncate-3-lines">{parsedExcerpt}</div>
+        {startsConversation && (
+          <span className="rd-notice-list-chat-label">
+            Start a conversation
+          </span>
+        )}
       </div>
     </div>
   );
 });
 
 const SingleNoticeView = memo(
-  ({ notice, onBack, isExpanded, setIsExpanded, logo, wideLogo }) => {
+  ({ notice, onBack, isExpanded, setIsExpanded, logo, wideLogo, onStartConversation }) => {
     const [content, setContent] = useState(null);
 
     useEffect(() => {
@@ -234,6 +250,17 @@ const SingleNoticeView = memo(
         <div className="rd-px-20 rd-py-15 rd-body-notices">
           <h4 className="heading-4 rd-mb-10">{title}</h4>
           <div className="rd-body-text">{parsedContent}</div>
+          {notice.notice_action === "start_conversation" &&
+            notice.initial_message && (
+              <div className="rd-mt-20">
+                <button
+                  className="rd-notice-start-chat-button"
+                  onClick={() => onStartConversation(notice.initial_message)}
+                >
+                  Start a conversation
+                </button>
+              </div>
+            )}
         </div>
         {robodeskShowCredits() && (
           <div className="rd-border-top-light">
@@ -253,6 +280,7 @@ const NoticeTabs = ({
   activeTab,
   selectedNotice: initialSelectedNotice,
   setShowActiveFeatured,
+  onStartConversation,
   logo,
   wideLogo,
 }) => {
@@ -272,6 +300,8 @@ const NoticeTabs = ({
         id: notice.id,
         title: notice.title.rendered,
         content: notice.content.rendered,
+        notice_action: notice.notice_action || "open",
+        initial_message: notice.initial_message || "",
         excerpt: DOMPurify.sanitize(notice.excerpt.rendered, {
           ADD_TAGS: ["p", "strong", "em"],
           ADD_ATTR: [],
@@ -311,6 +341,7 @@ const NoticeTabs = ({
             setIsExpanded={setIsExpanded}
             logo={logo}
             wideLogo={wideLogo}
+            onStartConversation={onStartConversation}
           />
         ) : (
           <>
@@ -340,6 +371,7 @@ const NoticeTabs = ({
                               key={notice.id}
                               notice={notice}
                               onSelect={setSelectedNotice}
+                              onStartConversation={onStartConversation}
                             />
                           ))
                         )}

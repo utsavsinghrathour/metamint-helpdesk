@@ -6,6 +6,10 @@ import { PiPaperPlaneRightFill } from "react-icons/pi";
 import { FiPaperclip } from "react-icons/fi";
 import EmojiPicker from "emoji-picker-react";
 import DefaultAvatar from "../images/default-avatar.jpg";
+import {
+  START_CONVERSATION_EVENT,
+  consumePendingInitialMessage,
+} from "../utils/startConversation.js";
 
 const escapeHtml = (unsafe) =>
   String(unsafe)
@@ -200,6 +204,33 @@ export default function RobodeskBotChatWidgetMain({
     sessionStorage.setItem(CHAT_KEY, JSON.stringify(messages));
   }, [messages]);
 
+  /**
+   * Action-2 notices: "Start a conversation with this message".
+   */
+  useEffect(() => {
+    const pendingMessage = consumePendingInitialMessage();
+    if (pendingMessage) {
+      setInput(pendingMessage);
+      sendMessageStream(pendingMessage);
+    }
+  }, [enabled]);
+
+  useEffect(() => {
+    const handleStartConversation = (e) => {
+      const message = consumePendingInitialMessage() || e.detail?.message;
+      if (!message) return;
+      setInput(message);
+      sendMessageStream(message);
+    };
+
+    window.addEventListener(START_CONVERSATION_EVENT, handleStartConversation);
+    return () =>
+      window.removeEventListener(
+        START_CONVERSATION_EVENT,
+        handleStartConversation,
+      );
+  }, [messages]);
+
   useEffect(() => {
     if (canLoadWidgetConfig) {
       fetchApiKey();
@@ -303,8 +334,8 @@ export default function RobodeskBotChatWidgetMain({
     }
   };
 
-  const sendMessageStream = async () => {
-    const q = input.trim();
+  const sendMessageStream = async (overrideText = null) => {
+    const q = (overrideText ?? input).trim();
     if (!q) return;
 
     const now = new Date().toISOString();
