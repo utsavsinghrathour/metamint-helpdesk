@@ -1169,6 +1169,7 @@ let currentPage = "dashboard";
 let currentTicket = null;
 let currentTicketTab = "replies";
 let currentSettingsTab = "basic";
+let ticketDetailOrigin = "tickets"; // Where ticket detail was opened from (dashboard | tickets)
 let currentDashboardFilter = "my_conversation"; // Default filter for dashboard
 let dashboardCurrentPage = 1;
 let dashboardTotalItems = 0; // Total items in the current filter (server-computed)
@@ -1610,6 +1611,14 @@ function isValidEmail(email) {
 function viewTicket(ticketId) {
   _rbd_firstTicketScroll = true;
 
+  // Record where the ticket was opened from so the detail page's Back button
+  // can return to the right place (dashboard vs conversations list).
+  if (currentPage === "dashboard") {
+    ticketDetailOrigin = "dashboard";
+  } else {
+    ticketDetailOrigin = "tickets";
+  }
+
   // Convert ticketId to number to ensure type consistency
   ticketId = parseInt(ticketId, 10);
 
@@ -1660,6 +1669,11 @@ function navigateToTicket(ticketId) {
 
   showPage("ticket-detail");
   showTicketTab("replies");
+}
+
+// Back button on the ticket detail page - return to where the ticket was opened from.
+function backFromTicketDetail() {
+  showPage(ticketDetailOrigin || "tickets");
 }
 
 // On page load, check for ticket param and show ticket if present

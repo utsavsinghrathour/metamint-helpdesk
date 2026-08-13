@@ -22,7 +22,7 @@ function robodesk_add_admin_menu()
         'robodesk_access_dashboard',
         'robodesk-dashboard',
         'robodesk_dashboard_callback',
-        plugin_dir_url(__FILE__) . 'assets/images/robodesk-icon.png',
+        'data:image/svg+xml;base64,' . base64_encode((string) file_get_contents(plugin_dir_path(__FILE__) . 'assets/images/robodesk-icon.svg')),
         30
     );
 
@@ -260,7 +260,7 @@ function robodesk_enqueue_tailwind_and_styles()
         'robodesk-dashboard-script',
         plugin_dir_url(__FILE__) . 'assets/js/robodesk-dashboard.js',
         ['jquery'],
-        '1.0.0',
+        filemtime(plugin_dir_path(__FILE__) . 'assets/js/robodesk-dashboard.js'),
         true
     );
 
