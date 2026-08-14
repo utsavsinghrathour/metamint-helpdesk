@@ -3076,6 +3076,12 @@ jQuery(document).ready(function ($) {
       "default_agent",
       $form.find('select[name="default_agent"]').val(),
     );
+    formData.append(
+      "do_not_send_email_on_import",
+      $form.find('input[name="do_not_send_email_on_import"]').is(":checked")
+        ? "1"
+        : "0",
+    );
 
     // Basic validation
     if (!$form.find('input[name="fetch_interval"]').val()) {
@@ -4107,16 +4113,13 @@ document.addEventListener("DOMContentLoaded", function () {
   function updateBulkActionsUI() {
     const selectedCount = getSelectedTicketIds().length;
 
-    if (selectedCount > 0) {
-      bulkActionsBar.style.display = "block";
-      selectedCountSpan.textContent = `${selectedCount} item${
-        selectedCount !== 1 ? "s" : ""
-      } selected`;
-      applyBulkActionBtn.disabled = !bulkActionSelect.value;
-    } else {
-      bulkActionsBar.style.display = "none";
+    selectedCountSpan.textContent = `${selectedCount} item${
+      selectedCount !== 1 ? "s" : ""
+    } selected`;
+    applyBulkActionBtn.disabled =
+      selectedCount === 0 || !bulkActionSelect.value;
+    if (selectedCount === 0) {
       bulkActionSelect.value = "";
-      applyBulkActionBtn.disabled = true;
     }
   }
 

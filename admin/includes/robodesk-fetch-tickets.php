@@ -428,7 +428,9 @@ function robodesk_fetch_emails()
                     'role'         => $role,
                 ], true);
                 // send notification to the new user
-                wp_send_new_user_notifications($user_id, 'user');
+                if (!robodesk_are_emails_suppressed()) {
+                    wp_send_new_user_notifications($user_id, 'user');
+                }
 
 
                 if (is_wp_error($user_id)) {

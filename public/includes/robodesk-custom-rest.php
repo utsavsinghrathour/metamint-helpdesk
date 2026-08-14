@@ -1287,7 +1287,9 @@ function robodesk_user_signup(WP_REST_Request $request)
     $rest_nonce = robodesk_create_session_nonce($user->ID);
 
     // Send default WordPress user notification email
-    wp_new_user_notification($user_id, null, 'both'); // Sends email to user and admin
+    if (!robodesk_are_emails_suppressed()) {
+        wp_new_user_notification($user_id, null, 'both'); // Sends email to user and admin
+    }
 
     // Generate JWT token
     $token = robodesk_generate_token($user);
@@ -1993,6 +1995,13 @@ function robodesk_custom_lost_password(WP_REST_Request $request)
     }
     set_transient($cooldown_key, true, 10 * MINUTE_IN_SECONDS);
 
+    if (robodesk_are_emails_suppressed()) {
+        rbd_log('Robodesk: Password reset email skipped (do not send email on import) for: ' . $user_login);
+        return new WP_REST_Response(array(
+            'message' => __('If the username or email exists, a password reset link has been sent.', 'robodesk')
+        ), 200);
+    }
+
     $result = retrieve_password($user_login);
 
     if (is_wp_error($result)) {
@@ -2201,6 +2210,11 @@ function robodesk_send_chat_transcript(WP_REST_Request $request)
     $reply_to = function_exists('robodesk_get_inbox_email_for_ticket') ? robodesk_get_inbox_email_for_ticket($ticket_id) : '';
     if ($reply_to) {
         $headers[] = 'Reply-To: ' . $reply_to;
+    }
+
+    if (robodesk_are_emails_suppressed()) {
+        rbd_log('Robodesk: Chat transcript email skipped (do not send email on import).');
+        return new WP_Error('emails_disabled', __('Email sending is currently disabled on this site.', 'robodesk'), array('status' => 403));
     }
 
     $email_sent = wp_mail($to, $subject, $full_html, $headers);

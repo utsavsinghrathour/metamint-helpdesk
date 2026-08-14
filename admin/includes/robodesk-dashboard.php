@@ -45,6 +45,27 @@ function robodesk_dashboard_callback()
     // var_dump($current_user_id); // Debugging line to check current user ID and name
     // var_dump($current_user_name); // Debugging line to check current user name
 
+    // Active ticket count (open + in-progress) for the nav badge
+    global $wpdb;
+    // phpcs:disable WordPress.DB.DirectDatabaseQuery, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+    $robodesk_nav_count_rows = $wpdb->get_results(
+        $wpdb->prepare(
+            "SELECT pm.meta_value, COUNT(*) AS total
+             FROM {$wpdb->postmeta} pm
+             INNER JOIN {$wpdb->posts} p ON p.ID = pm.post_id
+             WHERE pm.meta_key = '_robodesk_ticket_status'
+             AND pm.meta_value IN ('open', 'in-progress')
+             AND p.post_type = %s AND p.post_status = 'publish'
+             GROUP BY pm.meta_value",
+            'robodesk_ticket'
+        )
+    );
+    // phpcs:enable WordPress.DB.DirectDatabaseQuery, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+    $robodesk_active_ticket_count = 0;
+    foreach ($robodesk_nav_count_rows as $robodesk_nav_count_row) {
+        $robodesk_active_ticket_count += (int) $robodesk_nav_count_row->total;
+    }
+
     // No output buffering needed
 ?>
 
@@ -76,6 +97,8 @@ function robodesk_dashboard_callback()
                             data-page="tickets">
                             <i class="fas fa-ticket-alt mr-2"></i>
                             <?php esc_html_e('Conversations', 'robodesk'); ?>
+                            <span class="dashboard-filter-count-badge is-visible"
+                                title="<?php esc_attr_e('Active conversations', 'robodesk'); ?>"><?php echo esc_html($robodesk_active_ticket_count); ?></span>
                         </button>
                         <button onclick="showPage('new-ticket')"
                             class="nav-link inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"

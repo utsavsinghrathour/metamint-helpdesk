@@ -45,8 +45,13 @@ $status_filter = isset($_GET['status']) ? sanitize_text_field(wp_unslash($_GET['
 // Get the current page number from URL parameter
 // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound, WordPress.Security.NonceVerification.Recommended
 $current_page = isset($_GET['paged']) ? max(1, intval(wp_unslash($_GET['paged']))) : 1;
+// phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound, WordPress.Security.NonceVerification.Recommended
+$per_page = isset($_GET['per_page']) ? intval(wp_unslash($_GET['per_page'])) : 10;
+if (!in_array($per_page, [10, 20, 50, 100])) {
+    $per_page = 10;
+}
 // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound
-$posts_per_page = 10; // Number of tickets per page
+$posts_per_page = $per_page; // Number of tickets per page
 // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound
 $offset = ($current_page - 1) * $posts_per_page;
 
@@ -275,9 +280,13 @@ function get_filter_url($new_params = array())
     $params['page'] = 'robodesk-dashboard';
     $params['tab'] = 'tickets';
 
-    // Remove paged parameter when filtering to start from page 1
+    // Remove paged and filter parameters when building filter URL
     unset($params['paged']);
     unset($params['ticket']);
+    unset($params['search']);
+    unset($params['status']);
+    unset($params['customer']);
+    unset($params['agent']);
 
     // Merge new parameters
     $params = array_merge($params, $new_params);
@@ -357,7 +366,7 @@ $robodesk_tickets_hidden = ($robodesk_current_tab === 'tickets' && $robodesk_has
                 <?php
                 // phpcs:ignore WordPress.Security.NonceVerification.Recommended
                 foreach ($_GET as $key => $value): ?>
-                <?php if (!in_array($key, ['page', 'tab', 'search', 'customer', 'agent', 'status', 'paged'])): ?>
+                <?php if (!in_array($key, ['page', 'tab', 'search', 'customer', 'agent', 'status', 'paged', 'per_page'])): ?>
                 <input type="hidden" name="<?php echo esc_attr($key); ?>" value="<?php echo esc_attr($value); ?>">
                 <?php endif; ?>
                 <?php endforeach; ?>
@@ -426,21 +435,20 @@ $robodesk_tickets_hidden = ($robodesk_current_tab === 'tickets' && $robodesk_has
                     </select>
                 </div>
 
-                <div class="flex space-x-2">
+                <div class="flex space-x-2 items-center">
+                    <select name="per_page" id="per-page-select"
+                        class="styled-select block px-3 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 rounded-md">
+                        <?php foreach ([10, 20, 50, 100] as $per_page_option): ?>
+                        <option value="<?php echo esc_attr($per_page_option); ?>" <?php selected($per_page, $per_page_option); ?>>
+                            <?php echo esc_html($per_page_option); ?> per page
+                        </option>
+                        <?php endforeach; ?>
+                    </select>
                     <button id="filter-button" type="submit"
                         class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md shadow-sm text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
                         <i class="fas fa-filter mr-2"></i>
                         Filter
                     </button>
-
-                    <!-- Clear filters button -->
-                    <?php if (!empty($search_term) || !empty($customer_filter) || !empty($agent_filter) || $status_filter !== 'all'): ?>
-                    <a href="<?php echo esc_url(admin_url('admin.php?page=robodesk-dashboard&tab=tickets')); ?>"
-                        class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md shadow-sm text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-                        <i class="fas fa-times mr-2"></i>
-                        Clear
-                    </a>
-                    <?php endif; ?>
                 </div>
             </form>
 
@@ -458,50 +466,9 @@ $robodesk_tickets_hidden = ($robodesk_current_tab === 'tickets' && $robodesk_has
     }, 100);
     ?>
 
-    <!-- Filter Results Summary -->
-    <?php if (!empty($search_term) || !empty($customer_filter) || !empty($agent_filter) || $status_filter !== 'all'): ?>
-    <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-        <div class="flex items-center justify-between">
-            <div class="flex items-center">
-                <i class="fas fa-filter text-blue-600 mr-2"></i>
-                <span class="text-sm font-medium text-blue-800">Active Filters:</span>
-                <div class="ml-2 flex flex-wrap gap-2">
-                    <?php if (!empty($search_term)): ?>
-                    <span
-                        class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                        Search: "<?php echo esc_html($search_term); ?>"
-                    </span>
-                    <?php endif; ?>
-                    <?php foreach ($customer_filters as $customer_value): ?>
-                    <span
-                        class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                        Customer: "<?php echo esc_html($customer_value); ?>"
-                    </span>
-                    <?php endforeach; ?>
-                    <?php foreach ($agent_filters as $agent_value): ?>
-                    <span
-                        class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                        Agent: "<?php echo esc_html($agent_value); ?>"
-                    </span>
-                    <?php endforeach; ?>
-                    <?php if ($status_filter !== 'all'): ?>
-                    <span
-                        class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                        Status: <?php echo esc_html(ucfirst(str_replace('-', ' ', $status_filter))); ?>
-                    </span>
-                    <?php endif; ?>
-                </div>
-            </div>
-            <span class="text-sm text-blue-600"><?php echo esc_html($total_posts); ?>
-                result<?php echo $total_posts !== 1 ? 's' : ''; ?> found</span>
-        </div>
-    </div>
-    <?php endif; ?>
-
     <!-- Bulk Actions Bar -->
-    <?php if (!empty($tickets)): ?>
-    <div id="bulk-actions-bar" class="bg-white border border-gray-200 rounded-lg p-4 mb-4" style="display: none;">
-        <div class="flex items-center justify-between">
+    <div id="bulk-actions-bar" class="bg-white border border-gray-200 rounded-lg p-4 mb-4">
+        <div class="flex items-center justify-between gap-4 flex-wrap">
             <div class="flex items-center space-x-4">
                 <span id="selected-count" class="text-sm font-medium text-gray-900">0 items selected</span>
                 <div class="flex items-center space-x-2">
@@ -537,12 +504,51 @@ $robodesk_tickets_hidden = ($robodesk_current_tab === 'tickets' && $robodesk_has
                     </button>
                 </div>
             </div>
-            <button id="clear-selection" type="button" class="text-sm text-gray-500 hover:text-gray-700">
-                Clear Selection
-            </button>
+
+            <!-- Filter Results Summary -->
+            <?php if (!empty($search_term) || !empty($customer_filter) || !empty($agent_filter) || $status_filter !== 'all'): ?>
+            <div class="flex-1 flex items-center justify-between bg-blue-50 border border-blue-200 rounded-lg px-4 py-2">
+                <div class="flex items-center flex-wrap gap-2">
+                    <i class="fas fa-filter text-blue-600 mr-1"></i>
+                    <span class="text-sm font-medium text-blue-800">Active Filters:</span>
+                    <?php if (!empty($search_term)): ?>
+                    <span
+                        class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                        Search: "<?php echo esc_html($search_term); ?>"
+                    </span>
+                    <?php endif; ?>
+                    <?php foreach ($customer_filters as $customer_value): ?>
+                    <span
+                        class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                        Customer: "<?php echo esc_html($customer_value); ?>"
+                    </span>
+                    <?php endforeach; ?>
+                    <?php foreach ($agent_filters as $agent_value): ?>
+                    <span
+                        class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                        Agent: "<?php echo esc_html($agent_value); ?>"
+                    </span>
+                    <?php endforeach; ?>
+                    <?php if ($status_filter !== 'all'): ?>
+                    <span
+                        class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                        Status: <?php echo esc_html(ucfirst(str_replace('-', ' ', $status_filter))); ?>
+                    </span>
+                    <?php endif; ?>
+                </div>
+                <div class="flex items-center gap-4">
+                    <span class="text-sm text-blue-600"><?php echo esc_html($total_posts); ?>
+                        result<?php echo $total_posts !== 1 ? 's' : ''; ?> found</span>
+                    <a href="<?php echo esc_url(get_filter_url([])); ?>"
+                        class="inline-flex items-center px-3 py-1.5 border border-blue-300 text-sm font-medium rounded-md shadow-sm text-blue-700 bg-white hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                        <i class="fas fa-times mr-1.5"></i>
+                        Clear Filters
+                    </a>
+                </div>
+            </div>
+            <?php endif; ?>
         </div>
     </div>
-    <?php endif; ?>
 
     <!----------------------------- Tickets Table ----------------------------->
     <div class="bg-white shadow rounded-lg overflow-auto">

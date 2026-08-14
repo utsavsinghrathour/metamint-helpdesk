@@ -677,6 +677,19 @@ $robodesk_settings_hidden = ($robodesk_current_tab === 'settings') ? '' : ' hidd
                                      </p>
                                  </div>
                              </div>
+                             <div class="mt-4">
+                                 <label class="flex items-start space-x-2 cursor-pointer">
+                                     <input type="checkbox" name="do_not_send_email_on_import" value="1"
+                                         <?php checked(get_option('robodesk_do_not_send_email_on_import', 0)); ?>
+                                         class="mt-0.5 rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                                     <span class="text-sm font-medium text-gray-700">
+                                         <?php esc_html_e('Do not send email on import', 'robodesk'); ?>
+                                     </span>
+                                 </label>
+                                 <p class="mt-1 text-xs text-gray-500">
+                                     <?php esc_html_e('Suppresses all outgoing Robodesk emails — new user welcome, ticket creation confirmation, reply and close notifications, password reset, and more. Enable this to import existing conversations without notifying customers, or to pause all Robodesk email delivery.', 'robodesk'); ?>
+                                 </p>
+                             </div>
                          </div>
                          <div class="flex space-x-4">
                              <button id="save-ticket-assignment-settings"
