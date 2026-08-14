@@ -1029,7 +1029,7 @@ function robodesk_save_ticket_assignment_settings()
     // Save settings to the database
     update_option('robodesk_fetch_interval', $fetch_interval);
     update_option('robodesk_default_agent', $default_agent);
-    update_option('robodesk_do_not_send_email_on_import', isset($_POST['do_not_send_email_on_import']) ? 1 : 0);
+    update_option('robodesk_do_not_send_email_on_import', !empty($_POST['do_not_send_email_on_import']) ? 1 : 0);
 
     // Reschedule the cron event with the new interval
     if (wp_next_scheduled('robodesk_email_fetch_cron')) {
