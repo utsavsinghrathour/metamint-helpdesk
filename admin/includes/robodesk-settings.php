@@ -687,7 +687,7 @@ $robodesk_settings_hidden = ($robodesk_current_tab === 'settings') ? '' : ' hidd
                                      </span>
                                  </label>
                                  <p class="mt-1 text-xs text-gray-500">
-                                     <?php esc_html_e('Suppress all outgoing Robodesk emails — new user welcome, ticket creation confirmation, reply and close notifications, and more — while emails are being fetched and imported. Enable this to import existing conversations without notifying customers.', 'robodesk'); ?>
+                                     <?php esc_html_e('Suppresses all outgoing Robodesk emails — new user welcome, ticket creation confirmation, reply and close notifications, password reset, and more. Enable this to import existing conversations without notifying customers, or to pause all Robodesk email delivery.', 'robodesk'); ?>
                                  </p>
                              </div>
                          </div>
