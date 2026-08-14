@@ -4107,16 +4107,13 @@ document.addEventListener("DOMContentLoaded", function () {
   function updateBulkActionsUI() {
     const selectedCount = getSelectedTicketIds().length;
 
-    if (selectedCount > 0) {
-      bulkActionsBar.style.display = "block";
-      selectedCountSpan.textContent = `${selectedCount} item${
-        selectedCount !== 1 ? "s" : ""
-      } selected`;
-      applyBulkActionBtn.disabled = !bulkActionSelect.value;
-    } else {
-      bulkActionsBar.style.display = "none";
+    selectedCountSpan.textContent = `${selectedCount} item${
+      selectedCount !== 1 ? "s" : ""
+    } selected`;
+    applyBulkActionBtn.disabled =
+      selectedCount === 0 || !bulkActionSelect.value;
+    if (selectedCount === 0) {
       bulkActionSelect.value = "";
-      applyBulkActionBtn.disabled = true;
     }
   }
 
