@@ -700,7 +700,9 @@ function robodesk_register_user()
     $user_id = wp_create_user($username, $password, $email);
 
     if (!is_wp_error($user_id)) {
-        wp_new_user_notification($user_id, $password);
+        if (!robodesk_are_emails_suppressed()) {
+            wp_new_user_notification($user_id, $password);
+        }
 
         wp_send_json_success([
             'message' => __('Account created! Check your email for your password.', 'robodesk'),

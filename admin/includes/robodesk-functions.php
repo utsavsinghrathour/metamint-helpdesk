@@ -1029,6 +1029,7 @@ function robodesk_save_ticket_assignment_settings()
     // Save settings to the database
     update_option('robodesk_fetch_interval', $fetch_interval);
     update_option('robodesk_default_agent', $default_agent);
+    update_option('robodesk_do_not_send_email_on_import', isset($_POST['do_not_send_email_on_import']) ? 1 : 0);
 
     // Reschedule the cron event with the new interval
     if (wp_next_scheduled('robodesk_email_fetch_cron')) {
@@ -1148,7 +1149,9 @@ function robodesk_create_ticket()
 
         rbd_log('Created new user with ID: ' . $user_id);
         update_user_meta($user_id, 'nickname', $customer_name);
-        wp_send_new_user_notifications($user_id, 'user');
+        if (!robodesk_are_emails_suppressed()) {
+            wp_send_new_user_notifications($user_id, 'user');
+        }
     } else {
         $user_id = $user->ID;
         rbd_log('Using existing user with ID: ' . $user_id);
@@ -3381,8 +3384,18 @@ function robodesk_get_inbox_email_for_ticket($ticket_id)
     return '';
 }
 
+function robodesk_are_emails_suppressed()
+{
+    return (bool) get_option('robodesk_do_not_send_email_on_import', 0);
+}
+
 function robodesk_send_email($to, $subject, $message, $headers = [], $attachments = [], $reply_to = '')
 {
+    if (robodesk_are_emails_suppressed()) {
+        rbd_log("Robodesk: Email sending is disabled (do not send email on import). Skipped: $subject");
+        return false;
+    }
+
     if (!is_array($headers)) {
         $headers = [$headers];
     }

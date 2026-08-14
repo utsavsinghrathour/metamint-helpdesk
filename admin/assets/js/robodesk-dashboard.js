@@ -3076,6 +3076,12 @@ jQuery(document).ready(function ($) {
       "default_agent",
       $form.find('select[name="default_agent"]').val(),
     );
+    formData.append(
+      "do_not_send_email_on_import",
+      $form.find('input[name="do_not_send_email_on_import"]').is(":checked")
+        ? "1"
+        : "0",
+    );
 
     // Basic validation
     if (!$form.find('input[name="fetch_interval"]').val()) {
