@@ -2335,7 +2335,8 @@ function robodesk_fetch_emails_handler()
     try {
         $summary = robodesk_fetch_emails(); // returns the string
         wp_send_json_success($summary); // ✅ send summary as success data
-    } catch (Exception $e) {
+    } catch (Throwable $e) {
+        rbd_log('Robodesk: Fatal error during email fetch: ' . $e->getMessage());
         wp_send_json_error($e->getMessage());
     }
 
