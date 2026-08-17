@@ -1520,11 +1520,49 @@ function initConversationMultiFilters() {
     form.addEventListener("submit", () => {
       customerFilter?.commitInputValue();
       agentFilter?.commitInputValue();
+
+      // If the agent filter has no selected value, send the "__all__"
+      // sentinel so the server shows all agents instead of re-defaulting
+      // the filter back to the logged-in user.
+      const agentHiddenInputs = document.getElementById(
+        "robodesk-agent-hidden-inputs",
+      );
+      if (
+        agentHiddenInputs &&
+        !agentHiddenInputs.querySelector('input[name="agent[]"]')
+      ) {
+        const sentinel = document.createElement("input");
+        sentinel.type = "hidden";
+        sentinel.name = "agent[]";
+        sentinel.value = "__all__";
+        agentHiddenInputs.appendChild(sentinel);
+      }
     });
   }
 }
 
 document.addEventListener("DOMContentLoaded", initConversationMultiFilters);
+
+function initPriorityHeaderFilter() {
+  const select = document.getElementById("robodesk-priority-filter");
+  if (!select) {
+    return;
+  }
+
+  select.addEventListener("change", () => {
+    const url = new URL(window.location.href);
+    if (select.value === "all") {
+      url.searchParams.delete("priority");
+    } else {
+      url.searchParams.set("priority", select.value);
+    }
+    url.searchParams.delete("paged");
+    url.searchParams.delete("ticket");
+    window.location.href = url.toString();
+  });
+}
+
+document.addEventListener("DOMContentLoaded", initPriorityHeaderFilter);
 
 // Navigation functions
 function showPage(pageName, fromClick = false) {
