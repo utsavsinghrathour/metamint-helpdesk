@@ -1543,6 +1543,27 @@ function initConversationMultiFilters() {
 
 document.addEventListener("DOMContentLoaded", initConversationMultiFilters);
 
+function initPriorityHeaderFilter() {
+  const select = document.getElementById("robodesk-priority-filter");
+  if (!select) {
+    return;
+  }
+
+  select.addEventListener("change", () => {
+    const url = new URL(window.location.href);
+    if (select.value === "all") {
+      url.searchParams.delete("priority");
+    } else {
+      url.searchParams.set("priority", select.value);
+    }
+    url.searchParams.delete("paged");
+    url.searchParams.delete("ticket");
+    window.location.href = url.toString();
+  });
+}
+
+document.addEventListener("DOMContentLoaded", initPriorityHeaderFilter);
+
 // Navigation functions
 function showPage(pageName, fromClick = false) {
   // Settings and Addons are restricted to roles with robodesk_manage_settings

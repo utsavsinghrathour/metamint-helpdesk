@@ -54,6 +54,8 @@ $customer_filter = !empty($customer_filters) ? implode(', ', $customer_filters) 
 $agent_filter = !empty($agent_filters) ? implode(', ', $agent_filters) : '';
 // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound, WordPress.Security.NonceVerification.Recommended
 $status_filter = isset($_GET['status']) ? sanitize_text_field(wp_unslash($_GET['status'])) : 'all';
+// phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound, WordPress.Security.NonceVerification.Recommended
+$priority_filter = isset($_GET['priority']) ? sanitize_text_field(wp_unslash($_GET['priority'])) : 'all';
 
 // Get the current page number from URL parameter
 // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound, WordPress.Security.NonceVerification.Recommended
@@ -133,6 +135,17 @@ if (!empty($meta_query)) {
         $meta_query['relation'] = 'AND';
     }
     $args['meta_query'] = $meta_query;
+}
+
+// Add taxonomy query for the priority filter (header dropdown)
+if ($priority_filter !== 'all' && $priority_filter !== '') {
+    $args['tax_query'] = array(
+        array(
+            'taxonomy' => 'robodesk_ticket_priority',
+            'field' => 'name',
+            'terms' => $priority_filter,
+        ),
+    );
 }
 
 // Add search functionality - check if it's a ticket ID or general search
@@ -298,6 +311,7 @@ function get_filter_url($new_params = array())
     unset($params['ticket']);
     unset($params['search']);
     unset($params['status']);
+    unset($params['priority']);
     unset($params['customer']);
     unset($params['agent']);
 
@@ -519,7 +533,7 @@ $robodesk_tickets_hidden = ($robodesk_current_tab === 'tickets' && $robodesk_has
             </div>
 
             <!-- Filter Results Summary -->
-            <?php if (!empty($search_term) || !empty($customer_filter) || !empty($agent_filter) || $status_filter !== 'all'): ?>
+            <?php if (!empty($search_term) || !empty($customer_filter) || !empty($agent_filter) || $status_filter !== 'all' || $priority_filter !== 'all'): ?>
             <div class="flex-1 flex items-center justify-between bg-blue-50 border border-blue-200 rounded-lg px-4 py-2">
                 <div class="flex items-center flex-wrap gap-2">
                     <i class="fas fa-filter text-blue-600 mr-1"></i>
@@ -546,6 +560,12 @@ $robodesk_tickets_hidden = ($robodesk_current_tab === 'tickets' && $robodesk_has
                     <span
                         class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
                         Status: <?php echo esc_html(ucfirst(str_replace('-', ' ', $status_filter))); ?>
+                    </span>
+                    <?php endif; ?>
+                    <?php if ($priority_filter !== 'all'): ?>
+                    <span
+                        class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                        Priority: <?php echo esc_html($priority_filter); ?>
                     </span>
                     <?php endif; ?>
                 </div>
@@ -581,6 +601,18 @@ $robodesk_tickets_hidden = ($robodesk_current_tab === 'tickets' && $robodesk_has
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status
                     </th>
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Priority
+                        <div class="mt-1">
+                            <select id="robodesk-priority-filter" name="priority"
+                                class="styled-select text-[11px] font-medium text-gray-500 border-gray-300 rounded py-0.5"
+                                aria-label="Priority filter">
+                                <option value="all" <?php selected($priority_filter, 'all'); ?>>All</option>
+                                <?php foreach ($priority_terms as $priority_term): ?>
+                                <option value="<?php echo esc_attr($priority_term->name); ?>" <?php selected($priority_filter, $priority_term->name); ?>>
+                                    <?php echo esc_html($priority_term->name); ?>
+                                </option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
                     </th>
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Assignee
                     </th>
@@ -663,11 +695,11 @@ $robodesk_tickets_hidden = ($robodesk_current_tab === 'tickets' && $robodesk_has
                 <?php else: ?>
                 <tr>
                     <td colspan="7" class="px-6 py-4 text-center text-gray-500">
-                        <?php if (!empty($search_term) || !empty($customer_filter) || !empty($agent_filter) || $status_filter !== 'all'): ?>
+                        <?php if (!empty($search_term) || !empty($customer_filter) || !empty($agent_filter) || $status_filter !== 'all' || $priority_filter !== 'all'): ?>
                         No conversations found matching your filters. <a href="<?php
                                                                                         // phpcs:disable WordPress.Security.NonceVerification.Recommended
                                                                                         echo esc_url(admin_url('admin.php?' . http_build_query(array_filter(array_merge($_GET, ['agent' => '__all__']), function ($key) {
-                                                                                            return !in_array($key, ['search', 'customer', 'status', 'paged']);
+                                                                                            return !in_array($key, ['search', 'customer', 'status', 'priority', 'paged']);
                                                                                         }, ARRAY_FILTER_USE_KEY))));
                                                                                         // phpcs:enable WordPress.Security.NonceVerification.Recommended
                                                                                         ?>"
