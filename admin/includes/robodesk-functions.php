@@ -1029,7 +1029,17 @@ function robodesk_save_ticket_assignment_settings()
     // Save settings to the database
     update_option('robodesk_fetch_interval', $fetch_interval);
     update_option('robodesk_default_agent', $default_agent);
-    update_option('robodesk_do_not_send_email_on_import', !empty($_POST['do_not_send_email_on_import']) ? 1 : 0);
+    $suppress_now = !empty($_POST['do_not_send_email_on_import']) ? 1 : 0;
+    update_option('robodesk_do_not_send_email_on_import', $suppress_now);
+
+    // Suppressed emails must never be sent later. Drop any already-queued
+    // async email events so tickets imported while suppression is enabled
+    // never notify customers after it is turned off again.
+    if ($suppress_now) {
+        robodesk_clear_all_scheduled_events('robodesk_send_ticket_creation_email_async');
+        robodesk_clear_all_scheduled_events('robodesk_send_unseen_reply_email');
+        rbd_log('Robodesk: Email sending disabled. Cleared all queued async email events.');
+    }
 
     // Reschedule the cron event with the new interval
     if (wp_next_scheduled('robodesk_email_fetch_cron')) {
@@ -2864,6 +2874,11 @@ function robodesk_schedule_ticket_creation_email($post_id, $post, $update)
         return;
     }
 
+    if (robodesk_are_emails_suppressed()) {
+        rbd_log("Robodesk: Ticket creation email blocked (email sending disabled). Not scheduled for ticket ID: $post_id");
+        return;
+    }
+
     if (wp_next_scheduled('robodesk_send_ticket_creation_email_async', [$post_id])) {
         return;
     }
@@ -2921,8 +2936,12 @@ function robodesk_send_ticket_creation_email($post_id)
     $message .= '<p>If the button above does not work, please use this link: <a href="' . esc_url($ticket_link) . '">' . esc_html($ticket_link) . '</a></p>';
 
     $reply_to = robodesk_get_inbox_email_for_ticket($post_id);
-    robodesk_send_email($customer_email, $subject, $message, [], [], $reply_to);
-    rbd_log("Robodesk: Ticket creation email sent to $customer_email for ticket ID: $post_id");
+    $sent = robodesk_send_email($customer_email, $subject, $message, [], [], $reply_to);
+    if ($sent) {
+        rbd_log("Robodesk: Ticket creation email sent to $customer_email for ticket ID: $post_id");
+    } else {
+        rbd_log("Robodesk: Ticket creation email not sent to $customer_email for ticket ID: $post_id (suppressed or failed)");
+    }
 }
 
 // Dashboard ticket data (server-side pagination, filter counts, customer tickets).
@@ -3389,6 +3408,35 @@ function robodesk_are_emails_suppressed()
     return (bool) get_option('robodesk_do_not_send_email_on_import', 0);
 }
 
+function robodesk_clear_all_scheduled_events($hook)
+{
+    $crons = _get_cron_array();
+
+    if (empty($crons)) {
+        return;
+    }
+
+    $changed = false;
+
+    foreach ($crons as $timestamp => $scheduled) {
+        if (!is_array($scheduled) || !isset($scheduled[$hook])) {
+            continue;
+        }
+
+        unset($crons[$timestamp][$hook]);
+
+        if (empty($crons[$timestamp])) {
+            unset($crons[$timestamp]);
+        }
+
+        $changed = true;
+    }
+
+    if ($changed) {
+        _set_cron_array($crons);
+    }
+}
+
 function robodesk_send_email($to, $subject, $message, $headers = [], $attachments = [], $reply_to = '')
 {
     if (robodesk_are_emails_suppressed()) {
@@ -3412,5 +3460,11 @@ function robodesk_send_email($to, $subject, $message, $headers = [], $attachment
 
     $email_template = robodesk_render_email_template($subject, $message);
 
-    return wp_mail($to, $subject, $email_template, $headers, $attachments);
+    $sent = wp_mail($to, $subject, $email_template, $headers, $attachments);
+
+    if (!$sent && !empty($GLOBALS['phpmailer']) && $GLOBALS['phpmailer'] instanceof PHPMailer\PHPMailer\PHPMailer) {
+        rbd_log("Robodesk: wp_mail failed. PHPMailer error: " . $GLOBALS['phpmailer']->ErrorInfo);
+    }
+
+    return $sent;
 }
