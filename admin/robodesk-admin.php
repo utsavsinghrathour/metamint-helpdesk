@@ -384,6 +384,52 @@ function robodesk_get_active_ticket_count($assignee_id = 0)
 }
 
 /**
+ * Counts the current user's conversation tickets using the exact same
+ * logic as the dashboard "My Conversations" filter: the ticket_assignee
+ * display-name meta must equal the user's display name and the ticket
+ * status must not be 'closed'.
+ *
+ * @param int $user_id Optional user ID to count for. Defaults to current user.
+ * @return int
+ */
+function robodesk_get_my_conversation_count($user_id = 0)
+{
+    $user = get_userdata($user_id > 0 ? $user_id : get_current_user_id());
+    if (!$user) {
+        return 0;
+    }
+
+    // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query
+    $args = array(
+        'post_type'      => 'robodesk_ticket',
+        'post_status'    => 'publish',
+        'posts_per_page' => -1,
+        'fields'         => 'ids',
+        'meta_query'     => array(
+            'relation' => 'AND',
+            array(
+                'key'   => 'ticket_assignee',
+                'value' => $user->display_name,
+            ),
+            array(
+                'relation' => 'OR',
+                array(
+                    'key'     => '_robodesk_ticket_status',
+                    'value'   => 'closed',
+                    'compare' => '!=',
+                ),
+                array(
+                    'key'     => '_robodesk_ticket_status',
+                    'compare' => 'NOT EXISTS',
+                ),
+            ),
+        ),
+    );
+    $query = new WP_Query($args);
+    return (int) $query->post_count;
+}
+
+/**
  * Displays the active tickets count on the WordPress admin toolbar.
  *
  * @param WP_Admin_Bar $wp_admin_bar The admin bar object.
@@ -395,7 +441,7 @@ function robodesk_admin_bar_active_tickets($wp_admin_bar)
     }
 
     $total_count = robodesk_get_active_ticket_count();
-    $my_count    = robodesk_get_active_ticket_count(get_current_user_id());
+    $my_count    = robodesk_get_my_conversation_count(get_current_user_id());
 
     $wp_admin_bar->add_node(array(
         'id'    => 'robodesk-active-tickets',
