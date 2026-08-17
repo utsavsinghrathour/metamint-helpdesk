@@ -35,6 +35,19 @@ if (!function_exists('robodesk_parse_multi_filter_values')) {
 $customer_filters = isset($_GET['customer']) ? robodesk_parse_multi_filter_values(wp_unslash($_GET['customer'])) : [];
 // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound, WordPress.Security.NonceVerification.Recommended, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
 $agent_filters = isset($_GET['agent']) ? robodesk_parse_multi_filter_values(wp_unslash($_GET['agent'])) : [];
+if (in_array('__all__', $agent_filters, true)) {
+    // Explicit "all agents" sentinel (Clear Filters / chip removal): no agent filter.
+    $agent_filters = [];
+} elseif (empty($agent_filters)) {
+    // Default the agent filter to the current logged-in agent.
+    $current_user = wp_get_current_user();
+    if ($current_user && $current_user->ID) {
+        $agent_roles = ['robodesk_support_staff', 'robodesk_support_manager', 'author', 'editor', 'administrator'];
+        if (!empty(array_intersect($agent_roles, (array) $current_user->roles))) {
+            $agent_filters = [$current_user->display_name ?: $current_user->user_login];
+        }
+    }
+}
 // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound
 $customer_filter = !empty($customer_filters) ? implode(', ', $customer_filters) : '';
 // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound
@@ -539,7 +552,7 @@ $robodesk_tickets_hidden = ($robodesk_current_tab === 'tickets' && $robodesk_has
                 <div class="flex items-center gap-4">
                     <span class="text-sm text-blue-600"><?php echo esc_html($total_posts); ?>
                         result<?php echo $total_posts !== 1 ? 's' : ''; ?> found</span>
-                    <a href="<?php echo esc_url(get_filter_url([])); ?>"
+                    <a href="<?php echo esc_url(get_filter_url(['agent' => '__all__'])); ?>"
                         class="inline-flex items-center px-3 py-1.5 border border-blue-300 text-sm font-medium rounded-md shadow-sm text-blue-700 bg-white hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
                         <i class="fas fa-times mr-1.5"></i>
                         Clear Filters
@@ -653,8 +666,8 @@ $robodesk_tickets_hidden = ($robodesk_current_tab === 'tickets' && $robodesk_has
                         <?php if (!empty($search_term) || !empty($customer_filter) || !empty($agent_filter) || $status_filter !== 'all'): ?>
                         No conversations found matching your filters. <a href="<?php
                                                                                         // phpcs:disable WordPress.Security.NonceVerification.Recommended
-                                                                                        echo esc_url(admin_url('admin.php?' . http_build_query(array_filter($_GET, function ($key) {
-                                                                                            return !in_array($key, ['search', 'customer', 'agent', 'status', 'paged']);
+                                                                                        echo esc_url(admin_url('admin.php?' . http_build_query(array_filter(array_merge($_GET, ['agent' => '__all__']), function ($key) {
+                                                                                            return !in_array($key, ['search', 'customer', 'status', 'paged']);
                                                                                         }, ARRAY_FILTER_USE_KEY))));
                                                                                         // phpcs:enable WordPress.Security.NonceVerification.Recommended
                                                                                         ?>"
