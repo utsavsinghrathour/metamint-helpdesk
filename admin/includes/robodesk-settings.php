@@ -721,7 +721,7 @@ $robodesk_settings_hidden = ($robodesk_current_tab === 'settings') ? '' : ' hidd
 
 
              <?php
-                 $robodesk_advanced_settings = get_option('robodesk_advanced_settings', [
+                 $robodesk_advanced_settings = wp_parse_args(get_option('robodesk_advanced_settings', []), [
                     'enable_auto_assign' => false,
                     'enable_notifications' => true,
                     'enable_customer_portal' => true,

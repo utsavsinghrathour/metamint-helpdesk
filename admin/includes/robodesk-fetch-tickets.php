@@ -102,6 +102,13 @@ function robodesk_fetch_emails()
 {
     rbd_log('Starting email fetch process');
 
+    // Check if the IMAP PHP extension is available
+    if (!function_exists('imap_open')) {
+        $imap_error = 'The IMAP PHP extension is not enabled on this server. Email fetching is unavailable.';
+        rbd_log($imap_error);
+        return 'Error: ' . $imap_error;
+    }
+
     // Verify the custom post type exists
     if (!post_type_exists('robodesk_ticket')) {
         rbd_log('Custom post type "robodesk_ticket" does not exist!');
