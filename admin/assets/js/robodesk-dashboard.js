@@ -20,6 +20,19 @@ function formatRobodeskLocalTime(value, format = "datetime") {
   const date = parseRobodeskDate(value);
   if (!date) return value || "";
 
+  if (format === "datetime-block") {
+    const datePart = date.toLocaleString(undefined, {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    });
+    const timePart = date.toLocaleString(undefined, {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+    return datePart + "\n" + timePart;
+  }
+
   const options =
     format === "date"
       ? { year: "numeric", month: "short", day: "numeric" }

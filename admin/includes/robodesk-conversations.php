@@ -2,6 +2,35 @@
 if (!defined('ABSPATH')) {
     exit; // Exit if accessed directly
 }
+
+if (!function_exists('robodesk_get_name_initials')) {
+    function robodesk_get_name_initials($name, $user_id = 0)
+    {
+        $display_name = (string) $name;
+        if ((int) $user_id > 0) {
+            $user = get_userdata((int) $user_id);
+            if ($user && !empty($user->display_name)) {
+                $display_name = $user->display_name;
+            }
+        }
+        $parts  = preg_split('/\s+/', trim($display_name));
+        $initials = '';
+        foreach (array_slice((array) $parts, 0, 2) as $part) {
+            if ($part !== '') {
+                $initials .= mb_strtoupper(mb_substr($part, 0, 1));
+            }
+        }
+        return $initials !== '' ? $initials : '?';
+    }
+}
+
+if (!function_exists('robodesk_get_avatar_color')) {
+    function robodesk_get_avatar_color($name)
+    {
+        $palette = ['#6366f1', '#8b5cf6', '#ec4899', '#f59e0b', '#10b981', '#06b6d4', '#3b82f6', '#ef4444'];
+        return $palette[crc32((string) $name) % count($palette)];
+    }
+}
 // phpcs:disable WordPress.NamingConventions.PrefixAllGlobals, WordPress.DB.SlowDBQuery
 // Get filter parameters from URL
 // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound, WordPress.Security.NonceVerification.Recommended
@@ -268,6 +297,16 @@ if ($query->have_posts()) {
             'category' => $ticket_category,
             'assignee' => get_post_meta($ticket_id, 'ticket_assignee', true) ?: 'N/A',
             'assignee_id' => (int) get_post_meta($ticket_id, 'ticket_assignee_id', true),
+            'assignee_initials' => robodesk_get_name_initials(
+                get_post_meta($ticket_id, 'ticket_assignee', true) ?: 'N/A',
+                (int) get_post_meta($ticket_id, 'ticket_assignee_id', true)
+            ),
+            'assignee_avatar_color' => robodesk_get_avatar_color(get_post_meta($ticket_id, 'ticket_assignee', true) ?: 'N/A'),
+            'assignee_avatar_url' => ((int) get_post_meta($ticket_id, 'ticket_assignee_id', true)) > 0
+                ? (function_exists('robodesk_get_avatar_url')
+                    ? robodesk_get_avatar_url((int) get_post_meta($ticket_id, 'ticket_assignee_id', true), 32)
+                    : get_avatar_url((int) get_post_meta($ticket_id, 'ticket_assignee_id', true), ['size' => 32]))
+                : '',
             'replies' => $replies_count ? $replies : [
                 'id' => 0,
                 'author' => 'N/A',
@@ -600,15 +639,17 @@ $robodesk_tickets_hidden = ($robodesk_current_tab === 'tickets' && $robodesk_has
                     </th>
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status
                     </th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Priority
+                    <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
                         <div class="mt-1">
                             <select id="robodesk-priority-filter" name="priority"
-                                class="styled-select text-[11px] font-medium text-gray-500 border-gray-300 rounded py-0.5"
+                                class="styled-select text-xs font-medium text-gray-500 uppercase tracking-wider border-gray-300 rounded py-0.5"
                                 aria-label="Priority filter">
-                                <option value="all" <?php selected($priority_filter, 'all'); ?>>All</option>
+                                <option value="all" <?php selected($priority_filter, 'all'); ?>>
+                                    Priority (All)
+                                </option>
                                 <?php foreach ($priority_terms as $priority_term): ?>
                                 <option value="<?php echo esc_attr($priority_term->name); ?>" <?php selected($priority_filter, $priority_term->name); ?>>
-                                    <?php echo esc_html($priority_term->name); ?>
+                                    Priority (<?php echo esc_html($priority_term->name); ?>)
                                 </option>
                                 <?php endforeach; ?>
                             </select>
@@ -663,10 +704,10 @@ $robodesk_tickets_hidden = ($robodesk_current_tab === 'tickets' && $robodesk_has
                             <i class="fas fa-chevron-down text-[10px] opacity-70"></i>
                         </span>
                     </td>
-                    <td class="px-6 py-4 whitespace-nowrap cursor-pointer"
+                    <td class="px-6 py-4 whitespace-nowrap text-center cursor-pointer"
                         onclick="viewTicket(<?php echo esc_js($ticket['id']); ?>)">
                         <span
-                            class="status-badge editable-priority inline-flex items-center gap-1 cursor-pointer hover:opacity-90"
+                            class="status-badge editable-priority inline-flex items-center justify-center gap-1 cursor-pointer hover:opacity-90"
                             style="background-color:<?php echo esc_attr(robodesk_get_priority_class($ticket['priority'])); ?>"
                             title="Click to edit priority"
                             onclick="event.stopPropagation(); editPriority(<?php echo esc_js($ticket['id']); ?>, this)">
@@ -677,9 +718,17 @@ $robodesk_tickets_hidden = ($robodesk_current_tab === 'tickets' && $robodesk_has
                     <td class="px-6 py-4 whitespace-nowrap cursor-pointer"
                         onclick="viewTicket(<?php echo esc_js($ticket['id']); ?>)">
                         <span
-                            class="text-sm font-medium text-gray-900 editable-assignee inline-flex items-center gap-1 cursor-pointer hover:text-blue-700"
+                            class="text-sm font-medium text-gray-900 editable-assignee inline-flex items-center gap-1.5 cursor-pointer hover:text-blue-700"
                             title="Click to edit assignee"
                             onclick="event.stopPropagation(); editAssignee(<?php echo esc_js($ticket['id']); ?>, this)">
+                            <?php if (!empty($ticket['assignee_avatar_url'])): ?>
+                            <img class="robodesk-avatar-img"
+                                src="<?php echo esc_url($ticket['assignee_avatar_url']); ?>"
+                                alt="<?php echo esc_attr($ticket['assignee']); ?>">
+                            <?php else: ?>
+                            <span class="robodesk-avatar"
+                                style="background-color:<?php echo esc_attr($ticket['assignee_avatar_color']); ?>;"><?php echo esc_html($ticket['assignee_initials']); ?></span>
+                            <?php endif; ?>
                             <?php echo esc_html($ticket['assignee']); ?>
                             <i class="fas fa-chevron-down text-[10px] opacity-70"></i>
                         </span>
@@ -688,7 +737,7 @@ $robodesk_tickets_hidden = ($robodesk_current_tab === 'tickets' && $robodesk_has
                         onclick="viewTicket(<?php echo esc_js($ticket['id']); ?>)">
                         <time class="robodesk-local-time" datetime="<?php echo esc_attr($ticket['last_reply_time']); ?>"
                             data-utc="<?php echo esc_attr($ticket['last_reply_time']); ?>"
-                            data-format="datetime"><?php echo esc_html(function_exists('robodesk_datetime_to_utc_iso') ? wp_date(get_option('date_format') . ' ' . get_option('time_format'), strtotime($ticket['last_reply_time'])) : wp_date($ticket['last_reply_time'])); ?></time>
+                            data-format="datetime-block"><?php echo esc_html(function_exists('robodesk_datetime_to_utc_iso') ? wp_date(get_option('date_format') . ' ' . get_option('time_format'), strtotime($ticket['last_reply_time'])) : wp_date($ticket['last_reply_time'])); ?></time>
                     </td>
                 </tr>
                 <?php endforeach; ?>
