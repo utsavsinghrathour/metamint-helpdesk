@@ -66,6 +66,8 @@ $customer_filters = isset($_GET['customer']) ? robodesk_parse_multi_filter_value
 $agent_filters = isset($_GET['agent']) ? robodesk_parse_multi_filter_values(wp_unslash($_GET['agent'])) : [];
 if (in_array('__all__', $agent_filters, true)) {
     // Explicit "all agents" sentinel (Clear Filters / chip removal): no agent filter.
+    // The sentinel stays in the URL (get_filter_url preserves it), so the cleared
+    // state survives navigation; a fresh visit without the param re-applies the default.
     $agent_filters = [];
 } elseif (empty($agent_filters)) {
     // Default the agent filter to the current logged-in agent.
@@ -108,6 +110,34 @@ $args = array(
     'orderby' => 'modified',
     'order' => 'DESC'
 );
+
+// Sort by the Updated column (orderby=updated / order=asc|desc).
+// The Updated column shows the last reply comment's date, so ordering uses
+// the newest comment date per ticket, falling back to post_modified.
+// phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound, WordPress.Security.NonceVerification.Recommended
+$orderby = isset($_GET['orderby']) ? sanitize_key(wp_unslash($_GET['orderby'])) : '';
+// phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound, WordPress.Security.NonceVerification.Recommended
+$order = isset($_GET['order']) ? strtoupper(sanitize_key(wp_unslash($_GET['order']))) : 'DESC';
+if ($order === 'ASC') {
+    $sort_dir = 'ASC';
+} else {
+    $sort_dir = 'DESC';
+}
+if ($orderby === 'updated') {
+    $args['orderby'] = 'none';
+    add_filter('posts_orderby', function ($orderby_sql, $query) use ($sort_dir) {
+        if (!$query->get('robodesk_sort_updated')) {
+            return $orderby_sql;
+        }
+        global $wpdb;
+        $dir = $sort_dir;
+        return "COALESCE((SELECT MAX(comment_date_gmt) FROM {$wpdb->comments} WHERE comment_post_ID = {$wpdb->posts}.ID AND comment_approved = '1'), {$wpdb->posts}.post_modified_gmt) {$dir}, {$wpdb->posts}.ID DESC";
+    }, 10, 2);
+    $args['robodesk_sort_updated'] = true;
+} else {
+    $args['orderby'] = 'modified';
+    $args['order'] = 'DESC';
+}
 
 // Initialize meta_query array
 $meta_query = array();
@@ -345,14 +375,16 @@ function get_filter_url($new_params = array())
     $params['page'] = 'robodesk-dashboard';
     $params['tab'] = 'tickets';
 
-    // Remove paged and filter parameters when building filter URL
+    // Remove paged and filter parameters when building filter URL.
+    // Note: 'agent' is intentionally kept — it carries the active agent filter
+    // or the '__all__' sentinel, so a cleared agent filter stays cleared when
+    // navigating (pagination, sort, etc.) instead of re-applying the default.
     unset($params['paged']);
     unset($params['ticket']);
     unset($params['search']);
     unset($params['status']);
     unset($params['priority']);
     unset($params['customer']);
-    unset($params['agent']);
 
     // Merge new parameters
     $params = array_merge($params, $new_params);
@@ -657,7 +689,13 @@ $robodesk_tickets_hidden = ($robodesk_current_tab === 'tickets' && $robodesk_has
                     </th>
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Assignee
                     </th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Updated
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        <a href="<?php echo esc_url(get_filter_url($orderby === 'updated' ? ['orderby' => 'updated', 'order' => $order === 'ASC' ? 'DESC' : 'ASC'] : ['orderby' => 'updated', 'order' => 'DESC'])); ?>"
+                            title="Sort by updated date<?php echo $orderby === 'updated' ? ' (' . ($order === 'ASC' ? 'oldest first — click to reverse' : 'newest first — click to reverse') . ')' : ' (newest first)'; ?>"
+                            class="inline-flex items-center gap-1.5 rounded-md border px-2 py-1 transition-colors <?php echo $orderby === 'updated' ? 'border-blue-500 bg-blue-50 text-blue-700' : 'border-gray-300 bg-white text-gray-600 hover:border-blue-400 hover:text-blue-600'; ?>">
+                            Updated
+                            <i class="fas fa-sort<?php echo $orderby === 'updated' ? ($order === 'ASC' ? '-up' : '-down') : ''; ?> text-[10px]"></i>
+                        </a>
                     </th>
                 </tr>
             </thead>
