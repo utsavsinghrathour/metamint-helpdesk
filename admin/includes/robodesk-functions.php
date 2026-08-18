@@ -378,7 +378,7 @@ function robodesk_imap_save_settings()
         );
 
         update_option('robodesk_imap_settings', $settings);
-        imap_close($mailbox);
+        imap_close($conn);
         wp_send_json_success(['message' => $message]);
     } else {
         $error = imap_last_error();

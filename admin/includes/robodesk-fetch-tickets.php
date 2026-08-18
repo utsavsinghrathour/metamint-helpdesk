@@ -40,6 +40,94 @@ function robodesk_fetch_emails_callback()
     echo '</table>';
 }
 
+// Find the ticket a reply belongs to by matching a message ID across
+// ticket post meta AND reply comment meta (replies are stored as comments).
+function robodesk_find_ticket_by_email_message_id($message_id)
+{
+    $message_id = trim((string) $message_id);
+    if ($message_id === '') {
+        return 0;
+    }
+
+    $ticket_query = new WP_Query([
+        'meta_key' => 'email_message_id',
+        'meta_value' => $message_id,
+        'post_type' => 'robodesk_ticket',
+        'posts_per_page' => 1,
+        'fields' => 'ids',
+    ]);
+    if (!empty($ticket_query->posts)) {
+        return (int) $ticket_query->posts[0];
+    }
+
+    $matching_comments = get_comments([
+        'meta_key' => 'email_message_id',
+        'meta_value' => $message_id,
+        'number' => 1,
+    ]);
+    if (!empty($matching_comments)) {
+        return (int) $matching_comments[0]->comment_post_ID;
+    }
+
+    return 0;
+}
+
+// Find the ticket a reply belongs to: first match message IDs across ticket
+// post meta AND reply comment meta, then fall back to sender + normalized
+// subject (covers replies to agent emails whose Message-ID is never stored).
+function robodesk_find_ticket_by_reply_context($reference_ids, $useremail = '', $subject = '', $date = '')
+{
+    $reference_ids = is_array($reference_ids) ? $reference_ids : [];
+
+    foreach ($reference_ids as $ref_id) {
+        $matched_ticket_id = robodesk_find_ticket_by_email_message_id($ref_id);
+        if ($matched_ticket_id) {
+            rbd_log('Matched reply by message ID to ticket ID: ' . $matched_ticket_id);
+            return $matched_ticket_id;
+        }
+    }
+
+    if (!empty($useremail) && $subject !== '') {
+        $normalized_subject = strtolower(trim((string) preg_replace('/^\s*(re|fwd|fw|aw)\s*:\s*/i', '', $subject)));
+        if ($normalized_subject !== '') {
+            $date_args = [];
+            if ($date !== '') {
+                $date_args = [
+                    [
+                        'before'    => $date,
+                        'inclusive' => false,
+                    ],
+                ];
+            }
+            $thread_query = new WP_Query([
+                'post_type'      => 'robodesk_ticket',
+                'post_status'    => 'publish',
+                'posts_per_page' => 5,
+                'fields'         => 'ids',
+                'meta_query'     => [
+                    [
+                        'key'   => '_robodesk_customer_email',
+                        'value' => $useremail,
+                        'compare' => '=',
+                    ],
+                ],
+                'date_query' => $date_args,
+                'orderby'    => 'date',
+                'order'      => 'DESC',
+            ]);
+            foreach ($thread_query->posts as $thread_post_id) {
+                $ticket_subject = strtolower(trim((string) preg_replace('/^\s*(re|fwd|fw|aw)\s*:\s*/i', '', get_the_title($thread_post_id))));
+                if ($ticket_subject === $normalized_subject) {
+                    rbd_log('Matched reply by sender + subject to ticket ID: ' . $thread_post_id);
+                    return (int) $thread_post_id;
+                }
+            }
+        }
+    }
+
+return 0;
+}
+
 // Basic email cleaning function
 function robodesk_clean_email_message($message)
 {
@@ -182,7 +270,7 @@ function robodesk_fetch_emails()
         // Sort emails oldest to newest
         sort($emails);
 
-        // Pre-fetch existing message IDs to prevent duplicates
+        // Pre-fetch existing message IDs to prevent duplicates (ticket posts + reply comments)
         $existing_message_ids = get_posts([
             'post_type' => 'robodesk_ticket',
             'meta_key' => 'email_message_id',
@@ -199,6 +287,17 @@ function robodesk_fetch_emails()
             return get_post_meta($post_id, 'email_message_id', true);
         }, $existing_message_ids);
 
+        // Replies are stored as comments, so their message IDs must be deduped too
+        $reply_message_id_comments = get_comments([
+            'meta_key' => 'email_message_id',
+            'number' => 0,
+        ]);
+        foreach ($reply_message_id_comments as $reply_message_id_comment) {
+            $existing_message_ids[] = get_comment_meta($reply_message_id_comment->comment_ID, 'email_message_id', true);
+        }
+
+        $existing_message_ids = array_values(array_filter(array_unique($existing_message_ids)));
+
         $processed_count = 0;
         $skipped_count = 0;
         $reply_count = 0;
@@ -207,6 +306,7 @@ function robodesk_fetch_emails()
         foreach ($emails as $email_number) {
             rbd_log('Processing email #' . $email_number);
 
+            try {
             $headerInfo = imap_headerinfo($email, $email_number);
             if (!$headerInfo) {
                 rbd_log('Failed to get header info for email #' . $email_number);
@@ -261,7 +361,16 @@ function robodesk_fetch_emails()
                 $useremail = sanitize_email($from_email_match[1]);
             }
             // only showing the name part 
-            $subject = $headerInfo->subject ?? 'No Subject';
+            $subject_raw = $headerInfo->subject ?? 'No Subject';
+            if (function_exists('imap_mime_header_decode') && strpos($subject_raw, '=?') !== false) {
+                $subject = '';
+                foreach (imap_mime_header_decode($subject_raw) as $subject_part) {
+                    $subject .= $subject_part->text;
+                }
+                $subject = trim($subject);
+            } else {
+                $subject = $subject_raw;
+            }
             rbd_log('Email from: ' . $from . ', Subject: ' . $subject);
 
             // Fetch email body with robust MIME handling and transfer encoding decoding
@@ -311,23 +420,8 @@ function robodesk_fetch_emails()
 
             if (!empty($in_reply_to) || !empty($references)) {
                 rbd_log('Email #' . $email_number . ' appears to be a reply');
-                $reference_ids = !empty($references) ? explode(' ', trim($references)) : [$in_reply_to];
-                foreach ($reference_ids as $ref_id) {
-                    if (!empty($ref_id)) {
-                        $original_query = new WP_Query([
-                            'meta_key' => 'email_message_id',
-                            'meta_value' => $ref_id,
-                            'post_type' => 'robodesk_ticket',
-                            'posts_per_page' => 1,
-                            'fields' => 'ids',
-                        ]);
-                        if (!empty($original_query->posts)) {
-                            $original_post_id = $original_query->posts[0];
-                            rbd_log('Found original ticket with ID: ' . $original_post_id);
-                            break;
-                        }
-                    }
-                }
+                $reference_ids = !empty($references) ? preg_split('/[\s,]+/', trim($references)) : [$in_reply_to];
+                $original_post_id = robodesk_find_ticket_by_reply_context($reference_ids, $useremail, $subject, $date);
 
                 if ($original_post_id) {
                     // Prevent duplicate comments
@@ -372,12 +466,15 @@ function robodesk_fetch_emails()
 
                         if (!is_wp_error($comment_id)) {
                             add_comment_meta($comment_id, 'email_message_id', $message_id, true);
-                            add_comment_meta($comment_id, 'comment_source', 'email', true);
-                            add_comment_meta($comment_id, 'author_type', 'customer', true);
+                            // update_comment_meta: robodesk_comment_creation_on_insert (wp_insert_comment hook)
+                            // writes comment_source/author_type first; we must override with 'email'
+                            update_comment_meta($comment_id, 'comment_source', 'email');
+                            update_comment_meta($comment_id, 'author_type', 'customer');
                             add_comment_meta($comment_id, '_robodesk_source_ip', $email_source_context['ip'], true);
                             add_comment_meta($comment_id, '_robodesk_source_country', $email_source_context['country'], true);
                             add_comment_meta($comment_id, '_robodesk_source_browser', $email_source_context['browser'], true);
                             robodesk_store_ticket_source_meta($original_post_id, $email_source_context, $comment_id);
+                            $existing_message_ids[] = $message_id;
                             rbd_log('Successfully added comment ID: ' . $comment_id);
                             $reply_count++;
                         } else {
@@ -490,6 +587,11 @@ function robodesk_fetch_emails()
             ]);
 
             if (!is_wp_error($post_id)) {
+                // Save the dedup key immediately so a failure later in this block
+                // can never leave an orphan ticket that gets re-created on next fetch
+                add_post_meta($post_id, 'email_message_id', $message_id, true);
+                $existing_message_ids[] = $message_id;
+
                 // Assign the ticket to a support staff member
                 $assignee = auto_assign_ticket_to_support_staff(true);
 
@@ -523,8 +625,10 @@ function robodesk_fetch_emails()
                 ]);
                 if (!is_wp_error($comment_id)) {
                     add_comment_meta($comment_id, 'email_message_id', $message_id, true);
-                    add_comment_meta($comment_id, 'comment_source', 'email', true);
-                    add_comment_meta($comment_id, 'author_type', 'customer', true);
+                    // update_comment_meta: robodesk_comment_creation_on_insert (wp_insert_comment hook)
+                    // writes comment_source/author_type first; we must override with 'email'
+                    update_comment_meta($comment_id, 'comment_source', 'email');
+                    update_comment_meta($comment_id, 'author_type', 'customer');
                     add_comment_meta($comment_id, 'rbd_suppress_notification', 1, true);
                     rbd_log('Added comment ID: ' . $comment_id . ' to ticket ID: ' . $post_id);
                 } else {
@@ -554,7 +658,7 @@ function robodesk_fetch_emails()
             // Update post meta
             update_post_meta($post_id, 'robodesk_ticket_origin', 'email');
             update_post_meta($post_id, '_robodesk_ticket_status', 'open');
-            add_post_meta($post_id, 'email_message_id', $message_id);
+            update_post_meta($post_id, '_robodesk_customer_email', $useremail);
             add_post_meta($post_id, 'email_from', $from);
             robodesk_store_ticket_source_meta($post_id, $email_source_context);
 
@@ -567,6 +671,10 @@ function robodesk_fetch_emails()
             // Update last fetched date
             update_option('robodesk_last_fetched_date', $date);
             rbd_log('Robodesk: Updated last fetched email date/time to: ' . $date);
+            } catch (Throwable $e) {
+                rbd_log('Robodesk: Error processing email #' . $email_number . ': ' . $e->getMessage());
+                $error_count++;
+            }
         }
 
         // Display summary
