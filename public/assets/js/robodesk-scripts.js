@@ -375,7 +375,7 @@ jQuery(document).ready(function ($) {
 
   // Delete Credential AJAX
   $(document).on("click", ".delete-credential", function () {
-    var credentialId = credentialIdMap.get(this);
+    var credentialId = $(this).data("credential-id");
     var confirmDelete = confirm(
       "Are you sure you want to delete this credential?",
     );
@@ -423,7 +423,7 @@ jQuery(document).ready(function ($) {
   // Copy Password Functionality (AJAX-based)
   $(document).on("click", ".copy-password", function () {
     var button = $(this);
-    var credentialId = credentialIdMap.get(this);
+    var credentialId = $(this).data("credential-id");
 
     if (!credentialId) {
       return;
@@ -500,7 +500,7 @@ jQuery(document).ready(function ($) {
     var button = $(this);
     var passwordSpan = button.siblings(".password-hidden");
     var icon = button.find(".dashicons");
-    var credentialId = credentialIdMap.get(this);
+    var credentialId = $(this).data("credential-id");
 
     if (!credentialId) {
       return;
