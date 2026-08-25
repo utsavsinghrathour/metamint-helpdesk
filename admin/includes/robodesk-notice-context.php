@@ -427,9 +427,11 @@ function robodesk_save_notice_assignment_term_meta($term_id, $taxonomy = '')
     }
 
     $notice_ids = array();
+    // phpcs:disable WordPress.Security.NonceVerification.Missing -- WP core verifies the term-edit nonce (update-tag_{taxonomy}) in wp-admin/term.php before this hook fires.
     if (isset($_POST['robodesk_related_notices']) && is_array($_POST['robodesk_related_notices'])) {
         $notice_ids = array_values(array_filter(array_map('absint', wp_unslash($_POST['robodesk_related_notices']))));
     }
+    // phpcs:enable WordPress.Security.NonceVerification.Missing
 
     if (empty($notice_ids)) {
         delete_term_meta($term_id, '_robodesk_related_notices');
@@ -602,8 +604,10 @@ function robodesk_rest_get_context_notices($request)
         return array(
             'id'              => $n->ID,
             'title'           => array('rendered' => $n->post_title),
+            // phpcs:disable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- Intentionally applying WP core content filters.
             'excerpt'         => array('rendered' => apply_filters('the_excerpt', $n->post_excerpt)),
             'content'         => array('rendered' => apply_filters('the_content', $n->post_content)),
+            // phpcs:enable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound
             'notice_action'   => get_post_meta($n->ID, '_robodesk_notice_action', true) ?: 'open',
             'initial_message' => (string) get_post_meta($n->ID, '_robodesk_notice_initial_message', true),
         );
