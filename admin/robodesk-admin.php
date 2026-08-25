@@ -355,7 +355,6 @@ function robodesk_admin_bar_active_tickets($wp_admin_bar)
     $counters    = robodesk_get_ticket_counters(get_current_user_id());
     $total_count = (int) $counters['counts']['open'];
     $my_count    = (int) $counters['counts']['my'];
-    $user_name   = wp_get_current_user()->display_name;
 
     $badge = function ($count, $label) {
         return ' <span class="dashboard-filter-count-badge is-visible" title="' . esc_attr($label) . '">' . esc_html($count) . '</span>';
@@ -376,15 +375,11 @@ function robodesk_admin_bar_active_tickets($wp_admin_bar)
         'id'    => 'robodesk-active-tickets',
         'title' => '<span class="ab-icon dashicons dashicons-email-alt"></span>'
             . '<span class="robodesk-adminbar-tickets"><a href="' . esc_url($active_url) . '">'
-            . esc_html__('Active', 'robodesk')
+            . esc_html__('Active Tickets', 'robodesk')
             . $badge($total_count, esc_html__('Active conversations', 'robodesk'))
             . '</a></span>'
             . '<span class="robodesk-adminbar-tickets"><a href="' . esc_url($my_url) . '">'
-            . sprintf(
-                /* translators: %s: display name of the current user. */
-                esc_html__('My (%1$s)', 'robodesk'),
-                esc_html($user_name)
-            )
+            . esc_html__('My Tickets', 'robodesk')
             . $badge($my_count, esc_html__('My conversations', 'robodesk'))
             . '</a></span>',
         'meta'  => array(
@@ -408,9 +403,13 @@ add_action('admin_bar_menu', 'robodesk_admin_bar_active_tickets', 999);
 function robodesk_admin_bar_ticket_badge_styles()
 {
     echo '<style id="robodesk-adminbar-ticket-badge">'
-        . '#wp-admin-bar-robodesk-active-tickets .robodesk-adminbar-tickets{display:inline-flex;align-items:center;margin-right:.5rem}'
+        . '#wp-admin-bar-robodesk-active-tickets{display:inline-block}'
+        . '#wp-admin-bar-robodesk-active-tickets>.ab-item{display:flex;align-items:center;height:auto;padding:0 .35rem}'
+        . '#wp-admin-bar-robodesk-active-tickets>.ab-item,#wp-admin-bar-robodesk-active-tickets>.ab-item:hover{background:transparent!important;color:inherit!important}'
+        . '#wp-admin-bar-robodesk-active-tickets .robodesk-adminbar-tickets{display:inline-flex;align-items:center;margin-right:.35rem}'
         . '#wp-admin-bar-robodesk-active-tickets .robodesk-adminbar-tickets:last-child{margin-right:0}'
-        . '#wp-admin-bar-robodesk-active-tickets .robodesk-adminbar-tickets a{color:inherit;text-decoration:none}'
+        . '#wp-admin-bar-robodesk-active-tickets .robodesk-adminbar-tickets a{display:inline-flex;align-items:center;color:inherit;text-decoration:none;padding:0 .5rem;border-radius:3px;line-height:28px}'
+        . '#wp-admin-bar-robodesk-active-tickets .robodesk-adminbar-tickets a:hover{background:rgba(255,255,255,.16)}'
         . '#wp-admin-bar-robodesk-active-tickets .dashboard-filter-count-badge{display:inline-flex;align-items:center;justify-content:center;min-width:1.15rem;height:1.15rem;margin-left:.3rem;padding:0 .28rem;border-radius:9999px;background-color:#ef4444;color:#fff;font-size:.7rem;font-weight:600;line-height:1;vertical-align:middle}'
         . '</style>';
 }
