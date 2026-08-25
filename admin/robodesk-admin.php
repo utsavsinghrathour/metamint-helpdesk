@@ -410,7 +410,7 @@ function robodesk_admin_bar_ticket_badge_styles()
         . '#wp-admin-bar-robodesk-active-tickets .robodesk-adminbar-tickets{display:inline-flex;align-items:center;margin-right:.35rem}'
         . '#wp-admin-bar-robodesk-active-tickets .robodesk-adminbar-tickets:last-child{margin-right:0}'
         . '#wp-admin-bar-robodesk-active-tickets .robodesk-adminbar-tickets a{display:inline-flex;align-items:center;color:inherit;text-decoration:none;padding:0 .5rem;border-radius:3px;line-height:28px}'
-        . '#wp-admin-bar-robodesk-active-tickets .robodesk-adminbar-tickets a:hover{background:#2c3338;color:#72aee6}'
+        . '#wp-admin-bar-robodesk-active-tickets .robodesk-adminbar-tickets a:hover{background:#2c3338;color:#7b90ff}'
         . '#wp-admin-bar-robodesk-active-tickets .dashboard-filter-count-badge{display:inline-flex;align-items:center;justify-content:center;min-width:1.15rem;height:1.15rem;margin-left:.3rem;padding:0 .28rem;border-radius:9999px;background-color:#ef4444;color:#fff;font-size:.7rem;font-weight:600;line-height:1;vertical-align:middle}'
         . '</style>';
 }
