@@ -340,9 +340,10 @@ function robodesk_enqueue_tailwind_and_styles()
 }
 
 /**
- * Displays the active + my-conversation ticket counts side by side on the
- * WordPress admin toolbar using the same badge styling as the dashboard
- * filter counts.
+ * Displays the active + my-conversation ticket counts as two separate
+ * admin toolbar items (side by side). Each item is a normal WordPress
+ * admin bar node, so hovering highlights it with the active Administration
+ * Color Scheme's native style — no custom hover CSS needed.
  *
  * @param WP_Admin_Bar $wp_admin_bar The admin bar object.
  */
@@ -374,16 +375,21 @@ function robodesk_admin_bar_active_tickets($wp_admin_bar)
     $wp_admin_bar->add_node(array(
         'id'    => 'robodesk-active-tickets',
         'title' => '<span class="ab-icon dashicons dashicons-email-alt"></span>'
-            . '<span class="robodesk-adminbar-tickets"><a href="' . esc_url($active_url) . '">'
-            . esc_html__('Active Tickets', 'robodesk')
-            . $badge($total_count, esc_html__('Active conversations', 'robodesk'))
-            . '</a></span>'
-            . '<span class="robodesk-adminbar-tickets"><a href="' . esc_url($my_url) . '">'
-            . esc_html__('My Tickets', 'robodesk')
-            . $badge($my_count, esc_html__('My conversations', 'robodesk'))
-            . '</a></span>',
+            . '<span class="ab-label">' . esc_html__('Active Tickets', 'robodesk') . '</span>'
+            . $badge($total_count, esc_html__('Active conversations', 'robodesk')),
+        'href'  => $active_url,
         'meta'  => array(
-            'title' => esc_html__('View Conversations', 'robodesk'),
+            'title' => esc_html__('View active conversations', 'robodesk'),
+        ),
+    ));
+
+    $wp_admin_bar->add_node(array(
+        'id'    => 'robodesk-my-tickets',
+        'title' => '<span class="ab-label">' . esc_html__('My Tickets', 'robodesk') . '</span>'
+            . $badge($my_count, esc_html__('My conversations', 'robodesk')),
+        'href'  => $my_url,
+        'meta'  => array(
+            'title' => esc_html__('View my conversations', 'robodesk'),
         ),
     ));
 
@@ -403,14 +409,6 @@ add_action('admin_bar_menu', 'robodesk_admin_bar_active_tickets', 999);
 function robodesk_admin_bar_ticket_badge_styles()
 {
     echo '<style id="robodesk-adminbar-ticket-badge">'
-        . '#wp-admin-bar-robodesk-active-tickets{display:inline-block}'
-        . '#wp-admin-bar-robodesk-active-tickets>.ab-item{display:flex;align-items:center;height:auto;padding:0 .35rem}'
-        . '#wp-admin-bar-robodesk-active-tickets:hover>.ab-item,#wp-admin-bar-robodesk-active-tickets>.ab-item:hover{background:transparent!important;color:inherit!important}'
-        . '#wp-admin-bar-robodesk-active-tickets:hover .ab-icon:before{color:inherit!important}'
-        . '#wp-admin-bar-robodesk-active-tickets .robodesk-adminbar-tickets{display:inline-flex;align-items:center;margin-right:.35rem}'
-        . '#wp-admin-bar-robodesk-active-tickets .robodesk-adminbar-tickets:last-child{margin-right:0}'
-        . '#wp-admin-bar-robodesk-active-tickets .robodesk-adminbar-tickets a{display:inline-flex;align-items:center;color:inherit;text-decoration:none;padding:0 .5rem;border-radius:3px;line-height:28px}'
-        . '#wp-admin-bar-robodesk-active-tickets .robodesk-adminbar-tickets a:hover{background:var(--wp-admin-theme-color-darker-10,#2c3338);color:var(--wp-admin-theme-color,#72aee6)}'
-        . '#wp-admin-bar-robodesk-active-tickets .dashboard-filter-count-badge{display:inline-flex;align-items:center;justify-content:center;min-width:1.15rem;height:1.15rem;margin-left:.3rem;padding:0 .28rem;border-radius:9999px;background-color:#ef4444;color:#fff;font-size:.7rem;font-weight:600;line-height:1;vertical-align:middle}'
+        . '#wpadminbar .dashboard-filter-count-badge{display:inline-flex;align-items:center;justify-content:center;min-width:1.15rem;height:1.15rem;margin-left:.3rem;padding:0 .28rem;border-radius:9999px;background-color:#ef4444;color:#fff;font-size:.7rem;font-weight:600;line-height:1;vertical-align:middle}'
         . '</style>';
 }
