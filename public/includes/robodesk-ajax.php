@@ -701,7 +701,8 @@ function robodesk_register_user()
 
     if (!is_wp_error($user_id)) {
         if (!robodesk_are_emails_suppressed()) {
-            wp_new_user_notification($user_id, $password);
+            // The $password param was deprecated in WP 4.3.1; pass only the user ID.
+            wp_new_user_notification($user_id);
         }
 
         wp_send_json_success([
