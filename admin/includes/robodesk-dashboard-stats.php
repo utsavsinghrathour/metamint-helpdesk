@@ -10,39 +10,11 @@ $robodesk_current_tab    = isset($_GET['tab']) ? sanitize_key($_GET['tab']) : ''
 $robodesk_has_ticket     = isset($_GET['ticket']) ? intval($_GET['ticket']) : 0;
 $robodesk_dashboard_hidden = ($robodesk_current_tab !== '' && $robodesk_current_tab !== 'dashboard') || $robodesk_has_ticket > 0 ? ' hidden' : '';
 
-/**
- * Count published tickets by status in a single grouped query.
- *
- * @return array
- */
-if (!function_exists('robodesk_count_tickets_by_status')) {
-    function robodesk_count_tickets_by_status()
-    {
-        global $wpdb;
-        $counts = ['open' => 0, 'in-progress' => 0, 'closed' => 0];
-        // phpcs:disable WordPress.DB.DirectDatabaseQuery, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
-        $rows = $wpdb->get_results(
-            $wpdb->prepare(
-                "SELECT pm.meta_value, COUNT(*) AS total
-                 FROM {$wpdb->postmeta} pm
-                 INNER JOIN {$wpdb->posts} p ON p.ID = pm.post_id
-                 WHERE pm.meta_key = '_robodesk_ticket_status'
-                 AND p.post_type = %s AND p.post_status = 'publish'
-                 GROUP BY pm.meta_value",
-                'robodesk_ticket'
-            )
-        );
-        // phpcs:enable WordPress.DB.DirectDatabaseQuery, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
-        foreach ($rows as $row) {
-            if (isset($counts[$row->meta_value])) {
-                $counts[$row->meta_value] = (int) $row->total;
-            }
-        }
-        return $counts;
-    }
-}
-
-$robodesk_status_counts = robodesk_count_tickets_by_status();
+// All dashboard counters come from the single source of truth:
+// robodesk_get_ticket_counters() (see robodesk-dashboard-data.php).
+$robodesk_counters      = robodesk_get_ticket_counters();
+$robodesk_status_counts = $robodesk_counters['stats'];
+$robodesk_total_tickets = $robodesk_counters['stats']['total'];
 ?>
 <div id="dashboard-page" class="page-content<?php echo esc_attr($robodesk_dashboard_hidden); ?>">
     <!-- Statistics Cards -->
@@ -58,7 +30,6 @@ $robodesk_status_counts = robodesk_count_tickets_by_status();
                             <dt class="text-sm font-medium text-gray-500 truncate">
                                 <?php esc_html_e('Total Conversations', 'robodesk'); ?></dt>
                             <dd class="text-lg font-medium text-gray-900" id="total-tickets"><?php
-                                                                                                $robodesk_total_tickets = wp_count_posts('robodesk_ticket')->publish;
                                                                                                 echo esc_html($robodesk_total_tickets);
                                                                                                 ?></dd>
                         </dl>
@@ -78,7 +49,7 @@ $robodesk_status_counts = robodesk_count_tickets_by_status();
                             <dt class="text-sm font-medium text-gray-500 truncate">
                                 <?php esc_html_e('Active Conversations', 'robodesk'); ?></dt>
                             <dd class="text-lg font-medium text-gray-900" id="open-tickets"><?php
-                                                                                            echo esc_html($robodesk_status_counts['open']);
+                                                                                            echo esc_html($robodesk_counters['stats']['active']);
                                                                                             ?></dd>
                         </dl>
                     </div>
@@ -97,7 +68,7 @@ $robodesk_status_counts = robodesk_count_tickets_by_status();
                             <dt class="text-sm font-medium text-gray-500 truncate">
                                 <?php esc_html_e('In Progress', 'robodesk'); ?></dt>
                             <dd class="text-lg font-medium text-gray-900" id="in-progress-tickets"><?php
-                                                                                                    echo esc_html($robodesk_status_counts['in-progress']);
+                                                                                                    echo esc_html($robodesk_status_counts['inProgress']);
                                                                                                     ?></dd>
                         </dl>
                     </div>

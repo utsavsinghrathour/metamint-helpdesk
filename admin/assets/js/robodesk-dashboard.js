@@ -151,8 +151,7 @@ function loadDashboardTickets() {
       dashboardTotalItems = Number(data.total) || 0;
       dashboardCurrentPage = Number(data.page) || dashboardCurrentPage;
 
-      updateDashboardFilterCounts(data.counts);
-      updateDashboardStats(data.stats);
+      updateDashboardCounters(data);
 
       renderDashboardTable(tickets);
 
@@ -377,8 +376,25 @@ function renderDashboardTable(filteredTickets) {
   });
 }
 
-function updateDashboardFilterCounts(counts) {
-  counts = counts || {};
+function updateDashboardCounters(data) {
+  data = data || {};
+  const stats = data.stats || {};
+  const counts = data.counts || {};
+
+  const statValues = {
+    "total-tickets": stats.total,
+    "open-tickets": stats.active,
+    "in-progress-tickets": stats.inProgress,
+    "closed-tickets": stats.closed,
+  };
+
+  Object.entries(statValues).forEach(([id, value]) => {
+    const el = document.getElementById(id);
+    if (el) {
+      el.textContent = String(Number(value) || 0);
+    }
+  });
+
   const countValues = {
     "dashboard-count-my-conversation": counts.my,
     "dashboard-count-unassigned-conversation": counts.unassigned,
@@ -3359,8 +3375,8 @@ function updateTicketStatus(ticketId, newStatus) {
         }
 
         showToast(`Ticket status updated to ${updatedStatus}`);
-        // updateDashboardStats();
-        recalculateDashboardStats();
+        // updateDashboardCounters();
+        recalculateDashboardCounters();
         markConversationsTabStale();
         return { success: true, data: response.data };
       } catch (error) {
@@ -3427,7 +3443,7 @@ function updateTicketPriority(ticketId, newPriority) {
         }
 
         showToast(`Ticket priority updated to ${updatedPriority}`);
-        recalculateDashboardStats();
+        recalculateDashboardCounters();
         markConversationsTabStale();
         return { success: true, data: response.data };
       } else {
@@ -3503,7 +3519,7 @@ function updateTicketAssignee(ticketId, newAssignee) {
         }
 
         showToast(`Ticket assigned to ${updatedAssignee}`);
-        recalculateDashboardStats();
+        recalculateDashboardCounters();
         markConversationsTabStale();
         return { success: true, data: response.data };
       } else {
@@ -4395,23 +4411,6 @@ let _rbd_firstTicketScroll = true;
 let shouldRefreshTicketsPage = false;
 let lastTicketsPageReloadAt = 0;
 
-function updateDashboardStats(stats) {
-  stats = stats || {};
-  const statsTargets = {
-    "total-tickets": stats.total,
-    "open-tickets": stats.open,
-    "in-progress-tickets": stats.inProgress,
-    "closed-tickets": stats.closed,
-  };
-
-  Object.entries(statsTargets).forEach(([id, value]) => {
-    const el = document.getElementById(id);
-    if (el) {
-      el.textContent = String(Number(value) || 0);
-    }
-  });
-}
-
 function markConversationsTabStale() {
   shouldRefreshTicketsPage = true;
   if (currentPage === "tickets") {
@@ -4419,7 +4418,7 @@ function markConversationsTabStale() {
   }
 }
 
-function recalculateDashboardStats() {
+function recalculateDashboardCounters() {
   if (typeof dashboard_tickets === "undefined" || !Array.isArray(dashboard_tickets)) {
     return;
   }
@@ -4427,6 +4426,7 @@ function recalculateDashboardStats() {
   const stats = {
     total: dashboard_tickets.length,
     open: 0,
+    active: 0,
     inProgress: 0,
     closed: 0,
   };
@@ -4445,6 +4445,7 @@ function recalculateDashboardStats() {
     if (status === "open") stats.open++;
     else if (status === "in-progress") stats.inProgress++;
     else if (status === "closed") stats.closed++;
+    if (["open", "in-progress"].includes(status)) stats.active++;
 
     if (ticket.assignee_id === currentUserId) counts.my++;
     if (!ticket.assignee_id || ticket.assignee_id === 0) counts.unassigned++;
@@ -4452,8 +4453,7 @@ function recalculateDashboardStats() {
     if (ticket.source === "chat") counts.chat++;
   });
 
-  updateDashboardStats(stats);
-  updateDashboardFilterCounts(counts);
+  updateDashboardCounters({ stats, counts });
 }
 
 function reloadConversationsPageIfVisible() {

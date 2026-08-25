@@ -340,97 +340,9 @@ function robodesk_enqueue_tailwind_and_styles()
 }
 
 /**
- * Counts active (open + in-progress) tickets.
- *
- * @param int $assignee_id Optional user ID to limit count to assigned tickets.
- * @return int
- */
-function robodesk_get_active_ticket_count($assignee_id = 0)
-{
-    $meta_query = array(
-        'relation' => 'AND',
-        array(
-            'relation' => 'OR',
-            array(
-                'key'     => '_robodesk_ticket_status',
-                'value'   => 'open',
-                'compare' => '=',
-            ),
-            array(
-                'key'     => '_robodesk_ticket_status',
-                'value'   => 'in-progress',
-                'compare' => '=',
-            ),
-        ),
-    );
-
-    if ($assignee_id > 0) {
-        $meta_query[] = array(
-            'key'   => 'ticket_assignee_id',
-            'value' => (int) $assignee_id,
-        );
-    }
-
-    // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query
-    $args = array(
-        'post_type'      => 'robodesk_ticket',
-        'post_status'    => 'publish',
-        'posts_per_page' => -1,
-        'fields'         => 'ids',
-        'meta_query'     => $meta_query,
-    );
-    $query = new WP_Query($args);
-    return (int) $query->post_count;
-}
-
-/**
- * Counts the current user's conversation tickets using the exact same
- * logic as the dashboard "My Conversations" filter: the ticket_assignee
- * display-name meta must equal the user's display name and the ticket
- * status must not be 'closed'.
- *
- * @param int $user_id Optional user ID to count for. Defaults to current user.
- * @return int
- */
-function robodesk_get_my_conversation_count($user_id = 0)
-{
-    $user = get_userdata($user_id > 0 ? $user_id : get_current_user_id());
-    if (!$user) {
-        return 0;
-    }
-
-    // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query
-    $args = array(
-        'post_type'      => 'robodesk_ticket',
-        'post_status'    => 'publish',
-        'posts_per_page' => -1,
-        'fields'         => 'ids',
-        'meta_query'     => array(
-            'relation' => 'AND',
-            array(
-                'key'   => 'ticket_assignee',
-                'value' => $user->display_name,
-            ),
-            array(
-                'relation' => 'OR',
-                array(
-                    'key'     => '_robodesk_ticket_status',
-                    'value'   => 'closed',
-                    'compare' => '!=',
-                ),
-                array(
-                    'key'     => '_robodesk_ticket_status',
-                    'compare' => 'NOT EXISTS',
-                ),
-            ),
-        ),
-    );
-    $query = new WP_Query($args);
-    return (int) $query->post_count;
-}
-
-/**
- * Displays the active tickets count on the WordPress admin toolbar.
+ * Displays the active + my-conversation ticket counts side by side on the
+ * WordPress admin toolbar using the same badge styling as the dashboard
+ * filter counts.
  *
  * @param WP_Admin_Bar $wp_admin_bar The admin bar object.
  */
@@ -440,41 +352,65 @@ function robodesk_admin_bar_active_tickets($wp_admin_bar)
         return;
     }
 
-    $total_count = robodesk_get_active_ticket_count();
-    $my_count    = robodesk_get_my_conversation_count(get_current_user_id());
+    $counters    = robodesk_get_ticket_counters(get_current_user_id());
+    $total_count = (int) $counters['counts']['open'];
+    $my_count    = (int) $counters['counts']['my'];
+    $user_name   = wp_get_current_user()->display_name;
+
+    $badge = function ($count, $label) {
+        return ' <span class="dashboard-filter-count-badge is-visible" title="' . esc_attr($label) . '">' . esc_html($count) . '</span>';
+    };
+
+    // Open the dashboard with the matching conversation filter applied.
+    // The nonce lets the server pre-select the right filter button.
+    $active_url = wp_nonce_url(
+        admin_url('admin.php?page=robodesk-dashboard&filter=open_conversation'),
+        'robodesk_filter'
+    );
+    $my_url = wp_nonce_url(
+        admin_url('admin.php?page=robodesk-dashboard&filter=my_conversation'),
+        'robodesk_filter'
+    );
 
     $wp_admin_bar->add_node(array(
         'id'    => 'robodesk-active-tickets',
-        'title' => '<span class="ab-icon dashicons dashicons-email-alt"></span><span class="ab-label">' . esc_html__('Active Tickets', 'robodesk') . ': ' . esc_html($total_count) . '</span>',
-        'href'  => admin_url('admin.php?page=robodesk-dashboard&tab=tickets'),
+        'title' => '<span class="ab-icon dashicons dashicons-email-alt"></span>'
+            . '<span class="robodesk-adminbar-tickets"><a href="' . esc_url($active_url) . '">'
+            . esc_html__('Active', 'robodesk')
+            . $badge($total_count, esc_html__('Active conversations', 'robodesk'))
+            . '</a></span>'
+            . '<span class="robodesk-adminbar-tickets"><a href="' . esc_url($my_url) . '">'
+            . sprintf(
+                /* translators: %s: display name of the current user. */
+                esc_html__('My (%1$s)', 'robodesk'),
+                esc_html($user_name)
+            )
+            . $badge($my_count, esc_html__('My conversations', 'robodesk'))
+            . '</a></span>',
         'meta'  => array(
             'title' => esc_html__('View Conversations', 'robodesk'),
         ),
     ));
 
-    $wp_admin_bar->add_node(array(
-        'parent' => 'robodesk-active-tickets',
-        'id'     => 'robodesk-active-tickets-total',
-        'title'  => esc_html__('All Active Tickets', 'robodesk') . ': ' . esc_html($total_count),
-        'href'   => admin_url('admin.php?page=robodesk-dashboard&tab=tickets&status=all'),
-        'meta'   => array(
-            'title' => esc_html__('View all active tickets', 'robodesk'),
-        ),
-    ));
-
-    $wp_admin_bar->add_node(array(
-        'parent' => 'robodesk-active-tickets',
-        'id'     => 'robodesk-active-tickets-mine',
-        'title'  => sprintf(
-            /* translators: %1$s: display name of the current user, %2$d: number of active tickets assigned to them. */
-            esc_html__('My Tickets (%1$s): %2$d', 'robodesk'),
-            esc_html(wp_get_current_user()->display_name),
-            $my_count
-        ),
-        'href'   => admin_url('admin.php?page=robodesk-dashboard&filter=my_conversation'),
-        'meta'   => array(
-            'title' => esc_html__('View my active tickets', 'robodesk'),
-        ),
-    ));
+    // Badge styles must render even on pages where the dashboard stylesheet
+    // is not loaded (any admin page or the frontend toolbar).
+    if (!did_action('robodesk_admin_bar_ticket_badge_styles')) {
+        add_action('admin_footer', 'robodesk_admin_bar_ticket_badge_styles', 1);
+        add_action('wp_footer', 'robodesk_admin_bar_ticket_badge_styles', 1);
+        do_action('robodesk_admin_bar_ticket_badge_styles');
+    }
 }
 add_action('admin_bar_menu', 'robodesk_admin_bar_active_tickets', 999);
+
+/**
+ * Prints the admin toolbar badge styles once.
+ */
+function robodesk_admin_bar_ticket_badge_styles()
+{
+    echo '<style id="robodesk-adminbar-ticket-badge">'
+        . '#wp-admin-bar-robodesk-active-tickets .robodesk-adminbar-tickets{display:inline-flex;align-items:center;margin-right:.5rem}'
+        . '#wp-admin-bar-robodesk-active-tickets .robodesk-adminbar-tickets:last-child{margin-right:0}'
+        . '#wp-admin-bar-robodesk-active-tickets .robodesk-adminbar-tickets a{color:inherit;text-decoration:none}'
+        . '#wp-admin-bar-robodesk-active-tickets .dashboard-filter-count-badge{display:inline-flex;align-items:center;justify-content:center;min-width:1.15rem;height:1.15rem;margin-left:.3rem;padding:0 .28rem;border-radius:9999px;background-color:#ef4444;color:#fff;font-size:.7rem;font-weight:600;line-height:1;vertical-align:middle}'
+        . '</style>';
+}
