@@ -385,7 +385,8 @@ function robodesk_admin_bar_active_tickets($wp_admin_bar)
 
     $wp_admin_bar->add_node(array(
         'id'    => 'robodesk-my-tickets',
-        'title' => '<span class="ab-label">' . esc_html__('My Tickets', 'robodesk') . '</span>'
+        'title' => '<span class="ab-icon dashicons dashicons-tickets-alt"></span>'
+            . '<span class="ab-label">' . esc_html__('My Tickets', 'robodesk') . '</span>'
             . $badge($my_count, esc_html__('My conversations', 'robodesk')),
         'href'  => $my_url,
         'meta'  => array(
