@@ -5,36 +5,16 @@ if (!defined('ABSPATH')) {
 }
 
 /**
- * Build paginated dashboard ticket data (one page of tickets) along with
- * filter badge counts and stat card numbers. Uses bulk queries so it scales
- * to thousands of tickets without an N+1 comment/meta query per ticket.
+ * Fetch lightweight ticket records (id, author, title, modified, status,
+ * assignee, assignee_id, source) for every published ticket using bulk
+ * queries. Shared by the dashboard payload and the counters function so
+ * both scale to thousands of tickets without an N+1 meta query.
  *
- * @param string $filter   Dashboard filter key.
- * @param int    $page     Page number (1-based).
- * @param int    $per_page Tickets per page (max 50).
  * @return array
  */
-function robodesk_build_dashboard_tickets_payload($filter = 'my_conversation', $page = 1, $per_page = 10)
+function robodesk_get_light_tickets()
 {
     global $wpdb;
-
-    $valid_filters = ['my_conversation', 'unassigned_conversation', 'open_conversation', 'chat_conversation'];
-    $filter = in_array($filter, $valid_filters, true) ? $filter : 'my_conversation';
-    $page = max(1, (int) $page);
-    $per_page = max(1, min(50, (int) $per_page));
-
-    $current_user = wp_get_current_user();
-    $current_user_name = $current_user->display_name ?: $current_user->user_login;
-
-    $empty_payload = [
-        'tickets' => [],
-        'counts' => ['my' => 0, 'unassigned' => 0, 'open' => 0, 'chat' => 0],
-        'stats' => ['total' => 0, 'open' => 0, 'inProgress' => 0, 'closed' => 0],
-        'total' => 0,
-        'page' => $page,
-        'per_page' => $per_page,
-        'current_user_name' => $current_user_name,
-    ];
 
     // Fetch only ID columns for every ticket (cheap even with many tickets).
     // phpcs:disable WordPress.DB.DirectDatabaseQuery, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
@@ -50,7 +30,7 @@ function robodesk_build_dashboard_tickets_payload($filter = 'my_conversation', $
     );
 
     if (empty($ticket_rows)) {
-        return $empty_payload;
+        return [];
     }
 
     $ids = array_map('intval', wp_list_pluck($ticket_rows, 'ID'));
@@ -116,6 +96,134 @@ function robodesk_build_dashboard_tickets_payload($filter = 'my_conversation', $
         ];
     }
 
+    return $light_tickets;
+}
+
+/**
+ * Single source of truth for all dashboard ticket counters.
+ *
+ * Counts the stat card numbers (total / open / active / in-progress /
+ * closed) and the conversation filter badge counts (my / unassigned /
+ * open-active / chat) in one pass over the lightweight ticket records.
+ * "active" (stats.active) and the "open" badge (counts.open) both mean
+ * open + in-progress.
+ *
+ * @param array  $light_tickets Lightweight ticket records (see robodesk_get_light_tickets).
+ * @param string $user_name     Display name used for the "my conversations" count.
+ * @return array
+ */
+function robodesk_compute_ticket_counters($light_tickets, $user_name = '')
+{
+    $counters = [
+        'stats' => [
+            'total' => 0,
+            'open' => 0,
+            'active' => 0,
+            'inProgress' => 0,
+            'closed' => 0,
+        ],
+        'counts' => [
+            'my' => 0,
+            'unassigned' => 0,
+            'open' => 0,
+            'chat' => 0,
+        ],
+    ];
+
+    if (!is_array($light_tickets)) {
+        return $counters;
+    }
+
+    if ($user_name === '' && function_exists('wp_get_current_user')) {
+        $current_user = wp_get_current_user();
+        $user_name = $current_user->display_name ?: $current_user->user_login;
+    }
+
+    foreach ($light_tickets as $t) {
+        $status = isset($t['status']) ? $t['status'] : 'N/A';
+        $assignee = isset($t['assignee']) ? $t['assignee'] : 'N/A';
+        $source = isset($t['source']) ? $t['source'] : 'N/A';
+
+        $counters['stats']['total']++;
+        if ($status === 'open') {
+            $counters['stats']['open']++;
+        } elseif ($status === 'in-progress') {
+            $counters['stats']['inProgress']++;
+        } elseif ($status === 'closed') {
+            $counters['stats']['closed']++;
+        }
+        if ($status === 'open' || $status === 'in-progress') {
+            $counters['stats']['active']++;
+        }
+
+        if ($user_name !== '' && $assignee === $user_name && $status !== 'closed') {
+            $counters['counts']['my']++;
+        }
+        if ($assignee === 'N/A') {
+            $counters['counts']['unassigned']++;
+        }
+        if ($status === 'open' || $status === 'in-progress') {
+            $counters['counts']['open']++;
+        }
+        if ($source === 'chat' && $status !== 'closed') {
+            $counters['counts']['chat']++;
+        }
+    }
+
+    return $counters;
+}
+
+/**
+ * Get all dashboard ticket counters (stat cards + filter badge counts)
+ * for a given user. Single entry point used by the initial page render,
+ * the AJAX refresh payload and the admin bar.
+ *
+ * @param int $user_id Optional user ID for the "my conversations" count. Defaults to current user.
+ * @return array
+ */
+function robodesk_get_ticket_counters($user_id = 0)
+{
+    $user = get_userdata($user_id > 0 ? $user_id : get_current_user_id());
+    $user_name = $user ? ($user->display_name ?: $user->user_login) : '';
+
+    return robodesk_compute_ticket_counters(robodesk_get_light_tickets(), $user_name);
+}
+
+/**
+ * Build paginated dashboard ticket data (one page of tickets) along with
+ * filter badge counts and stat card numbers. Uses bulk queries so it scales
+ * to thousands of tickets without an N+1 comment/meta query per ticket.
+ *
+ * @param string $filter   Dashboard filter key.
+ * @param int    $page     Page number (1-based).
+ * @param int    $per_page Tickets per page (max 50).
+ * @return array
+ */
+function robodesk_build_dashboard_tickets_payload($filter = 'my_conversation', $page = 1, $per_page = 10)
+{
+    $valid_filters = ['my_conversation', 'unassigned_conversation', 'open_conversation', 'chat_conversation'];
+    $filter = in_array($filter, $valid_filters, true) ? $filter : 'my_conversation';
+    $page = max(1, (int) $page);
+    $per_page = max(1, min(50, (int) $per_page));
+
+    $current_user = wp_get_current_user();
+    $current_user_name = $current_user->display_name ?: $current_user->user_login;
+
+    $empty_payload = [
+        'tickets' => [],
+        'counts' => ['my' => 0, 'unassigned' => 0, 'open' => 0, 'chat' => 0],
+        'stats' => ['total' => 0, 'open' => 0, 'active' => 0, 'inProgress' => 0, 'closed' => 0],
+        'total' => 0,
+        'page' => $page,
+        'per_page' => $per_page,
+        'current_user_name' => $current_user_name,
+    ];
+
+    $light_tickets = robodesk_get_light_tickets();
+    if (empty($light_tickets)) {
+        return $empty_payload;
+    }
+
     $filter_matches = function ($t) use ($filter, $current_user_name) {
         switch ($filter) {
             case 'my_conversation':
@@ -133,34 +241,6 @@ function robodesk_build_dashboard_tickets_payload($filter = 'my_conversation', $
 
     $filtered = array_values(array_filter($light_tickets, $filter_matches));
 
-    $counts = [
-        'my' => count(array_filter($light_tickets, function ($t) use ($current_user_name) {
-            return $t['assignee'] === $current_user_name && $t['status'] !== 'closed';
-        })),
-        'unassigned' => count(array_filter($light_tickets, function ($t) {
-            return $t['assignee'] === 'N/A';
-        })),
-        'open' => count(array_filter($light_tickets, function ($t) {
-            return in_array($t['status'], ['open', 'in-progress'], true);
-        })),
-        'chat' => count(array_filter($light_tickets, function ($t) {
-            return $t['source'] === 'chat' && $t['status'] !== 'closed';
-        })),
-    ];
-
-    $stats = [
-        'total' => count($light_tickets),
-        'open' => count(array_filter($light_tickets, function ($t) {
-            return $t['status'] === 'open';
-        })),
-        'inProgress' => count(array_filter($light_tickets, function ($t) {
-            return $t['status'] === 'in-progress';
-        })),
-        'closed' => count(array_filter($light_tickets, function ($t) {
-            return $t['status'] === 'closed';
-        })),
-    ];
-
     $total = count($filtered);
     $total_pages = max(1, (int) ceil($total / $per_page));
     $page = min($page, $total_pages);
@@ -172,10 +252,12 @@ function robodesk_build_dashboard_tickets_payload($filter = 'my_conversation', $
         $tickets = robodesk_build_dashboard_ticket_records($page_records);
     }
 
+    $counters = robodesk_compute_ticket_counters($light_tickets, $current_user_name);
+
     return [
         'tickets' => $tickets,
-        'counts' => $counts,
-        'stats' => $stats,
+        'counts' => $counters['counts'],
+        'stats' => $counters['stats'],
         'total' => $total,
         'page' => $page,
         'per_page' => $per_page,
