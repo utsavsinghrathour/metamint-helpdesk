@@ -183,6 +183,9 @@ function robodesk_clean_email_message($message)
     // 7. Clean up single-line On ... wrote: prefix if it remained at the very end of the text
     $message = preg_replace('/On\s.*wrote:\s*$/i', '', $message);
 
+    // 8. Convert newlines to <br> so line breaks are preserved in HTML display
+    $message = nl2br($message);
+
     return trim($message);
 }
 

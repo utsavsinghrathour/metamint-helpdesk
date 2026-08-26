@@ -689,9 +689,15 @@ function robodesk_save_advanced_settings()
     $sanitized_settings = [];
     $results = [];
 
+    // Start from existing values so any key not submitted by the form
+    // (e.g. polling_interval) is preserved instead of silently dropped.
+    $existing = get_option('robodesk_advanced_settings', []);
+    $sanitized_settings = $existing;
+
     foreach ($valid_settings as $key) {
         if (!isset($settings[$key])) {
-            $results[$key] = ['status' => 'error', 'message' => 'Setting missing'];
+            // Keep existing value — don't wipe it.
+            $results[$key] = ['status' => 'success', 'message' => 'Kept existing value'];
             continue;
         }
 
