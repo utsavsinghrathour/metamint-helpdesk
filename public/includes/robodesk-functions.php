@@ -58,7 +58,8 @@ function robodesk_send_ticket_update_email($ticket_id, $comment_content, $update
     $message .= "View the ticket here: " . $ticket_link . "\n\nThank you,\nThe Robodesk Team";
 
     $reply_to = function_exists('robodesk_get_inbox_email_for_ticket') ? robodesk_get_inbox_email_for_ticket($ticket_id) : '';
-    robodesk_send_email($to, $subject, $message, [], [], $reply_to);
+    $thread_headers = function_exists('robodesk_get_ticket_thread_headers') ? robodesk_get_ticket_thread_headers($ticket_id) : [];
+    robodesk_send_email($to, $subject, $message, $thread_headers, [], $reply_to);
 }
 
 global $wpdb;

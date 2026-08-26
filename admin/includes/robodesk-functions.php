@@ -1841,7 +1841,8 @@ function robodesk_handle_close_ticket()
         $ticket_link = robodesk_build_ticket_deeplink($ticket_id);
         $message = 'Hello, your ticket #' . $ticket_id . ' has been closed. If you have any further questions, feel free to reply to this email or visit: ' . $ticket_link;
         $reply_to = robodesk_get_inbox_email_for_ticket($ticket_id);
-        robodesk_send_email($customer_email, $subject, $message, [], [], $reply_to);
+        $thread_headers = function_exists('robodesk_get_ticket_thread_headers') ? robodesk_get_ticket_thread_headers($ticket_id) : [];
+        robodesk_send_email($customer_email, $subject, $message, $thread_headers, [], $reply_to);
     }
     wp_send_json_success(['message' => 'Conversation closed successfully']);
 }
@@ -2943,7 +2944,8 @@ function robodesk_send_ticket_creation_email($post_id)
     $message .= '<p>If the button above does not work, please use this link: <a href="' . esc_url($ticket_link) . '">' . esc_html($ticket_link) . '</a></p>';
 
     $reply_to = robodesk_get_inbox_email_for_ticket($post_id);
-    $sent = robodesk_send_email($customer_email, $subject, $message, [], [], $reply_to);
+    $thread_headers = function_exists('robodesk_get_ticket_thread_headers') ? robodesk_get_ticket_thread_headers($post_id) : [];
+    $sent = robodesk_send_email($customer_email, $subject, $message, $thread_headers, [], $reply_to);
     if ($sent) {
         rbd_log("Robodesk: Ticket creation email sent to $customer_email for ticket ID: $post_id");
     } else {
@@ -3444,7 +3446,7 @@ function robodesk_clear_all_scheduled_events($hook)
     }
 }
 
-function robodesk_send_email($to, $subject, $message, $headers = [], $attachments = [], $reply_to = '')
+function robodesk_send_email($to, $subject, $message, $headers = [], $attachments = [], $reply_to = '', $outbound_message_id = '')
 {
     if (robodesk_are_emails_suppressed()) {
         rbd_log("Robodesk: Email sending is disabled (do not send email on import). Skipped: $subject");
@@ -3455,9 +3457,13 @@ function robodesk_send_email($to, $subject, $message, $headers = [], $attachment
         $headers = [$headers];
     }
 
+    // Drop any raw Message-ID header — it must be applied via phpmailer_init
+    // (robodesk_apply_outbound_message_id) or PHPMailer duplicates it and
+    // receiving servers silently drop the mail.
     $headers = array_values(array_filter($headers, function ($header) {
         return stripos((string) $header, 'Content-Type:') !== 0
-            && stripos((string) $header, 'Reply-To:') !== 0;
+            && stripos((string) $header, 'Reply-To:') !== 0
+            && stripos((string) $header, 'Message-ID:') !== 0;
     }));
 
     array_unshift($headers, 'Content-Type: text/html; charset=UTF-8');
@@ -3467,7 +3473,12 @@ function robodesk_send_email($to, $subject, $message, $headers = [], $attachment
 
     $email_template = robodesk_render_email_template($subject, $message);
 
+    global $robodesk_outbound_message_id;
+    $robodesk_outbound_message_id = trim((string) $outbound_message_id);
+
     $sent = wp_mail($to, $subject, $email_template, $headers, $attachments);
+
+    $robodesk_outbound_message_id = '';
 
     if (!$sent && !empty($GLOBALS['phpmailer']) && $GLOBALS['phpmailer'] instanceof PHPMailer\PHPMailer\PHPMailer) {
         rbd_log("Robodesk: wp_mail failed. PHPMailer error: " . $GLOBALS['phpmailer']->ErrorInfo);
