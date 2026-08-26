@@ -588,9 +588,32 @@ time[data-format="datetime-block"] {
 .status-closed-indicator {
   background-color: #16a34a;
 } */
+/* Neutralize Tailwind preflight (img { border-style: solid; display: block })
+   so WP admin menu icons don't get a visible border box or misaligned on
+   Robodesk pages. WP core's img { border: none } leaves border-width at
+   medium (3px); Tailwind's border-style: solid exposes it. Higher
+   specificity + border: 0 wins. display: inline-block keeps the icon
+   centered by .wp-menu-image's text-align: center. */
+#adminmenu .wp-menu-image img {
+  border: 0;
+  border-style: none;
+  display: inline-block;
+}
+
 #popover-top-icon-preview {
   height: 50px;
   width: 50px;
+  object-fit: contain;
+}
+
+#popover-icon-preview,
+#logo-preview,
+#wide-logo-preview {
+  max-width: 150px;
+  max-height: 150px;
+  width: auto;
+  height: auto;
+  object-fit: contain;
 }
 
 /* place holder */
