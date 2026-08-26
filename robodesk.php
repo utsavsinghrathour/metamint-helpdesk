@@ -220,6 +220,37 @@ function robodesk_deactivate()
 }
 
 /**
+ * Merge default settings into stored options on activation/update so that:
+ *  - old saved values are always preserved, and
+ *  - any new keys introduced by a plugin update get their default values
+ *    written automatically (no manual re-save required after updating).
+ */
+function robodesk_migrate_settings_on_update()
+{
+    $installed_version = get_option('robodesk_installed_version', '0');
+    if (version_compare($installed_version, ROBODESK_VERSION, '>=')) {
+        return;
+    }
+
+    // Advanced settings — preserve existing values, fill in missing defaults.
+    $advanced_defaults = [
+        'enable_auto_assign'           => false,
+        'enable_notifications'         => true,
+        'enable_customer_portal'       => true,
+        'enable_signup_rate_limiting'  => false,
+        'max_file_upload_size'         => 10,
+        'reply_unseen_email_minutes'   => 15,
+        'polling_interval'             => 30,
+    ];
+    $existing_advanced = get_option('robodesk_advanced_settings', []);
+    $merged_advanced  = wp_parse_args((array) $existing_advanced, $advanced_defaults);
+    update_option('robodesk_advanced_settings', $merged_advanced);
+
+    update_option('robodesk_installed_version', ROBODESK_VERSION);
+}
+add_action('admin_init', 'robodesk_migrate_settings_on_update');
+
+/**
  * Initialize debug log file
  * Creates logs directory and debug.log file if they don't exist
  */
