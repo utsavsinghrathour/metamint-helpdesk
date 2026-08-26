@@ -593,6 +593,14 @@ time[data-format="datetime-block"] {
   width: 50px;
 }
 
+#popover-icon-preview,
+#logo-preview {
+  max-width: 150px;
+  max-height: 150px;
+  width: auto;
+  height: auto;
+}
+
 /* place holder */
 .editor-content.placeholder:empty::before {
   content: attr(data-placeholder);
