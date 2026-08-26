@@ -220,6 +220,70 @@ function robodesk_deactivate()
 }
 
 /**
+ * Build threading headers (In-Reply-To / References) for a ticket so every
+ * email sent about it — ticket creation, admin replies, unseen-reply emails,
+ * close notifications — stays in the same conversation thread as the original
+ * email that created the ticket, and customer replies come back to the IMAP
+ * inbox and are matched to this ticket.
+ *
+ * @param int $ticket_id The ticket (robodesk_ticket post) ID.
+ * @return array Headers like [ 'In-Reply-To: <id>', 'References: <id>' ].
+ */
+function robodesk_get_ticket_thread_headers($ticket_id)
+{
+    $message_id = trim((string) get_post_meta((int) $ticket_id, 'email_message_id', true));
+    if ($message_id === '') {
+        return [];
+    }
+
+    // Normalize to angle-bracket form for RFC 5322 (In-Reply-To / References).
+    if (strpos($message_id, '<') !== 0) {
+        $message_id = '<' . $message_id . '>';
+    }
+
+    return [
+        'In-Reply-To: ' . $message_id,
+        'References: ' . $message_id,
+    ];
+}
+
+/**
+ * Apply our deterministic outbound Message-ID to PHPMailer. Setting it here
+ * REPLACES PHPMailer's auto-generated one — passing Message-ID as a raw
+ * wp_mail() custom header would create TWO Message-ID headers (RFC violation)
+ * and receiving servers like Gmail silently drop such mail.
+ */
+function robodesk_apply_outbound_message_id($phpmailer)
+{
+    global $robodesk_outbound_message_id;
+    if (!empty($robodesk_outbound_message_id)) {
+        // phpcs:ignore WordPress.NamingConventions.ValidVariableName
+        $phpmailer->MessageID = $robodesk_outbound_message_id;
+    }
+}
+add_action('phpmailer_init', 'robodesk_apply_outbound_message_id');
+
+/**
+ * Generate a deterministic outbound Message-ID for a ticket reply comment and
+ * persist it on the comment. When the customer replies to that email, their
+ * In-Reply-To / References will contain this ID, which is matched back to the
+ * ticket during email fetching.
+ *
+ * @param int $ticket_id  Ticket ID.
+ * @param int $comment_id Reply comment ID.
+ * @return string Message-ID including angle brackets.
+ */
+function robodesk_generate_outbound_message_id($ticket_id, $comment_id = 0)
+{
+    $domain = wp_parse_url(home_url(), PHP_URL_HOST);
+    if (empty($domain)) {
+        $domain = 'robodesk.local';
+    }
+    $suffix = $comment_id > 0 ? '-c' . (int) $comment_id : '';
+    return '<robodesk-ticket-' . (int) $ticket_id . $suffix . '@' . $domain . '>';
+}
+
+/**
  * Merge default settings into stored options on activation/update so that:
  *  - old saved values are always preserved, and
  *  - any new keys introduced by a plugin update get their default values
@@ -2162,7 +2226,7 @@ function robodesk_send_unseen_reply_email($comment_id)
     }
 
 
-    $message .= "<p><strong>" . esc_html($reply_author_name) . "</strong> replied with:</p>";
+    $message = "<p><strong>" . esc_html($reply_author_name) . "</strong> replied with:</p>";
     if ($reply_excerpt !== '') {
         $message .= "<p>\"" . esc_html($reply_excerpt) . "\"</p>";
     }
@@ -2183,8 +2247,14 @@ function robodesk_send_unseen_reply_email($comment_id)
     $send_error_message = '';
 
     try {
+        // Store our outbound Message-ID on the comment so the customer's reply
+        // (In-Reply-To / References) matches back to this ticket when fetched.
+        $outbound_message_id = robodesk_generate_outbound_message_id($ticket_id, $comment_id);
+        add_comment_meta($comment_id, 'email_message_id', $outbound_message_id, true);
+
         $reply_to = robodesk_get_inbox_email_for_ticket($ticket_id);
-        $sent = robodesk_send_email($customer_email, $subject, $message, [], [], $reply_to);
+        $thread_headers = robodesk_get_ticket_thread_headers($ticket_id);
+        $sent = robodesk_send_email($customer_email, $subject, $message, $thread_headers, [], $reply_to, $outbound_message_id);
         if (!$sent && $mail_failed_message !== '') {
             $send_error_message = $mail_failed_message;
         }
