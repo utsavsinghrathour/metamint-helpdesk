@@ -128,38 +128,117 @@ function robodesk_find_ticket_by_reply_context($reference_ids, $useremail = '', 
 return 0;
 }
 
-// Basic email cleaning function
-function robodesk_clean_email_message($message)
+// Detect whether a decoded email body is HTML or plain text.
+function robodesk_email_body_is_html($message, $is_html = null)
+{
+    if ($is_html !== null) {
+        return (bool) $is_html;
+    }
+
+    if (empty($message)) {
+        return false;
+    }
+
+    $trimmed = ltrim($message);
+
+    $is_html = preg_match('/^<!doctype\s+html/i', $trimmed) === 1
+        || stripos($trimmed, '<html') === 0
+        || (strpos($message, '<') !== false
+            && preg_match('/<(\s*(?:html|body|div|p|br|span|table|b|strong|em|i|u|s|h[1-6]|ul|ol|li|a)\s|<\/(?:html|body|div|p|br|span|table|b|strong|em|i|u|s|h[1-6]|ul|ol|li|a)>)/i', $message) === 1);
+
+    return $is_html;
+}
+
+// Walk the MIME structure and pull out the decoded text/plain and text/html
+// bodies (handles multipart/alternative, nested multipart and attachments).
+function robodesk_fetch_email_text_parts($email, $email_number, $structure)
+{
+    $result = ['html' => '', 'plain' => ''];
+
+    $decode = function ($body, $encoding) {
+        if ($body === false) {
+            return '';
+        }
+        if ((int) $encoding === 3) {
+            return base64_decode($body, true);
+        }
+        if ((int) $encoding === 4) {
+            return quoted_printable_decode($body);
+        }
+        return $body;
+    };
+
+    $get_charset = function ($part) {
+        foreach (($part->parameters ?? []) as $param) {
+            if (strtolower((string) ($param->attribute ?? '')) === 'charset') {
+                return (string) $param->value;
+            }
+        }
+        return '';
+    };
+
+    $to_utf8 = function ($body, $charset) {
+        if ($charset !== '' && strtoupper($charset) !== 'UTF-8' && strtoupper($charset) !== 'US-ASCII' && strtoupper($charset) !== 'ASCII') {
+            if (function_exists('mb_convert_encoding')) {
+                $converted = @mb_convert_encoding($body, 'UTF-8', $charset);
+                if ($converted !== false) {
+                    return $converted;
+                }
+            }
+        }
+        return $body;
+    };
+
+    $walk = function ($struct, $section = '') use (&$walk, $email, $email_number, $decode, $get_charset, $to_utf8, &$result) {
+        if ((int) ($struct->type ?? 0) === 1 && isset($struct->parts) && is_array($struct->parts)) {
+            foreach ($struct->parts as $part_index => $part) {
+                $child_section = $section === '' ? (string) ($part_index + 1) : $section . '.' . ($part_index + 1);
+                $walk($part, $child_section);
+            }
+            return;
+        }
+
+        if ((int) ($struct->type ?? -1) !== 0) {
+            return; // Only textual leaf parts (type 0).
+        }
+
+        $subtype = strtoupper((string) ($struct->subtype ?? ''));
+
+        if ($subtype === 'PLAIN' && $result['plain'] === '') {
+            $body = $decode(imap_fetchbody($email, $email_number, $section !== '' ? $section : '1'), $struct->encoding ?? 0);
+            $result['plain'] = $to_utf8($body, $get_charset($struct));
+        } elseif ($subtype === 'HTML' && $result['html'] === '') {
+            $body = $decode(imap_fetchbody($email, $email_number, $section !== '' ? $section : '1'), $struct->encoding ?? 0);
+            $result['html'] = $to_utf8($body, $get_charset($struct));
+        }
+    };
+
+    $walk($structure);
+
+    return $result;
+}
+
+// Clean a plain-text email body: strip quoted/forwarded thread content while
+// preserving the signature, then convert to HTML for display.
+function robodesk_clean_plain_email_message($message)
 {
     if (empty($message)) {
         return '';
     }
 
-    // 1. If it's HTML, try to cut off the email thread at common HTML reply structures first
-    if (strpos($message, '<') !== false) {
-        $html_split_patterns = array(
-            '/<blockquote/i',
-            '/<div\s+class=["\']gmail_quote["\']/i',
-            '/<div\s+id=["\']gmail_quote["\']/i',
-            '/<div\s+class=["\']outlook_signature["\']/i',
-            '/<div\s+class=["\']email-quote["\']/i',
-            '/<hr\s+[^>]*id=["\'](?:stopSpelling|divRplyFwdMsg)["\']/i', // Outlook / Webmail horizontal rules
-        );
-        foreach ($html_split_patterns as $pattern) {
-            $parts = preg_split($pattern, $message, 2);
-            if (count($parts) > 1) {
-                $message = $parts[0];
-            }
-        }
-    }
-
-    // 2. Remove common email reply headers in plain text or mixed text
+    // 1. Cut the message at common plain-text reply / forward markers. The
+    // message that precedes the marker is the new content, everything after it
+    // is the quoted thread we no longer want (keeps replies independent).
     $split_patterns = array(
-        '/[\r\n]+\s*On\s+(?:(?!\bOn\b).){1,250}?\s+wrote:\s*/i', // On ... wrote:
-        '/[\r\n]+\s*-+\s*Original Message\s*-+/i',             // -----Original Message-----
-        '/[\r\n]+\s*From:\s+.*[\r\n]+\s*(?:Sent|Date):\s+/i',    // Outlook style: From: ... Sent: ...
-        '/[\r\n]+\s*_{32,}/',                                    // Divider lines (32+ underscores)
-        '/[\r\n]+\s*-{10,}/',                                    // Divider lines (10+ dashes)
+        // On Thu, 27 Aug 2026 at 12:00, Someone <x@y.com> wrote:
+        '/[\r\n]+\s*On\s+(?:(?!\bOn\b).){1,300}?\s+wrote:\s*/i',
+        // -----Original Message----- / ---Original Message---
+        '/[\r\n]+\s*[-_=]{3,}\s*Original Message\s*[-_=]{3,}/i',
+        // Outlook / webmail header block: From: ... Sent/Date/Subject/To: ...
+        '/[\r\n]+\s*From:\s+[^\r\n]+[\r\n]+(?:\s*(?:To|Cc|Bcc|Sent|Date|Subject|Importance|MIME-Version):\s*[^\r\n]*[\r\n]*)+/i',
+        // Apple Mail / Gmail "---------- Forwarded message ----------"
+        '/[\r\n]+\s*[-_=]{3,}\s*Forwarded message\s*[-_=]{3,}/i',
+        '/[\r\n]+\s*Begin forwarded message:\s*[\r\n]+/i',
     );
     foreach ($split_patterns as $pattern) {
         $parts = preg_split($pattern, $message, 2);
@@ -168,25 +247,184 @@ function robodesk_clean_email_message($message)
         }
     }
 
-    // 3. Remove lines starting with ">" (quoted text)
+    // 2. Remove lines starting with ">" (quoted text).
     $message = preg_replace('/^>.*$/m', '', $message);
 
-    // 4. Strip HTML tags
-    $message = wp_strip_all_tags($message);
+    // 3. Remove a single "On ... wrote:" line that may have survived at the end.
+    $message = preg_replace('/[\r\n]+\s*On\s+(?:(?!\bOn\b).){1,300}?\s+wrote:\s*$/i', '', $message);
 
-    // 5. Replace multiple horizontal spaces/tabs with a single space
+    // 4. Trim trailing divider lines (dashes/underscores/equals) — these often
+    // separate the message from the quoted block. A signature below the divider
+    // is kept because the message ends with the signature text, not the divider.
+    $message = preg_replace('/[\r\n]+\s*[-_=]{6,}\s*$/', '', $message);
+
+    // 5. Collapse excessive whitespace.
     $message = preg_replace('/\h+/', ' ', $message);
-
-    // 6. Replace multiple vertical whitespace/newlines with a single newline
     $message = preg_replace('/\v+/', "\n", $message);
 
-    // 7. Clean up single-line On ... wrote: prefix if it remained at the very end of the text
-    $message = preg_replace('/On\s.*wrote:\s*$/i', '', $message);
+    $message = trim($message);
+    if ($message === '') {
+        return '';
+    }
 
-    // 8. Convert newlines to <br> so line breaks are preserved in HTML display
+    // 6. Convert newlines to <br> so line breaks are preserved, linkify URLs,
+    // then sanitize so the stored content is safe for HTML rendering.
     $message = nl2br($message);
+    $message = make_clickable($message);
+    $message = wp_kses_post($message);
 
     return trim($message);
+}
+
+// Clean an HTML email body with a DOM parser: keep text formatting (bold,
+// italic, lists, links, headings), drop scripts/styles/images and the quoted
+// thread (blockquotes, gmail/outlook/yahoo quote containers), keep signature.
+function robodesk_clean_html_email_message($html)
+{
+    if (empty($html)) {
+        return '';
+    }
+
+    $has_dom = class_exists('DOMDocument');
+
+    if (!$has_dom) {
+        // Fallback: regex-based thread stripping, then plain-text cleaning.
+        $html_split_patterns = array(
+            '/<blockquote[\s>]/i',
+            '/<div[^>]*class=["\'][^"\']*gmail_quote["\'][^>]*>/i',
+            '/<div[^>]*class=["\'][^"\']*gmail_extra["\'][^>]*>/i',
+            '/<div[^>]*class=["\'][^"\']*email-quote["\'][^>]*>/i',
+            '/<div[^>]*class=["\'][^"\']*yahoo_quoted["\'][^>]*>/i',
+            '/<div[^>]*class=["\'][^"\']*originalMessage["\'][^>]*>/i',
+            '/<hr[^>]*id=["\'](?:stopSpelling|divRplyFwdMsg)["\'][^>]*>/i',
+        );
+        foreach ($html_split_patterns as $pattern) {
+            $parts = preg_split($pattern, $html, 2);
+            if (count($parts) > 1) {
+                $html = $parts[0];
+            }
+        }
+
+        return wp_kses_post(trim(nl2br(wp_strip_all_tags($html))));
+    }
+
+    // Wrap the HTML in a proper document so DOMDocument preserves all content.
+    $html = '<!DOCTYPE html><html><head><meta charset="utf-8"></head><body>' . $html . '</body></html>';
+
+    $previous_internal_errors = libxml_use_internal_errors(true);
+    $dom = new DOMDocument();
+    $loaded = $dom->loadHTML($html, LIBXML_NOWARNING | LIBXML_NOERROR);
+    libxml_clear_errors();
+    libxml_use_internal_errors($previous_internal_errors);
+
+    if (!$loaded) {
+        return wp_kses_post(trim(nl2br(wp_strip_all_tags($html))));
+    }
+
+    $xpath = new DOMXPath($dom);
+
+    // Drop non-content elements entirely.
+    $drop_selector = '//head | //style | //script | //title | //meta | //link | //noscript | //iframe | //object | //embed | //form | //input | //button | //select | //textarea | //svg | //canvas | //img';
+    foreach ($xpath->query($drop_selector) as $node) {
+        if ($node->parentNode) {
+            $node->parentNode->removeChild($node);
+        }
+    }
+
+    // Remove quoted / forwarded thread containers (keeps each reply independent).
+    // Gmail/Outlook append random hashes to classes, so match class substrings.
+    $quote_selector = '//blockquote'
+        . ' | //*[contains(@class, "gmail_quote")]'
+        . ' | //*[contains(@class, "gmail_extra")]'
+        . ' | //*[contains(@class, "yahoo_quoted")]'
+        . ' | //*[contains(@class, "email-quote")]'
+        . ' | //*[contains(@class, "originalMessage")]'
+        . ' | //*[contains(@class, "apple-mail-inner-quote")]';
+    foreach ($xpath->query($quote_selector) as $node) {
+        if ($node->parentNode) {
+            $node->parentNode->removeChild($node);
+        }
+    }
+
+    // Outlook: everything below the "stopSpelling"/"divRplyFwdMsg" rule is the
+    // forwarded/replied thread — remove the rule and all following siblings.
+    $outlook_rules = $xpath->query('//hr[contains(@id, "stopSpelling")] | //div[contains(@id, "divRplyFwdMsg")] | //hr[contains(@id, "divRplyFwdMsg")] | //hr[contains(@class, "stopSpelling")]');
+    foreach ($outlook_rules as $node) {
+        $parent = $node->parentNode;
+        if (!$parent) {
+            continue;
+        }
+        while ($node->nextSibling) {
+            $parent->removeChild($node->nextSibling);
+        }
+        $parent->removeChild($node);
+    }
+
+    // Strip inline layout styles; semantic tags keep the formatting.
+    foreach ($xpath->query('//*[@style]') as $node) {
+        $node->removeAttribute('style');
+    }
+    foreach ($xpath->query('//*[@class]') as $node) {
+        $node->removeAttribute('class');
+    }
+    foreach ($xpath->query('//*[@id]') as $node) {
+        $node->removeAttribute('id');
+    }
+
+    // Neutralise dangerous link protocols; open in a new tab.
+    foreach ($xpath->query('//a') as $node) {
+        $href = trim((string) $node->getAttribute('href'));
+        if (preg_match('/^\s*(?:javascript|vbscript|data):/i', $href)) {
+            $node->removeAttribute('href');
+        } else {
+            $node->setAttribute('target', '_blank');
+            $node->setAttribute('rel', 'noopener nofollow');
+        }
+    }
+
+    // Remove stray "On ... wrote:" header text nodes that sit outside a
+    // blockquote (e.g. Outlook HTML replies).
+    $text_nodes = $xpath->query('//text()');
+    foreach ($text_nodes as $text_node) {
+        $text = $text_node->nodeValue;
+        if (preg_match('/^\s*On\s+(?:(?!\bOn\b).){1,300}?\s+wrote:\s*$/i', trim($text))) {
+            $text_node->nodeValue = '';
+        }
+    }
+
+    // Serialize just the body children (keeps <p>/<br>/lists formatting).
+    $body = $dom->getElementsByTagName('body')->item(0);
+    if ($body) {
+        $inner = '';
+        foreach ($body->childNodes as $child) {
+            $inner .= $dom->saveHTML($child);
+        }
+        $html_out = $inner;
+    } else {
+        $html_out = $dom->saveHTML();
+    }
+
+    $html_out = wp_kses_post($html_out);
+    $html_out = preg_replace('/[\r\n\t]+/', ' ', $html_out);
+    $html_out = preg_replace('/[ \t]{2,}/', ' ', $html_out);
+    $html_out = preg_replace('/>\s+</', '><', $html_out);
+
+    return trim($html_out);
+}
+
+// Basic email cleaning function: preserves HTML formatting and signatures,
+// strips quoted/forwarded thread content so each reply stays independent.
+function robodesk_clean_email_message($message, $is_html = null)
+{
+    if (empty($message)) {
+        return '';
+    }
+
+    if (robodesk_email_body_is_html($message, $is_html)) {
+        return robodesk_clean_html_email_message($message);
+    }
+
+    return robodesk_clean_plain_email_message($message);
 }
 
 function robodesk_fetch_emails()
@@ -307,8 +545,6 @@ function robodesk_fetch_emails()
         $error_count = 0;
 
         foreach ($emails as $email_number) {
-            rbd_log('Processing email #' . $email_number);
-
             try {
             $headerInfo = imap_headerinfo($email, $email_number);
             if (!$headerInfo) {
@@ -329,14 +565,16 @@ function robodesk_fetch_emails()
 
             $date_utc = gmdate("Y-m-d H:i:s", strtotime($headerInfo->date ?? 'now'));
             $date = get_date_from_gmt($date_utc, 'Y-m-d H:i:s');
-            rbd_log('Email date: ' . $date . ', Last fetched: ' . $last_fetched_date);
 
-            // Skip emails older than or equal to last fetched date
+            // Skip emails older than or equal to last fetched date silently —
+            // the IMAP SINCE search is day-granular so it re-reads the whole day
+            // every run; those are already handled, not a skip worth reporting.
             if (strtotime($date) <= strtotime($last_fetched_date)) {
-                rbd_log('Skipping email #' . $email_number . ' as it\'s older than last fetch date');
-                $skipped_count++;
                 continue;
             }
+
+            rbd_log('--- Processing email #' . $email_number . ' ---');
+            rbd_log('Email date: ' . $date . ', Last fetched: ' . $last_fetched_date);
 
             // Check for duplicate tickets
             if (in_array($message_id, $existing_message_ids)) {
@@ -376,36 +614,20 @@ function robodesk_fetch_emails()
             }
             rbd_log('Email from: ' . $from . ', Subject: ' . $subject);
 
-            // Fetch email body with robust MIME handling and transfer encoding decoding
+            // Fetch email body with robust MIME handling and transfer encoding decoding.
+            // Prefer the HTML part when present (preserves rich formatting), fall back
+            // to plain text.
             $structure = imap_fetchstructure($email, $email_number);
-            $message = '';
-            $encoding = 0;
+            $body_parts = robodesk_fetch_email_text_parts($email, $email_number, $structure);
 
-            if ($structure->type == 1 && isset($structure->parts)) { // Multipart
-                foreach ($structure->parts as $part_number => $part) {
-                    if ($part->subtype == 'PLAIN') {
-                        $message = imap_fetchbody($email, $email_number, $part_number + 1);
-                        $encoding = $part->encoding;
-                        break;
-                    }
-                }
-            }
-
-            if (empty($message)) {
-                // Fallback to default body
-                $message = imap_fetchbody($email, $email_number, 1.1);
-                $encoding = $structure->parts[0]->parts[0]->encoding ?? 0;
-                if (empty($message)) {
-                    $message = imap_fetchbody($email, $email_number, 1);
-                    $encoding = $structure->encoding ?? 0;
-                }
-            }
-
-            // Decode message based on transfer encoding (3 = Base64, 4 = Quoted-Printable)
-            if ($encoding == 3) {
-                $message = base64_decode($message);
-            } elseif ($encoding == 4) {
-                $message = quoted_printable_decode($message);
+            $is_html_body = false;
+            if (!empty($body_parts['html'])) {
+                $message = $body_parts['html'];
+                $is_html_body = true;
+            } elseif (!empty($body_parts['plain'])) {
+                $message = $body_parts['plain'];
+            } else {
+                $message = '';
             }
 
             if (empty($message)) {
@@ -414,7 +636,7 @@ function robodesk_fetch_emails()
                 continue;
             }
 
-            $message = robodesk_clean_email_message($message);
+            $message = robodesk_clean_email_message($message, $is_html_body);
 
             // Handle replies for parent tickets
             $in_reply_to = $headerInfo->in_reply_to ?? '';
@@ -681,10 +903,10 @@ function robodesk_fetch_emails()
         }
 
         // Display summary
-        // $summary = "Email processing complete. Processed: $processed_count, Replies: $reply_count, Skipped: $skipped_count, Errors: $error_count";
         $summary = "Email processing complete. Processed: $processed_count, Replies: $reply_count, Errors: $error_count";
 
         rbd_log($summary);
+        rbd_log('========================= END OF FETCH =========================');
 
         return $summary; // ✅ Return it
 
