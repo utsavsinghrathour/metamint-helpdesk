@@ -24,7 +24,22 @@ const normalizeMessageText = (text) => {
   const str = String(text);
   const hasHtml = /<[^>]+>/.test(str);
   if (hasHtml) return str;
-  return escapeHtml(str).replace(/\r\n|\r|\n/g, "<br />");
+
+  let html = escapeHtml(str);
+
+  // Markdown links [label](url) -> clickable anchor (url is HTML-escaped)
+  html = html.replace(
+    /\[([^\]]+)\]\((\S+?)\)/g,
+    '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>',
+  );
+
+  // Bare URLs -> clickable anchor (skip URLs already inside href="...")
+  html = html.replace(
+    /(?<!href=")(https?:\/\/\S+)/g,
+    '<a href="$1" target="_blank" rel="noopener noreferrer">$1</a>',
+  );
+
+  return html.replace(/\r\n|\r|\n/g, "<br />");
 };
 
 export default function RobodeskBotChatWidgetMain({
@@ -155,6 +170,10 @@ export default function RobodeskBotChatWidgetMain({
               <button
                 key={i}
                 onClick={() => {
+                  if (a.action === "confirm-refund") {
+                    confirmRefund(a.pending_id);
+                    return;
+                  }
                   if (a.prompt) setInput(a.prompt);
                   if (a.url) window.location.href = a.url;
                 }}
@@ -275,7 +294,7 @@ export default function RobodeskBotChatWidgetMain({
    * SEND MESSAGE
    */
   const sendMessage = async () => {
-    const q = input.trim();
+    const q = String(input ?? "").trim();
     if (!q) return;
 
     const now = new Date().toISOString();
@@ -293,7 +312,7 @@ export default function RobodeskBotChatWidgetMain({
       { role: "assistant", text: "...", thinking: true },
     ]);
 
-    const restNonce = window.RobodeskBotConfig?.restNonce || window.wpApiSettings?.nonce || "";
+    const restNonce = window.robodeskAuth?.restNonce || window.RobodeskBotConfig?.restNonce || window.wpApiSettings?.nonce || "";
     const headers = { "Content-Type": "application/json" };
     if (restNonce) {
       headers["X-WP-Nonce"] = restNonce;
@@ -335,7 +354,9 @@ export default function RobodeskBotChatWidgetMain({
   };
 
   const sendMessageStream = async (overrideText = null) => {
-    const q = (overrideText ?? input).trim();
+    // Coerce to string: this is also invoked from onClick, which passes a
+    // DOM event as the first argument — never let .trim() blow up.
+    const q = String(overrideText ?? input ?? "").trim();
     if (!q) return;
 
     const now = new Date().toISOString();
@@ -349,7 +370,7 @@ export default function RobodeskBotChatWidgetMain({
     setIsStreaming(true);
     setLoadingText("...");
 
-    const restNonce = window.RobodeskBotConfig?.restNonce || window.wpApiSettings?.nonce || "";
+    const restNonce = window.robodeskAuth?.restNonce || window.RobodeskBotConfig?.restNonce || window.wpApiSettings?.nonce || "";
     const headers = { "Content-Type": "application/json" };
     if (restNonce) {
       headers["X-WP-Nonce"] = restNonce;
@@ -368,12 +389,24 @@ export default function RobodeskBotChatWidgetMain({
         }),
       });
 
+      if (!resp.ok) {
+        let msg = `Request failed (${resp.status})`;
+        try {
+          const j = await resp.json();
+          if (j && j.message) msg = j.message;
+        } catch (e) {
+          /* ignore — fall back to status text */
+        }
+        throw new Error(msg);
+      }
+
       if (!resp.body) throw new Error("Streaming not supported");
 
       const reader = resp.body.getReader();
       const decoder = new TextDecoder("utf-8");
 
       let buffer = "";
+      let gotReply = false;
 
       while (true) {
         const { value, done } = await reader.read();
@@ -446,11 +479,54 @@ export default function RobodeskBotChatWidgetMain({
 
             setIsStreaming(false);
             setLoadingText("");
+            gotReply = true;
           }
         }
       }
+
+      // Stream ended without a final reply (e.g. server time-limit hit): show
+      // a fallback and clear the loading state so the input isn't stuck.
+      if (!gotReply) {
+        setMessages((m) => [
+          ...m,
+          {
+            role: "assistant",
+            message: "I didn't get a response. Please try again.",
+            timestamp: new Date().toISOString(),
+          },
+        ]);
+        setIsStreaming(false);
+        setLoadingText("");
+      }
     } catch (e) {
       setMessages((m) => [...m, { role: "assistant", text: e.message, timestamp: new Date().toISOString() }]);
+      setIsStreaming(false);
+      setLoadingText("");
+    }
+  };
+
+  /**
+   * Confirm a pending refund (triggered by the "Confirm refund" action button).
+   */
+  const confirmRefund = async (pendingId) => {
+    if (!pendingId) return;
+    setIsStreaming(true);
+    setLoadingText("...");
+    const restNonce = window.robodeskAuth?.restNonce || window.RobodeskBotConfig?.restNonce || window.wpApiSettings?.nonce || "";
+    try {
+      const resp = await fetch("/wp-json/robodesk-bot/v1/confirm-refund", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "X-WP-Nonce": restNonce },
+        body: JSON.stringify({ pending_id: pendingId }),
+      });
+      const data = await resp.json();
+      let message = data.status === "refunded"
+        ? `Refund of ${data.amount} processed.`
+        : (data.message || data.error || "Refund could not be processed.");
+      setMessages((m) => [...m, { role: "assistant", message, timestamp: new Date().toISOString() }]);
+    } catch (e) {
+      setMessages((m) => [...m, { role: "assistant", message: e.message, timestamp: new Date().toISOString() }]);
+    } finally {
       setIsStreaming(false);
       setLoadingText("");
     }
@@ -574,6 +650,10 @@ export default function RobodeskBotChatWidgetMain({
               className="chat-message rd-flex rd-items-start rd-gap-8 received rd-streaming-loader"
               style={{ maxWidth: "70%" }}
             >
+              <style>{`
+                @keyframes rd-typing-pulse { 0%,100%{ opacity:.3; } 50%{ opacity:1; } }
+                .rd-typing-ellipsis { display:inline-block; min-width:28px; text-align:left; font-size:20px; font-weight:700; line-height:1; letter-spacing:2px; animation: rd-typing-pulse 1.2s ease-in-out infinite; }
+              `}</style>
               {getBotDisplayImage() ? (
                 <img
                   src={getBotDisplayImage()}
@@ -595,11 +675,23 @@ export default function RobodeskBotChatWidgetMain({
                   border: "1px solid #E0E0E0",
                   borderRadius: "10px",
                   padding: "8px 12px",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "8px",
                 }}
               >
-                <span className="rd-body-text single-message">
-                  {loadingText || "..."}
+                <span
+                  className="rd-typing-ellipsis rd-body-text single-message"
+                  role="status"
+                  aria-label="Bot is typing"
+                >
+                  ...
                 </span>
+                {loadingText && loadingText !== "..." && (
+                  <span className="rd-body-text single-message">
+                    {loadingText}
+                  </span>
+                )}
               </div>
             </div>
           )}
@@ -624,7 +716,7 @@ export default function RobodeskBotChatWidgetMain({
             />
             <div className="rd-flex rd-gap-20 rd-relative">
               <button
-                onClick={sendMessageStream}
+                onClick={() => sendMessageStream()}
                 className="rd-bg-transparent rd-border-none rd-ml-10 icon-dark rd-cursor-pointer rd-p-0"
               >
                 <PiPaperPlaneRightFill className="icon-dark" size={20} />
