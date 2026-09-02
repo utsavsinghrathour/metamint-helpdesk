@@ -535,6 +535,20 @@ export default function RobodeskBotChatWidgetMain({
   return (
     <>
       <div id="robodesk-bot-panel">
+        <style>{`
+          #robodesk-bot-panel a,
+          #robodesk-bot-panel .message-content a,
+          #robodesk-bot-panel .ai-text a {
+            color: #1a73e8 !important;
+            font-weight: 600 !important;
+            text-decoration: underline !important;
+            text-underline-offset: 2px;
+            cursor: pointer;
+          }
+          #robodesk-bot-panel a:hover {
+            color: #0b5ed7 !important;
+          }
+        `}</style>
         {/* <div id="robodesk-bot-header">
                     <strong>AI Assistant ({AIMode})</strong>
                     <button onClick={() => setOpen(false)}>x</button>
