@@ -289,22 +289,25 @@ $robodesk_settings_hidden = ($robodesk_current_tab === 'settings') ? '' : ' hidd
 
              <!----------------------- IMAP Settings load saved settings ------------------->
              <?php
-                // Load saved settings
-                 $robodesk_imap_settings = get_option('robodesk_imap_settings', array(
+                // Load saved settings (merge defaults so a partial/empty saved
+                // value never produces undefined-index warnings)
+                 $robodesk_imap_defaults = array(
                      'hostname' => 'email.example.com',
                      'port'     => 993,
                      'username' => '',
                      'password' => '',
                      'auth'     => true,
                      'inbox_name' => '',
-                 ));
+                 );
+
+                 $robodesk_imap_settings = wp_parse_args((array) get_option('robodesk_imap_settings', array()), $robodesk_imap_defaults);
 
                  $robodesk_imap_hostname   = $robodesk_imap_settings['hostname'];
                  $robodesk_imap_port       = $robodesk_imap_settings['port'];
                  $robodesk_imap_username   = $robodesk_imap_settings['username'];
                  $robodesk_imap_password   = $robodesk_imap_settings['password'];
-                 $robodesk_imap_auth       = isset($robodesk_imap_settings['auth']) ? $robodesk_imap_settings['auth'] : true;
-                 $robodesk_imap_inbox_name = isset($robodesk_imap_settings['inbox_name']) ? $robodesk_imap_settings['inbox_name'] : '';
+                 $robodesk_imap_auth       = $robodesk_imap_settings['auth'];
+                 $robodesk_imap_inbox_name = $robodesk_imap_settings['inbox_name'];
 
                 $robodesk_smtp_settings = get_option('robodesk_smtp_settings', array(
                     'enabled' => false,
