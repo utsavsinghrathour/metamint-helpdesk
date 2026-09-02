@@ -548,6 +548,31 @@ export default function RobodeskBotChatWidgetMain({
           #robodesk-bot-panel a:hover {
             color: #0b5ed7 !important;
           }
+          #robodesk-bot-panel .ai-actions button,
+          #robodesk-bot-panel .ai-suggestions button {
+            background: #1a73e8 !important;
+            color: #ffffff !important;
+            border: none !important;
+            border-radius: 8px;
+            padding: 9px 18px;
+            font-weight: 600 !important;
+            font-size: 14px;
+            cursor: pointer;
+            box-shadow: 0 2px 6px rgba(26, 115, 232, 0.35);
+            transition: background .15s ease, transform .15s ease, box-shadow .15s ease;
+            display: inline-block;
+            margin: 4px 6px 4px 0;
+          }
+          #robodesk-bot-panel .ai-actions button:hover,
+          #robodesk-bot-panel .ai-suggestions button:hover {
+            background: #0b5ed7 !important;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 10px rgba(26, 115, 232, 0.45);
+          }
+          #robodesk-bot-panel .ai-actions,
+          #robodesk-bot-panel .ai-suggestions {
+            margin-top: 8px;
+          }
         `}</style>
         {/* <div id="robodesk-bot-header">
                     <strong>AI Assistant ({AIMode})</strong>
