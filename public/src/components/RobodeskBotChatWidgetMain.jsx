@@ -42,6 +42,20 @@ const normalizeMessageText = (text) => {
   return html.replace(/\r\n|\r|\n/g, "<br />");
 };
 
+/**
+ * Ticking countdown shown on expiring action buttons (e.g. refund confirm).
+ */
+function Countdown({ seconds }) {
+  const [left, setLeft] = useState(seconds);
+  useEffect(() => {
+    const t = setInterval(() => setLeft((s) => (s > 0 ? s - 1 : 0)), 1000);
+    return () => clearInterval(t);
+  }, []);
+  const mm = String(Math.floor(left / 60)).padStart(1, "0");
+  const ss = String(left % 60).padStart(2, "0");
+  return <span className="rd-countdown">({mm}:{ss})</span>;
+}
+
 export default function RobodeskBotChatWidgetMain({
   widgetConfig,
   activeAIMode,
@@ -113,7 +127,7 @@ export default function RobodeskBotChatWidgetMain({
   /**
    * ASSISTANT MESSAGE RENDERER
    */
-  function AssistantMessage({ msg }) {
+  function AssistantMessage({ msg, msgIndex }) {
     return (
       <div className="ai-block">
         {/* MAIN MESSAGE TEXT */}
@@ -166,21 +180,26 @@ export default function RobodeskBotChatWidgetMain({
         {/* ACTIONS (link / deep actions) */}
         {msg.ui?.actions?.length > 0 && (
           <div className="ai-actions">
-            {msg.ui.actions.map((a, i) => (
-              <button
-                key={i}
-                onClick={() => {
-                  if (a.action === "confirm-refund") {
-                    confirmRefund(a.pending_id);
-                    return;
-                  }
-                  if (a.prompt) setInput(a.prompt);
-                  if (a.url) window.location.href = a.url;
-                }}
-              >
-                {a.label}
-              </button>
-            ))}
+            {msg.ui.actions.map((a, i) => {
+              const isUsed = a.used;
+              return (
+                <button
+                  key={i}
+                  disabled={isUsed}
+                  onClick={() => {
+                    if (a.action === "confirm-refund") {
+                      confirmRefund(a.pending_id, msgIndex);
+                      return;
+                    }
+                    if (a.prompt) setInput(a.prompt);
+                    if (a.url) window.location.href = a.url;
+                  }}
+                >
+                  {isUsed ? "Refund processed ✓" : a.label}
+                  {a.expires_in && !isUsed ? <Countdown seconds={a.expires_in} /> : null}
+                </button>
+              );
+            })}
           </div>
         )}
       </div>
@@ -507,9 +526,19 @@ export default function RobodeskBotChatWidgetMain({
 
   /**
    * Confirm a pending refund (triggered by the "Confirm refund" action button).
+   * Marks the clicked button as used in the message it belongs to, so it can't
+   * be double-clicked.
    */
-  const confirmRefund = async (pendingId) => {
+  const confirmRefund = async (pendingId, msgIndex = null) => {
     if (!pendingId) return;
+    // Grey out the clicked button immediately.
+    if (msgIndex !== null) {
+      setMessages((m) => m.map((msg, idx) => (
+        idx === msgIndex
+          ? { ...msg, ui: { ...msg.ui, actions: (msg.ui?.actions || []).map((a) => (a.pending_id === pendingId ? { ...a, used: true } : a)) } }
+          : msg
+      )));
+    }
     setIsStreaming(true);
     setLoadingText("...");
     const restNonce = window.robodeskAuth?.restNonce || window.RobodeskBotConfig?.restNonce || window.wpApiSettings?.nonce || "";
@@ -568,6 +597,21 @@ export default function RobodeskBotChatWidgetMain({
             background: #0b5ed7 !important;
             transform: translateY(-1px);
             box-shadow: 0 4px 10px rgba(26, 115, 232, 0.45);
+          }
+          #robodesk-bot-panel .ai-actions button:disabled,
+          #robodesk-bot-panel .ai-suggestions button:disabled {
+            background: #9e9e9e !important;
+            color: #ffffff !important;
+            cursor: not-allowed !important;
+            box-shadow: none;
+            transform: none;
+            opacity: 0.85;
+          }
+          #robodesk-bot-panel .rd-countdown {
+            font-weight: 400 !important;
+            font-size: 12px;
+            margin-left: 6px;
+            opacity: 0.9;
           }
           #robodesk-bot-panel .ai-actions,
           #robodesk-bot-panel .ai-suggestions {
@@ -645,7 +689,7 @@ export default function RobodeskBotChatWidgetMain({
                     }}
                   >
                     {m.role === "assistant" ? (
-                      <AssistantMessage msg={m} />
+                      <AssistantMessage msg={m} msgIndex={i} />
                     ) : (
                       <span
                         className="rd-body-text single-message"
