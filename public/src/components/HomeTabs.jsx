@@ -2,6 +2,7 @@ import { useState } from "react";
 import Header from "./Header.jsx";
 import Footer from "./Footer.jsx";
 import SingleQuestionBox from "./SingleQuestionBox";
+import { readChatSession } from "../utils/startConversation";
 import "../styles/HomeTabs.css";
 import RobodeskBotChatWidgetMain from "./RobodeskBotChatWidgetMain";
 
@@ -18,11 +19,7 @@ const HomeTabs = ({
 }) => {
   const [showLogin, setShowLogin] = useState(false);
   const [showHeaderFooter, setShowHeaderFooter] = useState(true);
-  const CHAT_KEY = "robodesk_chat_session";
-  const [messages, setMessages] = useState(() => {
-    const saved = sessionStorage.getItem(CHAT_KEY);
-    return saved ? JSON.parse(saved) : [];
-  });
+  const [messages, setMessages] = useState(() => readChatSession());
 
   return (
     <div className="rd-flex rd-flex-col rd-h-full featured-faq">

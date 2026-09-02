@@ -3,6 +3,7 @@ import defaultLogo from '../images/robodesk-logo.png'; // Adjust path to your de
 import '../styles/header.css';
 import { IoAddCircle, IoCloseCircleSharp, IoLogoWhatsapp } from 'react-icons/io5';
 import { sendReply } from '../utils/modules';
+import { readChatSession, CHAT_SESSION_KEY } from '../utils/startConversation';
 import { useAppData } from '../utils/AppDataContext';
 import { createTicket } from "../utils/modules";
 
@@ -11,7 +12,6 @@ let staffFetched = false;
 const Header = ({ logo, onClose, setActiveTab, setShowLogin, updateSelectedTicket }) => {
   const [talkToHuman, setTalkToHuman] = useState(false);
   const [messageCount, setMessageCount] = useState(0);
-  const CHAT_KEY = "robodesk_chat_session";
   const [selectedStaff, setSelectedStaff] = useState(null);
   const { loggedinContext, loggedInUsrId, refreshTickets } = useAppData();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -70,8 +70,7 @@ const Header = ({ logo, onClose, setActiveTab, setShowLogin, updateSelectedTicke
       })
     );
 
-    const saved = sessionStorage.getItem(CHAT_KEY);
-    let messages = saved ? JSON.parse(saved) : [];
+    let messages = readChatSession();
 
     // Stably sort messages chronologically by timestamp
     const withIndex = messages.map((msg, idx) => ({ msg, idx }));
@@ -196,7 +195,7 @@ const Header = ({ logo, onClose, setActiveTab, setShowLogin, updateSelectedTicke
       updateSelectedTicket(newTicket);
       setActiveTab(1);
 
-      sessionStorage.removeItem(CHAT_KEY);
+      sessionStorage.removeItem(CHAT_SESSION_KEY);
     } catch (error) {
       console.error("Failed to create ticket:", error);
     } finally {
@@ -253,9 +252,7 @@ const Header = ({ logo, onClose, setActiveTab, setShowLogin, updateSelectedTicke
     }
     // Check WhatsApp availability on mount
     sendWhatsappMessageClick();
-    const saved = sessionStorage.getItem(CHAT_KEY);
-    const messages = saved ? JSON.parse(saved) : [];
-    setMessageCount(messages.length);
+    setMessageCount(readChatSession().length);
 
     const handleMessageSent = (e) => {
       setMessageCount(e.detail?.count ?? 1);

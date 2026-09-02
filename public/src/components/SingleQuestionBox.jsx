@@ -5,6 +5,7 @@ import parse from "html-react-parser";
 import DOMPurify from "dompurify";
 import he from "he";
 import Footer, { robodeskShowCredits } from "./Footer";
+import { readChatSession } from "../utils/startConversation";
 import "../styles/SingleQuestionBox.css";
 import RobodeskBotChatWidgetMain from "./RobodeskBotChatWidgetMain";
 
@@ -65,8 +66,7 @@ const SingleQuestionBox = ({
   const [error, setError] = useState(null);
   const [hasChatStarted, setHasChatStarted] = useState(() => {
     try {
-      const saved = sessionStorage.getItem("robodesk_chat_session");
-      return saved ? JSON.parse(saved).length > 0 : false;
+      return readChatSession().length > 0;
     } catch {
       return false;
     }

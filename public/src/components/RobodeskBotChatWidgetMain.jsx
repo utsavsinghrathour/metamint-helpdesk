@@ -9,6 +9,7 @@ import DefaultAvatar from "../images/default-avatar.jpg";
 import {
   START_CONVERSATION_EVENT,
   consumePendingInitialMessage,
+  CHAT_SESSION_KEY,
 } from "../utils/startConversation.js";
 
 const escapeHtml = (unsafe) =>
@@ -62,7 +63,10 @@ export default function RobodeskBotChatWidgetMain({
   onChatStart,
 }) {
   const rootRef = useRef(null);
-  const CHAT_KEY = "robodesk_chat_session";
+  const getUserKey = () =>
+    window.robodeskAuth?.isLoggedIn === "true" && window.robodeskAuth?.loggedInUserId
+      ? String(window.robodeskAuth.loggedInUserId)
+      : "guest";
   const chatHeading =
     window.robodeskData?.chatHeading ||
     widgetConfig?.chatHeading ||
@@ -89,24 +93,43 @@ export default function RobodeskBotChatWidgetMain({
   const [AIMode, setAIMode] = useState(activeAIMode || "");
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState(() => {
-    const saved = sessionStorage.getItem(CHAT_KEY);
+    const currentUserKey = getUserKey();
+    const saved = sessionStorage.getItem(CHAT_SESSION_KEY);
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
+        // New format: { user: <userKey>, messages: [...] }.
+        // Legacy format: a bare array (no user marker) -> treated as a guest chat.
+        let storedMessages;
+        let storedUser;
         if (Array.isArray(parsed)) {
-          // Stably sort messages in chronological order by timestamp
-          const withIndex = parsed.map((msg, idx) => ({ msg, idx }));
-          withIndex.sort((a, b) => {
-            const timeA = a.msg.timestamp ? new Date(a.msg.timestamp).getTime() : null;
-            const timeB = b.msg.timestamp ? new Date(b.msg.timestamp).getTime() : null;
-            if (timeA !== null && timeB !== null) {
-              if (timeA !== timeB) {
-                return timeA - timeB;
+          storedMessages = parsed;
+          storedUser = "guest";
+        } else if (parsed && typeof parsed === "object" && Array.isArray(parsed.messages)) {
+          storedMessages = parsed.messages;
+          storedUser = parsed.user || "guest";
+        }
+        if (storedMessages) {
+          // Keep only when: same visitor, or a guest who has now logged in.
+          // Clearing covers login -> logout and user -> different user.
+          const keep =
+            storedUser === currentUserKey ||
+            (storedUser === "guest" && currentUserKey !== "guest");
+          if (keep) {
+            // Stably sort messages in chronological order by timestamp
+            const withIndex = storedMessages.map((msg, idx) => ({ msg, idx }));
+            withIndex.sort((a, b) => {
+              const timeA = a.msg.timestamp ? new Date(a.msg.timestamp).getTime() : null;
+              const timeB = b.msg.timestamp ? new Date(b.msg.timestamp).getTime() : null;
+              if (timeA !== null && timeB !== null) {
+                if (timeA !== timeB) {
+                  return timeA - timeB;
+                }
               }
-            }
-            return a.idx - b.idx;
-          });
-          return withIndex.map(item => item.msg);
+              return a.idx - b.idx;
+            });
+            return withIndex.map(item => item.msg);
+          }
         }
       } catch (e) {
         console.error("Error parsing saved chat session:", e);
@@ -195,7 +218,7 @@ export default function RobodeskBotChatWidgetMain({
                     if (a.url) window.location.href = a.url;
                   }}
                 >
-                  {isUsed ? "Refund processed ✓" : a.label}
+                  {isUsed ? "Refund requested ✓" : a.label}
                   {a.expires_in && !isUsed ? <Countdown seconds={a.expires_in} /> : null}
                 </button>
               );
@@ -239,7 +262,10 @@ export default function RobodeskBotChatWidgetMain({
   const getBotDisplayName = () => botName || resolvedBotName || "Bot";
 
   useEffect(() => {
-    sessionStorage.setItem(CHAT_KEY, JSON.stringify(messages));
+    sessionStorage.setItem(
+      CHAT_SESSION_KEY,
+      JSON.stringify({ user: getUserKey(), messages }),
+    );
   }, [messages]);
 
   /**
@@ -549,8 +575,8 @@ export default function RobodeskBotChatWidgetMain({
         body: JSON.stringify({ pending_id: pendingId }),
       });
       const data = await resp.json();
-      let message = data.status === "refunded"
-        ? `Refund of ${data.amount} processed.`
+      let message = data.status === "refund_requested"
+        ? "Refund request submitted. Our team will review and process it shortly."
         : (data.message || data.error || "Refund could not be processed.");
       setMessages((m) => [...m, { role: "assistant", message, timestamp: new Date().toISOString() }]);
     } catch (e) {

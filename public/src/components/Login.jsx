@@ -2,12 +2,11 @@ import "../styles/Login.css";
 import { useEffect, useState } from "react";
 import { FaChevronLeft } from "react-icons/fa";
 import { loginUser, registerUser, createTicket, sendReply } from "../utils/modules";
+import { readChatSession, CHAT_SESSION_KEY } from "../utils/startConversation";
 import { useAppData } from "../utils/AppDataContext";
 import defaultLogo from "../images/robodesk-logo.png";
 import ForgotPassword from "./ForgotPassword";
 import ChangePassword from "./ChangePassword";
-
-const CHAT_KEY = "robodesk_chat_session";
 
 // Header Component
 const Header = ({ setActiveTab, image_urls, defaultLogo }) => (
@@ -322,10 +321,7 @@ const Login = ({
   };
 
   const handleTempTicketCreation = async (userId) => {
-    const savedConversation = sessionStorage.getItem(CHAT_KEY);
-    const conversationMessages = savedConversation
-      ? JSON.parse(savedConversation)
-      : [];
+    const conversationMessages = readChatSession();
 
     let transcriptMessages = Array.isArray(conversationMessages)
       ? conversationMessages.filter(
@@ -426,7 +422,7 @@ const Login = ({
       refreshTickets();
       handleStateUpdate(newTicket);
 
-      sessionStorage.removeItem(CHAT_KEY);
+      sessionStorage.removeItem(CHAT_SESSION_KEY);
       return ticketResponse;
     } catch (ticketError) {
       console.error("Ticket creation error:", ticketError);

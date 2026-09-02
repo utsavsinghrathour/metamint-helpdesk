@@ -156,16 +156,43 @@ function robodesk_fetch_email_text_parts($email, $email_number, $structure)
     $result = ['html' => '', 'plain' => ''];
 
     $decode = function ($body, $encoding) {
-        if ($body === false) {
+        if ($body === false || $body === null) {
             return '';
         }
+
+        // Safety net: some senders/gateways mislabel a base64 body (e.g. as
+        // 7bit). If the body is pure base64 and decodes to readable text, use
+        // the decoded content so raw base64 is never stored as the message.
+        $decode_if_base64 = function ($raw) {
+            if (!is_string($raw)) {
+                return $raw;
+            }
+            $compact = preg_replace('/\s+/', '', $raw);
+            if (strlen($compact) < 40 || !preg_match('/^[A-Za-z0-9+\/]+={0,2}$/', $compact)) {
+                return $raw;
+            }
+            $decoded = base64_decode($raw, true);
+            if ($decoded === false
+                || $decoded === ''
+                || strlen($decoded) < 30
+                || preg_match('//u', $decoded) !== 1
+                || preg_match('/[\x00-\x08\x0B\x0C\x0E-\x1F]/', $decoded) === 1
+                || (strpos($decoded, ' ') === false && strpos($decoded, '<') === false)) {
+                return $raw;
+            }
+            return $decoded;
+        };
+
         if ((int) $encoding === 3) {
-            return base64_decode($body, true);
+            $decoded = base64_decode($body, true);
+            // Strict mode rejects any non-alphabet byte; fall back to lenient
+            // decoding so malformed payloads still yield usable content.
+            return $decoded === false ? base64_decode($body) : $decoded;
         }
         if ((int) $encoding === 4) {
             return quoted_printable_decode($body);
         }
-        return $body;
+        return $decode_if_base64($body);
     };
 
     $get_charset = function ($part) {
@@ -189,26 +216,56 @@ function robodesk_fetch_email_text_parts($email, $email_number, $structure)
         return $body;
     };
 
-    $walk = function ($struct, $section = '') use (&$walk, $email, $email_number, $decode, $get_charset, $to_utf8, &$result) {
-        if ((int) ($struct->type ?? 0) === 1 && isset($struct->parts) && is_array($struct->parts)) {
+    $fetch_first = function (array $sections) use ($email, $email_number) {
+        foreach ($sections as $candidate) {
+            $body = imap_fetchbody($email, $email_number, $candidate);
+            if ($body !== false && $body !== null && $body !== '') {
+                return $body;
+            }
+        }
+        return '';
+    };
+
+    $walk = function ($struct, $section = '', $inside_rfc822 = false) use (&$walk, $email, $email_number, $decode, $get_charset, $to_utf8, $fetch_first, &$result) {
+        $struct_type = (int) ($struct->type ?? 0);
+
+        // Descend into multipart (type 1) containers and message/rfc822
+        // (type 2) attached/forwarded messages. Section numbering follows
+        // c-client: multipart containers are transparent, so an embedded
+        // message's parts are addressed as 2.1, 2.2 ... (not 2.1.1).
+        if (($struct_type === 1 || $struct_type === 2) && isset($struct->parts) && is_array($struct->parts)) {
             foreach ($struct->parts as $part_index => $part) {
+                if ($struct_type === 2 && (int) ($part->type ?? 0) === 1) {
+                    $walk($part, $section); // embedded multipart body: transparent
+                    continue;
+                }
                 $child_section = $section === '' ? (string) ($part_index + 1) : $section . '.' . ($part_index + 1);
-                $walk($part, $child_section);
+                $walk($part, $child_section, $struct_type === 2);
             }
             return;
         }
 
-        if ((int) ($struct->type ?? -1) !== 0) {
+        if ($struct_type !== 0) {
             return; // Only textual leaf parts (type 0).
         }
 
         $subtype = strtoupper((string) ($struct->subtype ?? ''));
+        $primary = $section !== '' ? $section : '1';
+
+        // c-client also exposes the body of a simple embedded message as
+        // N.TEXT; try that (and the bare part) if the numbered section is empty.
+        $candidates = [$primary];
+        if ($inside_rfc822 && preg_match('/(\.\d+)$/', $primary, $m)) {
+            $prefix = substr($primary, 0, -strlen($m[1]));
+            $candidates[] = $prefix . '.TEXT';
+            $candidates[] = $prefix;
+        }
 
         if ($subtype === 'PLAIN' && $result['plain'] === '') {
-            $body = $decode(imap_fetchbody($email, $email_number, $section !== '' ? $section : '1'), $struct->encoding ?? 0);
+            $body = $decode($fetch_first($candidates), $struct->encoding ?? 0);
             $result['plain'] = $to_utf8($body, $get_charset($struct));
         } elseif ($subtype === 'HTML' && $result['html'] === '') {
-            $body = $decode(imap_fetchbody($email, $email_number, $section !== '' ? $section : '1'), $struct->encoding ?? 0);
+            $body = $decode($fetch_first($candidates), $struct->encoding ?? 0);
             $result['html'] = $to_utf8($body, $get_charset($struct));
         }
     };

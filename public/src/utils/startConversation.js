@@ -27,3 +27,39 @@ export const requestStartConversation = (message) => {
     }),
   );
 };
+
+/**
+ * Chat session persistence ("robodesk_chat_session").
+ *
+ * Storage format: { user: <userKey>, messages: [...] } where userKey is the
+ * logged-in user id or "guest". Legacy sessions are bare message arrays.
+ * The owning user key lets the widget clear the chat after logout while
+ * preserving a guest conversation that continues after login.
+ */
+export const CHAT_SESSION_KEY = "robodesk_chat_session";
+
+export const readChatSession = () => {
+  try {
+    const saved = sessionStorage.getItem(CHAT_SESSION_KEY);
+    if (!saved) return [];
+    const parsed = JSON.parse(saved);
+    if (Array.isArray(parsed)) return parsed; // legacy bare-array format
+    if (parsed && typeof parsed === "object" && Array.isArray(parsed.messages)) {
+      return parsed.messages;
+    }
+    return [];
+  } catch {
+    return [];
+  }
+};
+
+export const writeChatSession = (messages, userKey) => {
+  try {
+    sessionStorage.setItem(
+      CHAT_SESSION_KEY,
+      JSON.stringify({ user: userKey || "guest", messages: messages || [] }),
+    );
+  } catch {
+    // Storage full/unavailable - ignore.
+  }
+};
