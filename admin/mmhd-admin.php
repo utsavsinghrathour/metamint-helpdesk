@@ -374,7 +374,7 @@ function mmhd_admin_bar_active_tickets($wp_admin_bar)
 
     $wp_admin_bar->add_node(array(
         'id'    => 'mmhd-active-tickets',
-        'title' => '<span class="ab-icon"><img src="' . esc_url(MMHD_PLUGIN_URL . 'admin/assets/images/mmhd-icon.png') . '" style="height:20px;width:20px;vertical-align:middle;margin-top:-2px" alt=""></span>'
+        'title' => '<span class="ab-icon"><img src="' . esc_url(MMHD_PLUGIN_URL . 'admin/assets/images/mmhd-icon.svg') . '" style="height:20px;width:20px;vertical-align:middle;margin-top:-2px" alt=""></span>'
             . '<span class="ab-label">' . esc_html__('Active Tickets', 'mmhd') . '</span>'
             . $badge($total_count, esc_html__('Active conversations', 'mmhd')),
         'href'  => $active_url,
@@ -385,7 +385,7 @@ function mmhd_admin_bar_active_tickets($wp_admin_bar)
 
     $wp_admin_bar->add_node(array(
         'id'    => 'mmhd-my-tickets',
-        'title' => '<span class="ab-icon"><img src="' . esc_url(MMHD_PLUGIN_URL . 'admin/assets/images/mmhd-icon.png') . '" style="height:20px;width:20px;vertical-align:middle;margin-top:-2px" alt=""></span>'
+        'title' => '<span class="ab-icon"><img src="' . esc_url(MMHD_PLUGIN_URL . 'admin/assets/images/mmhd-icon.svg') . '" style="height:20px;width:20px;vertical-align:middle;margin-top:-2px" alt=""></span>'
             . '<span class="ab-label">' . esc_html__('My Tickets', 'mmhd') . '</span>'
             . $badge($my_count, esc_html__('My conversations', 'mmhd')),
         'href'  => $my_url,

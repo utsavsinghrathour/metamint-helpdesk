@@ -63,9 +63,9 @@ function mmhd_dashboard_callback()
                             <button onclick="showPage('dashboard')" class="bg-transparent p-0 m-0 cursor-pointer" style="background: transparent; border: none; outline: none; box-shadow: none; -webkit-appearance: none; appearance: none;">
                                 <?php
                                 $plugin_base_url = plugin_dir_url(dirname(__FILE__, 2));
-                                $logo_url        = $plugin_base_url . 'admin/assets/images/mmhd-logo.png';
+                                $logo_url        = $plugin_base_url . 'admin/assets/images/mmhd-logo3.png';
 
-                                echo '<img src="' . esc_url($logo_url) . '" alt="Company Logo" width="50" height="50" style="border: none;">';
+                                echo '<img src="' . esc_url($logo_url) . '" alt="Company Logo" width="140" height="100" style="border: none;">';
                                 ?>
                             </button>
                         </div>
