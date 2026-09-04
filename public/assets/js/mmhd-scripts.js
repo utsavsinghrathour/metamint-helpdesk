@@ -1,0 +1,708 @@
+var credentialIdMap = new WeakMap();
+
+jQuery(document).ready(function ($) {
+  $("#change-ticket-status").change(function () {
+    var ticketId = $(this).data("ticket-id");
+    var newStatus = $(this).val();
+    $.ajax({
+      url: mmhd_ajax_object.ajax_url,
+      type: "POST",
+      data: {
+        action: "mmhd_change_ticket_status",
+        ticket_id: ticketId,
+        new_status: newStatus,
+        nonce: mmhd_ajax_object.nonce,
+      },
+      success: function (response) {
+        if (!response.success) {
+          alert(response.data);
+        }
+      },
+      error: function (jqXHR, textStatus, errorThrown) {
+        alert("An error occurred: " + textStatus + " " + errorThrown);
+        console.error("AJAX Error:", jqXHR, textStatus, errorThrown);
+      },
+    });
+  });
+
+  $(".mmhd-change-status").click(function (e) {
+    e.preventDefault();
+
+    var button = $(this);
+    var ticketId = button.data("ticket-id");
+    var newStatus = button.data("new-status");
+
+    console.log("Ticket ID:", ticketId);
+    console.log("New Status:", newStatus);
+    console.log("Nonce:", mmhd_ajax_object.nonce); // Check nonce
+    console.log("Ajax URL:", mmhd_ajax_object.ajax_url);
+
+    $.ajax({
+      url: mmhd_ajax_object.ajax_url,
+      type: "POST",
+      data: {
+        action: "mmhd_change_ticket_status",
+        ticket_id: ticketId,
+        new_status: newStatus,
+        nonce: mmhd_ajax_object.nonce,
+      },
+      success: function (response) {
+        if (response.success) {
+          if (newStatus === "closed") {
+            button.text("Reopen").data("new-status", "open");
+          } else {
+            button.text("Close").data("new-status", "closed");
+          }
+          button.closest("tr").find("td:eq(1)").text(newStatus);
+        } else {
+          alert("Error changing ticket status.");
+          console.log(response); // Log the full response for debugging
+        }
+      },
+      error: function (error) {
+        alert("Error changing ticket status.");
+        console.log(error);
+      },
+    });
+  });
+
+  // FAQ Voting
+  $(".mmhd-faq-vote-button").click(function () {
+    var faqId = $(this).data("faq-id");
+    var voteType = $(this).data("vote-type");
+    var button = $(this);
+
+    $.ajax({
+      url: mmhd_ajax_object.ajax_url,
+      type: "POST",
+      data: {
+        action: "mmhd_faq_vote",
+        faq_id: faqId,
+        vote_type: voteType,
+        nonce: mmhd_ajax_object.faq_nonce,
+      },
+      success: function (response) {
+        if (response.success) {
+          $("#mmhd-faq-upvotes-" + faqId).text(response.data.upvotes);
+          $("#mmhd-faq-downvotes-" + faqId).text(response.data.downvotes);
+          button.addClass("mmhd-faq-voted");
+        } else {
+          alert("Error voting.");
+          console.log(response);
+        }
+      },
+      error: function (error) {
+        alert("Error voting.");
+        console.log(error);
+      },
+    });
+  });
+
+  // Saving Credentials (Modal)
+  $("#mmhd-save-credential").click(function () {
+    alert("scripts here");
+    var url = $("#credential_url").val();
+    var username = $("#credential_username").val();
+    var password = $("#credential_password").val();
+    var notes = $("#credential_notes").val();
+    var nonce = mmhd_ajax_object.credentials_nonce;
+
+    $.ajax({
+      url: mmhd_ajax_object.ajax_url,
+      type: "POST",
+      data: {
+        action: "mmhd_save_credential",
+        ticket_id: mmhd_ajax_object.ticket_id,
+        url: url,
+        username: username,
+        password: password,
+        notes: notes,
+        nonce: nonce,
+      },
+      success: function (response) {
+        if (response.success) {
+          $("#mmhd-credentials-modal").hide();
+          location.reload(); // Reload the page after saving
+        } else {
+          alert(response.data.message);
+          console.log(response);
+        }
+      },
+      error: function (error) {
+        alert("Error saving credentials.");
+        console.log(error);
+      },
+    });
+  });
+
+  // Credential Modal Management
+  var modal = $("#mmhd-credentials-modal");
+  var addBtn = $("#mmhd-add-credentials-btn");
+  var showBtn = $("#mmhd-show-credentials-btn");
+  var closeBtn = $("#mmhd-close-modal");
+  var credentialsList = $("#mmhd-credentials-list");
+  var credentialsForm = $("#mmhd-credentials-form");
+
+  addBtn.click(function () {
+    credentialsForm.show();
+    credentialsList.hide();
+    modal.show();
+  });
+
+  showBtn.click(function () {
+    credentialsForm.hide();
+    credentialsList.show();
+    modal.show();
+  });
+
+  closeBtn.click(function () {
+    modal.hide();
+  });
+  $(document).on("click", ".mmhd-delete-credentials", function (e) {
+    e.preventDefault();
+    var credentialId = $(this).data("credential-id");
+    var nonce = mmhd_ajax_object.delete_credential_nonce;
+    $.ajax({
+      url: mmhd_ajax_object.ajax_url,
+      type: "POST",
+      data: {
+        action: "mmhd_delete_credential",
+        credential_id: credentialId,
+        nonce: nonce,
+      },
+      success: function (response) {
+        if (response.success) {
+          var row = $(".mmhd-delete-credentials[data-credential-id='" + credentialId + "']").closest("tr");
+          row.remove();
+        } else {
+          alert(response.data.message);
+          console.log(response);
+        }
+      },
+      error: function (error) {
+        alert("Error deleting credentials.");
+        console.log(error);
+      },
+    });
+  });
+});
+
+jQuery(document).ready(function ($) {
+  $(document).on("click", ".mmhd-notification-ticket-link", function (e) {
+    var link = $(this);
+    var notificationId = parseInt(link.data("notification-id"), 10) || 0;
+    var item = link.closest(".mmhd-notification-item");
+    var href = link.attr("href");
+
+    if (!notificationId || !item.hasClass("is-unread")) {
+      return;
+    }
+
+    e.preventDefault();
+
+    $.ajax({
+      url: mmhd_ajax_object.ajax_url,
+      type: "POST",
+      data: {
+        action: "mmhd_mark_user_notification_read",
+        notification_id: notificationId,
+        nonce: mmhd_ajax_object.notifications_nonce,
+      },
+      complete: function () {
+        item.removeClass("is-unread").addClass("is-read");
+        window.location.href = href;
+      },
+    });
+  });
+
+  $(document).on("click", "#mmhd-mark-all-notifications-read", function () {
+    $.ajax({
+      url: mmhd_ajax_object.ajax_url,
+      type: "POST",
+      data: {
+        action: "mmhd_mark_all_user_notifications_read",
+        nonce: mmhd_ajax_object.notifications_nonce,
+      },
+      success: function (response) {
+        if (response.success) {
+          window.location.reload();
+        } else {
+          alert(response.data || "Could not mark notifications as read.");
+        }
+      },
+      error: function () {
+        alert("Could not mark notifications as read.");
+      },
+    });
+  });
+});
+
+jQuery(document).ready(function ($) {
+  // ... other code
+
+  $("#mmhd-add-note").submit(function (e) {
+    // Select the form by ID
+    e.preventDefault();
+
+    var formData = $(this).serialize();
+
+    $.ajax({
+      url: mmhd_ajax_object.ajax_url,
+      type: "POST",
+      data: formData,
+      success: function (response) {
+        if (response.success) {
+          $("#mmhd-add-note")[0].reset(); // Clear form on success
+          location.reload(); // Reload the page to show the new note.
+        } else {
+          alert(response.data.message || "Error adding note."); // Display error message or default message
+          console.error(response); // Log the full response for debugging
+        }
+      },
+      error: function (jqXHR, textStatus, errorThrown) {
+        alert("An error occurred: " + textStatus + " " + errorThrown);
+        console.error("AJAX Error:", jqXHR, textStatus, errorThrown);
+      },
+    });
+  });
+
+  $("#note_attachment").on("change", function () {
+    var files = $(this)[0].files;
+    var fileList = $("#file-list");
+    fileList.empty(); // Clear previous file list
+    for (var i = 0; i < files.length; i++) {
+      fileList.append("<div>" + files[i].name + "</div>");
+    }
+  });
+});
+
+jQuery(document).ready(function ($) {
+  // --- Credential vault: populate ID map from DOM ---
+  $(".show-password, .copy-password, .delete-credential").each(function () {
+    var id = parseInt($(this).attr("data-credential-id"), 10);
+    if (id) credentialIdMap.set(this, id);
+  });
+
+  // Load Add Credential Form via AJAX
+  $("#add-credential-button").click(function () {
+    var existing = $("#credential-form");
+    if (existing.length) {
+      existing.slideUp(function () { $(this).remove(); });
+      return;
+    }
+    var container = $("<div id='credential-form' style='display:none'></div>").insertAfter(this);
+    $.ajax({
+      url: mmhd_ajax_object.ajax_url,
+      type: "POST",
+      data: {
+        action: "mmhd_get_credential_form",
+        nonce: mmhd_ajax_object.add_credential_nonce,
+      },
+      success: function (response) {
+        if (response.success) {
+          container.html(response.data.html).slideDown();
+          bindAddCredentialForm();
+        } else {
+          container.remove();
+          alert(response.data || "Failed to load the credential form.");
+        }
+      },
+      error: function () {
+        container.remove();
+        alert("An error occurred while loading the credential form.");
+      },
+    });
+  });
+
+  function bindAddCredentialForm() {
+    $("#mmhd-add-credential")
+      .off("submit")
+      .on("submit", function (e) {
+        e.preventDefault();
+
+        var formData = $(this).serialize();
+        $.ajax({
+          url: mmhd_ajax_object.ajax_url,
+          type: "POST",
+          data: formData,
+          success: function (response) {
+            if (response.success) {
+              $("#mmhd-add-credential")[0].reset();
+              $("#credential-form").slideUp();
+              var cred = response.data;
+              var row = buildCredentialRow(cred);
+              var wrapper = $(".credential-table-wrapper");
+              if (wrapper.length) {
+                wrapper.find("table tbody").append(row);
+              } else {
+                $(".mmhd-my-credentials").html(
+                  '<div class="credential-table-wrapper"><table><thead><tr><th>Name</th><th>Username</th><th>Password</th><th>URL</th><th>Notes</th><th>Actions</th></tr></thead><tbody></tbody></table></div>'
+                );
+                $(".credential-table-wrapper table tbody").append(row);
+              }
+              row.find(".show-password, .copy-password, .delete-credential").each(function () {
+                credentialIdMap.set(this, cred.id);
+              });
+            } else {
+              alert(response.data);
+              console.error(response);
+            }
+          },
+          error: function (jqXHR, textStatus, errorThrown) {
+            alert("An error occurred: " + textStatus + " " + errorThrown);
+            console.error("AJAX Error:", jqXHR, textStatus, errorThrown);
+          },
+        });
+      });
+  }
+
+  bindAddCredentialForm();
+
+  function buildCredentialRow(cred) {
+    var urlHtml = cred.url
+      ? '<span class="credential-cell-wrap"><a href="' + cred.url + '" target="_blank" rel="noopener noreferrer" class="credential-url-link" title="' + cred.url + '"><span class="dashicons dashicons-external" aria-hidden="true"></span></a><button type="button" class="copy-credential" data-copy-value="' + cred.url + '" title="' + cred.url + '"><span class="dashicons dashicons-admin-page"></span></button></span>'
+      : '<span class="credential-url-text">&mdash;</span>';
+
+    return '<tr class="mmhd-table-content">' +
+      '<td><span class="credential-cell-wrap"><span class="credential-name-text">' + cred.name + '</span><button type="button" class="copy-credential" data-copy-value="' + cred.name + '" title="Copy Name"><span class="dashicons dashicons-admin-page"></span></button></span></td>' +
+      '<td><span class="credential-cell-wrap"><span class="credential-username-text">' + cred.username + '</span><button type="button" class="copy-credential" data-copy-value="' + cred.username + '" title="Copy Username"><span class="dashicons dashicons-admin-page"></span></button></span></td>' +
+      '<td><span class="credential-cell-wrap"><span class="password-hidden">********</span><button type="button" class="show-password" data-credential-id="' + cred.id + '" title="Show Password"><span class="dashicons dashicons-visibility"></span></button><button type="button" class="copy-password" data-credential-id="' + cred.id + '" title="Copy Password"><span class="dashicons dashicons-admin-page"></span></button></span></td>' +
+      '<td>' + urlHtml + '</td>' +
+      '<td>' + (cred.notes || '') + '</td>' +
+      '<td><button class="delete-credential" data-credential-id="' + cred.id + '">Delete</button></td>' +
+      '</tr>';
+  }
+
+  // Delete Credential AJAX
+  $(document).on("click", ".delete-credential", function () {
+    var credentialId = $(this).data("credential-id");
+    var confirmDelete = confirm(
+      "Are you sure you want to delete this credential?",
+    );
+    if (confirmDelete) {
+      var row = $(this).closest("tr");
+      $.ajax({
+        url: mmhd_ajax_object.ajax_url,
+        type: "POST",
+        data: {
+          action: "mmhd_delete_credential",
+          credential_id: credentialId,
+          nonce: mmhd_ajax_object.delete_credential_nonce,
+        },
+        success: function (response) {
+          if (response.success) {
+            row.remove();
+            var tbody = $(".credential-table-wrapper table tbody");
+            if (tbody.length && tbody.find("tr").length === 0) {
+              $(".mmhd-my-credentials").html(
+                "<p>No credentials saved yet.</p>"
+              );
+            }
+          } else {
+            alert(response.data);
+            console.error(response);
+          }
+        },
+        error: function (jqXHR, textStatus, errorThrown) {
+          alert("An error occurred: " + textStatus + " " + errorThrown);
+          console.error("AJAX Error:", jqXHR, textStatus, errorThrown);
+        },
+      });
+    }
+  });
+
+  // Copy to Clipboard Functionality
+  $(document).on("click", ".copy-credential", function () {
+    var value = $(this).data("copy-value");
+    if (!value) {
+      return;
+    }
+    copyToClipboard(value, $(this));
+  });
+
+  // Copy Password Functionality (AJAX-based)
+  $(document).on("click", ".copy-password", function () {
+    var button = $(this);
+    var credentialId = $(this).data("credential-id");
+
+    if (!credentialId) {
+      return;
+    }
+
+    // If password is already revealed, copy directly from the span
+    var passwordSpan = button.siblings(".password-hidden");
+    if (passwordSpan.data("revealed")) {
+      copyToClipboard(passwordSpan.text(), button);
+      return;
+    }
+
+    // Fetch decrypted password from server and copy
+    $.ajax({
+      url: mmhd_ajax_object.ajax_url,
+      type: "POST",
+      data: {
+        action: "mmhd_reveal_credential_password",
+        credential_id: credentialId,
+        nonce: mmhd_ajax_object.reveal_credential_nonce,
+      },
+      beforeSend: function () {
+        button.prop("disabled", true);
+      },
+      success: function (response) {
+        if (response.success) {
+          copyToClipboard(response.data.password, button);
+        } else {
+          alert(response.data || "Unable to copy password.");
+        }
+      },
+      error: function () {
+        alert("An error occurred while fetching the password.");
+      },
+      complete: function () {
+        button.prop("disabled", false);
+      },
+    });
+  });
+
+  function copyToClipboard(text, button) {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(function () {
+        showCopyFeedback(button);
+      }).catch(function () {
+        fallbackCopyToClipboard(text, button);
+      });
+    } else {
+      fallbackCopyToClipboard(text, button);
+    }
+  }
+
+  function fallbackCopyToClipboard(text, button) {
+    var tempInput = $("<textarea>");
+    $("body").append(tempInput);
+    tempInput.val(text).trigger("select");
+    document.execCommand("copy");
+    tempInput.remove();
+    showCopyFeedback(button);
+  }
+
+  function showCopyFeedback(button) {
+    var originalIcon = button.find(".dashicons").attr("class");
+    button.find(".dashicons").removeClass().addClass("dashicons dashicons-yes");
+    button.addClass("is-copied");
+    setTimeout(function () {
+      button.find(".dashicons").removeClass().addClass(originalIcon);
+      button.removeClass("is-copied");
+    }, 1500);
+  }
+
+  // Show Password Functionality (AJAX-based decryption)
+  $(document).on("click", ".show-password", function () {
+    var button = $(this);
+    var passwordSpan = button.siblings(".password-hidden");
+    var icon = button.find(".dashicons");
+    var credentialId = $(this).data("credential-id");
+
+    if (!credentialId) {
+      return;
+    }
+
+    // If already revealed, hide it
+    if (passwordSpan.data("revealed")) {
+      passwordSpan.text("********");
+      passwordSpan.data("revealed", false);
+      icon.removeClass("dashicons-hidden").addClass("dashicons-visibility");
+      return;
+    }
+
+    // Fetch decrypted password from server
+    $.ajax({
+      url: mmhd_ajax_object.ajax_url,
+      type: "POST",
+      data: {
+        action: "mmhd_reveal_credential_password",
+        credential_id: credentialId,
+        nonce: mmhd_ajax_object.reveal_credential_nonce,
+      },
+      beforeSend: function () {
+        passwordSpan.text("Loading...");
+        button.prop("disabled", true);
+      },
+      success: function (response) {
+        if (response.success) {
+          passwordSpan.text(response.data.password);
+          passwordSpan.data("revealed", true);
+          icon.removeClass("dashicons-visibility").addClass("dashicons-hidden");
+        } else {
+          passwordSpan.text("********");
+          alert(response.data || "Unable to reveal password.");
+        }
+      },
+      error: function () {
+        passwordSpan.text("********");
+        alert("An error occurred while fetching the password.");
+      },
+      complete: function () {
+        button.prop("disabled", false);
+      },
+    });
+  });
+
+  $("body").append('<div class="spinner"></div>');
+  $("#mmhd-create-ticket").submit(function (e) {
+    e.preventDefault();
+
+    $("#mmhd-response-message").show().html("");
+    var formData = {
+      action: "mmhd_create_new_ticket",
+      ticket_title: $("#ticket_title").val(),
+      ticket_content: $("#ticket_content").val(),
+      ticket_priority: $("#ticket_priority").val(),
+      mmhd_nonce: $("#_wpnonce").val(),
+    };
+    $.ajax({
+      url: mmhd_ajax_object.ajax_url,
+      type: "POST",
+      data: formData,
+      beforeSend: function () {
+        $("#mmhd-create-ticket").addClass("blurred");
+        $(".spinner").css("display", "block");
+      },
+      success: function (response) {
+        if (response.success) {
+          $("#mmhd-response-message").html(
+            '<p style="color: green;">Ticket created successfully!</p>',
+          );
+          $("#mmhd-create-ticket")[0].reset();
+          $("#mmhd-response-message").delay(5000).fadeOut(2000);
+        } else {
+          $("#mmhd-response-message")
+            .html(
+              '<p style="color: red;">Error: ' + response.data.message + "</p>",
+            )
+            .delay(5000)
+            .fadeOut(2000);
+        }
+      },
+      error: function () {
+        $("#mmhd-response-message").html(
+          '<p style="color: red;">An error occurred. Please try again.</p>',
+        );
+        $("#mmhd-response-message").delay(5000).fadeOut(2000);
+      },
+
+      complete: function () {
+        $("#mmhd-create-ticket").removeClass("blurred");
+        $(".spinner").css("display", "none");
+      },
+    });
+  });
+  // --- Profile: image preview ---
+  var fileInput = document.getElementById('profile_picture');
+  var previewImg = document.getElementById('profile-preview');
+  if (fileInput && previewImg) {
+    fileInput.addEventListener('change', function () {
+      var file = this.files[0];
+      if (previewImg.src && previewImg.src.indexOf('blob:') === 0) {
+        URL.revokeObjectURL(previewImg.src);
+      }
+      if (file) {
+        previewImg.src = URL.createObjectURL(file);
+        previewImg.style.display = 'inline';
+      } else {
+        previewImg.src = '';
+        previewImg.style.display = 'none';
+      }
+    });
+  }
+
+  // --- Profile: show password toggle ---
+  $('.toggle-pw').on('click', function () {
+    var target = $('#' + $(this).data('target'));
+    var isPassword = target.attr('type') === 'password';
+    target.attr('type', isPassword ? 'text' : 'password');
+    $(this).toggleClass('dashicons-visibility dashicons-hidden');
+  });
+
+  // --- Profile: password validation ---
+  var $pwField = $('#password');
+  var $confirmField = $('#confirm_password');
+  var $pwFeedback = $('#password-feedback');
+  var $cfFeedback = $('#confirm-password-feedback');
+  var $matchFeedback = $('#password-match-feedback');
+
+  if ($pwField.length && $confirmField.length) {
+    function getPwErrors(val) {
+      var errors = [];
+      if (val.length < 8) errors.push('at least 8 characters');
+      if (!/[A-Z]/.test(val)) errors.push('uppercase letter');
+      if (!/[a-z]/.test(val)) errors.push('lowercase letter');
+      if (!/[0-9]/.test(val)) errors.push('number');
+      if (!/[^A-Za-z0-9]/.test(val)) errors.push('special character');
+      return errors;
+    }
+
+    function validatePwFields() {
+      var pw = $pwField.val();
+      var cf = $confirmField.val();
+      var pwErrors = getPwErrors(pw);
+      var match = pw === cf && pw.length > 0;
+
+      if (pw.length === 0) {
+        $pwFeedback.text('');
+      } else if (pwErrors.length > 0) {
+        $pwFeedback.text('Missing: ' + pwErrors.join(', ')).css('color', 'red');
+      } else {
+        $pwFeedback.text('');
+      }
+
+      $cfFeedback.text('');
+
+      if (pw.length > 0 && cf.length > 0 && pwErrors.length === 0 && !match) {
+        $matchFeedback.text('Passwords do not match').css('color', 'red');
+      } else {
+        $matchFeedback.text('');
+      }
+    }
+
+    $pwField.on('keyup', validatePwFields);
+    $confirmField.on('keyup', validatePwFields);
+  }
+
+  // --- Profile: form submit validation ---
+  $('.rodobesk-update-profile-form').on('submit', function () {
+    var pw = $pwField.val();
+    var cf = $confirmField.val();
+    var pwErrors = getPwErrors ? getPwErrors(pw) : [];
+    var hasError = false;
+
+    if (pw.length > 0 && cf.length === 0) {
+      $cfFeedback.text('Please confirm your new password').css('color', 'red');
+      hasError = true;
+    }
+
+    if (pw.length > 0 && cf.length > 0 && pwErrors.length === 0 && pw !== cf) {
+      $matchFeedback.text('Passwords do not match').css('color', 'red');
+      hasError = true;
+    }
+
+    if (pw.length > 0 && pwErrors.length > 0) {
+      $pwFeedback.text('Missing: ' + pwErrors.join(', ')).css('color', 'red');
+      hasError = true;
+    }
+
+    return !hasError;
+  });
+
+  // Localize timestamps to the visitor's timezone
+  document.querySelectorAll(".mmhd-local-time[data-utc]").forEach(function (el) {
+    var utc = el.getAttribute("data-utc");
+    if (!utc) return;
+    var d = new Date(utc);
+    if (isNaN(d.getTime())) return;
+    var format = el.getAttribute("data-format") || "datetime";
+    var options = format === "date"
+      ? { year: "numeric", month: "short", day: "numeric" }
+      : { year: "numeric", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" };
+    el.textContent = d.toLocaleString(undefined, options);
+  });
+});

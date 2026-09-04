@@ -2,14 +2,14 @@
 /* ContextualNotices.css - context-aware notices dropdown above the toggle button
    (styling intentionally mirrors the original ActiveFeatured look) */
 
-.rd-active-featured {
+.mmhd-active-featured {
   max-width: 300px;
   background: #fff;
   box-shadow: rgba(35, 47, 53, 0.09) 0px 2px 8px 0px;
   border-radius: 10px;
   margin-bottom: 10px;
 }
-.rd-active-featured::after {
+.mmhd-active-featured::after {
   content: "";
   position: absolute;
   width: 14px;
@@ -22,19 +22,19 @@
   z-index: -1;
 }
 
-.rd-active-featured h5 {
+.mmhd-active-featured h5 {
   margin: 0;
 }
 
-.rd-notice-title {
+.mmhd-notice-title {
   cursor: pointer;
   transition: color 0.2s;
 }
 
-.rd-notice-title:hover {
+.mmhd-notice-title:hover {
   background-color: #fafafa;
 }
-.rd-active-featured .rd-notice-title:not(:first-child) {
+.mmhd-active-featured .mmhd-notice-title:not(:first-child) {
   border-top: 1px solid #f0f0f0;
 }
 .featured-notice-icon,
@@ -48,12 +48,12 @@
   height: 32px;
   fill: #004aff;
 }
-.rd-close-all-button {
+.mmhd-close-all-button {
   position: absolute;
   right: -5px;
   top: -5px;
 }
-.rd-close-all-button svg {
+.mmhd-close-all-button svg {
   fill: #fff;
   background: #333;
   border-radius: 50px;
@@ -63,7 +63,7 @@
 }
 
 /* "Start a conversation" label (new element, kept plain to match the old look) */
-.rd-notice-start-chat-label {
+.mmhd-notice-start-chat-label {
   display: block;
   font-size: 11px;
   color: #666;

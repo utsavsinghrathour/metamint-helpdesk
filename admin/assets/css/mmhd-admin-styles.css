@@ -1,0 +1,102 @@
+/* Basic Styling for Metamint Admin Elements */
+
+/* Meta Box Styles */
+#mmhd_ticket_status {
+  width: 100%;
+  padding: 8px;
+  margin-top: 5px;
+  border: 1px solid #ddd;
+  box-sizing: border-box;
+  /* test */
+}
+
+/* Styles for the Metamint Tickets list table (if you customize the list table) */
+.wp-list-table .column-ticket_status {
+  /* Example for a custom column */
+  text-align: center;
+}
+
+/* Styles for any other custom admin elements */
+.mmhd-admin-notice {
+  padding: 10px;
+  margin: 10px 0;
+  border: 1px solid #ddd;
+  background-color: #f9f9f9;
+}
+
+.mmhd-admin-notice.updated {
+  border-color: #46b450;
+}
+
+.mmhd-admin-notice.error {
+  border-color: #dc3232;
+  color: #dc3232;
+}
+
+/* Styles for the Add/Edit Ticket page */
+.mmhd-ticket-form label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: bold;
+}
+
+.mmhd-ticket-form input[type="text"],
+.mmhd-ticket-form input[type="email"],
+.mmhd-ticket-form textarea,
+.mmhd-ticket-form select {
+  width: 100%;
+  padding: 8px;
+  margin-bottom: 10px;
+  border: 1px solid #ddd;
+  box-sizing: border-box;
+}
+
+.mmhd-ticket-form input[type="submit"] {
+  padding: 10px 20px;
+  background-color: #007cba;
+  color: white;
+  border: none;
+  cursor: pointer;
+}
+
+.mmhd-ticket-form input[type="submit"]:hover {
+  background-color: #006ba1;
+}
+
+/* Example styling for ticket meta boxes if you add more */
+.mmhd-meta-box {
+  margin-bottom: 20px;
+  border: 1px solid #ddd;
+  padding: 10px;
+  background-color: #fff;
+  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.04);
+}
+
+.mmhd-meta-box h3 {
+  margin-top: 0;
+}
+
+/* Styles for the credential section on the ticket edit page */
+.mmhd-credentials-area {
+  margin-top: 20px;
+}
+
+.mmhd-credentials-area button {
+  margin-right: 10px;
+}
+
+#mmhd-credentials-modal table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+#mmhd-credentials-modal th,
+#mmhd-credentials-modal td {
+  border: 1px solid black;
+  padding: 8px;
+  text-align: left;
+}
+
+#mmhd-credentials-form {
+  display: none;
+}

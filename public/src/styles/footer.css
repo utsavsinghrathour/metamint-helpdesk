@@ -1,12 +1,12 @@
 @import url(../../assets/css/variables.css);
 
-.robodesk-footer .tab-container {
+.mmhd-footer .tab-container {
   border-top: 1px solid var(--border-light-gray);
   border-bottom: 1px solid var(--border-light-gray);
   padding: calc(var(--header-padding) + 8px);
 }
 
-.robodesk-footer-text h6 {
+.mmhd-footer-text h6 {
   font-size: 10px;
   font-weight: 400;
   text-transform: none;
@@ -14,7 +14,7 @@
   line-height: 1;
 }
 
-.robodesk-footer {
+.mmhd-footer {
   /* position: sticky; */
   bottom: 0;
   background-color: #fff;
@@ -23,23 +23,23 @@
   position: absolute;
 }
 
-.robodesk-footer button svg:focus {
+.mmhd-footer button svg:focus {
   outline: none;
 }
 
-.robodesk-footer button.active-tab svg,
-.robodesk-footer button.active-tab svg path {
-  fill: var(--robodesk-theme-color) !important;
+.mmhd-footer button.active-tab svg,
+.mmhd-footer button.active-tab svg path {
+  fill: var(--mmhd-theme-color) !important;
 }
 
 /* Must remove this later  */
 /* For notification red dot */
-.rd-title-with-dot {
+.mmhd-title-with-dot {
   position: relative;
   display: inline-block;
 }
 
-.rd-title-with-dot::after {
+.mmhd-title-with-dot::after {
   content: "";
   position: absolute;
   top: -2px;

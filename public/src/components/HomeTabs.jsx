@@ -4,7 +4,7 @@ import Footer from "./Footer.jsx";
 import SingleQuestionBox from "./SingleQuestionBox";
 import { readChatSession } from "../utils/startConversation";
 import "../styles/HomeTabs.css";
-import RobodeskBotChatWidgetMain from "./RobodeskBotChatWidgetMain";
+import MetamintBotChatWidgetMain from "./MetamintBotChatWidgetMain";
 
 const HomeTabs = ({
   setActiveTab,
@@ -22,8 +22,8 @@ const HomeTabs = ({
   const [messages, setMessages] = useState(() => readChatSession());
 
   return (
-    <div className="rd-flex rd-flex-col rd-h-full featured-faq">
-      <div className="rd-main-content">
+    <div className="mmhd-flex mmhd-flex-col mmhd-h-full featured-faq">
+      <div className="mmhd-main-content">
         {!showLogin && showHeaderFooter && (
           <Header
             logo={logo}
@@ -33,7 +33,7 @@ const HomeTabs = ({
             updateSelectedTicket={updateSelectedTicket}
           />
         )}
-        <div className="rd-flex-1 rd-overflow-auto rd-body-content-wrapper-home">
+        <div className="mmhd-flex-1 mmhd-overflow-auto mmhd-body-content-wrapper-home">
           <SingleQuestionBox
             setShowHeaderFooter={setShowHeaderFooter}
             showHeaderFooter={showHeaderFooter}

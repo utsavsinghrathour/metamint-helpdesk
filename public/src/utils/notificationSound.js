@@ -10,7 +10,7 @@ let beepAudio = null;
 let pendingBeep = false;
 
 function ensureAudio() {
-  const sound = window.robodeskAuth?.notificationSound;
+  const sound = window.mmhdAuth?.notificationSound;
   if (!sound) {
     return null;
   }
@@ -46,7 +46,7 @@ function flushPending() {
 let lastPlayedAt = 0;
 const DEBOUNCE_MS = 1200;
 
-export function playRobodeskBeep() {
+export function playMetamintBeep() {
   const audio = ensureAudio();
   if (!audio) {
     return;

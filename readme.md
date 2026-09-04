@@ -1,4 +1,4 @@
-=== Robodesk Support Ticket System ===
+=== Metamint Helpdesk ===
 Contributors: codepixelzmedia
 Tags: support, tickets, helpdesk, customer-support
 Requires at least: 5.8
@@ -12,7 +12,7 @@ A support ticket and FAQ system for WordPress.
 
 == Description ==
 
-Robodesk is a simple and efficient support plugin for WordPress that enables users to submit support tickets, track their status, and communicate with the support team directly from the WordPress dashboard.
+Metamint is a simple and efficient support plugin for WordPress that enables users to submit support tickets, track their status, and communicate with the support team directly from the WordPress dashboard.
 
 == External Services ==
 
@@ -22,11 +22,11 @@ This plugin uses the following external services:
 
 == Source Code & Build Tools ==
 
-The frontend assets in `public/build/` are generated from source files located in `public/src/` using webpack. The source code for these build artifacts is included in the plugin at `public/src/`. Build configuration: `public/webpack.config.js`. Public source repository: https://github.com/utsavsinghrathour/robodesk
+The frontend assets in `public/build/` are generated from source files located in `public/src/` using webpack. The source code for these build artifacts is included in the plugin at `public/src/`. Build configuration: `public/webpack.config.js`. Public source repository: https://github.com/metamint/mmhd
 
 == Installation ==
 
-1. Upload the plugin files to `/wp-content/plugins/robodesk`
+1. Upload the plugin files to `/wp-content/plugins/mmhd`
 2. Activate the plugin through the WordPress Plugins screen
 3. Start managing support tickets from the dashboard
 

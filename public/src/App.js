@@ -7,12 +7,12 @@ import HelpTabs from "./components/HelpTabs.jsx";
 import ContextualNotices from "./components/ContextualNotices.jsx";
 import { requestStartConversation } from "./utils/startConversation.js";
 import "./styles/main.css";
-import defaultLogo from "./images/robodesk-logo.png";
+import defaultLogo from "./images/mmhd-logo.png";
 import { AppDataProvider, useAppData } from "./utils/AppDataContext.jsx";
 // import useExclusiveServerEvents from './Hooks/useExclusiveServerEvents.js';
 // import useSSE from './Hooks/useSSE.js';
 import { sseManager } from "./Hooks/sseManager.js";
-import { playRobodeskBeep } from "./utils/notificationSound.js";
+import { playMetamintBeep } from "./utils/notificationSound.js";
 
 const AppContent = ({ imageUrls = { logo: "" } }) => {
   const {
@@ -38,8 +38,8 @@ const AppContent = ({ imageUrls = { logo: "" } }) => {
   const hasAutoOpenedTicket = useRef(false);
   const hasAttemptedDeepLinkFetch = useRef(false);
 
-  const isSupportPage = window.location.pathname.includes("/robodesk-support");
-  const chatEnabled = window.robodeskData?.enable_chat === "1";
+  const isSupportPage = window.location.pathname.includes("/mmhd-support");
+  const chatEnabled = window.mmhdData?.enable_chat === "1";
 
   const handleFocusedTextArea = (focus) => setFocusedTextArea(focus);
 
@@ -47,15 +47,15 @@ const AppContent = ({ imageUrls = { logo: "" } }) => {
     (ticket) => ticket.notifications === "no",
   );
 
-  const isRobodeskPopupIntent = () => {
+  const isMetamintPopupIntent = () => {
     const params = new URLSearchParams(window.location.search);
-    const popupParam = params.get("rbd_popup");
+    const popupParam = params.get("mmhd_popup");
     const initiatorParam = params.get("initiator") || params.get("initator");
-    return popupParam === "true" && initiatorParam === "robodesk";
+    return popupParam === "true" && initiatorParam === "mmhd";
   };
 
   const requestedTicketId = useMemo(() => {
-    const deepLinkTicketId = window.robodeskData?.deepLinkTicketId;
+    const deepLinkTicketId = window.mmhdData?.deepLinkTicketId;
     if (deepLinkTicketId) {
       return String(deepLinkTicketId);
     }
@@ -70,7 +70,7 @@ const AppContent = ({ imageUrls = { logo: "" } }) => {
   }, []);
 
   useEffect(() => {
-    if (isRobodeskPopupIntent()) {
+    if (isMetamintPopupIntent()) {
       setShowActiveFeatured(false);
       setIsOpen(true);
       if (chatEnabled) setActiveTab(1);
@@ -116,7 +116,7 @@ const AppContent = ({ imageUrls = { logo: "" } }) => {
       return;
     }
 
-    if (!loggedInUsrId && window.robodeskAuth?.isLoggedIn !== "true") {
+    if (!loggedInUsrId && window.mmhdAuth?.isLoggedIn !== "true") {
       return;
     }
 
@@ -158,13 +158,13 @@ const AppContent = ({ imageUrls = { logo: "" } }) => {
     const fetchRequestedTicket = async () => {
       try {
         const response = await fetch(
-          `/wp-json/wp/v2/robodesk_ticket/${encodeURIComponent(
+          `/wp-json/wp/v2/mmhd_ticket/${encodeURIComponent(
             requestedTicketId,
           )}`,
           {
             headers: {
               "X-WP-Nonce":
-                window.robodeskAuth?.restNonce || window.wpApiSettings?.nonce || "",
+                window.mmhdAuth?.restNonce || window.wpApiSettings?.nonce || "",
             },
           },
         );
@@ -205,8 +205,8 @@ const AppContent = ({ imageUrls = { logo: "" } }) => {
   const url = useMemo(() => {
     if (!initialCursorId) return null;
     if (!loggedinContext && !loggedInUsrId) return null;
-    const nonce = window.robodeskAuth?.restNonce || window.wpApiSettings?.nonce || '';
-    return `${window.location.origin}/wp-json/robodesk/v1/stream/tickets/0/${initialCursorId}/${loggedInUsrId}?_wpnonce=${nonce}`;
+    const nonce = window.mmhdAuth?.restNonce || window.wpApiSettings?.nonce || '';
+    return `${window.location.origin}/wp-json/mmhd/v1/stream/tickets/0/${initialCursorId}/${loggedInUsrId}?_wpnonce=${nonce}`;
   }, [initialCursorId, loggedInUsrId]);
 
   // Tracks the latest reply id already accounted for, per ticket, so we beep
@@ -219,7 +219,7 @@ const AppContent = ({ imageUrls = { logo: "" } }) => {
   // blocked by the browser autoplay policy.
   useEffect(() => {
     const unlock = () => {
-      const sound = window.robodeskAuth?.notificationSound;
+      const sound = window.mmhdAuth?.notificationSound;
       if (sound) {
         const audio = new Audio(sound);
         const p = audio.play();
@@ -284,7 +284,7 @@ const AppContent = ({ imageUrls = { logo: "" } }) => {
         });
 
         if (shouldBeep) {
-          playRobodeskBeep();
+          playMetamintBeep();
         }
       },
       "tickets",
@@ -361,13 +361,13 @@ const AppContent = ({ imageUrls = { logo: "" } }) => {
   };
 
   const handlePopupToggle = async () => {
-    console.log("Toggle Clicked", window.robodeskAuth?.isLoggedIn, typeof window.robodeskAuth?.isLoggedIn);
+    console.log("Toggle Clicked", window.mmhdAuth?.isLoggedIn, typeof window.mmhdAuth?.isLoggedIn);
     if (isOpen) {
       setIsOpen(false);
       setShowActiveFeatured(true);
       setSelectedNotice(null);
     } else {
-      if (window.robodeskAuth?.isLoggedIn === "true") {
+      if (window.mmhdAuth?.isLoggedIn === "true") {
         await generateToken(); // Generate token on popup toggle open
       }
       setIsOpen(true);
@@ -452,7 +452,7 @@ const AppContent = ({ imageUrls = { logo: "" } }) => {
   //   if (errorContext) return <p>Error: {errorContext}</p>;
 
   return (
-    <div className="robodesk-plugin rd-flex rd-flex-col rd-align-end ">
+    <div className="mmhd-plugin mmhd-flex mmhd-flex-col mmhd-align-end ">
       {showActiveFeatured && (
         <ContextualNotices
           onNoticeSelect={handleNoticeSelect}
@@ -461,22 +461,22 @@ const AppContent = ({ imageUrls = { logo: "" } }) => {
       )}
 
       <div
-        className={`robodesk-popup rd-flex rd-flex-col rd-border-none rd-border-radius-md ${isOpen ? "open" : "closed"
+        className={`mmhd-popup mmhd-flex mmhd-flex-col mmhd-border-none mmhd-border-radius-md ${isOpen ? "open" : "closed"
           } ${isExpanded ? "expanded" : ""}`}
       >
         {tabs[activeTab].component}
       </div>
 
       <div
-        className={` rd-popup-top-icon-container ${isOpen ? "rd-hidden " : ""
-          } ${hasNotificationOff && !isOpen ? "rd-title-with-dot" : ""}`}
+        className={` mmhd-popup-top-icon-container ${isOpen ? "mmhd-hidden " : ""
+          } ${hasNotificationOff && !isOpen ? "mmhd-title-with-dot" : ""}`}
       >
         {imageUrls.popover_top_icon &&
           imageUrls.popover_top_icon.trim() !== "" ? (
           <img
             src={imageUrls.popover_top_icon}
             alt="Popup Top Icon"
-            className="rd-h-auto rd-rounded-md"
+            className="mmhd-h-auto mmhd-rounded-md"
             onError={(e) => {
               e.target.style.display = "none";
             }}
@@ -485,7 +485,7 @@ const AppContent = ({ imageUrls = { logo: "" } }) => {
       </div>
 
       <button
-        className={`robodesk-toggle-btn rd-bg-blue rd-rounded-border rd-border-none rd-cursor-pointer ${isOpen ? "rotatedssss" : ""
+        className={`mmhd-toggle-btn mmhd-bg-blue mmhd-rounded-border mmhd-border-none mmhd-cursor-pointer ${isOpen ? "rotatedssss" : ""
           }`}
         onClick={handlePopupToggle}
       >
@@ -507,7 +507,7 @@ const AppContent = ({ imageUrls = { logo: "" } }) => {
           <img
             src={imageUrls.popover_icon}
             alt="Pop over Icon"
-            className="rd-h-auto"
+            className="mmhd-h-auto"
             onError={(e) => {
               e.target.style.display = "none";
             }}
@@ -516,7 +516,7 @@ const AppContent = ({ imageUrls = { logo: "" } }) => {
           <img
             src={defaultLogo}
             alt="Default Plugin Logo"
-            className="rd-h-auto rd-header-logo"
+            className="mmhd-h-auto mmhd-header-logo"
           />
         )}
       </button>

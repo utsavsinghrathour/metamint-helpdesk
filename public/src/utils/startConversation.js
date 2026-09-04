@@ -6,7 +6,7 @@
  */
 let pendingInitialMessage = null;
 
-export const START_CONVERSATION_EVENT = "robodesk:startConversation";
+export const START_CONVERSATION_EVENT = "mmhd:startConversation";
 
 export const setPendingInitialMessage = (message) => {
   pendingInitialMessage = message || null;
@@ -29,14 +29,14 @@ export const requestStartConversation = (message) => {
 };
 
 /**
- * Chat session persistence ("robodesk_chat_session").
+ * Chat session persistence ("mmhd_chat_session").
  *
  * Storage format: { user: <userKey>, messages: [...] } where userKey is the
  * logged-in user id or "guest". Legacy sessions are bare message arrays.
  * The owning user key lets the widget clear the chat after logout while
  * preserving a guest conversation that continues after login.
  */
-export const CHAT_SESSION_KEY = "robodesk_chat_session";
+export const CHAT_SESSION_KEY = "mmhd_chat_session";
 
 export const readChatSession = () => {
   try {

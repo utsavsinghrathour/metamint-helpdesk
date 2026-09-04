@@ -28,7 +28,7 @@ const ContextualNotices = ({ onNoticeSelect, onStartConversation }) => {
       try {
         setIsLoading(true);
 
-        const context = window.robodeskData?.noticeContext || {};
+        const context = window.mmhdData?.noticeContext || {};
         const postId = Number(context?.post_id) || 0;
         const termIds = Array.isArray(context?.term_ids)
           ? context.term_ids.filter(Boolean)
@@ -44,7 +44,7 @@ const ContextualNotices = ({ onNoticeSelect, onStartConversation }) => {
           if (termIds.length > 0) params.set("term_ids", termIds.join(","));
 
           const response = await fetch(
-            `/wp-json/robodesk/v1/context-notices?${params.toString()}`,
+            `/wp-json/mmhd/v1/context-notices?${params.toString()}`,
           );
           if (response.ok) {
             const contextNotices = await response.json();
@@ -111,51 +111,51 @@ const ContextualNotices = ({ onNoticeSelect, onStartConversation }) => {
 
   return (
     <div
-      className={`rd-active-featured rd-position-relative ${
+      className={`mmhd-active-featured mmhd-position-relative ${
         !isVisible || isLoading || error || notices.length === 0
-          ? "rd-hidden"
+          ? "mmhd-hidden"
           : ""
-      } ${isVisible ? "rd-fade-in" : ""}`}
+      } ${isVisible ? "mmhd-fade-in" : ""}`}
     >
       {error ? (
-        <p className="rd-text-red rd-body-text">Error: {error}</p>
+        <p className="mmhd-text-red mmhd-body-text">Error: {error}</p>
       ) : (
         notices.length > 0 && (
           <>
             <button
-              className="rd-close-all-button rd-bg-transparent rd-border-none rd-cursor-pointer rd-text-gray-600 hover:rd-text-gray-800 rd-p-0"
+              className="mmhd-close-all-button mmhd-bg-transparent mmhd-border-none mmhd-cursor-pointer mmhd-text-gray-600 hover:mmhd-text-gray-800 mmhd-p-0"
               onClick={handleCloseAllNotices}
               title="Close all notices"
             >
               <FaTimes />
             </button>
-            <div className="rd-flex rd-flex-col">
+            <div className="mmhd-flex mmhd-flex-col">
               {notices.map((notice) => {
                 const startsConversation =
                   notice.notice_action === "start_conversation";
                 return (
                   <h5
                     key={notice.id}
-                    className={`rd-notice-title sub-text rd-p-10 rd-flex rd-align-center rd-gap-10 ${
-                      startsConversation ? "rd-notice-starts-chat" : ""
-                    } ${isContextual ? "rd-notice-contextual" : ""}`}
+                    className={`mmhd-notice-title sub-text mmhd-p-10 mmhd-flex mmhd-align-center mmhd-gap-10 ${
+                      startsConversation ? "mmhd-notice-starts-chat" : ""
+                    } ${isContextual ? "mmhd-notice-contextual" : ""}`}
                     onClick={() => handleNoticeClick(notice)}
                   >
                     <div className="featured-notice-icon">
                       {startsConversation ? (
-                        <PiChatCircleText className="rd-notice-chat-icon" />
+                        <PiChatCircleText className="mmhd-notice-chat-icon" />
                       ) : (
                         <img
                           src={Bell}
                           alt="Bell icon"
-                          className="rd-bell-gif"
+                          className="mmhd-bell-gif"
                         />
                       )}
                     </div>
-                    <span className="rd-notice-title-text">
+                    <span className="mmhd-notice-title-text">
                       {notice.title}
                       {startsConversation && (
-                        <small className="rd-notice-start-chat-label">
+                        <small className="mmhd-notice-start-chat-label">
                           Start a conversation
                         </small>
                       )}

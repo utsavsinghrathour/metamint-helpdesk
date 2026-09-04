@@ -10,7 +10,7 @@ const HelpTabs = ({
   handleFocusedTextArea,
 }) => {
   return (
-    <div className="help-tabs rd-h-full">
+    <div className="help-tabs mmhd-h-full">
       <FAQ
         setActiveTab={setActiveTab}
         setIsOpen={setIsOpen}

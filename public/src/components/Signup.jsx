@@ -153,8 +153,8 @@ const Signup = ({ switchToLogin }) => {
 
   return (
     <>
-      <div className="rd-text-center rd-body-text rd-my-30">
-        <span className="rd-px-10 rd-bg-white">
+      <div className="mmhd-text-center mmhd-body-text mmhd-my-30">
+        <span className="mmhd-px-10 mmhd-bg-white">
           ----- or Sign up with Email -----
         </span>
       </div>
@@ -162,7 +162,7 @@ const Signup = ({ switchToLogin }) => {
       <form onSubmit={handleSubmit} noValidate>
 
         <div>
-          <label htmlFor="username" className="rd-body-text"></label>
+          <label htmlFor="username" className="mmhd-body-text"></label>
           <input
             type="text"
             id="username"
@@ -170,22 +170,22 @@ const Signup = ({ switchToLogin }) => {
             value={formData.username}
             onChange={handleChange}
             placeholder="Username"
-            className="rd-w-full rd-border-light rd-p-12 rd-border-radius-md"
+            className="mmhd-w-full mmhd-border-light mmhd-p-12 mmhd-border-radius-md"
             required
             aria-describedby="username-error"
           />
           {errors.username && (
             <p
               id="username-error"
-              className="rd-text-red rd-text-sm rd-mt-5 form-err-msg err_msg"
+              className="mmhd-text-red mmhd-text-sm mmhd-mt-5 form-err-msg err_msg"
             >
               {errors.username}
             </p>
           )}
         </div>
 
-        <div className="rd-mt-15">
-          <label htmlFor="email" className="rd-body-text"></label>
+        <div className="mmhd-mt-15">
+          <label htmlFor="email" className="mmhd-body-text"></label>
           <input
             type="email"
             id="email-address"
@@ -193,22 +193,22 @@ const Signup = ({ switchToLogin }) => {
             value={formData.email}
             onChange={handleChange}
             placeholder="Email"
-            className="rd-w-full rd-border-light rd-p-12 rd-border-radius-md"
+            className="mmhd-w-full mmhd-border-light mmhd-p-12 mmhd-border-radius-md"
             required
             aria-describedby="email-error"
           />
           {errors.email && (
             <p
               id="email-error"
-              className="rd-text-red rd-text-sm rd-mt-5 form-err-msg err_msg"
+              className="mmhd-text-red mmhd-text-sm mmhd-mt-5 form-err-msg err_msg"
             >
               {errors.email}
             </p>
           )}
         </div>
 
-        <div className="rd-mt-15">
-          <label htmlFor="password" className="rd-body-text"></label>
+        <div className="mmhd-mt-15">
+          <label htmlFor="password" className="mmhd-body-text"></label>
           <input
             type="password"
             id="password"
@@ -216,15 +216,15 @@ const Signup = ({ switchToLogin }) => {
             value={formData.password}
             onChange={handleChange}
             placeholder="Password"
-            className="rd-w-full rd-border-light rd-p-12 rd-border-radius-md"
+            className="mmhd-w-full mmhd-border-light mmhd-p-12 mmhd-border-radius-md"
             required
             aria-describedby="password-error"
           />
           {formData.password && (
-            <div className="rd-mt-10 rd-flex rd-items-center rd-gap-10">
-              <div className="rd-flex-1 rd-h-5 rd-bg-gray-100 rd-rounded-full rd-overflow-hidden">
+            <div className="mmhd-mt-10 mmhd-flex mmhd-items-center mmhd-gap-10">
+              <div className="mmhd-flex-1 mmhd-h-5 mmhd-bg-gray-100 mmhd-rounded-full mmhd-overflow-hidden">
                 <div
-                  className="rd-h-full rd-rounded-full"
+                  className="mmhd-h-full mmhd-rounded-full"
                   style={{
                     width: `${(passwordStrength.score / 6) * 100}%`,
                     backgroundColor: passwordStrength.color
@@ -232,28 +232,28 @@ const Signup = ({ switchToLogin }) => {
                 ></div>
               </div>
               <span
-                className="rd-text-sm"
+                className="mmhd-text-sm"
                 style={{ color: passwordStrength.color }}
               >
                 {passwordStrength.label}
               </span>
             </div>
           )}
-          <div className="rd-text-xs rd-text-gray-500 rd-mt-5 rd-info err_msg">
+          <div className="mmhd-text-xs mmhd-text-gray-500 mmhd-mt-5 mmhd-info err_msg">
             Password must be at least 8 characters and include uppercase, lowercase, numbers, and special characters.
           </div>
           {errors.password && (
             <p
               id="password-error"
-              className="rd-text-red rd-text-sm rd-mt-5 form-err-msg err_msg"
+              className="mmhd-text-red mmhd-text-sm mmhd-mt-5 form-err-msg err_msg"
             >
               {errors.password}
             </p>
           )}
         </div>
 
-        <div className="rd-mt-15">
-          <label htmlFor="confirmPassword" className="rd-body-text"></label>
+        <div className="mmhd-mt-15">
+          <label htmlFor="confirmPassword" className="mmhd-body-text"></label>
           <input
             type="password"
             id="confirmPassword"
@@ -261,14 +261,14 @@ const Signup = ({ switchToLogin }) => {
             value={formData.confirmPassword}
             onChange={handleChange}
             placeholder="Confirm Password"
-            className="rd-w-full rd-border-light rd-p-12 rd-border-radius-md"
+            className="mmhd-w-full mmhd-border-light mmhd-p-12 mmhd-border-radius-md"
             required
             aria-describedby="confirmPassword-error"
           />
           {errors.confirmPassword && (
             <p
               id="confirmPassword-error"
-              className="rd-text-red rd-text-sm rd-mt-5 form-err-msg err_msg"
+              className="mmhd-text-red mmhd-text-sm mmhd-mt-5 form-err-msg err_msg"
             >
               {errors.confirmPassword}
             </p>
@@ -277,18 +277,18 @@ const Signup = ({ switchToLogin }) => {
 
         <button
           type="submit"
-          className="rd-login-button rd-w-full rd-border-radius-md"
+          className="mmhd-login-button mmhd-w-full mmhd-border-radius-md"
           disabled={isSubmitting}
         >
           {isSubmitting ? "Signing up..." : "Sign Up"}
         </button>
       </form>
 
-      <p className="rd-mt-15 rd-text-center rd-body-text rd-text-gray">
+      <p className="mmhd-mt-15 mmhd-text-center mmhd-body-text mmhd-text-gray">
         Already have an account?{" "}
         <button
           onClick={() => switchToLogin()}
-          className="rd-text-blue rd-hover-underline rd-bg-transparent rd-border-none rd-cursor-pointer"
+          className="mmhd-text-blue mmhd-hover-underline mmhd-bg-transparent mmhd-border-none mmhd-cursor-pointer"
         >
           Login
         </button>

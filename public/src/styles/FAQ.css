@@ -1,61 +1,61 @@
 @import url(../../assets/css/variables.css);
 
 /* FAQ.css */
-.rd-faq-container {
+.mmhd-faq-container {
   max-width: 600px;
   font-family: Arial, sans-serif;
 }
 
-.rd-faq-detail {
+.mmhd-faq-detail {
   display: flex;
   flex-direction: column;
   height: 100%;
 }
 
-.rd-faq-item {
+.mmhd-faq-item {
   padding: var(--header-padding);
   cursor: pointer;
   padding: 10px 15px;
 }
 
-.rd-faq-item .rd-title-text {
+.mmhd-faq-item .mmhd-title-text {
   margin-top: 0;
 }
 
-/* .rd-faq-item p{
+/* .mmhd-faq-item p{
     margin-top: 8px;
 } */
-.rd-faq-item .rd-faq-content {
+.mmhd-faq-item .mmhd-faq-content {
   max-width: 92%;
 }
 
-.rd-faq-item:hover {
+.mmhd-faq-item:hover {
   background-color: #f5f5f5;
 }
 
-.rd-faq-item svg {
+.mmhd-faq-item svg {
   height: 15px;
   width: 15px;
 }
 
-.rd-faq-content {
+.mmhd-faq-content {
   flex-grow: 1;
 }
 
-.rd-faq-paragraph {
+.mmhd-faq-paragraph {
   font-size: 14px;
   color: #666;
 }
 
-.rd-faq-icon {
+.mmhd-faq-icon {
   width: 20px;
   height: 20px;
   margin-left: 15px;
 }
 
-.rd-faq-item:last-child:not(
-    .featured-faq .rd-faq-item,
-    .single-faq-other-faq-content .rd-faq-item
+.mmhd-faq-item:last-child:not(
+    .featured-faq .mmhd-faq-item,
+    .single-faq-other-faq-content .mmhd-faq-item
   ) {
   border-bottom: none !important;
 }
@@ -70,14 +70,14 @@
   margin-bottom: 15px;
 }
 
-.rd-search-header .rd-search-bar input {
+.mmhd-search-header .mmhd-search-bar input {
   background-color: #fff !important;
   padding: 14px 15px;
   line-height: 18px;
   font-size: 14px;
 }
 
-.rd-search-header .rd-search-bar svg {
+.mmhd-search-header .mmhd-search-bar svg {
   position: absolute;
   right: 10px;
   height: 16px;
@@ -86,38 +86,38 @@
   transform: translate(-50%, -50%);
 }
 
-.rd-search-header .back-button {
+.mmhd-search-header .back-button {
   position: absolute;
   /* left: 18px; */
   top: 20px;
 }
 
-.rd-search-header {
+.mmhd-search-header {
   padding: 18px 18px 12px 18px;
 }
 
 /* css for search header end */
 
 /* css for single faq */
-.rd-author-avatar img {
+.mmhd-author-avatar img {
   height: 30px;
   width: 30px;
   object-fit: cover;
   border-radius: 50%;
 }
 
-.rd-single-faq-footer {
+.mmhd-single-faq-footer {
   padding-left: 10px;
   padding-right: 10px;
   margin: 30px 0;
 }
 
-.rd-faq-actions {
+.mmhd-faq-actions {
   gap: 40px;
   margin-bottom: 15px;
 }
 
-.rd-faq-actions svg path {
+.mmhd-faq-actions svg path {
   fill: #555555;
 }
 
@@ -142,18 +142,18 @@
   background-size: 22%; */
 }
 
-.rd-faq-content .rd-faq-title {
+.mmhd-faq-content .mmhd-faq-title {
   margin: 8px 0;
 }
 
-.rd-wiki-wrap {
+.mmhd-wiki-wrap {
   /* max-height: 320px; */
   max-height: calc(100% - 245px);
   overflow: auto;
 }
 
 .single-faq-content .wp-block-image img,
-.rd-notice-item .wp-block-image img {
+.mmhd-notice-item .wp-block-image img {
   margin: 15px 0;
 }
 
@@ -163,12 +163,12 @@
   margin: 15px 0;
 }
 
-.single-faq-other-faq-content .rd-faq-item {
+.single-faq-other-faq-content .mmhd-faq-item {
   border: 1px solid var(--border-light-gray);
   border-radius: 15px;
 }
 
-.rd-main-content .rd-conversation-fixed-bottm {
+.mmhd-main-content .mmhd-conversation-fixed-bottm {
   position: relative;
   left: auto;
   bottom: auto;
@@ -176,10 +176,10 @@
   margin-bottom: 15px;
 }
 
-.chat-disabled .rd-conversation-fixed-bottm {
+.chat-disabled .mmhd-conversation-fixed-bottm {
   display: none;
 }
 
-.chat-disabled .rd-main-content {
+.chat-disabled .mmhd-main-content {
   padding-bottom: 100px;
 }

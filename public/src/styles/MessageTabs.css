@@ -1,37 +1,37 @@
 @import url(../../assets/css/variables.css);
 
-.robodesk-plugin .rd-message-tab .rd-search-header {
+.mmhd-plugin .mmhd-message-tab .mmhd-search-header {
   padding: 20px;
 }
 
-.robodesk-plugin .single-rd-ticket {
+.mmhd-plugin .single-mmhd-ticket {
   padding: var(--card-padding);
 }
 
-.robodesk-plugin .rd-tickets .single-ticket-title {
+.mmhd-plugin .mmhd-tickets .single-ticket-title {
   padding: 0 20px;
   margin-bottom: 5px;
 }
 
-/* .rd-tickets {
+/* .mmhd-tickets {
   margin: 24px 0;
 } */
-.robodesk-plugin .rd-closed-tickets {
+.mmhd-plugin .mmhd-closed-tickets {
   margin-bottom: 0;
 }
 
-.robodesk-plugin .single-rd-active-ticket svg {
+.mmhd-plugin .single-mmhd-active-ticket svg {
   height: 15px;
   width: 15px;
 }
 
-.robodesk-plugin .rd-messge-wrapper {
+.mmhd-plugin .mmhd-messge-wrapper {
   max-height: 200px;
   overflow: auto;
   min-height: 200px;
 }
 
-.robodesk-plugin .rd-messge-wrapper .rd-send-message {
+.mmhd-plugin .mmhd-messge-wrapper .mmhd-send-message {
   position: absolute;
   bottom: 90px;
   left: 50%;
@@ -40,17 +40,17 @@
   background-color: #fff;
 }
 
-.robodesk-plugin .single-ticket-header img {
+.mmhd-plugin .single-ticket-header img {
   max-width: 100px;
   object-fit: contain;
 }
 
-.robodesk-plugin .rd-send-message a {
+.mmhd-plugin .mmhd-send-message a {
   width: fit-content;
   margin: auto;
 }
 
-.robodesk-plugin .chat-message.recieved .single-message {
+.mmhd-plugin .chat-message.recieved .single-message {
   border: 1px solid #eee;
   display: flex;
   align-items: center;
@@ -58,35 +58,35 @@
   border-radius: 10px;
 }
 
-.robodesk-plugin .chat-message.sent {
+.mmhd-plugin .chat-message.sent {
   margin-left: auto;
   gap: 10px;
   flex-direction: row-reverse;
 }
 
-.robodesk-plugin .chat-message .message-content {
+.mmhd-plugin .chat-message .message-content {
   display: flex;
   flex-direction: column;
 }
 
-.robodesk-plugin .chat-message.sent .message-content {
+.mmhd-plugin .chat-message.sent .message-content {
   background-color: var(--primary-blue);
 }
 
-.robodesk-plugin .chat-message.recieved .message-content {
+.mmhd-plugin .chat-message.recieved .message-content {
   background-color: transparent;
 }
 
-.robodesk-plugin .chat-message.sent .message-content * {
+.mmhd-plugin .chat-message.sent .message-content * {
   color: #fff !important;
 }
 
-.robodesk-plugin .chat-container {
+.mmhd-plugin .chat-container {
   overflow: auto;
   /* max-height: 300px; */
 }
 
-.rd-image-preview-wrapper {
+.mmhd-image-preview-wrapper {
   position: absolute;
   top: 50%;
   transform: translateY(-50%);
@@ -97,7 +97,7 @@
   border-radius: 0;
 }
 
-.robodesk-plugin .chat-input .rd-preview-image {
+.mmhd-plugin .chat-input .mmhd-preview-image {
   width: 100%;
   height: 100%;
   object-fit: contain;
@@ -105,26 +105,26 @@
   padding: 4px;
 }
 
-.robodesk-plugin .chat-input textarea::placeholder {
+.mmhd-plugin .chat-input textarea::placeholder {
   font-size: 12px;
   font-weight: 400;
 }
 
-.robodesk-plugin .chat-message .rd-comment-img {
+.mmhd-plugin .chat-message .mmhd-comment-img {
   margin: 10px auto;
   display: flex;
 }
 
-.robodesk-plugin .chat-input.has-preview textarea {
+.mmhd-plugin .chat-input.has-preview textarea {
   max-width: 55%;
 }
 
-.robodesk-plugin .chat-input textarea {
+.mmhd-plugin .chat-input textarea {
   max-height: 50px;
   overflow-y: auto;
 }
 
-.robodesk-plugin .emoji-picker-wrap {
+.mmhd-plugin .emoji-picker-wrap {
   height: fit-content;
   /* bottom: 100% !important; */
   left: 50%;
@@ -135,7 +135,7 @@
   right: unset !important;
 }
 
-.robodesk-plugin .remove-preview {
+.mmhd-plugin .remove-preview {
   right: 0;
   top: 0;
   background-color: #000;
@@ -148,46 +148,46 @@
   justify-content: center;
 }
 
-.robodesk-plugin .active-ticket-tab {
+.mmhd-plugin .active-ticket-tab {
   border-bottom: 2px solid var(--primary-blue) !important;
   color: var(--primary-blue) !important;
 }
 
-.robodesk-plugin .rd-urgent {
+.mmhd-plugin .mmhd-urgent {
   color: rgba(234, 0, 72, 1) !important;
   background-color: rgba(255, 216, 228, 1);
 }
 
-.robodesk-plugin .rd-medium {
+.mmhd-plugin .mmhd-medium {
   color: rgba(0, 74, 255, 1) !important;
   background-color: rgba(182, 203, 255, 1);
 }
 
-.robodesk-plugin .rd-low {
+.mmhd-plugin .mmhd-low {
   color: rgba(0, 99, 34, 1) !important;
   background-color: rgba(216, 255, 227, 1);
 }
 
-.rd-priority {
+.mmhd-priority {
   padding: 2px 6px;
   border-radius: 20px;
   font-size: 10px !important;
   line-height: 12px !important;
 }
 
-.robodesk-plugin .rd-message-tab-content input,
-.robodesk-plugin .rd-message-tab-content select {
+.mmhd-plugin .mmhd-message-tab-content input,
+.mmhd-plugin .mmhd-message-tab-content select {
   font-size: 13px !important;
   font-weight: 500 !important;
   line-height: 16px !important;
   padding: 8px 12px !important;
 }
 
-.robodesk-plugin .rd-message-tab-content input {
+.mmhd-plugin .mmhd-message-tab-content input {
   width: 50%;
 }
 
-.robodesk-plugin .rd-message-tab-content select {
+.mmhd-plugin .mmhd-message-tab-content select {
   width: 25%;
   appearance: none;
   -webkit-appearance: none;
@@ -198,21 +198,21 @@
   background-size: 16px;
 }
 
-.robodesk-plugin .rd-message-tab-content input::placeholder {
+.mmhd-plugin .mmhd-message-tab-content input::placeholder {
   color: #84818a !important;
   font-size: 13px !important;
   line-height: 16px !important;
 }
 
-.robodesk-plugin .rd-message-tab-content select,
-.robodesk-plugin .rd-message-tab-content select::placeholder {
+.mmhd-plugin .mmhd-message-tab-content select,
+.mmhd-plugin .mmhd-message-tab-content select::placeholder {
   font-size: 13px !important;
   line-height: 18px !important;
   color: rgba(85, 85, 85, 1);
   height: 34px;
 }
 
-.robodesk-plugin .rd-single-ticket .rd-single-chat-body-wrapper {
+.mmhd-plugin .mmhd-single-ticket .mmhd-single-chat-body-wrapper {
   display: flex;
   flex-direction: column;
   flex: 1;
@@ -220,22 +220,22 @@
   overflow: hidden;
 }
 
-.robodesk-plugin .rd-single-ticket .rd-single-chat-body-wrapper .rd-single-chat-intro {
+.mmhd-plugin .mmhd-single-ticket .mmhd-single-chat-body-wrapper .mmhd-single-chat-intro {
   flex-shrink: 0;
 }
 
-.robodesk-plugin .rd-single-ticket .rd-single-chat-body-wrapper .chat-container {
+.mmhd-plugin .mmhd-single-ticket .mmhd-single-chat-body-wrapper .chat-container {
   flex: 1;
   min-height: 0;
   overflow-y: auto;
 }
 
-.robodesk-plugin .rd-single-ticket .chat-container.ticket-closed {
+.mmhd-plugin .mmhd-single-ticket .chat-container.ticket-closed {
   min-height: 320px;
 }
 
 
-.robodesk-plugin .rd-preloader {
+.mmhd-plugin .mmhd-preloader {
   position: absolute;
   top: 50%;
   left: 50%;
@@ -245,11 +245,11 @@
   object-fit: cover;
 }
 
-.robodesk-plugin .rd-message-list-wrap {
+.mmhd-plugin .mmhd-message-list-wrap {
   max-width: 95%;
 }
 
-.rd-chat-info {
+.mmhd-chat-info {
   width: 100%;
   display: flex;
   justify-content: space-between;
@@ -257,40 +257,40 @@
   gap: 20px;
 }
 
-.robodesk-plugin .rd-message-image-preview img {
+.mmhd-plugin .mmhd-message-image-preview img {
   max-height: 35px;
   max-width: 35px;
 }
 
-.robodesk-plugin .rd-message-image-preview {
+.mmhd-plugin .mmhd-message-image-preview {
   position: absolute;
   bottom: -10px;
   right: 135px;
 }
 
-.robodesk-plugin .rd-message-image-preview+.rd-flex textarea {
+.mmhd-plugin .mmhd-message-image-preview+.mmhd-flex textarea {
   max-width: 60%;
 }
 
-.robodesk-plugin .emoji-picker-wrap .epr-category-nav {
+.mmhd-plugin .emoji-picker-wrap .epr-category-nav {
   padding: 10px;
 }
 
-.robodesk-plugin .rd-message-list-header img {
+.mmhd-plugin .mmhd-message-list-header img {
   height: 40px;
   aspect-ratio: auto;
   /* width: 40px; */
 }
 
-.robodesk-plugin .rd-search-header.rd-message-list-header {
+.mmhd-plugin .mmhd-search-header.mmhd-message-list-header {
   padding: 10px;
 }
 
-.robodesk-plugin .rd-is-action {
+.mmhd-plugin .mmhd-is-action {
   color: red;
 }
 
-.robodesk-plugin .rd-comment-img {
+.mmhd-plugin .mmhd-comment-img {
   max-width: 150px;
   max-height: 150px;
   object-fit: contain;
@@ -299,12 +299,12 @@
 
 /* For notification red dot */
 /* Must remove this later  */
-.robodesk-plugin .rd-title-with-dot {
+.mmhd-plugin .mmhd-title-with-dot {
   position: relative;
   display: inline-block;
 }
 
-.robodesk-plugin .rd-title-with-dot::after {
+.mmhd-plugin .mmhd-title-with-dot::after {
   content: "";
   position: absolute;
   top: -2px;
@@ -334,11 +334,11 @@
 }
 
 /* Skeleton Loader Styles */
-.robodesk-plugin .rd-skeleton-container {
+.mmhd-plugin .mmhd-skeleton-container {
   width: 100%;
 }
 
-.robodesk-plugin .rd-skeleton-message {
+.mmhd-plugin .mmhd-skeleton-message {
   animation: pulse 1.5s ease-in-out infinite;
 }
 
@@ -356,16 +356,16 @@
   }
 }
 
-.robodesk-plugin .rd-skeleton-avatar {
+.mmhd-plugin .mmhd-skeleton-avatar {
   animation: pulse 1.5s ease-in-out infinite;
 }
 
-.robodesk-plugin .rd-skeleton-content {
+.mmhd-plugin .mmhd-skeleton-content {
   position: relative;
   overflow: hidden;
 }
 
-.robodesk-plugin .rd-skeleton-content::after {
+.mmhd-plugin .mmhd-skeleton-content::after {
   content: "";
   position: absolute;
   top: 0;
@@ -387,14 +387,14 @@
   }
 }
 
-.rd-skeleton-text,
-.rd-skeleton-time {
+.mmhd-skeleton-text,
+.mmhd-skeleton-time {
   position: relative;
   overflow: hidden;
 }
 
-.rd-skeleton-text::after,
-.rd-skeleton-time::after {
+.mmhd-skeleton-text::after,
+.mmhd-skeleton-time::after {
   content: "";
   position: absolute;
   top: 0;
@@ -411,7 +411,7 @@
 }
 
 @media (max-width: 767px) {
-  .robodesk-plugin .chat-input.has-preview textarea {
+  .mmhd-plugin .chat-input.has-preview textarea {
     max-width: 50%;
   }
 }

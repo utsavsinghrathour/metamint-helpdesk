@@ -8,7 +8,7 @@ const parseJSON = async (response) => {
 };
 
 const getRestHeaders = (extraHeaders = {}) => {
-  const nonce = window.robodeskAuth?.restNonce || window.wpApiSettings?.nonce || '';
+  const nonce = window.mmhdAuth?.restNonce || window.wpApiSettings?.nonce || '';
   return {
     "Content-Type": "application/json",
     ...(nonce ? { "X-WP-Nonce": nonce } : {}),
@@ -18,7 +18,7 @@ const getRestHeaders = (extraHeaders = {}) => {
 
 //create ticket
 export const createTicket = async (userId, title, message = "", timestamp = null) => {
-  const webhookUrl = "/wp-json/robodesk/chat/v1/tickets";
+  const webhookUrl = "/wp-json/mmhd/chat/v1/tickets";
 
   const ticketData = {
     event: "ticket.created",
@@ -48,7 +48,7 @@ export const createTicket = async (userId, title, message = "", timestamp = null
 
 //get all messages
 export const getMessages = async (ticketId, userId) => {
-  const webhookUrl = "/wp-json/robodesk/chat/v1/tickets/";
+  const webhookUrl = "/wp-json/mmhd/chat/v1/tickets/";
 
   const messageData = {
     event: "comments.get",
@@ -74,10 +74,10 @@ export const getMessages = async (ticketId, userId) => {
 };
 
 export const userStatus = () => {
-  if (typeof robodeskAuth !== "undefined" && robodeskAuth.isLoggedIn === "true") {
+  if (typeof mmhdAuth !== "undefined" && mmhdAuth.isLoggedIn === "true") {
     return {
       isLoggedIn: true,
-      loggedInUserId: robodeskAuth.loggedInUserId || false,
+      loggedInUserId: mmhdAuth.loggedInUserId || false,
     };
   }
 
@@ -147,7 +147,7 @@ export async function sendReply(
   };
 
   try {
-    const response = await fetch("/wp-json/robodesk/chat/v1/tickets", {
+    const response = await fetch("/wp-json/mmhd/chat/v1/tickets", {
       method: "POST",
       headers: getRestHeaders(),
       body: JSON.stringify(payload),
@@ -173,7 +173,7 @@ export async function registerUser(email) {
     const payload = {
       email: email,
     };
-    const response = await fetch("/wp-json/robodesk/v1/signup", {
+    const response = await fetch("/wp-json/mmhd/v1/signup", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -198,7 +198,7 @@ export async function loginUser(email, password) {
       email: email,
       password: password,
     };
-    const response = await fetch("/wp-json/robodesk/v1/login", {
+    const response = await fetch("/wp-json/mmhd/v1/login", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -225,7 +225,7 @@ export async function getAllTickets(userId) {
         uid: userId,
       },
     };
-    const response = await fetch("/wp-json/robodesk/chat/v1/tickets", {
+    const response = await fetch("/wp-json/mmhd/chat/v1/tickets", {
       method: "POST",
       headers: getRestHeaders(),
       body: JSON.stringify(payload),

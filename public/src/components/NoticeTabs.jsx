@@ -1,15 +1,15 @@
 import React, { useState, useEffect, useMemo, memo } from "react";
 import { FaChevronLeft } from "react-icons/fa";
 import Header from "./Header.jsx";
-import Footer, { robodeskShowCredits } from "./Footer.jsx";
+import Footer, { mmhdShowCredits } from "./Footer.jsx";
 import parse from "html-react-parser";
 import DOMPurify from "dompurify";
 import "../styles/NoticeTabs.css";
-import defaultLogo from "../images/robodesk-logo.png";
+import defaultLogo from "../images/mmhd-logo.png";
 
 import { useAppData } from "../utils/AppDataContext";
 
-// const wpHomeUrl = window.robodeskData?.home_url || '';
+// const wpHomeUrl = window.mmhdData?.home_url || '';
 
 const normalizeImagePaths = (html) => {
   return html.replace(
@@ -32,7 +32,7 @@ class ErrorBoundary extends React.Component {
   render() {
     if (this.state.hasError) {
       return (
-        <p className="rd-body-text rd-text-red rd-text-center">
+        <p className="mmhd-body-text mmhd-text-red mmhd-text-center">
           Something went wrong.
         </p>
       );
@@ -60,11 +60,11 @@ const NoticeItem = memo(({ notice, onSelect, onStartConversation }) => {
 
   return (
     <div
-      className="rd-notice-item rd-flex rd-gap-10 rd-border-light single-notice-box-field rd-border-radius-md rd-faq-item"
+      className="mmhd-notice-item mmhd-flex mmhd-gap-10 mmhd-border-light single-notice-box-field mmhd-border-radius-md mmhd-faq-item"
       onClick={handleClick}
       style={{ cursor: "pointer" }}
     >
-      <div className="rd-text-blue">
+      <div className="mmhd-text-blue">
         <svg
           xmlns="http://www.w3.org/2000/svg"
           width="20"
@@ -79,10 +79,10 @@ const NoticeItem = memo(({ notice, onSelect, onStartConversation }) => {
         </svg>
       </div>
       <div>
-        <h4 className="rd-title-text">{notice.title}</h4>
-        <div className="rd-body-text truncate-3-lines">{parsedExcerpt}</div>
+        <h4 className="mmhd-title-text">{notice.title}</h4>
+        <div className="mmhd-body-text truncate-3-lines">{parsedExcerpt}</div>
         {startsConversation && (
-          <span className="rd-notice-list-chat-label">
+          <span className="mmhd-notice-list-chat-label">
             Start a conversation
           </span>
         )}
@@ -171,10 +171,10 @@ const SingleNoticeView = memo(
         : notice.title?.rendered || "";
 
     return (
-      <div className="rd-single-notice-view rd-main-content no-footer">
-        <div className="robodesk-header rd-notice-header rd-flex rd-align-center rd-justify-between">
+      <div className="mmhd-single-notice-view mmhd-main-content no-footer">
+        <div className="mmhd-header mmhd-notice-header mmhd-flex mmhd-align-center mmhd-justify-between">
           <button
-            className="rd-back-button rd-flex rd-items-center rd-bg-transparent rd-border-none icon-dark rd-p-0 rd-m-0 rd-cursor-pointer"
+            className="mmhd-back-button mmhd-flex mmhd-items-center mmhd-bg-transparent mmhd-border-none icon-dark mmhd-p-0 mmhd-m-0 mmhd-cursor-pointer"
             onClick={onBack}
           >
             <FaChevronLeft />
@@ -183,7 +183,7 @@ const SingleNoticeView = memo(
             <img
               src={wideLogo}
               alt="Plugin Logo"
-              className="rd-header-logo rd-notice-wide-logo"
+              className="mmhd-header-logo mmhd-notice-wide-logo"
               onError={(e) => {
                 e.target.style.display = "none";
               }}
@@ -192,22 +192,22 @@ const SingleNoticeView = memo(
             <img
               src={logo}
               alt="Plugin Logo"
-              className="rd-header-logo rd-notice-wide-logo"
+              className="mmhd-header-logo mmhd-notice-wide-logo"
               onError={(e) => {
                 e.target.style.display = "none";
               }}
             />
           ) : (
-            <div className="rd-header-logo default-logo">
+            <div className="mmhd-header-logo default-logo">
               <img
                 src={defaultLogo}
                 alt="Default Plugin Logo"
-                className="rd-header-logo rd-notice-wide-logo"
+                className="mmhd-header-logo mmhd-notice-wide-logo"
               />
             </div>
           )}
           <button
-            className={`expand-popup rd-bg-transparent rd-border-none rd-cursor-pointer rd-p-0 ${isExpanded ? "expanded" : ""
+            className={`expand-popup mmhd-bg-transparent mmhd-border-none mmhd-cursor-pointer mmhd-p-0 ${isExpanded ? "expanded" : ""
               }`}
             onClick={() => setIsExpanded(!isExpanded)}
           >
@@ -247,14 +247,14 @@ const SingleNoticeView = memo(
             </svg>
           </button>
         </div>
-        <div className="rd-px-20 rd-py-15 rd-body-notices">
-          <h4 className="heading-4 rd-mb-10">{title}</h4>
-          <div className="rd-body-text">{parsedContent}</div>
+        <div className="mmhd-px-20 mmhd-py-15 mmhd-body-notices">
+          <h4 className="heading-4 mmhd-mb-10">{title}</h4>
+          <div className="mmhd-body-text">{parsedContent}</div>
           {notice.notice_action === "start_conversation" &&
             notice.initial_message && (
-              <div className="rd-mt-20">
+              <div className="mmhd-mt-20">
                 <button
-                  className="rd-notice-start-chat-button"
+                  className="mmhd-notice-start-chat-button"
                   onClick={() => onStartConversation(notice.initial_message)}
                 >
                   Start a conversation
@@ -262,8 +262,8 @@ const SingleNoticeView = memo(
               </div>
             )}
         </div>
-        {robodeskShowCredits() && (
-          <div className="rd-border-top-light">
+        {mmhdShowCredits() && (
+          <div className="mmhd-border-top-light">
             <Footer showCopyrightOnly={true} />
           </div>
         )}
@@ -328,9 +328,9 @@ const NoticeTabs = ({
 
   return (
     <ErrorBoundary>
-      <div className="rd-flex rd-flex-col rd-h-full">
+      <div className="mmhd-flex mmhd-flex-col mmhd-h-full">
         {error ? (
-          <p className="rd-text-red rd-body-text rd-text-center">
+          <p className="mmhd-text-red mmhd-body-text mmhd-text-center">
             Error: {error}
           </p>
         ) : selectedNotice ? (
@@ -345,26 +345,26 @@ const NoticeTabs = ({
           />
         ) : (
           <>
-            <div className="rd-main-content">
+            <div className="mmhd-main-content">
               {showHeaderFooter && (
                 <>
                   <Header logo={logo} onClose={() => setIsOpen(false)} />
-                  <div className="rd-notice-tab-wrap">
-                    <div className="rd-text-center rd-p-16 rd-flex rd-flex-col rd-gap-5 notice-tab-title home-tab-title">
+                  <div className="mmhd-notice-tab-wrap">
+                    <div className="mmhd-text-center mmhd-p-16 mmhd-flex mmhd-flex-col mmhd-gap-5 notice-tab-title home-tab-title">
                       <h4 className="heading-4">Notices</h4>
                       <h5 className="sub-text">
                         Stay updated with our latest announcements.
                       </h5>
                     </div>
 
-                    <div className="rd-px-18 rd-mt-20 rd-mb-15 notice-tab-content">
-                      <div className="rd-flex rd-flex-col rd-gap-20 featured-faq">
+                    <div className="mmhd-px-18 mmhd-mt-20 mmhd-mb-15 notice-tab-content">
+                      <div className="mmhd-flex mmhd-flex-col mmhd-gap-20 featured-faq">
                         {loading ? (
-                          <p className="rd-body-text rd-text-center">
+                          <p className="mmhd-body-text mmhd-text-center">
                             Loading notices...
                           </p>
                         ) : notices.length === 0 ? (
-                          <p className="rd-text-center">No notices found.</p>
+                          <p className="mmhd-text-center">No notices found.</p>
                         ) : (
                           notices.map((notice) => (
                             <NoticeItem
