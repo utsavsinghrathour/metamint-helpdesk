@@ -17,8 +17,8 @@ function mmhd_add_admin_menu()
 {
     // Top-level menu pointing to the dashboard
     add_menu_page(
-        'Metamint',
-        'Metamint',
+        'Metamint Helpdesk',
+        'Metamint Helpdesk',
         'mmhd_access_dashboard',
         'mmhd-dashboard',
         'mmhd_dashboard_callback',
