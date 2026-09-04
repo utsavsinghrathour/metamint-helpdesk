@@ -330,7 +330,7 @@ jQuery(document).ready(function ($) {
               $("#mmhd-add-credential")[0].reset();
               $("#credential-form").slideUp();
               var cred = response.data;
-              var row = buildCredentialRow(cred);
+              var row = $(buildCredentialRow(cred));
               var wrapper = $(".credential-table-wrapper");
               if (wrapper.length) {
                 wrapper.find("table tbody").append(row);

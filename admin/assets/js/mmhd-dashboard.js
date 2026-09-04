@@ -2249,6 +2249,15 @@ function showSettingsTab(tabName) {
   url.searchParams.set("settings_tab", tabName);
   window.history.replaceState({}, "", url);
 
+  // Fall back to the basic tab if the requested tab does not exist
+  // (e.g. an addon tab that is not rendered because the addon is inactive)
+  if (!document.querySelector(`[data-tab="${tabName}"]`) || !document.getElementById(tabName + "-tab")) {
+    if (tabName !== "basic") {
+      showSettingsTab("basic");
+    }
+    return;
+  }
+
   // Update tab buttons
   document.querySelectorAll(".settings-tab").forEach((tab) => {
     tab.classList.remove("active");
