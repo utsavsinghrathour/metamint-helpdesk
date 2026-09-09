@@ -179,7 +179,7 @@ function mmhd_dashboard_callback()
 
             <!---------------------- Addons Page ---------------------->
             <?php
-            // Include Addons page if Metamint Addon plugin is active
+            // Include Addons page if Metamint Helpdesk Addon plugin is active
             if (defined('MMHD_ADDON_PLUGIN_PATH') && current_user_can('mmhd_manage_settings')) {
                 $addons_file = MMHD_ADDON_PLUGIN_PATH . 'admin/includes/mmhd-addons.php';
                 if (file_exists($addons_file)) {

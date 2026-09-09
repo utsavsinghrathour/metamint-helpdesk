@@ -1,4 +1,4 @@
-/* Basic Styling for Metamint Admin Elements */
+/* Basic Styling for Metamint Helpdesk Admin Elements */
 
 /* Meta Box Styles */
 #mmhd_ticket_status {
@@ -10,7 +10,7 @@
   /* test */
 }
 
-/* Styles for the Metamint Tickets list table (if you customize the list table) */
+/* Styles for the Metamint Helpdesk Tickets list table (if you customize the list table) */
 .wp-list-table .column-ticket_status {
   /* Example for a custom column */
   text-align: center;

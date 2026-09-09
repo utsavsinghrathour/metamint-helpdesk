@@ -17,7 +17,7 @@ if (file_exists($mmhd_jwt_file) && file_exists($mmhd_key_file)) {
                 return;
             }
 
-            echo '<div class="notice notice-error"><p><strong>Metamint:</strong> JWT library files are missing. Please reinstall the plugin package.</p></div>';
+            echo '<div class="notice notice-error"><p><strong>Metamint Helpdesk:</strong> JWT library files are missing. Please reinstall the plugin package.</p></div>';
         }
     }
 
@@ -56,7 +56,7 @@ function mmhd_log_debug($message)
 {
     if (defined('WP_DEBUG') && WP_DEBUG && defined('WP_DEBUG_LOG') && WP_DEBUG_LOG) {
         // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log
-        error_log('[Metamint] ' . $message);
+        error_log('[Metamint Helpdesk] ' . $message);
     }
 }
 
@@ -336,7 +336,7 @@ add_action('rest_api_init', function () {
         'permission_callback' => '__return_true', // Auth handled by callback via Authorization header
     ));
 
-    // Metamint Registration Rest Api Registration
+    // Metamint Helpdesk Registration Rest Api Registration
     register_rest_route('mmhd/v1', '/signup', array(
         'methods' => 'POST',
         'callback' => 'mmhd_user_signup',
@@ -1996,7 +1996,7 @@ function mmhd_custom_lost_password(WP_REST_Request $request)
     set_transient($cooldown_key, true, 10 * MINUTE_IN_SECONDS);
 
     if (mmhd_are_emails_suppressed()) {
-        mmhd_log('Metamint: Password reset email skipped (do not send email on import) for: ' . $user_login);
+        mmhd_log('Metamint Helpdesk: Password reset email skipped (do not send email on import) for: ' . $user_login);
         return new WP_REST_Response(array(
             'message' => __('If the username or email exists, a password reset link has been sent.', 'mmhd')
         ), 200);
@@ -2213,7 +2213,7 @@ function mmhd_send_chat_transcript(WP_REST_Request $request)
     }
 
     if (mmhd_are_emails_suppressed()) {
-        mmhd_log('Metamint: Chat transcript email skipped (do not send email on import).');
+        mmhd_log('Metamint Helpdesk: Chat transcript email skipped (do not send email on import).');
         return new WP_Error('emails_disabled', __('Email sending is currently disabled on this site.', 'mmhd'), array('status' => 403));
     }
 

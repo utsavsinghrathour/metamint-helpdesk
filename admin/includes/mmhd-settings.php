@@ -57,7 +57,7 @@ $mmhd_settings_hidden = ($mmhd_current_tab === 'settings') ? '' : ' hidden';
                                  <h4 class="text-base font-semibold text-gray-900">
                                      <?php esc_html_e('Basic', 'mmhd'); ?></h4>
                                  <p class="text-sm text-gray-500">
-                                     <?php esc_html_e('Core site details used across Metamint.', 'mmhd'); ?></p>
+                                     <?php esc_html_e('Core site details used across Metamint Helpdesk.', 'mmhd'); ?></p>
                              </div>
                              <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
                                  <div>
@@ -83,7 +83,7 @@ $mmhd_settings_hidden = ($mmhd_current_tab === 'settings') ? '' : ' hidden';
                                 <input type="checkbox" name="hide_credits" id="hide_credits" value="1" <?php checked(get_option('mmhd_hide_credits', '0'), '1'); ?> class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
                                 <label for="hide_credits" class="ml-2 block text-sm text-gray-900 font-medium"><?php esc_html_e('Hide Credits', 'mmhd'); ?></label>
                             </div>
-                            <p class="text-sm text-gray-500 ml-7"><?php esc_html_e('When checked, the "Powered by Metamint" text is hidden from the chat widget footer.', 'mmhd'); ?></p>
+                            <p class="text-sm text-gray-500 ml-7"><?php esc_html_e('When checked, the "Powered by Metamint Helpdesk" text is hidden from the chat widget footer.', 'mmhd'); ?></p>
                         </section>
 
                         <section class="rounded-xl border border-gray-200 bg-gray-50 p-6">
@@ -690,7 +690,7 @@ $mmhd_settings_hidden = ($mmhd_current_tab === 'settings') ? '' : ' hidden';
                                      </span>
                                  </label>
                                  <p class="mt-1 text-xs text-gray-500">
-                                     <?php esc_html_e('Suppresses all outgoing Metamint emails — new user welcome, ticket creation confirmation, reply and close notifications, password reset, and more. Enable this to import existing conversations without notifying customers, or to pause all Metamint email delivery.', 'mmhd'); ?>
+                                     <?php esc_html_e('Suppresses all outgoing Metamint Helpdesk emails — new user welcome, ticket creation confirmation, reply and close notifications, password reset, and more. Enable this to import existing conversations without notifying customers, or to pause all Metamint Helpdesk email delivery.', 'mmhd'); ?>
                                  </p>
                              </div>
                          </div>

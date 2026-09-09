@@ -12,7 +12,7 @@ A support ticket and FAQ system for WordPress.
 
 == Description ==
 
-Metamint is a simple and efficient support plugin for WordPress that enables users to submit support tickets, track their status, and communicate with the support team directly from the WordPress dashboard.
+Metamint Helpdesk is a simple and efficient support plugin for WordPress that enables users to submit support tickets, track their status, and communicate with the support team directly from the WordPress dashboard.
 
 == External Services ==
 

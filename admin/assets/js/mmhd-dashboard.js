@@ -1,4 +1,4 @@
-function parseMetamintDate(value) {
+function parseMetamintHelpdeskDate(value) {
   if (!value) return null;
   if (value instanceof Date) return isNaN(value.getTime()) ? null : value;
   if (typeof value === "number") {
@@ -11,13 +11,13 @@ function parseMetamintDate(value) {
   return isNaN(date.getTime()) ? null : date;
 }
 
-function getMetamintTime(value) {
-  const date = parseMetamintDate(value);
+function getMetamintHelpdeskTime(value) {
+  const date = parseMetamintHelpdeskDate(value);
   return date ? date.getTime() : 0;
 }
 
-function formatMetamintLocalTime(value, format = "datetime") {
-  const date = parseMetamintDate(value);
+function formatMetamintHelpdeskLocalTime(value, format = "datetime") {
+  const date = parseMetamintHelpdeskDate(value);
   if (!date) return value || "";
 
   if (format === "datetime-block") {
@@ -47,9 +47,9 @@ function formatMetamintLocalTime(value, format = "datetime") {
   return date.toLocaleString(undefined, options);
 }
 
-function localizeMetamintTimes(root = document) {
+function localizeMetamintHelpdeskTimes(root = document) {
   root.querySelectorAll(".mmhd-local-time[data-utc]").forEach((element) => {
-    const formatted = formatMetamintLocalTime(
+    const formatted = formatMetamintHelpdeskLocalTime(
       element.getAttribute("data-utc"),
       element.getAttribute("data-format") || "datetime",
     );
@@ -61,7 +61,7 @@ function localizeMetamintTimes(root = document) {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-  localizeMetamintTimes();
+  localizeMetamintHelpdeskTimes();
 });
 
 // Prime the browser audio engine on the first user gesture so that
@@ -190,7 +190,7 @@ function loadDashboardTickets() {
     const lastReply = replies.length > 0 ? replies[replies.length - 1] : null;
 
     const now = new Date();
-    const lastReplyTime = parseMetamintDate(
+    const lastReplyTime = parseMetamintHelpdeskDate(
       lastReply?.timestamp || lastReply?.date || ticket.updated,
     );
     const isValidDate =
@@ -263,10 +263,10 @@ function renderDashboardTable(filteredTickets) {
                     ? (() => {
                         const sortedReplies = [...ticket.replies].sort(
                           (a, b) => {
-                            const aDate = getMetamintTime(
+                            const aDate = getMetamintHelpdeskTime(
                               a?.timestamp || a?.date || 0,
                             );
-                            const bDate = getMetamintTime(
+                            const bDate = getMetamintHelpdeskTime(
                               b?.timestamp || b?.date || 0,
                             );
                             return bDate - aDate;
@@ -279,7 +279,7 @@ function renderDashboardTable(filteredTickets) {
                           lastReply.date ||
                           ticket.updated;
                         const timeAgo = timeSince(
-                          parseMetamintDate(lastReplyDate),
+                          parseMetamintHelpdeskDate(lastReplyDate),
                         );
                         return `
                           <div class="text-sm font-medium text-gray-900 ticket-col-text">${escapeHTML(
@@ -1034,7 +1034,7 @@ function timeSince(date) {
 
 // Helper function to format date (delegates to UTC-aware formatter)
 function formatDate(dateString) {
-  return formatMetamintLocalTime(dateString);
+  return formatMetamintHelpdeskLocalTime(dateString);
 }
 
 // Function to handle filter changes
@@ -2355,7 +2355,7 @@ document.addEventListener("click", function (event) {
     hideCustomerTickets();
   }
 });
-// custom JavaScript for Metamint dashboard
+// custom JavaScript for Metamint Helpdesk dashboard
 
 // IMAP test connection function
 // This function tests the IMAP connection using AJAX
@@ -4716,7 +4716,7 @@ function renderNotificationList() {
 
   listContainer.innerHTML = sortedItems
     .map((item, index) => {
-      const timeAgo = timeSinceCompact(parseMetamintDate(item.timestamp));
+      const timeAgo = timeSinceCompact(parseMetamintHelpdeskDate(item.timestamp));
       let icon = "fa-bell";
       let iconColor = "text-blue-500";
       const ticketData = Array.isArray(dashboard_tickets)

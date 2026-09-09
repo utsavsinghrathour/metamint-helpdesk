@@ -7,7 +7,7 @@ import he from "he";
 import Footer, { mmhdShowCredits } from "./Footer";
 import { readChatSession } from "../utils/startConversation";
 import "../styles/SingleQuestionBox.css";
-import MetamintBotChatWidgetMain from "./MetamintBotChatWidgetMain";
+import MetamintHelpdeskBotChatWidgetMain from "./MetamintHelpdeskBotChatWidgetMain";
 
 import defaultLogo from "../images/mmhd-logo.png";
 
@@ -188,7 +188,7 @@ const SingleQuestionBox = ({
   };
 
   const getRestNonce = () =>
-    window.MetamintBotConfig?.restNonce ||
+    window.MetamintHelpdeskBotConfig?.restNonce ||
     window.wpApiSettings?.nonce ||
     "";
 
@@ -428,7 +428,7 @@ const SingleQuestionBox = ({
               ) : null}
               {chatEnabled && shouldShowBotWidget ? (
                 <>
-                  <MetamintBotChatWidgetMain
+                  <MetamintHelpdeskBotChatWidgetMain
                     widgetConfig={widgetConfig}
                     activeAIMode={activeAIMode}
                     onChatStart={() => setHasChatStarted(true)}

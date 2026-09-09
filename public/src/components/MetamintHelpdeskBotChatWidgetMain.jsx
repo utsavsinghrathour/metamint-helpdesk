@@ -57,7 +57,7 @@ function Countdown({ seconds }) {
   return <span className="mmhd-countdown">({mm}:{ss})</span>;
 }
 
-export default function MetamintBotChatWidgetMain({
+export default function MetamintHelpdeskBotChatWidgetMain({
   widgetConfig,
   activeAIMode,
   onChatStart,
@@ -357,7 +357,7 @@ export default function MetamintBotChatWidgetMain({
       { role: "assistant", text: "...", thinking: true },
     ]);
 
-    const restNonce = window.mmhdAuth?.restNonce || window.MetamintBotConfig?.restNonce || window.wpApiSettings?.nonce || "";
+    const restNonce = window.mmhdAuth?.restNonce || window.MetamintHelpdeskBotConfig?.restNonce || window.wpApiSettings?.nonce || "";
     const headers = { "Content-Type": "application/json" };
     if (restNonce) {
       headers["X-WP-Nonce"] = restNonce;
@@ -415,7 +415,7 @@ export default function MetamintBotChatWidgetMain({
     setIsStreaming(true);
     setLoadingText("...");
 
-    const restNonce = window.mmhdAuth?.restNonce || window.MetamintBotConfig?.restNonce || window.wpApiSettings?.nonce || "";
+    const restNonce = window.mmhdAuth?.restNonce || window.MetamintHelpdeskBotConfig?.restNonce || window.wpApiSettings?.nonce || "";
     const headers = { "Content-Type": "application/json" };
     if (restNonce) {
       headers["X-WP-Nonce"] = restNonce;
@@ -567,7 +567,7 @@ export default function MetamintBotChatWidgetMain({
     }
     setIsStreaming(true);
     setLoadingText("...");
-    const restNonce = window.mmhdAuth?.restNonce || window.MetamintBotConfig?.restNonce || window.wpApiSettings?.nonce || "";
+    const restNonce = window.mmhdAuth?.restNonce || window.MetamintHelpdeskBotConfig?.restNonce || window.wpApiSettings?.nonce || "";
     try {
       const resp = await fetch("/wp-json/mmhd-bot/v1/confirm-refund", {
         method: "POST",

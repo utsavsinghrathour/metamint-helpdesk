@@ -8,8 +8,8 @@ add_action('init', 'mmhd_register_ticket_post_type');
 function mmhd_register_ticket_post_type()
 {
     $ticket_labels = array(
-        'name'                  => _x('Metamint Tickets', 'post type general name', 'mmhd'),
-        'singular_name'         => _x('Metamint Ticket', 'post type singular name', 'mmhd'),
+        'name'                  => _x('Metamint Helpdesk Tickets', 'post type general name', 'mmhd'),
+        'singular_name'         => _x('Metamint Helpdesk Ticket', 'post type singular name', 'mmhd'),
         'menu_name'             => __('Tickets', 'mmhd'),
         'name_admin_bar'        => __('Ticket', 'mmhd'),
         'add_new'               => __('Add New', 'mmhd'),

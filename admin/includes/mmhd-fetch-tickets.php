@@ -516,7 +516,7 @@ function mmhd_fetch_emails()
 
     $last_fetched_date = get_option('mmhd_last_fetched_date', '2021-01-01 00:00:00'); // Default to a past date if not set( as we are also using the ticket id to retrieve the last mail or reply    )
     mmhd_log('Last fetched date: ' . $last_fetched_date);
-    mmhd_log('Metamint: Last email fetched date/time: ' . $last_fetched_date);
+    mmhd_log('Metamint Helpdesk: Last email fetched date/time: ' . $last_fetched_date);
 
     $last_fetched_gmt = get_gmt_from_date($last_fetched_date, 'Y-m-d H:i:s');
     $since_date = gmdate('d-M-Y H:i:s', strtotime($last_fetched_gmt));
@@ -769,7 +769,7 @@ function mmhd_fetch_emails()
 
                     // Update last fetched date
                     update_option('mmhd_last_fetched_date', $date); // Update last fetched date to current email date
-                    mmhd_log('Metamint: Updated last fetched email date/time to: ' . $date);
+                    mmhd_log('Metamint Helpdesk: Updated last fetched email date/time to: ' . $date);
                     continue; // Skip creating a new ticket for replies
                 } else {
                     mmhd_log('Could not find original ticket for reply, creating new ticket instead');
@@ -883,11 +883,11 @@ function mmhd_fetch_emails()
                     mmhd_store_ticket_assignee_id($post_id, $assignee);
                 } else {
                     // Optional: Handle case where no assignee was found (e.g., log or set default)
-                    mmhd_log('Metamint: Failed to assign ticket ID ' . $post_id . ' - no support staff available.');
+                    mmhd_log('Metamint Helpdesk: Failed to assign ticket ID ' . $post_id . ' - no support staff available.');
                 }
             } else {
                 // Handle error if ticket creation failed
-                mmhd_log('Metamint: Failed to create ticket: ' . $post_id->get_error_message());
+                mmhd_log('Metamint Helpdesk: Failed to create ticket: ' . $post_id->get_error_message());
             }
 
             //if post is created successfully add a comment with email message
@@ -952,9 +952,9 @@ function mmhd_fetch_emails()
 
             // Update last fetched date
             update_option('mmhd_last_fetched_date', $date);
-            mmhd_log('Metamint: Updated last fetched email date/time to: ' . $date);
+            mmhd_log('Metamint Helpdesk: Updated last fetched email date/time to: ' . $date);
             } catch (Throwable $e) {
-                mmhd_log('Metamint: Error processing email #' . $email_number . ': ' . $e->getMessage());
+                mmhd_log('Metamint Helpdesk: Error processing email #' . $email_number . ': ' . $e->getMessage());
                 $error_count++;
             }
         }
@@ -1045,7 +1045,7 @@ function mmhd_imap_settings_callback()
 ?>
 
     <div class="wrap">
-        <h1>Metamint IMAP Settings</h1>
+        <h1>Metamint Helpdesk IMAP Settings</h1>
         <form method="post" action="">
             <?php wp_nonce_field('mmhd_imap_settings_action', 'mmhd_imap_settings_nonce'); ?>
             <table class="form-table">
@@ -1107,6 +1107,6 @@ if (!function_exists('mmhd_log')) {
     function mmhd_log($message)
     {
         // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log
-        error_log("[Metamint] $message");
+        error_log("[Metamint Helpdesk] $message");
     }
 }

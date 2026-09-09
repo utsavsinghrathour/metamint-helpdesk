@@ -4,7 +4,7 @@ import Footer from "./Footer.jsx";
 import SingleQuestionBox from "./SingleQuestionBox";
 import { readChatSession } from "../utils/startConversation";
 import "../styles/HomeTabs.css";
-import MetamintBotChatWidgetMain from "./MetamintBotChatWidgetMain";
+import MetamintHelpdeskBotChatWidgetMain from "./MetamintHelpdeskBotChatWidgetMain";
 
 const HomeTabs = ({
   setActiveTab,

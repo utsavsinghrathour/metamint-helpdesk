@@ -1,4 +1,4 @@
-/* Custom styles for the Metamint dashboard */
+/* Custom styles for the Metamint Helpdesk dashboard */
 :root {
   --color-main: #3b82f6;
   --color-text: #6b7280;
@@ -590,7 +590,7 @@ time[data-format="datetime-block"] {
 } */
 /* Neutralize Tailwind preflight (img { border-style: solid; display: block })
    so WP admin menu icons don't get a visible border box or misaligned on
-   Metamint pages. WP core's img { border: none } leaves border-width at
+   Metamint Helpdesk pages. WP core's img { border: none } leaves border-width at
    medium (3px); Tailwind's border-style: solid exposes it. Higher
    specificity + border: 0 wins. display: inline-block keeps the icon
    centered by .wp-menu-image's text-align: center. */

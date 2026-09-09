@@ -66,7 +66,7 @@ const Footer = ({
               target='_blank'
               className='mmhd-decoration-none'
             >
-              <span className='mmhd-text-blue mmhd-decoration-none'>Metamint</span>
+              <span className='mmhd-text-blue mmhd-decoration-none'>Metamint Helpdesk</span>
             </a>
           </h6>
         </div>
@@ -123,7 +123,7 @@ const Footer = ({
               target='_blank'
               className='mmhd-decoration-none'
             >
-              <span className='mmhd-text-blue mmhd-decoration-none'>Metamint</span>
+              <span className='mmhd-text-blue mmhd-decoration-none'>Metamint Helpdesk</span>
             </a>
           </h6>
         </div>

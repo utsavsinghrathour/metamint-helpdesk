@@ -327,7 +327,7 @@ function mmhd_init_debug_log()
     if (!is_dir($logs_dir)) {
         // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_mkdir
         if (!mkdir($logs_dir, 0755, true)) {
-            mmhd_log('Failed to create Metamint logs directory');
+            mmhd_log('Failed to create Metamint Helpdesk logs directory');
             return false;
         }
     }
@@ -336,7 +336,7 @@ function mmhd_init_debug_log()
         $initial_content = "[DEBUG LOG]\n";
 
         if (!file_put_contents($debug_log, $initial_content)) {
-            mmhd_log('Failed to create Metamint debug.log file');
+            mmhd_log('Failed to create Metamint Helpdesk debug.log file');
             return false;
         }
 
@@ -567,7 +567,7 @@ add_action('admin_post_mmhd_save_settings', 'mmhd_handle_settings_save');
 
 
 /**
- * Enqueues admin-specific scripts and styles for the Metamint plugin.
+ * Enqueues admin-specific scripts and styles for the Metamint Helpdesk plugin.
  *
  * This function is hooked into the admin_enqueue_scripts action and ensures
  * that scripts and styles are only loaded on the post.php and post-new.php
@@ -2028,7 +2028,7 @@ function mmhd_add_internal_ticket_note($ticket_id, $note_content)
 
     $note_id = wp_insert_comment([
         'comment_post_ID' => $ticket_id,
-        'comment_author' => 'Metamint System',
+        'comment_author' => 'Metamint Helpdesk System',
         'comment_author_email' => $system_email,
         'user_id' => 0,
         'comment_content' => $note_content,
@@ -2102,7 +2102,7 @@ function mmhd_track_unseen_reply_email_read()
             sprintf('Unseen reply reminder email was read at %s.', $read_at)
         );
 
-        mmhd_log("Metamint: Unseen reply email read tracked for ticket #{$ticket_id}, comment #{$comment_id} at {$read_at}");
+        mmhd_log("Metamint Helpdesk: Unseen reply email read tracked for ticket #{$ticket_id}, comment #{$comment_id} at {$read_at}");
     }
 
     mmhd_output_unseen_reply_tracking_pixel();
@@ -2110,22 +2110,22 @@ function mmhd_track_unseen_reply_email_read()
 
 function mmhd_schedule_unseen_reply_email($ticket_id, $comment_id, $reply, $user_object)
 {
-    mmhd_log("Metamint: Unseen reply email check triggered for ticket #{$ticket_id}, comment #{$comment_id}");
+    mmhd_log("Metamint Helpdesk: Unseen reply email check triggered for ticket #{$ticket_id}, comment #{$comment_id}");
 
     if (mmhd_are_emails_suppressed()) {
-        mmhd_log("Metamint: Unseen reply email skipped - email sending disabled (do not send email on import) for comment #{$comment_id}");
+        mmhd_log("Metamint Helpdesk: Unseen reply email skipped - email sending disabled (do not send email on import) for comment #{$comment_id}");
         return;
     }
 
     $settings = get_option('mmhd_advanced_settings', []);
     $minutes = isset($settings['reply_unseen_email_minutes']) ? absint($settings['reply_unseen_email_minutes']) : 0;
     if ($minutes <= 0) {
-        mmhd_log("Metamint: Unseen reply email skipped - minutes not configured (value: {$minutes})");
+        mmhd_log("Metamint Helpdesk: Unseen reply email skipped - minutes not configured (value: {$minutes})");
         return;
     }
 
     if (isset($settings['enable_notifications']) && !$settings['enable_notifications']) {
-        mmhd_log("Metamint: Unseen reply email skipped - notifications disabled");
+        mmhd_log("Metamint Helpdesk: Unseen reply email skipped - notifications disabled");
         return;
     }
 
@@ -2134,7 +2134,7 @@ function mmhd_schedule_unseen_reply_email($ticket_id, $comment_id, $reply, $user
     $comment = get_comment($comment_id);
     if (!$comment || $comment->comment_type !== 'ticket_replies') {
         $type = $comment ? $comment->comment_type : 'null';
-        mmhd_log("Metamint: Unseen reply email skipped - invalid comment type: {$type}");
+        mmhd_log("Metamint Helpdesk: Unseen reply email skipped - invalid comment type: {$type}");
         return;
     }
 
@@ -2143,12 +2143,12 @@ function mmhd_schedule_unseen_reply_email($ticket_id, $comment_id, $reply, $user
         $author_type = mmhd_get_author_type($comment->user_id);
     }
     if ($author_type !== 'agent') {
-        mmhd_log("Metamint: Unseen reply email skipped - author type is '{$author_type}' not 'agent'");
+        mmhd_log("Metamint Helpdesk: Unseen reply email skipped - author type is '{$author_type}' not 'agent'");
         return;
     }
 
     if (get_comment_meta($comment_id, 'mmhd_unseen_email_scheduled', true)) {
-        mmhd_log("Metamint: Unseen reply email skipped - already scheduled for comment #{$comment_id}");
+        mmhd_log("Metamint Helpdesk: Unseen reply email skipped - already scheduled for comment #{$comment_id}");
         return;
     }
 
@@ -2157,7 +2157,7 @@ function mmhd_schedule_unseen_reply_email($ticket_id, $comment_id, $reply, $user
     $timestamp = time() + ($minutes * 60);
     wp_schedule_single_event($timestamp, 'mmhd_send_unseen_reply_email', [$comment_id]);
 
-    mmhd_log("Metamint: Unseen reply email scheduled for comment #{$comment_id} to run in {$minutes} minutes");
+    mmhd_log("Metamint Helpdesk: Unseen reply email scheduled for comment #{$comment_id} to run in {$minutes} minutes");
 }
 
 add_action('mmhd_send_unseen_reply_email', 'mmhd_send_unseen_reply_email', 10, 1);
@@ -2284,7 +2284,7 @@ function mmhd_send_unseen_reply_email($comment_id)
             sprintf('Unseen reply reminder email sent successfully to %s at %s.', $customer_email, $event_time)
         );
 
-        mmhd_log("Metamint: Unseen reply email sent to {$customer_email} for ticket #{$ticket_id}");
+        mmhd_log("Metamint Helpdesk: Unseen reply email sent to {$customer_email} for ticket #{$ticket_id}");
     } else {
         $send_error_message = trim(wp_strip_all_tags((string) $send_error_message));
         if ($send_error_message !== '') {
@@ -2296,7 +2296,7 @@ function mmhd_send_unseen_reply_email($comment_id)
             sprintf('Failed to send unseen reply reminder email to %s at %s.%s', $customer_email, $event_time, $send_error_message)
         );
 
-        mmhd_log("Metamint: Unseen reply email failed to send to {$customer_email} for ticket #{$ticket_id}");
+        mmhd_log("Metamint Helpdesk: Unseen reply email failed to send to {$customer_email} for ticket #{$ticket_id}");
     }
 }
 
@@ -2332,7 +2332,7 @@ function mmhd_create_support_page()
     $support_page = !empty($support_pages) ? $support_pages[0] : null;
 
 
-    mmhd_log('Metamint activation hook triggered');
+    mmhd_log('Metamint Helpdesk activation hook triggered');
 
 
     if (!$support_page) {

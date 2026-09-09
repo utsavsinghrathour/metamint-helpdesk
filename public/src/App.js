@@ -12,7 +12,7 @@ import { AppDataProvider, useAppData } from "./utils/AppDataContext.jsx";
 // import useExclusiveServerEvents from './Hooks/useExclusiveServerEvents.js';
 // import useSSE from './Hooks/useSSE.js';
 import { sseManager } from "./Hooks/sseManager.js";
-import { playMetamintBeep } from "./utils/notificationSound.js";
+import { playMetamintHelpdeskBeep } from "./utils/notificationSound.js";
 
 const AppContent = ({ imageUrls = { logo: "" } }) => {
   const {
@@ -47,7 +47,7 @@ const AppContent = ({ imageUrls = { logo: "" } }) => {
     (ticket) => ticket.notifications === "no",
   );
 
-  const isMetamintPopupIntent = () => {
+  const isMetamintHelpdeskPopupIntent = () => {
     const params = new URLSearchParams(window.location.search);
     const popupParam = params.get("mmhd_popup");
     const initiatorParam = params.get("initiator") || params.get("initator");
@@ -70,7 +70,7 @@ const AppContent = ({ imageUrls = { logo: "" } }) => {
   }, []);
 
   useEffect(() => {
-    if (isMetamintPopupIntent()) {
+    if (isMetamintHelpdeskPopupIntent()) {
       setShowActiveFeatured(false);
       setIsOpen(true);
       if (chatEnabled) setActiveTab(1);
@@ -284,7 +284,7 @@ const AppContent = ({ imageUrls = { logo: "" } }) => {
         });
 
         if (shouldBeep) {
-          playMetamintBeep();
+          playMetamintHelpdeskBeep();
         }
       },
       "tickets",

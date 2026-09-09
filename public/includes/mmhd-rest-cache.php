@@ -2,7 +2,7 @@
 if (! defined('ABSPATH')) {
     exit; // Exit if accessed directly
 }
-class Metamint_rest_cache
+class Metamint_Helpdesk_rest_cache
 {
     private $prefix = 'mmhd_rest_cache';          // Prefix for cache keys
     private $default_timeout = 86400;            // Default cache timeout (1 day)

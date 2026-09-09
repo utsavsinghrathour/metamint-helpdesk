@@ -11,7 +11,7 @@ import { sendReply } from "../utils/modules";
 import { useAppData } from "../utils/AppDataContext";
 import DefaultAvatar from "../images/default-avatar.jpg";
 import { sseManager } from "../Hooks/sseManager";
-import { playMetamintBeep } from "../utils/notificationSound.js";
+import { playMetamintHelpdeskBeep } from "../utils/notificationSound.js";
 
 // Helper to escape HTML in plain text
 const escapeHtml = (unsafe) =>
@@ -529,7 +529,7 @@ const SingleTicket = ({
         !beepedIds.current.has(cid)
       ) {
         beepedIds.current.add(cid);
-        playMetamintBeep();
+        playMetamintHelpdeskBeep();
       }
     }
   };
@@ -826,7 +826,7 @@ const SingleTicket = ({
         // The SSE new_comment handler also beeps; this covers the case where
         // the poll delivers the message first.
         if (hasIncomingFromOther) {
-          playMetamintBeep();
+          playMetamintHelpdeskBeep();
         }
       } catch (error) {
         console.error("Failed to poll latest comments:", error);

@@ -46,7 +46,7 @@ function flushPending() {
 let lastPlayedAt = 0;
 const DEBOUNCE_MS = 1200;
 
-export function playMetamintBeep() {
+export function playMetamintHelpdeskBeep() {
   const audio = ensureAudio();
   if (!audio) {
     return;

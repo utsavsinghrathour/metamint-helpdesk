@@ -209,7 +209,7 @@ if (!function_exists('mmhd_debug_log_page_callback')) {
         );
 
         echo '<div class="wrap">';
-        echo '<h1>' . esc_html__('Metamint Debug Log', 'mmhd') . '</h1>';
+        echo '<h1>' . esc_html__('Metamint Helpdesk Debug Log', 'mmhd') . '</h1>';
         echo '<p>' . esc_html__('This view shows only the last 30 days of logs. Anything older is automatically deleted.', 'mmhd') . '</p>';
 
         if ($debug_log_exists) {
@@ -997,7 +997,7 @@ function mmhd_add_fetch_cron_interval($schedules)
     $schedules['mmhd_fetch_interval'] = [
         'interval' => $interval * 60,
         // translators: %d is the number of minutes between fetch intervals.
-        'display'  => sprintf(esc_html__('Every %d minutes (Metamint fetch)', 'mmhd'), $interval),
+        'display'  => sprintf(esc_html__('Every %d minutes (Metamint Helpdesk fetch)', 'mmhd'), $interval),
     ];
     return $schedules;
 }
@@ -1044,7 +1044,7 @@ function mmhd_save_ticket_assignment_settings()
     if ($suppress_now) {
         mmhd_clear_all_scheduled_events('mmhd_send_ticket_creation_email_async');
         mmhd_clear_all_scheduled_events('mmhd_send_unseen_reply_email');
-        mmhd_log('Metamint: Email sending disabled. Cleared all queued async email events.');
+        mmhd_log('Metamint Helpdesk: Email sending disabled. Cleared all queued async email events.');
     }
 
     // Reschedule the cron event with the new interval
@@ -1218,7 +1218,7 @@ function mmhd_create_ticket()
             'comment_content'      => $ticket_description,
             'comment_approved'     => 1,
             'comment_type'         => 'ticket_replies',
-            'is_mmhd_reply'    => true, // Custom field to identify as a Metamint reply
+            'is_mmhd_reply'    => true, // Custom field to identify as a Metamint Helpdesk reply
         ]);
 
         if ($comment_id === false || is_wp_error($comment_id)) {
@@ -1480,7 +1480,7 @@ function mmhd_update_ticket_status()
             'comment_content'      => 'Conversation status changed to ' . $new_status . ' by ' . $user_object->display_name,
             'comment_approved'     => 1,
             'comment_type'         => 'ticket_replies',
-            'is_mmhd_reply'    => true, // Custom field to identify as a Metamint reply
+            'is_mmhd_reply'    => true, // Custom field to identify as a Metamint Helpdesk reply
             //add comment meta to indicate the status change
             'comment_meta'         => [
                 'is_action' => true,
@@ -1546,7 +1546,7 @@ function mmhd_update_ticket_priority()
             'comment_content'      => 'Conversation priority changed to ' . $new_priority . ' by ' . $user_object->display_name,
             'comment_approved'     => 1,
             'comment_type'         => 'ticket_replies',
-            'is_mmhd_reply'    => true, // Custom field to identify as a Metamint reply
+            'is_mmhd_reply'    => true, // Custom field to identify as a Metamint Helpdesk reply
             //add comment meta to indicate the priority change
             'comment_meta'         => [
                 'is_action' => true,
@@ -1625,7 +1625,7 @@ function mmhd_update_ticket_assignee()
             'comment_content'      => 'Conversation assigned to ' . $assignee_display . ' by ' . $user_object->display_name,
             'comment_approved'     => 1,
             'comment_type'         => 'ticket_replies',
-            'is_mmhd_reply'    => true, // Custom field to identify as a Metamint reply
+            'is_mmhd_reply'    => true, // Custom field to identify as a Metamint Helpdesk reply
             //add comment meta to indicate the assignee change
             'comment_meta'         => [
                 'is_action' => true,
@@ -2043,7 +2043,7 @@ function mmhd_handle_add_ticket_note()
         'comment_content'      => $note,
         'comment_approved'     => 1,
         'comment_type'         => 'ticket_notes',
-        'is_mmhd_note'     => true, // Custom field to identify as a Metamint note
+        'is_mmhd_note'     => true, // Custom field to identify as a Metamint Helpdesk note
     ]);
 
     if (is_wp_error($note_id)) {
@@ -2343,7 +2343,7 @@ function mmhd_fetch_emails_handler()
         $summary = mmhd_fetch_emails(); // returns the string
         wp_send_json_success($summary); // ✅ send summary as success data
     } catch (Throwable $e) {
-        mmhd_log('Metamint: Fatal error during email fetch: ' . $e->getMessage());
+        mmhd_log('Metamint Helpdesk: Fatal error during email fetch: ' . $e->getMessage());
         wp_send_json_error($e->getMessage());
     }
 
@@ -2511,11 +2511,11 @@ function auto_assign_ticket_to_support_staff($prefer_default_agent = false, $str
     ));
 
     if (empty($support_staff)) {
-        mmhd_log('Metamint: No support staff users found.');
+        mmhd_log('Metamint Helpdesk: No support staff users found.');
         return false;
     }
 
-    mmhd_log('Metamint: Assigning new ticket to a support staff member.');
+    mmhd_log('Metamint Helpdesk: Assigning new ticket to a support staff member.');
 
     // For email-imported tickets, prefer configured default agent when requested.
     $default_agent = trim((string) get_option('mmhd_default_agent', ''));
@@ -2527,19 +2527,19 @@ function auto_assign_ticket_to_support_staff($prefer_default_agent = false, $str
 
             if ($matches_default) {
                 $assigned_name = !empty($staff->display_name) ? $staff->display_name : $staff->user_login;
-                mmhd_log('Metamint: Assigned to configured default agent: ' . $assigned_name . ' (ID: ' . $staff->ID . ')');
+                mmhd_log('Metamint Helpdesk: Assigned to configured default agent: ' . $assigned_name . ' (ID: ' . $staff->ID . ')');
                 return $assigned_name;
             }
         }
 
         if ($strict_default_only) {
-            mmhd_log('Metamint: Default agent setting does not match any eligible support user. Leaving ticket unassigned.');
+            mmhd_log('Metamint Helpdesk: Default agent setting does not match any eligible support user. Leaving ticket unassigned.');
             return false;
         }
     }
 
     if ($strict_default_only) {
-        mmhd_log('Metamint: No default agent configured for email fetch. Leaving ticket unassigned.');
+        mmhd_log('Metamint Helpdesk: No default agent configured for email fetch. Leaving ticket unassigned.');
         return false;
     }
 
@@ -2581,7 +2581,7 @@ function auto_assign_ticket_to_support_staff($prefer_default_agent = false, $str
     $assigned_user = $least_assigned['user'];
     $assigned_name = !empty($assigned_user->display_name) ? $assigned_user->display_name : $assigned_user->user_login;
 
-    mmhd_log('Metamint: New ticket assigned to: ' . $assigned_name . ' (ID: ' . $assigned_user->ID . ')');
+    mmhd_log('Metamint Helpdesk: New ticket assigned to: ' . $assigned_name . ' (ID: ' . $assigned_user->ID . ')');
 
     return $assigned_name;
 }
@@ -2883,7 +2883,7 @@ function mmhd_schedule_ticket_creation_email($post_id, $post, $update)
     }
 
     if (mmhd_are_emails_suppressed()) {
-        mmhd_log("Metamint: Ticket creation email blocked (email sending disabled). Not scheduled for ticket ID: $post_id");
+        mmhd_log("Metamint Helpdesk: Ticket creation email blocked (email sending disabled). Not scheduled for ticket ID: $post_id");
         return;
     }
 
@@ -2911,7 +2911,7 @@ function mmhd_send_ticket_creation_email($post_id)
             update_post_meta($post_id, '_mmhd_customer_email', $author_email);
             $customer_email = $author_email;
         } else {
-            mmhd_log("Metamint: Invalid or missing customer email for ticket ID: $post_id");
+            mmhd_log("Metamint Helpdesk: Invalid or missing customer email for ticket ID: $post_id");
             return;
         }
     }
@@ -2947,9 +2947,9 @@ function mmhd_send_ticket_creation_email($post_id)
     $thread_headers = function_exists('mmhd_get_ticket_thread_headers') ? mmhd_get_ticket_thread_headers($post_id) : [];
     $sent = mmhd_send_email($customer_email, $subject, $message, $thread_headers, [], $reply_to);
     if ($sent) {
-        mmhd_log("Metamint: Ticket creation email sent to $customer_email for ticket ID: $post_id");
+        mmhd_log("Metamint Helpdesk: Ticket creation email sent to $customer_email for ticket ID: $post_id");
     } else {
-        mmhd_log("Metamint: Ticket creation email not sent to $customer_email for ticket ID: $post_id (suppressed or failed)");
+        mmhd_log("Metamint Helpdesk: Ticket creation email not sent to $customer_email for ticket ID: $post_id (suppressed or failed)");
     }
 }
 
@@ -3449,7 +3449,7 @@ function mmhd_clear_all_scheduled_events($hook)
 function mmhd_send_email($to, $subject, $message, $headers = [], $attachments = [], $reply_to = '', $outbound_message_id = '')
 {
     if (mmhd_are_emails_suppressed()) {
-        mmhd_log("Metamint: Email sending is disabled (do not send email on import). Skipped: $subject");
+        mmhd_log("Metamint Helpdesk: Email sending is disabled (do not send email on import). Skipped: $subject");
         return false;
     }
 
@@ -3481,7 +3481,7 @@ function mmhd_send_email($to, $subject, $message, $headers = [], $attachments = 
     $mmhd_outbound_message_id = '';
 
     if (!$sent && !empty($GLOBALS['phpmailer']) && $GLOBALS['phpmailer'] instanceof PHPMailer\PHPMailer\PHPMailer) {
-        mmhd_log("Metamint: wp_mail failed. PHPMailer error: " . $GLOBALS['phpmailer']->ErrorInfo);
+        mmhd_log("Metamint Helpdesk: wp_mail failed. PHPMailer error: " . $GLOBALS['phpmailer']->ErrorInfo);
     }
 
     return $sent;

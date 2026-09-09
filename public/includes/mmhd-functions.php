@@ -37,7 +37,7 @@ function mmhd_send_ticket_update_email($ticket_id, $comment_content, $update_typ
     $ticket_link = get_permalink($ticket_id);
 
     $to = $customer->user_email;
-    $subject = sprintf('[Metamint] Ticket #%d Updated', $ticket_id);
+    $subject = sprintf('[Metamint Helpdesk] Ticket #%d Updated', $ticket_id);
 
     $message = sprintf(
         "Hello %s,\n\nYour ticket #%d (%s) has been updated.\n\n",
@@ -55,7 +55,7 @@ function mmhd_send_ticket_update_email($ticket_id, $comment_content, $update_typ
         $message .= $comment_content . "\n\n";
     }
 
-    $message .= "View the ticket here: " . $ticket_link . "\n\nThank you,\nThe Metamint Team";
+    $message .= "View the ticket here: " . $ticket_link . "\n\nThank you,\nThe Metamint Helpdesk Team";
 
     $reply_to = function_exists('mmhd_get_inbox_email_for_ticket') ? mmhd_get_inbox_email_for_ticket($ticket_id) : '';
     $thread_headers = function_exists('mmhd_get_ticket_thread_headers') ? mmhd_get_ticket_thread_headers($ticket_id) : [];
