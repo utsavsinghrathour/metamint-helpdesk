@@ -668,11 +668,11 @@ function mmhd_create_credentials_table()
 
     // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter -- $table_name is built from $wpdb->prefix, and schema changes are only possible via direct SQL.
     if (!empty($wpdb->get_var("SHOW TABLES LIKE '{$table_name}'"))) {
-        // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.DirectDatabaseQuery.SchemaChange -- intentional schema migration on activation; identifiers are built from $wpdb->prefix.
+        // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.DirectDatabaseQuery.SchemaChange, PluginCheck.Security.DirectDB.UnescapedDBParameter -- intentional schema migration on activation; identifiers are built from $wpdb->prefix.
         $add_fk_sql = "ALTER TABLE {$table_name}
              ADD CONSTRAINT fk_mmhd_credentials_user FOREIGN KEY (user_id)
              REFERENCES {$wpdb->prefix}users(ID) ON DELETE CASCADE";
-        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.NotPrepared -- intentional schema migration on activation; identifiers are built from $wpdb->prefix.
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.NotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter -- intentional schema migration on activation; identifiers are built from $wpdb->prefix.
         $wpdb->query($add_fk_sql);
     }
 }
