@@ -36,7 +36,7 @@ function mmhd_add_custom_menu_item_to_my_account($items)
 {
 
     $new_items = array(
-        'mmhd-support' => __('Support', 'mmhd')
+        'mmhd-support' => __('Support', 'metamint-helpdesk')
     );
 
     $position = array_search('orders', array_keys($items)) + 1;

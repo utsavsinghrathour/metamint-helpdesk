@@ -980,7 +980,7 @@ function mmhd_fetch_emails()
 function mmhd_imap_settings_callback()
 {
     if (!current_user_can('mmhd_access_dashboard')) {
-        wp_die(esc_html__('You do not have sufficient permissions to access this page.', 'mmhd'));
+        wp_die(esc_html__('You do not have sufficient permissions to access this page.', 'metamint-helpdesk'));
     }
 
     // Handle form submission for saving settings
@@ -1022,7 +1022,7 @@ function mmhd_imap_settings_callback()
             imap_close($conn);
         } else {
             echo '<div class="error"><p>' .
-                esc_html__('IMAP connection failed: ', 'mmhd') .
+                esc_html__('IMAP connection failed: ', 'metamint-helpdesk') .
                 esc_html(imap_last_error()) .
                 '</p></div>';
         }

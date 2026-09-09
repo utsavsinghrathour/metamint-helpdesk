@@ -11,7 +11,7 @@ $mmhd_nt_hidden = ($mmhd_current_tab === 'new-ticket') ? '' : ' hidden';
 <div id="new-ticket-page" class="page-content<?php echo esc_attr($mmhd_nt_hidden); ?>">
     <div class="bg-white shadow rounded-lg">
         <div class="px-4 py-5 sm:p-6">
-            <h3 class="text-lg font-bold text-gray-900 mb-6"><?php esc_html_e('Create New Conversation', 'mmhd'); ?>
+            <h3 class="text-lg font-bold text-gray-900 mb-6"><?php esc_html_e('Create New Conversation', 'metamint-helpdesk'); ?>
             </h3>
 
             <form id="mmhd-new-ticket-form" class="space-y-6">
@@ -23,7 +23,7 @@ $mmhd_nt_hidden = ($mmhd_current_tab === 'new-ticket') ? '' : ' hidden';
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div class="rb-form-group rb-relative">
                         <label
-                            class="block text-sm font-medium text-gray-700 mb-2"><?php esc_html_e('Customer Name', 'mmhd'); ?>
+                            class="block text-sm font-medium text-gray-700 mb-2"><?php esc_html_e('Customer Name', 'metamint-helpdesk'); ?>
                             *</label>
                         <input type="text" id="customer-name" name="customer_name" required autocomplete="off"
                             class="styled-input block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
@@ -34,7 +34,7 @@ $mmhd_nt_hidden = ($mmhd_current_tab === 'new-ticket') ? '' : ' hidden';
 
                     <div class="rb-form-group rb-relative">
                         <label
-                            class="block text-sm font-medium text-gray-700 mb-2"><?php esc_html_e('Customer Email', 'mmhd'); ?>
+                            class="block text-sm font-medium text-gray-700 mb-2"><?php esc_html_e('Customer Email', 'metamint-helpdesk'); ?>
                             *</label>
                         <input type="email" id="customer-email" name="customer_email" required autocomplete="off"
                             class="styled-input block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
@@ -47,7 +47,7 @@ $mmhd_nt_hidden = ($mmhd_current_tab === 'new-ticket') ? '' : ' hidden';
 
                 <div class="rb-form-group">
                     <label
-                        class="block text-sm font-medium text-gray-700 mb-2"><?php esc_html_e('Conversation Title', 'mmhd'); ?>
+                        class="block text-sm font-medium text-gray-700 mb-2"><?php esc_html_e('Conversation Title', 'metamint-helpdesk'); ?>
                         *</label>
                     <input type="text" id="ticket-title" name="ticket_title" required
                         class="styled-input block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
@@ -56,11 +56,11 @@ $mmhd_nt_hidden = ($mmhd_current_tab === 'new-ticket') ? '' : ' hidden';
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <div class="rb-form-group">
                         <label
-                            class="block text-sm font-medium text-gray-700 mb-2"><?php esc_html_e('Priority', 'mmhd'); ?>
+                            class="block text-sm font-medium text-gray-700 mb-2"><?php esc_html_e('Priority', 'metamint-helpdesk'); ?>
                             *</label>
                         <select id="ticket-priority" name="ticket_priority" required
                             class="styled-select block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
-                            <option value=""><?php esc_html_e('Select Priority', 'mmhd'); ?></option>
+                            <option value=""><?php esc_html_e('Select Priority', 'metamint-helpdesk'); ?></option>
                             <?php
                             $mmhd_ticket_priorities = get_terms([
                                 'taxonomy' => 'mmhd_ticket_priority',
@@ -74,11 +74,11 @@ $mmhd_nt_hidden = ($mmhd_current_tab === 'new-ticket') ? '' : ' hidden';
                     </div>
                     <div class="rb-form-group">
                         <label
-                            class="block text-sm font-medium text-gray-700 mb-2"><?php esc_html_e('Department', 'mmhd'); ?>
+                            class="block text-sm font-medium text-gray-700 mb-2"><?php esc_html_e('Department', 'metamint-helpdesk'); ?>
                         </label>
                         <select id="ticket-category" name="ticket_category"
                             class="styled-select block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
-                            <option value=""><?php esc_html_e('Select Department', 'mmhd'); ?></option>
+                            <option value=""><?php esc_html_e('Select Department', 'metamint-helpdesk'); ?></option>
                             <?php
                             $mmhd_default_category_id = get_option('mmhd_default_ticket_category', '');
                             if (!empty($mmhd_default_category_id)) {
@@ -102,7 +102,7 @@ $mmhd_nt_hidden = ($mmhd_current_tab === 'new-ticket') ? '' : ' hidden';
                     </div>
                     <div class="rb-form-group">
                         <label
-                            class="block text-sm font-medium text-gray-700 mb-2"><?php esc_html_e('Assign to', 'mmhd'); ?>
+                            class="block text-sm font-medium text-gray-700 mb-2"><?php esc_html_e('Assign to', 'metamint-helpdesk'); ?>
                             *</label>
                         <select id="ticket-assignee" name="ticket_assignee" required
                             class="styled-select block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
@@ -110,7 +110,7 @@ $mmhd_nt_hidden = ($mmhd_current_tab === 'new-ticket') ? '' : ' hidden';
                             $mmhd_default_agent = get_option('mmhd_default_agent');
                             ?>
                             <option value="" <?php echo empty($mmhd_default_agent) ? 'selected' : ''; ?>>
-                                <?php esc_html_e('Select Agent', 'mmhd'); ?>
+                                <?php esc_html_e('Select Agent', 'metamint-helpdesk'); ?>
                             </option>
                             <?php
                             $mmhd_agents = get_users([
@@ -135,7 +135,7 @@ $mmhd_nt_hidden = ($mmhd_current_tab === 'new-ticket') ? '' : ' hidden';
 
                 <div class="rb-form-group">
                     <label
-                        class="block text-sm font-medium text-gray-700 mb-2"><?php esc_html_e('Conversation Description', 'mmhd'); ?>
+                        class="block text-sm font-medium text-gray-700 mb-2"><?php esc_html_e('Conversation Description', 'metamint-helpdesk'); ?>
                         *</label>
                     <div class="editor-toolbar mb-2">
                         <button type="button" onclick="formatText('bold', 'ticket-description')" class="editor-btn"><i
@@ -157,11 +157,11 @@ $mmhd_nt_hidden = ($mmhd_current_tab === 'new-ticket') ? '' : ' hidden';
                 <div class="flex justify-end space-x-3">
                     <button type="button" onclick="showPage('dashboard')"
                         class="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-                        <?php esc_html_e('Cancel', 'mmhd'); ?>
+                        <?php esc_html_e('Cancel', 'metamint-helpdesk'); ?>
                     </button>
                     <button type="submit" id="mmhd-create-ticket"
                         class="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-                        <?php esc_html_e('Create Conversation', 'mmhd'); ?>
+                        <?php esc_html_e('Create Conversation', 'metamint-helpdesk'); ?>
                     </button>
                 </div>
             </form>

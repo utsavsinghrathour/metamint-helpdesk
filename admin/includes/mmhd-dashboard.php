@@ -20,7 +20,7 @@ function mmhd_dashboard_callback()
 {
     // Check if the user has the required capability to view the dashboard
     if (!current_user_can('mmhd_access_dashboard')) {
-        wp_die(esc_html__('You do not have sufficient permissions to access this page.', 'mmhd'));
+        wp_die(esc_html__('You do not have sufficient permissions to access this page.', 'metamint-helpdesk'));
     }
 
     // get the current user ID and name
@@ -74,28 +74,28 @@ function mmhd_dashboard_callback()
                                 class="nav-link inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
                                 data-page="dashboard">
                                 <i class="fas fa-home mr-2"></i>
-                                <?php esc_html_e('Dashboard', 'mmhd'); ?>
+                                <?php esc_html_e('Dashboard', 'metamint-helpdesk'); ?>
                             </button>
                             <button type="button" onclick="showPage('tickets', true)"
                                 class="nav-link inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
                                 data-page="tickets">
                                 <i class="fas fa-ticket-alt mr-2"></i>
-                                <?php esc_html_e('Conversations', 'mmhd'); ?>
+                                <?php esc_html_e('Conversations', 'metamint-helpdesk'); ?>
                                 <span class="dashboard-filter-count-badge is-visible"
-                                    title="<?php esc_attr_e('Active conversations', 'mmhd'); ?>"><?php echo esc_html($mmhd_active_ticket_count); ?></span>
+                                    title="<?php esc_attr_e('Active conversations', 'metamint-helpdesk'); ?>"><?php echo esc_html($mmhd_active_ticket_count); ?></span>
                             </button>
                             <button onclick="showPage('new-ticket')"
                                 class="nav-link inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
                                 data-page="new-ticket">
                                 <i class="fas fa-plus mr-2"></i>
-                                <?php esc_html_e('New Conversation', 'mmhd'); ?>
+                                <?php esc_html_e('New Conversation', 'metamint-helpdesk'); ?>
                             </button>
                             <?php if (current_user_can('mmhd_manage_settings')): ?>
                                 <button onclick="showPage('settings')"
                                     class="nav-link inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
                                     data-page="settings">
                                     <i class="fas fa-cog mr-2"></i>
-                                    <?php esc_html_e('Settings', 'mmhd'); ?>
+                                    <?php esc_html_e('Settings', 'metamint-helpdesk'); ?>
                                 </button>
                             <?php endif; ?>
                             <?php if (defined('MMHD_ADDON_VERSION') && current_user_can('mmhd_manage_settings')): ?>
@@ -103,7 +103,7 @@ function mmhd_dashboard_callback()
                                     class="nav-link inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
                                     data-page="addons">
                                     <i class="fas fa-puzzle-piece mr-2"></i>
-                                    <?php esc_html_e('Addons', 'mmhd'); ?>
+                                    <?php esc_html_e('Addons', 'metamint-helpdesk'); ?>
                                 </button>
                             <?php endif; ?>
                         </div>
@@ -114,7 +114,7 @@ function mmhd_dashboard_callback()
                     <div class="flex items-center relative">
                         <button id="dashboard-notification-bell" onclick="toggleNotificationDropdown()"
                             class="bg-gray-100 p-2 rounded-full text-gray-600 hover:text-gray-900 relative transition-all"
-                            title="<?php esc_html_e('View notifications', 'mmhd'); ?>">
+                            title="<?php esc_html_e('View notifications', 'metamint-helpdesk'); ?>">
                             <i class="fas fa-bell"></i>
                             <span id="notification-badge"
                                 class="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 items-center justify-center shadow-lg"
@@ -126,19 +126,19 @@ function mmhd_dashboard_callback()
                             class="hidden absolute right-0 top-12 w-96 bg-white rounded-lg shadow-xl border border-gray-200 z-50 overflow-hidden">
                             <div class="px-4 py-3 border-b border-gray-200 bg-gray-50">
                                 <h3 class="text-sm font-semibold text-gray-900">
-                                    <?php esc_html_e('Recent Updates', 'mmhd'); ?>
+                                    <?php esc_html_e('Recent Updates', 'metamint-helpdesk'); ?>
                                 </h3>
                             </div>
                             <div id="notification-list" class="overflow-y-auto max-h-80">
                                 <div class="px-4 py-8 text-center text-gray-500 text-sm">
                                     <i class="fas fa-bell-slash text-3xl mb-2 text-gray-400"></i>
-                                    <p><?php esc_html_e('No new notifications', 'mmhd'); ?></p>
+                                    <p><?php esc_html_e('No new notifications', 'metamint-helpdesk'); ?></p>
                                 </div>
                             </div>
                             <div class="px-4 py-3 border-t border-gray-200 bg-gray-50">
                                 <button onclick="clearAllNotifications()"
                                     class="w-full px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded hover:bg-blue-700 transition-colors">
-                                    <?php esc_html_e('Clear All', 'mmhd'); ?>
+                                    <?php esc_html_e('Clear All', 'metamint-helpdesk'); ?>
                                 </button>
                             </div>
                         </div>

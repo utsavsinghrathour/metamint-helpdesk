@@ -48,23 +48,23 @@ $mmhd_td_hidden      = ($mmhd_current_tab === 'ticket-detail' || $mmhd_has_ticke
                 <div class="lg:col-span-2 space-y-6 px-6">
                     <div class="mb-6 justify-between flex items-start py-6 border-b border-gray-200">
                         <h3 class="text-lg font-bold text-gray-900 ticket-title-80" id="ticket-detail-title">
-                            <?php esc_html_e('Conversation Details', 'mmhd'); ?>
+                            <?php esc_html_e('Conversation Details', 'metamint-helpdesk'); ?>
                         </h3>
                         <button type="button" onclick="backFromTicketDetail()"
                             class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
                             <i class="fas fa-arrow-left mr-2"></i>
-                            <?php esc_html_e('Back', 'mmhd'); ?>
+                            <?php esc_html_e('Back', 'metamint-helpdesk'); ?>
                         </button>
                     </div>
                     <div class="border-b border-gray-200">
                         <nav class="-mb-px flex space-x-8">
                             <button onclick="showTicketTab('replies')"
                                 class="ticket-tab py-2 px-1 border-b-2 font-medium text-sm" data-tab="replies">
-                                <?php esc_html_e('Replies', 'mmhd'); ?> (<span id="replies-count">0</span>)
+                                <?php esc_html_e('Replies', 'metamint-helpdesk'); ?> (<span id="replies-count">0</span>)
                             </button>
                             <button onclick="showTicketTab('notes')"
                                 class="ticket-tab py-2 px-1 border-b-2 font-medium text-sm" data-tab="notes">
-                                <?php esc_html_e('Internal Notes', 'mmhd'); ?> (<span id="notes-count">0</span>)
+                                <?php esc_html_e('Internal Notes', 'metamint-helpdesk'); ?> (<span id="notes-count">0</span>)
                             </button>
                         </nav>
                     </div>
@@ -78,12 +78,12 @@ $mmhd_td_hidden      = ($mmhd_current_tab === 'ticket-detail' || $mmhd_has_ticke
                             <div>
                                 <div class="add-label-wrapper d-flex justify-content-between align-items-center">
                                     <label class="block text-sm font-medium text-gray-700 mb-2">
-                                        <?php esc_html_e('Add Reply', 'mmhd'); ?>
+                                        <?php esc_html_e('Add Reply', 'metamint-helpdesk'); ?>
                                     </label>
                                     <button onclick="showVariablesPopup()"
                                         class="text-xs text-blue-600 hover:text-blue-800 font-medium" type="button">
                                         <i class="fas fa-lightbulb mr-1"></i>
-                                        <?php esc_html_e('Insert Variables', 'mmhd'); ?>
+                                        <?php esc_html_e('Insert Variables', 'metamint-helpdesk'); ?>
                                     </button>
                                     <?php do_action('mmhd_before_reply_editor'); ?>
                                 </div>
@@ -101,18 +101,18 @@ $mmhd_td_hidden      = ($mmhd_current_tab === 'ticket-detail' || $mmhd_has_ticke
                                 </div>
                                 <div id="new-reply" class="editor-content placeholder" contenteditable="true"
                                     style="min-height: 100px; border: 1px solid #d1d5db; border-radius: 0.375rem; padding: 0.5rem;"
-                                    data-placeholder="<?php esc_html_e('Type your reply here...', 'mmhd'); ?>"
+                                    data-placeholder="<?php esc_html_e('Type your reply here...', 'metamint-helpdesk'); ?>"
                                     aria-label="Reply input"></div>
                                 <?php do_action('mmhd_after_reply_editor'); ?>
                                 <button id="send-reply-btn" onclick="addReply()"
                                     class="mt-2 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-                                    <?php esc_html_e('Send Reply', 'mmhd'); ?>
+                                    <?php esc_html_e('Send Reply', 'metamint-helpdesk'); ?>
                                 </button>
 
                                 <button onclick="closeTicket()"
                                     class="mt-2 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 float-right"
                                     type="button">
-                                    <?php esc_html_e('Close Conversation', 'mmhd'); ?>
+                                    <?php esc_html_e('Close Conversation', 'metamint-helpdesk'); ?>
                                 </button>
                             </div>
                         </div>
@@ -124,12 +124,12 @@ $mmhd_td_hidden      = ($mmhd_current_tab === 'ticket-detail' || $mmhd_has_ticke
                             <div>
                                 <div class="add-label-wrapper d-flex justify-content-between align-items-center">
                                     <label class="block text-sm font-medium text-gray-700 mb-2">
-                                        <?php esc_html_e('Add Internal Note', 'mmhd'); ?>
+                                        <?php esc_html_e('Add Internal Note', 'metamint-helpdesk'); ?>
                                     </label>
                                     <button onclick="showVariablesPopup()"
                                         class="text-xs text-blue-600 hover:text-blue-800 font-medium" type="button">
                                         <i class="fas fa-lightbulb mr-1"></i>
-                                        <?php esc_html_e('Insert Variables', 'mmhd'); ?>
+                                        <?php esc_html_e('Insert Variables', 'metamint-helpdesk'); ?>
                                     </button>
                                 </div>
                                 <div class="editor-toolbar">
@@ -146,12 +146,12 @@ $mmhd_td_hidden      = ($mmhd_current_tab === 'ticket-detail' || $mmhd_has_ticke
                                 </div>
                                 <div id="new-note" class="editor-content placeholder" contenteditable="true"
                                     style="min-height: 100px; border: 1px solid #d1d5db; border-radius: 0.375rem; padding: 0.5rem;"
-                                    data-placeholder="<?php esc_html_e('Type your internal note here...', 'mmhd'); ?>">
+                                    data-placeholder="<?php esc_html_e('Type your internal note here...', 'metamint-helpdesk'); ?>">
                                 </div>
                                 <button onclick="addNote()"
                                     class="mt-2 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-yellow-600 hover:bg-yellow-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500"
                                     type="button">
-                                    <?php esc_html_e('Add Note', 'mmhd'); ?>
+                                    <?php esc_html_e('Add Note', 'metamint-helpdesk'); ?>
                                 </button>
                             </div>
                         </div>
@@ -161,7 +161,7 @@ $mmhd_td_hidden      = ($mmhd_current_tab === 'ticket-detail' || $mmhd_has_ticke
                             <div
                                 style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
                                 <h3 style="margin: 0; font-size: 1.125rem; font-weight: 600;">
-                                    <?php esc_html_e('Template Variables', 'mmhd'); ?>
+                                    <?php esc_html_e('Template Variables', 'metamint-helpdesk'); ?>
                                 </h3>
                                 <button onclick="hideVariablesPopup()"
                                     style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #6b7280; padding: 0; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center;"
@@ -180,13 +180,13 @@ $mmhd_td_hidden      = ($mmhd_current_tab === 'ticket-detail' || $mmhd_has_ticke
                     <div class="space-y-6 px-6 py-6">
                         <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
                             <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-4">
-                                <?php esc_html_e('Conversation Status', 'mmhd'); ?>
+                                <?php esc_html_e('Conversation Status', 'metamint-helpdesk'); ?>
                             </h2>
 
                             <div class="space-y-4">
                                 <div class="add-label-wrapper gap-2">
                                     <label class="block text-sm font-medium text-gray-700 mb-1"
-                                        for="ticket-status-select"><?php esc_html_e('Status', 'mmhd'); ?></label>
+                                        for="ticket-status-select"><?php esc_html_e('Status', 'metamint-helpdesk'); ?></label>
                                     <select onchange="updateTicketStatus(currentTicket.id, this.value)"
                                         class="w-full border border-gray-300 rounded-md p-2 text-sm focus:ring-blue-500 focus:border-blue-500"
                                         id="ticket-status-select">
@@ -200,7 +200,7 @@ $mmhd_td_hidden      = ($mmhd_current_tab === 'ticket-detail' || $mmhd_has_ticke
 
                                 <div class="add-label-wrapper gap-2">
                                     <label class="block text-sm font-medium text-gray-700 mb-1"
-                                        for="ticket-priority-select"><?php esc_html_e('Priority', 'mmhd'); ?></label>
+                                        for="ticket-priority-select"><?php esc_html_e('Priority', 'metamint-helpdesk'); ?></label>
                                     <select onchange="updateTicketPriority(currentTicket.id, this.value)"
                                         class="w-full border border-gray-300 rounded-md p-2 text-sm focus:ring-blue-500 focus:border-blue-500"
                                         id="ticket-priority-select">
@@ -216,7 +216,7 @@ $mmhd_td_hidden      = ($mmhd_current_tab === 'ticket-detail' || $mmhd_has_ticke
 
                                 <div class="add-label-wrapper gap-2">
                                     <label class="block text-sm font-medium text-gray-700 mb-1"
-                                        for="ticket-assignee-select"><?php esc_html_e('Assignee', 'mmhd'); ?></label>
+                                        for="ticket-assignee-select"><?php esc_html_e('Assignee', 'metamint-helpdesk'); ?></label>
                                     <select onchange="updateTicketAssignee(currentTicket.id, this.value)"
                                         class="w-full border border-gray-300 rounded-md p-2 text-sm focus:ring-blue-500 focus:border-blue-500"
                                         id="ticket-assignee-select">
@@ -235,7 +235,7 @@ $mmhd_td_hidden      = ($mmhd_current_tab === 'ticket-detail' || $mmhd_has_ticke
 
                                 <div class="add-label-wrapper gap-2">
                                     <label class="block text-sm font-medium text-gray-700 mb-1"
-                                        for="ticket-category-select"><?php esc_html_e('Department', 'mmhd'); ?></label>
+                                        for="ticket-category-select"><?php esc_html_e('Department', 'metamint-helpdesk'); ?></label>
                                     <select id="ticket-category-select"
                                         class="w-full border border-gray-300 rounded-md p-2 text-sm focus:ring-blue-500 focus:border-blue-500">
                                         <?php if (!empty($mmhd_terms)): ?>
@@ -246,7 +246,7 @@ $mmhd_td_hidden      = ($mmhd_current_tab === 'ticket-detail' || $mmhd_has_ticke
                                         </option>
                                         <?php endforeach; ?>
                                         <?php else: ?>
-                                        <option value=""><?php esc_html_e('No departments found', 'mmhd'); ?>
+                                        <option value=""><?php esc_html_e('No departments found', 'metamint-helpdesk'); ?>
                                         </option>
                                         <?php endif; ?>
                                     </select>
@@ -257,7 +257,7 @@ $mmhd_td_hidden      = ($mmhd_current_tab === 'ticket-detail' || $mmhd_has_ticke
                         <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
                             <div class="flex items-center justify-between mb-6">
                                 <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wider">
-                                    <?php esc_html_e('Conversation Details', 'mmhd'); ?>
+                                    <?php esc_html_e('Conversation Details', 'metamint-helpdesk'); ?>
                                 </h2>
                             </div>
 
@@ -278,7 +278,7 @@ $mmhd_td_hidden      = ($mmhd_current_tab === 'ticket-detail' || $mmhd_has_ticke
                 <div class="relative top-20 mx-auto p-5 border w-11/12 md:w-3/4 lg:w-1/2 shadow-lg rounded-md bg-white">
                     <div class="flex justify-between items-center mb-4">
                         <h3 class="text-lg font-bold text-gray-900" id="customer-tickets-title">
-                            <?php esc_html_e('Customer Conversations', 'mmhd'); ?>
+                            <?php esc_html_e('Customer Conversations', 'metamint-helpdesk'); ?>
                         </h3>
                         <button onclick="hideCustomerTickets()" class="text-gray-400 hover:text-gray-600" type="button">
                             <i class="fas fa-times"></i>

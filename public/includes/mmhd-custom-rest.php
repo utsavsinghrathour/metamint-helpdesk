@@ -1185,7 +1185,7 @@ function mmhd_user_signup(WP_REST_Request $request)
     if (get_option('users_can_register') != '1') {
         return new WP_Error(
             'registration_disabled',
-            __('Registration is currently disabled.', 'mmhd'),
+            __('Registration is currently disabled.', 'metamint-helpdesk'),
             array('status' => 403)
         );
     }
@@ -1195,7 +1195,7 @@ function mmhd_user_signup(WP_REST_Request $request)
     if (in_array($ip, $blocked, true)) {
         return new WP_Error(
             'ip_blocked',
-            __('Your IP has been permanently blocked due to repeated abuse.', 'mmhd'),
+            __('Your IP has been permanently blocked due to repeated abuse.', 'metamint-helpdesk'),
             array('status' => 403)
         );
     }
@@ -1215,14 +1215,14 @@ function mmhd_user_signup(WP_REST_Request $request)
             update_option('mmhd_blocked_ips', $blocked, false);
             return new WP_Error(
                 'ip_blocked',
-                __('Your IP has been permanently blocked due to repeated abuse.', 'mmhd'),
+                __('Your IP has been permanently blocked due to repeated abuse.', 'metamint-helpdesk'),
                 array('status' => 403)
             );
         }
         set_transient($strike_key, 1, DAY_IN_SECONDS);
         return new WP_Error(
             'rate_limited',
-            __('Too many signup attempts. Please try again later.', 'mmhd'),
+            __('Too many signup attempts. Please try again later.', 'metamint-helpdesk'),
             array('status' => 429)
         );
     }
@@ -1233,7 +1233,7 @@ function mmhd_user_signup(WP_REST_Request $request)
     if (empty($email)) {
         return new WP_Error(
             'invalid_data',
-            __('Missing email field', 'mmhd'),
+            __('Missing email field', 'metamint-helpdesk'),
             array('status' => 400)
         );
     }
@@ -1241,7 +1241,7 @@ function mmhd_user_signup(WP_REST_Request $request)
     if (email_exists($email)) {
         return new WP_Error(
             'user_exists',
-            __('Email already exists', 'mmhd'),
+            __('Email already exists', 'metamint-helpdesk'),
             array('status' => 409)
         );
     }
@@ -1297,13 +1297,13 @@ function mmhd_user_signup(WP_REST_Request $request)
     if (is_wp_error($token)) {
         return new WP_Error(
             'token_failed',
-            __('Failed to generate token', 'mmhd'),
+            __('Failed to generate token', 'metamint-helpdesk'),
             array('status' => 500)
         );
     }
 
     return new WP_REST_Response(array(
-        'message' => __('User created successfully', 'mmhd'),
+        'message' => __('User created successfully', 'metamint-helpdesk'),
         'token' => $token,
         'user_id' => $user_id,
         'rest_nonce' => $rest_nonce,
@@ -1969,7 +1969,7 @@ function mmhd_custom_lost_password(WP_REST_Request $request)
     if ($attempts >= 5) {
         return new WP_Error(
             'rate_limited',
-            __('Too many password reset requests. Please try again later.', 'mmhd'),
+            __('Too many password reset requests. Please try again later.', 'metamint-helpdesk'),
             array('status' => 429)
         );
     }
@@ -1989,7 +1989,7 @@ function mmhd_custom_lost_password(WP_REST_Request $request)
     if (get_transient($cooldown_key)) {
         return new WP_Error(
             'rate_limited',
-            __('A password reset link was already sent recently. Please check your email.', 'mmhd'),
+            __('A password reset link was already sent recently. Please check your email.', 'metamint-helpdesk'),
             array('status' => 429)
         );
     }
@@ -1998,7 +1998,7 @@ function mmhd_custom_lost_password(WP_REST_Request $request)
     if (mmhd_are_emails_suppressed()) {
         mmhd_log('Metamint Helpdesk: Password reset email skipped (do not send email on import) for: ' . $user_login);
         return new WP_REST_Response(array(
-            'message' => __('If the username or email exists, a password reset link has been sent.', 'mmhd')
+            'message' => __('If the username or email exists, a password reset link has been sent.', 'metamint-helpdesk')
         ), 200);
     }
 
@@ -2009,7 +2009,7 @@ function mmhd_custom_lost_password(WP_REST_Request $request)
     }
 
     return new WP_REST_Response(array(
-        'message' => __('If the username or email exists, a password reset link has been sent.', 'mmhd')
+        'message' => __('If the username or email exists, a password reset link has been sent.', 'metamint-helpdesk')
     ), 200);
 }
 
@@ -2050,7 +2050,7 @@ function mmhd_send_chat_transcript(WP_REST_Request $request)
 
     $to = $author->user_email;
     // translators: %s is the ticket/post title
-    $subject = sprintf(__('Chat Transcript: %s', 'mmhd'), $ticket->post_title);
+    $subject = sprintf(__('Chat Transcript: %s', 'metamint-helpdesk'), $ticket->post_title);
 
     $comments = get_comments(array(
         'post_id' => $ticket_id,
@@ -2063,7 +2063,7 @@ function mmhd_send_chat_transcript(WP_REST_Request $request)
     $messages_html = '';
 
     if (empty($comments)) {
-        $messages_html = '<tr><td style="padding:20px;text-align:center;color:#666;font-size:14px;">' . __('No messages in this conversation.', 'mmhd') . '</td></tr>';
+        $messages_html = '<tr><td style="padding:20px;text-align:center;color:#666;font-size:14px;">' . __('No messages in this conversation.', 'metamint-helpdesk') . '</td></tr>';
     } else {
         $prev_sender_type = null;
         $prev_author_id = null;
@@ -2162,7 +2162,7 @@ function mmhd_send_chat_transcript(WP_REST_Request $request)
     $chat_html = '
     <div style="max-width:600px;margin:0 auto;font-family:-apple-system,BlinkMacSystemFont,\'Segoe UI\',Roboto,sans-serif;">
         <div style="text-align:center;padding:20px 0 10px;border-bottom:1px solid #eee;margin-bottom:20px;">
-            <h2 style="margin:0;font-size:18px;color:#333;">' . esc_html__('Chat Transcript', 'mmhd') . '</h2>
+            <h2 style="margin:0;font-size:18px;color:#333;">' . esc_html__('Chat Transcript', 'metamint-helpdesk') . '</h2>
             <p style="margin:4px 0 0;font-size:13px;color:#666;">' . esc_html($ticket->post_title) . '</p>
         </div>
         <table role="presentation" cellpadding="0" cellspacing="0" style="width:100%;">
@@ -2214,16 +2214,16 @@ function mmhd_send_chat_transcript(WP_REST_Request $request)
 
     if (mmhd_are_emails_suppressed()) {
         mmhd_log('Metamint Helpdesk: Chat transcript email skipped (do not send email on import).');
-        return new WP_Error('emails_disabled', __('Email sending is currently disabled on this site.', 'mmhd'), array('status' => 403));
+        return new WP_Error('emails_disabled', __('Email sending is currently disabled on this site.', 'metamint-helpdesk'), array('status' => 403));
     }
 
     $email_sent = wp_mail($to, $subject, $full_html, $headers);
 
     if ($email_sent) {
-        return new WP_REST_Response(array('success' => true, 'message' => __('Chat transcript sent to your email.', 'mmhd')), 200);
+        return new WP_REST_Response(array('success' => true, 'message' => __('Chat transcript sent to your email.', 'metamint-helpdesk')), 200);
     }
 
-    return new WP_Error('send_failed', __('Failed to send email. Please try again.', 'mmhd'), array('status' => 500));
+    return new WP_Error('send_failed', __('Failed to send email. Please try again.', 'metamint-helpdesk'), array('status' => 500));
 }
 
 add_filter('retrieve_password_message', 'mmhd_add_param_to_reset_link', 10, 4);
@@ -2245,11 +2245,11 @@ function mmhd_add_param_to_reset_link($message, $key, $user_login, $user_data)
         $site_name = wp_specialchars_decode(get_option('blogname'), ENT_QUOTES);
 
         /* translators: %s: site name */
-        $message = sprintf(__('Someone has requested a password reset for the following account on %s:', 'mmhd'), $site_name) . "\r\n\r\n";
+        $message = sprintf(__('Someone has requested a password reset for the following account on %s:', 'metamint-helpdesk'), $site_name) . "\r\n\r\n";
         /* translators: %s: username */
-        $message .= sprintf(__('Username: %s', 'mmhd'), $user_login) . "\r\n\r\n";
-        $message .= __('If this was a mistake, just ignore this email and nothing will happen.', 'mmhd') . "\r\n\r\n";
-        $message .= __('To reset your password, visit the following address:', 'mmhd') . "\r\n\r\n";
+        $message .= sprintf(__('Username: %s', 'metamint-helpdesk'), $user_login) . "\r\n\r\n";
+        $message .= __('If this was a mistake, just ignore this email and nothing will happen.', 'metamint-helpdesk') . "\r\n\r\n";
+        $message .= __('To reset your password, visit the following address:', 'metamint-helpdesk') . "\r\n\r\n";
         $message .= $custom_reset_url . "\r\n\r\n";
     }
 

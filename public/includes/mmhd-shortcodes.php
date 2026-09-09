@@ -353,8 +353,8 @@ function mmhd_my_tickets_shortcode()
         'format'    => '?paged=%#%',
         'current'   => max(1, $paged),
         'total'     => $query->max_num_pages,
-        'prev_text' => __('« Previous', 'mmhd'),
-        'next_text' => __('Next »', 'mmhd'),
+        'prev_text' => __('« Previous', 'metamint-helpdesk'),
+        'next_text' => __('Next »', 'metamint-helpdesk'),
     ));
 
     if ($pagination) {

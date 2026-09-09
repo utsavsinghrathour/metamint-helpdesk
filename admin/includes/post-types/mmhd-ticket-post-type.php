@@ -8,30 +8,30 @@ add_action('init', 'mmhd_register_ticket_post_type');
 function mmhd_register_ticket_post_type()
 {
     $ticket_labels = array(
-        'name'                  => _x('Metamint Helpdesk Tickets', 'post type general name', 'mmhd'),
-        'singular_name'         => _x('Metamint Helpdesk Ticket', 'post type singular name', 'mmhd'),
-        'menu_name'             => __('Tickets', 'mmhd'),
-        'name_admin_bar'        => __('Ticket', 'mmhd'),
-        'add_new'               => __('Add New', 'mmhd'),
-        'add_new_item'          => __('Add New Ticket', 'mmhd'),
-        'new_item'              => __('New Ticket', 'mmhd'),
-        'edit_item'             => __('Edit Ticket', 'mmhd'),
-        'view_item'             => __('View Ticket', 'mmhd'),
-        'all_items'             => __('All Tickets', 'mmhd'),
-        'search_items'          => __('Search Tickets', 'mmhd'),
-        'parent_item_colon'     => __('Parent Tickets:', 'mmhd'),
-        'not_found'             => __('No tickets found.', 'mmhd'),
-        'not_found_in_trash'    => __('No tickets found in Trash.', 'mmhd'),
-        'featured_image'        => __('Ticket Featured Image', 'mmhd'),
-        'set_featured_image'    => __('Set featured image', 'mmhd'),
-        'remove_featured_image' => __('Remove featured image', 'mmhd'),
-        'use_featured_image'    => __('Use as featured image', 'mmhd'),
-        'archives'              => __('Ticket Archives', 'mmhd'),
-        'insert_into_item'      => __('Insert into Ticket', 'mmhd'),
-        'uploaded_to_this_item' => __('Uploaded to this Ticket', 'mmhd'),
-        'filter_items_list'     => __('Filter Tickets list', 'mmhd'),
-        'items_list_navigation' => __('Tickets list navigation', 'mmhd'),
-        'items_list'            => __('Tickets list', 'mmhd'),
+        'name'                  => _x('Metamint Helpdesk Tickets', 'post type general name', 'metamint-helpdesk'),
+        'singular_name'         => _x('Metamint Helpdesk Ticket', 'post type singular name', 'metamint-helpdesk'),
+        'menu_name'             => __('Tickets', 'metamint-helpdesk'),
+        'name_admin_bar'        => __('Ticket', 'metamint-helpdesk'),
+        'add_new'               => __('Add New', 'metamint-helpdesk'),
+        'add_new_item'          => __('Add New Ticket', 'metamint-helpdesk'),
+        'new_item'              => __('New Ticket', 'metamint-helpdesk'),
+        'edit_item'             => __('Edit Ticket', 'metamint-helpdesk'),
+        'view_item'             => __('View Ticket', 'metamint-helpdesk'),
+        'all_items'             => __('All Tickets', 'metamint-helpdesk'),
+        'search_items'          => __('Search Tickets', 'metamint-helpdesk'),
+        'parent_item_colon'     => __('Parent Tickets:', 'metamint-helpdesk'),
+        'not_found'             => __('No tickets found.', 'metamint-helpdesk'),
+        'not_found_in_trash'    => __('No tickets found in Trash.', 'metamint-helpdesk'),
+        'featured_image'        => __('Ticket Featured Image', 'metamint-helpdesk'),
+        'set_featured_image'    => __('Set featured image', 'metamint-helpdesk'),
+        'remove_featured_image' => __('Remove featured image', 'metamint-helpdesk'),
+        'use_featured_image'    => __('Use as featured image', 'metamint-helpdesk'),
+        'archives'              => __('Ticket Archives', 'metamint-helpdesk'),
+        'insert_into_item'      => __('Insert into Ticket', 'metamint-helpdesk'),
+        'uploaded_to_this_item' => __('Uploaded to this Ticket', 'metamint-helpdesk'),
+        'filter_items_list'     => __('Filter Tickets list', 'metamint-helpdesk'),
+        'items_list_navigation' => __('Tickets list navigation', 'metamint-helpdesk'),
+        'items_list'            => __('Tickets list', 'metamint-helpdesk'),
     );
 
 
@@ -67,17 +67,17 @@ function mmhd_register_ticket_post_type()
 
     // Ticket Origin Taxonomy
     $ticket_origin_labels = array(
-        'name'              => _x('Ticket Origins', 'taxonomy general name', 'mmhd'),
-        'singular_name'     => _x('Ticket Origin', 'taxonomy singular name', 'mmhd'),
-        'search_items'      => __('Search Ticket Origins', 'mmhd'),
-        'all_items'         => __('All Ticket Origins', 'mmhd'),
-        'parent_item'       => __('Parent Ticket Origin', 'mmhd'),
-        'parent_item_colon' => __('Parent Ticket Origin:', 'mmhd'),
-        'edit_item'         => __('Edit Ticket Origin', 'mmhd'),
-        'update_item'       => __('Update Ticket Origin', 'mmhd'),
-        'add_new_item'      => __('Add New Ticket Origin', 'mmhd'),
-        'new_item_name'     => __('New Ticket Origin Name', 'mmhd'),
-        'menu_name'         => __('Ticket Origins', 'mmhd'),
+        'name'              => _x('Ticket Origins', 'taxonomy general name', 'metamint-helpdesk'),
+        'singular_name'     => _x('Ticket Origin', 'taxonomy singular name', 'metamint-helpdesk'),
+        'search_items'      => __('Search Ticket Origins', 'metamint-helpdesk'),
+        'all_items'         => __('All Ticket Origins', 'metamint-helpdesk'),
+        'parent_item'       => __('Parent Ticket Origin', 'metamint-helpdesk'),
+        'parent_item_colon' => __('Parent Ticket Origin:', 'metamint-helpdesk'),
+        'edit_item'         => __('Edit Ticket Origin', 'metamint-helpdesk'),
+        'update_item'       => __('Update Ticket Origin', 'metamint-helpdesk'),
+        'add_new_item'      => __('Add New Ticket Origin', 'metamint-helpdesk'),
+        'new_item_name'     => __('New Ticket Origin Name', 'metamint-helpdesk'),
+        'menu_name'         => __('Ticket Origins', 'metamint-helpdesk'),
     );
 
     $ticket_origin_args = array(
@@ -93,17 +93,17 @@ function mmhd_register_ticket_post_type()
 
     // Ticket Priority Taxonomy
     $ticket_priority_labels = array(
-        'name'              => _x('Ticket Priorities', 'taxonomy general name', 'mmhd'),
-        'singular_name'     => _x('Ticket Priority', 'taxonomy singular name', 'mmhd'),
-        'search_items'      => __('Search Ticket Priorities', 'mmhd'),
-        'all_items'         => __('All Ticket Priorities', 'mmhd'),
-        'parent_item'       => __('Parent Ticket Priority', 'mmhd'),
-        'parent_item_colon' => __('Parent Ticket Priority:', 'mmhd'),
-        'edit_item'         => __('Edit Ticket Priority', 'mmhd'),
-        'update_item'       => __('Update Ticket Priority', 'mmhd'),
-        'add_new_item'      => __('Add New Ticket Priority', 'mmhd'),
-        'new_item_name'     => __('New Ticket Priority Name', 'mmhd'),
-        'menu_name'         => __('Ticket Priorities', 'mmhd'),
+        'name'              => _x('Ticket Priorities', 'taxonomy general name', 'metamint-helpdesk'),
+        'singular_name'     => _x('Ticket Priority', 'taxonomy singular name', 'metamint-helpdesk'),
+        'search_items'      => __('Search Ticket Priorities', 'metamint-helpdesk'),
+        'all_items'         => __('All Ticket Priorities', 'metamint-helpdesk'),
+        'parent_item'       => __('Parent Ticket Priority', 'metamint-helpdesk'),
+        'parent_item_colon' => __('Parent Ticket Priority:', 'metamint-helpdesk'),
+        'edit_item'         => __('Edit Ticket Priority', 'metamint-helpdesk'),
+        'update_item'       => __('Update Ticket Priority', 'metamint-helpdesk'),
+        'add_new_item'      => __('Add New Ticket Priority', 'metamint-helpdesk'),
+        'new_item_name'     => __('New Ticket Priority Name', 'metamint-helpdesk'),
+        'menu_name'         => __('Ticket Priorities', 'metamint-helpdesk'),
     );
 
     $ticket_priority_args = array(
@@ -121,17 +121,17 @@ function mmhd_register_ticket_post_type()
 
     // Ticket Category Taxonomy
     $ticket_category_labels = [
-        'name'              => _x('Categories', 'taxonomy general name', 'mmhd'),
-        'singular_name'     => _x('Category', 'taxonomy singular name', 'mmhd'),
-        'search_items'      => __('Search Categories', 'mmhd'),
-        'all_items'         => __('All Categories', 'mmhd'),
-        'parent_item'       => __('Parent Category', 'mmhd'),
-        'parent_item_colon' => __('Parent Category:', 'mmhd'),
-        'edit_item'         => __('Edit Category', 'mmhd'),
-        'update_item'       => __('Update Category', 'mmhd'),
-        'add_new_item'      => __('Add New Category', 'mmhd'),
-        'new_item_name'     => __('New Category Name', 'mmhd'),
-        'menu_name'         => __('Category', 'mmhd'),
+        'name'              => _x('Categories', 'taxonomy general name', 'metamint-helpdesk'),
+        'singular_name'     => _x('Category', 'taxonomy singular name', 'metamint-helpdesk'),
+        'search_items'      => __('Search Categories', 'metamint-helpdesk'),
+        'all_items'         => __('All Categories', 'metamint-helpdesk'),
+        'parent_item'       => __('Parent Category', 'metamint-helpdesk'),
+        'parent_item_colon' => __('Parent Category:', 'metamint-helpdesk'),
+        'edit_item'         => __('Edit Category', 'metamint-helpdesk'),
+        'update_item'       => __('Update Category', 'metamint-helpdesk'),
+        'add_new_item'      => __('Add New Category', 'metamint-helpdesk'),
+        'new_item_name'     => __('New Category Name', 'metamint-helpdesk'),
+        'menu_name'         => __('Category', 'metamint-helpdesk'),
     ];
 
 

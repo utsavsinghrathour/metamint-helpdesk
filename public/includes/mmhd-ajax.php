@@ -590,7 +590,7 @@ function mmhd_login_action_callback()
     $email = isset($_POST['email']) ? sanitize_email(wp_unslash($_POST['email'])) : '';
     if (empty($email) || ! is_email($email)) {
         wp_send_json_error([
-            'message' => __('Invalid email format.', 'mmhd')
+            'message' => __('Invalid email format.', 'metamint-helpdesk')
         ]);
     }
 
@@ -610,14 +610,14 @@ function mmhd_login_action_callback()
     if (!is_wp_error($user_id)) {
 
         wp_send_json_success([
-            'message' => __('Account created! Check your email for your password.', 'mmhd'),
+            'message' => __('Account created! Check your email for your password.', 'metamint-helpdesk'),
             'showPassword' => false
         ]);
     }
     wp_send_json_error([
         'message' => sprintf(
             //translators: %s: error message returned from wp_insert_user 
-            __('Failed to create account: %s', 'mmhd'),
+            __('Failed to create account: %s', 'metamint-helpdesk'),
             $user_id->get_error_message()
         )
     ]);
@@ -647,7 +647,7 @@ function mmhd_check_email()
     if (empty($email) || ! is_email($email)) {
         wp_send_json_error([
             'exists' => false,
-            'message' => __('Invalid email format.', 'mmhd')
+            'message' => __('Invalid email format.', 'metamint-helpdesk')
         ]);
     }
     $user_exists = email_exists($email);
@@ -691,7 +691,7 @@ function mmhd_register_user()
     $email = isset($_POST['email']) ? sanitize_email(wp_unslash($_POST['email'])) : '';
     if (empty($email) || ! is_email($email)) {
         wp_send_json_error([
-            'message' => __('Invalid email .', 'mmhd')
+            'message' => __('Invalid email .', 'metamint-helpdesk')
         ]);
     }
 
@@ -706,7 +706,7 @@ function mmhd_register_user()
         }
 
         wp_send_json_success([
-            'message' => __('Account created! Check your email for your password.', 'mmhd'),
+            'message' => __('Account created! Check your email for your password.', 'metamint-helpdesk'),
             'userId' => $user_id,
             'loggedIn' => false
         ]);
@@ -714,7 +714,7 @@ function mmhd_register_user()
     wp_send_json_error([
         'message' => sprintf(
             /* translators: %s: error message returned from wp_insert_user */
-            __('Failed to create account: %s', 'mmhd'),
+            __('Failed to create account: %s', 'metamint-helpdesk'),
             $user_id->get_error_message()
         )
     ]);

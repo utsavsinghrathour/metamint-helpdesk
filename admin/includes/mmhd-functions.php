@@ -159,14 +159,14 @@ if (!function_exists('mmhd_download_debug_log')) {
     function mmhd_download_debug_log()
     {
         if (!current_user_can('mmhd_access_dashboard')) {
-            wp_die(esc_html__('You do not have sufficient permissions to access this file.', 'mmhd'));
+            wp_die(esc_html__('You do not have sufficient permissions to access this file.', 'metamint-helpdesk'));
         }
 
         check_admin_referer('mmhd_download_debug_log', 'mmhd_debug_log_nonce');
 
         $log_path = mmhd_get_debug_log_path();
         if (!file_exists($log_path) || !is_readable($log_path)) {
-            wp_die(esc_html__('Debug log file is not available.', 'mmhd'));
+            wp_die(esc_html__('Debug log file is not available.', 'metamint-helpdesk'));
         }
 
         $debug_log_lines = mmhd_read_debug_log_recent(30);
@@ -190,7 +190,7 @@ if (!function_exists('mmhd_debug_log_page_callback')) {
     function mmhd_debug_log_page_callback()
     {
         if (!current_user_can('mmhd_access_dashboard')) {
-            wp_die(esc_html__('You do not have sufficient permissions to access this page.', 'mmhd'));
+            wp_die(esc_html__('You do not have sufficient permissions to access this page.', 'metamint-helpdesk'));
         }
 
         if (function_exists('mmhd_prune_debug_log')) {
@@ -209,27 +209,27 @@ if (!function_exists('mmhd_debug_log_page_callback')) {
         );
 
         echo '<div class="wrap">';
-        echo '<h1>' . esc_html__('Metamint Helpdesk Debug Log', 'mmhd') . '</h1>';
-        echo '<p>' . esc_html__('This view shows only the last 30 days of logs. Anything older is automatically deleted.', 'mmhd') . '</p>';
+        echo '<h1>' . esc_html__('Metamint Helpdesk Debug Log', 'metamint-helpdesk') . '</h1>';
+        echo '<p>' . esc_html__('This view shows only the last 30 days of logs. Anything older is automatically deleted.', 'metamint-helpdesk') . '</p>';
 
         if ($debug_log_exists) {
             echo '<p>';
             printf(
                 /* translators: 1: file size, 2: last modified date */
-                esc_html__('Size: %1$s | Last updated: %2$s', 'mmhd'),
+                esc_html__('Size: %1$s | Last updated: %2$s', 'metamint-helpdesk'),
                 esc_html(size_format($debug_log_size)),
                 esc_html(date_i18n(get_option('date_format') . ' ' . get_option('time_format'), $debug_log_modified))
             );
             echo '</p>';
 
-            echo '<p><a href="' . esc_url($debug_log_download_url) . '" class="button button-primary">' . esc_html__('Download Last 30 Days', 'mmhd') . '</a></p>';
+            echo '<p><a href="' . esc_url($debug_log_download_url) . '" class="button button-primary">' . esc_html__('Download Last 30 Days', 'metamint-helpdesk') . '</a></p>';
 
             echo '<textarea readonly style="width:100%;min-height:520px;font-family:monospace;line-height:1.4;">'
                 . esc_textarea(implode("\n", $debug_log_lines)) .
                 '</textarea>';
         } else {
             echo '<div class="notice notice-error"><p>'
-                . esc_html__('Debug log file was not found or is not readable.', 'mmhd') .
+                . esc_html__('Debug log file was not found or is not readable.', 'metamint-helpdesk') .
                 '</p></div>';
         }
 
@@ -997,7 +997,7 @@ function mmhd_add_fetch_cron_interval($schedules)
     $schedules['mmhd_fetch_interval'] = [
         'interval' => $interval * 60,
         // translators: %d is the number of minutes between fetch intervals.
-        'display'  => sprintf(esc_html__('Every %d minutes (Metamint Helpdesk fetch)', 'mmhd'), $interval),
+        'display'  => sprintf(esc_html__('Every %d minutes (Metamint Helpdesk fetch)', 'metamint-helpdesk'), $interval),
     ];
     return $schedules;
 }
@@ -2446,13 +2446,13 @@ function add_mmhd_user_meta_fields($user)
 {
     $user_location = get_user_meta($user->ID, 'mmhd_user_location', true);
 ?>
-    <h3><?php esc_html_e('Metamint Helpdesk', 'mmhd'); ?></h3>
+    <h3><?php esc_html_e('Metamint Helpdesk', 'metamint-helpdesk'); ?></h3>
     <table class="form-table">
         <tr>
-            <th><label for="mmhd_user_department"><?php esc_html_e('Department', 'mmhd'); ?></label></th>
+            <th><label for="mmhd_user_department"><?php esc_html_e('Department', 'metamint-helpdesk'); ?></label></th>
             <td>
                 <select name="mmhd_user_department" id="mmhd_user_department">
-                    <option value=""><?php esc_html_e('Select Department', 'mmhd'); ?></option>
+                    <option value=""><?php esc_html_e('Select Department', 'metamint-helpdesk'); ?></option>
                     <?php
                     $departments = get_terms(array(
                         'taxonomy' => 'mmhd_ticket_category',
@@ -2466,14 +2466,14 @@ function add_mmhd_user_meta_fields($user)
                     }
                     ?>
                 </select>
-                <p class="description"><?php esc_html_e('Select the department this user belongs to.', 'mmhd'); ?></p>
+                <p class="description"><?php esc_html_e('Select the department this user belongs to.', 'metamint-helpdesk'); ?></p>
             </td>
         </tr>
         <tr>
-            <th><label for="mmhd_user_location"><?php esc_html_e('Location', 'mmhd'); ?></label></th>
+            <th><label for="mmhd_user_location"><?php esc_html_e('Location', 'metamint-helpdesk'); ?></label></th>
             <td>
                 <input type="text" name="mmhd_user_location" id="mmhd_user_location" value="<?php echo esc_attr($user_location); ?>" class="regular-text">
-                <p class="description"><?php esc_html_e('Enter the location of this user (e.g. Denmark, USA).', 'mmhd'); ?></p>
+                <p class="description"><?php esc_html_e('Enter the location of this user (e.g. Denmark, USA).', 'metamint-helpdesk'); ?></p>
             </td>
         </tr>
     </table>

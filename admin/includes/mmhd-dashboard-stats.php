@@ -28,7 +28,7 @@ $mmhd_total_tickets = $mmhd_counters['stats']['total'];
                     <div class="ml-5 w-0 flex-1">
                         <dl>
                             <dt class="text-sm font-medium text-gray-500 truncate">
-                                <?php esc_html_e('Total Conversations', 'mmhd'); ?></dt>
+                                <?php esc_html_e('Total Conversations', 'metamint-helpdesk'); ?></dt>
                             <dd class="text-lg font-medium text-gray-900" id="total-tickets"><?php
                                                                                                 echo esc_html($mmhd_total_tickets);
                                                                                                 ?></dd>
@@ -47,7 +47,7 @@ $mmhd_total_tickets = $mmhd_counters['stats']['total'];
                     <div class="ml-5 w-0 flex-1">
                         <dl>
                             <dt class="text-sm font-medium text-gray-500 truncate">
-                                <?php esc_html_e('Active Conversations', 'mmhd'); ?></dt>
+                                <?php esc_html_e('Active Conversations', 'metamint-helpdesk'); ?></dt>
                             <dd class="text-lg font-medium text-gray-900" id="open-tickets"><?php
                                                                                             echo esc_html($mmhd_counters['stats']['active']);
                                                                                             ?></dd>
@@ -66,7 +66,7 @@ $mmhd_total_tickets = $mmhd_counters['stats']['total'];
                     <div class="ml-5 w-0 flex-1">
                         <dl>
                             <dt class="text-sm font-medium text-gray-500 truncate">
-                                <?php esc_html_e('In Progress', 'mmhd'); ?></dt>
+                                <?php esc_html_e('In Progress', 'metamint-helpdesk'); ?></dt>
                             <dd class="text-lg font-medium text-gray-900" id="in-progress-tickets"><?php
                                                                                                     echo esc_html($mmhd_status_counts['inProgress']);
                                                                                                     ?></dd>
@@ -84,7 +84,7 @@ $mmhd_total_tickets = $mmhd_counters['stats']['total'];
                     </div>
                     <div class="ml-5 w-0 flex-1">
                         <dl>
-                            <dt class="text-sm font-medium text-gray-500 truncate"><?php esc_html_e('Closed', 'mmhd'); ?>
+                            <dt class="text-sm font-medium text-gray-500 truncate"><?php esc_html_e('Closed', 'metamint-helpdesk'); ?>
                             </dt>
                             <dd class="text-lg font-medium text-gray-900" id="closed-tickets"><?php
                                                                                                 echo esc_html($mmhd_status_counts['closed']);
@@ -172,17 +172,17 @@ $mmhd_total_tickets = $mmhd_counters['stats']['total'];
                 <thead class="bg-gray-50">
                     <tr>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            <?php esc_html_e('Conversation', 'mmhd'); ?></th>
+                            <?php esc_html_e('Conversation', 'metamint-helpdesk'); ?></th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            <?php esc_html_e('Last Reply', 'mmhd'); ?></th>
+                            <?php esc_html_e('Last Reply', 'metamint-helpdesk'); ?></th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            <?php esc_html_e('Customer', 'mmhd'); ?></th>
+                            <?php esc_html_e('Customer', 'metamint-helpdesk'); ?></th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            <?php esc_html_e('Source', 'mmhd'); ?></th>
+                            <?php esc_html_e('Source', 'metamint-helpdesk'); ?></th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            <?php esc_html_e('Status', 'mmhd'); ?></th>
+                            <?php esc_html_e('Status', 'metamint-helpdesk'); ?></th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            <?php esc_html_e('Priority', 'mmhd'); ?></th>
+                            <?php esc_html_e('Priority', 'metamint-helpdesk'); ?></th>
                     </tr>
                 </thead>
                 <tbody class="bg-white divide-y divide-gray-200" id="dashboard-tickets-table">
@@ -212,15 +212,15 @@ $mmhd_total_tickets = $mmhd_counters['stats']['total'];
         <div class="px-4 py-5 sm:p-6">
             <div class="flex justify-between items-center mb-4">
                 <h3 class="text-lg leading-6 font-medium text-gray-900">
-                    <?php esc_html_e('Conversation Overview', 'mmhd'); ?></h3>
+                    <?php esc_html_e('Conversation Overview', 'metamint-helpdesk'); ?></h3>
                 <div class="flex space-x-2">
-                    <button onclick="filterDashboardTickets('my_conversation')" class="dashboard-filter-btn px-3 py-1 text-sm rounded-md border <?php echo $mmhd_filter === 'my_conversation' ? 'active' : ''; ?>" data-filter="my_conversation"><?php esc_html_e('My Conversations', 'mmhd'); ?> <span id="dashboard-count-my-conversation" class="dashboard-filter-count-badge" aria-hidden="true"></span></button>
+                    <button onclick="filterDashboardTickets('my_conversation')" class="dashboard-filter-btn px-3 py-1 text-sm rounded-md border <?php echo $mmhd_filter === 'my_conversation' ? 'active' : ''; ?>" data-filter="my_conversation"><?php esc_html_e('My Conversations', 'metamint-helpdesk'); ?> <span id="dashboard-count-my-conversation" class="dashboard-filter-count-badge" aria-hidden="true"></span></button>
 
-                    <button onclick="filterDashboardTickets('unassigned_conversation')" class="dashboard-filter-btn px-3 py-1 text-sm rounded-md border <?php echo $mmhd_filter === 'unassigned_conversation' ? 'active' : ''; ?>" data-filter="unassigned_conversation"><?php esc_html_e('Unassigned Conversations', 'mmhd'); ?> <span id="dashboard-count-unassigned-conversation" class="dashboard-filter-count-badge" aria-hidden="true"></span></button>
+                    <button onclick="filterDashboardTickets('unassigned_conversation')" class="dashboard-filter-btn px-3 py-1 text-sm rounded-md border <?php echo $mmhd_filter === 'unassigned_conversation' ? 'active' : ''; ?>" data-filter="unassigned_conversation"><?php esc_html_e('Unassigned Conversations', 'metamint-helpdesk'); ?> <span id="dashboard-count-unassigned-conversation" class="dashboard-filter-count-badge" aria-hidden="true"></span></button>
 
-                    <button onclick="filterDashboardTickets('open_conversation')" class="dashboard-filter-btn px-3 py-1 text-sm rounded-md border <?php echo $mmhd_filter === 'open_conversation' ? 'active' : ''; ?>" data-filter="open_conversation"><?php esc_html_e('Active Conversations', 'mmhd'); ?> <span id="dashboard-count-open-conversation" class="dashboard-filter-count-badge" aria-hidden="true"></span></button>
+                    <button onclick="filterDashboardTickets('open_conversation')" class="dashboard-filter-btn px-3 py-1 text-sm rounded-md border <?php echo $mmhd_filter === 'open_conversation' ? 'active' : ''; ?>" data-filter="open_conversation"><?php esc_html_e('Active Conversations', 'metamint-helpdesk'); ?> <span id="dashboard-count-open-conversation" class="dashboard-filter-count-badge" aria-hidden="true"></span></button>
 
-                    <button onclick="filterDashboardTickets('chat_conversation')" class="dashboard-filter-btn px-3 py-1 text-sm rounded-md border <?php echo $mmhd_filter === 'chat_conversation' ? 'active' : ''; ?>" data-filter="chat_conversation"><?php esc_html_e('Chat Conversations', 'mmhd'); ?> <span id="dashboard-count-chat-conversation" class="dashboard-filter-count-badge" aria-hidden="true"></span></button>
+                    <button onclick="filterDashboardTickets('chat_conversation')" class="dashboard-filter-btn px-3 py-1 text-sm rounded-md border <?php echo $mmhd_filter === 'chat_conversation' ? 'active' : ''; ?>" data-filter="chat_conversation"><?php esc_html_e('Chat Conversations', 'metamint-helpdesk'); ?> <span id="dashboard-count-chat-conversation" class="dashboard-filter-count-badge" aria-hidden="true"></span></button>
 
                 </div>
             </div>
@@ -232,29 +232,29 @@ $mmhd_total_tickets = $mmhd_counters['stats']['total'];
     <!------------------------------------ Quick Actions ------------------------------------>
     <div class="bg-white shadow rounded-lg">
         <div class="px-4 py-5 sm:p-6">
-            <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4"><?php esc_html_e('Quick Actions', 'mmhd'); ?></h3>
+            <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4"><?php esc_html_e('Quick Actions', 'metamint-helpdesk'); ?></h3>
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <button onclick="showPage('new-ticket')"
                     class="bg-blue-50 hover:bg-blue-100 p-4 rounded-lg text-left transition-colors">
                     <i class="fas fa-plus text-blue-600 text-xl mb-2"></i>
-                    <div class="text-sm font-medium text-blue-900"><?php esc_html_e('Create New Conversation', 'mmhd'); ?>
+                    <div class="text-sm font-medium text-blue-900"><?php esc_html_e('Create New Conversation', 'metamint-helpdesk'); ?>
                     </div>
-                    <div class="text-xs text-blue-700"><?php esc_html_e('Add a new support conversation', 'mmhd'); ?></div>
+                    <div class="text-xs text-blue-700"><?php esc_html_e('Add a new support conversation', 'metamint-helpdesk'); ?></div>
                 </button>
                 <button
                     onclick="window.location.href='<?php echo esc_url(admin_url('users.php?role=mmhd_support_customer')); ?>'"
                     class="bg-green-50 hover:bg-green-100 p-4 rounded-lg text-left transition-colors">
                     <i class="fas fa-users text-green-600 text-xl mb-2"></i>
-                    <div class="text-sm font-medium text-green-900"><?php esc_html_e('Manage Customers', 'mmhd'); ?></div>
-                    <div class="text-xs text-green-700"><?php esc_html_e('View and edit customer information', 'mmhd'); ?>
+                    <div class="text-sm font-medium text-green-900"><?php esc_html_e('Manage Customers', 'metamint-helpdesk'); ?></div>
+                    <div class="text-xs text-green-700"><?php esc_html_e('View and edit customer information', 'metamint-helpdesk'); ?>
                     </div>
                 </button>
 
                 <button onclick="showPage('settings')"
                     class="bg-purple-50 hover:bg-purple-100 p-4 rounded-lg text-left transition-colors">
                     <i class="fas fa-cog text-purple-600 text-xl mb-2"></i>
-                    <div class="text-sm font-medium text-purple-900"><?php esc_html_e('System Settings', 'mmhd'); ?></div>
-                    <div class="text-xs text-purple-700"><?php esc_html_e('Configure system preferences', 'mmhd'); ?></div>
+                    <div class="text-sm font-medium text-purple-900"><?php esc_html_e('System Settings', 'metamint-helpdesk'); ?></div>
+                    <div class="text-xs text-purple-700"><?php esc_html_e('Configure system preferences', 'metamint-helpdesk'); ?></div>
                 </button>
             </div>
         </div>

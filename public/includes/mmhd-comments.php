@@ -37,7 +37,7 @@ function mmhd_add_tinymce_to_comments($defaults)
         $value = get_post_meta($tid, '_mmhd_ticket_status', true);
 ?>
 <div class="mmhd-status-selector">
-    <label for="mmhd_ticket_status_comment"><?php esc_html_e('Select Status *', 'mmhd') ?></label>
+    <label for="mmhd_ticket_status_comment"><?php esc_html_e('Select Status *', 'metamint-helpdesk') ?></label>
     <select name="mmhd_ticket_status_comment" id="mmhd_ticket_status_comment" required>
         <option value="open" <?php selected($value, 'new'); ?>>New</option>
         <option value="open" <?php selected($value, 'open'); ?>>Open</option>

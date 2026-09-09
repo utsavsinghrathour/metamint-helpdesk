@@ -152,7 +152,7 @@ function mmhd_render_notice_assignment_picker($notices, $saved, $sources = array
         <input
             type="search"
             class="mmhd-notice-search"
-            placeholder="<?php esc_attr_e('Search notices…', 'mmhd'); ?>"
+            placeholder="<?php esc_attr_e('Search notices…', 'metamint-helpdesk'); ?>"
             style="width:100%;margin-bottom:6px;"
         />
         <select
@@ -177,10 +177,10 @@ function mmhd_render_notice_assignment_picker($notices, $saved, $sources = array
                 </option>
             <?php endforeach; ?>
         </select>
-        <p class="description"><?php esc_html_e('Hold Ctrl (Cmd on Mac) to select multiple notices.', 'mmhd'); ?></p>
+        <p class="description"><?php esc_html_e('Hold Ctrl (Cmd on Mac) to select multiple notices.', 'metamint-helpdesk'); ?></p>
         <?php if (!empty($inherited)) : ?>
             <p class="description" style="margin-bottom:4px;font-weight:600;">
-                <?php esc_html_e('Also shown because of taxonomy:', 'mmhd'); ?>
+                <?php esc_html_e('Also shown because of taxonomy:', 'metamint-helpdesk'); ?>
             </p>
             <ul class="mmhd-notice-inherited" style="margin:0;padding-left:16px;">
                 <?php foreach ($inherited as $label) : ?>
@@ -295,7 +295,7 @@ function mmhd_add_notice_assignment_meta_boxes()
     foreach (array_keys(mmhd_get_notice_assignable_post_types()) as $pt) {
         add_meta_box(
             'mmhd_notice_assignment',
-            __('Notices', 'mmhd'),
+            __('Notices', 'metamint-helpdesk'),
             'mmhd_render_notice_assignment_meta_box',
             $pt,
             'side',
@@ -316,11 +316,11 @@ function mmhd_render_notice_assignment_meta_box($post)
     $saved = (array) get_post_meta($post->ID, '_mmhd_related_notices', true);
 
     if (empty($notices)) {
-        echo '<p>' . esc_html__('No active notices found. Create and activate a notice first.', 'mmhd') . '</p>';
+        echo '<p>' . esc_html__('No active notices found. Create and activate a notice first.', 'metamint-helpdesk') . '</p>';
         return;
     }
 
-    echo '<p class="description" style="margin-top:0;">' . esc_html__('Show these notices in the chat widget on this item.', 'mmhd') . '</p>';
+    echo '<p class="description" style="margin-top:0;">' . esc_html__('Show these notices in the chat widget on this item.', 'metamint-helpdesk') . '</p>';
     mmhd_render_notice_assignment_picker($notices, $saved, mmhd_get_post_term_notice_sources($post->ID));
 }
 
@@ -372,11 +372,11 @@ function mmhd_render_notice_assignment_term_field($term = null)
     }
     ?>
     <div class="form-field mmhd-notice-assignment-field">
-        <label for="mmhd_related_notices"><?php esc_html_e('Notices', 'mmhd'); ?></label>
+        <label for="mmhd_related_notices"><?php esc_html_e('Notices', 'metamint-helpdesk'); ?></label>
         <?php if (empty($notices)) : ?>
-            <p><?php esc_html_e('No active notices found. Create and activate a notice first.', 'mmhd'); ?></p>
+            <p><?php esc_html_e('No active notices found. Create and activate a notice first.', 'metamint-helpdesk'); ?></p>
         <?php else : ?>
-            <p class="description" style="margin-top:0;"><?php esc_html_e('Show these notices in the chat widget when content in this term is viewed.', 'mmhd'); ?></p>
+            <p class="description" style="margin-top:0;"><?php esc_html_e('Show these notices in the chat widget when content in this term is viewed.', 'metamint-helpdesk'); ?></p>
             <?php mmhd_render_notice_assignment_picker($notices, $saved); ?>
         <?php endif; ?>
     </div>
@@ -400,7 +400,7 @@ function mmhd_init_notice_assignment_term_fields()
             }
             ?>
             <tr class="form-field">
-                <th scope="row"><?php esc_html_e('Notices', 'mmhd'); ?></th>
+                <th scope="row"><?php esc_html_e('Notices', 'metamint-helpdesk'); ?></th>
                 <td>
                     <?php mmhd_render_notice_assignment_term_field($term); ?>
                 </td>

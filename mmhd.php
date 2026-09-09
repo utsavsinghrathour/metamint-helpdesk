@@ -8,7 +8,7 @@
  * Author: Code Pixelz Media
  * Author URI: https://codepixelzmedia.com
  * License: GPL2
- * Text Domain: mmhd
+ * Text Domain: metamint-helpdesk
  */
 
 // phpcs:disable WordPress.DB.SlowDBQuery
@@ -657,14 +657,18 @@ function mmhd_create_credentials_table()
         KEY user_id (user_id)
     ) $charset_collate;";
 
+    // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter -- $table_name is built from $wpdb->prefix, and schema changes are only possible via direct SQL.
     if (!empty($wpdb->get_var("SHOW TABLES LIKE '{$table_name}'"))) {
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.SchemaChange, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter, WordPress.DB.DirectDatabaseQuery.DirectQuery -- intentional schema migration on activation.
         $wpdb->query("ALTER TABLE {$table_name} DROP FOREIGN KEY fk_mmhd_credentials_user");
     }
 
     require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
     dbDelta($sql);
 
+    // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter -- $table_name is built from $wpdb->prefix, and schema changes are only possible via direct SQL.
     if (!empty($wpdb->get_var("SHOW TABLES LIKE '{$table_name}'"))) {
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.SchemaChange, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter, WordPress.DB.DirectDatabaseQuery.DirectQuery -- intentional schema migration on activation.
         $wpdb->query(
             "ALTER TABLE {$table_name}
              ADD CONSTRAINT fk_mmhd_credentials_user FOREIGN KEY (user_id)
@@ -1590,7 +1594,7 @@ function mmhd_get_bot_display_name()
 {
     $bot_name = trim((string) get_option('mmhd_bot_title_name', ''));
 
-    return $bot_name !== '' ? $bot_name : __('Bot', 'mmhd');
+    return $bot_name !== '' ? $bot_name : __('Bot', 'metamint-helpdesk');
 }
 
 function mmhd_get_bot_avatar_url($size = 96)

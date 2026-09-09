@@ -8,30 +8,30 @@ add_action('init', 'mmhd_register_faq_post_type');
 function mmhd_register_faq_post_type()
 {
     $faq_labels = array(
-        'name'                  => _x('FAQs', 'post type general name', 'mmhd'),
-        'singular_name'         => _x('FAQ', 'post type singular name', 'mmhd'),
-        'menu_name'             => __('FAQs', 'mmhd'),
-        'name_admin_bar'        => __('FAQ', 'mmhd'),
-        'add_new'               => __('Add New', 'mmhd'),
-        'add_new_item'          => __('Add New FAQ', 'mmhd'),
-        'new_item'              => __('New FAQ', 'mmhd'),
-        'edit_item'             => __('Edit FAQ', 'mmhd'),
-        'view_item'             => __('View FAQ', 'mmhd'),
-        'all_items'             => __('All FAQs', 'mmhd'),
-        'search_items'          => __('Search FAQs', 'mmhd'),
-        'parent_item_colon'     => __('Parent FAQs:', 'mmhd'),
-        'not_found'             => __('No FAQs found.', 'mmhd'),
-        'not_found_in_trash'    => __('No FAQs found in Trash.', 'mmhd'),
-        'featured_image'        => __('FAQ Featured Image', 'mmhd'),
-        'set_featured_image'    => __('Set featured image', 'mmhd'),
-        'remove_featured_image' => __('Remove featured image', 'mmhd'),
-        'use_featured_image'    => __('Use as featured image', 'mmhd'),
-        'archives'              => __('FAQ Archives', 'mmhd'),
-        'insert_into_item'      => __('Insert into FAQ', 'mmhd'),
-        'uploaded_to_this_item' => __('Uploaded to this FAQ', 'mmhd'),
-        'filter_items_list'     => __('Filter FAQs list', 'mmhd'),
-        'items_list_navigation' => __('FAQs list navigation', 'mmhd'),
-        'items_list'            => __('FAQs list', 'mmhd'),
+        'name'                  => _x('FAQs', 'post type general name', 'metamint-helpdesk'),
+        'singular_name'         => _x('FAQ', 'post type singular name', 'metamint-helpdesk'),
+        'menu_name'             => __('FAQs', 'metamint-helpdesk'),
+        'name_admin_bar'        => __('FAQ', 'metamint-helpdesk'),
+        'add_new'               => __('Add New', 'metamint-helpdesk'),
+        'add_new_item'          => __('Add New FAQ', 'metamint-helpdesk'),
+        'new_item'              => __('New FAQ', 'metamint-helpdesk'),
+        'edit_item'             => __('Edit FAQ', 'metamint-helpdesk'),
+        'view_item'             => __('View FAQ', 'metamint-helpdesk'),
+        'all_items'             => __('All FAQs', 'metamint-helpdesk'),
+        'search_items'          => __('Search FAQs', 'metamint-helpdesk'),
+        'parent_item_colon'     => __('Parent FAQs:', 'metamint-helpdesk'),
+        'not_found'             => __('No FAQs found.', 'metamint-helpdesk'),
+        'not_found_in_trash'    => __('No FAQs found in Trash.', 'metamint-helpdesk'),
+        'featured_image'        => __('FAQ Featured Image', 'metamint-helpdesk'),
+        'set_featured_image'    => __('Set featured image', 'metamint-helpdesk'),
+        'remove_featured_image' => __('Remove featured image', 'metamint-helpdesk'),
+        'use_featured_image'    => __('Use as featured image', 'metamint-helpdesk'),
+        'archives'              => __('FAQ Archives', 'metamint-helpdesk'),
+        'insert_into_item'      => __('Insert into FAQ', 'metamint-helpdesk'),
+        'uploaded_to_this_item' => __('Uploaded to this FAQ', 'metamint-helpdesk'),
+        'filter_items_list'     => __('Filter FAQs list', 'metamint-helpdesk'),
+        'items_list_navigation' => __('FAQs list navigation', 'metamint-helpdesk'),
+        'items_list'            => __('FAQs list', 'metamint-helpdesk'),
     );
 
     $faq_args = array(
@@ -56,21 +56,21 @@ function mmhd_register_faq_post_type()
 
     // FAQ Category Taxonomy
     $faq_category_labels = array(
-        'name'                       => _x('FAQ Categories', 'taxonomy general name', 'mmhd'),
-        'singular_name'              => _x('FAQ Category', 'taxonomy singular name', 'mmhd'),
-        'search_items'               => __('Search FAQ Categories', 'mmhd'),
-        'all_items'                  => __('All FAQ Categories', 'mmhd'),
-        'parent_item'                => __('Parent FAQ Category', 'mmhd'),
-        'parent_item_colon'          => __('Parent FAQ Category:', 'mmhd'),
-        'edit_item'                  => __('Edit FAQ Category', 'mmhd'),
-        'update_item'                => __('Update FAQ Category', 'mmhd'),
-        'add_new_item'               => __('Add New FAQ Category', 'mmhd'),
-        'new_item_name'              => __('New FAQ Category Name', 'mmhd'),
-        'separate_items_with_commas' => __('Separate FAQ Categories with commas', 'mmhd'),
-        'add_or_remove_items'        => __('Add or remove FAQ Categories', 'mmhd'),
-        'choose_from_most_used'      => __('Choose from the most used FAQ Categories', 'mmhd'),
-        'not_found'                  => __('No FAQ Categories found.', 'mmhd'),
-        'menu_name'                  => __('FAQ Categories', 'mmhd'),
+        'name'                       => _x('FAQ Categories', 'taxonomy general name', 'metamint-helpdesk'),
+        'singular_name'              => _x('FAQ Category', 'taxonomy singular name', 'metamint-helpdesk'),
+        'search_items'               => __('Search FAQ Categories', 'metamint-helpdesk'),
+        'all_items'                  => __('All FAQ Categories', 'metamint-helpdesk'),
+        'parent_item'                => __('Parent FAQ Category', 'metamint-helpdesk'),
+        'parent_item_colon'          => __('Parent FAQ Category:', 'metamint-helpdesk'),
+        'edit_item'                  => __('Edit FAQ Category', 'metamint-helpdesk'),
+        'update_item'                => __('Update FAQ Category', 'metamint-helpdesk'),
+        'add_new_item'               => __('Add New FAQ Category', 'metamint-helpdesk'),
+        'new_item_name'              => __('New FAQ Category Name', 'metamint-helpdesk'),
+        'separate_items_with_commas' => __('Separate FAQ Categories with commas', 'metamint-helpdesk'),
+        'add_or_remove_items'        => __('Add or remove FAQ Categories', 'metamint-helpdesk'),
+        'choose_from_most_used'      => __('Choose from the most used FAQ Categories', 'metamint-helpdesk'),
+        'not_found'                  => __('No FAQ Categories found.', 'metamint-helpdesk'),
+        'menu_name'                  => __('FAQ Categories', 'metamint-helpdesk'),
     );
 
     $faq_category_args = array(
@@ -101,7 +101,7 @@ function mmhd_add_featured_metabox()
 {
     add_meta_box(
         'mmhd_featured_metabox',
-        __('Featured?', 'mmhd'),
+        __('Featured?', 'metamint-helpdesk'),
         'mmhd_render_featured_metabox',
         'mmhd_faq',
         'side',
@@ -123,7 +123,7 @@ function mmhd_render_featured_metabox($post)
     <label for="mmhd_featured">
         <input type="checkbox" id="mmhd_featured" name="mmhd_featured" value="true"
             <?php checked($featured, 'true'); ?> />
-        <?php esc_html_e('Mark as featured', 'mmhd'); ?>
+        <?php esc_html_e('Mark as featured', 'metamint-helpdesk'); ?>
     </label>
 <?php
 }

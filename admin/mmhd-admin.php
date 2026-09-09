@@ -375,22 +375,22 @@ function mmhd_admin_bar_active_tickets($wp_admin_bar)
     $wp_admin_bar->add_node(array(
         'id'    => 'mmhd-active-tickets',
         'title' => '<span class="ab-icon"><img src="' . esc_url(MMHD_PLUGIN_URL . 'admin/assets/images/mmhd-icon.svg') . '" style="height:20px;width:20px;display:block" alt=""></span>'
-            . '<span class="ab-label">' . esc_html__('Active Tickets', 'mmhd') . '</span>'
-            . $badge($total_count, esc_html__('Active conversations', 'mmhd')),
+            . '<span class="ab-label">' . esc_html__('Active Tickets', 'metamint-helpdesk') . '</span>'
+            . $badge($total_count, esc_html__('Active conversations', 'metamint-helpdesk')),
         'href'  => $active_url,
         'meta'  => array(
-            'title' => esc_html__('View active conversations', 'mmhd'),
+            'title' => esc_html__('View active conversations', 'metamint-helpdesk'),
         ),
     ));
 
     $wp_admin_bar->add_node(array(
         'id'    => 'mmhd-my-tickets',
         'title' => '<span class="ab-icon"><img src="' . esc_url(MMHD_PLUGIN_URL . 'admin/assets/images/mmhd-icon.svg') . '" style="height:20px;width:20px;display:block" alt=""></span>'
-            . '<span class="ab-label">' . esc_html__('My Tickets', 'mmhd') . '</span>'
-            . $badge($my_count, esc_html__('My conversations', 'mmhd')),
+            . '<span class="ab-label">' . esc_html__('My Tickets', 'metamint-helpdesk') . '</span>'
+            . $badge($my_count, esc_html__('My conversations', 'metamint-helpdesk')),
         'href'  => $my_url,
         'meta'  => array(
-            'title' => esc_html__('View my conversations', 'mmhd'),
+            'title' => esc_html__('View my conversations', 'metamint-helpdesk'),
         ),
     ));
 
