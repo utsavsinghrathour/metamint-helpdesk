@@ -365,7 +365,6 @@ function mmhd_imap_save_settings()
     $conn = mmhd_imap_connect($hostname_val, $port_val, $auth_type, $username, $password);
 
     if ($conn) {
-        imap_close($conn);
         $message = 'IMAP connection settings saved successfully!';
         // Save settings to the database
         $settings = array(
