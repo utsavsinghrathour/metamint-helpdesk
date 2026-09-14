@@ -2329,22 +2329,22 @@ function mmhd_create_support_page()
 
     $support_pages = get_posts(array(
         'post_type' => 'page',
-        'title' => 'Metamint Helpdesk',
+        'title' => 'Metamint Helpdesk Support',
         'post_status' => 'any',
         'numberposts' => 1,
     ));
     $support_page = !empty($support_pages) ? $support_pages[0] : null;
 
 
-    mmhd_log('Metamint Helpdesk activation hook triggered');
+    mmhd_log('Metamint Helpdesk Support activation hook triggered');
 
 
     if (!$support_page) {
-        mmhd_log('Creating Metamint Helpdesk page');
+        mmhd_log('Creating Metamint Helpdesk Support page');
 
 
         $page_data = array(
-            'post_title' => 'Metamint Helpdesk',
+            'post_title' => 'Metamint Helpdesk Support',
             'post_content' => '[mmhd_frontend_dashboard]',
             'post_status' => 'publish',
             'post_author' => 1,
@@ -2361,7 +2361,7 @@ function mmhd_create_support_page()
             update_post_meta($page_id, 'page_state', '--support dashboard');
         }
     } else {
-        mmhd_log('Metamint Helpdesk page already exists with ID: ' . $support_page->ID);
+        mmhd_log('Metamint Helpdesk Support page already exists with ID: ' . $support_page->ID);
     }
 }
 
@@ -2377,11 +2377,11 @@ function mmhd_delete_support_page()
 
     if ($page_id) {
         wp_delete_post($page_id, true);
-        mmhd_log('Deleted Metamint Helpdesk page with ID: ' . $page_id);
+        mmhd_log('Deleted Metamint Helpdesk Support page with ID: ' . $page_id);
     } else {
         $support_pages = get_posts(array(
             'post_type' => 'page',
-            'title' => 'Metamint Helpdesk',
+            'title' => 'Metamint Helpdesk Support',
             'post_status' => 'any',
             'numberposts' => 1,
         ));
@@ -2389,7 +2389,7 @@ function mmhd_delete_support_page()
         if ($support_page) {
             wp_delete_post($support_page->ID, true);
         } else {
-            mmhd_log('No Metamint Helpdesk page found to delete');
+            mmhd_log('No Metamint Helpdesk Support page found to delete');
         }
     }
 
