@@ -305,6 +305,7 @@ function mmhd_migrate_settings_on_update()
         'max_file_upload_size'         => 10,
         'reply_unseen_email_minutes'   => 15,
         'polling_interval'             => 30,
+        'auto_close_chat_minutes'      => 30,
     ];
     $existing_advanced = get_option('mmhd_advanced_settings', []);
     $merged_advanced  = wp_parse_args((array) $existing_advanced, $advanced_defaults);
@@ -2283,6 +2284,10 @@ function mmhd_send_unseen_reply_email($comment_id)
         update_comment_meta($comment_id, 'mmhd_unseen_email_sent', 1);
         update_comment_meta($comment_id, 'mmhd_unseen_email_sent_at', $event_time);
 
+        // Flag the ticket so a later email reply can flip a chat ticket's source
+        // from chat to email (case 2: reminder sent, customer replies via email).
+        update_post_meta($ticket_id, 'mmhd_reminder_email_sent', $event_time);
+
         mmhd_add_internal_ticket_note(
             $ticket_id,
             sprintf('Unseen reply reminder email sent successfully to %s at %s.', $customer_email, $event_time)
@@ -2302,6 +2307,202 @@ function mmhd_send_unseen_reply_email($comment_id)
 
         mmhd_log("Metamint Helpdesk: Unseen reply email failed to send to {$customer_email} for ticket #{$ticket_id}");
     }
+}
+
+// Auto-close chat conversations: when a Support Staff / Manager / Admin posts a
+// reply on a chat ticket, schedule the ticket to be closed after the configured
+// delay if the customer does not respond in the meantime.
+add_action('mmhd_after_reply_added', 'mmhd_schedule_chat_ticket_auto_close', 20, 4);
+function mmhd_schedule_chat_ticket_auto_close($ticket_id, $comment_id, $reply, $user_object)
+{
+    $settings = get_option('mmhd_advanced_settings', []);
+    $minutes = isset($settings['auto_close_chat_minutes']) ? absint($settings['auto_close_chat_minutes']) : 30;
+    if ($minutes <= 0) {
+        mmhd_log("Metamint Helpdesk: Chat auto-close skipped - minutes not configured (ticket #{$ticket_id})");
+        return;
+    }
+
+    $ticket_id  = (int) $ticket_id;
+    $comment_id = (int) $comment_id;
+    if ($ticket_id <= 0 || $comment_id <= 0 || get_post_type($ticket_id) !== 'mmhd_ticket') {
+        return;
+    }
+
+    // Only chat-sourced tickets are eligible.
+    if (mmhd_get_ticket_source($ticket_id) !== 'chat') {
+        return;
+    }
+
+    // Only real agent (staff/manager/admin) replies restart the countdown.
+    $author_type = get_comment_meta($comment_id, 'author_type', true);
+    if ($author_type === '') {
+        $comment = get_comment($comment_id);
+        $author_type = $comment ? mmhd_get_author_type((int) $comment->user_id) : '';
+    }
+    if ($author_type !== 'agent') {
+        mmhd_log("Metamint Helpdesk: Chat auto-close skipped - comment #{$comment_id} author type '{$author_type}' is not agent");
+        return;
+    }
+
+    if (get_post_meta($ticket_id, '_mmhd_ticket_status', true) === 'closed') {
+        return;
+    }
+
+    // Schedule the close. Older pending events for this ticket are left in place
+    // and simply become no-ops when a newer reply arrives (validated at run time).
+    $timestamp = time() + ($minutes * MINUTE_IN_SECONDS);
+    wp_schedule_single_event($timestamp, 'mmhd_auto_close_chat_ticket', [$ticket_id, $comment_id]);
+    update_post_meta($ticket_id, 'mmhd_auto_close_scheduled', $timestamp);
+
+    mmhd_log("Metamint Helpdesk: Chat auto-close scheduled for ticket #{$ticket_id} after comment #{$comment_id} to run in {$minutes} minutes");
+}
+
+add_action('mmhd_auto_close_chat_ticket', 'mmhd_run_chat_ticket_auto_close', 10, 2);
+function mmhd_run_chat_ticket_auto_close($ticket_id, $comment_id)
+{
+    $ticket_id  = (int) $ticket_id;
+    $comment_id = (int) $comment_id;
+
+    $settings = get_option('mmhd_advanced_settings', []);
+    $minutes = isset($settings['auto_close_chat_minutes']) ? absint($settings['auto_close_chat_minutes']) : 30;
+    if ($minutes <= 0) {
+        return;
+    }
+
+    if ($ticket_id <= 0 || get_post_type($ticket_id) !== 'mmhd_ticket') {
+        return;
+    }
+
+    if (mmhd_get_ticket_source($ticket_id) !== 'chat') {
+        return;
+    }
+
+    $current_status = (string) get_post_meta($ticket_id, '_mmhd_ticket_status', true);
+    if ($current_status === 'closed') {
+        return;
+    }
+
+    // The scheduled comment must still be the last real reply — this ensures the
+    // customer never replied and no newer agent reply rescheduled the close.
+    $last_reply = mmhd_get_last_real_ticket_reply($ticket_id);
+    if (!$last_reply || (int) $last_reply->comment_ID !== (int) $comment_id) {
+        mmhd_log("Metamint Helpdesk: Chat auto-close cancelled - newer reply posted on ticket #{$ticket_id}");
+        return;
+    }
+
+    $author_type = get_comment_meta($comment_id, 'author_type', true);
+    if ($author_type === '') {
+        $author_type = mmhd_get_author_type((int) $last_reply->user_id);
+    }
+    if ($author_type !== 'agent') {
+        return;
+    }
+
+    update_post_meta($ticket_id, '_mmhd_ticket_status', 'closed');
+
+    // Attribute the auto-close comment to the ticket assignee, defaulting to the
+    // configurable default agent, then to the first administrator.
+    $author_id = mmhd_get_chat_auto_close_author_id($ticket_id);
+    $author_user = $author_id > 0 ? get_userdata($author_id) : false;
+
+    // Add an action comment marking the auto-close so it is visible in the thread.
+    $close_comment_id = wp_insert_comment([
+        'comment_post_ID'      => $ticket_id,
+        'comment_author'       => $author_user ? $author_user->display_name : 'System',
+        'comment_author_email' => $author_user ? $author_user->user_email : '',
+        'user_id'              => $author_id,
+        'comment_content'      => 'This conversation has been closed due to inactivity. Please start a new conversation if you still need assistance.',
+        'comment_approved'     => 1,
+        'comment_type'         => 'ticket_replies',
+        'is_mmhd_reply'        => true,
+        'comment_meta'         => [
+            'is_action' => true,
+            // Explicitly mark this as a real (authentic) reply so the thread
+            // renders the resolved author's name instead of the AI bot label.
+            'is_bot_response' => '0',
+        ],
+    ]);
+    if (!is_wp_error($close_comment_id)) {
+        update_comment_meta($close_comment_id, 'comment_source', 'chat');
+        update_comment_meta($close_comment_id, 'author_type', 'agent');
+        update_comment_meta($close_comment_id, 'admin_comment', 'yes');
+    }
+
+    delete_post_meta($ticket_id, 'mmhd_auto_close_scheduled');
+
+    do_action('mmhd_after_ticket_closed', $ticket_id, $author_id);
+    do_action('mmhd_after_ticket_status_change', $ticket_id, $current_status, 'closed', $author_id);
+
+    if (function_exists('mmhd_notify_status_changed')) {
+        mmhd_notify_status_changed($ticket_id, 'closed', $author_id, 'chat');
+    }
+
+    mmhd_log("Metamint Helpdesk: Chat ticket #{$ticket_id} auto-closed after no customer response");
+}
+
+/**
+ * Get the latest real reply on a ticket, skipping system/status action comments
+ * and bot responses so only genuine customer or agent messages are considered.
+ */
+function mmhd_get_last_real_ticket_reply($ticket_id)
+{
+    $comments = get_comments([
+        'post_id' => (int) $ticket_id,
+        'number'  => 50,
+        'orderby' => 'comment_ID',
+        'order'   => 'DESC',
+        'type'    => 'ticket_replies',
+    ]);
+
+    foreach ($comments as $comment) {
+        if (get_comment_meta($comment->comment_ID, 'is_action', true)) {
+            continue;
+        }
+        if (function_exists('mmhd_is_bot_comment') && mmhd_is_bot_comment($comment->comment_ID)) {
+            continue;
+        }
+        return $comment;
+    }
+
+    return null;
+}
+
+/**
+ * Resolve which user should author the auto-close comment: the ticket's
+ * assignee, falling back to the configured default agent, then to the first
+ * administrator. Returns 0 when no eligible user can be found.
+ */
+function mmhd_get_chat_auto_close_author_id($ticket_id)
+{
+    $ticket_id = (int) $ticket_id;
+
+    $assignee_id = $ticket_id > 0 ? (int) get_post_meta($ticket_id, 'ticket_assignee_id', true) : 0;
+    if ($assignee_id > 0 && get_userdata($assignee_id)) {
+        return $assignee_id;
+    }
+
+    $default_agent = trim((string) get_option('mmhd_default_agent', ''));
+    if ($default_agent === '') {
+        $default_agent = trim((string) get_option('mmhd_default_staff', ''));
+    }
+    $default_id = function_exists('mmhd_resolve_user_id_from_assignee') ? mmhd_resolve_user_id_from_assignee($default_agent) : 0;
+    if ($default_id > 0 && get_userdata($default_id)) {
+        return $default_id;
+    }
+
+    $administrators = get_users([
+        'role'    => 'administrator',
+        'number'  => 1,
+        'fields'  => 'ID',
+        'orderby' => 'ID',
+        'order'   => 'ASC',
+    ]);
+    $admin_id = !empty($administrators) ? (int) $administrators[0] : 0;
+    if ($admin_id > 0 && get_userdata($admin_id)) {
+        return $admin_id;
+    }
+
+    return 0;
 }
 
 if (is_admin()) {

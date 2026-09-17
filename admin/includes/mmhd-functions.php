@@ -682,6 +682,7 @@ function mmhd_save_advanced_settings()
         'max_file_upload_size',
         'reply_unseen_email_minutes',
         'polling_interval',
+        'auto_close_chat_minutes',
         'blocked_ips',
     ];
 
@@ -712,6 +713,13 @@ function mmhd_save_advanced_settings()
             $value = absint($settings[$key]);
             if ($value < 0 || $value > 1440) {
                 $results[$key] = ['status' => 'error', 'message' => 'Invalid reply email minutes (must be 0–1440)'];
+                continue;
+            }
+            $sanitized_settings[$key] = $value;
+        } elseif ($key === 'auto_close_chat_minutes') {
+            $value = absint($settings[$key]);
+            if ($value < 0 || $value > 1440) {
+                $results[$key] = ['status' => 'error', 'message' => 'Invalid auto-close minutes (must be 0–1440)'];
                 continue;
             }
             $sanitized_settings[$key] = $value;

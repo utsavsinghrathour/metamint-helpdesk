@@ -758,6 +758,19 @@ function mmhd_fetch_emails()
                             mmhd_store_ticket_source_meta($original_post_id, $email_source_context, $comment_id);
                             $existing_message_ids[] = $message_id;
                             mmhd_log('Successfully added comment ID: ' . $comment_id);
+
+                            // Case 2: A chat-originated ticket whose customer was sent a
+                            // reminder email and then replies from email — move the ticket's
+                            // source to email. Later chat replies keep the email source and are
+                            // never rewritten back to chat.
+                            if (
+                                function_exists('mmhd_get_ticket_source') &&
+                                mmhd_get_ticket_source($original_post_id) === 'chat' &&
+                                get_post_meta($original_post_id, 'mmhd_reminder_email_sent', true)
+                            ) {
+                                update_post_meta($original_post_id, 'mmhd_ticket_origin', 'email');
+                                mmhd_log('Metamint Helpdesk: Ticket #' . $original_post_id . ' source changed from chat to email (customer replied via email after a reminder email).');
+                            }
                             $reply_count++;
                         } else {
                             mmhd_log('Failed to add comment: ' . $comment_id->get_error_message());

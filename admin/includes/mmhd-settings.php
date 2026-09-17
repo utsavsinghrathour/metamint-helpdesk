@@ -732,6 +732,7 @@ $mmhd_settings_hidden = ($mmhd_current_tab === 'settings') ? '' : ' hidden';
                     'max_file_upload_size' => 10,
                     'reply_unseen_email_minutes' => 15,
                     'polling_interval' => 30,
+                    'auto_close_chat_minutes' => 30,
                 ]);
                 ?>
              <div id="advanced-tab" class="settings-tab-content hidden">
@@ -837,6 +838,31 @@ $mmhd_settings_hidden = ($mmhd_current_tab === 'settings') ? '' : ' hidden';
                                       $mmhd_blocked_ips = get_option('mmhd_blocked_ips', array());
                                       echo esc_textarea(implode("\n", $mmhd_blocked_ips));
                                     ?></textarea>
+                            </div>
+                            <?php
+                                $mmhd_auto_close_chat_minutes = isset($mmhd_advanced_settings['auto_close_chat_minutes']) ? absint($mmhd_advanced_settings['auto_close_chat_minutes']) : 30;
+                                $mmhd_auto_close_chat_enabled = $mmhd_auto_close_chat_minutes > 0;
+                                ?>
+                            <div>
+                                <div class="flex items-center gap-2">
+                                    <input id="enable-auto-close-chat" type="checkbox"
+                                        <?php checked($mmhd_auto_close_chat_enabled, true); ?>
+                                        class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                                    <label for="enable-auto-close-chat" class="block text-sm font-medium text-gray-700">
+                                        <?php esc_html_e('Close chat conversations automatically', 'metamint-helpdesk'); ?>
+                                    </label>
+                                </div>
+                                <div id="auto-close-chat-options" class="mt-2 flex items-center gap-2"
+                                    style="<?php echo $mmhd_auto_close_chat_enabled ? '' : 'display:none;'; ?>">
+                                    <input type="number" name="auto_close_chat_minutes" id="auto-close-chat-minutes"
+                                        min="1" max="1440"
+                                        value="<?php echo esc_attr($mmhd_auto_close_chat_minutes); ?>"
+                                        class="styled-input block w-28 border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                                    <span class="text-sm text-gray-600"><?php esc_html_e('minutes', 'metamint-helpdesk'); ?></span>
+                                </div>
+                                <p class="text-xs text-gray-500 mt-1">
+                                    <?php esc_html_e('When the last reply on a chat conversation is from a Support Staff, Manager, or Admin, the conversation is closed automatically after this delay if the customer does not respond.', 'metamint-helpdesk'); ?>
+                                </p>
                             </div>
                       </div>
                      <hr class="my-6 border-gray-200">

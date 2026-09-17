@@ -2576,10 +2576,20 @@ jQuery(document).ready(function ($) {
     $("#reply-unseen-email-options").toggle(enabled);
   }
 
+  function toggleAutoCloseChatOptions() {
+    var enabled = $("#enable-auto-close-chat").is(":checked");
+    $("#auto-close-chat-options").toggle(enabled);
+  }
+
   toggleUnseenReplyOptions();
+  toggleAutoCloseChatOptions();
 
   $(document).on("change", "#enable-unseen-reply-email", function () {
     toggleUnseenReplyOptions();
+  });
+
+  $(document).on("change", "#enable-auto-close-chat", function () {
+    toggleAutoCloseChatOptions();
   });
 
   $(document).on("click", "#save-advanced-settings", function () {
@@ -2590,6 +2600,7 @@ jQuery(document).ready(function ($) {
 
     // Collect form data
     var unseenEnabled = $("#enable-unseen-reply-email").is(":checked");
+    var autoCloseEnabled = $("#enable-auto-close-chat").is(":checked");
     var settings = {
       enable_auto_assign: $("#enable-auto-assign").is(":checked"),
       enable_notifications: $("#enable-notifications").is(":checked"),
@@ -2598,6 +2609,9 @@ jQuery(document).ready(function ($) {
       max_file_upload_size: $form.find('input[type="number"]').val(),
       reply_unseen_email_minutes: unseenEnabled
         ? $("#reply-unseen-email-minutes").val()
+        : 0,
+      auto_close_chat_minutes: autoCloseEnabled
+        ? $("#auto-close-chat-minutes").val()
         : 0,
       blocked_ips: $("#blocked-ips").val(),
     };
