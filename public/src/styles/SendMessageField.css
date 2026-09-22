@@ -8,7 +8,7 @@
 
 .send-message-field textarea::placeholder {
   /* color: var(--primary-blue); */
-  color: var(--robodesk-theme-color);
+  color: var(--mmhd-theme-color);
   font-size: 13px;
   font-weight: 400;
 }
@@ -35,5 +35,5 @@
 }
 
 .send-message-field button svg path {
-  fill: var(--robodesk-theme-color);
+  fill: var(--mmhd-theme-color);
 }

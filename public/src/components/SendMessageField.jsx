@@ -13,8 +13,8 @@ const SendMessageField = ({ setShowLogin, setActiveTab, updateSelectedTicket, ha
     const [loggedIn, setLoggedIn] = useState(false);
     const [userId, setUserId] = useState(null);
     const [placeHolderText, setplaceHolderText] = useState('Start a conversation...');
-    const chatHeading = window.robodeskData?.chatHeading || 'Have Questions?';
-    const welcomeMessage = window.robodeskData?.welcomeMessage || 'Have any questions or need a quote? Leave us a message.';
+    const chatHeading = window.mmhdData?.chatHeading || 'Have Questions?';
+    const welcomeMessage = window.mmhdData?.welcomeMessage || 'Have any questions or need a quote? Leave us a message.';
     const { loggedinContext, loggedInUsrId, refreshTickets } = useAppData();
 
 
@@ -90,7 +90,7 @@ const SendMessageField = ({ setShowLogin, setActiveTab, updateSelectedTicket, ha
         if (!trimmedMessage || submitLockRef.current || isSubmitting) return;
         if (!loggedinContext) {
             localStorage.setItem('temp_ticket_title', trimmedMessage);
-            if (window.robodeskData?.enable_chat === "1") setActiveTab(1);
+            if (window.mmhdData?.enable_chat === "1") setActiveTab(1);
             setShowLogin(true);
 
             return;
@@ -119,7 +119,7 @@ const SendMessageField = ({ setShowLogin, setActiveTab, updateSelectedTicket, ha
             refreshTickets();
             updateSelectedTicket(newTicket);
 
-            if (window.robodeskData?.enable_chat === "1") setActiveTab(1);
+            if (window.mmhdData?.enable_chat === "1") setActiveTab(1);
             setMessage("");
 
         } catch (error) {
@@ -132,14 +132,14 @@ const SendMessageField = ({ setShowLogin, setActiveTab, updateSelectedTicket, ha
     };
 
     return (
-        <div className="send-message-field rd-px-16">
-            <div className='rd-text-center rd-px-20 rd-flex rd-flex-col rd-gap-5 rd-mb-20 home-tab-title'>
+        <div className="send-message-field mmhd-px-16">
+            <div className='mmhd-text-center mmhd-px-20 mmhd-flex mmhd-flex-col mmhd-gap-5 mmhd-mb-20 home-tab-title'>
                 <h4 className='heading-4'>{chatHeading}</h4>
-                <h5 className='sub-text rd-mt-0'>{welcomeMessage}</h5>
+                <h5 className='sub-text mmhd-mt-0'>{welcomeMessage}</h5>
             </div>
-            <div className="rd-position-relative rd-flex rd-px-18 ">
+            <div className="mmhd-position-relative mmhd-flex mmhd-px-18 ">
                 <textarea
-                    className="rd-w-full rd-border-blue rd-border-radius-md"
+                    className="mmhd-w-full mmhd-border-blue mmhd-border-radius-md"
                     placeholder={placeHolderText}
                     value={message}
                     ref={textareaRef}
@@ -161,7 +161,7 @@ const SendMessageField = ({ setShowLogin, setActiveTab, updateSelectedTicket, ha
                     onClick={() => {
                         handleSend();
                     }}
-                    className="rd-bg-transparent rd-border-none rd-text-blue rd-p-0"
+                    className="mmhd-bg-transparent mmhd-border-none mmhd-text-blue mmhd-p-0"
                     disabled={!message.trim() || isSubmitting}
                 >
                     <svg

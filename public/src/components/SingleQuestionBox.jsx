@@ -4,16 +4,17 @@ import SendMessageField from "./SendMessageField";
 import parse from "html-react-parser";
 import DOMPurify from "dompurify";
 import he from "he";
-import Footer, { robodeskShowCredits } from "./Footer";
+import Footer, { mmhdShowCredits } from "./Footer";
+import { readChatSession } from "../utils/startConversation";
 import "../styles/SingleQuestionBox.css";
-import RobodeskBotChatWidgetMain from "./RobodeskBotChatWidgetMain";
+import MetamintHelpdeskBotChatWidgetMain from "./MetamintHelpdeskBotChatWidgetMain";
 
-import defaultLogo from "../images/robodesk-logo.png";
+import defaultLogo from "../images/mmhd-logo.png";
 
 const faqCache = {};
-// const wpHomeUrl = window.robodeskData?.home_url || '';
+// const wpHomeUrl = window.mmhdData?.home_url || '';
 
-const WIDGET_CONFIG_CACHE_KEY = "robodesk_widget_config_cache";
+const WIDGET_CONFIG_CACHE_KEY = "mmhd_widget_config_cache";
 
 const readWidgetConfigCache = () => {
   try {
@@ -65,17 +66,16 @@ const SingleQuestionBox = ({
   const [error, setError] = useState(null);
   const [hasChatStarted, setHasChatStarted] = useState(() => {
     try {
-      const saved = sessionStorage.getItem("robodesk_chat_session");
-      return saved ? JSON.parse(saved).length > 0 : false;
+      return readChatSession().length > 0;
     } catch {
       return false;
     }
   });
-  const image_urls = window.robodeskData?.imageUrls || {};
-  const chatEnabled = window.robodeskData?.enable_chat === "1";
+  const image_urls = window.mmhdData?.imageUrls || {};
+  const chatEnabled = window.mmhdData?.enable_chat === "1";
   const canLoadWidgetConfig = Boolean(
-    window.robodeskData?.robodesk_addon_active &&
-      window.robodeskData?.robodesk_ai_bot_active,
+    window.mmhdData?.mmhd_addon_active &&
+      window.mmhdData?.mmhd_ai_bot_active,
   );
   const [isAddonActive, setIsAddonActive] = useState(false);
   const [loadingAddon, setLoadingAddon] = useState(true);
@@ -109,7 +109,7 @@ const SingleQuestionBox = ({
       try {
         setIsLoading(true);
         const response = await fetch(
-          `/wp-json/wp/v2/robodesk_faq?featured=true&_fields=id,title.rendered,excerpt.rendered,content.rendered`,
+          `/wp-json/wp/v2/mmhd_faq?featured=true&_fields=id,title.rendered,excerpt.rendered,content.rendered`,
         );
         if (!response.ok) {
           throw new Error("Failed to fetch FAQs");
@@ -188,7 +188,7 @@ const SingleQuestionBox = ({
   };
 
   const getRestNonce = () =>
-    window.RobodeskBotConfig?.restNonce ||
+    window.MetamintHelpdeskBotConfig?.restNonce ||
     window.wpApiSettings?.nonce ||
     "";
 
@@ -204,7 +204,7 @@ const SingleQuestionBox = ({
       const headers = { "Content-Type": "application/json" };
       const nonce = getRestNonce();
       if (nonce) headers["X-WP-Nonce"] = nonce;
-      const response = await fetch("/wp-json/robodesk-bot/v1/widget-config", { headers });
+      const response = await fetch("/wp-json/mmhd-bot/v1/widget-config", { headers });
       const data = await response.json();
       if (response.ok && data) {
         writeWidgetConfigCache(data);
@@ -239,11 +239,11 @@ const SingleQuestionBox = ({
 
   const QuestionItem = ({ question }) => (
     <div
-      className="rd-faq-item rd-flex rd-gap-15 rd-border-light single-question-box-field rd-border-radius-md"
+      className="mmhd-faq-item mmhd-flex mmhd-gap-15 mmhd-border-light single-question-box-field mmhd-border-radius-md"
       onClick={() => setSelectedQuestion(question)}
       style={{ cursor: "pointer" }}
     >
-      <div className="rd-text-blue">
+      <div className="mmhd-text-blue">
         <svg
           xmlns="http://www.w3.org/2000/svg"
           width="20"
@@ -258,8 +258,8 @@ const SingleQuestionBox = ({
         </svg>
       </div>
       <div>
-        <h4 className="rd-title-text">{question.title}</h4>
-        <div className="rd-body-text truncate-3-lines">
+        <h4 className="mmhd-title-text">{question.title}</h4>
+        <div className="mmhd-body-text truncate-3-lines">
           {parse(question.excerpt)}
         </div>
       </div>
@@ -269,10 +269,10 @@ const SingleQuestionBox = ({
   return (
     <>
       {selectedQuestion ? (
-        <div className={`rd-single-question-view${robodeskShowCredits() ? "" : " rd-no-credits"}`}>
-          <div className="rd-faq-header rd-flex rd-align-center rd-justify-between rd-cursor-pointer rd-border-bottom-light rd-py-15 rd-px-20">
+        <div className={`mmhd-single-question-view${mmhdShowCredits() ? "" : " mmhd-no-credits"}`}>
+          <div className="mmhd-faq-header mmhd-flex mmhd-align-center mmhd-justify-between mmhd-cursor-pointer mmhd-border-bottom-light mmhd-py-15 mmhd-px-20">
             <button
-              className="rd-back-button rd-flex rd-items-center rd-bg-transparent rd-border-none icon-dark rd-text-blue rd-p-0 rd-m-0 rd-cursor-pointer"
+              className="mmhd-back-button mmhd-flex mmhd-items-center mmhd-bg-transparent mmhd-border-none icon-dark mmhd-text-blue mmhd-p-0 mmhd-m-0 mmhd-cursor-pointer"
               onClick={handleBackClick}
             >
               <FaChevronLeft />
@@ -281,7 +281,7 @@ const SingleQuestionBox = ({
               <img
                 src={image_urls.wide_logo}
                 alt="Plugin Wide Logo"
-                className=" rd-header-logo"
+                className=" mmhd-header-logo"
                 onError={(e) => {
                   e.target.style.display = "none";
                 }}
@@ -290,22 +290,22 @@ const SingleQuestionBox = ({
               <img
                 src={image_urls.logo}
                 alt="Plugin Logo"
-                className=" rd-header-logo"
+                className=" mmhd-header-logo"
                 onError={(e) => {
                   e.target.style.display = "none";
                 }}
               />
             ) : (
-              <div className=" rd-header-logo default-logo">
+              <div className=" mmhd-header-logo default-logo">
                 <img
                   src={defaultLogo}
                   alt="Default Plugin Logo"
-                  className=" rd-header-logo"
+                  className=" mmhd-header-logo"
                 />
               </div>
             )}
             <button
-              className={`expand-popup rd-bg-transparent rd-border-none rd-cursor-pointer rd-p-0 ${
+              className={`expand-popup mmhd-bg-transparent mmhd-border-none mmhd-cursor-pointer mmhd-p-0 ${
                 isExpanded ? "expanded" : ""
               }`}
               onClick={handleExpandClick}
@@ -349,14 +349,14 @@ const SingleQuestionBox = ({
 
           <div
             ref={contentRef}
-            className="rd-py-15 single-faq-content rd-px-20"
+            className="mmhd-py-15 single-faq-content mmhd-px-20"
           >
-            <div className="rd-flex rd-gap-15">
+            <div className="mmhd-flex mmhd-gap-15">
               <div>
-                <h4 className="rd-faq-title heading-4">
+                <h4 className="mmhd-faq-title heading-4">
                   {selectedQuestion.title}
                 </h4>
-                <div className="rd-body-text rd-my-10">
+                <div className="mmhd-body-text mmhd-my-10">
                   {selectedQuestion.content
                     ? parse(selectedQuestion.content, {
                         replace: (domNode) => {
@@ -375,12 +375,12 @@ const SingleQuestionBox = ({
                 </div>
               </div>
             </div>
-            <div className="single-faq-other-faq-content rd-my-20 single-content-other-content">
+            <div className="single-faq-other-faq-content mmhd-my-20 single-content-other-content">
               <h4 className="heading-4">Didn't get your answer?</h4>
-              <div className="rd-body-text rd-mt-8">
+              <div className="mmhd-body-text mmhd-mt-8">
                 <p>Here are some related articles.</p>
               </div>
-              <div className="rd-flex rd-flex-col rd-gap-20 rd-mt-20">
+              <div className="mmhd-flex mmhd-flex-col mmhd-gap-20 mmhd-mt-20">
                 {questions
                   .slice(0, 3)
                   .map(
@@ -391,8 +391,8 @@ const SingleQuestionBox = ({
                   )}
               </div>
               {chatEnabled && (
-                <div className="rd-my-30">
-                  <h4 className="heading-4 rd-fw-semi rd-mb-8">
+                <div className="mmhd-my-30">
+                  <h4 className="heading-4 mmhd-fw-semi mmhd-mb-8">
                     Still have questions?
                   </h4>
                   <a
@@ -415,33 +415,33 @@ const SingleQuestionBox = ({
         <>
           {showHeaderFooter && (
             <>
-              {/* <div className='rd-text-center rd-px-20 rd-flex rd-flex-col rd-gap-5 rd-mb-20 home-tab-title'>
+              {/* <div className='mmhd-text-center mmhd-px-20 mmhd-flex mmhd-flex-col mmhd-gap-5 mmhd-mb-20 home-tab-title'>
                 <h4 className='heading-4'>Have Questions?</h4>
-                <h5 className='sub-text rd-mt-0'>
+                <h5 className='sub-text mmhd-mt-0'>
                   Have any questions or need a quote? Leave us a message.
                 </h5>
               </div> */}
               {chatEnabled && loadingAddonStatus ? (
-                <div className="rd-loader-container">
-                  <div className="rd-loader"></div>
+                <div className="mmhd-loader-container">
+                  <div className="mmhd-loader"></div>
                 </div>
               ) : null}
               {chatEnabled && shouldShowBotWidget ? (
                 <>
-                  <RobodeskBotChatWidgetMain
+                  <MetamintHelpdeskBotChatWidgetMain
                     widgetConfig={widgetConfig}
                     activeAIMode={activeAIMode}
                     onChatStart={() => setHasChatStarted(true)}
                   />
                   {!hasChatStarted && (
-                    <div className="rd-px-18 rd-mt-20 rd-mb-15 rd-single-message-faq-field">
-                      <div className="rd-flex rd-flex-col rd-gap-20">
+                    <div className="mmhd-px-18 mmhd-mt-20 mmhd-mb-15 mmhd-single-message-faq-field">
+                      <div className="mmhd-flex mmhd-flex-col mmhd-gap-20">
                         {isLoading ? (
-                          <p className="rd-body-text rd-text-center">
+                          <p className="mmhd-body-text mmhd-text-center">
                             Loading FAQs...
                           </p>
                         ) : error ? (
-                          <p className="rd-text-red rd-body-text">
+                          <p className="mmhd-text-red mmhd-body-text">
                             Error: {error}
                           </p>
                         ) : questions.length === 0 ? (
@@ -465,14 +465,14 @@ const SingleQuestionBox = ({
                     focused={focused}
                     handleFocusedTextArea={handleFocusedTextArea}
                   />
-                  <div className="rd-px-18 rd-mt-20 rd-mb-15 rd-single-message-faq-field">
-                    <div className="rd-flex rd-flex-col rd-gap-20">
+                  <div className="mmhd-px-18 mmhd-mt-20 mmhd-mb-15 mmhd-single-message-faq-field">
+                    <div className="mmhd-flex mmhd-flex-col mmhd-gap-20">
                       {isLoading ? (
-                        <p className="rd-body-text rd-text-center">
+                        <p className="mmhd-body-text mmhd-text-center">
                           Loading FAQs...
                         </p>
                       ) : error ? (
-                        <p className="rd-text-red rd-body-text">
+                        <p className="mmhd-text-red mmhd-body-text">
                           Error: {error}
                         </p>
                       ) : questions.length === 0 ? (
@@ -486,14 +486,14 @@ const SingleQuestionBox = ({
                   </div>
                 </>
               ) : (
-                <div className="rd-px-18 rd-mt-20 rd-mb-15 rd-single-message-faq-field">
-                  <div className="rd-flex rd-flex-col rd-gap-20">
+                <div className="mmhd-px-18 mmhd-mt-20 mmhd-mb-15 mmhd-single-message-faq-field">
+                  <div className="mmhd-flex mmhd-flex-col mmhd-gap-20">
                     {isLoading ? (
-                      <p className="rd-body-text rd-text-center">
+                      <p className="mmhd-body-text mmhd-text-center">
                         Loading FAQs...
                       </p>
                     ) : error ? (
-                      <p className="rd-text-red rd-body-text">
+                      <p className="mmhd-text-red mmhd-body-text">
                         Error: {error}
                       </p>
                     ) : questions.length === 0 ? (

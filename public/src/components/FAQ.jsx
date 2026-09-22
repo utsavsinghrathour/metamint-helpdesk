@@ -5,11 +5,11 @@ import parse from "html-react-parser";
 import DOMPurify from "dompurify";
 import he from "he";
 
-import Footer, { robodeskShowCredits } from "./Footer";
+import Footer, { mmhdShowCredits } from "./Footer";
 import Author1 from "../images/person1.jpeg";
 import Author2 from "../images/person2.jpeg";
 import "../styles/FAQ.css";
-import defaultLogo from "../images/robodesk-logo.png";
+import defaultLogo from "../images/mmhd-logo.png";
 
 const stripHtml = (html) => he.decode(html.replace(/<[^>]+>/g, "")).trim();
 const wpTrimWords = (text, numWords) => {
@@ -47,7 +47,7 @@ const FAQDetail = memo(
     const [fullContent, setFullContent] = useState(null);
     const [authorNames, setAuthorNames] = useState([]);
     const contentRef = useRef(null);
-    const image_urls = window.robodeskData?.imageUrls || {};
+    const image_urls = window.mmhdData?.imageUrls || {};
 
     useEffect(() => {
       const fetchFAQDetails = () => {
@@ -119,11 +119,11 @@ const FAQDetail = memo(
     };
 
     return (
-      <div className={`rd-faq-detail rd-h-full${robodeskShowCredits() ? "" : " rd-no-credits"}`}>
-        <div className="rd-main-content no-footer rd-h-full">
-          <div className="single-faq-header rd-flex rd-align-center rd-justify-between rd-cursor-pointer rd-border-bottom-light rd-p-10 rd-bg-primary ">
+      <div className={`mmhd-faq-detail mmhd-h-full${mmhdShowCredits() ? "" : " mmhd-no-credits"}`}>
+        <div className="mmhd-main-content no-footer mmhd-h-full">
+          <div className="single-faq-header mmhd-flex mmhd-align-center mmhd-justify-between mmhd-cursor-pointer mmhd-border-bottom-light mmhd-p-10 mmhd-bg-primary ">
             <button
-              className="back-button rd-flex rd-items-center rd-bg-transparent rd-border-none icon-dark rd-p-0 rd-m-0"
+              className="back-button mmhd-flex mmhd-items-center mmhd-bg-transparent mmhd-border-none icon-dark mmhd-p-0 mmhd-m-0"
               onClick={onBack}
             >
               <FaChevronLeft />
@@ -132,7 +132,7 @@ const FAQDetail = memo(
               <img
                 src={image_urls.wide_logo}
                 alt="Plugin Wide Logo"
-                className="rd-header-logo"
+                className="mmhd-header-logo"
                 onError={(e) => {
                   e.target.style.display = "none";
                 }}
@@ -141,22 +141,22 @@ const FAQDetail = memo(
               <img
                 src={image_urls.logo}
                 alt="Plugin Logo"
-                className="rd-header-logo"
+                className="mmhd-header-logo"
                 onError={(e) => {
                   e.target.style.display = "none";
                 }}
               />
             ) : (
-              <div className="rd-header-logo default-logo">
+              <div className="mmhd-header-logo default-logo">
                 <img
                   src={defaultLogo}
                   alt="Default Plugin Logo"
-                  className="rd-header-logo"
+                  className="mmhd-header-logo"
                 />
               </div>
             )}
             <button
-              className={`expand-popup rd-bg-transparent rd-border-none rd-cursor-pointer rd-p-0 ${
+              className={`expand-popup mmhd-bg-transparent mmhd-border-none mmhd-cursor-pointer mmhd-p-0 ${
                 isExpanded ? "expanded" : ""
               }`}
               onClick={() => setIsExpanded(!isExpanded)}
@@ -199,28 +199,28 @@ const FAQDetail = memo(
           </div>
           <div
             ref={contentRef}
-            className="rd-px-20 rd-py-15 single-faq-content"
+            className="mmhd-px-20 mmhd-py-15 single-faq-content"
           >
             <div>
-              <h4 className="rd-faq-title heading-4">{faq.question}</h4>
+              <h4 className="mmhd-faq-title heading-4">{faq.question}</h4>
               {parsedContent ? (
-                <div className="rd-body-text rd-my-10">{parsedContent}</div>
+                <div className="mmhd-body-text mmhd-my-10">{parsedContent}</div>
               ) : (
                 <div>Loading...</div>
               )}
             </div>
-            <div className="rd-single-faq-footer rd-py-10 rd-border-vertical-light">
-              <div className="rd-flex rd-justify-between rd-align-center">
+            <div className="mmhd-single-faq-footer mmhd-py-10 mmhd-border-vertical-light">
+              <div className="mmhd-flex mmhd-justify-between mmhd-align-center">
                 <div>
                   <h5 className="sub-text">
                     {faq?.author?.total_posts} articles
                   </h5>
                   {/* <h5 className="sub-text">By {faq?.author?.display_name}</h5> */}
-                  <span className="rd-text-small">
+                  <span className="mmhd-text-small">
                     By {faq?.author?.display_name}
                   </span>
                 </div>
-                <div className="rd-author-avatar rd-flex rd-align-center">
+                <div className="mmhd-author-avatar mmhd-flex mmhd-align-center">
                   <img
                     src={faq?.author?.gravatar_url}
                     alt={faq?.author?.display_name}
@@ -231,10 +231,10 @@ const FAQDetail = memo(
             {relatedFaqs.length > 0 && (
               <div className="single-faq-other-faq-content single-content-other-content">
                 <h4 className="heading-4">Didn't get your answer?</h4>
-                <div className="rd-body-text rd-mt-8">
+                <div className="mmhd-body-text mmhd-mt-8">
                   <p>Here are some related articles.</p>
                 </div>
-                <div className="rd-flex rd-flex-col rd-gap-8 rd-mt-20">
+                <div className="mmhd-flex mmhd-flex-col mmhd-gap-8 mmhd-mt-20">
                   {relatedFaqs.map((relatedFaq) => (
                     <FAQItem
                       key={relatedFaq.id}
@@ -246,14 +246,14 @@ const FAQDetail = memo(
               </div>
             )}
           </div>
-          {window.robodeskData?.enable_chat === "1" && (
-            <div className="rd-conversation-fixed-bottm">
-              <h4 className="heading-4 rd-fw-semi rd-mb-8">
+          {window.mmhdData?.enable_chat === "1" && (
+            <div className="mmhd-conversation-fixed-bottm">
+              <h4 className="heading-4 mmhd-fw-semi mmhd-mb-8">
                 Still have questions?
               </h4>
               <button
                 type="button"
-                className="button no-bg rd-flex rd-align-center rd-gap-10 rd-cursor-pointer"
+                className="button no-bg mmhd-flex mmhd-align-center mmhd-gap-10 mmhd-cursor-pointer"
                 onClick={() => {
                   setActiveTab(0);
                   handleFocusedTextArea(true);
@@ -265,8 +265,8 @@ const FAQDetail = memo(
             </div>
           )}
         </div>
-        {robodeskShowCredits() && (
-          <div className="rd-border-top-light">
+        {mmhdShowCredits() && (
+          <div className="mmhd-border-top-light">
             <Footer showCopyrightOnly={true} />
           </div>
         )}
@@ -277,12 +277,12 @@ const FAQDetail = memo(
 
 const FAQItem = memo(({ faq, onSelect }) => (
   <div
-    className="rd-faq-item rd-flex rd-align-center rd-border-bottom-light rd-gap-8"
+    className="mmhd-faq-item mmhd-flex mmhd-align-center mmhd-border-bottom-light mmhd-gap-8"
     onClick={() => onSelect(faq)}
   >
-    <div className="rd-faq-content">
-      <h3 className="rd-faq-title rd-title-text">{faq.question}</h3>
-      <p className="rd-faq-paragraph rd-body-text truncate-3-lines">
+    <div className="mmhd-faq-content">
+      <h3 className="mmhd-faq-title mmhd-title-text">{faq.question}</h3>
+      <p className="mmhd-faq-paragraph mmhd-body-text truncate-3-lines">
         {faq.summary}
       </p>
     </div>
@@ -331,7 +331,7 @@ const FAQ = ({
         }
 
         const response = await fetch(
-          `/wp-json/wp/v2/robodesk_faq?_fields=id,title.rendered,excerpt.rendered,content.rendered,author_info&per_page=100&page=1`,
+          `/wp-json/wp/v2/mmhd_faq?_fields=id,title.rendered,excerpt.rendered,content.rendered,author_info&per_page=100&page=1`,
         );
 
         if (!response.ok) {
@@ -390,7 +390,7 @@ const FAQ = ({
 
   if (selectedFAQ) {
     return (
-      <div className={`rd-faq-container rd-h-full${window.robodeskData?.enable_chat !== "1" ? ' chat-disabled' : ''}`}>
+      <div className={`mmhd-faq-container mmhd-h-full${window.mmhdData?.enable_chat !== "1" ? ' chat-disabled' : ''}`}>
         <FAQDetail
           faq={selectedFAQ}
           onBack={() => {
@@ -409,48 +409,48 @@ const FAQ = ({
   }
 
   return (
-    <div className={`rd-faq-container rd-h-full${window.robodeskData?.enable_chat !== "1" ? ' chat-disabled' : ''}`}>
-      <div className="rd-main-content rd-h-full">
-        <div className="rd-p-10 rd-search-header rd-bg-blue rd-flex rd-items-center rd-justify-between rd-flex-col">
-          <h5 className="heading-5 rd-text-white rd-text-center rd-p-16">
+    <div className={`mmhd-faq-container mmhd-h-full${window.mmhdData?.enable_chat !== "1" ? ' chat-disabled' : ''}`}>
+      <div className="mmhd-main-content mmhd-h-full">
+        <div className="mmhd-p-10 mmhd-search-header mmhd-bg-blue mmhd-flex mmhd-items-center mmhd-justify-between mmhd-flex-col">
+          <h5 className="heading-5 mmhd-text-white mmhd-text-center mmhd-p-16">
             Search
           </h5>
-          <div className="rd-mt-20 rd-search-bar rd-flex rd-items-center rd-bg-white rd-rounded rd-position-relative searh-bar">
+          <div className="mmhd-mt-20 mmhd-search-bar mmhd-flex mmhd-items-center mmhd-bg-white mmhd-rounded mmhd-position-relative searh-bar">
             <input
               type="text"
-              className="rd-border-none rd-bg-transparent rd-w-full rd-border-radius-md"
+              className="mmhd-border-none mmhd-bg-transparent mmhd-w-full mmhd-border-radius-md"
               placeholder="Search your answer here"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
-            <FaSearch className="rd-body-text" />
+            <FaSearch className="mmhd-body-text" />
           </div>
           <button
-            className="back-button rd-flex rd-items-center rd-gap-1 rd-border-none rd-bg-transparent rd-m-0 rd-p-0"
+            className="back-button mmhd-flex mmhd-items-center mmhd-gap-1 mmhd-border-none mmhd-bg-transparent mmhd-m-0 mmhd-p-0"
             onClick={() => setActiveTab(0)}
           >
             <FaChevronLeft />
           </button>
         </div>
-        <div className="rd-wiki-wrap">
+        <div className="mmhd-wiki-wrap">
           {error ? (
-            <p className="rd-body-text rd-text-red rd-text-center rd-p-16">
+            <p className="mmhd-body-text mmhd-text-red mmhd-text-center mmhd-p-16">
               Error: {error}
             </p>
           ) : isLoading ? (
-            <div className="rd-skeleton">
-              <p className="rd-body-text rd-text rd-text-center rd-p-16">
+            <div className="mmhd-skeleton">
+              <p className="mmhd-body-text mmhd-text mmhd-text-center mmhd-p-16">
                 Loading...
               </p>
               {[...Array(10)].map((_, i) => (
                 <div
                   key={i}
-                  className="rd-skeleton-item rd-mb-10 rd-p-20 rd-bg-gray-200 rd-rounded"
+                  className="mmhd-skeleton-item mmhd-mb-10 mmhd-p-20 mmhd-bg-gray-200 mmhd-rounded"
                 ></div>
               ))}
             </div>
           ) : filteredFaqs.length === 0 ? (
-            <p className="rd-text-center rd-p-16">
+            <p className="mmhd-text-center mmhd-p-16">
               {searchTerm ? "No FAQs match your search." : "No FAQs found."}
             </p>
           ) : (

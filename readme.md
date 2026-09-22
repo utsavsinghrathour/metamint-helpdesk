@@ -1,4 +1,4 @@
-=== Robodesk Support Ticket System ===
+=== Metamint Helpdesk ===
 Contributors: codepixelzmedia
 Tags: support, tickets, helpdesk, customer-support
 Requires at least: 5.8
@@ -12,7 +12,7 @@ A support ticket and FAQ system for WordPress.
 
 == Description ==
 
-Robodesk is a simple and efficient support plugin for WordPress that enables users to submit support tickets, track their status, and communicate with the support team directly from the WordPress dashboard.
+Metamint Helpdesk is a simple and efficient support plugin for WordPress that enables users to submit support tickets, track their status, and communicate with the support team directly from the WordPress dashboard.
 
 == External Services ==
 
@@ -22,19 +22,20 @@ This plugin uses the following external services:
 
 == Source Code & Build Tools ==
 
-The frontend assets in `public/build/` are generated from source files located in `public/src/` using webpack. The source code for these build artifacts is included in the plugin at `public/src/`. Build configuration: `public/webpack.config.js`. Public source repository: https://github.com/utsavsinghrathour/robodesk
+The frontend assets in `public/build/` are generated from source files located in `public/src/` using webpack. The source code for these build artifacts is included in the plugin at `public/src/`. Build configuration: `public/webpack.config.js`. Source repository: https://github.com/utsavsinghrathour/robodesk.git (branch: rebrand/metamint-helpdesk) — the distribution ZIP excludes public/src/ and npm files
 
 == Installation ==
 
-1. Upload the plugin files to `/wp-content/plugins/robodesk`
+1. Upload the plugin files to `/wp-content/plugins/metamint-helpdesk`
 2. Activate the plugin through the WordPress Plugins screen
 3. Start managing support tickets from the dashboard
 
 == Changelog ==
 
-= 1.11.6 =
-* Latest improvements and bug fixes
-* This is a test line to check deployment
+= 1.5.7 =
+* Rebranded to Metamint Helpdesk (slug mmhd)
+* IMAP save fix: removed duplicate imap_close()
+* Text domain changed to metamint-helpdesk
 
 == License ==
 

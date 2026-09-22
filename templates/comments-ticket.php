@@ -16,76 +16,76 @@ if (post_password_required()) {
                 'style' => 'ol',
                 'type' => 'ticket_replies',
                 'callback' => function ($comment, $args, $depth) {
-                    static $robodesk_previous_author_id = null;
-                    static $robodesk_previous_is_sent = null;
-                    static $robodesk_previous_is_bot = null;
+                    static $mmhd_previous_author_id = null;
+                    static $mmhd_previous_is_sent = null;
+                    static $mmhd_previous_is_bot = null;
 
-                    $robodesk_current_user = wp_get_current_user();
-                    $robodesk_current_user_id = (int) get_current_user_id();
-                    $robodesk_current_user_email = $robodesk_current_user && !empty($robodesk_current_user->user_email) ? strtolower((string) $robodesk_current_user->user_email) : '';
-                    $robodesk_comment_email = !empty($comment->comment_author_email) ? strtolower((string) $comment->comment_author_email) : '';
-                    $robodesk_comment_author_type = (string) get_comment_meta($comment->comment_ID, 'author_type', true);
-                    $robodesk_comment_source = (string) get_comment_meta($comment->comment_ID, 'comment_source', true);
-                    $robodesk_ticket_customer_user_id = function_exists('robodesk_get_ticket_customer_user_id') ? (int) robodesk_get_ticket_customer_user_id($comment->comment_post_ID) : 0;
+                    $mmhd_current_user = wp_get_current_user();
+                    $mmhd_current_user_id = (int) get_current_user_id();
+                    $mmhd_current_user_email = $mmhd_current_user && !empty($mmhd_current_user->user_email) ? strtolower((string) $mmhd_current_user->user_email) : '';
+                    $mmhd_comment_email = !empty($comment->comment_author_email) ? strtolower((string) $comment->comment_author_email) : '';
+                    $mmhd_comment_author_type = (string) get_comment_meta($comment->comment_ID, 'author_type', true);
+                    $mmhd_comment_source = (string) get_comment_meta($comment->comment_ID, 'comment_source', true);
+                    $mmhd_ticket_customer_user_id = function_exists('mmhd_get_ticket_customer_user_id') ? (int) mmhd_get_ticket_customer_user_id($comment->comment_post_ID) : 0;
 
-                    $robodesk_is_bot = function_exists('robodesk_is_bot_comment') ? robodesk_is_bot_comment($comment->comment_ID) : false;
+                    $mmhd_is_bot = function_exists('mmhd_is_bot_comment') ? mmhd_is_bot_comment($comment->comment_ID) : false;
 
                     // Determine if this comment was sent by the current (customer) user.
                     // Email replies from customers (comment_source = 'email', author_type = 'customer')
                     // must also be treated as "sent" so they appear on the right side, matching
                     // the customer's chat replies.
-                    $robodesk_is_email_reply_from_customer = (
-                        $robodesk_comment_source === 'email' &&
-                        $robodesk_comment_author_type === 'customer' &&
+                    $mmhd_is_email_reply_from_customer = (
+                        $mmhd_comment_source === 'email' &&
+                        $mmhd_comment_author_type === 'customer' &&
                         (
-                            $robodesk_ticket_customer_user_id === $robodesk_current_user_id ||
-                            ($robodesk_current_user_email !== '' && $robodesk_comment_email === $robodesk_current_user_email)
+                            $mmhd_ticket_customer_user_id === $mmhd_current_user_id ||
+                            ($mmhd_current_user_email !== '' && $mmhd_comment_email === $mmhd_current_user_email)
                         )
                     );
 
-                    $robodesk_is_sent = !$robodesk_is_bot && (
-                        (int) $comment->user_id === $robodesk_current_user_id ||
-                        ($robodesk_current_user_email !== '' && $robodesk_comment_email === $robodesk_current_user_email) ||
-                        ($robodesk_comment_author_type === 'customer' && $robodesk_ticket_customer_user_id === $robodesk_current_user_id) ||
-                        $robodesk_is_email_reply_from_customer
+                    $mmhd_is_sent = !$mmhd_is_bot && (
+                        (int) $comment->user_id === $mmhd_current_user_id ||
+                        ($mmhd_current_user_email !== '' && $mmhd_comment_email === $mmhd_current_user_email) ||
+                        ($mmhd_comment_author_type === 'customer' && $mmhd_ticket_customer_user_id === $mmhd_current_user_id) ||
+                        $mmhd_is_email_reply_from_customer
                     );
-                    $robodesk_sender_key = (int) $comment->user_id > 0
+                    $mmhd_sender_key = (int) $comment->user_id > 0
                         ? 'user:' . (int) $comment->user_id
-                        : 'email:' . $robodesk_comment_email . ':' . $robodesk_comment_author_type;
-                    $robodesk_is_same_sender = $robodesk_previous_author_id !== null
-                        && $robodesk_previous_author_id === $robodesk_sender_key
-                        && $robodesk_previous_is_sent === $robodesk_is_sent
-                        && $robodesk_previous_is_bot === $robodesk_is_bot;
+                        : 'email:' . $mmhd_comment_email . ':' . $mmhd_comment_author_type;
+                    $mmhd_is_same_sender = $mmhd_previous_author_id !== null
+                        && $mmhd_previous_author_id === $mmhd_sender_key
+                        && $mmhd_previous_is_sent === $mmhd_is_sent
+                        && $mmhd_previous_is_bot === $mmhd_is_bot;
 
-                    $robodesk_item_classes = array(
-                        $robodesk_is_sent ? 'robodesk-comment-sent' : 'robodesk-comment-received',
+                    $mmhd_item_classes = array(
+                        $mmhd_is_sent ? 'mmhd-comment-sent' : 'mmhd-comment-received',
                     );
 
-                    if ($robodesk_is_same_sender) {
-                        $robodesk_item_classes[] = 'robodesk-comment-same-sender';
+                    if ($mmhd_is_same_sender) {
+                        $mmhd_item_classes[] = 'mmhd-comment-same-sender';
                     }
             ?>
-                <li <?php comment_class($robodesk_item_classes); ?> id="comment-<?php comment_ID(); ?>">
+                <li <?php comment_class($mmhd_item_classes); ?> id="comment-<?php comment_ID(); ?>">
                     <div class="comment-body">
                         <?php
-                        $robodesk_comment_avatar = function_exists('robodesk_get_ticket_comment_avatar_url')
-                            ? robodesk_get_ticket_comment_avatar_url($comment, 50)
+                        $mmhd_comment_avatar = function_exists('mmhd_get_ticket_comment_avatar_url')
+                            ? mmhd_get_ticket_comment_avatar_url($comment, 50)
                             : get_avatar_url($comment, array('size' => 50));
-                        $robodesk_comment_author = function_exists('robodesk_get_ticket_comment_author_name')
-                            ? robodesk_get_ticket_comment_author_name($comment)
+                        $mmhd_comment_author = function_exists('mmhd_get_ticket_comment_author_name')
+                            ? mmhd_get_ticket_comment_author_name($comment)
                             : get_comment_author();
                         ?>
                         <div class="comment-author vcard">
-                            <?php if (!$robodesk_is_same_sender) : ?>
-                                <img alt="<?php echo esc_attr($robodesk_comment_author); ?>"
-                                    src="<?php echo esc_url($robodesk_comment_avatar); ?>" class="avatar avatar-50 photo"
+                            <?php if (!$mmhd_is_same_sender) : ?>
+                                <img alt="<?php echo esc_attr($mmhd_comment_author); ?>"
+                                    src="<?php echo esc_url($mmhd_comment_avatar); ?>" class="avatar avatar-50 photo"
                                     height="50" width="50" />
                             <?php endif; ?>
                         </div>
-                        <div class="robodesk-comment-bubble">
-                            <?php if (!$robodesk_is_same_sender) : ?>
+                        <div class="mmhd-comment-bubble">
+                            <?php if (!$mmhd_is_same_sender) : ?>
                                 <div class="comment-meta">
-                                    <cite><?php echo esc_html($robodesk_is_sent ? 'You' : $robodesk_comment_author); ?></cite>
+                                    <cite><?php echo esc_html($mmhd_is_sent ? 'You' : $mmhd_comment_author); ?></cite>
                                 </div>
                             <?php endif; ?>
                             <div class="comment-content">
@@ -93,10 +93,10 @@ if (post_password_required()) {
                             </div>
                             <div class="comment-metadata">
                                 <?php
-                                $robodesk_comment_utc = function_exists('robodesk_comment_utc_iso') ? robodesk_comment_utc_iso($comment) : get_comment_date('Y-m-d H:i:s');
+                                $mmhd_comment_utc = function_exists('mmhd_comment_utc_iso') ? mmhd_comment_utc_iso($comment) : get_comment_date('Y-m-d H:i:s');
                                 printf(
-                                    '<time class="robodesk-local-time" datetime="%1$s" data-utc="%1$s" data-format="datetime">%2$s</time>',
-                                    esc_attr($robodesk_comment_utc),
+                                    '<time class="mmhd-local-time" datetime="%1$s" data-utc="%1$s" data-format="datetime">%2$s</time>',
+                                    esc_attr($mmhd_comment_utc),
                                     esc_html(get_comment_date('Y-m-d H:i:s'))
                                 );
                                 ?>
@@ -114,9 +114,9 @@ if (post_password_required()) {
                     </div>
                 </li>
             <?php
-                    $robodesk_previous_author_id = $robodesk_sender_key;
-                    $robodesk_previous_is_sent = $robodesk_is_sent;
-                    $robodesk_previous_is_bot = $robodesk_is_bot;
+                    $mmhd_previous_author_id = $mmhd_sender_key;
+                    $mmhd_previous_is_sent = $mmhd_is_sent;
+                    $mmhd_previous_is_bot = $mmhd_is_bot;
                 }
             ));
             ?>
@@ -125,7 +125,7 @@ if (post_password_required()) {
     <?php if (comments_open()) : ?>
         <?php
         add_filter('comment_form_submit_field', function ($submit_field) {
-            $nonce = wp_nonce_field('robodesk_reply_action', 'robodesk_reply_nonce', true, false);
+            $nonce = wp_nonce_field('mmhd_reply_action', 'mmhd_reply_nonce', true, false);
             return $submit_field . $nonce;
         });
         comment_form(array(

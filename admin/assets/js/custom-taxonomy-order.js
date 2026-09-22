@@ -13,7 +13,7 @@ jQuery(document).ready(function($) {
                 url: taxonomyOrderData.ajax_url,
                 type: 'POST',
                 data: {
-                    action: 'robodesk_update_taxonomy_order',
+                    action: 'mmhd_update_taxonomy_order',
                     order: termOrder,
                     nonce: taxonomyOrderData.nonce
                 },

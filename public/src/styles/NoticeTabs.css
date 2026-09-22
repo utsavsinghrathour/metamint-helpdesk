@@ -1,19 +1,19 @@
 @import url(../../assets/css/variables.css);
-.rd-notice-item .rd-title-text {
+.mmhd-notice-item .mmhd-title-text {
   margin-top: 0;
 }
-.rd-single-notice-view .wp-block-image {
+.mmhd-single-notice-view .wp-block-image {
   margin: 15px 0;
 }
 .notice-tab-content {
   min-height: 290px;
   overflow: auto;
 }
-.rd-notice-item.rd-faq-item {
+.mmhd-notice-item.mmhd-faq-item {
   padding: var(--header-padding);
 }
 
-.rd-notice-list-chat-label {
+.mmhd-notice-list-chat-label {
   display: inline-flex;
   align-items: center;
   margin-top: 8px;
@@ -25,7 +25,7 @@
   border-radius: 20px;
 }
 
-.rd-notice-start-chat-button {
+.mmhd-notice-start-chat-button {
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -41,6 +41,6 @@
   transition: opacity 0.2s;
 }
 
-.rd-notice-start-chat-button:hover {
+.mmhd-notice-start-chat-button:hover {
   opacity: 0.85;
 }

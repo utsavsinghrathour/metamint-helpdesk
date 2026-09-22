@@ -3,7 +3,7 @@ import { createContext, useEffect, useState, useContext } from 'react';
 const AppDataContext = createContext();
 
 const getRestHeaders = () => {
-  const nonce = window.robodeskAuth?.restNonce || window.wpApiSettings?.nonce || '';
+  const nonce = window.mmhdAuth?.restNonce || window.wpApiSettings?.nonce || '';
   return nonce ? { 'X-WP-Nonce': nonce } : {};
 };
 
@@ -129,7 +129,7 @@ export const AppDataProvider = ({ children }) => {
         errorContext: null,
       }));
 
-      let url = `/wp-json/wp/v2/robodesk_ticket?author=${usrId}&page=${page}&per_page=${perPage}&orderby=date&order=desc`;
+      let url = `/wp-json/wp/v2/mmhd_ticket?author=${usrId}&page=${page}&per_page=${perPage}&orderby=date&order=desc`;
 
       if (keyword) {
         url += `&search=${encodeURIComponent(keyword)}`;
@@ -222,7 +222,7 @@ export const AppDataProvider = ({ children }) => {
     const ppp = 5;
 
     try {
-      let url = `/wp-json/wp/v2/robodesk_ticket?author=${data.loggedInUsrId}&page=${nextPage}&per_page=${ppp}&orderby=date&order=desc`;
+      let url = `/wp-json/wp/v2/mmhd_ticket?author=${data.loggedInUsrId}&page=${nextPage}&per_page=${ppp}&orderby=date&order=desc`;
 
       const response = await fetch(url, { headers: getRestHeaders() });
       if (!response.ok) throw new Error(`Failed to load more tickets: ${response.status}`);

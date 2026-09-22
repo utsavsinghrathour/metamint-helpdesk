@@ -27,8 +27,8 @@ export default function ChangePassword({ onReset }) {
   }, [resetKey, resetUser]);
 
   //   const removeParam = () => {
-  //     if (searchParams.has('rbd_popup')) {
-  //       searchParams.delete('rbd_popup');
+  //     if (searchParams.has('mmhd_popup')) {
+  //       searchParams.delete('mmhd_popup');
   //       setSearchParams(searchParams);
   //     }
   //   };
@@ -110,17 +110,17 @@ export default function ChangePassword({ onReset }) {
 
     try {
       // WordPress Ajax request
-      const response = await fetch(window.robodeskAuth?.wpAjax?.ajaxUrl, {
+      const response = await fetch(window.mmhdAuth?.wpAjax?.ajaxUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded',
         },
         body: new URLSearchParams({
-          action: 'robodesk_change_password',
+          action: 'mmhd_change_password',
           password: formData.password,
           reset_key: resetKey,
           user: resetUser,
-          nonce: window.robodeskAuth?.wpAjax?.passwordResetNonce,
+          nonce: window.mmhdAuth?.wpAjax?.passwordResetNonce,
         }),
       });
 
@@ -150,16 +150,16 @@ export default function ChangePassword({ onReset }) {
   };
 
   return (
-    <div className='login-container rd-px-18'>
-      <h4 className='heading-4 rd-text-center'>Change Password</h4>
-      <div className='rd-body-text rd-mt-8 rd-text-center rd-mb-20'>
+    <div className='login-container mmhd-px-18'>
+      <h4 className='heading-4 mmhd-text-center'>Change Password</h4>
+      <div className='mmhd-body-text mmhd-mt-8 mmhd-text-center mmhd-mb-20'>
         <p>Please enter your New Password</p>
       </div>
 
       <div className='login-card'>
         <form noValidate onSubmit={handleSubmit}>
-          <div className='rd-mb-16'>
-            <label htmlFor='password' className='rd-body-text rd-mb-4 rd-block rd-fw-semi'>
+          <div className='mmhd-mb-16'>
+            <label htmlFor='password' className='mmhd-body-text mmhd-mb-4 mmhd-block mmhd-fw-semi'>
               New Password
             </label>
             <input
@@ -169,8 +169,8 @@ export default function ChangePassword({ onReset }) {
               value={formData.password}
               onChange={handleInputChange}
               placeholder='Enter Your New Password'
-              className={`rd-w-full rd-border rd-p-12 rd-border-radius-md rd-border-light ${
-                errors.password ? 'rd-border-error' : ''
+              className={`mmhd-w-full mmhd-border mmhd-p-12 mmhd-border-radius-md mmhd-border-light ${
+                errors.password ? 'mmhd-border-error' : ''
               }`}
               required
               aria-describedby='password-error'
@@ -178,17 +178,17 @@ export default function ChangePassword({ onReset }) {
             {errors.password && (
               <p
                 id='password-error'
-                className='rd-text-error rd-text-sm rd-mt-4 err_msg'
+                className='mmhd-text-error mmhd-text-sm mmhd-mt-4 err_msg'
               >
                 {errors.password}
               </p>
             )}
           </div>
 
-          <div className='rd-mb-24 rd-mt-10'>
+          <div className='mmhd-mb-24 mmhd-mt-10'>
             <label
               htmlFor='confirmPassword'
-              className='rd-body-text rd-mb-4 rd-block rd-fw-semi'
+              className='mmhd-body-text mmhd-mb-4 mmhd-block mmhd-fw-semi'
             >
               Confirm New Password
             </label>
@@ -199,8 +199,8 @@ export default function ChangePassword({ onReset }) {
               value={formData.confirmPassword}
               onChange={handleInputChange}
               placeholder='Confirm Your New Password'
-              className={`rd-w-full rd-border rd-p-12 rd-border-radius-md rd-border-light ${
-                errors.confirmPassword ? 'rd-border-error' :''
+              className={`mmhd-w-full mmhd-border mmhd-p-12 mmhd-border-radius-md mmhd-border-light ${
+                errors.confirmPassword ? 'mmhd-border-error' :''
               }`}
               required
               aria-describedby='confirm-password-error'
@@ -208,7 +208,7 @@ export default function ChangePassword({ onReset }) {
             {errors.confirmPassword && (
               <p
                 id='confirm-password-error'
-                className='rd-text-error rd-text-sm rd-mt-4 err_msg'
+                className='mmhd-text-error mmhd-text-sm mmhd-mt-4 err_msg'
               >
                 {errors.confirmPassword}
               </p>
@@ -216,18 +216,18 @@ export default function ChangePassword({ onReset }) {
           </div>
           {message && (
             <div
-              className={`rd-alert success_msg ${
+              className={`mmhd-alert success_msg ${
                 message.includes('success')
-                  ? 'rd-alert-success'
-                  : 'rd-alert-error'
-              } rd-mb-20`}
+                  ? 'mmhd-alert-success'
+                  : 'mmhd-alert-error'
+              } mmhd-mb-20`}
             >
               {message}
             </div>
           )}
           <button
             type='submit'
-            className='rd-login-button rd-w-full rd-border-radius-md'
+            className='mmhd-login-button mmhd-w-full mmhd-border-radius-md'
             disabled={loading}
           >
             {loading ? 'Changing Password...' : 'Change Password'}

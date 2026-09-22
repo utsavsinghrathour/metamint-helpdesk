@@ -1,7 +1,7 @@
 @import url(../../assets/css/variables.css);
-.rd-login-button {
+.mmhd-login-button {
   /* background-color: var(--primary-blue); */
-  background-color: var(--robodesk-theme-color);
+  background-color: var(--mmhd-theme-color);
   font-size: 14px;
   color: #fff;
   padding: 12px;
@@ -20,13 +20,13 @@
 .login-container button {
   cursor: pointer;
 }
-.rd-search-header.login-wrap {
+.mmhd-search-header.login-wrap {
   padding: 10px;
   max-height: 60px;
   min-height: 60px;
   justify-content: center;
 }
-.rd-search-header.login-wrap img {
+.mmhd-search-header.login-wrap img {
   /* height: 40px;
     width: 40px; */
   max-height: 40px;

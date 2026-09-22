@@ -5,13 +5,13 @@ import { PiPaperPlaneRightFill } from "react-icons/pi";
 import { FiPaperclip } from "react-icons/fi";
 import { IoClose } from "react-icons/io5";
 import EmojiPicker from "emoji-picker-react";
-import defaultLogo from "../images/robodesk-logo.png";
+import defaultLogo from "../images/mmhd-logo.png";
 import "../styles/MessageTabs.css";
 import { sendReply } from "../utils/modules";
 import { useAppData } from "../utils/AppDataContext";
 import DefaultAvatar from "../images/default-avatar.jpg";
 import { sseManager } from "../Hooks/sseManager";
-import { playRobodeskBeep } from "../utils/notificationSound.js";
+import { playMetamintHelpdeskBeep } from "../utils/notificationSound.js";
 
 // Helper to escape HTML in plain text
 const escapeHtml = (unsafe) =>
@@ -54,7 +54,7 @@ const ConversationSkeleton = ({ count = 6 }) => {
   });
 
   return (
-    <div className="rd-skeleton-container" style={{ width: "100%" }}>
+    <div className="mmhd-skeleton-container" style={{ width: "100%" }}>
       {skeletonMessages.map((msg, index) => {
         const prevMsg = index > 0 ? skeletonMessages[index - 1] : null;
         const isSameSender = prevMsg && prevMsg.sender === msg.sender;
@@ -63,9 +63,9 @@ const ConversationSkeleton = ({ count = 6 }) => {
         return (
           <div
             key={index}
-            className={`chat-message rd-flex rd-items-start ${msg.sender === "me"
-              ? "rd-justify-end"
-              : "rd-justify-start rd-gap-8"
+            className={`chat-message mmhd-flex mmhd-items-start ${msg.sender === "me"
+              ? "mmhd-justify-end"
+              : "mmhd-justify-start mmhd-gap-8"
               }`}
             style={{
               maxWidth: "100%",
@@ -77,7 +77,7 @@ const ConversationSkeleton = ({ count = 6 }) => {
           >
             {msg.sender === "other" && (!isSameSender || index === 0) && (
               <div
-                className="rd-skeleton-avatar "
+                className="mmhd-skeleton-avatar "
                 style={{
                   width: "30px",
                   height: "30px",
@@ -92,7 +92,7 @@ const ConversationSkeleton = ({ count = 6 }) => {
               <div style={{ width: "30px", height: "30px" }} />
             )}
             <div
-              className="message-content rd-skeleton-bubble"
+              className="message-content mmhd-skeleton-bubble"
               style={{
                 backgroundColor: msg.sender === "me" ? "#007BFF" : "#FFFFFF",
                 border: msg.sender === "other" ? "1px solid #E0E0E0" : "none",
@@ -107,7 +107,7 @@ const ConversationSkeleton = ({ count = 6 }) => {
               {Array.from({ length: msg.lines }, (_, lineIndex) => (
                 <div
                   key={lineIndex}
-                  className="rd-skeleton-line"
+                  className="mmhd-skeleton-line"
                   style={{
                     height: "14px",
                     backgroundColor:
@@ -121,7 +121,7 @@ const ConversationSkeleton = ({ count = 6 }) => {
                 />
               ))}
               <div
-                className="rd-skeleton-time"
+                className="mmhd-skeleton-time"
                 style={{
                   height: "10px",
                   width: "35px",
@@ -172,7 +172,7 @@ const ConversationSkeleton = ({ count = 6 }) => {
           }
         }
 
-        .rd-skeleton-container {
+        .mmhd-skeleton-container {
           display: flex;
           flex-direction: column;
           width: 100%;
@@ -183,11 +183,11 @@ const ConversationSkeleton = ({ count = 6 }) => {
           width: 100%;
         }
 
-        .rd-justify-end {
+        .mmhd-justify-end {
           justify-content: flex-end;
         }
 
-        .rd-justify-start {
+        .mmhd-justify-start {
           justify-content: flex-start;
         }
       `}</style>
@@ -198,10 +198,10 @@ const ConversationSkeleton = ({ count = 6 }) => {
 const TicketClosed = ({ handleFocusedTextArea, setActiveTab }) => {
   return (
     <div>
-      <h5 className="rd-fw-semi rd-mb-5 rd-body-text">Still have questions?</h5>
+      <h5 className="mmhd-fw-semi mmhd-mb-5 mmhd-body-text">Still have questions?</h5>
       <a
         href="#"
-        className="rd-title-text"
+        className="mmhd-title-text"
         onClick={(e) => (
           e.preventDefault(), setActiveTab(0), handleFocusedTextArea(true)
         )}
@@ -239,7 +239,7 @@ const SingleTicket = ({
   setActiveTab,
 }) => {
   const ticketIntroMessage =
-    window.robodeskData?.ticketIntroMessage ||
+    window.mmhdData?.ticketIntroMessage ||
     "If you are interested in working with us, take a step towards discovering exciting opportunities by reaching out to us. We look forward to talking with you soon!";
 
   const [message, setMessage] = useState("");
@@ -263,12 +263,12 @@ const SingleTicket = ({
   const fileInputRef = useRef(null);
   const chatContainerRef = useRef(null);
   const sendInFlightRef = useRef(false);
-  const image_urls = window.robodeskData?.imageUrls || {};
+  const image_urls = window.mmhdData?.imageUrls || {};
   const customerAvatar = ticket?.authorImage || DefaultAvatar;
   const configuredBotAvatar =
-    window.robodeskData?.robodesk_bot_profile_image || "";
+    window.mmhdData?.mmhd_bot_profile_image || "";
   const configuredBotName =
-    window.robodeskData?.robodesk_bot_title_name || "Bot";
+    window.mmhdData?.mmhd_bot_title_name || "Bot";
   const previousScrollHeight = useRef(0);
   const isAtTop = useRef(false);
   const [streamCursorId, setStreamCursorId] = useState(null);
@@ -327,7 +327,7 @@ const SingleTicket = ({
   // programmatic notification beeps are not blocked by the autoplay policy.
   useEffect(() => {
     const unlock = () => {
-      const sound = window.robodeskAuth?.notificationSound;
+      const sound = window.mmhdAuth?.notificationSound;
       if (sound) {
         const audio = new Audio(sound);
         const p = audio.play();
@@ -376,7 +376,7 @@ const SingleTicket = ({
           signal: controller.signal,
           headers: {
             "X-WP-Nonce":
-              window.robodeskAuth?.restNonce || window.wpApiSettings?.nonce || "",
+              window.mmhdAuth?.restNonce || window.wpApiSettings?.nonce || "",
           },
         },
       );
@@ -529,7 +529,7 @@ const SingleTicket = ({
         !beepedIds.current.has(cid)
       ) {
         beepedIds.current.add(cid);
-        playRobodeskBeep();
+        playMetamintHelpdeskBeep();
       }
     }
   };
@@ -605,7 +605,7 @@ const SingleTicket = ({
             signal: controller.signal,
             headers: {
               "X-WP-Nonce":
-                window.robodeskAuth?.restNonce || window.wpApiSettings?.nonce || "",
+                window.mmhdAuth?.restNonce || window.wpApiSettings?.nonce || "",
             },
           },
         );
@@ -716,8 +716,8 @@ const SingleTicket = ({
     if (!ticket?.id) return null;
     if (!loggedinContext && !loggedInUsrId) return null;
     if (!streamCursorId) return null;
-    const nonce = window.robodeskAuth?.restNonce || window.wpApiSettings?.nonce || '';
-    return `/wp-json/robodesk/v1/stream/comments/${ticket.id}/${streamCursorId}/${loggedInUsrId}?_wpnonce=${nonce}`;
+    const nonce = window.mmhdAuth?.restNonce || window.wpApiSettings?.nonce || '';
+    return `/wp-json/mmhd/v1/stream/comments/${ticket.id}/${streamCursorId}/${loggedInUsrId}?_wpnonce=${nonce}`;
   }, [streamCursorId, ticket.id, loggedInUsrId, loggedinContext]);
 
   useEffect(() => {
@@ -764,7 +764,7 @@ const SingleTicket = ({
             cache: "no-store",
             headers: {
               "X-WP-Nonce":
-                window.robodeskAuth?.restNonce || window.wpApiSettings?.nonce || "",
+                window.mmhdAuth?.restNonce || window.wpApiSettings?.nonce || "",
             },
           },
         );
@@ -826,7 +826,7 @@ const SingleTicket = ({
         // The SSE new_comment handler also beeps; this covers the case where
         // the poll delivers the message first.
         if (hasIncomingFromOther) {
-          playRobodeskBeep();
+          playMetamintHelpdeskBeep();
         }
       } catch (error) {
         console.error("Failed to poll latest comments:", error);
@@ -853,7 +853,7 @@ const SingleTicket = ({
       sendInFlightRef.current = true;
 
       const imageHTML = outgoingPreviewImage
-        ? `<a href="${outgoingPreviewImage}" target="_blank"><img src="${outgoingPreviewImage}" alt="Preview" class="rd-comment-img"  /></a>`
+        ? `<a href="${outgoingPreviewImage}" target="_blank"><img src="${outgoingPreviewImage}" alt="Preview" class="mmhd-comment-img"  /></a>`
         : false;
       const tempMessage = {
         id: `temp-${Date.now()}`,
@@ -1042,8 +1042,8 @@ const SingleTicket = ({
     if (emailSending || emailSent || !ticket?.id) return;
     setEmailSending(true);
     try {
-      const nonce = window.robodeskAuth?.restNonce || window.wpApiSettings?.nonce || '';
-      const res = await fetch('/wp-json/robodesk/v1/send-chat-transcript', {
+      const nonce = window.mmhdAuth?.restNonce || window.wpApiSettings?.nonce || '';
+      const res = await fetch('/wp-json/mmhd/v1/send-chat-transcript', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'X-WP-Nonce': nonce },
         body: JSON.stringify({ ticket_id: ticket.id }),
@@ -1059,10 +1059,10 @@ const SingleTicket = ({
   };
 
   return (
-    <div className="rd-single-ticket rd-flex rd-flex-col rd-h-full">
-      <div className="single-ticket-header rd-search-header rd-bg-blue rd-flex rd-items-center rd-justify-between rd-flex-col rd-message-list-header">
+    <div className="mmhd-single-ticket mmhd-flex mmhd-flex-col mmhd-h-full">
+      <div className="single-ticket-header mmhd-search-header mmhd-bg-blue mmhd-flex mmhd-items-center mmhd-justify-between mmhd-flex-col mmhd-message-list-header">
         <button
-          className="back-button rd-flex rd-items-center rd-gap-1 rd-border-none rd-bg-transparent rd-m-0 rd-p-0"
+          className="back-button mmhd-flex mmhd-items-center mmhd-gap-1 mmhd-border-none mmhd-bg-transparent mmhd-m-0 mmhd-p-0"
           onClick={onBack}
         >
           <FaChevronLeft />
@@ -1070,7 +1070,7 @@ const SingleTicket = ({
         <button
           onClick={handleEmailTranscript}
           disabled={emailSending || emailSent}
-          className="rd-flex rd-items-center rd-gap-1 rd-border-none rd-bg-transparent rd-m-0 rd-p-0 rd-cursor-pointer"
+          className="mmhd-flex mmhd-items-center mmhd-gap-1 mmhd-border-none mmhd-bg-transparent mmhd-m-0 mmhd-p-0 mmhd-cursor-pointer"
           title={emailSent ? "Email sent" : "Email me this conversation"}
             style={{
               position: "absolute",
@@ -1085,42 +1085,42 @@ const SingleTicket = ({
           <img
             src={image_urls.wide_logo}
             alt="Plugin Wide Logo"
-            className="rd-header-logo rd-m-auto"
+            className="mmhd-header-logo mmhd-m-auto"
             onError={(e) => (e.target.style.display = "none")}
           />
         ) : image_urls.logo && image_urls.logo.trim() !== "" ? (
           <img
             src={image_urls.logo}
             alt="Plugin Logo"
-            className="rd-header-logo rd-m-auto"
+            className="mmhd-header-logo mmhd-m-auto"
             onError={(e) => (e.target.style.display = "none")}
           />
         ) : (
-          <div className="rd-header-logo default-logo">
+          <div className="mmhd-header-logo default-logo">
             <img
               src={defaultLogo}
               alt="Default Plugin Logo"
-              className="rd-header-logo rd-m-auto"
+              className="mmhd-header-logo mmhd-m-auto"
             />
           </div>
         )}
       </div>
-      <div className="rd-single-chat-body-wrapper">
-        <div className="rd-px-18 rd-py-15 rd-border-bottom-light rd-single-chat-intro">
-          <div className="rd-body-text">
-            <p className="rd-text-center rd-body-text rd-mb-0">
+      <div className="mmhd-single-chat-body-wrapper">
+        <div className="mmhd-px-18 mmhd-py-15 mmhd-border-bottom-light mmhd-single-chat-intro">
+          <div className="mmhd-body-text">
+            <p className="mmhd-text-center mmhd-body-text mmhd-mb-0">
               {ticketIntroMessage}
             </p>
           </div>
         </div>
         <div
           ref={chatContainerRef}
-          className={`chat-container rd-flex rd-flex-col rd-flex-grow rd-px-18 rd-py-15 rd-overflow-auto ${ticketClosed ? "ticket-closed" : ""
+          className={`chat-container mmhd-flex mmhd-flex-col mmhd-flex-grow mmhd-px-18 mmhd-py-15 mmhd-overflow-auto ${ticketClosed ? "ticket-closed" : ""
             }`}
         >
           {/* Show pagination loader at the top when loading older messages */}
           {isPaginationLoading && (
-            <div className="rd-pagination-loader rd-mb-10">
+            <div className="mmhd-pagination-loader mmhd-mb-10">
               <ConversationSkeleton count={3} />
             </div>
           )}
@@ -1128,7 +1128,7 @@ const SingleTicket = ({
           {/* Show connection warning if there's an error but we have cached messages */}
           {error && chatMessages.length > 0 && (
             <div
-              className="rd-connection-warning rd-px-12 rd-py-8 rd-mb-10 rd-text-center"
+              className="mmhd-connection-warning mmhd-px-12 mmhd-py-8 mmhd-mb-10 mmhd-text-center"
               style={{
                 backgroundColor: "#fff3cd",
                 border: "1px solid #ffc107",
@@ -1144,9 +1144,9 @@ const SingleTicket = ({
           {loading && !initialLoadComplete ? (
             <ConversationSkeleton />
           ) : error && chatMessages.length === 0 ? (
-            <p className="err_msg rd-text-center">{error}</p>
+            <p className="err_msg mmhd-text-center">{error}</p>
           ) : chatMessages.length === 0 ? (
-            <p className="rd-text-center rd-body-text">
+            <p className="mmhd-text-center mmhd-body-text">
               No conversations yet. Start a conversation below.
             </p>
           ) : (
@@ -1164,9 +1164,9 @@ const SingleTicket = ({
                 return (
                   <div
                     key={msg.id}
-                    className={`chat-message rd-flex rd-items-start ${msg.sender === "me" || msg.isSending
-                      ? "rd-ml-auto sent"
-                      : "rd-flex rd-gap-8 received"
+                    className={`chat-message mmhd-flex mmhd-items-start ${msg.sender === "me" || msg.isSending
+                      ? "mmhd-ml-auto sent"
+                      : "mmhd-flex mmhd-gap-8 received"
                       }`}
                     style={{
                       maxWidth: "80%",
@@ -1188,7 +1188,7 @@ const SingleTicket = ({
                             <img
                               src={botProfileImage || DefaultAvatar}
                               alt={botTitleName || "Bot"}
-                              className="rd-rounded-full rd-object-cover rd-single-message-avatar"
+                              className="mmhd-rounded-full mmhd-object-cover mmhd-single-message-avatar"
                               onError={(e) => {
                                 e.target.onerror = null;
                                 e.target.src = DefaultAvatar;
@@ -1202,7 +1202,7 @@ const SingleTicket = ({
                             <img
                               src={customerAvatar}
                               alt={"You"}
-                              className="rd-rounded-full rd-object-cover rd-single-message-avatar"
+                              className="mmhd-rounded-full mmhd-object-cover mmhd-single-message-avatar"
                             />
                           );
                         }
@@ -1212,7 +1212,7 @@ const SingleTicket = ({
                           <img
                             src={msg.image || DefaultAvatar}
                             alt={msg.senderName}
-                            className="rd-rounded-full rd-object-cover rd-single-message-avatar"
+                            className="mmhd-rounded-full mmhd-object-cover mmhd-single-message-avatar"
                           />
                         );
                       })()}
@@ -1249,7 +1249,7 @@ const SingleTicket = ({
                     >
                       {msg.isSending || msg.isPending ? (
                         <span
-                          className="rd-body-text single-message"
+                          className="mmhd-body-text single-message"
                           style={{ opacity: msg.isPending ? 0.7 : 1 }}
                           dangerouslySetInnerHTML={{
                             __html: msg.text,
@@ -1260,9 +1260,9 @@ const SingleTicket = ({
                           {msg.text && (
                             <span
                               className={[
-                                "rd-body-text",
+                                "mmhd-body-text",
                                 "single-message",
-                                msg.action ? "rd-is-action" : null,
+                                msg.action ? "mmhd-is-action" : null,
                               ]
                                 .filter(Boolean)
                                 .join(" ")}
@@ -1274,7 +1274,7 @@ const SingleTicket = ({
                         </>
                       )}
                       <div
-                        className="rd-text-small rd-text-gray"
+                        className="mmhd-text-small mmhd-text-gray"
                         style={{
                           marginTop: "4px",
                           textAlign:
@@ -1300,28 +1300,28 @@ const SingleTicket = ({
       </div>
 
       <div
-        className={`chat-input rd-flex rd-flex-col rd-px-18 rd-py-15 rd-border-top-light rd-bg-white  ${previewImage ? "has-preview" : ""
+        className={`chat-input mmhd-flex mmhd-flex-col mmhd-px-18 mmhd-py-15 mmhd-border-top-light mmhd-bg-white  ${previewImage ? "has-preview" : ""
           }`}
       >
         {previewImage && (
-          <div className="rd-flex rd-align-center rd-image-upload-container">
-            <div className="rd-image-preview-wrapper">
+          <div className="mmhd-flex mmhd-align-center mmhd-image-upload-container">
+            <div className="mmhd-image-preview-wrapper">
               <img
                 src={previewImage}
                 alt="Preview"
-                className="rd-max-w-full rd-preview-image"
+                className="mmhd-max-w-full mmhd-preview-image"
                 style={{ maxWidth: "80px" }}
               />
               <button
                 onClick={() => setPreviewImage(null)}
-                className="rd-ml-10 rd-text-red-500 rd-border-none rd-cursor-pointer remove-preview rd-position-absolute rd-p-0"
+                className="mmhd-ml-10 mmhd-text-red-500 mmhd-border-none mmhd-cursor-pointer remove-preview mmhd-position-absolute mmhd-p-0"
               >
                 <IoClose />
               </button>
             </div>
           </div>
         )}
-        <div className="rd-flex rd-align-center rd-justify-between">
+        <div className="mmhd-flex mmhd-align-center mmhd-justify-between">
           {!ticketClosed ? (
             <>
               <textarea
@@ -1336,42 +1336,42 @@ const SingleTicket = ({
                   }
                 }}
                 placeholder="Write a message..."
-                className="rd-flex-grow rd-border-none rd-outline-none rd-py-5 rd-w-full rd-resize-none"
+                className="mmhd-flex-grow mmhd-border-none mmhd-outline-none mmhd-py-5 mmhd-w-full mmhd-resize-none"
                 rows="1"
               />
-              <div className="rd-flex rd-gap-20 rd-relative">
+              <div className="mmhd-flex mmhd-gap-20 mmhd-relative">
                 <button
                   onClick={toggleEmojiPicker}
-                  className="rd-bg-transparent rd-border-none rd-mr-10 icon-dark rd-cursor-pointer rd-p-0"
+                  className="mmhd-bg-transparent mmhd-border-none mmhd-mr-10 icon-dark mmhd-cursor-pointer mmhd-p-0"
                 >
                   <FaRegFaceSmileBeam className="icon-dark" size={20} />
                 </button>
                 {showPicker && (
-                  <div className="rd-position-absolute rd-bottom-0 rd-right-0 emoji-picker-wrap">
+                  <div className="mmhd-position-absolute mmhd-bottom-0 mmhd-right-0 emoji-picker-wrap">
                     <EmojiPicker onEmojiClick={handleEmojiClick} />
                   </div>
                 )}
-                <div className="rd-flex">
+                <div className="mmhd-flex">
                   <input
                     type="file"
                     ref={fileInputRef}
                     onChange={handleFileUpload}
                     accept="image/*"
-                    className="rd-hidden"
+                    className="mmhd-hidden"
                   />
                   <button
                     onClick={triggerFileInput}
-                    className="rd-bg-transparent rd-border-none rd-mr-10 rd-cursor-pointer rd-p-0 icon-dark"
+                    className="mmhd-bg-transparent mmhd-border-none mmhd-mr-10 mmhd-cursor-pointer mmhd-p-0 icon-dark"
                   >
                     <FiPaperclip
-                      className="icon-dark rbd-paperclip"
+                      className="icon-dark mmhd-paperclip"
                       size={20}
                     />
                   </button>
                 </div>
                 <button
                   onClick={handleSend}
-                  className="rd-bg-transparent rd-border-none rd-ml-10 icon-dark rd-cursor-pointer rd-p-0"
+                  className="mmhd-bg-transparent mmhd-border-none mmhd-ml-10 icon-dark mmhd-cursor-pointer mmhd-p-0"
                 >
                   <PiPaperPlaneRightFill className="icon-dark" size={20} />
                 </button>

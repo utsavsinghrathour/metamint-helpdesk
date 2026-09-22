@@ -21,7 +21,7 @@ export default function ForgotPassword({ onSent, email }) {
     const userDetail = userDetailRef.current.value;
 
     try {
-      const response = await fetch("/wp-json/robodesk/v1/lost-password", {
+      const response = await fetch("/wp-json/mmhd/v1/lost-password", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -50,17 +50,17 @@ export default function ForgotPassword({ onSent, email }) {
     }
   }
   return (
-    <div className="login-container rd-px-18">
-      <h4 className="heading-4 rd-text-center">Lost password</h4>
-      <div className="rd-body-text rd-mt-8 rd-text-center rd-mb-20">
+    <div className="login-container mmhd-px-18">
+      <h4 className="heading-4 mmhd-text-center">Lost password</h4>
+      <div className="mmhd-body-text mmhd-mt-8 mmhd-text-center mmhd-mb-20">
         <p>Please enter your email address to reset your password</p>
       </div>
       <div className="login-card">
         <form onSubmit={handleSubmit} noValidate>
-          <div className="rd-flex rd-flex-col rd-gap-10">
+          <div className="mmhd-flex mmhd-flex-col mmhd-gap-10">
             {!sent && (
               <>
-                <label htmlFor="userdetail" className="rd-body-text rd-fw-semi">
+                <label htmlFor="userdetail" className="mmhd-body-text mmhd-fw-semi">
                   Email
                 </label>
 
@@ -70,7 +70,7 @@ export default function ForgotPassword({ onSent, email }) {
                   name="userdetail"
                   ref={userDetailRef}
                   placeholder="Email"
-                  className="rd-border-light rd-p-12 rd-border-radius-md"
+                  className="mmhd-border-light mmhd-p-12 mmhd-border-radius-md"
                   required
                   aria-describedby="email-error"
                   defaultValue={email}
@@ -79,18 +79,18 @@ export default function ForgotPassword({ onSent, email }) {
             )}
 
             {error && (
-              <p className="rd-text-red-500 rd-mt-2 err_msg" id="email-error">
+              <p className="mmhd-text-red-500 mmhd-mt-2 err_msg" id="email-error">
                 {error}
               </p>
             )}
             {message && (
-              <p className="text-green color-green rd-mt-5 rd-body-text">
+              <p className="text-green color-green mmhd-mt-5 mmhd-body-text">
                 {message}
               </p>
             )}
             <button
               type="submit"
-              className="rd-login-button rd-w-full rd-border-radius-md"
+              className="mmhd-login-button mmhd-w-full mmhd-border-radius-md"
               disabled={isLoading}
             >
               {isLoading

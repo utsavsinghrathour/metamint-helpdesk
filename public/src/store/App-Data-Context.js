@@ -140,7 +140,7 @@ export default function AppContextProvider({ children }) {
         // Prepare API requests (exclude conversations if not logged in)
         const requests = [
           fetch(
-            '/wp-json/wp/v2/robodesk_faq?featured=true&_fields=id,title.rendered,excerpt.rendered,content.rendered'
+            '/wp-json/wp/v2/mmhd_faq?featured=true&_fields=id,title.rendered,excerpt.rendered,content.rendered'
           ),
           fetch(
             '/wp-json/wp/v2/notice?_fields=id,title.rendered,excerpt.rendered,content.rendered'
@@ -151,7 +151,7 @@ export default function AppContextProvider({ children }) {
         if (state.loggedIn && state.loggedInUsrId) {
           requests.push(
             fetch(
-              `/wp-json/wp/v2/robodesk_ticket?author=${state.loggedInUsrId}&page=1&per_page='4'&orderby=date&order=desc`
+              `/wp-json/wp/v2/mmhd_ticket?author=${state.loggedInUsrId}&page=1&per_page='4'&orderby=date&order=desc`
             )
           );
         } else {

@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import defaultLogo from '../images/robodesk-logo.png'; // Adjust path to your default logo
+import defaultLogo from '../images/mmhd-logo.png'; // Adjust path to your default logo
 import '../styles/header.css';
 import { IoAddCircle, IoCloseCircleSharp, IoLogoWhatsapp } from 'react-icons/io5';
 import { sendReply } from '../utils/modules';
+import { readChatSession, CHAT_SESSION_KEY } from '../utils/startConversation';
 import { useAppData } from '../utils/AppDataContext';
 import { createTicket } from "../utils/modules";
 
@@ -11,15 +12,14 @@ let staffFetched = false;
 const Header = ({ logo, onClose, setActiveTab, setShowLogin, updateSelectedTicket }) => {
   const [talkToHuman, setTalkToHuman] = useState(false);
   const [messageCount, setMessageCount] = useState(0);
-  const CHAT_KEY = "robodesk_chat_session";
   const [selectedStaff, setSelectedStaff] = useState(null);
   const { loggedinContext, loggedInUsrId, refreshTickets } = useAppData();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const chatEnabled = window.robodeskData?.enable_chat === "1";
+  const chatEnabled = window.mmhdData?.enable_chat === "1";
   const canLoadWidgetConfig = Boolean(
     chatEnabled &&
-    window.robodeskData?.robodesk_addon_active &&
-    window.robodeskData?.robodesk_ai_bot_active,
+    window.mmhdData?.mmhd_addon_active &&
+    window.mmhdData?.mmhd_ai_bot_active,
   );
   // null = unknown, true = available, false = unavailable
   const [sendWhatsappMessage, setSendWhatsappMessage] = useState(null);
@@ -35,7 +35,7 @@ const Header = ({ logo, onClose, setActiveTab, setShowLogin, updateSelectedTicke
       return;
     }
     try {
-      const response = await fetch("/wp-json/robodesk-bot/v1/widget-config");
+      const response = await fetch("/wp-json/mmhd-bot/v1/widget-config");
       const data = await response.json();
       if (response.ok) {
         setTalkToHuman(!!data?.talkToHuman);
@@ -51,8 +51,8 @@ const Header = ({ logo, onClose, setActiveTab, setShowLogin, updateSelectedTicke
   const fetchDefaultStaff = async () => {
     if (staffFetched) return;
     staffFetched = true;
-    if (window.robodeskAuth?.defaultStaffId) {
-      setSelectedStaff(window.robodeskAuth.defaultStaffId);
+    if (window.mmhdAuth?.defaultStaffId) {
+      setSelectedStaff(window.mmhdAuth.defaultStaffId);
     } else {
       setSelectedStaff(null);
     }
@@ -65,13 +65,12 @@ const Header = ({ logo, onClose, setActiveTab, setShowLogin, updateSelectedTicke
 
     // Dispatch event to show loader in chat window
     window.dispatchEvent(
-      new CustomEvent("robodesk:creatingTicket", {
+      new CustomEvent("mmhd:creatingTicket", {
         detail: { isCreating: true },
       })
     );
 
-    const saved = sessionStorage.getItem(CHAT_KEY);
-    let messages = saved ? JSON.parse(saved) : [];
+    let messages = readChatSession();
 
     // Stably sort messages chronologically by timestamp
     const withIndex = messages.map((msg, idx) => ({ msg, idx }));
@@ -90,7 +89,7 @@ const Header = ({ logo, onClose, setActiveTab, setShowLogin, updateSelectedTicke
     if (!messages || messages.length === 0) {
       setIsSubmitting(false);
       window.dispatchEvent(
-        new CustomEvent("robodesk:creatingTicket", {
+        new CustomEvent("mmhd:creatingTicket", {
           detail: { isCreating: false },
         })
       );
@@ -101,7 +100,7 @@ const Header = ({ logo, onClose, setActiveTab, setShowLogin, updateSelectedTicke
     if (userMessages.length === 0) {
       setIsSubmitting(false);
       window.dispatchEvent(
-        new CustomEvent("robodesk:creatingTicket", {
+        new CustomEvent("mmhd:creatingTicket", {
           detail: { isCreating: false },
         })
       );
@@ -119,7 +118,7 @@ const Header = ({ logo, onClose, setActiveTab, setShowLogin, updateSelectedTicke
       setShowLogin(true);
       setIsSubmitting(false);
       window.dispatchEvent(
-        new CustomEvent("robodesk:creatingTicket", {
+        new CustomEvent("mmhd:creatingTicket", {
           detail: { isCreating: false },
         })
       );
@@ -196,14 +195,14 @@ const Header = ({ logo, onClose, setActiveTab, setShowLogin, updateSelectedTicke
       updateSelectedTicket(newTicket);
       setActiveTab(1);
 
-      sessionStorage.removeItem(CHAT_KEY);
+      sessionStorage.removeItem(CHAT_SESSION_KEY);
     } catch (error) {
       console.error("Failed to create ticket:", error);
     } finally {
       setIsSubmitting(false); // ← always re-enable, even on error
       // Dispatch event to hide loader in chat window
       window.dispatchEvent(
-        new CustomEvent("robodesk:creatingTicket", {
+        new CustomEvent("mmhd:creatingTicket", {
           detail: { isCreating: false },
         })
       );
@@ -217,7 +216,7 @@ const Header = ({ logo, onClose, setActiveTab, setShowLogin, updateSelectedTicke
       return;
     }
     try {
-      const response = await fetch("/wp-json/robodesk-bot/v1/wa-settings");
+      const response = await fetch("/wp-json/mmhd-bot/v1/wa-settings");
       const data = await response.json();
       // response may be 404 if the AI Bot addon isn't loaded; handle gracefully
       if (response.ok && data?.phoneNumber) {
@@ -253,66 +252,64 @@ const Header = ({ logo, onClose, setActiveTab, setShowLogin, updateSelectedTicke
     }
     // Check WhatsApp availability on mount
     sendWhatsappMessageClick();
-    const saved = sessionStorage.getItem(CHAT_KEY);
-    const messages = saved ? JSON.parse(saved) : [];
-    setMessageCount(messages.length);
+    setMessageCount(readChatSession().length);
 
     const handleMessageSent = (e) => {
       setMessageCount(e.detail?.count ?? 1);
     };
 
-    window.addEventListener("robodesk:messageSent", handleMessageSent);
-    return () => window.removeEventListener("robodesk:messageSent", handleMessageSent);
+    window.addEventListener("mmhd:messageSent", handleMessageSent);
+    return () => window.removeEventListener("mmhd:messageSent", handleMessageSent);
   }, []);
 
   return (
-    <header className="robodesk-header rd-flex rd-justify-between">
-      <div className="rd-flex rd-items-center">
+    <header className="mmhd-header mmhd-flex mmhd-justify-between">
+      <div className="mmhd-flex mmhd-items-center">
         {logo && logo.trim() !== '' ? (
           <img
             src={logo}
             alt="Plugin Logo"
-            className=" rd-header-logo rd-main-header-logo"
+            className=" mmhd-header-logo mmhd-main-header-logo"
             onError={(e) => {
               e.target.style.display = 'none';
             }}
           />
         ) : (
-          <div className=" rd-header-logo default">
+          <div className=" mmhd-header-logo default">
             <img
               src={defaultLogo}
               alt="Default Plugin Logo"
-              className=" rd-header-logo rd-main-header-logo"
+              className=" mmhd-header-logo mmhd-main-header-logo"
             />
           </div>
         )}
         {sendWhatsappMessage === true &&
           <button
-            className="rd-m-5 rd-border-none rd-bg-transparent rd-p-0"
+            className="mmhd-m-5 mmhd-border-none mmhd-bg-transparent mmhd-p-0"
             onClick={handleWhatsappClick}
           >
-            <div className="icon-dark custom-svg rd-cursor-pointer">
+            <div className="icon-dark custom-svg mmhd-cursor-pointer">
               <IoLogoWhatsapp />
             </div>
           </button>
         }
         {talkToHuman && messageCount > 0 && (
           <button
-            className="rd-m-5"
+            className="mmhd-m-5"
             onClick={handleTalkToHumanClick}
             disabled={isSubmitting}
           >
-            <div className="icon-dark custom-svg rd-cursor-pointer">
+            <div className="icon-dark custom-svg mmhd-cursor-pointer">
               <IoAddCircle />
             </div>
           </button>
         )}
       </div>
       <button
-        className="robodesk-close-btn rd-m-5 rd-border-none rd-bg-transparent rd-p-0"
+        className="mmhd-close-btn mmhd-m-5 mmhd-border-none mmhd-bg-transparent mmhd-p-0"
         onClick={handleCloseClick}
       >
-        <div className="icon-dark custom-svg rd-cursor-pointer">
+        <div className="icon-dark custom-svg mmhd-cursor-pointer">
           <IoCloseCircleSharp />
         </div>
       </button>

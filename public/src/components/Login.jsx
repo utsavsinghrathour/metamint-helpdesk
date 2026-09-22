@@ -2,19 +2,18 @@ import "../styles/Login.css";
 import { useEffect, useState } from "react";
 import { FaChevronLeft } from "react-icons/fa";
 import { loginUser, registerUser, createTicket, sendReply } from "../utils/modules";
+import { readChatSession, CHAT_SESSION_KEY } from "../utils/startConversation";
 import { useAppData } from "../utils/AppDataContext";
-import defaultLogo from "../images/robodesk-logo.png";
+import defaultLogo from "../images/mmhd-logo.png";
 import ForgotPassword from "./ForgotPassword";
 import ChangePassword from "./ChangePassword";
 
-const CHAT_KEY = "robodesk_chat_session";
-
 // Header Component
 const Header = ({ setActiveTab, image_urls, defaultLogo }) => (
-  <div className="rd-search-header rd-bg-blue rd-flex rd-items-center rd-justify-between rd-flex-col rd-message-list-header">
+  <div className="mmhd-search-header mmhd-bg-blue mmhd-flex mmhd-items-center mmhd-justify-between mmhd-flex-col mmhd-message-list-header">
     <button
       type="button"
-      className="back-button rd-flex rd-items-center rd-gap-1 rd-border-none rd-bg-transparent rd-m-0 rd-p-0"
+      className="back-button mmhd-flex mmhd-items-center mmhd-gap-1 mmhd-border-none mmhd-bg-transparent mmhd-m-0 mmhd-p-0"
       aria-label="Go back to home"
       onClick={() => setActiveTab(0)}
     >
@@ -24,7 +23,7 @@ const Header = ({ setActiveTab, image_urls, defaultLogo }) => (
       <img
         src={image_urls.wide_logo}
         alt="Plugin Wide Logo"
-        className="rd-header-logo rd-m-auto"
+        className="mmhd-header-logo mmhd-m-auto"
         onError={(e) => {
           e.target.style.display = "none";
         }}
@@ -33,17 +32,17 @@ const Header = ({ setActiveTab, image_urls, defaultLogo }) => (
       <img
         src={image_urls.logo}
         alt="Plugin Logo"
-        className="rd-header-logo rd-m-auto"
+        className="mmhd-header-logo mmhd-m-auto"
         onError={(e) => {
           e.target.style.display = "none";
         }}
       />
     ) : (
-      <div className="rd-header-logo default-logo">
+      <div className="mmhd-header-logo default-logo">
         <img
           src={defaultLogo}
           alt="Default Plugin Logo"
-          className="rd-header-logo rd-m-auto"
+          className="mmhd-header-logo mmhd-m-auto"
         />
       </div>
     )}
@@ -53,7 +52,7 @@ const Header = ({ setActiveTab, image_urls, defaultLogo }) => (
 // ErrorMessage Component
 const ErrorMessage = ({ id, message }) =>
   message && (
-    <p id={id} className="rd-text-red rd-text-sm rd-mt-5 err_msg">
+    <p id={id} className="mmhd-text-red mmhd-text-sm mmhd-mt-5 err_msg">
       {message}
     </p>
   );
@@ -69,20 +68,20 @@ const LoginForm = ({
   handleChange,
   handleForgotPassword,
 }) => (
-  <div className="login-container rd-px-18">
-    <h4 className="heading-4 rd-text-center">Login</h4>
-    <div className="rd-body-text rd-mt-8 rd-text-center rd-mb-20">
+  <div className="login-container mmhd-px-18">
+    <h4 className="heading-4 mmhd-text-center">Login</h4>
+    <div className="mmhd-body-text mmhd-mt-8 mmhd-text-center mmhd-mb-20">
       <p>How do we get in touch with you?</p>
     </div>
     <div className="login-card">
       <form onSubmit={handleSubmit} noValidate>
         {successMessage && (
-          <p className="rd-text-green rd-text-sm rd-mt-5 rd-mb-10">
+          <p className="mmhd-text-green mmhd-text-sm mmhd-mt-5 mmhd-mb-10">
             {successMessage}
           </p>
         )}
-        <div className="rd-flex rd-flex-col rd-gap-10">
-          <label htmlFor="email" className="rd-body-text rd-fw-semi">
+        <div className="mmhd-flex mmhd-flex-col mmhd-gap-10">
+          <label htmlFor="email" className="mmhd-body-text mmhd-fw-semi">
             Email
           </label>
           <input
@@ -92,7 +91,7 @@ const LoginForm = ({
             value={formData.email}
             onChange={handleChange}
             placeholder="Email"
-            className="rd-border-light rd-p-12 rd-border-radius-md"
+            className="mmhd-border-light mmhd-p-12 mmhd-border-radius-md"
             required
             aria-describedby="email-error"
           />
@@ -103,8 +102,8 @@ const LoginForm = ({
           />
         </div>
         {showPasswordField && (
-          <div className="rd-mt-10">
-            <label htmlFor="password" className="rd-body-text rd-fw-semi">
+          <div className="mmhd-mt-10">
+            <label htmlFor="password" className="mmhd-body-text mmhd-fw-semi">
               Password
             </label>
             <input
@@ -114,7 +113,7 @@ const LoginForm = ({
               value={formData.password}
               onChange={handleChange}
               placeholder="Password"
-              className="rd-w-full rd-border-light rd-p-12 rd-border-radius-md"
+              className="mmhd-w-full mmhd-border-light mmhd-p-12 mmhd-border-radius-md"
               required
               aria-describedby="password-error"
             />
@@ -123,10 +122,10 @@ const LoginForm = ({
               className="err_msg"
               message={errors.password}
             />
-            <p className="rd-body-text rd-mt-8">
+            <p className="mmhd-body-text mmhd-mt-8">
               <a
                 href="#"
-                className="rd-decoration-none color-blue"
+                className="mmhd-decoration-none color-blue"
                 onClick={handleForgotPassword}
               >
                 Lost your password?
@@ -136,7 +135,7 @@ const LoginForm = ({
         )}
         <button
           type="submit"
-          className="rd-login-button rd-w-full rd-border-radius-md"
+          className="mmhd-login-button mmhd-w-full mmhd-border-radius-md"
           disabled={isSubmitting}
         >
           {isSubmitting
@@ -167,18 +166,18 @@ const Login = ({
 
   const [currentForm, setCurrentForm] = useState("login");
 
-  const image_urls = window.robodeskData?.imageUrls || {};
+  const image_urls = window.mmhdData?.imageUrls || {};
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const resetKey = params.get("key");
     const resetUser = params.get("user");
-    const popupParam = params.get("rbd_popup");
+    const popupParam = params.get("mmhd_popup");
     const initiatorParam = params.get("initiator") || params.get("initator");
 
     if (
       popupParam === "true" &&
-      initiatorParam === "robodesk" &&
+      initiatorParam === "mmhd" &&
       resetKey &&
       resetUser
     ) {
@@ -187,14 +186,14 @@ const Login = ({
   }, []);
 
   useEffect(() => {
-    if (window.robodeskAuth?.defaultStaffId) {
-      setDefaultStaffId(window.robodeskAuth.defaultStaffId);
+    if (window.mmhdAuth?.defaultStaffId) {
+      setDefaultStaffId(window.mmhdAuth.defaultStaffId);
     }
   }, []);
 
   const handleStateUpdate = (ticket) => {
     updateSelectedTicket(ticket);
-    if (window.robodeskData?.enable_chat === "1") setActiveTab(1);
+    if (window.mmhdData?.enable_chat === "1") setActiveTab(1);
   };
 
   const validateEmail = () => {
@@ -236,14 +235,14 @@ const Login = ({
 
     setIsSubmitting(true);
     try {
-      const response = await fetch(window.robodeskAuth?.wpAjax?.ajaxUrl, {
+      const response = await fetch(window.mmhdAuth?.wpAjax?.ajaxUrl, {
         method: "POST",
         headers: {
           "Content-Type": "application/x-www-form-urlencoded",
         },
         body: new URLSearchParams({
-          action: "robodesk_check_email",
-          security: window.robodeskAuth?.wpAjax?.nonce,
+          action: "mmhd_check_email",
+          security: window.mmhdAuth?.wpAjax?.nonce,
           email: formData.email,
         }),
       });
@@ -276,8 +275,8 @@ const Login = ({
       const user_id = ticketResponse.user_id;
 
       if (ticketResponse.rest_nonce) {
-        window.robodeskAuth = window.robodeskAuth || {};
-        window.robodeskAuth.restNonce = ticketResponse.rest_nonce;
+        window.mmhdAuth = window.mmhdAuth || {};
+        window.mmhdAuth.restNonce = ticketResponse.rest_nonce;
       }
 
       await handleTempTicketCreation(user_id);
@@ -299,8 +298,8 @@ const Login = ({
 
       updateLoginStatus(true, loginResponse.user_id);
       if (loginResponse.rest_nonce) {
-        window.robodeskAuth = window.robodeskAuth || {};
-        window.robodeskAuth.restNonce = loginResponse.rest_nonce;
+        window.mmhdAuth = window.mmhdAuth || {};
+        window.mmhdAuth.restNonce = loginResponse.rest_nonce;
       }
 
       try {
@@ -322,10 +321,7 @@ const Login = ({
   };
 
   const handleTempTicketCreation = async (userId) => {
-    const savedConversation = sessionStorage.getItem(CHAT_KEY);
-    const conversationMessages = savedConversation
-      ? JSON.parse(savedConversation)
-      : [];
+    const conversationMessages = readChatSession();
 
     let transcriptMessages = Array.isArray(conversationMessages)
       ? conversationMessages.filter(
@@ -426,7 +422,7 @@ const Login = ({
       refreshTickets();
       handleStateUpdate(newTicket);
 
-      sessionStorage.removeItem(CHAT_KEY);
+      sessionStorage.removeItem(CHAT_SESSION_KEY);
       return ticketResponse;
     } catch (ticketError) {
       console.error("Ticket creation error:", ticketError);

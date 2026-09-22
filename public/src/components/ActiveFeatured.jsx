@@ -3,8 +3,8 @@ import '../styles/ActiveFeatured.css';
 import { FaTimes } from 'react-icons/fa';
 import Bell from '../images/alarm-gif.gif';
 
-// Get WordPress home URL from robodeskData
-// const wpHomeUrl = window.robodeskData?.home_url || '';
+// Get WordPress home URL from mmhdData
+// const wpHomeUrl = window.mmhdData?.home_url || '';
 
 const ActiveFeatured = ({ onNoticeSelect }) => {
   const [notices, setNotices] = useState([]);
@@ -59,33 +59,33 @@ const ActiveFeatured = ({ onNoticeSelect }) => {
 
   return (
     <div
-      className={`rd-active-featured rd-position-relative ${
+      className={`mmhd-active-featured mmhd-position-relative ${
         !isVisible || isLoading || error || notices.length === 0
-          ? 'rd-hidden'
+          ? 'mmhd-hidden'
           : ''
-      } ${isVisible ? 'rd-fade-in' : ''}`}
+      } ${isVisible ? 'mmhd-fade-in' : ''}`}
     >
       {error ? (
-        <p className='rd-text-red rd-body-text'>Error: {error}</p>
+        <p className='mmhd-text-red mmhd-body-text'>Error: {error}</p>
       ) : (
         notices.length > 0 && (
           <>
             <button
-              className='rd-close-all-button rd-bg-transparent rd-border-none rd-cursor-pointer rd-text-gray-600 hover:rd-text-gray-800 rd-p-0'
+              className='mmhd-close-all-button mmhd-bg-transparent mmhd-border-none mmhd-cursor-pointer mmhd-text-gray-600 hover:mmhd-text-gray-800 mmhd-p-0'
               onClick={handleCloseAllNotices}
               title='Close all notices'
             >
               <FaTimes />
             </button>
-            <div className='rd-flex rd-flex-col'>
+            <div className='mmhd-flex mmhd-flex-col'>
               {notices.map((notice) => (
                 <h5
                   key={notice.id}
-                  className='rd-notice-title sub-text rd-cursor-pointer rd-p-10 rd-flex rd-align-center rd-gap-10'
+                  className='mmhd-notice-title sub-text mmhd-cursor-pointer mmhd-p-10 mmhd-flex mmhd-align-center mmhd-gap-10'
                   onClick={() => handleNoticeClick(notice)}
                 >
                   <div className='featured-notice-icon'>
-                    <img src={Bell} alt='Bell icon' className='rd-bell-gif' />
+                    <img src={Bell} alt='Bell icon' className='mmhd-bell-gif' />
                   </div>
                   {notice.title.rendered}
                 </h5>

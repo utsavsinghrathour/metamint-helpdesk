@@ -7,8 +7,8 @@ import '../styles/footer.css';
 import { useAppData } from '../utils/AppDataContext';
 import { useEffect, useState } from 'react';
 
-export const robodeskShowCredits = () =>
-  window.robodeskData?.hide_credits !== "1";
+export const mmhdShowCredits = () =>
+  window.mmhdData?.hide_credits !== "1";
 
 const Footer = ({
   activeTab,
@@ -20,9 +20,9 @@ const Footer = ({
 
   const [showRedDot, setShowRedDot] = useState(false);
 
-  const chatEnabled = window.robodeskData?.enable_chat !== "1" ? false : true;
+  const chatEnabled = window.mmhdData?.enable_chat !== "1" ? false : true;
 
-  const hideCredits = !robodeskShowCredits();
+  const hideCredits = !mmhdShowCredits();
 
   useEffect(() => {
     const hasNotification = ticketsContext?.some(
@@ -57,16 +57,16 @@ const Footer = ({
       return null;
     }
     return (
-      <footer className='robodesk-footer'>
-        <div className='robodesk-footer-text rd-text-center rd-py-10'>
-          <h6 className='rd-m-0'>
+      <footer className='mmhd-footer'>
+        <div className='mmhd-footer-text mmhd-text-center mmhd-py-10'>
+          <h6 className='mmhd-m-0'>
             Powered by{' '}
             <a
-              href='https://robodesk.io/'
+              href='https://metamintapps.com/'
               target='_blank'
-              className='rd-decoration-none'
+              className='mmhd-decoration-none'
             >
-              <span className='rd-text-blue rd-decoration-none'>Robodesk</span>
+              <span className='mmhd-text-blue mmhd-decoration-none'>Metamint Helpdesk</span>
             </a>
           </h6>
         </div>
@@ -75,9 +75,9 @@ const Footer = ({
   }
 
   return (
-    <footer className='robodesk-footer'>
+    <footer className='mmhd-footer'>
       <div
-        className='tab-container rd-flex rd-justify-between test-class'
+        className='tab-container mmhd-flex mmhd-justify-between test-class'
         role='tablist'
       >
         {tabs.map((tab) => (
@@ -87,9 +87,9 @@ const Footer = ({
             aria-selected={activeTab === tab.id}
             aria-controls={`tabpanel-${tab.id}`}
             id={`tab-${tab.id}`}
-            className={`custom-svg rd-p-0 rd-flex rd-align-center rd-gap-5 rd-border-none rd-bg-transparent icon-dark rd-cursor-pointer  ${
+            className={`custom-svg mmhd-p-0 mmhd-flex mmhd-align-center mmhd-gap-5 mmhd-border-none mmhd-bg-transparent icon-dark mmhd-cursor-pointer  ${
               activeTab === tab.id ? 'active-tab' : ''
-            } ${tab.notification ? 'rd-title-with-dot' : ''}`}
+            } ${tab.notification ? 'mmhd-title-with-dot' : ''}`}
             onClick={() => {
               handlefooterClick(tab.id);
             }}
@@ -115,15 +115,15 @@ const Footer = ({
         ))}
       </div>
       {!hideCredits && (
-        <div className='robodesk-footer-text rd-text-center rd-py-10'>
-          <h6 className='rd-m-0'>
+        <div className='mmhd-footer-text mmhd-text-center mmhd-py-10'>
+          <h6 className='mmhd-m-0'>
             Powered by{' '}
             <a
-              href='https://robodesk.io/'
+              href='https://metamintapps.com/'
               target='_blank'
-              className='rd-decoration-none'
+              className='mmhd-decoration-none'
             >
-              <span className='rd-text-blue rd-decoration-none'>Robodesk</span>
+              <span className='mmhd-text-blue mmhd-decoration-none'>Metamint Helpdesk</span>
             </a>
           </h6>
         </div>
