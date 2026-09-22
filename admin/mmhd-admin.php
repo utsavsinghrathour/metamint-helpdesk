@@ -245,7 +245,7 @@ function mmhd_enqueue_tailwind_and_styles()
         'tailwind-css',
         plugin_dir_url(__FILE__) . 'assets/css/tailwind/tailwind.min.css',
         [],
-        '3.4.15'
+        '2.2.19'
     );
 
     wp_enqueue_style(
