@@ -6,7 +6,6 @@ on:
     types:
       - completed
 
-
 jobs:
   deploy:
     name: Update Changes on server
@@ -15,7 +14,7 @@ jobs:
     steps:
       - name: Download release asset
         run: |
-          gh release download --pattern "mmhd.zip" --repo "${{ github.repository }}"
+          gh release download --pattern "metamint-helpdesk.zip" --repo "${{ github.repository }}"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -25,7 +24,7 @@ jobs:
           host: ${{ secrets.SERVER_HOST }}
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SERVER_SSH_KEY }}
-          source: "mmhd.zip"
+          source: "metamint-helpdesk.zip"
           target: "${{ secrets.PROJECT_GIT_PATH }}"
 
       - name: Extract ZIP on Server
@@ -37,19 +36,19 @@ jobs:
           script_stop: true
           script: |
             DEST_PATH="${{secrets.PROJECT_GIT_PATH}}"
-            ZIP_NAME="mmhd.zip"
+            ZIP_NAME="metamint-helpdesk.zip"
 
             cd "$DEST_PATH"
 
             CURRENT_DIR=$(basename "$PWD")
-            if [ "$CURRENT_DIR" = "mmhd" ]; then
-              echo "📂 We are inside the 'mmhd' folder. Moving zip to parent directory and shifting context..."
+            if [ "$CURRENT_DIR" = "metamint-helpdesk" ]; then
+              echo "📂 We are inside the 'metamint-helpdesk' folder. Moving zip to parent directory and shifting context..."
               mv "$ZIP_NAME" ../
               cd ..
             fi
 
             echo "🧹 Cleaning old files..."
-            rm -rf mmhd
+            rm -rf metamint-helpdesk
 
             echo "📦 Extracting ZIP..."
             unzip -o "$ZIP_NAME"
@@ -69,6 +68,6 @@ jobs:
             cd "/www/wwwroot/robo-desk.codepixelz.tech/wp-content/plugins/"
 
             echo "🔐 Fixing ownership..."
-            chown -R www:www mmhd
+            chown -R www:www metamint-helpdesk
 
             echo "✅ Deployment complete!"
