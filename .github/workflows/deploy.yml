@@ -15,7 +15,7 @@ jobs:
     steps:
       - name: Download release asset
         run: |
-          gh release download --pattern "robodesk.zip" --repo "${{ github.repository }}"
+          gh release download --pattern "metamint-helpdesk.zip" --repo "${{ github.repository }}"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -25,7 +25,7 @@ jobs:
           host: ${{ secrets.SERVER_HOST }}
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SERVER_SSH_KEY }}
-          source: "robodesk.zip"
+          source: "metamint-helpdesk.zip"
           target: "${{ secrets.PROJECT_GIT_PATH }}"
 
       - name: Extract ZIP on Server
@@ -37,19 +37,19 @@ jobs:
           script_stop: true
           script: |
             DEST_PATH="${{secrets.PROJECT_GIT_PATH}}"
-            ZIP_NAME="robodesk.zip"
+            ZIP_NAME="metamint-helpdesk.zip"
 
             cd "$DEST_PATH"
 
             CURRENT_DIR=$(basename "$PWD")
-            if [ "$CURRENT_DIR" = "robodesk" ]; then
-              echo "📂 We are inside the 'robodesk' folder. Moving zip to parent directory and shifting context..."
+            if [ "$CURRENT_DIR" = "metamint-helpdesk" ]; then
+              echo "📂 We are inside the 'metamint-helpdesk' folder. Moving zip to parent directory and shifting context..."
               mv "$ZIP_NAME" ../
               cd ..
             fi
 
             echo "🧹 Cleaning old files..."
-            rm -rf robodesk
+            rm -rf metamint-helpdesk
 
             echo "📦 Extracting ZIP..."
             unzip -o "$ZIP_NAME"
@@ -69,6 +69,6 @@ jobs:
             cd "/www/wwwroot/robo-desk.codepixelz.tech/wp-content/plugins/"
 
             echo "🔐 Fixing ownership..."
-            chown -R www:www robodesk
+            chown -R www:www metamint-helpdesk
 
             echo "✅ Deployment complete!"
