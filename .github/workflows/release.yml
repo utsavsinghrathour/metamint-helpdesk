@@ -39,7 +39,7 @@ jobs:
       - name: Generate next tag
         id: tag
         run: |
-          PREFIX="robodesk-v"
+          PREFIX="metamint-helpdesk-v"
 
           LAST_TAG=$(git tag --list "${PREFIX}*" --sort=-version:refname | head -n 1)
 
@@ -66,20 +66,20 @@ jobs:
           rm -rf public/node_modules
           
           # Create temp directory
-          mkdir -p /tmp/robodesk-zip/robodesk
+          mkdir -p /tmp/metamint-helpdesk-zip/metamint-helpdesk
           
           # Copy all files
-          cp -r . /tmp/robodesk-zip/robodesk/
+          cp -r . /tmp/metamint-helpdesk-zip/metamint-helpdesk/
           
           # Clean up unwanted files in the copied folder
-          cd /tmp/robodesk-zip/robodesk
+          cd /tmp/metamint-helpdesk-zip/metamint-helpdesk
           rm -rf .git .github *.zip composer.json composer.lock package.json package-lock.json public/package.json public/package-lock.json plugin-zip.js stylelint.config.mjs .php-cs-fixer.dist.php eslint.config.mjs .stylelintignore .gitignore .husky public/src
           find . -name ".DS_Store" -delete
           find . -name ".babelrc" -delete
           
           # Zip the folder
-          cd /tmp/robodesk-zip
-          zip -r "$GITHUB_WORKSPACE/robodesk.zip" robodesk
+          cd /tmp/metamint-helpdesk-zip
+          zip -r "$GITHUB_WORKSPACE/metamint-helpdesk.zip" metamint-helpdesk
 
       - name: Create and push tag
         run: |
@@ -125,6 +125,6 @@ jobs:
             **Full diff:**  
             https://github.com/${{ github.repository }}/compare/${{ steps.tag.outputs.last_tag }}...${{ steps.tag.outputs.new_tag }}
 
-          files: "robodesk.zip"
+          files: "metamint-helpdesk.zip"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
