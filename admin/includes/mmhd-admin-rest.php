@@ -195,7 +195,7 @@ function mmhd_live_admin_comments($request)
             $new_admin_comments[] = [
                 'id'        => $comment->comment_ID,
                 'author'    => $is_bot_response && function_exists('mmhd_get_bot_display_name') ? mmhd_get_bot_display_name() : $comment->comment_author,
-                'message'   => $comment->comment_content,
+                'message'   => mmhd_markdown_to_html( $comment->comment_content ),
                 'timestamp' => function_exists('mmhd_comment_utc_iso') ? mmhd_comment_utc_iso($comment) : $comment->comment_date,
                 'type'      => $type,
                 'role'      => $role,
@@ -339,7 +339,7 @@ function mmhd_ticket_stream($request)
             $replies[] = [
                 'id'              => $comment->comment_ID,
                 'author'          => $is_bot_response && function_exists('mmhd_get_bot_display_name') ? mmhd_get_bot_display_name() : $comment->comment_author,
-                'message'         => $comment->comment_content,
+                'message'         => mmhd_markdown_to_html( $comment->comment_content ),
                 'timestamp'       => function_exists('mmhd_comment_utc_iso') ? mmhd_comment_utc_iso($comment) : $comment->comment_date,
                 'type'            => $type,
                 'role'            => $role,
@@ -383,7 +383,7 @@ function mmhd_ticket_stream($request)
             $notes[] = [
                 'id'        => $comment->comment_ID,
                 'author'    => $comment->comment_author,
-                'message'   => $comment->comment_content,
+                'message'   => mmhd_markdown_to_html( $comment->comment_content ),
                 'timestamp' => function_exists('mmhd_comment_utc_iso') ? mmhd_comment_utc_iso($comment) : $comment->comment_date,
                 'type'      => $type,
                 'role'      => $role,
@@ -583,7 +583,7 @@ function mmhd_notification_stream()
 //     $replies[] = [
 //         'id'        => $comment->comment_ID,
 //         'author'    => $comment->comment_author,
-//         'message'   => $comment->comment_content,
+//         'message'   => mmhd_markdown_to_html( $comment->comment_content ),
 //         'timestamp' => $comment->comment_date,
 //         'type'      => $type,
 //         'comment_meta' => $comment_meta, // Include comment_meta object
