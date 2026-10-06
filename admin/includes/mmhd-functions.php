@@ -1989,7 +1989,7 @@ function mmhd_handle_get_ticket_replies()
         $replies[] = [
             'id'             => $comment->comment_ID,
             'author'         => $is_bot_response && function_exists('mmhd_get_bot_display_name') ? mmhd_get_bot_display_name() : $comment->comment_author,
-            'message'        => $comment->comment_content,
+            'message'        => mmhd_markdown_to_html( $comment->comment_content ),
             'timestamp'      => function_exists('mmhd_comment_utc_iso') ? mmhd_comment_utc_iso($comment) : $comment->comment_date,
             'type'           => $type,
             'role'           => $role,
@@ -3493,3 +3493,284 @@ function mmhd_send_email($to, $subject, $message, $headers = [], $attachments = 
 
     return $sent;
 }
+
+/**
+ * Renders the light markdown the AI bot writes into HTML, so ticket replies read
+ * as formatted text instead of showing ** and ## literally.
+ *
+ * This is deliberately a small renderer rather than a full parser. It covers
+ * exactly what the assistant is allowed to emit (headings, bold, italic,
+ * strikethrough, inline and fenced code, links, lists, quotes, rules), leaves
+ * markup that is already HTML untouched, and the result is filtered through
+ * wp_kses_post() so the output is as safe as post content.
+ *
+ * Content stays plain in the database; only the reply payloads are rendered, so
+ * existing tickets are fixed without a migration and plain-text exports, search
+ * and email bodies keep working on the original text.
+ *
+ * @param string $text Raw comment or description text.
+ * @return string Rendered HTML.
+ */
+function mmhd_markdown_to_html( $text ) {
+    if ( ! is_string( $text ) || '' === trim( $text ) ) {
+        return '';
+    }
+
+    $text = str_replace( array( "\r\n", "\r" ), "\n", $text );
+
+    // Fenced code is lifted out first so its body is never read as markdown.
+    $fences = array();
+    $text   = preg_replace_callback(
+        '~```[ \t]*\n?(.*?)\n?```~s',
+        static function ( $matches ) use ( &$fences ) {
+            $token            = "\x1aMMHD_FENCE_" . count( $fences ) . "\x1b";
+            $fences[ $token ] = '<pre><code>' . esc_html( $matches[1] ) . '</code></pre>';
+
+            return "\n\n" . $token . "\n\n";
+        },
+        $text
+    );
+
+    if ( null === $text ) {
+        return '';
+    }
+
+    $rendered = array();
+
+    foreach ( preg_split( '/\n{2,}/', $text ) as $block ) {
+        $block = trim( $block );
+        if ( '' === $block ) {
+            continue;
+        }
+
+        $type = 'p';
+
+        if ( isset( $fences[ $block ] ) ) {
+            $html      = $fences[ $block ];
+            $type      = 'pre';
+        } elseif ( preg_match( '/^(-{3,}|\*{3,}|_{3,})$/', $block ) ) {
+            $html      = '<hr />';
+            $type      = 'hr';
+        } elseif ( preg_match( '/^(#{1,6})\s+(.*)$/s', $block, $heading ) ) {
+            $level     = strlen( $heading[1] );
+            $html      = '<h' . $level . '>' . mmhd_markdown_inline( $heading[2] ) . '</h' . $level . '>';
+            $type      = 'heading';
+        } elseif ( preg_match( '/^>\s?/m', $block ) ) {
+            $lines = array();
+            foreach ( explode( "\n", $block ) as $line ) {
+                $lines[] = preg_replace( '/^>\s?/', '', $line );
+            }
+            $html      = '<blockquote><p>' . nl2br( mmhd_markdown_inline( implode( "\n", $lines ) ), false ) . '</p></blockquote>';
+            $type      = 'quote';
+        } elseif ( preg_match( '/^\s*(?:[-*+]|\d+[.)])\s+/m', $block ) ) {
+            $html      = mmhd_markdown_list( $block );
+            $type      = ( 0 === strpos( $html, '<ol' ) ) ? 'ol' : 'ul';
+        } else {
+            $html      = '<p>' . nl2br( mmhd_markdown_inline( $block ), false ) . '</p>';
+            $type      = 'p';
+        }
+
+        // The assistant puts a blank line between numbered items, which would
+        // otherwise break one long list into a list per item.
+        $last  = count( $rendered ) - 1;
+        $inner = preg_replace( '~^</?' . $type . '>~', '', $html );
+        $inner = preg_replace( '~</' . $type . '>$~', '', $inner );
+
+        if ( ( 'ol' === $type || 'ul' === $type ) && $last >= 0 && $rendered[ $last ]['type'] === $type ) {
+            $rendered[ $last ]['html'] = preg_replace( '~</' . $type . '>$~', '', $rendered[ $last ]['html'] )
+                . $inner
+                . '</' . $type . '>';
+            continue;
+        }
+
+        $rendered[] = array(
+            'type' => $type,
+            'html' => $html,
+        );
+    }
+
+    $output = array();
+    foreach ( $rendered as $item ) {
+        $output[] = $item['html'];
+    }
+
+    return wp_kses_post( implode( "\n", $output ) );
+}
+
+/**
+ * Parses a bullet or numbered block into items, honouring indentation so a
+ * sub-list under a numbered item stays nested.
+ *
+ * @param string $block Raw list block.
+ * @return string Rendered HTML.
+ */
+function mmhd_markdown_list( $block ) {
+    $items = array();
+
+    foreach ( explode( "\n", $block ) as $line ) {
+        if ( '' === trim( $line ) ) {
+            continue;
+        }
+
+        if ( preg_match( '/^(\s*)(?:[-*+])\s+(.*)$/', $line, $match ) ) {
+            $items[] = array(
+                'indent' => strlen( $match[1] ),
+                'marker' => 'ul',
+                'text'   => $match[2],
+            );
+            continue;
+        }
+
+        if ( preg_match( '/^(\s*)(?:\d+[.)])\s+(.*)$/', $line, $match ) ) {
+            $items[] = array(
+                'indent' => strlen( $match[1] ),
+                'marker' => 'ol',
+                'text'   => $match[2],
+            );
+            continue;
+        }
+
+        // Anything else continues the item above it.
+        if ( $items ) {
+            $last                       = count( $items ) - 1;
+            $items[ $last ]['text']    .= "\n" . trim( $line );
+        }
+    }
+
+    return $items ? mmhd_markdown_list_items( $items ) : '';
+}
+
+/**
+ * Builds the nested <ul>/<ol> markup for already parsed list items.
+ *
+ * @param array $items Items with indent, marker and text keys.
+ * @return string Rendered HTML.
+ */
+function mmhd_markdown_list_items( array $items ) {
+    $tag   = 'ol' === $items[0]['marker'] ? 'ol' : 'ul';
+    $html  = '<' . $tag . '>';
+    $total = count( $items );
+    $index = 0;
+
+    while ( $index < $total ) {
+        $item     = $items[ $index ];
+        $children = array();
+
+        $next = $index + 1;
+        while ( $next < $total && $items[ $next ]['indent'] > $item['indent'] ) {
+            $children[] = $items[ $next ];
+            ++$next;
+        }
+
+        $content = nl2br( mmhd_markdown_inline( $item['text'] ), false );
+        if ( $children ) {
+            $content .= mmhd_markdown_list_items( $children );
+        }
+
+        $html .= '<li>' . $content . '</li>';
+        $index = $next;
+    }
+
+    return $html . '</' . $tag . '>';
+}
+
+/**
+ * Renders inline markdown for one block of text.
+ *
+ * Code spans and links are pulled out before escaping so their bodies and URLs
+ * are handled correctly. Everything else is escaped while any tag the author
+ * wrote as real HTML is kept, so an existing <strong> still survives.
+ *
+ * @param string $text  Inline source text.
+ * @param int    $depth Recursion guard for link labels.
+ * @return string Rendered HTML.
+ */
+function mmhd_markdown_inline( $text, $depth = 0 ) {
+    if ( ! is_string( $text ) || '' === $text ) {
+        return '';
+    }
+
+    $tokens = array();
+    $keep   = static function ( $html ) use ( &$tokens ) {
+        $token            = "\x1aMMHD_INLINE_" . count( $tokens ) . "\x1b";
+        $tokens[ $token ] = $html;
+
+        return $token;
+    };
+
+    // Inline code first: its contents are never markdown.
+    $text = preg_replace_callback(
+        '~`([^`]+)`~',
+        static function ( $matches ) use ( $keep ) {
+            return $keep( '<code>' . esc_html( $matches[1] ) . '</code>' );
+        },
+        $text
+    );
+
+    // Then links, so the URL is validated and the label is rendered.
+    if ( $depth < 3 ) {
+        $text = preg_replace_callback(
+            '~\[([^\]]*)\]\(\s*([^)\s]+)[^)]*\)~',
+            static function ( $matches ) use ( $keep, $depth ) {
+                $url = esc_url( $matches[2], array( 'http', 'https', 'mailto' ) );
+                if ( '' === $url ) {
+                    return $keep( esc_html( $matches[1] ) );
+                }
+
+                return $keep( '<a href="' . $url . '" target="_blank" rel="noopener noreferrer">' . mmhd_markdown_inline( $matches[1], $depth + 1 ) . '</a>' );
+            },
+            $text
+        );
+    }
+
+    // Escape what is left, keeping only tags that were already markup.
+    $parts = preg_split( '~(<[^>]+>)~', $text, -1, PREG_SPLIT_DELIM_CAPTURE );
+    $text  = '';
+    foreach ( (array) $parts as $index => $part ) {
+        $text .= ( 0 === $index % 2 ) ? esc_html( $part ) : $part;
+    }
+
+    // Emphasis last, so ** is not mistaken for two italics. preg_replace()
+    // returns null when a pattern fails to compile, which would silently drop
+    // the whole message, so each pass keeps the previous text on failure.
+    $emphasis = static function ( $subject, $pattern, $replacement ) {
+        $result = preg_replace( $pattern, $replacement, $subject );
+
+        return null === $result ? $subject : $result;
+    };
+
+    $text = $emphasis( $text, '~\*\*(?=\S)(.+?)(?<=\S)\*\*~s', '<strong>$1</strong>' );
+    $text = $emphasis( $text, '~(?<![A-Za-z0-9_])__(?=\S)(.+?)(?<=\S)__(?![A-Za-z0-9_])~s', '<strong>$1</strong>' );
+    $text = $emphasis( $text, '~\~\~(?=\S)(.+?)(?<=\S)\~\~~s', '<del>$1</del>' );
+    $text = $emphasis( $text, '~\*(?=\S)(.+?)(?<=\S)\*~s', '<em>$1</em>' );
+    $text = $emphasis( $text, '~(?<![A-Za-z0-9_])_(?=\S)(.+?)(?<=\S)_(?![A-Za-z0-9_])~s', '<em>$1</em>' );
+
+    return strtr( (string) $text, $tokens );
+}
+
+/**
+ * Renders markdown on ticket replies that are read through the comments REST
+ * API, which is how the customer's own ticket page displays them. The stored
+ * comment stays plain, so this is display only.
+ *
+ * Runs before wptexturize() and wpautop(): both rewrite "- " into an en dash
+ * and turn newlines into <br />, which would destroy the list markers before
+ * the markdown was ever read.
+ *
+ * @param string $content Comment text.
+ * @param mixed  $comment WP_Comment object when available.
+ * @return string
+ */
+function mmhd_render_ticket_reply_markdown( $content, $comment = null ) {
+    if ( ! $comment instanceof WP_Comment || 'ticket_replies' !== $comment->comment_type ) {
+        return $content;
+    }
+
+    // Leave comment administration screens exactly as they were.
+    if ( is_admin() && ! ( defined( 'REST_REQUEST' ) && REST_REQUEST ) ) {
+        return $content;
+    }
+
+    return mmhd_markdown_to_html( $content );
+}
+add_filter( 'comment_text', 'mmhd_render_ticket_reply_markdown', 1, 2 );

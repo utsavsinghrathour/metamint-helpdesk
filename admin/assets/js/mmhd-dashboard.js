@@ -3763,9 +3763,7 @@ function renderReplies(replies) {
               reply.timestamp,
             )}</span>
           </div>
-          <p class="text-sm text-gray-700">${
-            isAction ? reply.message : reply.message
-          }</p>
+          <div class="text-sm text-gray-700">${reply.message}</div>
         </div>
       `;
     })
