@@ -204,9 +204,9 @@ function mmhd_enqueue_notice_picker_assets($hook)
 
     if ('post.php' === $hook || 'post-new.php' === $hook) {
         $post_type = get_post_type();
-        // phpcs:ignore WordPress.Security.NonceVerification.Recommended
-        if (!$post_type && isset($_GET['post_type'])) {
-            $post_type = sanitize_key(wp_unslash($_GET['post_type']));
+        if (!$post_type) {
+            // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- read-only screen detection
+            $post_type = isset($_GET['post_type']) ? sanitize_key(wp_unslash($_GET['post_type'])) : '';
         }
         if ($post_type && array_key_exists($post_type, mmhd_get_notice_assignable_post_types())) {
             $load = true;
