@@ -394,10 +394,10 @@ function mmhd_frontend_dashboard_shortcode()
             $current_page = isset($_GET['mmhd_page']) ? sanitize_text_field(wp_unslash($_GET['mmhd_page'])) : 'dashboard';
         }
 
-        $ticket_id = get_query_var('tid');
+        $ticket_id = absint(get_query_var('tid'));
         if (empty($ticket_id)) {
             // phpcs:ignore WordPress.Security.NonceVerification.Recommended
-            $ticket_id = isset($_GET['tid']) ? sanitize_text_field(wp_unslash($_GET['tid'])) : '';
+            $ticket_id = isset($_GET['tid']) ? absint(wp_unslash($_GET['tid'])) : 0;
         }
         // Get Ticket Counts
         $open_tickets_args = array(
@@ -519,7 +519,8 @@ function mmhd_frontend_dashboard_shortcode()
         $user_id = get_current_user_id();
         $current_page = get_query_var('mmhd_page');
         if (empty($current_page)) {
-            $current_page = isset($_GET['mmhd_page']) ? $_GET['mmhd_page'] : 'dashboard';
+            // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+            $current_page = isset($_GET['mmhd_page']) ? sanitize_key(wp_unslash($_GET['mmhd_page'])) : 'dashboard';
         }
         // Get ticket data
         $open_tickets = mmhd_get_open_ticket_count($user_id);
@@ -1317,7 +1318,7 @@ function mmhd_single_ticket_shortcode($atts)
     static $single_ticket_js_enqueued = false;
     if (!$single_ticket_js_enqueued) {
         $single_ticket_js_enqueued = true;
-        $ajax_url = esc_url(admin_url('admin-ajax.php'));
+        $ajax_url = wp_json_encode(admin_url('admin-ajax.php'));
         add_action('wp_footer', function () use ($ajax_url) {
             wp_add_inline_script('mmhd-scripts', '
 jQuery(document).ready(function($) {
@@ -1363,7 +1364,7 @@ jQuery(document).ready(function($) {
 
         formData.append(\'action\', \'mmhd_submit_comment\');
         $.ajax({
-            url: \'' . $ajax_url . '\',
+            url: ' . $ajax_url . ',
             type: \'POST\',
             data: formData,
             processData: false,
@@ -1557,9 +1558,8 @@ function mmhd_login_form_shortcode()
         <p>
             <label for="user_login">Username or Email<br />
                 <input type="text" name="log" id="user_login" class="input" value="<?php
-                                                                                        // phpcs:disable WordPress.Security.NonceVerification.Missing, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized, WordPress.Security.ValidatedSanitizedInput.MissingUnslash
-                                                                                        echo esc_attr(wp_unslash(isset($_POST['log']) ? $_POST['log'] : ''));
-                                                                                        // phpcs:enable WordPress.Security.NonceVerification.Missing, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized, WordPress.Security.ValidatedSanitizedInput.MissingUnslash
+                                                                                        // phpcs:ignore WordPress.Security.NonceVerification.Missing -- login form field repopulation, nonce not applicable
+                                                                                        echo esc_attr(sanitize_text_field(wp_unslash(isset($_POST['log']) ? $_POST['log'] : '')));
                                                                                         ?>" size="20"
                     autocapitalize="off" />
             </label>

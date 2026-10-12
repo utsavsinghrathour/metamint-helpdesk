@@ -4,7 +4,7 @@ if (! defined('ABSPATH')) {
     exit; // Exit if accessed directly
 }
 
-// Register the custom post type 'notice'
+// Register the custom post type 'mmhd_notice'
 function mmhd_register_notice_post_type()
 {
     $labels = array(
@@ -32,7 +32,7 @@ function mmhd_register_notice_post_type()
 
     );
 
-    register_post_type('notice', $args);
+    register_post_type('mmhd_notice', $args);
 }
 
 // 'labels'             => $faq_labels,
@@ -58,7 +58,7 @@ function mmhd_add_notice_meta_boxes()
         'notice_active',
         'Active?',
         'mmhd_notice_active_callback',
-        'notice',
+        'mmhd_notice',
         'side',
         'default'
     );
@@ -66,7 +66,7 @@ function mmhd_add_notice_meta_boxes()
         'notice_feature',
         'Feature?',
         'mmhd_notice_feature_callback',
-        'notice',
+        'mmhd_notice',
         'side',
         'default'
     );
@@ -96,7 +96,7 @@ function mmhd_add_notice_action_meta_box()
         'notice_action_box',
         'Action',
         'mmhd_notice_action_callback',
-        'notice',
+        'mmhd_notice',
         'side',
         'default'
     );
@@ -129,26 +129,39 @@ function mmhd_notice_action_callback($post)
         <textarea name="_mmhd_notice_initial_message" id="_mmhd_notice_initial_message" rows="3" style="width:100%;"><?php echo esc_textarea($initial_message); ?></textarea>
         <p class="description">Sent to the AI bot (or to a human conversation when the AI bot is off) when the visitor clicks this notice.</p>
     </div>
-    <script>
-        (function () {
-            var radios = document.querySelectorAll('input[name="_mmhd_notice_action"]');
-            var wrap = document.getElementById('mmhd-notice-initial-message-wrap');
-            if (!radios.length || !wrap) return;
-            var toggle = function () {
-                var checked = document.querySelector('input[name="_mmhd_notice_action"]:checked');
-                wrap.style.display = checked && checked.value === 'start_conversation' ? '' : 'none';
-            };
-            radios.forEach(function (r) { r.addEventListener('change', toggle); });
-        })();
-    </script>
     <?php
 }
+
+/**
+ * Enqueue the notice "Action" meta box JS on the notice edit screen.
+ *
+ * @param string $hook The current admin page hook suffix.
+ */
+function mmhd_enqueue_notice_action_meta_script($hook)
+{
+    if ('post.php' !== $hook && 'post-new.php' !== $hook) {
+        return;
+    }
+
+    if ('mmhd_notice' !== get_post_type()) {
+        return;
+    }
+
+    wp_enqueue_script(
+        'mmhd-notice-action-meta',
+        MMHD_PLUGIN_URL . 'admin/assets/js/mmhd-notice-action-meta.js',
+        array(),
+        MMHD_VERSION,
+        true
+    );
+}
+add_action('admin_enqueue_scripts', 'mmhd_enqueue_notice_action_meta_script');
 
 // Save the meta data when the post is saved
 function mmhd_save_notice_meta($post_id)
 {
     // Check if this is the correct post type
-    if (get_post_type($post_id) !== 'notice') {
+    if (get_post_type($post_id) !== 'mmhd_notice') {
         return;
     }
     // Verify user permissions
@@ -193,7 +206,7 @@ function mmhd_save_notice_meta($post_id)
 add_action('save_post', 'mmhd_save_notice_meta');
 
 
-add_filter('rest_notice_query', 'mmhd_filter_notice_by_featured_and_active', 10, 2);
+add_filter('rest_mmhd_notice_query', 'mmhd_filter_notice_by_featured_and_active', 10, 2);
 function mmhd_filter_notice_by_featured_and_active($args, $request)
 {
     $meta_query = array();
@@ -228,7 +241,7 @@ function mmhd_filter_notice_by_featured_and_active($args, $request)
 }
 
 // Expose notice action + initial message through the REST API
-register_rest_field('notice', 'notice_action', array(
+register_rest_field('mmhd_notice', 'notice_action', array(
     'get_callback' => function ($post_arr) {
         $action = get_post_meta($post_arr['id'], '_mmhd_notice_action', true);
         return empty($action) ? 'open' : $action;
@@ -238,7 +251,7 @@ register_rest_field('notice', 'notice_action', array(
     ),
 ));
 
-register_rest_field('notice', 'initial_message', array(
+register_rest_field('mmhd_notice', 'initial_message', array(
     'get_callback' => function ($post_arr) {
         return (string) get_post_meta($post_arr['id'], '_mmhd_notice_initial_message', true);
     },

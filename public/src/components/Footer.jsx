@@ -8,7 +8,7 @@ import { useAppData } from '../utils/AppDataContext';
 import { useEffect, useState } from 'react';
 
 export const mmhdShowCredits = () =>
-  window.mmhdData?.hide_credits !== "1";
+  window.mmhdData?.show_credits === "1";
 
 const Footer = ({
   activeTab,
@@ -22,7 +22,7 @@ const Footer = ({
 
   const chatEnabled = window.mmhdData?.enable_chat !== "1" ? false : true;
 
-  const hideCredits = !mmhdShowCredits();
+  const showCredits = mmhdShowCredits();
 
   useEffect(() => {
     const hasNotification = ticketsContext?.some(
@@ -53,7 +53,7 @@ const Footer = ({
     }
   };
   if (showCopyrightOnly) {
-    if (hideCredits) {
+    if (!showCredits) {
       return null;
     }
     return (
@@ -114,7 +114,7 @@ const Footer = ({
           </button>
         ))}
       </div>
-      {!hideCredits && (
+      {showCredits && (
         <div className='mmhd-footer-text mmhd-text-center mmhd-py-10'>
           <h6 className='mmhd-m-0'>
             Powered by{' '}

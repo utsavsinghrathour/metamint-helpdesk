@@ -80,10 +80,10 @@ $mmhd_settings_hidden = ($mmhd_current_tab === 'settings') ? '' : ' hidden';
                             </div>
                             <p class="text-sm text-gray-500 ml-7"><?php esc_html_e('When disabled, the Conversations tab, "Start a conversation" buttons, and the AI bot chat are hidden from the frontend. FAQ and other tabs remain visible.', 'metamint-helpdesk'); ?></p>
                             <div class="mt-6 flex items-center">
-                                <input type="checkbox" name="hide_credits" id="hide_credits" value="1" <?php checked(get_option('mmhd_hide_credits', '0'), '1'); ?> class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
-                                <label for="hide_credits" class="ml-2 block text-sm text-gray-900 font-medium"><?php esc_html_e('Hide Credits', 'metamint-helpdesk'); ?></label>
+                                <input type="checkbox" name="show_credits" id="show_credits" value="1" <?php checked(get_option('mmhd_show_credits', '0'), '1'); ?> class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                                <label for="show_credits" class="ml-2 block text-sm text-gray-900 font-medium"><?php esc_html_e('Show "Powered by Metamint Helpdesk" credit', 'metamint-helpdesk'); ?></label>
                             </div>
-                            <p class="text-sm text-gray-500 ml-7"><?php esc_html_e('When checked, the "Powered by Metamint Helpdesk" text is hidden from the chat widget footer.', 'metamint-helpdesk'); ?></p>
+                            <p class="text-sm text-gray-500 ml-7"><?php esc_html_e('Off by default. When enabled, a "Powered by Metamint Helpdesk" credit is displayed in the chat widget footer.', 'metamint-helpdesk'); ?></p>
                         </section>
 
                         <section class="rounded-xl border border-gray-200 bg-gray-50 p-6">

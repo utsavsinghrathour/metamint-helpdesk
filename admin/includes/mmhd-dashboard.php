@@ -4,15 +4,6 @@ if (!defined('ABSPATH')) {
     exit; // Exit if accessed directly
 }
 
-// Ensure WordPress core functions are available if not running in the admin context
-if (!function_exists('check_admin_referer')) {
-    if (file_exists(dirname(__FILE__, 6) . '/wp-load.php')) {
-        require_once dirname(__FILE__, 6) . '/wp-load.php';
-    } elseif (file_exists(dirname(__FILE__, 6) . '/wp-admin/includes/admin.php')) {
-        require_once dirname(__FILE__, 6) . '/wp-admin/includes/admin.php';
-    }
-}
-
 /**
  * Callback function to render the Metamint Helpdesk Ticket Dashboard
  */

@@ -1,0 +1,16 @@
+#wpadminbar .dashboard-filter-count-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 1.15rem;
+    height: 1.15rem;
+    margin-left: .3rem;
+    padding: 0 .28rem;
+    border-radius: 9999px;
+    background-color: #ef4444;
+    color: #fff;
+    font-size: .7rem;
+    font-weight: 600;
+    line-height: 1;
+    vertical-align: middle;
+}

@@ -58,7 +58,7 @@ const ContextualNotices = ({ onNoticeSelect, onStartConversation }) => {
         // 2) Fallback: global featured + active notices.
         if (data.length === 0) {
           const response = await fetch(
-            "/wp-json/wp/v2/notice?featured=true&active=true&_fields=id,title.rendered,excerpt.rendered,content.rendered,notice_action,initial_message",
+            "/wp-json/wp/v2/mmhd_notice?featured=true&active=true&_fields=id,title.rendered,excerpt.rendered,content.rendered,notice_action,initial_message",
           );
           if (!response.ok) {
             throw new Error("Failed to fetch notices");

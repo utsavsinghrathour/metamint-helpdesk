@@ -10,12 +10,12 @@ jQuery(document).ready(function($) {
             });
            
             $.ajax({
-                url: taxonomyOrderData.ajax_url,
+                url: mmhdTaxonomyOrderData.ajax_url,
                 type: 'POST',
                 data: {
                     action: 'mmhd_update_taxonomy_order',
                     order: termOrder,
-                    nonce: taxonomyOrderData.nonce
+                    nonce: mmhdTaxonomyOrderData.nonce
                 },
                 success: function(response) {
                     if (response.success) {

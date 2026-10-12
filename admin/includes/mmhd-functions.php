@@ -831,7 +831,7 @@ function mmhd_save_basic_settings()
 
     // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- sanitized per-key in loop below
     $settings = wp_unslash($_POST['settings']);
-    $valid_settings = ['site_name', 'admin_email', 'theme_color', 'default_ticket_category', 'chat_heading', 'welcome_message', 'ticket_intro_message', 'enable_chat', 'hide_credits'];
+    $valid_settings = ['site_name', 'admin_email', 'theme_color', 'default_ticket_category', 'chat_heading', 'welcome_message', 'ticket_intro_message', 'enable_chat', 'show_credits'];
     $image_fields = [
         'popover_icon' => 'mmhd_popover_icon',
         'popover_top_icon' => 'mmhd_popover_top_icon',
@@ -883,7 +883,7 @@ function mmhd_save_basic_settings()
             $sanitized_settings[$key] = sanitize_textarea_field($settings[$key]);
         } elseif ($key === 'enable_chat') {
             $sanitized_settings[$key] = $settings[$key] === '1' ? '1' : '0';
-        } elseif ($key === 'hide_credits') {
+        } elseif ($key === 'show_credits') {
             $sanitized_settings[$key] = $settings[$key] === '1' ? '1' : '0';
         }
         $results[$key] = ['status' => 'success', 'message' => ucfirst(str_replace('_', ' ', $key)) . ' saved successfully'];
@@ -1272,7 +1272,15 @@ function mmhd_create_ticket()
 
     if (!is_wp_error($ticket_id)) {
         mmhd_notify_ticket_created($ticket_id, 'admin');
-        do_action('mmhd_after_ticket_created', $ticket_id, $_POST, $user_id);
+        do_action('mmhd_after_ticket_created', $ticket_id, array(
+            'customer_name'      => $customer_name,
+            'customer_email'     => $customer_email,
+            'ticket_title'       => $ticket_title,
+            'ticket_priority'    => $ticket_priority,
+            'ticket_category'    => $ticket_category,
+            'ticket_assignee'    => $ticket_assignee,
+            'ticket_description' => $ticket_description,
+        ), $user_id);
     }
 
     wp_send_json_success(['message' => 'Conversation created successfully', 'ticket_id' => $ticket_id]);
