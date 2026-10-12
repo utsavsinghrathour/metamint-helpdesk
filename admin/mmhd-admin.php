@@ -89,7 +89,7 @@ function mmhd_add_admin_menu()
         'All Notices',
         'All Notices',
         'edit_posts',
-        'edit.php?post_type=notice'
+        'edit.php?post_type=mmhd_notice'
     );
 
     // Add Notice
@@ -98,7 +98,7 @@ function mmhd_add_admin_menu()
         'Add New Notice',
         'Add New Notice',
         'edit_posts',
-        'post-new.php?post_type=notice'
+        'post-new.php?post_type=mmhd_notice'
     );
 
     // Debug Log
@@ -393,23 +393,27 @@ function mmhd_admin_bar_active_tickets($wp_admin_bar)
             'title' => esc_html__('View my conversations', 'metamint-helpdesk'),
         ),
     ));
-
-    // Badge styles must render even on pages where the dashboard stylesheet
-    // is not loaded (any admin page or the frontend toolbar).
-    if (!did_action('mmhd_admin_bar_ticket_badge_styles')) {
-        add_action('admin_footer', 'mmhd_admin_bar_ticket_badge_styles', 1);
-        add_action('wp_footer', 'mmhd_admin_bar_ticket_badge_styles', 1);
-        do_action('mmhd_admin_bar_ticket_badge_styles');
-    }
 }
 add_action('admin_bar_menu', 'mmhd_admin_bar_active_tickets', 999);
 
 /**
- * Prints the admin toolbar badge styles once.
+ * Enqueue the admin toolbar badge stylesheet.
+ *
+ * The toolbar renders on both the admin and the front end, so the stylesheet
+ * is registered on both enqueue hooks when the toolbar is being displayed.
  */
-function mmhd_admin_bar_ticket_badge_styles()
+function mmhd_enqueue_admin_bar_ticket_badge_styles()
 {
-    echo '<style id="mmhd-adminbar-ticket-badge">'
-        . '#wpadminbar .dashboard-filter-count-badge{display:inline-flex;align-items:center;justify-content:center;min-width:1.15rem;height:1.15rem;margin-left:.3rem;padding:0 .28rem;border-radius:9999px;background-color:#ef4444;color:#fff;font-size:.7rem;font-weight:600;line-height:1;vertical-align:middle}'
-        . '</style>';
+    if (!is_admin_bar_showing()) {
+        return;
+    }
+
+    wp_enqueue_style(
+        'mmhd-adminbar-ticket-badge',
+        MMHD_PLUGIN_URL . 'admin/assets/css/mmhd-adminbar-badge.css',
+        array(),
+        MMHD_VERSION
+    );
 }
+add_action('admin_enqueue_scripts', 'mmhd_enqueue_admin_bar_ticket_badge_styles');
+add_action('wp_enqueue_scripts', 'mmhd_enqueue_admin_bar_ticket_badge_styles');

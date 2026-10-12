@@ -23,7 +23,7 @@ function mmhd_get_notice_assignable_post_types()
     }
 
     $excluded = array(
-        'notice',
+        'mmhd_notice',
         'mmhd_faq',
         'mmhd_ticket',
         'attachment',
@@ -77,7 +77,7 @@ function mmhd_get_active_notices_list()
 
     $notices = array();
     $query = get_posts(array(
-        'post_type'      => 'notice',
+        'post_type'      => 'mmhd_notice',
         'post_status'    => 'publish',
         'posts_per_page' => -1,
         'orderby'        => 'title',
@@ -191,101 +191,53 @@ function mmhd_render_notice_assignment_picker($notices, $saved, $sources = array
         <div class="mmhd-notice-selected"></div>
     </div>
     <?php
-    mmhd_print_notice_picker_assets();
 }
 
 /**
- * Print the picker JS + CSS once per page.
+ * Enqueue the picker JS + CSS on the screens where the picker is rendered.
+ *
+ * @param string $hook The current admin page hook suffix.
  */
-function mmhd_print_notice_picker_assets()
+function mmhd_enqueue_notice_picker_assets($hook)
 {
-    static $printed = false;
-    if ($printed) {
+    $load = false;
+
+    if ('post.php' === $hook || 'post-new.php' === $hook) {
+        $post_type = get_post_type();
+        // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+        if (!$post_type && isset($_GET['post_type'])) {
+            $post_type = sanitize_key(wp_unslash($_GET['post_type']));
+        }
+        if ($post_type && array_key_exists($post_type, mmhd_get_notice_assignable_post_types())) {
+            $load = true;
+        }
+    } elseif ('edit-tags.php' === $hook || 'term.php' === $hook) {
+        // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+        $taxonomy = isset($_GET['taxonomy']) ? sanitize_key(wp_unslash($_GET['taxonomy'])) : '';
+        if ($taxonomy && array_key_exists($taxonomy, mmhd_get_notice_assignable_taxonomies())) {
+            $load = true;
+        }
+    }
+
+    if (!$load) {
         return;
     }
-    $printed = true;
-    ?>
-    <style>
-        .mmhd-notice-selected { display:flex; flex-wrap:wrap; gap:4px; margin-top:6px; }
-        .mmhd-notice-chip {
-            display:inline-flex; align-items:center; gap:4px;
-            background:#f0f0f1; border:1px solid #dcdcde; border-radius:3px;
-            padding:2px 6px; font-size:12px;
-        }
-        .mmhd-notice-chip-remove {
-            background:none; border:none; cursor:pointer; padding:0 2px;
-            color:#787c82; font-size:14px; line-height:1;
-        }
-        .mmhd-notice-chip-remove:hover { color:#d63638; }
-    </style>
-    <script>
-    (function () {
-        if (window.__mmhdNoticePickerInit) {
-            return;
-        }
-        window.__mmhdNoticePickerInit = true;
 
-        function initPicker(root) {
-            var select = root.querySelector('select[name="mmhd_related_notices[]"]');
-            var search = root.querySelector('.mmhd-notice-search');
-            var selectedBox = root.querySelector('.mmhd-notice-selected');
-            if (!select || !selectedBox) return;
-
-            function renderChips() {
-                selectedBox.innerHTML = '';
-                var options = Array.prototype.slice.call(select.selectedOptions || []);
-                options.forEach(function (option) {
-                    var chip = document.createElement('span');
-                    chip.className = 'mmhd-notice-chip';
-                    chip.textContent = option.textContent;
-
-                    var remove = document.createElement('button');
-                    remove.type = 'button';
-                    remove.className = 'mmhd-notice-chip-remove';
-                    remove.setAttribute('aria-label', 'Remove');
-                    remove.textContent = '×';
-                    remove.addEventListener('click', function () {
-                        option.selected = false;
-                        renderChips();
-                        select.dispatchEvent(new Event('change'));
-                    });
-
-                    chip.appendChild(remove);
-                    selectedBox.appendChild(chip);
-                });
-            }
-
-            select.addEventListener('change', renderChips);
-            renderChips();
-
-            if (search) {
-                search.addEventListener('input', function () {
-                    var query = search.value.toLowerCase();
-                    var options = select.options;
-                    for (var i = 0; i < options.length; i++) {
-                        options[i].style.display =
-                            options[i].textContent.toLowerCase().indexOf(query) !== -1 ? '' : 'none';
-                    }
-                });
-            }
-        }
-
-        function initAll() {
-            var roots = document.querySelectorAll('.mmhd-notice-picker');
-            for (var i = 0; i < roots.length; i++) {
-                initPicker(roots[i]);
-            }
-        }
-
-        if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', initAll);
-        } else {
-            initAll();
-        }
-    })();
-    </script>
-    <?php
+    wp_enqueue_style(
+        'mmhd-notice-picker',
+        MMHD_PLUGIN_URL . 'admin/assets/css/mmhd-notice-picker.css',
+        array(),
+        MMHD_VERSION
+    );
+    wp_enqueue_script(
+        'mmhd-notice-picker',
+        MMHD_PLUGIN_URL . 'admin/assets/js/mmhd-notice-picker.js',
+        array(),
+        MMHD_VERSION,
+        true
+    );
 }
+add_action('admin_enqueue_scripts', 'mmhd_enqueue_notice_picker_assets');
 
 /**
  * Register the "Notices" meta box on all assignable post types.
@@ -461,7 +413,7 @@ function mmhd_resolve_context_notices($post_id = 0, $term_ids = array())
 
         if (!empty($assigned)) {
             $direct = get_posts(array(
-                'post_type'      => 'notice',
+                'post_type'      => 'mmhd_notice',
                 'post_status'    => 'publish',
                 'posts_per_page' => -1,
                 'orderby'        => 'date',
@@ -495,7 +447,7 @@ function mmhd_resolve_context_notices($post_id = 0, $term_ids = array())
 
         if (!empty($term_notice_ids)) {
             $from_terms = get_posts(array(
-                'post_type'      => 'notice',
+                'post_type'      => 'mmhd_notice',
                 'post_status'    => 'publish',
                 'posts_per_page' => -1,
                 'orderby'        => 'date',

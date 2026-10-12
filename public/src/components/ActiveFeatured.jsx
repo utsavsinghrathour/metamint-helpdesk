@@ -18,7 +18,7 @@ const ActiveFeatured = ({ onNoticeSelect }) => {
       try {
         setIsLoading(true);
         const response = await fetch(
-          `/wp-json/wp/v2/notice?featured=true&active=true&_fields=id,title.rendered,link,content.rendered`
+          `/wp-json/wp/v2/mmhd_notice?featured=true&active=true&_fields=id,title.rendered,link,content.rendered`
         );
         if (!response.ok) {
           throw new Error('Failed to fetch notices');

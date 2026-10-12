@@ -463,7 +463,13 @@ $mmhd_tickets_hidden = ($mmhd_current_tab === 'tickets' && $mmhd_has_ticket === 
                 <input type="hidden" name="tab" value="tickets">
                 <?php
                 // phpcs:ignore WordPress.Security.NonceVerification.Recommended
-                foreach ($_GET as $key => $value): ?>
+                foreach ($_GET as $key => $value):
+                    if (!is_scalar($value)) {
+                        continue;
+                    }
+                    $key   = sanitize_key($key);
+                    $value = sanitize_text_field(wp_unslash((string) $value));
+                    ?>
                 <?php if (!in_array($key, ['page', 'tab', 'search', 'customer', 'agent', 'status', 'paged', 'per_page'])): ?>
                 <input type="hidden" name="<?php echo esc_attr($key); ?>" value="<?php echo esc_attr($value); ?>">
                 <?php endif; ?>
@@ -785,7 +791,7 @@ $mmhd_tickets_hidden = ($mmhd_current_tab === 'tickets' && $mmhd_has_ticket === 
                         <?php if (!empty($search_term) || !empty($customer_filter) || !empty($agent_filter) || $status_filter !== 'all' || $priority_filter !== 'all'): ?>
                         No conversations found matching your filters. <a href="<?php
                                                                                         // phpcs:disable WordPress.Security.NonceVerification.Recommended
-                                                                                        echo esc_url(admin_url('admin.php?' . http_build_query(array_filter(array_merge($_GET, ['agent' => '__all__']), function ($key) {
+                                                                                        echo esc_url(admin_url('admin.php?' . http_build_query(array_filter(array_merge(map_deep($_GET, 'sanitize_text_field'), ['agent' => '__all__']), function ($key) {
                                                                                             return !in_array($key, ['search', 'customer', 'status', 'priority', 'paged']);
                                                                                         }, ARRAY_FILTER_USE_KEY))));
                                                                                         // phpcs:enable WordPress.Security.NonceVerification.Recommended

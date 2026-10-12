@@ -76,19 +76,6 @@ function mmhd_live_admin_comments($request)
     // Disable output buffering and compression
     if (ob_get_level()) ob_end_clean();
 
-    // Disable WordPress output compression
-    if (function_exists('ini_set')) {
-        // phpcs:ignore Squiz.PHP.DiscouragedFunctions.Discouraged
-        @ini_set('zlib.output_compression', 0);
-        // phpcs:ignore Squiz.PHP.DiscouragedFunctions.Discouraged
-        @ini_set('output_buffering', 0);
-    }
-
-    // Set execution limits
-    if (function_exists('set_time_limit')) {
-        // phpcs:ignore Squiz.PHP.DiscouragedFunctions.Discouraged
-        set_time_limit(0);
-    }
     if (function_exists('ignore_user_abort')) {
         ignore_user_abort(false);
     }
@@ -245,10 +232,6 @@ function mmhd_ticket_stream($request)
     }
     ob_implicit_flush(true);
 
-    if (function_exists('set_time_limit')) {
-        // phpcs:ignore Squiz.PHP.DiscouragedFunctions.Discouraged
-        set_time_limit(0);
-    }
     if (function_exists('ignore_user_abort')) {
         ignore_user_abort(false);
     }
@@ -487,10 +470,6 @@ function mmhd_notification_stream()
     }
     ob_implicit_flush(true);
 
-    if (function_exists('set_time_limit')) {
-        // phpcs:ignore Squiz.PHP.DiscouragedFunctions.Discouraged
-        set_time_limit(0);
-    }
     if (function_exists('ignore_user_abort')) {
         ignore_user_abort(false);
     }

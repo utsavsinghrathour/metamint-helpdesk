@@ -4,7 +4,7 @@ import { FaRegFaceSmileBeam } from "react-icons/fa6";
 import { PiPaperPlaneRightFill } from "react-icons/pi";
 import { FiPaperclip } from "react-icons/fi";
 import { IoClose } from "react-icons/io5";
-import EmojiPicker from "emoji-picker-react";
+import EmojiPicker, { EmojiStyle } from "emoji-picker-react";
 import defaultLogo from "../images/mmhd-logo.png";
 import "../styles/MessageTabs.css";
 import { sendReply } from "../utils/modules";
@@ -1348,7 +1348,7 @@ const SingleTicket = ({
                 </button>
                 {showPicker && (
                   <div className="mmhd-position-absolute mmhd-bottom-0 mmhd-right-0 emoji-picker-wrap">
-                    <EmojiPicker onEmojiClick={handleEmojiClick} />
+                    <EmojiPicker onEmojiClick={handleEmojiClick} emojiStyle={EmojiStyle.NATIVE} />
                   </div>
                 )}
                 <div className="mmhd-flex">
