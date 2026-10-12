@@ -7,3 +7,4 @@ logs/debug.log
 *.zip
 tests/
 .playwright-mcp
+__pycache__/

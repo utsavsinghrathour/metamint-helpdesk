@@ -2,68 +2,26 @@ name: Repo Integrity Guard
 
 on:
   push:
+    branches: [main, dev]
   pull_request:
+    branches: [main, dev]
+  workflow_call:
 
 permissions:
   contents: read
 
 jobs:
-  webpack-config-integrity:
-    name: webpack.config.js integrity
+  integrity-check:
+    name: Repo Integrity Guard
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-      - name: Scan tracked files for injected payload markers
-        run: |
-          set -euo pipefail
-          MARKERS=(
-            "global.o="
-            "i_tjmbnaan"
-            "xaustunbrcrpkzrjlctnswcoeitoqohmfdgvy"
-            "7-nv1431"
-            "7-v21442"
-            "7-c1250"
-          )
-          FOUND=0
-          for m in "${MARKERS[@]}"; do
-            if git grep -qF -- "$m" -- . ':(exclude).github/workflows/integrity-check.yml'; then
-              echo "::error::Injected payload marker '$m' found in tracked files:"
-              git grep -nF -- "$m" -- . ':(exclude).github/workflows/integrity-check.yml' || true
-              FOUND=1
-            fi
-          done
-          if [ "$FOUND" -ne 0 ]; then exit 1; fi
-          echo "OK: no payload markers in tracked files"
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
 
-      - name: Structural check of public/webpack.config.js
-        run: |
-          python3 - <<'PY'
-          import re, sys, pathlib
-
-          p = pathlib.Path("public/webpack.config.js")
-          if not p.exists():
-              print("::error::public/webpack.config.js is missing")
-              sys.exit(1)
-
-          src = p.read_text(errors="replace")
-          problems = []
-
-          if re.search(r"\beval\s*\(", src):
-              problems.append("eval() call")
-          if re.search(r"\bnew\s+Function\s*\(|[^.\w]Function\s*\(", src):
-              problems.append("Function() constructor")
-          if re.search(r"\bfromCharCode\s*\(", src):
-              problems.append("String.fromCharCode")
-          if len(src) > 8192:
-              problems.append(f"unexpected size {len(src)} bytes")
-
-          if problems:
-              print(
-                  "::error::public/webpack.config.js looks tampered with: "
-                  + ", ".join(problems)
-              )
-              sys.exit(1)
-
-          print(f"OK: public/webpack.config.js ({len(src)} bytes)")
-          PY
+      - name: Scan repository and config files for malicious code
+        run: python3 .github/scripts/check-integrity.py

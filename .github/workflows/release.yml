@@ -8,8 +8,13 @@ on:
     types: [closed]
 
 jobs:
+  integrity-check:
+    name: Repo Integrity Guard
+    uses: ./.github/workflows/integrity-check.yml
+
   release-plugin:
     name: Release Full Plugin (Dev Push)
+    needs: integrity-check
     runs-on: ubuntu-latest
     if: github.event_name == 'push'
     permissions:
