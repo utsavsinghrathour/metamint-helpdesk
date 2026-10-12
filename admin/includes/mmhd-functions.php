@@ -3227,6 +3227,15 @@ function mmhd_get_email_logo_file_path()
     return '';
 }
 
+/**
+ * Returns the HTML email header template.
+ *
+ * The inline <style> block below is intentional: this markup is the body of a
+ * transactional email, and email clients do not support enqueued stylesheets,
+ * so the CSS must be embedded. It is never printed on a web page.
+ *
+ * phpcs:disable WordPress.WP.EnqueuedResources
+ */
 function mmhd_get_default_email_header_template()
 {
     return <<<'HTML'
@@ -3276,6 +3285,7 @@ function mmhd_get_default_email_header_template()
                         <td class="content">
 HTML;
 }
+// phpcs:enable WordPress.WP.EnqueuedResources
 
 function mmhd_get_default_email_footer_template()
 {
