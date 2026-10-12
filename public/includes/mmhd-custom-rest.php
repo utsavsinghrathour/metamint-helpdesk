@@ -451,11 +451,6 @@ function mmhd_stream($request)
     header('Access-Control-Allow-Headers: Cache-Control');
     header('X-Accel-Buffering: no');
 
-    if (function_exists('set_time_limit')) {
-        // phpcs:ignore Squiz.PHP.DiscouragedFunctions.Discouraged
-        set_time_limit(0);
-    }
-
     if (function_exists('session_write_close')) {
         session_write_close();
     }
@@ -463,17 +458,6 @@ function mmhd_stream($request)
     if (ob_get_level())
         ob_end_clean();
 
-    if (function_exists('ini_set')) {
-        // phpcs:ignore Squiz.PHP.DiscouragedFunctions.Discouraged
-        @ini_set('zlib.output_compression', 0);
-        // phpcs:ignore Squiz.PHP.DiscouragedFunctions.Discouraged
-        @ini_set('output_buffering', 0);
-    }
-
-    if (function_exists('set_time_limit')) {
-        // phpcs:ignore Squiz.PHP.DiscouragedFunctions.Discouraged
-        set_time_limit(0);
-    }
     if (function_exists('ignore_user_abort')) {
         ignore_user_abort(false);
     }
@@ -908,19 +892,6 @@ function mmhd_live_comments($request)
     if (ob_get_level())
         ob_end_clean();
 
-    // Disable WordPress output compression
-    if (function_exists('ini_set')) {
-        // phpcs:ignore Squiz.PHP.DiscouragedFunctions.Discouraged
-        @ini_set('zlib.output_compression', 0);
-        // phpcs:ignore Squiz.PHP.DiscouragedFunctions.Discouraged
-        @ini_set('output_buffering', 0);
-    }
-
-    // Set execution limits
-    if (function_exists('set_time_limit')) {
-        // phpcs:ignore Squiz.PHP.DiscouragedFunctions.Discouraged
-        set_time_limit(0);
-    }
     if (function_exists('ignore_user_abort')) {
         ignore_user_abort(false);
     }

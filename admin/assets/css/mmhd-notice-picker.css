@@ -1,0 +1,11 @@
+.mmhd-notice-selected { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px; }
+.mmhd-notice-chip {
+    display: inline-flex; align-items: center; gap: 4px;
+    background: #f0f0f1; border: 1px solid #dcdcde; border-radius: 3px;
+    padding: 2px 6px; font-size: 12px;
+}
+.mmhd-notice-chip-remove {
+    background: none; border: none; cursor: pointer; padding: 0 2px;
+    color: #787c82; font-size: 14px; line-height: 1;
+}
+.mmhd-notice-chip-remove:hover { color: #d63638; }

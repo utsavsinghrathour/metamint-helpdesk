@@ -132,11 +132,6 @@ require_once MMHD_PLUGIN_PATH . 'public/includes/mmhd-shortcodes.php';
 
 function mmhd_activate()
 {
-    // Ensure WordPress functions are loaded
-    if (!function_exists('add_role')) {
-        require_once ABSPATH . 'wp-includes/capabilities.php';
-    }
-
     $admin_role = get_role('administrator');
     if ($admin_role) {
         $admin_role->add_cap('create_tickets');
@@ -316,6 +311,33 @@ function mmhd_migrate_settings_on_update()
 add_action('admin_init', 'mmhd_migrate_settings_on_update');
 
 /**
+ * One-time migration: move any notices stored under the legacy, unprefixed
+ * `notice` post type to the prefixed `mmhd_notice` post type introduced for
+ * WordPress.org naming compliance, so existing notices are not orphaned.
+ */
+function mmhd_migrate_notice_post_type()
+{
+    if (get_option('mmhd_notice_cpt_migrated')) {
+        return;
+    }
+
+    $legacy_notices = get_posts(array(
+        'post_type'   => 'notice',
+        'post_status' => 'any',
+        'numberposts' => -1,
+        'fields'      => 'ids',
+    ));
+
+    foreach ($legacy_notices as $legacy_id) {
+        set_post_type($legacy_id, 'mmhd_notice');
+    }
+
+    update_option('mmhd_notice_cpt_migrated', 1);
+    flush_rewrite_rules();
+}
+add_action('admin_init', 'mmhd_migrate_notice_post_type');
+
+/**
  * Initialize debug log file
  * Creates logs directory and debug.log file if they don't exist
  */
@@ -457,7 +479,7 @@ function mmhd_enqueue_scripts()
                 'mmhd_addon_active' => defined('MMHD_ADDON_VERSION'),
                 'mmhd_ai_bot_active' => get_option('mmhd_addon_ai_bot_status', 'inactive') === 'active',
                 'enable_chat' => get_option('mmhd_enable_chat', '1'),
-                'hide_credits' => get_option('mmhd_hide_credits', '0'),
+                'show_credits' => get_option('mmhd_show_credits', '0'),
                 'noticeContext' => mmhd_get_current_notice_context(),
             ]
         );
@@ -589,7 +611,7 @@ function mmhd_enqueue_admin_scripts($hook)
     if ($taxonomy === 'mmhd_ticket_priority' && $post_type === 'mmhd_ticket') {
         wp_enqueue_script('jquery-ui-sortable');
         wp_enqueue_script('mmhd-custom-taxonomy-order', MMHD_PLUGIN_URL . 'admin/assets/js/custom-taxonomy-order.js', array('jquery', 'jquery-ui-sortable'), MMHD_VERSION, true);
-        wp_localize_script('mmhd-custom-taxonomy-order', 'taxonomyOrderData', array(
+        wp_localize_script('mmhd-custom-taxonomy-order', 'mmhdTaxonomyOrderData', array(
             'ajax_url' => admin_url('admin-ajax.php'),
             'nonce' => wp_create_nonce('taxonomy_order_nonce')
         ));
@@ -2514,7 +2536,7 @@ function mmhd_disable_block_for_post_type($use_block_editor, $post)
     if ('mmhd_faq' === $post->post_type) {
         return false;
     }
-    if ('notice' === $post->post_type) {
+    if ('mmhd_notice' === $post->post_type) {
         return false;
     }
     return $use_block_editor;

@@ -143,7 +143,7 @@ export default function AppContextProvider({ children }) {
             '/wp-json/wp/v2/mmhd_faq?featured=true&_fields=id,title.rendered,excerpt.rendered,content.rendered'
           ),
           fetch(
-            '/wp-json/wp/v2/notice?_fields=id,title.rendered,excerpt.rendered,content.rendered'
+            '/wp-json/wp/v2/mmhd_notice?_fields=id,title.rendered,excerpt.rendered,content.rendered'
           ),
         ];
 
