@@ -202,8 +202,12 @@ function mmhd_dashboard_callback()
         class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4"
         role="dialog" aria-modal="true" aria-labelledby="mmhd-review-modal-title">
         <div class="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
-            <div class="flex items-center justify-center mb-4">
-                <i class="fas fa-star text-yellow-400 text-4xl"></i>
+            <div class="flex items-center justify-center gap-1 mb-4">
+                <i class="fas fa-star text-yellow-400 text-2xl"></i>
+                <i class="fas fa-star text-yellow-400 text-2xl"></i>
+                <i class="fas fa-star text-yellow-400 text-2xl"></i>
+                <i class="fas fa-star text-yellow-400 text-2xl"></i>
+                <i class="fas fa-star text-yellow-400 text-2xl"></i>
             </div>
             <h3 id="mmhd-review-modal-title" class="text-lg font-semibold text-gray-900 text-center mb-2">
                 <?php esc_html_e('Enjoying Metamint Helpdesk?', 'metamint-helpdesk'); ?>
@@ -213,7 +217,7 @@ function mmhd_dashboard_callback()
             </p>
             <div class="flex flex-col sm:flex-row gap-2">
                 <a href="#" id="mmhd-review-leave" target="_blank" rel="noopener noreferrer"
-                    class="w-full inline-flex items-center justify-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md">
+                    class="mmhd-review-btn w-full inline-flex items-center justify-center px-4 py-2 text-white text-sm font-medium rounded-md">
                     <i class="fas fa-star mr-2"></i>
                     <?php esc_html_e('Leave us a review', 'metamint-helpdesk'); ?>
                 </a>

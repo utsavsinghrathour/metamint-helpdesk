@@ -917,3 +917,17 @@ CONVERSATION
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+
+/* Review prompt primary button (Metamint brand green) */
+.mmhd-review-btn {
+  background-color: #076c45;
+  border: 1px solid #076c45;
+  transition: background-color 0.2s ease-in-out, border-color 0.2s ease-in-out;
+}
+
+.mmhd-review-btn:hover,
+.mmhd-review-btn:focus {
+  background-color: #055336;
+  border-color: #055336;
+  color: #ffffff;
+}
