@@ -337,6 +337,14 @@ function mmhd_enqueue_tailwind_and_styles()
     wp_localize_script('mmhd-dashboard-script', 'mmhdAdvancedSettings', [
         'polling_interval' => isset($mmhd_adv_settings['polling_interval']) ? absint($mmhd_adv_settings['polling_interval']) : 30,
     ]);
+
+    // Review prompt: link + timing (popup repeats every 5 days unless the user
+    // dismisses it via "Already reviewed", which snoozes it for 30 days).
+    wp_localize_script('mmhd-dashboard-script', 'mmhdReviewPrompt', [
+        'reviewUrl' => '#',
+        'showEveryDays' => 5,
+        'snoozeDays' => 30,
+    ]);
 }
 
 /**
