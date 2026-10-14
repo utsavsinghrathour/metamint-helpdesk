@@ -5063,3 +5063,100 @@ jQuery(document).ready(function () {
     }
   });
 });
+
+/**
+ * Review prompt.
+ *
+ * Shows a "leave us a review" popup every few days (default 5). Clicking
+ * "Already reviewed" snoozes it for a longer period (default 30 days) using a
+ * cookie. Clicking "Leave us a review" opens the configured review URL.
+ */
+(function ($) {
+  var MMHD_REVIEW_COOKIE = "mmhd_review_snooze";
+  var MMHD_REVIEW_NEXT_COOKIE = "mmhd_review_next";
+
+  var config = window.mmhdReviewPrompt || {};
+  var reviewUrl = config.reviewUrl || "#";
+  var showEveryDays = parseInt(config.showEveryDays, 10) || 5;
+  var snoozeDays = parseInt(config.snoozeDays, 10) || 30;
+
+  function getCookie(name) {
+    var match = document.cookie.match(
+      new RegExp("(?:^|; )" + name.replace(/([.*+?^${}()|[\]\\])/g, "\\$1") + "=([^;]*)")
+    );
+    return match ? decodeURIComponent(match[1]) : null;
+  }
+
+  function setCookie(name, value, days) {
+    var expires = new Date();
+    expires.setTime(expires.getTime() + days * 24 * 60 * 60 * 1000);
+    document.cookie =
+      name +
+      "=" +
+      encodeURIComponent(value) +
+      "; expires=" +
+      expires.toUTCString() +
+      "; path=/; SameSite=Lax";
+  }
+
+  function daysToMs(days) {
+    return days * 24 * 60 * 60 * 1000;
+  }
+
+  function shouldShow() {
+    var now = Date.now();
+
+    var snooze = parseInt(getCookie(MMHD_REVIEW_COOKIE), 10);
+    if (!isNaN(snooze) && now < snooze) {
+      return false;
+    }
+
+    var next = parseInt(getCookie(MMHD_REVIEW_NEXT_COOKIE), 10);
+    if (!isNaN(next) && now < next) {
+      return false;
+    }
+
+    return true;
+  }
+
+  function scheduleNext() {
+    setCookie(MMHD_REVIEW_NEXT_COOKIE, Date.now() + daysToMs(showEveryDays), 3650);
+  }
+
+  function hideModal() {
+    $("#mmhd-review-modal").addClass("hidden");
+  }
+
+  function init() {
+    var $modal = $("#mmhd-review-modal");
+    if (!$modal.length) {
+      return;
+    }
+
+    if (!shouldShow()) {
+      return;
+    }
+
+    scheduleNext();
+    $modal.removeClass("hidden");
+
+    $("#mmhd-review-leave")
+      .attr("href", reviewUrl)
+      .on("click", function () {
+        hideModal();
+      });
+
+    $("#mmhd-review-already").on("click", function () {
+      setCookie(MMHD_REVIEW_COOKIE, Date.now() + daysToMs(snoozeDays), snoozeDays);
+      hideModal();
+    });
+
+    $modal.on("click", function (event) {
+      if (event.target === this) {
+        hideModal();
+      }
+    });
+  }
+
+  $(init);
+})(jQuery);

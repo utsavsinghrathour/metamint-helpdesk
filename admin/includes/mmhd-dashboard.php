@@ -102,7 +102,12 @@ function mmhd_dashboard_callback()
                             <i class="fa-solid fa-bars" style="color: rgb(0, 124, 186);"></i>
                         </button>
                     </div>
-                    <div class="flex items-center relative">
+                    <div class="flex items-center space-x-3 relative">
+                        <a href="#" target="_blank" rel="noopener noreferrer"
+                            class="inline-flex items-center px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm">
+                            <?php esc_html_e('Leave us a review', 'metamint-helpdesk'); ?>
+                        </a>
+
                         <button id="dashboard-notification-bell" onclick="toggleNotificationDropdown()"
                             class="bg-gray-100 p-2 rounded-full text-gray-600 hover:text-gray-900 relative transition-all"
                             title="<?php esc_html_e('View notifications', 'metamint-helpdesk'); ?>">
@@ -190,6 +195,34 @@ function mmhd_dashboard_callback()
         </div>
 
 
+    </div>
+
+    <!-- Review Request Modal -->
+    <div id="mmhd-review-modal"
+        class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4"
+        role="dialog" aria-modal="true" aria-labelledby="mmhd-review-modal-title">
+        <div class="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
+            <div class="flex items-center justify-center mb-4">
+                <i class="fas fa-star text-yellow-400 text-4xl"></i>
+            </div>
+            <h3 id="mmhd-review-modal-title" class="text-lg font-semibold text-gray-900 text-center mb-2">
+                <?php esc_html_e('Enjoying Metamint Helpdesk?', 'metamint-helpdesk'); ?>
+            </h3>
+            <p class="text-sm text-gray-600 text-center mb-6">
+                <?php esc_html_e('Your feedback helps us improve. Would you take a moment to leave us a review?', 'metamint-helpdesk'); ?>
+            </p>
+            <div class="flex flex-col sm:flex-row gap-2">
+                <a href="#" id="mmhd-review-leave" target="_blank" rel="noopener noreferrer"
+                    class="w-full inline-flex items-center justify-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md">
+                    <i class="fas fa-star mr-2"></i>
+                    <?php esc_html_e('Leave us a review', 'metamint-helpdesk'); ?>
+                </a>
+                <button type="button" id="mmhd-review-already"
+                    class="w-full inline-flex items-center justify-center px-4 py-2 bg-gray-100 text-gray-700 text-sm font-medium rounded-md border border-gray-300">
+                    <?php esc_html_e('Already reviewed', 'metamint-helpdesk'); ?>
+                </button>
+            </div>
+        </div>
     </div>
 
 <?php
