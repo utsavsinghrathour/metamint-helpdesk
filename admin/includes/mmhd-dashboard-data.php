@@ -358,6 +358,20 @@ function mmhd_build_dashboard_ticket_records($light_records)
             ];
         }
 
+        $assignee_name = isset($light['assignee']) ? $light['assignee'] : 'N/A';
+        $assignee_id = isset($light['assignee_id']) ? (int) $light['assignee_id'] : 0;
+        $assignee_initials = function_exists('mmhd_get_name_initials')
+            ? mmhd_get_name_initials($assignee_name, $assignee_id)
+            : strtoupper(substr($assignee_name, 0, 1));
+        $assignee_avatar_color = function_exists('mmhd_get_avatar_color')
+            ? mmhd_get_avatar_color($assignee_name)
+            : '#9ca3af';
+        $assignee_avatar_url = $assignee_id > 0
+            ? (function_exists('mmhd_get_avatar_url')
+                ? mmhd_get_avatar_url($assignee_id, 32)
+                : get_avatar_url($assignee_id, ['size' => 32]))
+            : '';
+
         $records[] = [
             'id' => $ticket_id,
             'title' => $post->post_title,
@@ -377,6 +391,9 @@ function mmhd_build_dashboard_ticket_records($light_records)
             'updated' => $updated_at,
             'assignee' => $light['assignee'],
             'assignee_id' => $light['assignee_id'],
+            'assignee_initials' => $assignee_initials,
+            'assignee_avatar_color' => $assignee_avatar_color,
+            'assignee_avatar_url' => $assignee_avatar_url,
             'replies' => $replies,
             'replies_count' => count($replies),
         ];
