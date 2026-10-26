@@ -1604,6 +1604,35 @@ function mmhd_get_avatar_url($user_id, $size = 96)
     return get_avatar_url($user_id, array('size' => (int) $size));
 }
 
+if (!function_exists('mmhd_get_name_initials')) {
+    function mmhd_get_name_initials($name, $user_id = 0)
+    {
+        $display_name = (string) $name;
+        if ((int) $user_id > 0) {
+            $user = get_userdata((int) $user_id);
+            if ($user && !empty($user->display_name)) {
+                $display_name = $user->display_name;
+            }
+        }
+        $parts    = preg_split('/\s+/', trim($display_name));
+        $initials = '';
+        foreach (array_slice((array) $parts, 0, 2) as $part) {
+            if ($part !== '') {
+                $initials .= mb_strtoupper(mb_substr($part, 0, 1));
+            }
+        }
+        return $initials !== '' ? $initials : '?';
+    }
+}
+
+if (!function_exists('mmhd_get_avatar_color')) {
+    function mmhd_get_avatar_color($name)
+    {
+        $palette = ['#6366f1', '#8b5cf6', '#ec4899', '#f59e0b', '#10b981', '#06b6d4', '#3b82f6', '#ef4444'];
+        return $palette[crc32((string) $name) % count($palette)];
+    }
+}
+
 function mmhd_get_default_avatar_url($size = 96)
 {
     return get_avatar_url('', array(

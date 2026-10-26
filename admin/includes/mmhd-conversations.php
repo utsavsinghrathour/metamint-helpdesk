@@ -3,34 +3,6 @@ if (!defined('ABSPATH')) {
     exit; // Exit if accessed directly
 }
 
-if (!function_exists('mmhd_get_name_initials')) {
-    function mmhd_get_name_initials($name, $user_id = 0)
-    {
-        $display_name = (string) $name;
-        if ((int) $user_id > 0) {
-            $user = get_userdata((int) $user_id);
-            if ($user && !empty($user->display_name)) {
-                $display_name = $user->display_name;
-            }
-        }
-        $parts  = preg_split('/\s+/', trim($display_name));
-        $initials = '';
-        foreach (array_slice((array) $parts, 0, 2) as $part) {
-            if ($part !== '') {
-                $initials .= mb_strtoupper(mb_substr($part, 0, 1));
-            }
-        }
-        return $initials !== '' ? $initials : '?';
-    }
-}
-
-if (!function_exists('mmhd_get_avatar_color')) {
-    function mmhd_get_avatar_color($name)
-    {
-        $palette = ['#6366f1', '#8b5cf6', '#ec4899', '#f59e0b', '#10b981', '#06b6d4', '#3b82f6', '#ef4444'];
-        return $palette[crc32((string) $name) % count($palette)];
-    }
-}
 // phpcs:disable WordPress.NamingConventions.PrefixAllGlobals, WordPress.DB.SlowDBQuery
 // Get filter parameters from URL
 // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound, WordPress.Security.NonceVerification.Recommended
@@ -678,7 +650,7 @@ $mmhd_tickets_hidden = ($mmhd_current_tab === 'tickets' && $mmhd_has_ticket === 
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status
                     </th>
                     <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        <div class="mt-1">
+                        <div class="mt-1 relative inline-flex items-center">
                             <select id="mmhd-priority-filter" name="priority"
                                 class="styled-select text-xs font-medium text-gray-500 uppercase tracking-wider border-gray-300 rounded py-0.5"
                                 aria-label="Priority filter">
@@ -691,9 +663,10 @@ $mmhd_tickets_hidden = ($mmhd_current_tab === 'tickets' && $mmhd_has_ticket === 
                                 </option>
                                 <?php endforeach; ?>
                             </select>
+                            <i class="fas fa-sort mmhd-filter-icon" aria-hidden="true"></i>
                         </div>
                     </th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Assignee
+                    <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Assignee
                     </th>
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         <a href="<?php echo esc_url(get_filter_url($orderby === 'updated' ? ['orderby' => 'updated', 'order' => $order === 'ASC' ? 'DESC' : 'ASC'] : ['orderby' => 'updated', 'order' => 'DESC'])); ?>"
@@ -759,11 +732,12 @@ $mmhd_tickets_hidden = ($mmhd_current_tab === 'tickets' && $mmhd_has_ticket === 
                             <i class="fas fa-chevron-down text-[10px] opacity-70"></i>
                         </span>
                     </td>
-                    <td class="px-6 py-4 whitespace-nowrap cursor-pointer"
+                    <td class="px-6 py-4 whitespace-nowrap text-center cursor-pointer"
                         onclick="viewTicket(<?php echo esc_js($ticket['id']); ?>)">
                         <span
-                            class="text-sm font-medium text-gray-900 editable-assignee inline-flex items-center gap-1.5 cursor-pointer hover:text-blue-700"
-                            title="Click to edit assignee"
+                            class="editable-assignee inline-flex items-center cursor-pointer hover:opacity-90"
+                            title="<?php echo esc_attr($ticket['assignee']); ?>"
+                            data-assignee="<?php echo esc_attr($ticket['assignee']); ?>"
                             onclick="event.stopPropagation(); editAssignee(<?php echo esc_js($ticket['id']); ?>, this)">
                             <?php if (!empty($ticket['assignee_avatar_url'])): ?>
                             <img class="mmhd-avatar-img"
@@ -773,8 +747,6 @@ $mmhd_tickets_hidden = ($mmhd_current_tab === 'tickets' && $mmhd_has_ticket === 
                             <span class="mmhd-avatar"
                                 style="background-color:<?php echo esc_attr($ticket['assignee_avatar_color']); ?>;"><?php echo esc_html($ticket['assignee_initials']); ?></span>
                             <?php endif; ?>
-                            <?php echo esc_html($ticket['assignee']); ?>
-                            <i class="fas fa-chevron-down text-[10px] opacity-70"></i>
                         </span>
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 cursor-pointer"
