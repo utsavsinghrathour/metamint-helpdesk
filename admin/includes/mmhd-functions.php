@@ -1653,9 +1653,25 @@ function mmhd_update_ticket_assignee()
             update_comment_meta($comment_id, 'admin_comment', 'yes');
         }
     }
+    $assignee_id = $assignee_user ? (int) $assignee_user->ID : 0;
+    $assignee_initials = function_exists('mmhd_get_name_initials')
+        ? mmhd_get_name_initials($assignee_display, $assignee_id)
+        : strtoupper(substr($assignee_display, 0, 1));
+    $assignee_avatar_color = function_exists('mmhd_get_avatar_color')
+        ? mmhd_get_avatar_color($assignee_display)
+        : '#9ca3af';
+    $assignee_avatar_url = $assignee_id > 0
+        ? (function_exists('mmhd_get_avatar_url')
+            ? mmhd_get_avatar_url($assignee_id, 32)
+            : get_avatar_url($assignee_id, ['size' => 32]))
+        : '';
+
     wp_send_json_success([
         'assignee' => $assignee_display,
-        'assignee_id' => $assignee_user ? (int) $assignee_user->ID : 0,
+        'assignee_id' => $assignee_id,
+        'assignee_initials' => $assignee_initials,
+        'assignee_avatar_color' => $assignee_avatar_color,
+        'assignee_avatar_url' => $assignee_avatar_url,
         'updated'  => $updated,
     ]);
 }
