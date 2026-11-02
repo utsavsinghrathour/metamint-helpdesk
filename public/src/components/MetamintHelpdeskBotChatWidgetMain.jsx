@@ -311,6 +311,140 @@ function Countdown({ seconds, onExpire }) {
   return <span className="mmhd-countdown">({mm}:{ss})</span>;
 }
 
+/**
+ * ASSISTANT MESSAGE RENDERER
+ * Hoisted to module level so its identity stays stable across re-renders of the
+ * widget. Defining it inside the parent component caused React to unmount/remount
+ * it (and any child Countdown timers) on every render, resetting the countdown.
+ */
+function AssistantMessage({
+  msg,
+  msgIndex,
+  setInput,
+  setMessages,
+  markActionUsed,
+  addToCart,
+  removeFromCart,
+  confirmRefund,
+  pushAssistant,
+  expiredActions,
+  setExpiredActions,
+}) {
+  return (
+    <div className="ai-block">
+      {/* MAIN MESSAGE TEXT */}
+      {msg.message && (
+        <div
+          className="ai-text mmhd-body-text single-message"
+          dangerouslySetInnerHTML={{
+            __html: normalizeMessageText(msg.message),
+          }}
+        />
+      )}
+
+      {/* INTENT PILL */}
+      {msg.intent && (
+        <div className="ai-intent">
+          Intent: <strong>{msg.intent}</strong>
+        </div>
+      )}
+
+      {/* SQL RESULT CARDS */}
+      {Array.isArray(msg.data) && msg.data.length > 0 && (
+        <div className="ai-cards">
+          {msg.data.map((row, i) => (
+            <div key={i} className="ai-card">
+              {Object.entries(row).map(([k, v]) => (
+                <div key={k}>
+                  <strong>{k}</strong>: {String(v)}
+                </div>
+              ))}
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* SUGGESTIONS (label + prompt) */}
+      {msg.ui?.suggestions?.length > 0 && (
+        <div className="ai-suggestions">
+          {msg.ui.suggestions.map((s, i) => (
+            <button
+              key={i}
+              className="chip"
+              onClick={() => setInput(s.prompt || s.label || "")}
+            >
+              {s.label || s.prompt}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {/* ACTIONS (link / deep actions) */}
+      {msg.ui?.actions?.length > 0 && (
+        <div className="ai-actions">
+          {msg.ui.actions.map((a, i) => {
+            const isUsed = a.used;
+            const isExpired = Boolean(a.pending_id) && expiredActions.includes(a.pending_id);
+            return (
+              <button
+                key={i}
+                disabled={isUsed || isExpired}
+                onClick={() => {
+                  if (a.action === "confirm-refund") {
+                    confirmRefund(a.pending_id, msgIndex);
+                    return;
+                  }
+                  if (a.action === "add-to-cart") {
+                    addToCart(a.pending_id, msgIndex);
+                    return;
+                  }
+                  if (a.action === "remove-from-cart") {
+                    removeFromCart(a.pending_id, msgIndex);
+                    return;
+                  }
+                  if (a.prompt) setInput(a.prompt);
+                  if (a.url) window.location.href = a.url;
+                }}
+              >
+                {isUsed ? `${a.label} ✓` : isExpired ? `${a.label} (expired)` : a.label}
+                {a.expires_in && !isUsed && !isExpired ? (
+                  <Countdown
+                    seconds={a.expires_in}
+                    onExpire={() =>
+                      setExpiredActions((p) =>
+                        p.includes(a.pending_id) ? p : [...p, a.pending_id]
+                      )
+                    }
+                  />
+                ) : null}
+              </button>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
+AssistantMessage.propTypes = {
+  msg: PropTypes.shape({
+    message: PropTypes.string,
+    intent: PropTypes.string,
+    data: PropTypes.any,
+    ui: PropTypes.any,
+  }).isRequired,
+  msgIndex: PropTypes.number,
+  setInput: PropTypes.func.isRequired,
+  setMessages: PropTypes.func.isRequired,
+  markActionUsed: PropTypes.func.isRequired,
+  addToCart: PropTypes.func.isRequired,
+  removeFromCart: PropTypes.func.isRequired,
+  confirmRefund: PropTypes.func.isRequired,
+  pushAssistant: PropTypes.func.isRequired,
+  expiredActions: PropTypes.arrayOf(PropTypes.string).isRequired,
+  setExpiredActions: PropTypes.func.isRequired,
+};
+
 export default function MetamintHelpdeskBotChatWidgetMain({
   widgetConfig,
   activeAIMode,
@@ -402,109 +536,6 @@ export default function MetamintHelpdeskBotChatWidgetMain({
   const apiProxyStream =
     window.location.origin + "/wp-json/mmhd-bot/v1/chat-stream";
 
-  /**
-   * ASSISTANT MESSAGE RENDERER
-   */
-  function AssistantMessage({ msg, msgIndex }) {
-    return (
-      <div className="ai-block">
-        {/* MAIN MESSAGE TEXT */}
-        {msg.message && (
-          <div
-            className="ai-text mmhd-body-text single-message"
-            dangerouslySetInnerHTML={{
-              __html: normalizeMessageText(msg.message),
-            }}
-          />
-        )}
-
-        {/* INTENT PILL */}
-        {msg.intent && (
-          <div className="ai-intent">
-            Intent: <strong>{msg.intent}</strong>
-          </div>
-        )}
-
-        {/* SQL RESULT CARDS */}
-        {Array.isArray(msg.data) && msg.data.length > 0 && (
-          <div className="ai-cards">
-            {msg.data.map((row, i) => (
-              <div key={i} className="ai-card">
-                {Object.entries(row).map(([k, v]) => (
-                  <div key={k}>
-                    <strong>{k}</strong>: {String(v)}
-                  </div>
-                ))}
-              </div>
-            ))}
-          </div>
-        )}
-
-        {/* SUGGESTIONS (label + prompt) */}
-        {msg.ui?.suggestions?.length > 0 && (
-          <div className="ai-suggestions">
-            {msg.ui.suggestions.map((s, i) => (
-              <button
-                key={i}
-                className="chip"
-                onClick={() => setInput(s.prompt || s.label || "")}
-              >
-                {s.label || s.prompt}
-              </button>
-            ))}
-          </div>
-        )}
-
-        {/* ACTIONS (link / deep actions) */}
-        {msg.ui?.actions?.length > 0 && (
-          <div className="ai-actions">
-            {msg.ui.actions.map((a, i) => {
-              const isUsed = a.used;
-              const isExpired = Boolean(a.pending_id) && expiredActions.includes(a.pending_id);
-              return (
-                <button
-                  key={i}
-                  disabled={isUsed || isExpired}
-                  onClick={() => {
-                    if (a.action === "confirm-refund") {
-                      confirmRefund(a.pending_id, msgIndex);
-                      return;
-                    }
-                    if (a.action === "add-to-cart") {
-                      addToCart(a.pending_id, msgIndex);
-                      return;
-                    }
-                    if (a.action === "remove-from-cart") {
-                      removeFromCart(a.pending_id, msgIndex);
-                      return;
-                    }
-                    if (a.prompt) setInput(a.prompt);
-                    if (a.url) window.location.href = a.url;
-                  }}
-                >
-                  {isUsed ? `${a.label} ✓` : isExpired ? `${a.label} (expired)` : a.label}
-                  {a.expires_in && !isUsed && !isExpired ? (
-                    <Countdown
-                      seconds={a.expires_in}
-                      onExpire={() => setExpiredActions((p) => (p.includes(a.pending_id) ? p : [...p, a.pending_id]))}
-                    />
-                  ) : null}
-                </button>
-              );
-            })}
-          </div>
-        )}
-      </div>
-    );
-  }
-  AssistantMessage.propTypes = {
-    msg: PropTypes.shape({
-      message: PropTypes.string,
-      intent: PropTypes.string,
-      data: PropTypes.any,
-      ui: PropTypes.any,
-    }).isRequired,
-  };
 
   const fetchApiKey = async () => {
     if (!canLoadWidgetConfig) return;
@@ -1333,7 +1364,19 @@ export default function MetamintHelpdeskBotChatWidgetMain({
                     }}
                   >
                     {m.role === "assistant" ? (
-                      <AssistantMessage msg={m} msgIndex={i} />
+                      <AssistantMessage
+                        msg={m}
+                        msgIndex={i}
+                        setInput={setInput}
+                        setMessages={setMessages}
+                        markActionUsed={markActionUsed}
+                        addToCart={addToCart}
+                        removeFromCart={removeFromCart}
+                        confirmRefund={confirmRefund}
+                        pushAssistant={pushAssistant}
+                        expiredActions={expiredActions}
+                        setExpiredActions={setExpiredActions}
+                      />
                     ) : (
                       <span
                         className="mmhd-body-text single-message"
