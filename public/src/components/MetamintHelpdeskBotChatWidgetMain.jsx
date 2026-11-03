@@ -378,7 +378,7 @@ function AssistantMessage({
                 s.label || s.prompt || "",
               );
 
-            if (isTalkToHuman && talkToHuman) {
+            if (isTalkToHuman) {
               return (
                 <button
                   key={i}
@@ -434,7 +434,7 @@ function AssistantMessage({
                 a.label || "",
               );
 
-            if (isTalkToHuman && talkToHuman) {
+            if (isTalkToHuman) {
               return (
                 <button
                   key={i}
@@ -1186,7 +1186,7 @@ export default function MetamintHelpdeskBotChatWidgetMain({
     if (!q) return;
 
     // Frontend detection: if user asks for human, show the SVG button immediately
-    if (talkToHuman && TALK_TO_HUMAN_PATTERN.test(q)) {
+    if (TALK_TO_HUMAN_PATTERN.test(q)) {
       setMessages((m) => [...m, { role: "user", text: q, timestamp: new Date().toISOString() }]);
       setInput("");
       setMessages((m) => [
