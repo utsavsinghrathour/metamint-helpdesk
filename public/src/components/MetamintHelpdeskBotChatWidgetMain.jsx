@@ -358,7 +358,13 @@ function AssistantMessage({
   pushAssistant,
   expiredActions,
   setExpiredActions,
+  talkToHuman,
 }) {
+  // Never render a saved talk-to-human action if the addon setting is off.
+  const visibleActions = (msg.ui?.actions || []).filter(
+    (a) => a?.action !== "talk-to-human" || talkToHuman
+  );
+
   return (
     <div className="ai-block">
       {/* MAIN MESSAGE TEXT */}
@@ -409,9 +415,9 @@ function AssistantMessage({
       )}
 
       {/* ACTIONS (link / deep actions) */}
-      {msg.ui?.actions?.length > 0 && (
+      {visibleActions.length > 0 && (
         <div className="ai-actions">
-          {msg.ui.actions.map((a, i) => {
+          {visibleActions.map((a, i) => {
             const isUsed = a.used;
             const isExpired = Boolean(a.pending_id) && expiredActions.includes(a.pending_id);
             return (
@@ -476,6 +482,7 @@ AssistantMessage.propTypes = {
   pushAssistant: PropTypes.func.isRequired,
   expiredActions: PropTypes.arrayOf(PropTypes.string).isRequired,
   setExpiredActions: PropTypes.func.isRequired,
+  talkToHuman: PropTypes.bool,
 };
 
 export default function MetamintHelpdeskBotChatWidgetMain({
@@ -1202,7 +1209,9 @@ export default function MetamintHelpdeskBotChatWidgetMain({
             const parsedActions = Array.isArray(parsedUi.actions)
               ? parsedUi.actions
               : [];
-            const offerHuman = wantsHuman || HUMAN_OFFER_RE.test(finalText);
+            const offerHuman =
+              talkToHuman &&
+              (wantsHuman || HUMAN_OFFER_RE.test(finalText));
             const ui =
               offerHuman &&
               !parsedActions.some((a) => a && a.action === "talk-to-human")
@@ -1432,6 +1441,7 @@ export default function MetamintHelpdeskBotChatWidgetMain({
                         pushAssistant={pushAssistant}
                         expiredActions={expiredActions}
                         setExpiredActions={setExpiredActions}
+                        talkToHuman={talkToHuman}
                       />
                     ) : (
                       <span
