@@ -630,21 +630,22 @@ export default function MetamintHelpdeskBotChatWidgetMain({
     if (!canLoadWidgetConfig) return;
     console.log("fetchApiKey");
     try {
-      const response = await wp.apiFetch({
-        path: `/mmhd-bot/v1/widget-config`,
-      });
-      // Try both possible key formats your PHP might return
-      setBotName(
-        response.botName || response.bot_name || resolvedBotName || ""
-      );
-      setBotImage(
-        response.botImage || response.bot_image || resolvedBotImage || ""
-      );
-      setTalkToHuman(!!response.talkToHuman);
+      const headers = { "Content-Type": "application/json" };
+      const nonce = window.mmhdAuth?.restNonce || window.wpApiSettings?.nonce || "";
+      if (nonce) headers["X-WP-Nonce"] = nonce;
+      const response = await fetch("/wp-json/mmhd-bot/v1/widget-config", { headers });
+      const data = await response.json();
+      if (response.ok && data) {
+        setBotName(data.botName || data.bot_name || resolvedBotName || "");
+        setBotImage(data.botImage || data.bot_image || resolvedBotImage || "");
+        setTalkToHuman(!!data.talkToHuman);
+      }
     } catch (err) {
       console.error(err);
       setBotName((current) => current || resolvedBotName || "Bot");
       setBotImage((current) => current || resolvedBotImage || "");
+      // Fallback: try to read from localized script config
+      setTalkToHuman(!!window.MetamintHelpdeskBotConfig?.talkToHuman);
     }
   };
 
