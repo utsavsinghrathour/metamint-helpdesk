@@ -301,6 +301,7 @@ function mmhd_migrate_settings_on_update()
         'reply_unseen_email_minutes'   => 15,
         'polling_interval'             => 30,
         'auto_close_chat_minutes'      => 30,
+        'auto_close_ticket_days'       => 0,
     ];
     $existing_advanced = get_option('mmhd_advanced_settings', []);
     $merged_advanced  = wp_parse_args((array) $existing_advanced, $advanced_defaults);
@@ -2453,7 +2454,7 @@ function mmhd_run_chat_ticket_auto_close($ticket_id, $comment_id)
 
     // Attribute the auto-close comment to the ticket assignee, defaulting to the
     // configurable default agent, then to the first administrator.
-    $author_id = mmhd_get_chat_auto_close_author_id($ticket_id);
+    $author_id = mmhd_get_auto_close_author_id($ticket_id);
     $author_user = $author_id > 0 ? get_userdata($author_id) : false;
 
     // Add an action comment marking the auto-close so it is visible in the thread.
@@ -2523,7 +2524,7 @@ function mmhd_get_last_real_ticket_reply($ticket_id)
  * assignee, falling back to the configured default agent, then to the first
  * administrator. Returns 0 when no eligible user can be found.
  */
-function mmhd_get_chat_auto_close_author_id($ticket_id)
+function mmhd_get_auto_close_author_id($ticket_id)
 {
     $ticket_id = (int) $ticket_id;
 
@@ -2554,6 +2555,290 @@ function mmhd_get_chat_auto_close_author_id($ticket_id)
     }
 
     return 0;
+}
+
+/**
+ * Backwards-compatible wrapper for the chat-specific auto-close flow.
+ */
+function mmhd_get_chat_auto_close_author_id($ticket_id)
+{
+    return mmhd_get_auto_close_author_id($ticket_id);
+}
+
+/**
+ * Auto-close tickets from every source after a configurable number of days
+ * without a reply from the end user. The timer is based on the most recent
+ * customer reply, or the ticket creation date when there is no customer reply.
+ */
+add_action('init', 'mmhd_schedule_auto_close_tickets_cron');
+function mmhd_schedule_auto_close_tickets_cron()
+{
+    $settings = get_option('mmhd_advanced_settings', []);
+    $days = isset($settings['auto_close_ticket_days']) ? absint($settings['auto_close_ticket_days']) : 0;
+
+    if ($days <= 0) {
+        return;
+    }
+
+    if (!wp_next_scheduled('mmhd_auto_close_tickets_cron')) {
+        wp_schedule_event(time() + HOUR_IN_SECONDS, 'hourly', 'mmhd_auto_close_tickets_cron');
+    }
+}
+
+add_action('mmhd_auto_close_tickets_cron', 'mmhd_run_auto_close_tickets_cron');
+function mmhd_run_auto_close_tickets_cron()
+{
+    $settings = get_option('mmhd_advanced_settings', []);
+    $days = isset($settings['auto_close_ticket_days']) ? absint($settings['auto_close_ticket_days']) : 0;
+
+    if ($days <= 0) {
+        return;
+    }
+
+    $cutoff = (int) current_time('timestamp', true) - ($days * DAY_IN_SECONDS);
+
+    $ticket_ids = get_posts([
+        'post_type'              => 'mmhd_ticket',
+        'post_status'            => 'any',
+        'posts_per_page'         => -1,
+        'fields'                 => 'ids',
+        'no_found_rows'          => true,
+        'orderby'                => 'ID',
+        'order'                  => 'ASC',
+        'ignore_sticky_posts'    => true,
+        'update_post_term_cache' => false,
+        'update_post_meta_cache' => false,
+        'meta_query'             => [
+            'relation' => 'OR',
+            [
+                'key'     => '_mmhd_ticket_status',
+                'value'   => 'closed',
+                'compare' => '!=',
+            ],
+            [
+                'key'     => '_mmhd_ticket_status',
+                'compare' => 'NOT EXISTS',
+            ],
+        ],
+    ]);
+
+    if (empty($ticket_ids)) {
+        return;
+    }
+
+    $closed_count = 0;
+
+    foreach ($ticket_ids as $ticket_id) {
+        $ticket_id = (int) $ticket_id;
+        if ($ticket_id <= 0) {
+            continue;
+        }
+
+        $current_status = (string) get_post_meta($ticket_id, '_mmhd_ticket_status', true);
+        if ($current_status === 'closed') {
+            continue;
+        }
+
+        $reference_time = mmhd_get_ticket_auto_close_reference_time($ticket_id);
+        if ($reference_time <= 0 || $reference_time > $cutoff) {
+            continue;
+        }
+
+        if (mmhd_auto_close_ticket($ticket_id)) {
+            $closed_count++;
+        }
+    }
+
+    if ($closed_count > 0) {
+        mmhd_log(sprintf('Metamint Helpdesk: Auto-close cron closed %d ticket(s).', $closed_count));
+    }
+}
+
+/**
+ * Find the most recent genuine reply from the end user on a ticket.
+ *
+ * Customer replies carry author_type=customer across every source (chat, email,
+ * WhatsApp, web and the customer portal). The fallback scan covers legacy
+ * comments created before that metadata was introduced.
+ */
+function mmhd_get_last_customer_ticket_reply($ticket_id)
+{
+    $ticket_id = (int) $ticket_id;
+    if ($ticket_id <= 0) {
+        return null;
+    }
+
+    $comments = get_comments([
+        'post_id'    => $ticket_id,
+        'number'     => 10,
+        'orderby'    => 'comment_date_gmt',
+        'order'      => 'DESC',
+        'type'       => 'ticket_replies',
+        'status'     => 'approve',
+        'meta_query' => [
+            [
+                'key'     => 'author_type',
+                'value'   => 'customer',
+                'compare' => '=',
+            ],
+        ],
+    ]);
+
+    foreach ($comments as $comment) {
+        if (get_comment_meta($comment->comment_ID, 'is_action', true)) {
+            continue;
+        }
+        return $comment;
+    }
+
+    $customer_email = strtolower(trim((string) get_post_meta($ticket_id, '_mmhd_customer_email', true)));
+
+    $legacy_comments = get_comments([
+        'post_id' => $ticket_id,
+        'number'  => 200,
+        'orderby' => 'comment_date_gmt',
+        'order'   => 'DESC',
+        'type'    => 'ticket_replies',
+        'status'  => 'approve',
+    ]);
+
+    foreach ($legacy_comments as $comment) {
+        if (get_comment_meta($comment->comment_ID, 'is_action', true)) {
+            continue;
+        }
+
+        if (function_exists('mmhd_is_bot_comment') && mmhd_is_bot_comment($comment->comment_ID)) {
+            continue;
+        }
+
+        $author_type = (string) get_comment_meta($comment->comment_ID, 'author_type', true);
+        if ($author_type === '') {
+            $author_type = mmhd_get_author_type((int) $comment->user_id);
+        }
+
+        if ($author_type === 'customer') {
+            return $comment;
+        }
+
+        // Legacy email replies from customers who do not have a WordPress account.
+        $comment_email = strtolower(trim((string) $comment->comment_author_email));
+        if (
+            (int) $comment->user_id <= 0 &&
+            $customer_email !== '' &&
+            $comment_email !== '' &&
+            $comment_email === $customer_email
+        ) {
+            return $comment;
+        }
+    }
+
+    return null;
+}
+
+/**
+ * Resolve the moment the auto-close countdown starts for a ticket.
+ */
+function mmhd_get_ticket_auto_close_reference_time($ticket_id)
+{
+    $ticket_id = (int) $ticket_id;
+    if ($ticket_id <= 0) {
+        return 0;
+    }
+
+    $last_customer_reply = mmhd_get_last_customer_ticket_reply($ticket_id);
+    if ($last_customer_reply) {
+        $date_gmt = (string) $last_customer_reply->comment_date_gmt;
+        if ($date_gmt === '' || $date_gmt === '0000-00-00 00:00:00') {
+            $date_gmt = get_gmt_from_date($last_customer_reply->comment_date);
+        }
+
+        $timestamp = strtotime($date_gmt . ' UTC');
+        if ($timestamp) {
+            return (int) $timestamp;
+        }
+    }
+
+    $created_at = get_post_time('U', true, $ticket_id);
+    return $created_at ? (int) $created_at : 0;
+}
+
+/**
+ * Close a ticket and add the rendered "Conversation Closed" template as a
+ * public comment. Returns true when the ticket was closed.
+ */
+function mmhd_auto_close_ticket($ticket_id)
+{
+    $ticket_id = (int) $ticket_id;
+    if ($ticket_id <= 0 || get_post_type($ticket_id) !== 'mmhd_ticket') {
+        return false;
+    }
+
+    $current_status = (string) get_post_meta($ticket_id, '_mmhd_ticket_status', true);
+    if ($current_status === 'closed') {
+        return false;
+    }
+
+    $settings = get_option('mmhd_advanced_settings', []);
+    $days = isset($settings['auto_close_ticket_days']) ? absint($settings['auto_close_ticket_days']) : 0;
+
+    $template = (string) get_option(
+        'mmhd_email_template_ticket-closed',
+        'Your ticket has been closed. Please let us know if you need further assistance.'
+    );
+    $content = wp_kses_post(mmhd_replace_template_tags($template, $ticket_id));
+
+    if (trim(wp_strip_all_tags($content)) === '') {
+        $content = esc_html__('Your ticket has been closed. Please let us know if you need further assistance.', 'metamint-helpdesk');
+    }
+
+    $author_id = mmhd_get_auto_close_author_id($ticket_id);
+    $author_user = $author_id > 0 ? get_userdata($author_id) : false;
+    $author_name = $author_user ? $author_user->display_name : __('System', 'metamint-helpdesk');
+
+    $comment_id = wp_insert_comment([
+        'comment_post_ID'      => $ticket_id,
+        'comment_author'       => $author_name,
+        'comment_author_email' => $author_user ? $author_user->user_email : '',
+        'user_id'              => $author_id,
+        'comment_content'      => $content,
+        'comment_approved'     => 1,
+        'comment_type'         => 'ticket_replies',
+        'is_mmhd_reply'        => true,
+        'comment_meta'         => [
+            'comment_source'            => 'admin',
+            'author_type'               => 'agent',
+            'is_bot_response'           => '0',
+            'admin_comment'             => 'yes',
+            'mmhd_suppress_notification' => 1,
+            'mmhd_auto_close_comment'   => 1,
+        ],
+    ]);
+
+    if (!$comment_id || is_wp_error($comment_id)) {
+        mmhd_log(sprintf('Metamint Helpdesk: Auto-close failed to add a comment to ticket #%d.', $ticket_id));
+        return false;
+    }
+
+    update_post_meta($ticket_id, '_mmhd_ticket_status', 'closed');
+    update_post_meta($ticket_id, '_mmhd_auto_closed_at', current_time('mysql', true));
+    update_post_meta($ticket_id, '_mmhd_auto_close_comment_id', (int) $comment_id);
+
+    $source = mmhd_get_ticket_source($ticket_id);
+
+    do_action('mmhd_after_ticket_closed', $ticket_id, $author_id);
+    do_action('mmhd_after_ticket_status_change', $ticket_id, $current_status, 'closed', $author_id);
+
+    if (function_exists('mmhd_notify_status_changed')) {
+        mmhd_notify_status_changed($ticket_id, 'closed', $author_id, $source);
+    }
+
+    mmhd_log(sprintf(
+        'Metamint Helpdesk: Ticket #%d auto-closed after %d day(s) without an end-user reply.',
+        $ticket_id,
+        $days
+    ));
+
+    return true;
 }
 
 if (is_admin()) {

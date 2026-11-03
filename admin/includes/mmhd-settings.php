@@ -733,6 +733,7 @@ $mmhd_settings_hidden = ($mmhd_current_tab === 'settings') ? '' : ' hidden';
                     'reply_unseen_email_minutes' => 15,
                     'polling_interval' => 30,
                     'auto_close_chat_minutes' => 30,
+                    'auto_close_ticket_days' => 0,
                 ]);
                 ?>
              <div id="advanced-tab" class="settings-tab-content hidden">
@@ -814,7 +815,7 @@ $mmhd_settings_hidden = ($mmhd_current_tab === 'settings') ? '' : ' hidden';
                           <div>
                               <label
                                   class="block text-sm font-medium text-gray-700"><?php esc_html_e('Maximum file upload size (MB)', 'metamint-helpdesk'); ?></label>
-                              <input type="number" name="max_file_upload_size"
+                              <input type="number" name="max_file_upload_size" id="max-file-upload-size"
                                   value="<?php echo esc_attr($mmhd_advanced_settings['max_file_upload_size']); ?>"
                                   min="1" max="100"
                                   class="styled-input mt-1 block w-32 border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
@@ -862,6 +863,32 @@ $mmhd_settings_hidden = ($mmhd_current_tab === 'settings') ? '' : ' hidden';
                                 </div>
                                 <p class="text-xs text-gray-500 mt-1">
                                     <?php esc_html_e('When the last reply on a chat conversation is from a Support Staff, Manager, or Admin, the conversation is closed automatically after this delay if the customer does not respond.', 'metamint-helpdesk'); ?>
+                                </p>
+                            </div>
+                            <?php
+                                $mmhd_auto_close_ticket_days = isset($mmhd_advanced_settings['auto_close_ticket_days']) ? absint($mmhd_advanced_settings['auto_close_ticket_days']) : 0;
+                                $mmhd_auto_close_ticket_enabled = $mmhd_auto_close_ticket_days > 0;
+                                $mmhd_auto_close_ticket_days_value = $mmhd_auto_close_ticket_enabled ? $mmhd_auto_close_ticket_days : 7;
+                                ?>
+                            <div>
+                                <div class="flex items-center gap-2">
+                                    <input id="enable-auto-close-ticket" type="checkbox"
+                                        <?php checked($mmhd_auto_close_ticket_enabled, true); ?>
+                                        class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                                    <label for="enable-auto-close-ticket" class="block text-sm font-medium text-gray-700">
+                                        <?php esc_html_e('Auto-close tickets after no customer reply for', 'metamint-helpdesk'); ?>
+                                    </label>
+                                </div>
+                                <div id="auto-close-ticket-options" class="mt-2 flex items-center gap-2"
+                                    style="<?php echo $mmhd_auto_close_ticket_enabled ? '' : 'display:none;'; ?>">
+                                    <input type="number" name="auto_close_ticket_days" id="auto-close-ticket-days"
+                                        min="1" max="365"
+                                        value="<?php echo esc_attr($mmhd_auto_close_ticket_days_value); ?>"
+                                        class="styled-input block w-28 border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                                    <span class="text-sm text-gray-600"><?php esc_html_e('days', 'metamint-helpdesk'); ?></span>
+                                </div>
+                                <p class="text-xs text-gray-500 mt-1">
+                                    <?php esc_html_e('Applies to tickets from every source. The timer starts from the last reply by the end user (not by Support Staff, a Manager, or an Admin). Tickets with no end-user reply use the ticket creation date. When a ticket is closed automatically, the "Conversation Closed" email template is added to the ticket as a public comment.', 'metamint-helpdesk'); ?>
                                 </p>
                             </div>
                       </div>
