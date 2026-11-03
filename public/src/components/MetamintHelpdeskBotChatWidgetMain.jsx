@@ -292,6 +292,8 @@ const CART_MENTION_RE = /\b(?:cart|basket)\b/i;
 const CART_REMOVE_PRONOUN_RE = /^(?:it|this|that|these|those|them|one|the item|the items?|an item|the product|the products?|my item|everything|all(?: of them)?|all items|all products)$/i;
 const CART_VIEW_RE = /\b(?:what(?:['\u2019]?s| is)? in (?:my|the) (?:cart|basket)|(?:cart|basket) (?:contents|summary|items|list)|(?:show|view|open|see|display|list) (?:me )?(?:my |the )?(?:cart|basket))\b/i;
 
+const TALK_TO_HUMAN_PATTERN = /talk.?human|speak.?agent|connect.?support|escalate|human.?support|talk.?to.?someone|customer.?service/i;
+
 /**
  * Ticking countdown shown on expiring action buttons (e.g. refund confirm).
  * Reports back once when it reaches zero so the button can be disabled rather
@@ -367,15 +369,58 @@ function AssistantMessage({
       {/* SUGGESTIONS (label + prompt) */}
       {msg.ui?.suggestions?.length > 0 && (
         <div className="ai-suggestions">
-          {msg.ui.suggestions.map((s, i) => (
-            <button
-              key={i}
-              className="chip"
-              onClick={() => setInput(s.prompt || s.label || "")}
-            >
-              {s.label || s.prompt}
-            </button>
-          ))}
+          {msg.ui.suggestions.map((s, i) => {
+            const isTalkToHuman =
+              s.type === "talk-to-human" ||
+              /talk.?human|speak.?agent|connect.?support|escalate/i.test(
+                s.label || s.prompt || "",
+              );
+
+            if (isTalkToHuman && talkToHuman) {
+              return (
+                <button
+                  key={i}
+                  className="mmhd-m-5"
+                  onClick={() => convertToTicket()}
+                  style={{
+                    border: "none",
+                    background: "transparent",
+                    padding: "0",
+                    cursor: "pointer",
+                    display: "inline-flex",
+                    alignItems: "center",
+                  }}
+                >
+                  <div
+                    className="icon-dark custom-svg mmhd-cursor-pointer"
+                    onClick={() => convertToTicket()}
+                  >
+                    <svg
+                      stroke="currentColor"
+                      fill="currentColor"
+                      stroke-width="0"
+                      viewBox="0 0 512 512"
+                      height="1em"
+                      width="1em"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <path d="M256 48C141.31 48 48 141.31 48 256s93.31 208 208 208 208-93.31 208-208S370.69 48 256 48zm80 224h-64v64a16 16 0 0 1-32 0v-64h-64a16 16 0 0 1 0-32h64v-64a16 16 0 0 1 32 0v64h64a16 16 0 0 1 0 32z"></path>
+                    </svg>
+                  </div>
+                </button>
+              );
+            }
+
+            return (
+              <button
+                key={i}
+                className="chip"
+                onClick={() => setInput(s.prompt || s.label || "")}
+              >
+                {s.label || s.prompt}
+              </button>
+            );
+          })}
         </div>
       )}
 
@@ -385,6 +430,47 @@ function AssistantMessage({
           {msg.ui.actions.map((a, i) => {
             const isUsed = a.used;
             const isExpired = Boolean(a.pending_id) && expiredActions.includes(a.pending_id);
+            const isTalkToHuman =
+              a.type === "talk-to-human" ||
+              /talk.?human|speak.?agent|connect.?support|escalate/i.test(
+                a.label || "",
+              );
+
+            if (isTalkToHuman && talkToHuman) {
+              return (
+                <button
+                  key={i}
+                  className="mmhd-m-5"
+                  onClick={() => convertToTicket()}
+                  style={{
+                    border: "none",
+                    background: "transparent",
+                    padding: "0",
+                    cursor: "pointer",
+                    display: "inline-flex",
+                    alignItems: "center",
+                  }}
+                >
+                  <div
+                    className="icon-dark custom-svg mmhd-cursor-pointer"
+                    onClick={() => convertToTicket()}
+                  >
+                    <svg
+                      stroke="currentColor"
+                      fill="currentColor"
+                      stroke-width="0"
+                      viewBox="0 0 512 512"
+                      height="1em"
+                      width="1em"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <path d="M256 48C141.31 48 48 141.31 48 256s93.31 208 208 208 208-93.31 208-208S370.69 48 256 48zm80 224h-64v64a16 16 0 0 1-32 0v-64h-64a16 16 0 0 1 0-32h64v-64a16 16 0 0 1 32 0v64h64a16 16 0 0 1 0 32z"></path>
+                    </svg>
+                  </div>
+                </button>
+              );
+            }
+
             return (
               <button
                 key={i}
@@ -532,6 +618,9 @@ export default function MetamintHelpdeskBotChatWidgetMain({
   const [expiredActions, setExpiredActions] = useState([]);
   const [botName, setBotName] = useState(resolvedBotName);
   const [botImage, setBotImage] = useState(resolvedBotImage);
+  const [talkToHuman, setTalkToHuman] = useState(false);
+  const [ticketCreated, setTicketCreated] = useState(false);
+  const [ticketId, setTicketId] = useState(null);
   const apiProxy = window.location.origin + "/wp-json/mmhd-bot/v1/chat";
   const apiProxyStream =
     window.location.origin + "/wp-json/mmhd-bot/v1/chat-stream";
@@ -551,6 +640,7 @@ export default function MetamintHelpdeskBotChatWidgetMain({
       setBotImage(
         response.botImage || response.bot_image || resolvedBotImage || ""
       );
+      setTalkToHuman(!!response.talkToHuman);
     } catch (err) {
       console.error(err);
       setBotName((current) => current || resolvedBotName || "Bot");
@@ -1016,11 +1106,98 @@ export default function MetamintHelpdeskBotChatWidgetMain({
     }
   };
 
+  /**
+   * CONVERT CHAT TO TICKET (Talk to Human)
+   */
+  const convertToTicket = async () => {
+    setIsCreatingTicket(true);
+    try {
+      const headers = { "Content-Type": "application/json" };
+      const restNonce = window.mmhdAuth?.restNonce || window.MetamintHelpdeskBotConfig?.restNonce || window.wpApiSettings?.nonce || "";
+      if (restNonce) {
+        headers["X-WP-Nonce"] = restNonce;
+      }
+
+      const resp = await fetch(
+        "/wp-json/mmhd-bot/v1/convert-to-ticket",
+        {
+          method: "POST",
+          headers,
+          body: JSON.stringify({
+            messages: messages.map((m) => ({
+              role: m.role,
+              text: m.text ?? m.message ?? "",
+            })),
+            session_id: sessionStorage.getItem("mmhd_chat_session_id") || "",
+          }),
+        }
+      );
+
+      if (!resp.ok) {
+        throw new Error(`HTTP ${resp.status}: ${resp.statusText}`);
+      }
+
+      const data = await resp.json();
+
+      if (data.status === "success") {
+        setTicketCreated(true);
+        setTicketId(data.ticket_id ?? null);
+        setMessages((m) => [
+          ...m,
+          {
+            role: "assistant",
+            message:
+              data.message ||
+              "Your conversation has been converted to a support ticket. A human agent will be with you shortly.",
+            timestamp: new Date().toISOString(),
+          },
+        ]);
+      } else {
+        throw new Error(data.message ?? "Failed to create ticket.");
+      }
+    } catch (e) {
+      console.error("Ticket conversion error:", e);
+      setMessages((m) => [
+        ...m,
+        {
+          role: "assistant",
+          message:
+            "Sorry, we couldn't create a ticket right now. Please try again later or contact support directly.",
+          timestamp: new Date().toISOString(),
+        },
+      ]);
+    } finally {
+      setIsCreatingTicket(false);
+    }
+  };
+
   const sendMessageStream = async (overrideText = null) => {
     // Coerce to string: this is also invoked from onClick, which passes a
     // DOM event as the first argument — never let .trim() blow up.
     const q = String(overrideText ?? input ?? "").trim();
     if (!q) return;
+
+    // Frontend detection: if user asks for human, show the SVG button immediately
+    if (talkToHuman && TALK_TO_HUMAN_PATTERN.test(q)) {
+      setMessages((m) => [...m, { role: "user", text: q, timestamp: new Date().toISOString() }]);
+      setInput("");
+      setMessages((m) => [
+        ...m,
+        {
+          role: "assistant",
+          message:
+            "I can connect you with a human agent. Click the button below to convert this conversation into a support ticket:",
+          ui: {
+            suggestions: [
+              { type: "talk-to-human", label: "Talk to Human", prompt: "" },
+            ],
+            actions: [],
+          },
+          timestamp: new Date().toISOString(),
+        },
+      ]);
+      return;
+    }
 
     // Quick local handling for cart queries so the user gets an instant answer.
     const recordUserTurn = (text) => {
@@ -1299,13 +1476,42 @@ export default function MetamintHelpdeskBotChatWidgetMain({
                 </div> */}
 
         {/* MESSAGES */}
-        <div
-          id="mmhd-bot-messages"
-          className="mmhd-bot-message"
-          ref={rootRef}
-        >
-          {messages.length > 0 &&
-            messages.map((m, i) => {
+        {ticketCreated ? (
+          <div style={{ padding: "20px", textAlign: "center", color: "#ef4444" }}>
+            <div style={{ fontSize: "16px", fontWeight: "600", marginBottom: "8px" }}>
+              Ticket Created #{ticketId}
+            </div>
+            <p style={{ fontSize: "13px", marginBottom: "16px" }}>
+              A human agent will review your conversation and get back to you soon.
+            </p>
+            <button
+              onClick={() => {
+                setTicketCreated(false);
+                setTicketId(null);
+                setMessages([]);
+                sessionStorage.removeItem("mmhd_chat_session");
+              }}
+              style={{
+                background: "#1f8ef1",
+                color: "#ffffff",
+                border: "none",
+                borderRadius: "6px",
+                padding: "8px 16px",
+                fontSize: "13px",
+                cursor: "pointer",
+              }}
+            >
+              Close Chat
+            </button>
+          </div>
+        ) : (
+          <div
+            id="mmhd-bot-messages"
+            className="mmhd-bot-message"
+            ref={rootRef}
+          >
+            {messages.length > 0 &&
+              messages.map((m, i) => {
               const prevMsg = i > 0 ? messages[i - 1] : null;
               const isSameSender = prevMsg && prevMsg.role === m.role;
 
@@ -1465,7 +1671,7 @@ export default function MetamintHelpdeskBotChatWidgetMain({
               </div>
             </div>
           )}
-        </div>
+        </div>      )}
 
         {/* INPUT */}
         <div
