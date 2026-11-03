@@ -2626,8 +2626,14 @@ jQuery(document).ready(function ($) {
     $("#auto-close-chat-options").toggle(enabled);
   }
 
+  function toggleAutoCloseTicketOptions() {
+    var enabled = $("#enable-auto-close-ticket").is(":checked");
+    $("#auto-close-ticket-options").toggle(enabled);
+  }
+
   toggleUnseenReplyOptions();
   toggleAutoCloseChatOptions();
+  toggleAutoCloseTicketOptions();
 
   $(document).on("change", "#enable-unseen-reply-email", function () {
     toggleUnseenReplyOptions();
@@ -2635,6 +2641,10 @@ jQuery(document).ready(function ($) {
 
   $(document).on("change", "#enable-auto-close-chat", function () {
     toggleAutoCloseChatOptions();
+  });
+
+  $(document).on("change", "#enable-auto-close-ticket", function () {
+    toggleAutoCloseTicketOptions();
   });
 
   $(document).on("click", "#save-advanced-settings", function () {
@@ -2646,17 +2656,21 @@ jQuery(document).ready(function ($) {
     // Collect form data
     var unseenEnabled = $("#enable-unseen-reply-email").is(":checked");
     var autoCloseEnabled = $("#enable-auto-close-chat").is(":checked");
+    var autoCloseTicketEnabled = $("#enable-auto-close-ticket").is(":checked");
     var settings = {
       enable_auto_assign: $("#enable-auto-assign").is(":checked"),
       enable_notifications: $("#enable-notifications").is(":checked"),
       enable_customer_portal: $("#enable-customer-portal").is(":checked"),
       enable_signup_rate_limiting: $("#enable-signup-rate-limiting").is(":checked"),
-      max_file_upload_size: $form.find('input[type="number"]').val(),
+      max_file_upload_size: $("#max-file-upload-size").val(),
       reply_unseen_email_minutes: unseenEnabled
         ? $("#reply-unseen-email-minutes").val()
         : 0,
       auto_close_chat_minutes: autoCloseEnabled
         ? $("#auto-close-chat-minutes").val()
+        : 0,
+      auto_close_ticket_days: autoCloseTicketEnabled
+        ? $("#auto-close-ticket-days").val()
         : 0,
       blocked_ips: $("#blocked-ips").val(),
     };

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import defaultLogo from '../images/mmhd-logo.png'; // Adjust path to your default logo
 import '../styles/header.css';
 import { IoAddCircle, IoCloseCircleSharp, IoLogoWhatsapp } from 'react-icons/io5';
@@ -209,6 +209,22 @@ const Header = ({ logo, onClose, setActiveTab, setShowLogin, updateSelectedTicke
     }
   };
 
+  // The AI chat widget renders its own "Talk to human" action. It must run this
+  // exact flow (not a separate ticket endpoint): convert the current chat
+  // session into a ticket and copy every message into it.
+  const talkToHumanHandlerRef = useRef(null);
+  talkToHumanHandlerRef.current = handleTalkToHumanClick;
+
+  useEffect(() => {
+    const handleTalkToHumanRequest = () => {
+      talkToHumanHandlerRef.current?.();
+    };
+
+    window.addEventListener("mmhd:talkToHuman", handleTalkToHumanRequest);
+    return () =>
+      window.removeEventListener("mmhd:talkToHuman", handleTalkToHumanRequest);
+  }, []);
+
   const sendWhatsappMessageClick = async () => {
     if (!canLoadWidgetConfig) {
       setSendWhatsappMessage(false);
@@ -295,6 +311,7 @@ const Header = ({ logo, onClose, setActiveTab, setShowLogin, updateSelectedTicke
         }
         {talkToHuman && messageCount > 0 && (
           <button
+            id="mmhd-talk-to-human-btn"
             className="mmhd-m-5"
             onClick={handleTalkToHumanClick}
             disabled={isSubmitting}
