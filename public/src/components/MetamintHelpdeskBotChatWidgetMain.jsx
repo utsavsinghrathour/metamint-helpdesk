@@ -618,7 +618,9 @@ export default function MetamintHelpdeskBotChatWidgetMain({
   const [expiredActions, setExpiredActions] = useState([]);
   const [botName, setBotName] = useState(resolvedBotName);
   const [botImage, setBotImage] = useState(resolvedBotImage);
-  const [talkToHuman, setTalkToHuman] = useState(false);
+  const [talkToHuman, setTalkToHuman] = useState(
+    () => Boolean(window.MetamintHelpdeskBotConfig?.talkToHuman)
+  );
   const [ticketCreated, setTicketCreated] = useState(false);
   const [ticketId, setTicketId] = useState(null);
   const apiProxy = window.location.origin + "/wp-json/mmhd-bot/v1/chat";
