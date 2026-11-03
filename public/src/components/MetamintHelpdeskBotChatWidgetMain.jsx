@@ -1494,22 +1494,30 @@ export default function MetamintHelpdeskBotChatWidgetMain({
             </p>
             <button
               onClick={() => {
-                setTicketCreated(false);
-                setTicketId(null);
-                setMessages([]);
-                sessionStorage.removeItem("mmhd_chat_session");
+                window.location.href = `/mmhd-ticket/${ticketId}`;
               }}
+              className="mmhd-m-5"
               style={{
-                background: "#1f8ef1",
-                color: "#ffffff",
                 border: "none",
-                borderRadius: "6px",
-                padding: "8px 16px",
-                fontSize: "13px",
+                background: "transparent",
+                padding: 0,
                 cursor: "pointer",
+                display: "inline-flex",
               }}
             >
-              Close Chat
+              <div className="icon-dark custom-svg mmhd-cursor-pointer">
+                <svg
+                  stroke="currentColor"
+                  fill="currentColor"
+                  stroke-width="0"
+                  viewBox="0 0 512 512"
+                  height="1em"
+                  width="1em"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path d="M256 48C141.31 48 48 141.31 48 256s93.31 208 208 208 208-93.31 208-208S370.69 48 256 48zm80 224h-64v64a16 16 0 0 1-32 0v-64h-64a16 16 0 0 1 0-32h64v-64a16 16 0 0 1 32 0v64h64a16 16 0 0 1 0 32z"></path>
+                </svg>
+              </div>
             </button>
           </div>
         ) : (
