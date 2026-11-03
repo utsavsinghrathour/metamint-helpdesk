@@ -292,7 +292,7 @@ const CART_MENTION_RE = /\b(?:cart|basket)\b/i;
 const CART_REMOVE_PRONOUN_RE = /^(?:it|this|that|these|those|them|one|the item|the items?|an item|the product|the products?|my item|everything|all(?: of them)?|all items|all products)$/i;
 const CART_VIEW_RE = /\b(?:what(?:['\u2019]?s| is)? in (?:my|the) (?:cart|basket)|(?:cart|basket) (?:contents|summary|items|list)|(?:show|view|open|see|display|list) (?:me )?(?:my |the )?(?:cart|basket))\b/i;
 
-const TALK_TO_HUMAN_PATTERN = /talk.?human|speak.?agent|connect.?support|escalate|human.?support|talk.?to.?someone|customer.?service/i;
+const TALK_TO_HUMAN_PATTERN = /talk\s+(?:to\s+)?human|speak\s+(?:to\s+)?agent|connect\s+(?:to\s+)?support|escalate|human\s+support|talk\s+(?:to\s+)?someone|customer\s+service/i;
 
 /**
  * Ticking countdown shown on expiring action buttons (e.g. refund confirm).
