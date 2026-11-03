@@ -374,7 +374,7 @@ function AssistantMessage({
           {msg.ui.suggestions.map((s, i) => {
             const isTalkToHuman =
               s.type === "talk-to-human" ||
-              /talk.?human|speak.?agent|connect.?support|escalate/i.test(
+              /talk\s+(?:to\s+)?human|speak\s+(?:to\s+)?agent|connect\s+(?:to\s+)?support|escalate|human\s+support|talk\s+(?:to\s+)?someone|customer\s+service/i.test(
                 s.label || s.prompt || "",
               );
 
@@ -387,16 +387,12 @@ function AssistantMessage({
                   style={{
                     border: "none",
                     background: "transparent",
-                    padding: "0",
+                    padding: 0,
                     cursor: "pointer",
                     display: "inline-flex",
-                    alignItems: "center",
                   }}
                 >
-                  <div
-                    className="icon-dark custom-svg mmhd-cursor-pointer"
-                    onClick={() => convertToTicket()}
-                  >
+                  <div className="icon-dark custom-svg mmhd-cursor-pointer">
                     <svg
                       stroke="currentColor"
                       fill="currentColor"
@@ -434,7 +430,7 @@ function AssistantMessage({
             const isExpired = Boolean(a.pending_id) && expiredActions.includes(a.pending_id);
             const isTalkToHuman =
               a.type === "talk-to-human" ||
-              /talk.?human|speak.?agent|connect.?support|escalate/i.test(
+              /talk\s+(?:to\s+)?human|speak\s+(?:to\s+)?agent|connect\s+(?:to\s+)?support|escalate|human\s+support|talk\s+(?:to\s+)?someone|customer\s+service/i.test(
                 a.label || "",
               );
 
@@ -447,16 +443,12 @@ function AssistantMessage({
                   style={{
                     border: "none",
                     background: "transparent",
-                    padding: "0",
+                    padding: 0,
                     cursor: "pointer",
                     display: "inline-flex",
-                    alignItems: "center",
                   }}
                 >
-                  <div
-                    className="icon-dark custom-svg mmhd-cursor-pointer"
-                    onClick={() => convertToTicket()}
-                  >
+                  <div className="icon-dark custom-svg mmhd-cursor-pointer">
                     <svg
                       stroke="currentColor"
                       fill="currentColor"
@@ -1117,6 +1109,15 @@ export default function MetamintHelpdeskBotChatWidgetMain({
    * CONVERT CHAT TO TICKET (Talk to Human)
    */
   const convertToTicket = async () => {
+    if (isCreatingTicket) return;
+
+    const nonEmptyMessages = messages.filter(
+      (m) => (m.text ?? m.message ?? "").trim() !== "",
+    );
+    if (nonEmptyMessages.length === 0) {
+      return;
+    }
+
     setIsCreatingTicket(true);
     try {
       const headers = { "Content-Type": "application/json" };
@@ -1131,7 +1132,7 @@ export default function MetamintHelpdeskBotChatWidgetMain({
           method: "POST",
           headers,
           body: JSON.stringify({
-            messages: messages.map((m) => ({
+            messages: nonEmptyMessages.map((m) => ({
               role: m.role,
               text: m.text ?? m.message ?? "",
             })),
