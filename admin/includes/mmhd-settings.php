@@ -888,7 +888,7 @@ $mmhd_settings_hidden = ($mmhd_current_tab === 'settings') ? '' : ' hidden';
                                     <span class="text-sm text-gray-600"><?php esc_html_e('days', 'metamint-helpdesk'); ?></span>
                                 </div>
                                 <p class="text-xs text-gray-500 mt-1">
-                                    <?php esc_html_e('Applies to tickets from every source. The timer starts from the last reply by the end user (not by Support Staff, a Manager, or an Admin). Tickets with no end-user reply use the ticket creation date. When a ticket is closed automatically, the "Conversation Closed" email template is added to the ticket as a public comment.', 'metamint-helpdesk'); ?>
+                                    <?php esc_html_e('Applies to tickets from every source. The timer starts when the last reply is from Support Staff, a Manager, or an Admin (not from the end user). Tickets where the end user replied last are not closed. Tickets with no replies use the ticket creation date. When a ticket is closed automatically, the "Conversation Closed" email template is added to the ticket as a public comment.', 'metamint-helpdesk'); ?>
                                 </p>
                             </div>
                       </div>

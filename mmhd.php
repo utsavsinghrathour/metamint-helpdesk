@@ -2608,18 +2608,6 @@ function mmhd_run_auto_close_tickets_cron()
         'ignore_sticky_posts'    => true,
         'update_post_term_cache' => false,
         'update_post_meta_cache' => false,
-        'meta_query'             => [
-            'relation' => 'OR',
-            [
-                'key'     => '_mmhd_ticket_status',
-                'value'   => 'closed',
-                'compare' => '!=',
-            ],
-            [
-                'key'     => '_mmhd_ticket_status',
-                'compare' => 'NOT EXISTS',
-            ],
-        ],
     ]);
 
     if (empty($ticket_ids)) {
@@ -2655,59 +2643,33 @@ function mmhd_run_auto_close_tickets_cron()
 }
 
 /**
- * Find the most recent genuine reply from the end user on a ticket.
+ * Resolve the moment the auto-close countdown starts for a ticket.
  *
- * Customer replies carry author_type=customer across every source (chat, email,
- * WhatsApp, web and the customer portal). The fallback scan covers legacy
- * comments created before that metadata was introduced.
+ * Option B: the timer starts from the most recent reply that is NOT from the
+ * end user (i.e. from an agent, manager, admin, or bot). If the most recent
+ * real reply is from the end user, the customer has responded and the ticket
+ * must not auto-close (return 0). When there are no real replies at all, the
+ * timer falls back to the ticket creation date.
  */
-function mmhd_get_last_customer_ticket_reply($ticket_id)
+function mmhd_get_ticket_auto_close_reference_time($ticket_id)
 {
     $ticket_id = (int) $ticket_id;
     if ($ticket_id <= 0) {
-        return null;
+        return 0;
     }
 
     $comments = get_comments([
         'post_id'    => $ticket_id,
-        'number'     => 10,
+        'number'     => 50,
         'orderby'    => 'comment_date_gmt',
         'order'      => 'DESC',
         'type'       => 'ticket_replies',
         'status'     => 'approve',
-        'meta_query' => [
-            [
-                'key'     => 'author_type',
-                'value'   => 'customer',
-                'compare' => '=',
-            ],
-        ],
     ]);
 
     foreach ($comments as $comment) {
+        // System/action status comments are not real replies.
         if (get_comment_meta($comment->comment_ID, 'is_action', true)) {
-            continue;
-        }
-        return $comment;
-    }
-
-    $customer_email = strtolower(trim((string) get_post_meta($ticket_id, '_mmhd_customer_email', true)));
-
-    $legacy_comments = get_comments([
-        'post_id' => $ticket_id,
-        'number'  => 200,
-        'orderby' => 'comment_date_gmt',
-        'order'   => 'DESC',
-        'type'    => 'ticket_replies',
-        'status'  => 'approve',
-    ]);
-
-    foreach ($legacy_comments as $comment) {
-        if (get_comment_meta($comment->comment_ID, 'is_action', true)) {
-            continue;
-        }
-
-        if (function_exists('mmhd_is_bot_comment') && mmhd_is_bot_comment($comment->comment_ID)) {
             continue;
         }
 
@@ -2717,39 +2679,16 @@ function mmhd_get_last_customer_ticket_reply($ticket_id)
         }
 
         if ($author_type === 'customer') {
-            return $comment;
+            // The most recent real reply is from the end user: they have
+            // responded, so do not start the auto-close timer.
+            return 0;
         }
 
-        // Legacy email replies from customers who do not have a WordPress account.
-        $comment_email = strtolower(trim((string) $comment->comment_author_email));
-        if (
-            (int) $comment->user_id <= 0 &&
-            $customer_email !== '' &&
-            $comment_email !== '' &&
-            $comment_email === $customer_email
-        ) {
-            return $comment;
-        }
-    }
-
-    return null;
-}
-
-/**
- * Resolve the moment the auto-close countdown starts for a ticket.
- */
-function mmhd_get_ticket_auto_close_reference_time($ticket_id)
-{
-    $ticket_id = (int) $ticket_id;
-    if ($ticket_id <= 0) {
-        return 0;
-    }
-
-    $last_customer_reply = mmhd_get_last_customer_ticket_reply($ticket_id);
-    if ($last_customer_reply) {
-        $date_gmt = (string) $last_customer_reply->comment_date_gmt;
+        // The most recent real reply is from a non-end-user (agent/manager/
+        // admin/bot): start the timer from this reply's timestamp.
+        $date_gmt = (string) $comment->comment_date_gmt;
         if ($date_gmt === '' || $date_gmt === '0000-00-00 00:00:00') {
-            $date_gmt = get_gmt_from_date($last_customer_reply->comment_date);
+            $date_gmt = get_gmt_from_date($comment->comment_date);
         }
 
         $timestamp = strtotime($date_gmt . ' UTC');
@@ -2758,6 +2697,7 @@ function mmhd_get_ticket_auto_close_reference_time($ticket_id)
         }
     }
 
+    // No real replies at all — fall back to the ticket creation date.
     $created_at = get_post_time('U', true, $ticket_id);
     return $created_at ? (int) $created_at : 0;
 }
