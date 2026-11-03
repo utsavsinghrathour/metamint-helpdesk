@@ -331,6 +331,8 @@ function AssistantMessage({
   pushAssistant,
   expiredActions,
   setExpiredActions,
+  talkToHuman,
+  convertToTicket,
 }) {
   return (
     <div className="ai-block">
@@ -529,6 +531,8 @@ AssistantMessage.propTypes = {
   pushAssistant: PropTypes.func.isRequired,
   expiredActions: PropTypes.arrayOf(PropTypes.string).isRequired,
   setExpiredActions: PropTypes.func.isRequired,
+  talkToHuman: PropTypes.bool.isRequired,
+  convertToTicket: PropTypes.func.isRequired,
 };
 
 export default function MetamintHelpdeskBotChatWidgetMain({
@@ -1585,6 +1589,8 @@ export default function MetamintHelpdeskBotChatWidgetMain({
                         pushAssistant={pushAssistant}
                         expiredActions={expiredActions}
                         setExpiredActions={setExpiredActions}
+                        talkToHuman={talkToHuman}
+                        convertToTicket={convertToTicket}
                       />
                     ) : (
                       <span
