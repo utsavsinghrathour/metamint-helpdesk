@@ -369,24 +369,532 @@ function renderDashboardTable(filteredTickets) {
   });
 }
 
+function buildSparklinePaths(
+  values,
+  width = 100,
+  height = 36,
+  padding = 4,
+  inset = 4,
+) {
+  const numbers = (Array.isArray(values) ? values : []).map((value) => {
+    const numeric = Number(value);
+    return Number.isFinite(numeric) ? numeric : 0;
+  });
+
+  if (numbers.length === 0) numbers.push(0);
+  if (numbers.length === 1) numbers.push(numbers[0]);
+
+  const count = numbers.length;
+  const max = Math.max(...numbers);
+  const min = Math.min(...numbers);
+  const range = max - min;
+  const usableHeight = height - padding * 2;
+  const usableWidth = Math.max(1, width - inset * 2);
+  const step = usableWidth / (count - 1);
+  const round = (value) => Math.round(value * 100) / 100;
+
+  const points = numbers.map((value, index) => {
+    const x = inset + index * step;
+    const y =
+      range > 0
+        ? padding + ((max - value) / range) * usableHeight
+        : padding + usableHeight / 2;
+
+    return [x, y];
+  });
+
+  let line = `M ${round(points[0][0])} ${round(points[0][1])}`;
+
+  for (let index = 0; index < count - 1; index++) {
+    const previous = points[Math.max(0, index - 1)];
+    const current = points[index];
+    const next = points[index + 1];
+    const afterNext = points[Math.min(count - 1, index + 2)];
+
+    const control1X = current[0] + (next[0] - previous[0]) / 6;
+    const control1Y = current[1] + (next[1] - previous[1]) / 6;
+    const control2X = next[0] - (afterNext[0] - current[0]) / 6;
+    const control2Y = next[1] - (afterNext[1] - current[1]) / 6;
+
+    // Keep each curve segment within its endpoints so the sparkline does
+    // not dip below the baseline or overshoot above a peak.
+    const segmentMinY = Math.min(current[1], next[1]);
+    const segmentMaxY = Math.max(current[1], next[1]);
+    const clampedControl1Y = Math.max(
+      segmentMinY,
+      Math.min(segmentMaxY, control1Y),
+    );
+    const clampedControl2Y = Math.max(
+      segmentMinY,
+      Math.min(segmentMaxY, control2Y),
+    );
+
+    line += ` C ${round(control1X)} ${round(clampedControl1Y)}, ${round(
+      control2X,
+    )} ${round(clampedControl2Y)}, ${round(next[0])} ${round(next[1])}`;
+  }
+
+  const area = `${line} L ${round(points[count - 1][0])} ${height} L ${round(
+    points[0][0],
+  )} ${height} Z`;
+
+  const last = points[count - 1];
+
+  return { line, area, last, points };
+}
+
+/**
+ * Draw the sparkline in with a left-to-right reveal and fade the area up.
+ * Uses the Web Animations API so it can replay cleanly after data changes
+ * without leaving a permanent `animation-fill-mode` that would block the
+ * hover/interaction styles.
+ */
+function replaySparklineAnimation(chart) {
+  if (!chart || typeof chart.animate !== "function") return;
+
+  const reduceMotion =
+    typeof window.matchMedia === "function" &&
+    window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  if (reduceMotion) return;
+
+  const line = chart.querySelector("[data-mmhd-sparkline-line]");
+  const area = chart.querySelector("[data-mmhd-sparkline-area]");
+  const dot = chart.querySelector("[data-mmhd-sparkline-dot]");
+
+  const restart = (element) => {
+    if (!element || typeof element.animate !== "function") return;
+    if (typeof element.getAnimations === "function") {
+      element.getAnimations().forEach((animation) => animation.cancel());
+    }
+  };
+
+  if (line) {
+    restart(line);
+    // Reveal with a clip instead of stroke-dashoffset. The SVG is stretched
+    // horizontally and the line uses `vector-effect: non-scaling-stroke`, so
+    // dash lengths are calculated in screen space and can split the line
+    // into multiple visible segments. A clip always reveals start-to-end.
+    line.animate(
+      [
+        { clipPath: "inset(0 100% 0 0)", opacity: 0.45 },
+        { clipPath: "inset(0 0 0 0)", opacity: 1 },
+      ],
+      {
+        duration: 1150,
+        easing: "cubic-bezier(0.22, 1, 0.36, 1)",
+        fill: "backwards",
+      },
+    );
+  }
+
+  if (area) {
+    restart(area);
+    area.animate(
+      [
+        { opacity: 0, transform: "translateY(3px)" },
+        { opacity: 0.85, transform: "translateY(0)" },
+      ],
+      {
+        duration: 900,
+        easing: "cubic-bezier(0.22, 1, 0.36, 1)",
+        fill: "backwards",
+      },
+    );
+  }
+
+  if (dot) {
+    restart(dot);
+    dot.animate(
+      [
+        { transform: "translate(-50%, -50%) scale(0)", opacity: 0 },
+        {
+          transform: "translate(-50%, -50%) scale(1.18)",
+          opacity: 1,
+          offset: 0.68,
+        },
+        { transform: "translate(-50%, -50%) scale(1)", opacity: 1 },
+      ],
+      {
+        duration: 520,
+        delay: 620,
+        easing: "cubic-bezier(0.34, 1.56, 0.64, 1)",
+        fill: "backwards",
+      },
+    );
+  }
+}
+
+function updateDashboardSparklines(trends) {
+  if (!trends || typeof trends !== "object") return;
+
+  Object.entries(trends).forEach(([key, trend]) => {
+    if (!trend || !Array.isArray(trend.series)) return;
+
+    const paths = buildSparklinePaths(trend.series);
+    const linePath = document.querySelector(
+      `[data-mmhd-sparkline-line="${key}"]`,
+    );
+    const areaPath = document.querySelector(
+      `[data-mmhd-sparkline-area="${key}"]`,
+    );
+    const dot = document.querySelector(`[data-mmhd-sparkline-dot="${key}"]`);
+    const chart = document.querySelector(`[data-mmhd-sparkline-chart="${key}"]`);
+    const seriesJson = JSON.stringify(trend.series);
+    const seriesChanged =
+      Boolean(chart) && chart.dataset.mmhdSparklineSeries !== seriesJson;
+
+    if (linePath) linePath.setAttribute("d", paths.line);
+    if (areaPath) areaPath.setAttribute("d", paths.area);
+    if (dot && Array.isArray(paths.last)) {
+      dot.style.left = `${paths.last[0]}%`;
+      dot.style.top = `${(paths.last[1] / 36) * 100}%`;
+    }
+
+    if (chart) {
+      hideSparklinePoint(chart);
+      chart.dataset.mmhdSparklineSeries = seriesJson;
+      if (Array.isArray(trend.dates)) {
+        chart.dataset.mmhdSparklineDates = JSON.stringify(trend.dates);
+      }
+
+      // Only replay the draw-in when the values actually changed, so the
+      // 30s auto-refresh does not make the chart twitch unnecessarily.
+      if (seriesChanged) {
+        replaySparklineAnimation(chart);
+      }
+    }
+
+    const trendEl = document.querySelector(`[data-mmhd-stat-trend="${key}"]`);
+    if (!trendEl) return;
+
+    const rawChange = trend.change;
+    const isNew = rawChange === null;
+    const numericChange = Number(rawChange);
+    const hasChange =
+      rawChange !== null &&
+      rawChange !== undefined &&
+      Number.isFinite(numericChange);
+    const change = hasChange ? Math.round(numericChange) : 0;
+    const direction =
+      trend.direction ||
+      (isNew ? "up" : change > 0 ? "up" : change < 0 ? "down" : "flat");
+
+    trendEl.classList.remove("is-up", "is-down", "is-flat");
+    trendEl.classList.add(`is-${direction}`);
+
+    const icon = trendEl.querySelector("i");
+    if (icon) {
+      icon.className = `fas ${
+        direction === "up"
+          ? "fa-arrow-trend-up"
+          : direction === "down"
+            ? "fa-arrow-trend-down"
+            : "fa-minus"
+      }`;
+    }
+
+    const label = trendEl.querySelector("span");
+    if (label) {
+      if (isNew) {
+        label.textContent = trendEl.dataset.mmhdTrendNew || "New";
+      } else if (hasChange) {
+        label.textContent = `${change > 0 ? "+" : ""}${change}%`;
+      }
+    }
+
+    if (chart && label) {
+      const template = chart.dataset.mmhdSparklineLabelTemplate || "";
+      const cardLabel =
+        chart
+          .closest(".mmhd-dashboard-stat-card")
+          ?.querySelector(".mmhd-stat-card__label")?.textContent || "";
+
+      if (template && cardLabel) {
+        const baseLabel = template
+          .replace("%1$s", cardLabel)
+          .replace("%2$s", label.textContent);
+        chart.dataset.mmhdSparklineBaseLabel = baseLabel;
+
+        if (!chart.classList.contains("is-interacting")) {
+          chart.setAttribute("aria-label", baseLabel);
+        }
+      }
+    }
+  });
+}
+
+function formatSparklineDate(isoDate, chart) {
+  if (!isoDate) return "";
+
+  const value = String(isoDate);
+  const todayIso = chart?.dataset.mmhdSparklineToday || "";
+
+  if (todayIso) {
+    if (value === todayIso) {
+      return chart.dataset.mmhdSparklineLabelToday || "Today";
+    }
+
+    const todayParts = todayIso.split("-").map((part) => Number(part));
+    if (
+      todayParts.length === 3 &&
+      todayParts.every((part) => Number.isFinite(part))
+    ) {
+      const yesterday = new Date(
+        todayParts[0],
+        todayParts[1] - 1,
+        todayParts[2],
+      );
+      yesterday.setDate(yesterday.getDate() - 1);
+
+      const yesterdayIso = `${yesterday.getFullYear()}-${String(
+        yesterday.getMonth() + 1,
+      ).padStart(2, "0")}-${String(yesterday.getDate()).padStart(2, "0")}`;
+
+      if (value === yesterdayIso) {
+        return chart.dataset.mmhdSparklineLabelYesterday || "Yesterday";
+      }
+    }
+  }
+
+  const parts = value.split("-").map((part) => Number(part));
+
+  if (parts.length !== 3 || parts.some((part) => !Number.isFinite(part))) {
+    return value;
+  }
+
+  const date = new Date(parts[0], parts[1] - 1, parts[2]);
+
+  return date.toLocaleDateString(undefined, {
+    month: "short",
+    day: "numeric",
+  });
+}
+
+function getSparklineChartData(chart) {
+  if (!chart) return null;
+
+  let series = [];
+  let dates = [];
+
+  try {
+    series = JSON.parse(chart.dataset.mmhdSparklineSeries || "[]");
+  } catch (error) {
+    series = [];
+  }
+
+  try {
+    dates = JSON.parse(chart.dataset.mmhdSparklineDates || "[]");
+  } catch (error) {
+    dates = [];
+  }
+
+  return {
+    series: Array.isArray(series) ? series.map(Number) : [],
+    dates: Array.isArray(dates) ? dates : [],
+    unit: chart.dataset.mmhdSparklineUnit || "",
+    points: buildSparklinePaths(series).points,
+  };
+}
+
+function showSparklinePoint(chart, index, updateAria) {
+  const data = getSparklineChartData(chart);
+  if (!chart || !data || !data.points.length) return;
+
+  const boundedIndex = Math.max(
+    0,
+    Math.min(data.points.length - 1, Number(index) || 0),
+  );
+  const point = data.points[boundedIndex];
+  const key = chart.dataset.mmhdSparklineChart;
+  const guide = chart.querySelector(`[data-mmhd-sparkline-guide="${key}"]`);
+  const marker = chart.querySelector(`[data-mmhd-sparkline-point="${key}"]`);
+  const tip = chart.querySelector(`[data-mmhd-sparkline-tip="${key}"]`);
+
+  if (!guide || !marker || !tip) return;
+
+  const xPercent = point[0]; // viewBox is 100 units wide.
+  const yPercent = (point[1] / 36) * 100;
+  const value = Number(data.series[boundedIndex]) || 0;
+  const dateLabel = formatSparklineDate(data.dates[boundedIndex], chart);
+
+  guide.style.left = `${xPercent}%`;
+  marker.style.left = `${xPercent}%`;
+  marker.style.top = `${yPercent}%`;
+  tip.style.top = `${yPercent}%`;
+
+  const dateEl = tip.querySelector("[data-mmhd-sparkline-tip-date]");
+  const valueEl = tip.querySelector("[data-mmhd-sparkline-tip-value]");
+
+  if (dateEl) dateEl.textContent = dateLabel;
+  if (valueEl) valueEl.textContent = `${value} ${data.unit}`.trim();
+
+  // Keep the tooltip inside the card. Cards clip overflow, so a tooltip on
+  // the first or last point would otherwise be cut in half.
+  const chartWidth = chart.getBoundingClientRect().width;
+  const tipHalfWidth = tip.offsetWidth / 2;
+  const rawLeft = (xPercent / 100) * chartWidth;
+  const tipLeft = Math.max(
+    tipHalfWidth + 4,
+    Math.min(chartWidth - tipHalfWidth - 4, rawLeft),
+  );
+  tip.style.left = `${tipLeft}px`;
+
+  chart.classList.add("is-interacting");
+  chart.dataset.mmhdSparklineIndex = String(boundedIndex);
+
+  // Touch has no hover-out, so make sure only one tooltip is visible at a
+  // time when the user taps from one card to another.
+  document.querySelectorAll("[data-mmhd-sparkline-chart]").forEach((other) => {
+    if (other !== chart) hideSparklinePoint(other);
+  });
+
+  if (updateAria) {
+    chart.setAttribute(
+      "aria-label",
+      `${dateLabel}: ${value} ${data.unit}.`.trim(),
+    );
+  }
+}
+
+function hideSparklinePoint(chart) {
+  if (!chart) return;
+
+  chart.classList.remove("is-interacting");
+
+  if (chart.dataset.mmhdSparklineBaseLabel) {
+    chart.setAttribute("aria-label", chart.dataset.mmhdSparklineBaseLabel);
+  }
+}
+
+function handleSparklinePointerMove(event) {
+  const chart = event.currentTarget;
+  const data = getSparklineChartData(chart);
+  if (!data.points.length) return;
+
+  const rect = chart.getBoundingClientRect();
+  if (!rect.width) return;
+
+  const xPercent = ((event.clientX - rect.left) / rect.width) * 100;
+  let nearestIndex = 0;
+  let nearestDistance = Infinity;
+
+  data.points.forEach((point, index) => {
+    const distance = Math.abs(point[0] - xPercent);
+    if (distance < nearestDistance) {
+      nearestDistance = distance;
+      nearestIndex = index;
+    }
+  });
+
+  showSparklinePoint(chart, nearestIndex, false);
+}
+
+function handleSparklineKeyDown(event) {
+  const chart = event.currentTarget;
+  const data = getSparklineChartData(chart);
+  if (!data.points.length) return;
+
+  const storedIndex = Number(chart.dataset.mmhdSparklineIndex);
+  let index = Number.isFinite(storedIndex)
+    ? storedIndex
+    : data.points.length - 1;
+
+  if (event.key === "ArrowLeft") {
+    index = Math.max(0, index - 1);
+  } else if (event.key === "ArrowRight") {
+    index = Math.min(data.points.length - 1, index + 1);
+  } else if (event.key === "Home") {
+    index = 0;
+  } else if (event.key === "End") {
+    index = data.points.length - 1;
+  } else if (event.key === "Escape") {
+    hideSparklinePoint(chart);
+    return;
+  } else {
+    return;
+  }
+
+  event.preventDefault();
+  showSparklinePoint(chart, index, true);
+}
+
+let sparklineOutsideDismissBound = false;
+
+function bindSparklineOutsideDismiss() {
+  if (sparklineOutsideDismissBound) return;
+
+  sparklineOutsideDismissBound = true;
+  document.addEventListener("pointerdown", (event) => {
+    if (event.target.closest("[data-mmhd-sparkline-chart]")) return;
+
+    document.querySelectorAll("[data-mmhd-sparkline-chart]").forEach((chart) => {
+      hideSparklinePoint(chart);
+    });
+  });
+}
+
+function initSparklineInteractions() {
+  bindSparklineOutsideDismiss();
+
+  document.querySelectorAll("[data-mmhd-sparkline-chart]").forEach((chart) => {
+    if (chart.dataset.mmhdSparklineReady === "1") return;
+
+    chart.dataset.mmhdSparklineReady = "1";
+    chart.dataset.mmhdSparklineBaseLabel = chart.getAttribute("aria-label") || "";
+
+    chart.addEventListener("pointerdown", handleSparklinePointerMove);
+    chart.addEventListener("pointermove", handleSparklinePointerMove);
+    chart.addEventListener("pointerleave", () => hideSparklinePoint(chart));
+    chart.addEventListener("keydown", handleSparklineKeyDown);
+    chart.addEventListener("blur", () => {
+      hideSparklinePoint(chart);
+      delete chart.dataset.mmhdSparklineIndex;
+    });
+    chart.addEventListener("focus", () => {
+      // A click focuses the chart after pointerdown has already picked a
+      // point, so don't jump back to the newest point in that case.
+      if (chart.dataset.mmhdSparklineIndex !== undefined) return;
+
+      const data = getSparklineChartData(chart);
+      if (data.points.length) {
+        showSparklinePoint(chart, data.points.length - 1, true);
+      }
+    });
+
+    replaySparklineAnimation(chart);
+  });
+}
+
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", initSparklineInteractions);
+} else {
+  initSparklineInteractions();
+}
+
 function updateDashboardCounters(data) {
   data = data || {};
   const stats = data.stats || {};
   const counts = data.counts || {};
 
   const statValues = {
-    "total-tickets": stats.total,
+    "total-tickets": stats.total30,
     "open-tickets": stats.active,
     "in-progress-tickets": stats.inProgress,
-    "closed-tickets": stats.closed,
+    "closed-tickets": stats.closed30,
   };
 
   Object.entries(statValues).forEach(([id, value]) => {
     const el = document.getElementById(id);
-    if (el) {
+    if (el && value !== undefined && value !== null) {
       el.textContent = String(Number(value) || 0);
     }
   });
+
+  // Keep each card's sparkline and 7-day trend badge in sync. Local
+  // recalculation (inline status/priority/assignee changes) does not send
+  // trends, so the last server-rendered values stay in place.
+  updateDashboardSparklines(data.trends);
 
   const countValues = {
     "dashboard-count-my-conversation": counts.my,
@@ -3458,7 +3966,7 @@ function updateTicketStatus(ticketId, newStatus) {
 
         showToast(`Ticket status updated to ${updatedStatus}`);
         // updateDashboardCounters();
-        recalculateDashboardCounters();
+        applyDashboardSummary(response.data);
         markConversationsTabStale();
         return { success: true, data: response.data };
       } catch (error) {
@@ -3525,7 +4033,7 @@ function updateTicketPriority(ticketId, newPriority) {
         }
 
         showToast(`Ticket priority updated to ${updatedPriority}`);
-        recalculateDashboardCounters();
+        applyDashboardSummary(response.data);
         markConversationsTabStale();
         return { success: true, data: response.data };
       } else {
@@ -3601,7 +4109,7 @@ function updateTicketAssignee(ticketId, newAssignee) {
         }
 
         showToast(`Ticket assigned to ${updatedAssignee}`);
-        recalculateDashboardCounters();
+        applyDashboardSummary(response.data);
         markConversationsTabStale();
         return { success: true, data: response.data };
       } else {
@@ -4486,6 +4994,9 @@ jQuery(document).ready(function ($) {
 let dashboardRefreshInterval = null;
 let notificationCount = 0;
 let notificationItems = [];
+let notificationHasMore = false;
+let notificationLoadingMore = false;
+const MMHD_NOTIFICATION_PAGE_SIZE = 50;
 let _notifFirstFetch = true;
 let _rbd_firstTicketScroll = true;
 let shouldRefreshTicketsPage = false;
@@ -4498,42 +5009,23 @@ function markConversationsTabStale() {
   }
 }
 
-function recalculateDashboardCounters() {
-  if (typeof dashboard_tickets === "undefined" || !Array.isArray(dashboard_tickets)) {
+/**
+ * Apply the fresh global dashboard numbers returned by a mutation endpoint.
+ *
+ * Never derive totals from `dashboard_tickets`: that array only holds the
+ * currently loaded table page (often 10 rows), so recalculating from it
+ * overwrote the all-time cards with page-only values.
+ */
+function applyDashboardSummary(data) {
+  if (!data || !data.stats) {
     return;
   }
 
-  const stats = {
-    total: dashboard_tickets.length,
-    open: 0,
-    active: 0,
-    inProgress: 0,
-    closed: 0,
-  };
-
-  const counts = {
-    my: 0,
-    unassigned: 0,
-    open: 0,
-    chat: 0,
-  };
-
-  const currentUserId = (typeof mmhdCurrentUser !== "undefined" && mmhdCurrentUser.id) ? parseInt(mmhdCurrentUser.id, 10) : 0;
-
-  dashboard_tickets.forEach((ticket) => {
-    const status = ticket.status;
-    if (status === "open") stats.open++;
-    else if (status === "in-progress") stats.inProgress++;
-    else if (status === "closed") stats.closed++;
-    if (["open", "in-progress"].includes(status)) stats.active++;
-
-    if (ticket.assignee_id === currentUserId) counts.my++;
-    if (!ticket.assignee_id || ticket.assignee_id === 0) counts.unassigned++;
-    if (["open", "in-progress"].includes(status)) counts.open++;
-    if (ticket.source === "chat") counts.chat++;
+  updateDashboardCounters({
+    stats: data.stats,
+    counts: data.counts,
+    trends: data.trends,
   });
-
-  updateDashboardCounters({ stats, counts });
 }
 
 function reloadConversationsPageIfVisible() {
@@ -4629,15 +5121,29 @@ function detectTicketChanges(oldTickets, newTickets) {
 function updateNotificationBadge(count) {
   const badge = document.getElementById("notification-badge");
   const bell = document.getElementById("dashboard-notification-bell");
+  const countLabel = document.getElementById("notification-count-label");
 
   if (badge && bell) {
     if (count > 0) {
-      badge.textContent = count > 99 ? "99+" : count;
+      badge.textContent = String(count);
       badge.style.display = "flex";
       bell.classList.add("animate-pulse");
+      bell.setAttribute("title", `${count} unread notifications`);
     } else {
+      badge.textContent = "";
       badge.style.display = "none";
       bell.classList.remove("animate-pulse");
+      bell.setAttribute("title", "View notifications");
+    }
+  }
+
+  if (countLabel) {
+    if (count > 0) {
+      countLabel.textContent = `${count} unread`;
+      countLabel.style.display = "inline-flex";
+    } else {
+      countLabel.textContent = "";
+      countLabel.style.display = "none";
     }
   }
 }
@@ -4683,7 +5189,33 @@ function showChangeNotification(changes) {
   }
 }
 
-function fetchNotifications() {
+function fetchNotifications(options = {}) {
+  const append = options.append === true;
+
+  if (append && (notificationLoadingMore || !notificationHasMore)) {
+    return Promise.resolve();
+  }
+
+  const dropdown = document.getElementById("notification-dropdown");
+  const dropdownOpen =
+    dropdown && !dropdown.classList.contains("hidden");
+
+  let offset = 0;
+  let limit = MMHD_NOTIFICATION_PAGE_SIZE;
+
+  if (append) {
+    offset = notificationItems.length;
+  } else if (dropdownOpen && notificationItems.length > MMHD_NOTIFICATION_PAGE_SIZE) {
+    // Refresh the whole loaded range so polling does not discard pages the
+    // user has already expanded with "Load more".
+    limit = Math.min(notificationItems.length, 1000);
+  }
+
+  if (append) {
+    notificationLoadingMore = true;
+    updateNotificationLoadMoreButton();
+  }
+
   return fetch(mmhdAjax.ajax_url, {
     method: "POST",
     headers: {
@@ -4692,6 +5224,8 @@ function fetchNotifications() {
     body: new URLSearchParams({
       action: "mmhd_get_notifications",
       nonce: mmhdAjax.nonces.notifications,
+      offset: String(offset),
+      limit: String(limit),
     }),
   })
     .then((res) => res.json())
@@ -4705,15 +5239,30 @@ function fetchNotifications() {
       notificationItems.forEach(function (item) {
         prevItemsMap[item.id] = item;
       });
-      notificationItems = Array.isArray(response.data.items)
+
+      const incomingItems = Array.isArray(response.data.items)
         ? response.data.items
         : [];
+
+      if (append) {
+        const existingIds = new Set(
+          notificationItems.map((item) => item.id),
+        );
+        notificationItems = notificationItems.concat(
+          incomingItems.filter((item) => !existingIds.has(item.id)),
+        );
+      } else {
+        notificationItems = incomingItems;
+      }
+
       notificationCount = Number(response.data.count || 0);
+      notificationHasMore = Boolean(response.data.has_more);
       updateNotificationBadge(notificationCount);
 
-      var hasNewOrUpdatedNotification = notificationCount > prevCount;
+      var hasNewOrUpdatedNotification =
+        !append && notificationCount > prevCount;
       var isForCurrentTicket = false;
-      if (!hasNewOrUpdatedNotification && prevCount > 0) {
+      if (!append && !hasNewOrUpdatedNotification && prevCount > 0) {
         for (var i = 0; i < notificationItems.length; i++) {
           var newItem = notificationItems[i];
           var prevItem = prevItemsMap[newItem.id];
@@ -4746,14 +5295,46 @@ function fetchNotifications() {
         }
       _notifFirstFetch = false;
 
-      const dropdown = document.getElementById("notification-dropdown");
       if (dropdown && !dropdown.classList.contains("hidden")) {
         renderNotificationList();
+      } else {
+        updateNotificationLoadMoreButton();
       }
     })
     .catch((error) => {
       console.error("Error fetching notifications:", error);
+    })
+    .finally(() => {
+      if (append) {
+        notificationLoadingMore = false;
+        updateNotificationLoadMoreButton();
+      }
     });
+}
+
+function updateNotificationLoadMoreButton() {
+  const button = document.getElementById("notification-load-more");
+  if (!button) return;
+
+  const remaining = Math.max(
+    0,
+    notificationCount - notificationItems.length,
+  );
+  const shouldShow = notificationHasMore && remaining > 0;
+
+  button.style.display = shouldShow ? "block" : "none";
+  button.disabled = notificationLoadingMore;
+  button.textContent = notificationLoadingMore
+    ? "Loading…"
+    : `Load more (${remaining} remaining)`;
+}
+
+function loadMoreNotifications() {
+  if (notificationLoadingMore || !notificationHasMore) {
+    return;
+  }
+
+  fetchNotifications({ append: true });
 }
 
 // Function to toggle notification dropdown
@@ -4779,11 +5360,12 @@ function renderNotificationList() {
         <p>No new notifications</p>
       </div>
     `;
+    updateNotificationLoadMoreButton();
     return;
   }
 
-  // Reverse to show newest first
-  const sortedItems = [...notificationItems].reverse();
+  // Backend returns newest first; additional pages append below.
+  const sortedItems = [...notificationItems];
 
   listContainer.innerHTML = sortedItems
     .map((item, index) => {
@@ -4807,7 +5389,7 @@ function renderNotificationList() {
           icon = "fa-comment";
           iconColor = "text-blue-500";
           break;
-        case "status_change":
+        case "status_changed":
           icon = "fa-exchange-alt";
           iconColor = "text-yellow-500";
           break;
@@ -4841,6 +5423,8 @@ function renderNotificationList() {
     `;
     })
     .join("");
+
+  updateNotificationLoadMoreButton();
 }
 
 // Function to handle notification click
@@ -4914,6 +5498,8 @@ function clearAllNotifications() {
 
       notificationCount = 0;
       notificationItems = [];
+      notificationHasMore = false;
+      notificationLoadingMore = false;
       updateNotificationBadge(0);
       renderNotificationList();
       document.getElementById("notification-dropdown").classList.add("hidden");
