@@ -1511,10 +1511,13 @@ function mmhd_update_ticket_status()
         ]);
     }
 
-    wp_send_json_success([
-        'status' => $new_status,
-        'updated' => $updated
-    ]);
+    wp_send_json_success(array_merge(
+        [
+            'status' => $new_status,
+            'updated' => $updated,
+        ],
+        mmhd_get_dashboard_summary()
+    ));
 }
 
 
@@ -1582,10 +1585,13 @@ function mmhd_update_ticket_priority()
             update_comment_meta($comment_id, 'admin_comment', 'yes');
         }
     }
-    wp_send_json_success([
-        'priority' => $new_priority,
-        'updated'  => $updated,
-    ]);
+    wp_send_json_success(array_merge(
+        [
+            'priority' => $new_priority,
+            'updated'  => $updated,
+        ],
+        mmhd_get_dashboard_summary()
+    ));
 }
 
 
@@ -1674,14 +1680,17 @@ function mmhd_update_ticket_assignee()
             : get_avatar_url($assignee_id, ['size' => 32]))
         : '';
 
-    wp_send_json_success([
-        'assignee' => $assignee_display,
-        'assignee_id' => $assignee_id,
-        'assignee_initials' => $assignee_initials,
-        'assignee_avatar_color' => $assignee_avatar_color,
-        'assignee_avatar_url' => $assignee_avatar_url,
-        'updated'  => $updated,
-    ]);
+    wp_send_json_success(array_merge(
+        [
+            'assignee' => $assignee_display,
+            'assignee_id' => $assignee_id,
+            'assignee_initials' => $assignee_initials,
+            'assignee_avatar_color' => $assignee_avatar_color,
+            'assignee_avatar_url' => $assignee_avatar_url,
+            'updated'  => $updated,
+        ],
+        mmhd_get_dashboard_summary()
+    ));
 }
 
 
@@ -2866,7 +2875,10 @@ function mmhd_handle_bulk_action()
             $message .= ' However, there were some errors: ' . implode('; ', $errors);
         }
 
-        wp_send_json_success(array('message' => $message));
+        wp_send_json_success(array_merge(
+            ['message' => $message],
+            mmhd_get_dashboard_summary()
+        ));
     } else {
         $error_message = !empty($errors) ? implode('; ', $errors) : 'No tickets were updated.';
         wp_send_json_error(array('message' => $error_message));
@@ -3006,59 +3018,20 @@ function mmhd_get_notifications()
         wp_send_json_error(['message' => 'User not logged in.']);
     }
 
-    global $wpdb;
-    $table_name = $wpdb->prefix . 'mmhd_notifications';
+    $offset = isset($_POST['offset']) ? max(0, intval($_POST['offset'])) : 0;
+    $limit = isset($_POST['limit']) ? intval($_POST['limit']) : 50;
+    $limit = max(1, min(1000, $limit));
 
-    // phpcs:disable WordPress.DB.DirectDatabaseQuery, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter
-    $rows = $wpdb->get_results(
-        $wpdb->prepare(
-            "SELECT id, ticket_id, comment_id, type, source, message, created_at
-             FROM {$table_name}
-             WHERE recipient_user_id = %d AND read_at IS NULL
-             ORDER BY created_at DESC
-             LIMIT 50",
-            $user_id
-        ),
-        ARRAY_A
-    );
-    // phpcs:enable WordPress.DB.DirectDatabaseQuery, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter
-
-    $items = [];
-    foreach ($rows as $row) {
-        $ticket_id = (int) $row['ticket_id'];
-
-        if ($ticket_id > 0) {
-            $current_assignee_id = (int) get_post_meta($ticket_id, 'ticket_assignee_id', true);
-            if ($current_assignee_id > 0 && $current_assignee_id !== $user_id) {
-                // phpcs:disable WordPress.DB.DirectDatabaseQuery, PluginCheck.Security.DirectDB.UnescapedDBParameter
-                $wpdb->delete(
-                    $table_name,
-                    ['id' => (int) $row['id'], 'recipient_user_id' => $user_id],
-                    ['%d', '%d']
-                );
-                // phpcs:enable WordPress.DB.DirectDatabaseQuery, PluginCheck.Security.DirectDB.UnescapedDBParameter
-                continue;
-            }
-        }
-
-        $items[] = [
-            'id' => (int) $row['id'],
-            'ticketId' => $ticket_id,
-            'commentId' => $row['comment_id'] ? (int) $row['comment_id'] : null,
-            'type' => $row['type'],
-            'source' => $row['source'],
-            'message' => $row['message'],
-            'title' => $row['type'] === 'ticket_created'
-                ? 'New Conversation #' . $ticket_id
-                : 'New Reply on #' . $ticket_id,
-            'assignee' => get_post_meta($ticket_id, 'ticket_assignee', true) ?: 'Unassigned',
-            'timestamp' => function_exists('mmhd_datetime_to_utc_iso') ? mmhd_datetime_to_utc_iso($row['created_at']) : $row['created_at'],
-        ];
-    }
+    $notification_data = mmhd_get_unread_notifications_for_user($user_id, $limit, $offset);
+    $items = $notification_data['items'];
+    $unread_count = $notification_data['count'];
 
     wp_send_json_success([
         'items' => $items,
-        'count' => count($items),
+        'count' => $unread_count,
+        'offset' => $offset,
+        'limit' => $limit,
+        'has_more' => ($offset + count($items)) < $unread_count,
     ]);
 }
 

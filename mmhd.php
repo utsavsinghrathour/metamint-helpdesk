@@ -215,6 +215,60 @@ function mmhd_deactivate()
 }
 
 /**
+ * Default ticket priorities and their colors.
+ *
+ * @return array<string, string> Priority name => hex color.
+ */
+function mmhd_get_default_priorities()
+{
+    return array(
+        'Low'    => '#3b82f6', // Blue.
+        'Medium' => '#eab308', // Yellow.
+        'High'   => '#ef4444', // Red.
+    );
+}
+
+/**
+ * Create the default ticket priorities once, on the first activation.
+ *
+ * Runs on init (after the taxonomy is registered) and records a persistent
+ * option when done. The option is intentionally left in place on deactivation,
+ * so reactivating the plugin never recreates priorities the user has deleted.
+ */
+function mmhd_seed_default_priorities()
+{
+    if (get_option('mmhd_default_priorities_seeded')) {
+        return;
+    }
+
+    if (!taxonomy_exists('mmhd_ticket_priority')) {
+        return;
+    }
+
+    foreach (mmhd_get_default_priorities() as $priority_name => $priority_color) {
+        $term = term_exists($priority_name, 'mmhd_ticket_priority');
+
+        if (!$term) {
+            $term = wp_insert_term($priority_name, 'mmhd_ticket_priority');
+        }
+
+        if (is_wp_error($term)) {
+            continue;
+        }
+
+        $term_id = is_array($term) ? (int) $term['term_id'] : (int) $term;
+
+        // Keep any color the site already set for an existing term.
+        if ($term_id && !get_term_meta($term_id, 'priority_color', true)) {
+            update_term_meta($term_id, 'priority_color', $priority_color);
+        }
+    }
+
+    update_option('mmhd_default_priorities_seeded', 1);
+}
+add_action('init', 'mmhd_seed_default_priorities', 20);
+
+/**
  * Build threading headers (In-Reply-To / References) for a ticket so every
  * email sent about it — ticket creation, admin replies, unseen-reply emails,
  * close notifications — stays in the same conversation thread as the original
@@ -1732,16 +1786,11 @@ function mmhd_create_notification($recipient_user_id, $ticket_id, $comment_id, $
 
     $normalized_source = strtolower(trim((string) $source));
     $comment_user_id = 0;
-    $comment_author_type = '';
 
     if ($comment_id > 0) {
         $comment = get_comment($comment_id);
         if ($comment && !is_wp_error($comment)) {
             $comment_user_id = (int) $comment->user_id;
-            $comment_author_type = (string) get_comment_meta($comment_id, 'author_type', true);
-            if ($comment_author_type === '') {
-                $comment_author_type = mmhd_get_author_type($comment_user_id);
-            }
 
             if ($normalized_source === '') {
                 $normalized_source = strtolower((string) get_comment_meta($comment_id, 'comment_source', true));
@@ -1757,15 +1806,11 @@ function mmhd_create_notification($recipient_user_id, $ticket_id, $comment_id, $
 
     switch ($normalized_source) {
         case 'chat':
-            if ($comment_user_id > 0 && $comment_author_type === 'customer') {
-                $created_by = $comment_user_id;
-            } elseif ($customer_user_id > 0) {
-                $created_by = $customer_user_id;
-            }
-            break;
-
         case 'email':
-            if ($comment_user_id > 0 && $comment_author_type === 'customer') {
+            // The comment author is the actor, regardless of whether the
+            // ticket originated in chat or email. Falling back to the
+            // customer here made agent replies look like customer replies.
+            if ($comment_user_id > 0) {
                 $created_by = $comment_user_id;
             } elseif ($customer_user_id > 0) {
                 $created_by = $customer_user_id;
@@ -1828,6 +1873,152 @@ function mmhd_create_notification($recipient_user_id, $ticket_id, $comment_id, $
     );
 }
 
+/**
+ * Get unread notifications for an admin user.
+ *
+ * Notifications for deleted tickets or tickets that are no longer assigned
+ * to the user are removed first. The returned item list is capped, but
+ * `count` is the full unread total so badges are not limited by the dropdown
+ * page size.
+ *
+ * @param int $recipient_user_id Recipient user ID.
+ * @param int $limit            Maximum number of items to return.
+ * @param int $offset           Number of items to skip.
+ * @return array{items: array<int, array<string, mixed>>, count: int}
+ */
+function mmhd_get_unread_notifications_for_user($recipient_user_id, $limit = 50, $offset = 0)
+{
+    global $wpdb;
+
+    $recipient_user_id = (int) $recipient_user_id;
+    $limit = max(1, (int) $limit);
+    $offset = max(0, (int) $offset);
+
+    if ($recipient_user_id <= 0) {
+        return ['items' => [], 'count' => 0];
+    }
+
+    $table_name = $wpdb->prefix . 'mmhd_notifications';
+
+    // phpcs:disable WordPress.DB.DirectDatabaseQuery, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter
+    $unread_rows = $wpdb->get_results(
+        $wpdb->prepare(
+            "SELECT id, ticket_id FROM {$table_name} WHERE recipient_user_id = %d AND read_at IS NULL",
+            $recipient_user_id
+        ),
+        ARRAY_A
+    );
+
+    $stale_ids = [];
+    foreach ($unread_rows as $unread_row) {
+        $ticket_id = (int) $unread_row['ticket_id'];
+        if ($ticket_id <= 0) {
+            continue;
+        }
+
+        // Notifications for deleted tickets can never be opened, so do not
+        // let them inflate the badge indefinitely.
+        if (get_post_type($ticket_id) !== 'mmhd_ticket') {
+            $stale_ids[] = (int) $unread_row['id'];
+            continue;
+        }
+
+        $current_assignee_id = (int) get_post_meta($ticket_id, 'ticket_assignee_id', true);
+        if ($current_assignee_id > 0 && $current_assignee_id !== $recipient_user_id) {
+            $stale_ids[] = (int) $unread_row['id'];
+        }
+    }
+
+    if (!empty($stale_ids)) {
+        $placeholders = implode(',', array_fill(0, count($stale_ids), '%d'));
+        $wpdb->query(
+            $wpdb->prepare(
+                "DELETE FROM {$table_name} WHERE recipient_user_id = %d AND id IN ({$placeholders})",
+                array_merge([$recipient_user_id], $stale_ids)
+            )
+        );
+    }
+
+    $rows = $wpdb->get_results(
+        $wpdb->prepare(
+            "SELECT id, ticket_id, comment_id, type, source, message, created_at
+             FROM {$table_name}
+             WHERE recipient_user_id = %d AND read_at IS NULL
+             ORDER BY created_at DESC, id DESC
+             LIMIT %d OFFSET %d",
+            $recipient_user_id,
+            $limit,
+            $offset
+        ),
+        ARRAY_A
+    );
+
+    $count = (int) $wpdb->get_var(
+        $wpdb->prepare(
+            "SELECT COUNT(*) FROM {$table_name} WHERE recipient_user_id = %d AND read_at IS NULL",
+            $recipient_user_id
+        )
+    );
+    // phpcs:enable WordPress.DB.DirectDatabaseQuery, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter
+
+    $items = [];
+    foreach ($rows as $row) {
+        $ticket_id = (int) $row['ticket_id'];
+        $notification_title = 'Update on #' . $ticket_id;
+        switch ($row['type']) {
+            case 'ticket_created':
+                $notification_title = 'New Conversation #' . $ticket_id;
+                break;
+            case 'reply_added':
+                $notification_title = 'New Reply on #' . $ticket_id;
+                break;
+            case 'status_changed':
+                $notification_title = 'Status Changed on #' . $ticket_id;
+                break;
+            case 'assignment_change':
+                $notification_title = 'Assignment Changed on #' . $ticket_id;
+                break;
+        }
+
+        $items[] = [
+            'id' => (int) $row['id'],
+            'ticketId' => $ticket_id,
+            'commentId' => $row['comment_id'] ? (int) $row['comment_id'] : null,
+            'type' => $row['type'],
+            'source' => $row['source'],
+            'message' => $row['message'],
+            'title' => $notification_title,
+            'assignee' => $ticket_id > 0 ? (get_post_meta($ticket_id, 'ticket_assignee', true) ?: 'Unassigned') : 'Unassigned',
+            'timestamp' => function_exists('mmhd_datetime_to_utc_iso') ? mmhd_datetime_to_utc_iso($row['created_at']) : $row['created_at'],
+        ];
+    }
+
+    return ['items' => $items, 'count' => $count];
+}
+
+/**
+ * Remove notifications when a ticket is permanently deleted.
+ *
+ * Without this, unread notifications for deleted tickets stay in the table
+ * and keep inflating notification badges.
+ *
+ * @param int $post_id Post being deleted.
+ */
+function mmhd_delete_ticket_notifications($post_id)
+{
+    $post_id = (int) $post_id;
+    if ($post_id <= 0 || get_post_type($post_id) !== 'mmhd_ticket') {
+        return;
+    }
+
+    global $wpdb;
+    $table_name = $wpdb->prefix . 'mmhd_notifications';
+
+    // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+    $wpdb->delete($table_name, ['ticket_id' => $post_id], ['%d']);
+}
+add_action('before_delete_post', 'mmhd_delete_ticket_notifications');
+
 function mmhd_notify_ticket_created($ticket_id, $source = '')
 {
     $ticket_id = (int) $ticket_id;
@@ -1865,10 +2056,41 @@ function mmhd_notify_ticket_created($ticket_id, $source = '')
     $source = $source !== '' ? $source : mmhd_get_ticket_source($ticket_id);
     $message = get_the_title($ticket_id);
 
+    // Do not notify the person who just created the ticket. Other
+    // notification types already exclude the actor.
+    $actor_user_id = (int) get_current_user_id();
+
     foreach ($recipients as $recipient_id) {
+        if ($actor_user_id > 0 && (int) $recipient_id === $actor_user_id) {
+            continue;
+        }
+
         mmhd_create_notification($recipient_id, $ticket_id, null, 'ticket_created', $source, $message);
     }
 }
+
+/**
+ * Record when a ticket is closed so the dashboard can show how many
+ * conversations were closed during the last 30 days.
+ *
+ * The timestamp is stored in GMT to match the other dashboard date fields.
+ */
+function mmhd_record_ticket_closed_at($ticket_id, $old_status, $new_status)
+{
+    $ticket_id = (int) $ticket_id;
+
+    if ($ticket_id <= 0) {
+        return;
+    }
+
+    if ($new_status === 'closed') {
+        update_post_meta($ticket_id, '_mmhd_closed_at', current_time('mysql', true));
+    } elseif ($old_status === 'closed') {
+        // The ticket was reopened, so it no longer counts as a recent closure.
+        delete_post_meta($ticket_id, '_mmhd_closed_at');
+    }
+}
+add_action('mmhd_after_ticket_status_change', 'mmhd_record_ticket_closed_at', 10, 3);
 
 function mmhd_notify_status_changed($ticket_id, $new_status, $actor_user_id = 0, $source = '')
 {
@@ -2045,16 +2267,28 @@ function mmhd_notify_comment_created($comment_id)
                 }
                 $count += 1;
                 $new_message = $count . ' new replies';
+                $aggregate_now = current_time('mysql');
+                $aggregate_actor_id = $author_id > 0 ? $author_id : $customer_user_id;
+
+                $aggregate_data = [
+                    'message' => $new_message,
+                    'created_at' => $aggregate_now,
+                    'notification_date' => $aggregate_now,
+                    'comment_id' => $comment_id,
+                    'source' => $source,
+                ];
+                $aggregate_formats = ['%s', '%s', '%s', '%d', '%s'];
+                if ($aggregate_actor_id > 0) {
+                    $aggregate_data['created_by'] = $aggregate_actor_id;
+                    $aggregate_formats[] = '%d';
+                }
 
                 // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
                 $wpdb->update(
                     $table_name,
-                    [
-                        'message' => $new_message,
-                        'created_at' => current_time('mysql'),
-                    ],
+                    $aggregate_data,
                     ['id' => (int) $existing['id']],
-                    ['%s', '%s'],
+                    $aggregate_formats,
                     ['%d']
                 );
                 continue;

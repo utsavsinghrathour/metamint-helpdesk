@@ -252,7 +252,7 @@ function mmhd_enqueue_tailwind_and_styles()
         'mmhd-dashboard-styles',
         plugin_dir_url(__FILE__) . 'assets/css/mmhd-dashboard.css',
         [],
-        '1.0.0'
+        filemtime(plugin_dir_path(__FILE__) . 'assets/css/mmhd-dashboard.css')
     );
     wp_add_inline_style('mmhd-dashboard-styles', '.hidden { display: none; }');
 

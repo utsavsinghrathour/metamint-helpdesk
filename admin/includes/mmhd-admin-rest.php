@@ -474,54 +474,15 @@ function mmhd_notification_stream()
         ignore_user_abort(false);
     }
 
-    global $wpdb;
-    $table_name = $wpdb->prefix . 'mmhd_notifications';
     $last_count = -1;
 
-    $send = function () use ($wpdb, $table_name, $user_id, &$last_count) {
-        // phpcs:disable WordPress.DB.DirectDatabaseQuery
-        // phpcs:disable PluginCheck.Security.DirectDB
-        $rows = $wpdb->get_results(
-            $wpdb->prepare(
-                "SELECT id, ticket_id, comment_id, type, source, message, created_at
-                 FROM " . esc_sql($table_name) . "
-                 WHERE recipient_user_id = %d AND read_at IS NULL
-                 ORDER BY created_at DESC
-                 LIMIT 50",
-                $user_id
-            ),
-            ARRAY_A
-        );
-        // phpcs:enable
-
-        $items = [];
-        foreach ($rows as $row) {
-            $ticket_id = (int) $row['ticket_id'];
-            if ($ticket_id > 0) {
-                $current_assignee_id = (int) get_post_meta($ticket_id, 'ticket_assignee_id', true);
-                if ($current_assignee_id > 0 && $current_assignee_id !== $user_id) {
-                    // phpcs:ignore WordPress.DB.DirectDatabaseQuery
-                    $wpdb->delete($table_name, ['id' => (int) $row['id'], 'recipient_user_id' => $user_id], ['%d', '%d']);
-                    continue;
-                }
-            }
-            $items[] = [
-                'id'        => (int) $row['id'],
-                'ticketId'  => $ticket_id,
-                'type'      => $row['type'],
-                'source'    => $row['source'],
-                'message'   => $row['message'],
-                'title'     => $row['type'] === 'ticket_created' ? 'New Conversation #' . $ticket_id : 'New Reply on #' . $ticket_id,
-                'assignee'  => $ticket_id > 0 ? (get_post_meta($ticket_id, 'ticket_assignee', true) ?: 'Unassigned') : '',
-                'timestamp' => function_exists('mmhd_datetime_to_utc_iso') ? mmhd_datetime_to_utc_iso($row['created_at']) : $row['created_at'],
-            ];
-        }
-
-        $count = count($items);
+    $send = function () use ($user_id, &$last_count) {
+        $payload = mmhd_get_unread_notifications_for_user($user_id, 50);
+        $count = $payload['count'];
         if ($count !== $last_count) {
             $last_count = $count;
             echo "event: notifications\n";
-            echo "data: " . wp_json_encode(['items' => $items, 'count' => $count]) . "\n\n";
+            echo "data: " . wp_json_encode($payload) . "\n\n";
             flush();
         }
     };
