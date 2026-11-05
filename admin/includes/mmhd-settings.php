@@ -3,40 +3,44 @@
         exit; // Exit if accessed directly
     }
     ?>
-<?php
-// phpcs:ignore WordPress.Security.NonceVerification.Recommended
-$mmhd_current_tab = isset($_GET['tab']) ? sanitize_key($_GET['tab']) : '';
-$mmhd_settings_hidden = ($mmhd_current_tab === 'settings') ? '' : ' hidden';
-?>
+ <?php
+    // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+    $mmhd_current_tab = isset($_GET['tab']) ? sanitize_key($_GET['tab']) : '';
+    $mmhd_settings_hidden = ($mmhd_current_tab === 'settings') ? '' : ' hidden';
+    ?>
  <div id="settings-page" class="page-content<?php echo esc_attr($mmhd_settings_hidden); ?>">
-     <div class="bg-white shadow rounded-lg">
-         <div class="border-b border-gray-200">
-             <nav class="mmhd-settings-nav-sec flex space-x-8 px-6">
+     <div class="bg-white shadow rounded-lg mmhd-settings-container-wrapper px-4 py-6 sm:px-6">
+         <div class="mmhd-settings-nav-wrapper">
+             <nav class="mmhd-settings-nav-sec flex space-x-8">
                  <button onclick="showSettingsTab('basic')"
-                     class="settings-tab py-4 px-1 border-b-2 font-medium text-sm" data-tab="basic">
+                     class="settings-tab py-2 px-1 font-medium text-sm" data-tab="basic">
+                     <i class="fa-solid fa-sliders"></i>
                      <?php esc_html_e('Basic Settings', 'metamint-helpdesk'); ?>
                  </button>
-                 <button onclick="showSettingsTab('imap')" class="settings-tab py-4 px-1 border-b-2 font-medium text-sm"
+                 <button onclick="showSettingsTab('imap')" class="settings-tab py-2 px-1 font-medium text-sm"
                      data-tab="imap">
                      <?php esc_html_e('Mail Settings', 'metamint-helpdesk'); ?>
                  </button>
                  <button onclick="showSettingsTab('templates')"
-                     class="settings-tab py-4 px-1 border-b-2 font-medium text-sm" data-tab="templates">
+                     class="settings-tab py-2 px-1 font-medium text-sm" data-tab="templates">
+                     <i class="fa-regular fa-envelope"></i>
                      <?php esc_html_e('Email Templates', 'metamint-helpdesk'); ?>
                  </button>
                  <button onclick="showSettingsTab('fetch')"
-                     class="settings-tab py-4 px-1 border-b-2 font-medium text-sm" data-tab="fetch">
+                     class="settings-tab py-2 px-1 font-medium text-sm" data-tab="fetch">
+                     <i class="fa-solid fa-ticket"></i>
                      <?php esc_html_e('Fetch Tickets', 'metamint-helpdesk'); ?>
                  </button>
                  <button onclick="showSettingsTab('advanced')"
-                     class="settings-tab py-4 px-1 border-b-2 font-medium text-sm" data-tab="advanced">
+                     class="settings-tab py-2 px-1 font-medium text-sm" data-tab="advanced">
+                     <i class="fa-solid fa-gear"></i>
                      <?php esc_html_e('Advanced', 'metamint-helpdesk'); ?>
                  </button>
                  <?php
                     // Allow addons to add their settings tabs
                     $mmhd_addon_tabs = apply_filters('mmhd_settings_tabs', array());
                     foreach ($mmhd_addon_tabs as $mmhd_tab_key => $mmhd_tab_label) {
-                        echo '<button onclick="showSettingsTab(\'' . esc_js($mmhd_tab_key) . '\')" class="settings-tab py-4 px-1 border-b-2 font-medium text-sm" data-tab="' . esc_attr($mmhd_tab_key) . '">';
+                        echo '<button onclick="showSettingsTab(\'' . esc_js($mmhd_tab_key) . '\')" class="settings-tab py-2 px-1 font-medium text-sm" data-tab="' . esc_attr($mmhd_tab_key) . '">';
                         echo wp_kses_post($mmhd_tab_label);
                         echo '</button>';
                     }
@@ -44,22 +48,22 @@ $mmhd_settings_hidden = ($mmhd_current_tab === 'settings') ? '' : ' hidden';
              </nav>
          </div>
          <!------------------------------------------ overall setting page with all the tabs---------------------------------------->
-         <div class="p-6">
+         <div class="mmhd-settings-content-wrapper">
              <!------------------------------Basic Settings Tab --------------------------------->
 
              <div id="basic-tab" class="settings-tab-content">
                  <form id="mmhd-basic-settings-form" class="space-y-6">
                      <input type="hidden" name="mmhd_basic_settings_nonce"
                          value="<?php echo esc_attr(wp_create_nonce('mmhd_basic_settings_action')); ?>">
-                     <div class="space-y-8">
-                         <section class="rounded-xl border border-gray-200 bg-gray-50 p-6">
+                     <div class="mmhd-settings-grid grid grid-cols-1 gap-6">
+                         <section class="border border-gray-200 rounded-xl bg-gray-50 p-6">
                              <div class="mb-5">
                                  <h4 class="text-base font-semibold text-gray-900">
                                      <?php esc_html_e('Basic', 'metamint-helpdesk'); ?></h4>
                                  <p class="text-sm text-gray-500">
                                      <?php esc_html_e('Core site details used across Metamint Helpdesk.', 'metamint-helpdesk'); ?></p>
                              </div>
-                             <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
+                             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                                  <div>
                                      <label for="site_name"
                                          class="block text-sm font-medium text-gray-700"><?php esc_html_e('Site Name', 'metamint-helpdesk'); ?></label>
@@ -74,22 +78,29 @@ $mmhd_settings_hidden = ($mmhd_current_tab === 'settings') ? '' : ' hidden';
                                          value="<?php echo esc_attr(get_option('mmhd_admin_email', 'admin@example.com')); ?>"
                                          class="styled-input mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
                                  </div>
-                            <div class="mt-6 flex items-center">
-                                <input type="checkbox" name="enable_chat" id="enable_chat" value="1" <?php checked(get_option('mmhd_enable_chat', '1'), '1'); ?> class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
-                                <label for="enable_chat" class="ml-2 block text-sm text-gray-900 font-medium"><?php esc_html_e('Enable Chat', 'metamint-helpdesk'); ?></label>
-                            </div>
-                            <p class="text-sm text-gray-500 ml-7"><?php esc_html_e('When disabled, the Conversations tab, "Start a conversation" buttons, and the AI bot chat are hidden from the frontend. FAQ and other tabs remain visible.', 'metamint-helpdesk'); ?></p>
-                            <div class="mt-6 flex items-center">
-                                <input type="checkbox" name="show_credits" id="show_credits" value="1" <?php checked(get_option('mmhd_show_credits', '0'), '1'); ?> class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
-                                <label for="show_credits" class="ml-2 block text-sm text-gray-900 font-medium"><?php esc_html_e('Show "Powered by Metamint Helpdesk" credit', 'metamint-helpdesk'); ?></label>
-                            </div>
-                            <p class="text-sm text-gray-500 ml-7"><?php esc_html_e('Off by default. When enabled, a "Powered by Metamint Helpdesk" credit is displayed in the chat widget footer.', 'metamint-helpdesk'); ?></p>
-                        </section>
+                                 <div class="mmhd-enable-chat">
+                                     <div class="flex items-center">
+                                         <input type="checkbox" name="enable_chat" id="enable_chat" value="1" <?php checked(get_option('mmhd_enable_chat', '1'), '1'); ?> class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                                         <label for="enable_chat" class="ml-2 block text-sm text-gray-900 font-medium"><?php esc_html_e('Enable Chat', 'metamint-helpdesk'); ?></label>
+                                     </div>
+                                     <p class="text-sm text-gray-500 ml-7"><?php esc_html_e('When disabled, the Conversations tab, "Start a conversation" buttons, and the AI bot chat are hidden from the frontend. FAQ and other tabs remain visible.', 'metamint-helpdesk'); ?></p>
 
-                        <section class="rounded-xl border border-gray-200 bg-gray-50 p-6">
-                            <div class="mb-5">
-                                <h4 class="text-base font-semibold text-gray-900">
-                                    <?php esc_html_e('Logos', 'metamint-helpdesk'); ?></h4>
+                                 </div>
+                                 <div class="mmhd-show-credits">
+                                     <div class="flex items-center">
+                                         <input type="checkbox" name="show_credits" id="show_credits" value="1" <?php checked(get_option('mmhd_show_credits', '0'), '1'); ?> class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                                         <label for="show_credits" class="ml-2 block text-sm text-gray-900 font-medium"><?php esc_html_e('Show "Powered by Metamint Helpdesk" credit', 'metamint-helpdesk'); ?></label>
+                                     </div>
+                                     <p class="text-sm text-gray-500 ml-7"><?php esc_html_e('Off by default. When enabled, a "Powered by Metamint Helpdesk" credit is displayed in the chat widget footer.', 'metamint-helpdesk'); ?></p>
+
+                                 </div>
+                             </div>
+                         </section>
+
+                         <section class="border border-gray-200 rounded-xl bg-gray-50 p-6">
+                             <div class="mb-5">
+                                 <h4 class="text-base font-semibold text-gray-900">
+                                     <?php esc_html_e('Logos', 'metamint-helpdesk'); ?></h4>
                                  <p class="text-sm text-gray-500">
                                      <?php esc_html_e('Upload the visuals that define the widget and brand colors.', 'metamint-helpdesk'); ?>
                                  </p>
@@ -174,13 +185,13 @@ $mmhd_settings_hidden = ($mmhd_current_tab === 'settings') ? '' : ' hidden';
                                      <input type="hidden" name="mmhd_wide_logo" id="mmhd_wide_logo"
                                          value="<?php echo esc_attr(get_option('mmhd_wide_logo', '')); ?>">
                                  </div>
-                            </div>
-                        </section>
+                             </div>
+                         </section>
 
-                        <section class="rounded-xl border border-gray-200 bg-gray-50 p-6">
-                            <div class="mb-5">
-                                <h4 class="text-base font-semibold text-gray-900">
-                                    <?php esc_html_e('Defaults', 'metamint-helpdesk'); ?></h4>
+                         <section class="border border-gray-200 rounded-xl bg-gray-50 p-6">
+                             <div class="mb-5">
+                                 <h4 class="text-base font-semibold text-gray-900">
+                                     <?php esc_html_e('Defaults', 'metamint-helpdesk'); ?></h4>
                                  <p class="text-sm text-gray-500">
                                      <?php esc_html_e('Set the default category and notification audio.', 'metamint-helpdesk'); ?>
                                  </p>
@@ -248,7 +259,7 @@ $mmhd_settings_hidden = ($mmhd_current_tab === 'settings') ? '' : ' hidden';
                              </div>
                          </section>
 
-                         <section class="rounded-xl border border-gray-200 bg-gray-50 p-6">
+                         <section class="border border-gray-200 rounded-xl bg-gray-50 p-6">
                              <div class="mb-5">
                                  <h4 class="text-base font-semibold text-gray-900">
                                      <?php esc_html_e('Messages', 'metamint-helpdesk'); ?></h4>
@@ -279,9 +290,9 @@ $mmhd_settings_hidden = ($mmhd_current_tab === 'settings') ? '' : ' hidden';
                              </div>
                          </section>
                      </div>
-                     <hr class="my-6 border-gray-200">
+                     <!-- <hr class="my-6 border-gray-200"> -->
                      <button type="button" id="save-basic-settings"
-                         class="mt-6 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">
+                         class="mt-6 bg-teal-600 text-white px-4 py-2 rounded-md hover:bg-teal-700">
                          <?php esc_html_e('Save Settings', 'metamint-helpdesk'); ?>
                      </button>
                  </form>
@@ -291,23 +302,23 @@ $mmhd_settings_hidden = ($mmhd_current_tab === 'settings') ? '' : ' hidden';
              <?php
                 // Load saved settings (merge defaults so a partial/empty saved
                 // value never produces undefined-index warnings)
-                 $mmhd_imap_defaults = array(
-                     'hostname' => 'email.example.com',
-                     'port'     => 993,
-                     'username' => '',
-                     'password' => '',
-                     'auth'     => true,
-                     'inbox_name' => '',
-                 );
+                $mmhd_imap_defaults = array(
+                    'hostname' => 'email.example.com',
+                    'port'     => 993,
+                    'username' => '',
+                    'password' => '',
+                    'auth'     => true,
+                    'inbox_name' => '',
+                );
 
-                 $mmhd_imap_settings = wp_parse_args((array) get_option('mmhd_imap_settings', array()), $mmhd_imap_defaults);
+                $mmhd_imap_settings = wp_parse_args((array) get_option('mmhd_imap_settings', array()), $mmhd_imap_defaults);
 
-                 $mmhd_imap_hostname   = $mmhd_imap_settings['hostname'];
-                 $mmhd_imap_port       = $mmhd_imap_settings['port'];
-                 $mmhd_imap_username   = $mmhd_imap_settings['username'];
-                 $mmhd_imap_password   = $mmhd_imap_settings['password'];
-                 $mmhd_imap_auth       = $mmhd_imap_settings['auth'];
-                 $mmhd_imap_inbox_name = $mmhd_imap_settings['inbox_name'];
+                $mmhd_imap_hostname   = $mmhd_imap_settings['hostname'];
+                $mmhd_imap_port       = $mmhd_imap_settings['port'];
+                $mmhd_imap_username   = $mmhd_imap_settings['username'];
+                $mmhd_imap_password   = $mmhd_imap_settings['password'];
+                $mmhd_imap_auth       = $mmhd_imap_settings['auth'];
+                $mmhd_imap_inbox_name = $mmhd_imap_settings['inbox_name'];
 
                 $mmhd_smtp_settings = get_option('mmhd_smtp_settings', array(
                     'enabled' => false,
@@ -333,7 +344,7 @@ $mmhd_settings_hidden = ($mmhd_current_tab === 'settings') ? '' : ' hidden';
 
              <!--------------------------- IMAP Settings Tab ---------------------------------------->
              <div id="imap-tab" class="settings-tab-content hidden">
-                 <h3 class="text-lg font-medium text-gray-900 mb-6"><?php esc_html_e('IMAP Settings', 'metamint-helpdesk'); ?>
+                 <h3 class="mmhd-adv__title mb-2"><?php esc_html_e('IMAP Settings', 'metamint-helpdesk'); ?>
                  </h3>
                  <form method="post" action="" id="mmhd-imap-form" class="space-y-6">
                      <?php wp_nonce_field('mmhd_imap_settings_action', 'mmhd_imap_settings_nonce'); ?>
@@ -366,36 +377,36 @@ $mmhd_settings_hidden = ($mmhd_current_tab === 'settings') ? '' : ' hidden';
                                  value="<?php echo esc_attr($mmhd_imap_password); ?>"
                                  class="styled-input mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
                          </div>
-                          <div>
-                              <label for="mmhd_imap_inbox_name"
-                                  class="block text-sm font-medium text-gray-700"><?php esc_html_e('Inbox Name', 'metamint-helpdesk'); ?></label>
-                              <input type="text" name="mmhd_imap_inbox_name" id="mmhd_imap_inbox_name"
-                                  value="<?php echo esc_attr($mmhd_imap_inbox_name); ?>"
-                                  placeholder="e.g. Sales, Support, General"
-                                  class="styled-input mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
-                              <p class="text-xs text-gray-500 mt-1"><?php esc_html_e('A name to identify this inbox in the dashboard.', 'metamint-helpdesk'); ?></p>
-                          </div>
-                          <div>
-                              <label for="mmhd_imap_auth"
-                                  class="block text-sm font-medium text-gray-700"><?php esc_html_e('Encryption', 'metamint-helpdesk'); ?></label>
-                              <select name="mmhd_imap_auth" id="mmhd_imap_auth"
-                                  class="styled-select mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
-                                  <option value="1" <?php selected($mmhd_imap_auth, true); ?>>
-                                      <?php esc_html_e('SSL', 'metamint-helpdesk'); ?></option>
-                                  <option value="0" <?php selected($mmhd_imap_auth, false); ?>>
-                                      <?php esc_html_e('TLS', 'metamint-helpdesk'); ?></option>
-                              </select>
-                          </div>
+                         <div>
+                             <label for="mmhd_imap_inbox_name"
+                                 class="block text-sm font-medium text-gray-700"><?php esc_html_e('Inbox Name', 'metamint-helpdesk'); ?></label>
+                             <input type="text" name="mmhd_imap_inbox_name" id="mmhd_imap_inbox_name"
+                                 value="<?php echo esc_attr($mmhd_imap_inbox_name); ?>"
+                                 placeholder="e.g. Sales, Support, General"
+                                 class="styled-input mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                             <p class="text-xs text-gray-500 mt-1"><?php esc_html_e('A name to identify this inbox in the dashboard.', 'metamint-helpdesk'); ?></p>
+                         </div>
+                         <div>
+                             <label for="mmhd_imap_auth"
+                                 class="block text-sm font-medium text-gray-700"><?php esc_html_e('Encryption', 'metamint-helpdesk'); ?></label>
+                             <select name="mmhd_imap_auth" id="mmhd_imap_auth"
+                                 class="styled-select mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                                 <option value="1" <?php selected($mmhd_imap_auth, true); ?>>
+                                     <?php esc_html_e('SSL', 'metamint-helpdesk'); ?></option>
+                                 <option value="0" <?php selected($mmhd_imap_auth, false); ?>>
+                                     <?php esc_html_e('TLS', 'metamint-helpdesk'); ?></option>
+                             </select>
+                         </div>
                      </div>
                      <div class="mt-6 flex gap-4">
                          <button type="button" id="mmhd-imap-test" onclick="testConnection()"
-                             class="mt-4 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">
+                             class="mt-4 bg-teal-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">
                              <?php esc_html_e('Test Connection', 'metamint-helpdesk'); ?>
                          </button>
 
 
                          <button type="button" id="save-imap-settings"
-                             class="mt-4 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">
+                             class="mt-4 bg-teal-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">
                              <?php esc_html_e('Save Settings', 'metamint-helpdesk'); ?>
                          </button>
 
@@ -403,9 +414,9 @@ $mmhd_settings_hidden = ($mmhd_current_tab === 'settings') ? '' : ' hidden';
 
                  </form>
 
-                 <hr class="my-8 border-gray-200">
+                 <!-- <hr class="my-8 border-gray-200"> -->
 
-                 <h3 class="text-lg font-medium text-gray-900 mb-6"><?php esc_html_e('SMTP Settings', 'metamint-helpdesk'); ?>
+                 <h3 class="mmhd-adv__title text-gray-900 mb-2"><?php esc_html_e('SMTP Settings', 'metamint-helpdesk'); ?>
                  </h3>
                  <form method="post" action="" id="mmhd-smtp-form" class="space-y-6">
                      <?php wp_nonce_field('mmhd_smtp_settings_action', 'mmhd_smtp_settings_nonce'); ?>
@@ -479,11 +490,11 @@ $mmhd_settings_hidden = ($mmhd_current_tab === 'settings') ? '' : ' hidden';
 
                      <div class="mt-6 flex gap-4">
                          <button type="button" id="mmhd-smtp-test"
-                             class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">
+                             class="bg-teal-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">
                              <?php esc_html_e('Test SMTP Connection', 'metamint-helpdesk'); ?>
                          </button>
                          <button type="button" id="save-smtp-settings"
-                             class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">
+                             class="bg-teal-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">
                              <?php esc_html_e('Save SMTP Settings', 'metamint-helpdesk'); ?>
                          </button>
                      </div>
@@ -494,15 +505,15 @@ $mmhd_settings_hidden = ($mmhd_current_tab === 'settings') ? '' : ' hidden';
              <!------------------------------------------ Email Templates Tab --------------------------->
 
              <div id="templates-tab" class="settings-tab-content hidden">
-                 <h3 class="text-lg font-medium text-gray-900 mb-6"><?php esc_html_e('Email Templates', 'metamint-helpdesk'); ?>
+                 <h3 class="mmhd-adv__title text-gray-900 mb-2"><?php esc_html_e('Email Templates', 'metamint-helpdesk'); ?>
                  </h3>
 
-                 <div class="bg-[#ebedf5] rounded-lg p-6 text-gray-800 shadow-sm">
+                 <div class="bg-[#ebedf5] rounded-lg p-6 text-gray-800 shadow-sm mmhd-email-variables-container">
                      <div class="flex justify-between items-center">
                          <h2 class="text-base font-semibold text-gray-900">
                              <?php esc_html_e('Customize the email templates with Variables', 'metamint-helpdesk'); ?></h2>
                          <button type="button" id="mmhd-email-variables-toggle"
-                             class="text-sm text-blue-600 hover:underline focus:outline-none">
+                             class="text-sm text-teal-600 hover:underline focus:outline-none">
                              <?php esc_html_e('Show', 'metamint-helpdesk'); ?>
                          </button>
                      </div>
@@ -534,7 +545,7 @@ $mmhd_settings_hidden = ($mmhd_current_tab === 'settings') ? '' : ' hidden';
                          <div>
                              <label
                                  class="block text-sm font-medium text-gray-700 mb-2"><?php esc_html_e('New Conversation Notification', 'metamint-helpdesk'); ?></label>
-                             <div class="editor-toolbar mb-2">
+                             <div class="editor-toolbar">
                                  <button type="button" onclick="formatText('bold', 'new-ticket-template')"
                                      class="editor-btn"><i class="fas fa-bold"></i></button>
                                  <button type="button" onclick="formatText('italic', 'new-ticket-template')"
@@ -554,7 +565,7 @@ $mmhd_settings_hidden = ($mmhd_current_tab === 'settings') ? '' : ' hidden';
                          <div>
                              <label
                                  class="block text-sm font-medium text-gray-700 mb-2"><?php esc_html_e('Conversation Closed', 'metamint-helpdesk'); ?></label>
-                             <div class="editor-toolbar mb-2">
+                             <div class="editor-toolbar">
                                  <button type="button" onclick="formatText('bold', 'ticket-closed-template')"
                                      class="editor-btn"><i class="fas fa-bold"></i></button>
                                  <button type="button" onclick="formatText('italic', 'ticket-closed-template')"
@@ -575,7 +586,7 @@ $mmhd_settings_hidden = ($mmhd_current_tab === 'settings') ? '' : ' hidden';
                          <div>
                              <label
                                  class="block text-sm font-medium text-gray-700 mb-2"><?php esc_html_e('Auto Reply', 'metamint-helpdesk'); ?></label>
-                             <div class="editor-toolbar mb-2">
+                             <div class="editor-toolbar">
                                  <button type="button" onclick="formatText('bold', 'auto-reply-template')"
                                      class="editor-btn"><i class="fas fa-bold"></i></button>
                                  <button type="button" onclick="formatText('italic', 'auto-reply-template')"
@@ -593,25 +604,25 @@ $mmhd_settings_hidden = ($mmhd_current_tab === 'settings') ? '' : ' hidden';
                              </div>
                          </div>
                      </div>
-                     <hr class="my-6 border-gray-200">
+                     <!-- <hr class="my-6 border-gray-200"> -->
                      <button type="button" id="mmhd-save-templates"
-                         class="mt-6 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">
+                         class="mt-6 bg-teal-600 text-white px-4 py-2 rounded-md hover:bg-teal-700">
                          <?php esc_html_e('Save Templates', 'metamint-helpdesk'); ?>
                      </button>
                  </form>
              </div>
              <!------------------------------ Fetch Tickets Tab --------------------------------------->
              <div id="fetch-tab" class="settings-tab-content hidden">
-                 <h3 class="text-lg font-medium text-gray-900 mb-6">
+                 <h3 class="text-xl font-bold text-gray-900 mb-2">
                      <?php esc_html_e('Fetch Conversations', 'metamint-helpdesk'); ?></h3>
                  <form id="mmhd-fetch-tickets-form" class="space-y-6">
                      <input type="hidden" name="mmhd_ticket_assignment_nonce"
                          value="<?php echo esc_attr(wp_create_nonce('mmhd_ticket_assignment_action')); ?>">
-                     <div class="space-y-6">
-                         <p class="text-sm text-gray-600">
+                     <div class="mmhd-fetch-tickets-settings">
+                         <p class="text-sm text-gray-600 mb-4">
                              <?php esc_html_e('Use this feature to fetch new emails from your configured IMAP account and convert them into conversations and replies.', 'metamint-helpdesk'); ?>
                          </p>
-                         <div class="bg-gray-50 p-4 rounded-lg">
+                         <div class="border border-gray-300 bg-gray-50 p-4 rounded-lg mb-4">
                              <h4 class="font-medium text-gray-900 mb-2">
                                  <?php esc_html_e('Email Fetching Settings', 'metamint-helpdesk'); ?></h4>
                              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -645,16 +656,16 @@ $mmhd_settings_hidden = ($mmhd_current_tab === 'settings') ? '' : ' hidden';
                                             ?>
 
                                          <?php foreach ($mmhd_agents as $mmhd_agent): ?>
-                                         <?php
+                                             <?php
                                                 $mmhd_agent_id = (int) $mmhd_agent->ID;
                                                 $mmhd_agent_name = !empty($mmhd_agent->display_name) ? $mmhd_agent->display_name : $mmhd_agent->user_login;
                                                 $mmhd_is_selected = (string) $mmhd_default_agent === (string) $mmhd_agent_id ||
                                                     (string) $mmhd_default_agent === (string) $mmhd_agent_name;
                                                 ?>
-                                         <option value="<?php echo esc_attr($mmhd_agent_id); ?>"
-                                             <?php selected($mmhd_is_selected, true); ?>>
-                                             <?php echo esc_html($mmhd_agent_name); ?>
-                                         </option>
+                                             <option value="<?php echo esc_attr($mmhd_agent_id); ?>"
+                                                 <?php selected($mmhd_is_selected, true); ?>>
+                                                 <?php echo esc_html($mmhd_agent_name); ?>
+                                             </option>
                                          <?php endforeach; ?>
 
                                          <?php
@@ -668,9 +679,9 @@ $mmhd_settings_hidden = ($mmhd_current_tab === 'settings') ? '' : ' hidden';
                                             ?>
 
                                          <?php if (!$mmhd_default_is_in_agents && !empty($mmhd_default_agent)): ?>
-                                         <option value="<?php echo esc_attr($mmhd_default_agent); ?>" selected>
-                                             <?php echo esc_html($mmhd_default_agent); ?>
-                                         </option>
+                                             <option value="<?php echo esc_attr($mmhd_default_agent); ?>" selected>
+                                                 <?php echo esc_html($mmhd_default_agent); ?>
+                                             </option>
                                          <?php endif; ?>
 
 
@@ -696,7 +707,7 @@ $mmhd_settings_hidden = ($mmhd_current_tab === 'settings') ? '' : ' hidden';
                          </div>
                          <div class="flex space-x-4">
                              <button id="save-ticket-assignment-settings"
-                                 class="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                                 class="bg-teal-600 text-white px-6 py-2 rounded-md hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500">
                                  <i class="fas fa-cog mr-2"></i>
                                  <?php esc_html_e('Save Auto-Fetch', 'metamint-helpdesk'); ?>
                              </button>
@@ -704,17 +715,17 @@ $mmhd_settings_hidden = ($mmhd_current_tab === 'settings') ? '' : ' hidden';
                      </div>
                  </form>
 
-                 <div class="flex space-x-4 mt-6">
+                 <div class="flex space-x-4 mt-6 mmhd-fetch-tickets-button-container">
                      <button onclick="fetchEmails()"
-                         class="bg-gray-600 text-white px-6 py-2 rounded-md hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500">
+                         class="text-teal-600 border border-teal-600 px-6 py-2 rounded-md hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500">
                          <i class="fas fa-sync-alt mr-2"></i>
                          <?php esc_html_e('Fetch Emails Now', 'metamint-helpdesk'); ?>
                      </button>
                  </div>
-                 <div id="fetch-results" class="hidden bg-blue-50 border border-blue-200 rounded-lg p-4 mt-4">
+                 <div id="fetch-results" class="hidden bg-teal-50 border border-teal-600 rounded-lg p-4 mt-4">
                      <div class="flex items-center">
-                         <i class="fas fa-info-circle text-blue-500 mr-2"></i>
-                         <span id="fetch-message" class="text-blue-800"></span>
+                         <i class="fas fa-info-circle text-teal-600 mr-2"></i>
+                         <span id="fetch-message" class="text-teal-600"></span>
                      </div>
                  </div>
 
@@ -724,7 +735,7 @@ $mmhd_settings_hidden = ($mmhd_current_tab === 'settings') ? '' : ' hidden';
 
 
              <?php
-                 $mmhd_advanced_settings = wp_parse_args(get_option('mmhd_advanced_settings', []), [
+                $mmhd_advanced_settings = wp_parse_args(get_option('mmhd_advanced_settings', []), [
                     'enable_auto_assign' => false,
                     'enable_notifications' => true,
                     'enable_customer_portal' => true,
@@ -736,170 +747,204 @@ $mmhd_settings_hidden = ($mmhd_current_tab === 'settings') ? '' : ' hidden';
                     'auto_close_ticket_days' => 0,
                 ]);
                 ?>
-             <div id="advanced-tab" class="settings-tab-content hidden">
-                 <h3 class="text-lg font-medium text-gray-900 mb-6">
-                     <?php esc_html_e('Advanced Settings', 'metamint-helpdesk'); ?></h3>
-                 <form id="advanced-settings-form" class="space-y-6">
+             <?php
+                $mmhd_reply_unseen_minutes = isset($mmhd_advanced_settings['reply_unseen_email_minutes']) ? absint($mmhd_advanced_settings['reply_unseen_email_minutes']) : 15;
+                $mmhd_reply_unseen_enabled = $mmhd_reply_unseen_minutes > 0;
+
+                $mmhd_auto_close_chat_minutes = isset($mmhd_advanced_settings['auto_close_chat_minutes']) ? absint($mmhd_advanced_settings['auto_close_chat_minutes']) : 30;
+                $mmhd_auto_close_chat_enabled = $mmhd_auto_close_chat_minutes > 0;
+
+                $mmhd_auto_close_ticket_days = isset($mmhd_advanced_settings['auto_close_ticket_days']) ? absint($mmhd_advanced_settings['auto_close_ticket_days']) : 0;
+                $mmhd_auto_close_ticket_enabled = $mmhd_auto_close_ticket_days > 0;
+                $mmhd_auto_close_ticket_days_value = $mmhd_auto_close_ticket_enabled ? $mmhd_auto_close_ticket_days : 7;
+
+                $mmhd_reply_minute_options = [5, 10, 15, 30, 60, 120];
+                $mmhd_polling_options      = [15, 30, 45, 60, 120];
+                $mmhd_blocked_ips          = get_option('mmhd_blocked_ips', array());
+                ?>
+             <div id="advanced-tab" class="settings-tab-content mmhd-adv hidden">
+                 <h3 class="mmhd-adv__title"><?php esc_html_e('Advanced Settings', 'metamint-helpdesk'); ?></h3>
+
+                 <form id="advanced-settings-form" class="mmhd-adv__form">
                      <input type="hidden" name="mmhd_advanced_settings_nonce"
                          value="<?php echo esc_attr(wp_create_nonce('mmhd_advanced_settings_action')); ?>">
-                     <div class="space-y-4">
-                         <div class="flex items-center">
-                             <input id="enable-auto-assign" type="checkbox"
-                                 <?php checked($mmhd_advanced_settings['enable_auto_assign'], true); ?>
-                                 class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
-                             <label for="enable-auto-assign" class="ml-2 block text-sm text-gray-900">
+
+                     <!-- Notifications & assignment -->
+                     <section class="mmhd-adv__card" aria-labelledby="mmhd-adv-h-notifications">
+                         <h4 class="mmhd-adv__card-title" id="mmhd-adv-h-notifications">
+                             <?php esc_html_e('Notifications & assignment', 'metamint-helpdesk'); ?>
+                         </h4>
+
+                         <div class="mmhd-adv__row">
+                             <label for="enable-auto-assign" class="mmhd-adv__label">
                                  <?php esc_html_e('Enable auto-assignment of Conversations', 'metamint-helpdesk'); ?>
                              </label>
+                             <input id="enable-auto-assign" type="checkbox" role="switch" class="mmhd-adv__switch"
+                                 <?php checked($mmhd_advanced_settings['enable_auto_assign'], true); ?>>
                          </div>
-                         <div class="flex items-center">
-                             <input id="enable-notifications" type="checkbox"
-                                 <?php checked($mmhd_advanced_settings['enable_notifications'], true); ?>
-                                 class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
-                             <label for="enable-notifications" class="ml-2 block text-sm text-gray-900">
+
+                         <div class="mmhd-adv__row">
+                             <label for="enable-notifications" class="mmhd-adv__label">
                                  <?php esc_html_e('Enable email notifications', 'metamint-helpdesk'); ?>
                              </label>
+                             <input id="enable-notifications" type="checkbox" role="switch" class="mmhd-adv__switch"
+                                 <?php checked($mmhd_advanced_settings['enable_notifications'], true); ?>>
                          </div>
-                         <?php
-                            $mmhd_reply_unseen_minutes = isset($mmhd_advanced_settings['reply_unseen_email_minutes']) ? absint($mmhd_advanced_settings['reply_unseen_email_minutes']) : 15;
-                            $mmhd_reply_unseen_enabled = $mmhd_reply_unseen_minutes > 0;
-                            ?>
-                         <div>
-                             <div class="flex items-center gap-2">
-                                 <input id="enable-unseen-reply-email" type="checkbox"
-                                     <?php checked($mmhd_reply_unseen_enabled, true); ?>
-                                     class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
-                                 <label for="enable-unseen-reply-email" class="block text-sm font-medium text-gray-700">
-                                     <?php esc_html_e("Email the reply if the client hasn't seen it for", 'metamint-helpdesk'); ?>
-                                 </label>
-                             </div>
-                             <div id="reply-unseen-email-options" class="mt-2 flex items-center gap-2"
-                                 style="<?php echo $mmhd_reply_unseen_enabled ? '' : 'display:none;'; ?>">
-                                 <select name="reply_unseen_email_minutes" id="reply-unseen-email-minutes"
-                                     class="styled-select block w-40 border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+
+                         <div class="mmhd-adv__row">
+                             <label for="enable-unseen-reply-email" class="mmhd-adv__label">
+                                 <?php esc_html_e("Email the reply if the client hasn't seen it for", 'metamint-helpdesk'); ?>
+                             </label>
+                             <input id="enable-unseen-reply-email" type="checkbox" role="switch" class="mmhd-adv__switch"
+                                 <?php checked($mmhd_reply_unseen_enabled, true); ?>>
+                         </div>
+                         <div id="reply-unseen-email-options" class="mmhd-adv__sub mmhd-adv__inline"
+                             style="<?php echo $mmhd_reply_unseen_enabled ? '' : 'display:none;'; ?>">
+                             <div class="mmhd-adv__select-wrap mmhd-adv__select-wrap--sm">
+                                 <select name="reply_unseen_email_minutes" id="reply-unseen-email-minutes" class="mmhd-adv__select"
+                                     aria-label="<?php esc_attr_e('Minutes before the reply is emailed', 'metamint-helpdesk'); ?>">
                                      <?php
-                                        $mmhd_reply_minute_options = [5, 10, 15, 30, 60, 120];
                                         foreach ($mmhd_reply_minute_options as $mmhd_reply_minutes) {
                                             echo '<option value="' . esc_attr($mmhd_reply_minutes) . '" ' . selected($mmhd_reply_unseen_minutes, $mmhd_reply_minutes, false) . '>' . esc_html($mmhd_reply_minutes) . '</option>';
                                         }
                                         ?>
                                  </select>
-                                  <span class="text-sm text-gray-600"><?php esc_html_e('minutes', 'metamint-helpdesk'); ?></span>
-                              </div>
-                          </div>
-                          <div>
-                              <label for="polling-interval"
-                                  class="block text-sm font-medium text-gray-700 mb-1">
-                                  <?php esc_html_e('Dashboard polling interval', 'metamint-helpdesk'); ?>
-                              </label>
-                              <p class="text-xs text-gray-500 mb-2">
-                                  <?php esc_html_e('How often the dashboard checks for new replies and notifications. Shorter intervals feel more real-time but increase server load.', 'metamint-helpdesk'); ?>
-                              </p>
-                              <select id="polling-interval" name="polling_interval"
-                                  class="styled-select block w-40 border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
-                                  <?php
-                                     $mmhd_polling_options = [15, 30, 45, 60, 120];
-                                     foreach ($mmhd_polling_options as $mmhd_poll_sec) {
-                                         echo '<option value="' . esc_attr($mmhd_poll_sec) . '" ' . selected($mmhd_advanced_settings['polling_interval'], $mmhd_poll_sec, false) . '>' . esc_html($mmhd_poll_sec) . ' ' . esc_html__('seconds', 'metamint-helpdesk') . '</option>';
-                                     }
-                                     ?>
-                              </select>
-                          </div>
-                          <div class="flex items-center">
-                              <input id="enable-customer-portal" type="checkbox"
-                                 <?php checked($mmhd_advanced_settings['enable_customer_portal'], true); ?>
-                                 class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
-                             <label for="enable-customer-portal" class="ml-2 block text-sm text-gray-900">
+                             </div>
+                             <span class="mmhd-adv__suffix"><?php esc_html_e('minutes', 'metamint-helpdesk'); ?></span>
+                         </div>
+                     </section>
+
+                     <!-- Dashboard & customer portal -->
+                     <section class="mmhd-adv__card" aria-labelledby="mmhd-adv-h-dashboard">
+                         <h4 class="mmhd-adv__card-title" id="mmhd-adv-h-dashboard">
+                             <?php esc_html_e('Dashboard & customer portal', 'metamint-helpdesk'); ?>
+                         </h4>
+
+                         <div class="mmhd-adv__row">
+                             <div class="mmhd-adv__text">
+                                 <label for="polling-interval" class="mmhd-adv__label">
+                                     <?php esc_html_e('Dashboard polling interval', 'metamint-helpdesk'); ?>
+                                 </label>
+                                 <p class="mmhd-adv__hint">
+                                     <?php esc_html_e('How often the dashboard checks for new replies and notifications. Shorter intervals feel more real-time but increase server load.', 'metamint-helpdesk'); ?>
+                                 </p>
+                             </div>
+                             <div class="mmhd-adv__select-wrap mmhd-adv__select-wrap--md">
+                                 <select id="polling-interval" name="polling_interval" class="mmhd-adv__select">
+                                     <?php
+                                        foreach ($mmhd_polling_options as $mmhd_poll_sec) {
+                                            echo '<option value="' . esc_attr($mmhd_poll_sec) . '" ' . selected($mmhd_advanced_settings['polling_interval'], $mmhd_poll_sec, false) . '>' . esc_html($mmhd_poll_sec) . ' ' . esc_html__('seconds', 'metamint-helpdesk') . '</option>';
+                                        }
+                                        ?>
+                                 </select>
+                             </div>
+                         </div>
+
+                         <div class="mmhd-adv__row">
+                             <label for="enable-customer-portal" class="mmhd-adv__label">
                                  <?php esc_html_e('Enable customer portal', 'metamint-helpdesk'); ?>
                              </label>
+                             <input id="enable-customer-portal" type="checkbox" role="switch" class="mmhd-adv__switch"
+                                 <?php checked($mmhd_advanced_settings['enable_customer_portal'], true); ?>>
                          </div>
-                          <div>
-                              <label
-                                  class="block text-sm font-medium text-gray-700"><?php esc_html_e('Maximum file upload size (MB)', 'metamint-helpdesk'); ?></label>
-                              <input type="number" name="max_file_upload_size" id="max-file-upload-size"
-                                  value="<?php echo esc_attr($mmhd_advanced_settings['max_file_upload_size']); ?>"
-                                  min="1" max="100"
-                                  class="styled-input mt-1 block w-32 border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
-                          </div>
-                          <div class="flex items-start">
-                              <input type="checkbox" id="enable-signup-rate-limiting" name="enable_signup_rate_limiting" value="1"
-                                  <?php checked($mmhd_advanced_settings['enable_signup_rate_limiting'] ?? false, true); ?>
-                                  class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded mt-1">
-                              <label for="enable-signup-rate-limiting" class="ml-2 block text-sm text-gray-900">
-                                  <?php esc_html_e('Enable signup rate limiting &amp; IP blocking', 'metamint-helpdesk'); ?>
-                              </label>
-                          </div>
-                          <div>
-                                <label for="blocked-ips"
-                                    class="block text-sm font-medium text-gray-700"><?php esc_html_e('Blocked IPs', 'metamint-helpdesk'); ?></label>
-                                <p class="text-xs text-gray-500 mb-2">
-                                    <?php esc_html_e('One IP per line. These IPs are blocked from signing up. Add or remove IPs manually.', 'metamint-helpdesk'); ?>
-                                </p>
-                                <textarea id="blocked-ips" name="blocked_ips" rows="5"
-                                    class="mt-1 block w-full max-w-md border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 font-mono text-sm"><?php
-                                      $mmhd_blocked_ips = get_option('mmhd_blocked_ips', array());
-                                      echo esc_textarea(implode("\n", $mmhd_blocked_ips));
-                                    ?></textarea>
-                            </div>
-                            <?php
-                                $mmhd_auto_close_chat_minutes = isset($mmhd_advanced_settings['auto_close_chat_minutes']) ? absint($mmhd_advanced_settings['auto_close_chat_minutes']) : 30;
-                                $mmhd_auto_close_chat_enabled = $mmhd_auto_close_chat_minutes > 0;
-                                ?>
-                            <div>
-                                <div class="flex items-center gap-2">
-                                    <input id="enable-auto-close-chat" type="checkbox"
-                                        <?php checked($mmhd_auto_close_chat_enabled, true); ?>
-                                        class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
-                                    <label for="enable-auto-close-chat" class="block text-sm font-medium text-gray-700">
-                                        <?php esc_html_e('Close chat conversations automatically', 'metamint-helpdesk'); ?>
-                                    </label>
-                                </div>
-                                <div id="auto-close-chat-options" class="mt-2 flex items-center gap-2"
-                                    style="<?php echo $mmhd_auto_close_chat_enabled ? '' : 'display:none;'; ?>">
-                                    <input type="number" name="auto_close_chat_minutes" id="auto-close-chat-minutes"
-                                        min="1" max="1440"
-                                        value="<?php echo esc_attr($mmhd_auto_close_chat_minutes); ?>"
-                                        class="styled-input block w-28 border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
-                                    <span class="text-sm text-gray-600"><?php esc_html_e('minutes', 'metamint-helpdesk'); ?></span>
-                                </div>
-                                <p class="text-xs text-gray-500 mt-1">
-                                    <?php esc_html_e('When the last reply on a chat conversation is from a Support Staff, Manager, or Admin, the conversation is closed automatically after this delay if the customer does not respond.', 'metamint-helpdesk'); ?>
-                                </p>
-                            </div>
-                            <?php
-                                $mmhd_auto_close_ticket_days = isset($mmhd_advanced_settings['auto_close_ticket_days']) ? absint($mmhd_advanced_settings['auto_close_ticket_days']) : 0;
-                                $mmhd_auto_close_ticket_enabled = $mmhd_auto_close_ticket_days > 0;
-                                $mmhd_auto_close_ticket_days_value = $mmhd_auto_close_ticket_enabled ? $mmhd_auto_close_ticket_days : 7;
-                                ?>
-                            <div>
-                                <div class="flex items-center gap-2">
-                                    <input id="enable-auto-close-ticket" type="checkbox"
-                                        <?php checked($mmhd_auto_close_ticket_enabled, true); ?>
-                                        class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
-                                    <label for="enable-auto-close-ticket" class="block text-sm font-medium text-gray-700">
-                                        <?php esc_html_e('Auto-close tickets after no customer reply for', 'metamint-helpdesk'); ?>
-                                    </label>
-                                </div>
-                                <div id="auto-close-ticket-options" class="mt-2 flex items-center gap-2"
-                                    style="<?php echo $mmhd_auto_close_ticket_enabled ? '' : 'display:none;'; ?>">
-                                    <input type="number" name="auto_close_ticket_days" id="auto-close-ticket-days"
-                                        min="1" max="365"
-                                        value="<?php echo esc_attr($mmhd_auto_close_ticket_days_value); ?>"
-                                        class="styled-input block w-28 border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
-                                    <span class="text-sm text-gray-600"><?php esc_html_e('days', 'metamint-helpdesk'); ?></span>
-                                </div>
-                                <p class="text-xs text-gray-500 mt-1">
-                                    <?php esc_html_e('Applies to tickets from every source. The timer starts when the last reply is from Support Staff, a Manager, or an Admin (not from the end user). Tickets where the end user replied last are not closed. Tickets with no replies use the ticket creation date. When a ticket is closed automatically, the "Conversation Closed" email template is added to the ticket as a public comment.', 'metamint-helpdesk'); ?>
-                                </p>
-                            </div>
-                      </div>
-                     <hr class="my-6 border-gray-200">
-                     <button type="button" id="save-advanced-settings"
-                         class="mt-6 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">
-                         <?php esc_html_e('Save Advanced Settings', 'metamint-helpdesk'); ?>
-                     </button>
+
+                         <div class="mmhd-adv__row">
+                             <label for="max-file-upload-size" class="mmhd-adv__label">
+                                 <?php esc_html_e('Maximum file upload size (MB)', 'metamint-helpdesk'); ?>
+                             </label>
+                             <div class="mmhd-adv__inline">
+                                 <input type="number" name="max_file_upload_size" id="max-file-upload-size"
+                                     value="<?php echo esc_attr($mmhd_advanced_settings['max_file_upload_size']); ?>"
+                                     min="1" max="100" class="mmhd-adv__input mmhd-adv__input--sm">
+                                 <span class="mmhd-adv__suffix"><?php esc_html_e('MB', 'metamint-helpdesk'); ?></span>
+                             </div>
+                         </div>
+                     </section>
+
+                     <!-- Security -->
+                     <section class="mmhd-adv__card" aria-labelledby="mmhd-adv-h-security">
+                         <h4 class="mmhd-adv__card-title" id="mmhd-adv-h-security">
+                             <?php esc_html_e('Security', 'metamint-helpdesk'); ?>
+                         </h4>
+
+                         <div class="mmhd-adv__row">
+                             <label for="enable-signup-rate-limiting" class="mmhd-adv__label">
+                                 <?php esc_html_e('Enable signup rate limiting &amp; IP blocking', 'metamint-helpdesk'); ?>
+                             </label>
+                             <input type="checkbox" role="switch" id="enable-signup-rate-limiting" name="enable_signup_rate_limiting" value="1"
+                                 class="mmhd-adv__switch"
+                                 <?php checked($mmhd_advanced_settings['enable_signup_rate_limiting'] ?? false, true); ?>>
+                         </div>
+                         <div class="mmhd-adv__sub mmhd-adv__sub--plain">
+                             <label for="blocked-ips" class="mmhd-adv__label">
+                                 <?php esc_html_e('Blocked IPs', 'metamint-helpdesk'); ?>
+                             </label>
+                             <p class="mmhd-adv__hint">
+                                 <?php esc_html_e('One IP per line. These IPs are blocked from signing up. Add or remove IPs manually.', 'metamint-helpdesk'); ?>
+                             </p>
+                             <textarea id="blocked-ips" name="blocked_ips" rows="5"
+                                 class="mmhd-adv__textarea"><?php echo esc_textarea(implode("\n", $mmhd_blocked_ips)); ?></textarea>
+                         </div>
+                     </section>
+
+                     <!-- Auto-close -->
+                     <section class="mmhd-adv__card" aria-labelledby="mmhd-adv-h-autoclose">
+                         <h4 class="mmhd-adv__card-title" id="mmhd-adv-h-autoclose">
+                             <?php esc_html_e('Auto-close', 'metamint-helpdesk'); ?>
+                         </h4>
+
+                         <div class="mmhd-adv__row">
+                             <label for="enable-auto-close-chat" class="mmhd-adv__label">
+                                 <?php esc_html_e('Close chat conversations automatically', 'metamint-helpdesk'); ?>
+                             </label>
+                             <input id="enable-auto-close-chat" type="checkbox" role="switch" class="mmhd-adv__switch"
+                                 <?php checked($mmhd_auto_close_chat_enabled, true); ?>>
+                         </div>
+                         <div class="mmhd-adv__sub">
+                             <div id="auto-close-chat-options" class="mmhd-adv__inline"
+                                 style="<?php echo $mmhd_auto_close_chat_enabled ? '' : 'display:none;'; ?>">
+                                 <input type="number" name="auto_close_chat_minutes" id="auto-close-chat-minutes"
+                                     min="1" max="1440"
+                                     value="<?php echo esc_attr($mmhd_auto_close_chat_minutes); ?>"
+                                     class="mmhd-adv__input mmhd-adv__input--md"
+                                     aria-label="<?php esc_attr_e('Minutes before closing chat conversations', 'metamint-helpdesk'); ?>">
+                                 <span class="mmhd-adv__suffix"><?php esc_html_e('minutes', 'metamint-helpdesk'); ?></span>
+                             </div>
+                             <p class="mmhd-adv__hint mmhd-adv__hint--wide">
+                                 <?php esc_html_e('When the last reply on a chat conversation is from a Support Staff, Manager, or Admin, the conversation is closed automatically after this delay if the customer does not respond.', 'metamint-helpdesk'); ?>
+                             </p>
+                         </div>
+
+                         <div class="mmhd-adv__row mmhd-adv__row--top">
+                             <div class="mmhd-adv__text">
+                                 <label for="enable-auto-close-ticket" class="mmhd-adv__label">
+                                     <?php esc_html_e('Auto-close tickets after no customer reply for', 'metamint-helpdesk'); ?>
+                                 </label>
+                                 <p class="mmhd-adv__hint mmhd-adv__hint--wide">
+                                     <?php esc_html_e('Applies to tickets from every source. The timer starts when the last reply is from Support Staff, a Manager, or an Admin (not from the end user). Tickets where the end user replied last are not closed. Tickets with no replies use the ticket creation date. When a ticket is closed automatically, the "Conversation Closed" email template is added to the ticket as a public comment.', 'metamint-helpdesk'); ?>
+                                 </p>
+                             </div>
+                             <input id="enable-auto-close-ticket" type="checkbox" role="switch" class="mmhd-adv__switch"
+                                 <?php checked($mmhd_auto_close_ticket_enabled, true); ?>>
+                         </div>
+                         <div id="auto-close-ticket-options" class="mmhd-adv__sub mmhd-adv__inline"
+                             style="<?php echo $mmhd_auto_close_ticket_enabled ? '' : 'display:none;'; ?>">
+                             <input type="number" name="auto_close_ticket_days" id="auto-close-ticket-days"
+                                 min="1" max="365"
+                                 value="<?php echo esc_attr($mmhd_auto_close_ticket_days_value); ?>"
+                                 class="mmhd-adv__input mmhd-adv__input--md"
+                                 aria-label="<?php esc_attr_e('Days before auto-closing tickets', 'metamint-helpdesk'); ?>">
+                             <span class="mmhd-adv__suffix"><?php esc_html_e('days', 'metamint-helpdesk'); ?></span>
+                         </div>
+                     </section>
+
+                     <div class="mmhd-adv__actions">
+                         <button type="button" id="save-advanced-settings" class="mmhd-adv__save border bg-teal-600 border-teal-600 bg-teal-600 text-white px-6 py-2 rounded-md hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500">
+                             <?php esc_html_e('Save Advanced Settings', 'metamint-helpdesk'); ?>
+                         </button>
+                     </div>
                  </form>
              </div>
-
              <?php
                 // Allow addons to add their settings content (Slack, Discord, etc.)
                 // Addons hook into 'mmhd_settings_content' action to render their settings UI

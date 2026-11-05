@@ -4,11 +4,31 @@
   --color-text: #6b7280;
   --color-white: #ffffff;
   --color-error: #dc2626;
-  --color-main-active: #0f7173;
+  --color-main-active: #0a5152;
   --color-text-hover: #374151;
   --color-border: #d1d5db;
   --color-background: #f9fafb;
   --color-light-bg: #E6F5EE;
+}
+
+.text-teal-600 {
+  color: var(--color-main);
+}
+
+.bg-teal-600 {
+  background-color: var(--color-main);
+}
+
+.bg-teal-50 {
+  background-color: var(--color-light-bg);
+}
+
+.bg-teal-600:hover {
+  background-color: var(--color-main-active);
+}
+
+.border-teal-600 {
+  border-color: var(--color-main);
 }
 
 .rb-relative {
@@ -210,7 +230,6 @@
 
 .ticket-tab.active,
 .settings-tab.active {
-  border-color: var(--color-main);
   color: var(--color-main-active);
 }
 
@@ -223,8 +242,29 @@
 .ticket-tab:not(.active):hover,
 .settings-tab:not(.active):hover {
   color: var(--color-text-hover);
-  border-color: var(--color-border);
 }
+
+.mmhd-settings-container-wrapper {
+  display: flex;
+  gap: 35px;
+}
+
+.mmhd-settings-nav-wrapper {
+  width: 200px;
+}
+
+.mmhd-settings-content-wrapper {
+  width: calc(100% - 200px);
+  margin-top: 20px;
+}
+
+.mmhd-settings-nav-wrapper nav {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  width: 100%;
+}
+
 
 /* Dashboard filter buttons */
 .dashboard-filter-btn {
@@ -373,7 +413,8 @@
 }
 
 /* Styled inputs and selects */
-.styled-input {
+.mmhd-dashboard-container .styled-input,
+.mmhd-email-variables-container {
   transition: all 0.2s ease-in-out;
   padding: 0.5rem 0.75rem;
   border: 1px solid var(--color-border);
@@ -383,13 +424,14 @@
   line-height: 1.25;
 }
 
-.styled-input:focus {
+.mmhd-dashboard-container .styled-input:focus {
   outline: none;
   border-color: var(--color-main);
   box-shadow: 0 0 0 1px var(--color-main);
 }
 
-.styled-select {
+.styled-select,
+.mmhd-dashboard-container select {
   transition: all 0.2s ease-in-out;
   padding: 0.5rem 2.5rem 0.5rem 0.75rem;
   border: 1px solid var(--color-border);
@@ -408,6 +450,38 @@
   outline: none;
   border-color: var(--color-main);
   box-shadow: 0 0 0 1px var(--color-main);
+}
+
+.mmhd-dashboard-container input[type=checkbox]:checked {
+  background: var(--color-main);
+  border-color: var(--color-main);
+}
+
+.mmhd-dashboard-container input[type=checkbox] {
+  margin-top: 2px;
+  width: 16px !important;
+  height: 16px !important;
+}
+
+.wp-admin .mmhd-dashboard-container input[type=file] {
+  padding: 14px;
+  border: 1.5px dashed rgb(197, 204, 211);
+}
+
+.mmhd-dashboard-container .mmhd-fetch-tickets-settings {
+  margin-top: 10px !important;
+}
+
+@media (min-width: 700px) {
+  .mmhd-fetch-tickets-button-container {
+    float: right;
+  }
+
+  .mmhd-fetch-tickets-button-container button {
+    position: relative;
+    top: -60px;
+  }
+
 }
 
 /* Filter dropdowns styled as the active sort-link pill (blue). */
@@ -878,11 +952,28 @@ CONVERSATION
 
 .mmhd-settings-nav-sec {
   gap: 10px;
-  justify-content: space-between;
+  justify-content: flex-start;
+  flex-wrap: wrap;
 }
 
 .mmhd-settings-nav-sec button {
   margin: 0 !important;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  font-size: 15px;
+  font-weight: 600;
+  width: 100%;
+}
+
+.mmhd-settings-grid {
+  margin-top: 0 !important;
+}
+
+.mmhd-settings-nav-sec button.active {
+  background-color: var(--color-light-bg);
 }
 
 .mmhd-comment-img {
@@ -1019,4 +1110,275 @@ CONVERSATION
   background-color: #055336;
   border-color: #055336;
   color: #ffffff;
+}
+
+/* =====================================================================
+   ADVANCED SETTINGS TAB (redesign)
+   ===================================================================== */
+
+.mmhd-adv {
+  --mmhd-primary: var(--color-main, #0f7173);
+  --mmhd-primary-hover: var(--color-main-active, #0a5152);
+  --mmhd-focus: rgba(29, 159, 117, 0.45);
+  --mmhd-text: #101828;
+  --mmhd-muted: #5b6770;
+  --mmhd-border: #e4e7ec;
+  --mmhd-field-border: #d0d5dd;
+  --mmhd-surface-alt: #f9fafb;
+  color: var(--mmhd-text);
+}
+
+.mmhd-dashboard-container .mmhd-adv__title {
+  margin: 0 0 24px;
+  font-size: 20px;
+  line-height: 28px;
+  font-weight: 700;
+  color: var(--mmhd-text);
+}
+
+.mmhd-adv .mmhd-adv__form {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* ---------- Cards ---------- */
+.mmhd-adv .mmhd-adv__card {
+  border: 1px solid var(--mmhd-border);
+  border-radius: 16px;
+  background: #fff;
+  overflow: hidden;
+}
+
+.mmhd-adv .mmhd-adv__card-title {
+  margin: 0;
+  padding: 12px 24px;
+  font-size: 16px;
+  line-height: 26px;
+  font-weight: 600;
+  color: var(--mmhd-text);
+  border-bottom: 1px solid var(--mmhd-border);
+}
+
+/* ---------- Rows ---------- */
+.mmhd-adv .mmhd-adv__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 12px 24px;
+}
+
+.mmhd-adv .mmhd-adv__row+.mmhd-adv__row,
+.mmhd-adv .mmhd-adv__sub+.mmhd-adv__row,
+.mmhd-adv .mmhd-adv__row+.mmhd-adv__sub {
+  border-top: 1px solid var(--mmhd-border);
+}
+
+.mmhd-adv .mmhd-adv__row--top {
+  align-items: flex-start;
+}
+
+.mmhd-adv .mmhd-adv__text {
+  min-width: 0;
+}
+
+.mmhd-adv .mmhd-adv__label {
+  display: block;
+  margin: 0;
+  font-size: 14px;
+  line-height: 22px;
+  font-weight: 600;
+  color: var(--mmhd-text);
+  cursor: pointer;
+}
+
+.mmhd-adv .mmhd-adv__hint {
+  margin: 2px 0 0;
+  max-width: 620px;
+  line-height: 20px;
+  color: var(--mmhd-muted);
+}
+
+.mmhd-adv .mmhd-adv__hint--wide {
+  max-width: 760px;
+}
+
+/* Tinted strip that holds a toggle's dependent field */
+.mmhd-adv .mmhd-adv__sub {
+  padding: 12px 24px 16px;
+  background: var(--mmhd-surface-alt);
+  border-top: 1px solid var(--mmhd-border);
+}
+
+.mmhd-adv .mmhd-adv__sub--plain {
+  background: #fff;
+}
+
+.mmhd-adv .mmhd-adv__sub .mmhd-adv__hint {
+  margin-top: 12px;
+}
+
+.mmhd-adv .mmhd-adv__sub--plain .mmhd-adv__hint {
+  margin-top: 2px;
+  margin-bottom: 12px;
+}
+
+.mmhd-adv .mmhd-adv__sub>.mmhd-adv__inline+.mmhd-adv__hint {
+  margin-top: 12px;
+}
+
+/* Used both on its own and as the toggled options row */
+.mmhd-adv .mmhd-adv__inline {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.mmhd-adv .mmhd-adv__row>.mmhd-adv__inline {
+  flex: none;
+  gap: 10px;
+}
+
+.mmhd-adv .mmhd-adv__suffix {
+  font-size: 15px;
+  color: var(--mmhd-muted);
+}
+
+/* ---------- Switch (a real checkbox, so existing JS still works) ---------- */
+.mmhd-adv input[type="checkbox"].mmhd-adv__switch {
+  -webkit-appearance: none;
+  appearance: none;
+  position: relative;
+  flex: none;
+  width: 44px !important;
+  min-width: 44px !important;
+  height: 26px !important;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background: #c5ccd3;
+  box-shadow: none;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.mmhd-adv input[type="checkbox"].mmhd-adv__switch::after {
+  content: "";
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 2px rgba(16, 24, 40, 0.25);
+  transition: left 0.15s ease;
+}
+
+/* WordPress draws its own check mark with ::before; remove it */
+.mmhd-adv input[type="checkbox"].mmhd-adv__switch::before {
+  content: none !important;
+  display: none !important;
+}
+
+.mmhd-adv input[type="checkbox"].mmhd-adv__switch:checked {
+  background: var(--mmhd-primary);
+}
+
+.mmhd-adv input[type="checkbox"].mmhd-adv__switch:checked::after {
+  left: 21px;
+}
+
+.mmhd-adv input[type="checkbox"].mmhd-adv__switch:focus,
+.mmhd-adv input[type="checkbox"].mmhd-adv__switch:focus-visible {
+  outline: 3px solid var(--mmhd-focus);
+  outline-offset: 2px;
+  box-shadow: none;
+}
+
+/* ---------- Fields ---------- */
+.mmhd-adv input[type="number"].mmhd-adv__input,
+.mmhd-adv select.mmhd-adv__select,
+.mmhd-adv textarea.mmhd-adv__textarea {
+  box-sizing: border-box;
+  height: 40px;
+  min-height: 40px;
+  margin: 0;
+  padding: 0 14px;
+  border: 1px solid var(--mmhd-field-border);
+  border-radius: 10px;
+  background-color: #fff;
+  box-shadow: none;
+  font-size: 15px;
+  line-height: 1.4;
+  color: var(--mmhd-text);
+}
+
+.mmhd-adv .mmhd-adv__input--sm {
+  width: 96px;
+}
+
+.mmhd-adv .mmhd-adv__input--md {
+  width: 120px;
+}
+
+.mmhd-adv .mmhd-adv__select-wrap {
+  position: relative;
+  flex: none;
+}
+
+.mmhd-adv .mmhd-adv__select-wrap--sm {
+  width: 120px;
+}
+
+.mmhd-adv .mmhd-adv__select-wrap--md {
+  width: 160px;
+}
+
+.mmhd-adv select.mmhd-adv__select {
+  width: 100%;
+  max-width: none;
+  -webkit-appearance: none;
+  appearance: none;
+  padding-right: 40px;
+  cursor: pointer;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='%23667085' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+  background-size: 18px 18px;
+}
+
+.mmhd-adv textarea.mmhd-adv__textarea {
+  display: block;
+  width: 100%;
+  max-width: none;
+  height: 128px;
+  padding: 12px 14px;
+  resize: vertical;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+
+/* ---------- Small screens ---------- */
+@media (max-width: 640px) {
+  .mmhd-adv .mmhd-adv__row {
+    flex-wrap: wrap;
+    padding: 16px 20px;
+  }
+
+  .mmhd-adv .mmhd-adv__sub {
+    padding: 16px 20px;
+  }
+
+  .mmhd-adv .mmhd-adv__card-title {
+    padding: 16px 20px;
+  }
+
+  .mmhd-adv .mmhd-adv__select-wrap--md {
+    width: 100%;
+  }
 }
