@@ -1382,3 +1382,389 @@ CONVERSATION
     width: 100%;
   }
 }
+/* Dashboard stat cards with per-card sparklines */
+.mmhd-dashboard-stats {
+  align-items: stretch;
+}
+
+.mmhd-dashboard-stat-card {
+  --mmhd-stat-accent: #3b82f6;
+  --mmhd-stat-accent-soft: #dbeafe;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-height: 158px;
+  padding: 1.05rem 1.15rem 0.9rem;
+  border: 1px solid rgba(15, 23, 42, 0.06);
+  border-radius: 16px;
+  background: #ffffff;
+  box-shadow: 0 10px 24px -20px rgba(15, 23, 42, 0.55);
+  overflow: hidden;
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+}
+
+.mmhd-dashboard-stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 16px 30px -22px rgba(15, 23, 42, 0.6);
+}
+
+.mmhd-stat-card--blue {
+  --mmhd-stat-accent: #3b82f6;
+  --mmhd-stat-accent-soft: #dbeafe;
+  background: linear-gradient(150deg, #e4efff 0%, #f4f9ff 56%, #ffffff 100%);
+}
+
+.mmhd-stat-card--orange {
+  --mmhd-stat-accent: #f59e0b;
+  --mmhd-stat-accent-soft: #fef3c7;
+  background: linear-gradient(150deg, #fdeecd 0%, #fff9ec 56%, #ffffff 100%);
+}
+
+.mmhd-stat-card--green {
+  --mmhd-stat-accent: #10b981;
+  --mmhd-stat-accent-soft: #d1fae5;
+  background: linear-gradient(150deg, #ddf8eb 0%, #f1fcf7 56%, #ffffff 100%);
+}
+
+.mmhd-stat-card--purple {
+  --mmhd-stat-accent: #8b5cf6;
+  --mmhd-stat-accent-soft: #ede9fe;
+  background: linear-gradient(150deg, #ece6ff 0%, #f8f5ff 56%, #ffffff 100%);
+}
+
+.mmhd-stat-card__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.mmhd-stat-card__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 999px;
+  background: var(--mmhd-stat-accent-soft);
+  color: var(--mmhd-stat-accent);
+  font-size: 1rem;
+  line-height: 1;
+}
+
+.mmhd-stat-card__trend {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 8px;
+  border-radius: 999px;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  line-height: 1.5;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/* Growth-rate badges are temporarily hidden on every stat card. The data and
+   markup are still rendered so the badges can be re-enabled by removing this
+   rule; sparklines and their tooltips stay visible. */
+.mmhd-dashboard-stat-card .mmhd-stat-card__trend {
+  display: none;
+}
+
+.mmhd-stat-card__trend.is-up {
+  background: rgba(16, 185, 129, 0.14);
+  color: #047857;
+}
+
+.mmhd-stat-card__trend.is-down {
+  background: rgba(239, 68, 68, 0.13);
+  color: #b91c1c;
+}
+
+.mmhd-stat-card__trend.is-flat {
+  background: rgba(100, 116, 139, 0.13);
+  color: #64748b;
+}
+
+.mmhd-stat-card__body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-top: 0.85rem;
+}
+
+.mmhd-stat-card__label {
+  font-size: 0.8125rem;
+  font-weight: 500;
+  line-height: 1.35;
+  color: #475569;
+}
+
+.mmhd-stat-card__value {
+  font-size: 1.75rem;
+  font-weight: 700;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  color: #0f172a;
+  font-variant-numeric: tabular-nums;
+}
+
+.mmhd-stat-card__caption {
+  font-size: 0.6875rem;
+  font-weight: 500;
+  color: #94a3b8;
+}
+
+.mmhd-stat-card__chart {
+  position: relative;
+  height: 60px;
+  margin: auto -1.15rem -0.9rem;
+  color: var(--mmhd-stat-accent);
+  cursor: crosshair;
+  touch-action: pan-y;
+}
+
+.mmhd-stat-card__chart::before {
+  content: "";
+  position: absolute;
+  inset: 7px 0 9px;
+  background-image: linear-gradient(
+    to bottom,
+    rgba(15, 23, 42, 0.055) 1px,
+    transparent 1px
+  );
+  background-size: 100% 50%;
+  -webkit-mask-image: linear-gradient(
+    to right,
+    transparent,
+    #000 12%,
+    #000 88%,
+    transparent
+  );
+  mask-image: linear-gradient(
+    to right,
+    transparent,
+    #000 12%,
+    #000 88%,
+    transparent
+  );
+  pointer-events: none;
+}
+
+.mmhd-stat-card__chart:focus {
+  outline: none;
+}
+
+.mmhd-stat-card__chart:focus-visible {
+  outline: 2px solid var(--mmhd-stat-accent);
+  outline-offset: 4px;
+  border-radius: 8px;
+}
+
+.mmhd-stat-card__chart svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+.mmhd-stat-card__chart-area {
+  opacity: 0.88;
+  transition: opacity 0.2s ease;
+}
+
+.mmhd-dashboard-stat-card:hover .mmhd-stat-card__chart-area {
+  opacity: 1;
+}
+
+.mmhd-stat-card__chart-line {
+  stroke-width: 2.4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+  filter: drop-shadow(0 3px 4px rgba(15, 23, 42, 0.16));
+  transition:
+    stroke-width 0.2s ease,
+    filter 0.2s ease;
+  will-change: clip-path;
+}
+
+.mmhd-dashboard-stat-card:hover .mmhd-stat-card__chart-line {
+  stroke-width: 2.65;
+  filter: drop-shadow(0 4px 7px rgba(15, 23, 42, 0.2));
+}
+
+.mmhd-stat-card__chart-dot {
+  position: absolute;
+  z-index: 2;
+  width: 9px;
+  height: 9px;
+  border: 2px solid #ffffff;
+  border-radius: 999px;
+  background: var(--mmhd-stat-accent);
+  box-shadow:
+    0 0 0 3px var(--mmhd-stat-accent-soft),
+    0 3px 8px rgba(15, 23, 42, 0.22);
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  transition:
+    left 0.55s cubic-bezier(0.22, 1, 0.36, 1),
+    top 0.55s cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 0.15s ease;
+}
+
+.mmhd-stat-card__chart-dot::after {
+  content: "";
+  position: absolute;
+  inset: -4px;
+  border: 1px solid var(--mmhd-stat-accent);
+  border-radius: inherit;
+  opacity: 0;
+  animation: mmhd-sparkline-pulse 3s ease-out infinite;
+}
+
+.mmhd-stat-card__chart.is-interacting .mmhd-stat-card__chart-dot {
+  opacity: 0;
+}
+
+.mmhd-stat-card__chart-guide {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: linear-gradient(
+    to bottom,
+    transparent,
+    var(--mmhd-stat-accent) 16%,
+    var(--mmhd-stat-accent) 84%,
+    transparent
+  );
+  opacity: 0;
+  transform: translateX(-50%);
+  pointer-events: none;
+  transition: opacity 0.15s ease;
+}
+
+.mmhd-stat-card__chart.is-interacting .mmhd-stat-card__chart-guide {
+  opacity: 0.42;
+}
+
+.mmhd-stat-card__chart-point {
+  position: absolute;
+  width: 11px;
+  height: 11px;
+  border: 2px solid #ffffff;
+  border-radius: 999px;
+  background: var(--mmhd-stat-accent);
+  box-shadow:
+    0 0 0 4px var(--mmhd-stat-accent-soft),
+    0 3px 10px rgba(15, 23, 42, 0.24);
+  transform: translate(-50%, -50%) scale(0.7);
+  opacity: 0;
+  pointer-events: none;
+  transition:
+    opacity 0.15s ease,
+    transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.mmhd-stat-card__chart.is-interacting .mmhd-stat-card__chart-point {
+  opacity: 1;
+  transform: translate(-50%, -50%) scale(1);
+}
+
+.mmhd-stat-card__chart-tip {
+  position: absolute;
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  padding: 6px 9px;
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 9px;
+  background: #0f172a;
+  color: #f8fafc;
+  box-shadow: 0 10px 24px -12px rgba(15, 23, 42, 0.85);
+  font-size: 10px;
+  line-height: 1.35;
+  white-space: nowrap;
+  opacity: 0;
+  visibility: hidden;
+  transform: translate(-50%, -100%) translateY(-7px);
+  pointer-events: none;
+  transition:
+    opacity 0.12s ease,
+    transform 0.12s ease,
+    visibility 0.12s ease;
+}
+
+.mmhd-stat-card__chart-tip::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: -4px;
+  width: 7px;
+  height: 7px;
+  border-radius: 1px;
+  background: #0f172a;
+  transform: translateX(-50%) rotate(45deg);
+}
+
+.mmhd-stat-card__chart.is-interacting .mmhd-stat-card__chart-tip {
+  opacity: 1;
+  visibility: visible;
+  transform: translate(-50%, -100%) translateY(-10px);
+}
+
+.mmhd-stat-card__chart-tip-date {
+  font-weight: 600;
+  color: #cbd5e1;
+}
+
+.mmhd-stat-card__chart-tip-value {
+  font-size: 11px;
+  font-weight: 700;
+  color: #ffffff;
+  font-variant-numeric: tabular-nums;
+}
+
+@keyframes mmhd-sparkline-pulse {
+  0% {
+    opacity: 0.42;
+    transform: scale(0.7);
+  }
+
+  70%,
+  100% {
+    opacity: 0;
+    transform: scale(2.35);
+  }
+}
+
+@media (max-width: 782px) {
+  .mmhd-dashboard-stat-card {
+    min-height: 150px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mmhd-dashboard-stat-card {
+    transition: none;
+  }
+
+  .mmhd-dashboard-stat-card:hover {
+    transform: none;
+  }
+
+  .mmhd-stat-card__chart-dot,
+  .mmhd-stat-card__chart-line,
+  .mmhd-stat-card__chart-area,
+  .mmhd-stat-card__chart-point {
+    transition: none;
+  }
+
+  .mmhd-stat-card__chart-dot::after {
+    animation: none;
+    opacity: 0;
+  }
+}

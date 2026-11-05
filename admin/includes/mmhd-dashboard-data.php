@@ -5,10 +5,28 @@ if (!defined('ABSPATH')) {
 }
 
 /**
- * Fetch lightweight ticket records (id, author, title, modified, status,
- * assignee, assignee_id, source) for every published ticket using bulk
- * queries. Shared by the dashboard payload and the counters function so
- * both scale to thousands of tickets without an N+1 meta query.
+ * Convert a MySQL GMT datetime to a Unix timestamp.
+ *
+ * @param string $mysql_gmt MySQL datetime in GMT.
+ * @return int|false
+ */
+function mmhd_mysql_gmt_to_timestamp($mysql_gmt)
+{
+    if (empty($mysql_gmt) || $mysql_gmt === '0000-00-00 00:00:00') {
+        return false;
+    }
+
+    $timestamp = strtotime($mysql_gmt . ' UTC');
+
+    return $timestamp !== false ? $timestamp : false;
+}
+
+/**
+ * Fetch lightweight ticket records (id, author, title, created/modified,
+ * closed time, status, assignee, assignee_id, source) for every published
+ * ticket using bulk queries. Shared by the dashboard payload and the
+ * counters function so both scale to thousands of tickets without an N+1
+ * meta query.
  *
  * @return array
  */
@@ -20,7 +38,7 @@ function mmhd_get_light_tickets()
     // phpcs:disable WordPress.DB.DirectDatabaseQuery, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
     $ticket_rows = $wpdb->get_results(
         $wpdb->prepare(
-            "SELECT ID, post_author, post_title, post_modified
+            "SELECT ID, post_author, post_title, post_modified, post_modified_gmt, post_date_gmt
              FROM {$wpdb->posts}
              WHERE post_type = %s AND post_status = %s
              ORDER BY post_modified DESC",
@@ -42,7 +60,7 @@ function mmhd_get_light_tickets()
         $wpdb->prepare(
             "SELECT post_id, meta_key, meta_value FROM {$wpdb->postmeta}
              WHERE post_id IN ({$id_placeholders})
-             AND meta_key IN ('_mmhd_ticket_status', 'ticket_assignee', 'ticket_assignee_id', 'mmhd_ticket_origin')",
+             AND meta_key IN ('_mmhd_ticket_status', 'ticket_assignee', 'ticket_assignee_id', 'mmhd_ticket_origin', '_mmhd_closed_at', '_mmhd_auto_closed_at')",
             $ids
         )
     );
@@ -89,6 +107,11 @@ function mmhd_get_light_tickets()
             'author_id' => (int) $row->post_author,
             'title' => $row->post_title,
             'modified' => $row->post_modified,
+            'modified_gmt' => $row->post_modified_gmt,
+            'created_gmt' => $row->post_date_gmt,
+            'closed_at' => !empty($meta['_mmhd_closed_at'])
+                ? $meta['_mmhd_closed_at']
+                : (isset($meta['_mmhd_auto_closed_at']) ? $meta['_mmhd_auto_closed_at'] : ''),
             'status' => $status,
             'assignee' => $assignee,
             'assignee_id' => isset($meta['ticket_assignee_id']) ? (int) $meta['ticket_assignee_id'] : 0,
@@ -103,10 +126,15 @@ function mmhd_get_light_tickets()
  * Single source of truth for all dashboard ticket counters.
  *
  * Counts the stat card numbers (total / open / active / in-progress /
- * closed) and the conversation filter badge counts (my / unassigned /
- * open-active / chat) in one pass over the lightweight ticket records.
+ * closed plus the last-30-days total30 / closed30 variants) and the
+ * conversation filter badge counts (my / unassigned / open-active / chat)
+ * in one pass over the lightweight ticket records.
  * "active" (stats.active) and the "open" badge (counts.open) both mean
  * open + in-progress.
+ *
+ * "total30" counts tickets created in the last 30 days. "closed30" counts
+ * tickets that moved to closed in the last 30 days; older closed tickets
+ * without a recorded close timestamp fall back to their last modified time.
  *
  * @param array  $light_tickets Lightweight ticket records (see mmhd_get_light_tickets).
  * @param string $user_name     Display name used for the "my conversations" count.
@@ -121,6 +149,8 @@ function mmhd_compute_ticket_counters($light_tickets, $user_name = '')
             'active' => 0,
             'inProgress' => 0,
             'closed' => 0,
+            'total30' => 0,
+            'closed30' => 0,
         ],
         'counts' => [
             'my' => 0,
@@ -139,10 +169,17 @@ function mmhd_compute_ticket_counters($light_tickets, $user_name = '')
         $user_name = $current_user->display_name ?: $current_user->user_login;
     }
 
+    $window_start = time() - (30 * DAY_IN_SECONDS);
+
     foreach ($light_tickets as $t) {
         $status = isset($t['status']) ? $t['status'] : 'N/A';
         $assignee = isset($t['assignee']) ? $t['assignee'] : 'N/A';
         $source = isset($t['source']) ? $t['source'] : 'N/A';
+
+        $created_time = mmhd_mysql_gmt_to_timestamp(isset($t['created_gmt']) ? $t['created_gmt'] : '');
+        if ($created_time !== false && $created_time >= $window_start) {
+            $counters['stats']['total30']++;
+        }
 
         $counters['stats']['total']++;
         if ($status === 'open') {
@@ -151,6 +188,14 @@ function mmhd_compute_ticket_counters($light_tickets, $user_name = '')
             $counters['stats']['inProgress']++;
         } elseif ($status === 'closed') {
             $counters['stats']['closed']++;
+
+            $closed_at = !empty($t['closed_at'])
+                ? $t['closed_at']
+                : (isset($t['modified_gmt']) ? $t['modified_gmt'] : '');
+            $closed_time = mmhd_mysql_gmt_to_timestamp($closed_at);
+            if ($closed_time !== false && $closed_time >= $window_start) {
+                $counters['stats']['closed30']++;
+            }
         }
         if ($status === 'open' || $status === 'in-progress') {
             $counters['stats']['active']++;
@@ -174,6 +219,193 @@ function mmhd_compute_ticket_counters($light_tickets, $user_name = '')
 }
 
 /**
+ * Build a 14-day sparkline series and a 7-day-over-7-day change for each
+ * dashboard stat card.
+ *
+ * Days are calendar days in the site timezone so the tooltip labels match
+ * what the user expects ("Today", "Yesterday", etc.).
+ *
+ * - total30: tickets created per day.
+ * - closed30: tickets closed per day.
+ * - active / inProgress: tickets currently in that status, grouped by the
+ *   day they were created (a recent-inflow view of the current backlog).
+ *
+ * @param array $light_tickets Lightweight ticket records.
+ * @return array
+ */
+function mmhd_compute_ticket_stat_trends($light_tickets)
+{
+    $days = 14;
+    $half = 7;
+    $series_keys = ['active', 'inProgress', 'total30', 'closed30'];
+
+    $timezone = wp_timezone();
+    $today = new DateTimeImmutable('today', $timezone);
+
+    $dates = [];
+    for ($offset = $days - 1; $offset >= 0; $offset--) {
+        $dates[] = $today->modify('-' . $offset . ' days')->format('Y-m-d');
+    }
+
+    $series = [];
+    foreach ($series_keys as $key) {
+        $series[$key] = array_fill_keys($dates, 0);
+    }
+
+    $day_key = static function ($timestamp) use ($timezone) {
+        if ($timestamp === false) {
+            return null;
+        }
+
+        return wp_date('Y-m-d', $timestamp, $timezone);
+    };
+
+    if (is_array($light_tickets)) {
+        foreach ($light_tickets as $t) {
+            $status = isset($t['status']) ? $t['status'] : 'N/A';
+
+            $created_key = $day_key(
+                mmhd_mysql_gmt_to_timestamp(isset($t['created_gmt']) ? $t['created_gmt'] : '')
+            );
+            if ($created_key !== null && isset($series['total30'][$created_key])) {
+                $series['total30'][$created_key]++;
+
+                if ($status === 'open' || $status === 'in-progress') {
+                    $series['active'][$created_key]++;
+                }
+                if ($status === 'in-progress') {
+                    $series['inProgress'][$created_key]++;
+                }
+            }
+
+            if ($status === 'closed') {
+                $closed_at = !empty($t['closed_at'])
+                    ? $t['closed_at']
+                    : (isset($t['modified_gmt']) ? $t['modified_gmt'] : '');
+                $closed_key = $day_key(mmhd_mysql_gmt_to_timestamp($closed_at));
+                if ($closed_key !== null && isset($series['closed30'][$closed_key])) {
+                    $series['closed30'][$closed_key]++;
+                }
+            }
+        }
+    }
+
+    $trends = [];
+    foreach ($series as $key => $values_by_date) {
+        $values = array_values($values_by_date);
+        $previous = array_sum(array_slice($values, 0, $half));
+        $current = array_sum(array_slice($values, $half, $half));
+
+        if ($previous > 0) {
+            $change = (int) round((($current - $previous) / $previous) * 100);
+            $direction = $change > 0 ? 'up' : ($change < 0 ? 'down' : 'flat');
+        } elseif ($current > 0) {
+            // There is no meaningful percentage when the previous period was
+            // empty, so the UI shows "New" instead of a fake "+100%".
+            $change = null;
+            $direction = 'up';
+        } else {
+            $change = 0;
+            $direction = 'flat';
+        }
+
+        $trends[$key] = [
+            'series' => $values,
+            'dates' => $dates,
+            'change' => $change,
+            'direction' => $direction,
+            'previous' => $previous,
+            'current' => $current,
+        ];
+    }
+
+    return $trends;
+}
+
+/**
+ * Build SVG paths for a smooth sparkline from a series of numeric values.
+ *
+ * @param array $values  Series values (oldest to newest).
+ * @param int   $width   SVG viewBox width.
+ * @param int   $height  SVG viewBox height.
+ * @param int   $padding Vertical padding.
+ * @param int   $inset   Horizontal padding at both ends.
+ * @return array{line:string,area:string,last:array{0:float,1:float}}
+ */
+function mmhd_get_sparkline_paths($values, $width = 100, $height = 36, $padding = 4, $inset = 4)
+{
+    $values = array_values(array_map('floatval', (array) $values));
+
+    if (empty($values)) {
+        $values = [0];
+    }
+
+    if (count($values) === 1) {
+        $values[] = $values[0];
+    }
+
+    $count = count($values);
+    $max = max($values);
+    $min = min($values);
+    $range = $max - $min;
+    $usable_height = $height - ($padding * 2);
+    $usable_width = max(1, $width - ($inset * 2));
+    $step = $usable_width / ($count - 1);
+
+    $points = [];
+    foreach ($values as $index => $value) {
+        $x = $inset + ($index * $step);
+
+        if ($range > 0) {
+            $y = $padding + (($max - $value) / $range) * $usable_height;
+        } else {
+            $y = $padding + ($usable_height / 2);
+        }
+
+        $points[] = [$x, $y];
+    }
+
+    $line = 'M ' . round($points[0][0], 2) . ' ' . round($points[0][1], 2);
+
+    for ($index = 0; $index < $count - 1; $index++) {
+        $previous = $points[max(0, $index - 1)];
+        $current = $points[$index];
+        $next = $points[$index + 1];
+        $after_next = $points[min($count - 1, $index + 2)];
+
+        $control_1_x = $current[0] + (($next[0] - $previous[0]) / 6);
+        $control_1_y = $current[1] + (($next[1] - $previous[1]) / 6);
+        $control_2_x = $next[0] - (($after_next[0] - $current[0]) / 6);
+        $control_2_y = $next[1] - (($after_next[1] - $current[1]) / 6);
+
+        // Keep each curve segment within its endpoints so the sparkline does
+        // not dip below the baseline or overshoot above a peak.
+        $segment_min_y = min($current[1], $next[1]);
+        $segment_max_y = max($current[1], $next[1]);
+        $control_1_y = max($segment_min_y, min($segment_max_y, $control_1_y));
+        $control_2_y = max($segment_min_y, min($segment_max_y, $control_2_y));
+
+        $line .= ' C '
+            . round($control_1_x, 2) . ' ' . round($control_1_y, 2) . ', '
+            . round($control_2_x, 2) . ' ' . round($control_2_y, 2) . ', '
+            . round($next[0], 2) . ' ' . round($next[1], 2);
+    }
+
+    $area = $line
+        . ' L ' . round($points[$count - 1][0], 2) . ' ' . $height
+        . ' L ' . round($points[0][0], 2) . ' ' . $height
+        . ' Z';
+
+    $last = $points[$count - 1];
+
+    return [
+        'line' => $line,
+        'area' => $area,
+        'last' => [$last[0], $last[1]],
+    ];
+}
+
+/**
  * Get all dashboard ticket counters (stat cards + filter badge counts)
  * for a given user. Single entry point used by the initial page render,
  * the AJAX refresh payload and the admin bar.
@@ -186,7 +418,33 @@ function mmhd_get_ticket_counters($user_id = 0)
     $user = get_userdata($user_id > 0 ? $user_id : get_current_user_id());
     $user_name = $user ? ($user->display_name ?: $user->user_login) : '';
 
-    return mmhd_compute_ticket_counters(mmhd_get_light_tickets(), $user_name);
+    $light_tickets = mmhd_get_light_tickets();
+    $counters = mmhd_compute_ticket_counters($light_tickets, $user_name);
+    $counters['trends'] = mmhd_compute_ticket_stat_trends($light_tickets);
+
+    return $counters;
+}
+
+/**
+ * Compact dashboard payload for AJAX responses that can change the stat
+ * cards (status, priority, assignee and bulk actions).
+ *
+ * Keeping this in one helper means every mutation path returns the same
+ * fresh global numbers and sparkline series, instead of the browser trying
+ * to recalculate totals from the currently loaded table page.
+ *
+ * @param int $user_id Optional user ID for the "my conversations" count.
+ * @return array{stats: array, counts: array, trends: array}
+ */
+function mmhd_get_dashboard_summary($user_id = 0)
+{
+    $counters = mmhd_get_ticket_counters($user_id);
+
+    return [
+        'stats' => $counters['stats'],
+        'counts' => $counters['counts'],
+        'trends' => $counters['trends'],
+    ];
 }
 
 /**
@@ -212,7 +470,8 @@ function mmhd_build_dashboard_tickets_payload($filter = 'my_conversation', $page
     $empty_payload = [
         'tickets' => [],
         'counts' => ['my' => 0, 'unassigned' => 0, 'open' => 0, 'chat' => 0],
-        'stats' => ['total' => 0, 'open' => 0, 'active' => 0, 'inProgress' => 0, 'closed' => 0],
+        'stats' => ['total' => 0, 'open' => 0, 'active' => 0, 'inProgress' => 0, 'closed' => 0, 'total30' => 0, 'closed30' => 0],
+        'trends' => mmhd_compute_ticket_stat_trends([]),
         'total' => 0,
         'page' => $page,
         'per_page' => $per_page,
@@ -258,6 +517,7 @@ function mmhd_build_dashboard_tickets_payload($filter = 'my_conversation', $page
         'tickets' => $tickets,
         'counts' => $counters['counts'],
         'stats' => $counters['stats'],
+        'trends' => mmhd_compute_ticket_stat_trends($light_tickets),
         'total' => $total,
         'page' => $page,
         'per_page' => $per_page,
