@@ -65,23 +65,38 @@ jobs:
           echo "new_tag=$NEW_TAG" >> $GITHUB_OUTPUT
           echo "last_tag=$LAST_TAG" >> $GITHUB_OUTPUT
 
+      - name: Update plugin version in PHP file
+        run: |
+          VERSION="${{ steps.tag.outputs.new_tag }}"
+          VERSION="${VERSION#metamint-helpdesk-v}"
+
+          echo "Updating plugin version to: $VERSION"
+
+          FILE="mmhd.php"
+
+          # Update header version
+          sed -i "s/\* Version: .*/ * Version: $VERSION/" "$FILE"
+
+          # Update constant
+          sed -i "s/define('MMHD_VERSION', '.*')/define('MMHD_VERSION', '$VERSION')/" "$FILE"
+
       - name: Create full plugin zip
         run: |
           # Clean up node_modules first to make copy fast
           rm -rf public/node_modules
-
+          
           # Create temp directory
           mkdir -p /tmp/metamint-helpdesk-zip/metamint-helpdesk
-
+          
           # Copy all files
           cp -r . /tmp/metamint-helpdesk-zip/metamint-helpdesk/
-
+          
           # Clean up unwanted files in the copied folder
           cd /tmp/metamint-helpdesk-zip/metamint-helpdesk
           rm -rf .git .github *.zip composer.json composer.lock package.json package-lock.json public/package.json public/package-lock.json plugin-zip.js stylelint.config.mjs .php-cs-fixer.dist.php eslint.config.mjs .stylelintignore .gitignore .husky public/src
           find . -name ".DS_Store" -delete
           find . -name ".babelrc" -delete
-
+          
           # Zip the folder
           cd /tmp/metamint-helpdesk-zip
           zip -r "$GITHUB_WORKSPACE/metamint-helpdesk.zip" metamint-helpdesk
