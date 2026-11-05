@@ -18,14 +18,11 @@ $mmhd_total_tickets = $mmhd_counters['stats']['total'];
 ?>
 <div id="dashboard-page" class="page-content<?php echo esc_attr($mmhd_dashboard_hidden); ?>">
     <!-- Statistics Cards -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
-        <div class="bg-white overflow-hidden shadow rounded-lg">
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6 mmhd-dashboard-stats">
+        <div class="bg-white overflow-hidden shadow rounded-lg mmhd-dashboard-stat-card">
             <div class="p-5">
-                <div class="flex ">
-                    <div class="flex-shrink-0">
-                        <i class="fas fa-chart-bar text-gray-400 text-xl"></i>
-                    </div>
-                    <div class="ml-5 w-0 flex-1">
+                <div class="flex">
+                    <div class="w-0 flex-1">
                         <dl>
                             <dt class="text-sm font-medium text-gray-500 truncate">
                                 <?php esc_html_e('Total Conversations', 'metamint-helpdesk'); ?></dt>
@@ -34,17 +31,18 @@ $mmhd_total_tickets = $mmhd_counters['stats']['total'];
                                                                                                 ?></dd>
                         </dl>
                     </div>
+                    <div class="flex-shrink-0">
+                        <i class="fas fa-chart-bar text-gray-400 text-xl"></i>
+                    </div>
+
                 </div>
             </div>
         </div>
 
-        <div class="bg-white overflow-hidden shadow rounded-lg">
+        <div class="bg-white overflow-hidden shadow rounded-lg mmhd-dashboard-stat-card">
             <div class="p-5">
                 <div class="flex ">
-                    <div class="flex-shrink-0">
-                        <i class="fas fa-exclamation-circle text-red-400 text-xl"></i>
-                    </div>
-                    <div class="ml-5 w-0 flex-1">
+                    <div class="w-0 flex-1">
                         <dl>
                             <dt class="text-sm font-medium text-gray-500 truncate">
                                 <?php esc_html_e('Active Conversations', 'metamint-helpdesk'); ?></dt>
@@ -53,17 +51,17 @@ $mmhd_total_tickets = $mmhd_counters['stats']['total'];
                                                                                             ?></dd>
                         </dl>
                     </div>
+                    <div class="flex-shrink-0">
+                        <i class="fas fa-exclamation-circle text-red-400 text-xl"></i>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <div class="bg-white overflow-hidden shadow rounded-lg">
+        <div class="bg-white overflow-hidden shadow rounded-lg mmhd-dashboard-stat-card">
             <div class="p-5">
                 <div class="flex ">
-                    <div class="flex-shrink-0">
-                        <i class="fas fa-clock text-yellow-400 text-xl"></i>
-                    </div>
-                    <div class="ml-5 w-0 flex-1">
+                    <div class="w-0 flex-1">
                         <dl>
                             <dt class="text-sm font-medium text-gray-500 truncate">
                                 <?php esc_html_e('In Progress', 'metamint-helpdesk'); ?></dt>
@@ -72,17 +70,18 @@ $mmhd_total_tickets = $mmhd_counters['stats']['total'];
                                                                                                     ?></dd>
                         </dl>
                     </div>
+                    <div class="flex-shrink-0">
+                        <i class="fas fa-clock text-yellow-400 text-xl"></i>
+                    </div>
+
                 </div>
             </div>
         </div>
 
-        <div class="bg-white overflow-hidden shadow rounded-lg">
+        <div class="bg-white overflow-hidden shadow rounded-lg mmhd-dashboard-stat-card">
             <div class="p-5">
                 <div class="flex">
-                    <div class="flex-shrink-0">
-                        <i class="fas fa-check-circle text-green-400 text-xl"></i>
-                    </div>
-                    <div class="ml-5 w-0 flex-1">
+                    <div class="w-0 flex-1">
                         <dl>
                             <dt class="text-sm font-medium text-gray-500 truncate"><?php esc_html_e('Closed', 'metamint-helpdesk'); ?>
                             </dt>
@@ -91,6 +90,10 @@ $mmhd_total_tickets = $mmhd_counters['stats']['total'];
                                                                                                 ?></dd>
                         </dl>
                     </div>
+                    <div class="flex-shrink-0">
+                        <i class="fas fa-check-circle text-green-400 text-xl"></i>
+                    </div>
+
                 </div>
             </div>
         </div>
@@ -168,7 +171,7 @@ $mmhd_total_tickets = $mmhd_counters['stats']['total'];
         ob_start();
     ?>
         <div class="overflow-auto">
-            <table class="min-w-full divide-y divide-gray-200">
+            <table class="min-w-full divide-y divide-gray-200 mmhd-dashboard-table">
                 <thead class="bg-gray-50">
                     <tr>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -189,7 +192,7 @@ $mmhd_total_tickets = $mmhd_counters['stats']['total'];
                 </tbody>
             </table>
         </div>
-        <div id="dashboard-pagination" class="py-4"></div>
+        <div id="dashboard-pagination" class="py-4 px-6"></div>
     <?php
         return ob_get_clean();
     }
@@ -209,8 +212,8 @@ $mmhd_total_tickets = $mmhd_counters['stats']['total'];
     ?>
 
     <div class="bg-white shadow rounded-lg mb-6">
-        <div class="px-4 py-5 sm:p-6">
-            <div class="flex justify-between items-center mb-4">
+        <div class="mmhd-dashboard-tickets">
+            <div class="flex justify-between items-center p-2 sm:p-6">
                 <h3 class="text-lg leading-6 font-medium text-gray-900">
                     <?php esc_html_e('Conversation Overview', 'metamint-helpdesk'); ?></h3>
                 <div class="flex space-x-2">
@@ -230,7 +233,7 @@ $mmhd_total_tickets = $mmhd_counters['stats']['total'];
     </div>
 
     <!------------------------------------ Quick Actions ------------------------------------>
-    <div class="bg-white shadow rounded-lg">
+    <div class="bg-white shadow rounded-lg mmhd-dashboard-quick-actions">
         <div class="px-4 py-5 sm:p-6">
             <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4"><?php esc_html_e('Quick Actions', 'metamint-helpdesk'); ?></h3>
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
