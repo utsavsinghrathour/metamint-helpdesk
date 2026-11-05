@@ -337,15 +337,8 @@ function renderDashboardTable(filteredTickets) {
               ${
                 showAssigneeColumn
                   ? `
-              <td class="px-6 py-4 whitespace-nowrap">
-                <span class="text-sm font-medium text-gray-900 editable-assignee inline-flex items-center gap-1 cursor-pointer hover:text-blue-700"
-                  title="Click to choose"
-                  onclick="event.stopPropagation(); editAssignee(${
-                    ticket.id
-                  }, this)">
-                  ${escapeHTML(ticket.assignee || "Unassigned")}
-                  <i class="fas fa-chevron-down text-[10px] opacity-70"></i>
-                </span>
+              <td class="px-6 py-4 whitespace-nowrap text-center">
+                ${buildAssigneeCellHTML(ticket)}
               </td>
               `
                   : ""
@@ -515,7 +508,9 @@ function updateTableHeader(showAssigneeColumn) {
   tableHeader.innerHTML = headers
     .map(
       (header) =>
-        `<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">${header}</th>`,
+        `<th class="px-6 py-3 ${
+          header === "Assignee" ? "text-center" : "text-left"
+        } text-xs font-medium text-gray-500 uppercase tracking-wider">${header}</th>`,
     )
     .join("");
 }
@@ -574,7 +569,7 @@ function createInlineDropdown(options, selectedValue, className) {
 
   const trigger = document.createElement("button");
   trigger.type = "button";
-  trigger.className = `${className} w-full flex items-center justify-between gap-2`;
+  trigger.className = `${className} inline-flex items-center justify-between gap-1`;
 
   const label = document.createElement("span");
   label.className = "truncate";
@@ -601,34 +596,48 @@ function createInlineDropdown(options, selectedValue, className) {
   };
 
   const updateMenuPosition = () => {
-    const rect = container.getBoundingClientRect();
+    // The menu sizes to its content (not a fixed width), capped at the column
+    // width so the option list never spills outside the cell, and is centered
+    // within its column.
+    const cell = container.closest("td, th") || container;
+    const cellRect = cell.getBoundingClientRect();
+    const triggerEl = container.querySelector("button") || container;
+    const rect = triggerEl.getBoundingClientRect();
     const viewportWidth =
       window.innerWidth || document.documentElement.clientWidth;
     const viewportHeight =
       window.innerHeight || document.documentElement.clientHeight;
-    const menuWidth = Math.max(1, Math.round(rect.width));
-    const estimatedHeight = Math.min(options.length * 36, 224);
+    const menuMaxWidth = Math.max(1, Math.round(cellRect.width));
+    const estimatedHeight = Math.min(options.length * 30, 200);
 
-    let left = rect.left;
-    if (left + menuWidth > viewportWidth - 8) {
-      left = Math.max(8, viewportWidth - menuWidth - 8);
-    }
+    menu.style.width = "max-content";
+    menu.style.maxWidth = `${menuMaxWidth}px`;
+
+    // Measure the (already visible) menu so it can be centered on the column.
+    const menuWidth = Math.min(
+      menu.getBoundingClientRect().width || 0,
+      menuMaxWidth,
+    );
+    const centeredLeft = cellRect.left + (cellRect.width - menuWidth) / 2;
+    const left = Math.max(
+      8,
+      Math.min(centeredLeft, viewportWidth - menuWidth - 8),
+    );
 
     const spaceBelow = viewportHeight - rect.bottom;
     const showAbove =
       spaceBelow < Math.min(estimatedHeight, 140) && rect.top > estimatedHeight;
     const top = showAbove
-      ? Math.max(8, rect.top - estimatedHeight - 6)
-      : rect.bottom + 6;
+      ? Math.max(8, rect.top - estimatedHeight - 2)
+      : rect.bottom + 2;
 
-    menu.style.width = `${menuWidth}px`;
     menu.style.left = `${Math.round(left)}px`;
     menu.style.top = `${Math.round(top)}px`;
   };
 
   const open = () => {
-    updateMenuPosition();
     menu.style.display = "block";
+    updateMenuPosition();
   };
 
   const outsideHandler = (event) => {
@@ -660,7 +669,7 @@ function createInlineDropdown(options, selectedValue, className) {
     const item = document.createElement("button");
     item.type = "button";
     item.className =
-      "w-full text-left px-3 py-2 text-sm hover:bg-blue-50 border-b last:border-b-0";
+      "w-full text-left px-3 py-1.5 text-xs hover:bg-blue-50 border-b last:border-b-0";
     if (String(option.value) === String(selectedValue)) {
       item.classList.add("bg-blue-50");
     }
@@ -773,7 +782,7 @@ function editStatus(ticketId, element) {
   const dropdown = createInlineDropdown(
     statusOptions,
     currentStatus,
-    "border border-gray-300 bg-white rounded-md text-sm px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500",
+    "border border-gray-300 bg-white rounded-md text-xs px-2 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500",
   );
 
   const restore = () => {
@@ -843,7 +852,7 @@ function editPriority(ticketId, element) {
   const dropdown = createInlineDropdown(
     priorityOptions,
     currentPriority,
-    "border border-gray-300 bg-white rounded-md text-sm px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500",
+    "border border-gray-300 bg-white rounded-md text-xs px-2 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500",
   );
 
   const restore = () => {
@@ -916,18 +925,20 @@ function editAssignee(ticketId, element) {
     return;
   }
 
+  const currentAssigneeLabel =
+    element.dataset?.assignee || element.textContent.trim();
+
   const currentAssigneeValue =
     ticket?.assignee_id ||
     assigneeOptions.find((option) => option.label === ticket?.assignee)
       ?.value ||
-    assigneeOptions.find(
-      (option) => option.label === element.textContent.trim(),
-    )?.value;
+    assigneeOptions.find((option) => option.label === currentAssigneeLabel)
+      ?.value;
 
   const dropdown = createInlineDropdown(
     assigneeOptions,
     currentAssigneeValue,
-    "border border-gray-300 bg-white rounded-md text-sm px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500",
+    "border border-gray-300 bg-white rounded-md text-xs px-2 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500",
   );
 
   const restore = () => {
@@ -971,12 +982,19 @@ function editAssignee(ticketId, element) {
           assigneeOptions.find(
             (option) => String(option.value) === String(newAssigneeId),
           )?.label ||
-          element.textContent.trim();
+          element.dataset?.assignee ||
+          "";
         const updatedSpan = document.createElement("span");
         updatedSpan.className =
-          "text-sm font-medium text-gray-900 editable-assignee inline-flex items-center gap-1 cursor-pointer hover:text-blue-700";
-        updatedSpan.title = "Click to choose";
-        updatedSpan.innerHTML = `${escapeHTML(updatedAssignee)}<i class="fas fa-chevron-down text-[10px] opacity-70"></i>`;
+          "editable-assignee inline-flex items-center cursor-pointer hover:opacity-90";
+        updatedSpan.title = updatedAssignee;
+        updatedSpan.dataset.assignee = updatedAssignee;
+        updatedSpan.innerHTML = buildAssigneeAvatarHTML(
+          updatedAssignee,
+          result.data?.assignee_avatar_url,
+          result.data?.assignee_initials,
+          result.data?.assignee_avatar_color,
+        );
         updatedSpan.onclick = (event) => {
           event.stopPropagation();
           editAssignee(ticketId, updatedSpan);
@@ -995,6 +1013,33 @@ function editAssignee(ticketId, element) {
 
 // Call when DOM is ready
 document.addEventListener("DOMContentLoaded", loadDashboardTickets);
+
+// Build the assignee cell: avatar only, assignee name exposed via tooltip.
+function buildAssigneeCellHTML(ticket) {
+  const name = ticket.assignee || "Unassigned";
+  const avatar = buildAssigneeAvatarHTML(
+    name,
+    ticket.assignee_avatar_url,
+    ticket.assignee_initials,
+    ticket.assignee_avatar_color,
+  );
+
+  return `<span class="editable-assignee inline-flex items-center cursor-pointer hover:opacity-90"
+    title="${escapeHTML(name)}"
+    data-assignee="${escapeHTML(name)}"
+    onclick="event.stopPropagation(); editAssignee(${ticket.id}, this)">${avatar}</span>`;
+}
+
+function buildAssigneeAvatarHTML(name, avatarUrl, initials, color) {
+  if (avatarUrl) {
+    return `<img class="mmhd-avatar-img" src="${escapeHTML(
+      avatarUrl,
+    )}" alt="${escapeHTML(name)}">`;
+  }
+  return `<span class="mmhd-avatar" style="background-color:${escapeHTML(
+    color || "#9ca3af",
+  )};">${escapeHTML(initials || "?")}</span>`;
+}
 
 // Helper function to escape HTML (if not already defined)
 function escapeHTML(str) {
@@ -5063,3 +5108,100 @@ jQuery(document).ready(function () {
     }
   });
 });
+
+/**
+ * Review prompt.
+ *
+ * Shows a "leave us a review" popup every few days (default 5). Clicking
+ * "Already reviewed" snoozes it for a longer period (default 30 days) using a
+ * cookie. Clicking "Leave us a review" opens the configured review URL.
+ */
+(function ($) {
+  var MMHD_REVIEW_COOKIE = "mmhd_review_snooze";
+  var MMHD_REVIEW_NEXT_COOKIE = "mmhd_review_next";
+
+  var config = window.mmhdReviewPrompt || {};
+  var reviewUrl = config.reviewUrl || "#";
+  var showEveryDays = parseInt(config.showEveryDays, 10) || 5;
+  var snoozeDays = parseInt(config.snoozeDays, 10) || 30;
+
+  function getCookie(name) {
+    var match = document.cookie.match(
+      new RegExp("(?:^|; )" + name.replace(/([.*+?^${}()|[\]\\])/g, "\\$1") + "=([^;]*)")
+    );
+    return match ? decodeURIComponent(match[1]) : null;
+  }
+
+  function setCookie(name, value, days) {
+    var expires = new Date();
+    expires.setTime(expires.getTime() + days * 24 * 60 * 60 * 1000);
+    document.cookie =
+      name +
+      "=" +
+      encodeURIComponent(value) +
+      "; expires=" +
+      expires.toUTCString() +
+      "; path=/; SameSite=Lax";
+  }
+
+  function daysToMs(days) {
+    return days * 24 * 60 * 60 * 1000;
+  }
+
+  function shouldShow() {
+    var now = Date.now();
+
+    var snooze = parseInt(getCookie(MMHD_REVIEW_COOKIE), 10);
+    if (!isNaN(snooze) && now < snooze) {
+      return false;
+    }
+
+    var next = parseInt(getCookie(MMHD_REVIEW_NEXT_COOKIE), 10);
+    if (!isNaN(next) && now < next) {
+      return false;
+    }
+
+    return true;
+  }
+
+  function scheduleNext() {
+    setCookie(MMHD_REVIEW_NEXT_COOKIE, Date.now() + daysToMs(showEveryDays), 3650);
+  }
+
+  function hideModal() {
+    $("#mmhd-review-modal").addClass("hidden");
+  }
+
+  function init() {
+    var $modal = $("#mmhd-review-modal");
+    if (!$modal.length) {
+      return;
+    }
+
+    if (!shouldShow()) {
+      return;
+    }
+
+    scheduleNext();
+    $modal.removeClass("hidden");
+
+    $("#mmhd-review-leave")
+      .attr("href", reviewUrl)
+      .on("click", function () {
+        hideModal();
+      });
+
+    $("#mmhd-review-already").on("click", function () {
+      setCookie(MMHD_REVIEW_COOKIE, Date.now() + daysToMs(snoozeDays), snoozeDays);
+      hideModal();
+    });
+
+    $modal.on("click", function (event) {
+      if (event.target === this) {
+        hideModal();
+      }
+    });
+  }
+
+  $(init);
+})(jQuery);
