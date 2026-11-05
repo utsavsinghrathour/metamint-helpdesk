@@ -44,9 +44,9 @@ function mmhd_dashboard_callback()
     // No output buffering needed
 ?>
 
-    <div class="bg-gray-100">
+    <div class="mmhd-dashboard-container">
         <!-- Navigation -->
-        <nav class="bg-white shadow-lg border-b border-gray-200">
+        <nav class="bg-white border-b border-gray-200 mmhd-nav-bar">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div class="flex justify-between h-16">
                     <div class="flex items-center">
@@ -54,7 +54,7 @@ function mmhd_dashboard_callback()
                             <button onclick="showPage('dashboard')" class="bg-transparent p-0 m-0 cursor-pointer" style="background: transparent; border: none; outline: none; box-shadow: none; -webkit-appearance: none; appearance: none;">
                                 <?php
                                 $plugin_base_url = plugin_dir_url(dirname(__FILE__, 2));
-                                $logo_url        = $plugin_base_url . 'admin/assets/images/mmhd-logo-wide.png';
+                                $logo_url        = $plugin_base_url . 'admin/assets/images/mmhd-app-logo.png';
 
                                 echo '<img src="' . esc_url($logo_url) . '" alt="Company Logo" width="140" height="150" style="border: none;">';
                                 ?>
@@ -62,13 +62,13 @@ function mmhd_dashboard_callback()
                         </div>
                         <div class="mmhd-menu-head mmhd-mobile-hidden md:ml-10 md:flex md:space-x-8">
                             <button onclick="showPage('dashboard')"
-                                class="nav-link inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
+                                class="nav-link inline-flex items-center px-1 pt-1 text-sm font-medium"
                                 data-page="dashboard">
                                 <i class="fas fa-home mr-2"></i>
                                 <?php esc_html_e('Dashboard', 'metamint-helpdesk'); ?>
                             </button>
                             <button type="button" onclick="showPage('tickets', true)"
-                                class="nav-link inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
+                                class="nav-link inline-flex items-center px-1 pt-1 text-sm font-medium"
                                 data-page="tickets">
                                 <i class="fas fa-ticket-alt mr-2"></i>
                                 <?php esc_html_e('Conversations', 'metamint-helpdesk'); ?>
@@ -76,14 +76,14 @@ function mmhd_dashboard_callback()
                                     title="<?php esc_attr_e('Active conversations', 'metamint-helpdesk'); ?>"><?php echo esc_html($mmhd_active_ticket_count); ?></span>
                             </button>
                             <button onclick="showPage('new-ticket')"
-                                class="nav-link inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
+                                class="nav-link inline-flex items-center px-1 pt-1 text-sm font-medium"
                                 data-page="new-ticket">
                                 <i class="fas fa-plus mr-2"></i>
                                 <?php esc_html_e('New Conversation', 'metamint-helpdesk'); ?>
                             </button>
                             <?php if (current_user_can('mmhd_manage_settings')): ?>
                                 <button onclick="showPage('settings')"
-                                    class="nav-link inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
+                                    class="nav-link inline-flex items-center px-1 pt-1 text-sm font-medium"
                                     data-page="settings">
                                     <i class="fas fa-cog mr-2"></i>
                                     <?php esc_html_e('Settings', 'metamint-helpdesk'); ?>
@@ -91,7 +91,7 @@ function mmhd_dashboard_callback()
                             <?php endif; ?>
                             <?php if (defined('MMHD_ADDON_VERSION') && current_user_can('mmhd_manage_settings')): ?>
                                 <button onclick="showPage('addons')"
-                                    class="nav-link inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
+                                    class="nav-link inline-flex items-center px-1 pt-1 text-sm font-medium"
                                     data-page="addons">
                                     <i class="fas fa-puzzle-piece mr-2"></i>
                                     <?php esc_html_e('Addons', 'metamint-helpdesk'); ?>
@@ -102,7 +102,7 @@ function mmhd_dashboard_callback()
                             <i class="fa-solid fa-bars" style="color: rgb(0, 124, 186);"></i>
                         </button>
                     </div>
-                    <div class="flex items-center space-x-3 relative">
+                    <div class="flex items-center space-x-3 relative mmhd-leave-review-bell">
                         <a href="#" target="_blank" rel="noopener noreferrer"
                             class="inline-flex items-center px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm">
                             <?php esc_html_e('Leave us a review', 'metamint-helpdesk'); ?>

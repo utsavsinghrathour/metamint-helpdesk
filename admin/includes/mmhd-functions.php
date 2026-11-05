@@ -683,6 +683,7 @@ function mmhd_save_advanced_settings()
         'reply_unseen_email_minutes',
         'polling_interval',
         'auto_close_chat_minutes',
+        'auto_close_ticket_days',
         'blocked_ips',
     ];
 
@@ -720,6 +721,13 @@ function mmhd_save_advanced_settings()
             $value = absint($settings[$key]);
             if ($value < 0 || $value > 1440) {
                 $results[$key] = ['status' => 'error', 'message' => 'Invalid auto-close minutes (must be 0–1440)'];
+                continue;
+            }
+            $sanitized_settings[$key] = $value;
+        } elseif ($key === 'auto_close_ticket_days') {
+            $value = absint($settings[$key]);
+            if ($value < 0 || $value > 365) {
+                $results[$key] = ['status' => 'error', 'message' => 'Invalid auto-close days (must be 0–365)'];
                 continue;
             }
             $sanitized_settings[$key] = $value;

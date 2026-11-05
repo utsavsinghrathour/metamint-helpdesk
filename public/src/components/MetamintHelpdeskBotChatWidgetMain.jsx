@@ -293,6 +293,35 @@ const CART_REMOVE_PRONOUN_RE = /^(?:it|this|that|these|those|them|one|the item|t
 const CART_VIEW_RE = /\b(?:what(?:['\u2019]?s| is)? in (?:my|the) (?:cart|basket)|(?:cart|basket) (?:contents|summary|items|list)|(?:show|view|open|see|display|list) (?:me )?(?:my |the )?(?:cart|basket))\b/i;
 
 /**
+ * When the visitor asks for a person, the assistant reply gets a real
+ * "Talk to human" action, rendered exactly like the add-to-cart action.
+ *
+ * Covers the common ways people phrase a handoff; the assistant-reply check
+ * below catches paraphrases where the bot itself offers human/support help.
+ */
+const TALK_TO_HUMAN_RE = /\b(?:human|person|people|agent|representative|rep|operator|staff|team member|manager|supervisor|escalat(?:e|ion)|customer (?:service|support|care)|tech(?:nical)? support|support (?:team|agent|staff|desk)|live (?:chat|support|agent|person|help)|real (?:person|human)|actual (?:person|human)|speak (?:to|with) (?:someone|somebody|a person|a human|your team|support)|talk (?:to|with) (?:someone|somebody|a person|a human|your team|support)|chat (?:to|with) (?:someone|somebody|a person|a human|your team|support)|connect me|transfer me|assistance|assist|complaint|complain|support|help)\b/i;
+
+/**
+ * Fallback for phrasings the visitor regex misses: if the bot's own answer
+ * offers a human/support contact, show the handoff button on that reply.
+ */
+const HUMAN_OFFER_RE = /\b(?:human|agent|representative|support team|customer (?:service|support|care)|live (?:chat|support)|contact (?:us|support)|reach (?:us|our support)|speak (?:to|with) (?:a|our) (?:human|agent|representative|team))\b/i;
+
+/**
+ * Runs the exact flow of the header's talk-to-human button: convert the
+ * current chat session into a ticket and copy every message into it.
+ * Nothing is created here — the header handler owns the conversion.
+ */
+const triggerTalkToHuman = () => {
+  const headerButton = document.getElementById("mmhd-talk-to-human-btn");
+  if (headerButton) {
+    headerButton.click();
+    return;
+  }
+  window.dispatchEvent(new CustomEvent("mmhd:talkToHuman"));
+};
+
+/**
  * Ticking countdown shown on expiring action buttons (e.g. refund confirm).
  * Reports back once when it reaches zero so the button can be disabled rather
  * than left clickable against an intent the server has already dropped.
@@ -329,7 +358,13 @@ function AssistantMessage({
   pushAssistant,
   expiredActions,
   setExpiredActions,
+  talkToHuman,
 }) {
+  // Never render a saved talk-to-human action if the addon setting is off.
+  const visibleActions = (msg.ui?.actions || []).filter(
+    (a) => a?.action !== "talk-to-human" || talkToHuman
+  );
+
   return (
     <div className="ai-block">
       {/* MAIN MESSAGE TEXT */}
@@ -380,9 +415,9 @@ function AssistantMessage({
       )}
 
       {/* ACTIONS (link / deep actions) */}
-      {msg.ui?.actions?.length > 0 && (
+      {visibleActions.length > 0 && (
         <div className="ai-actions">
-          {msg.ui.actions.map((a, i) => {
+          {visibleActions.map((a, i) => {
             const isUsed = a.used;
             const isExpired = Boolean(a.pending_id) && expiredActions.includes(a.pending_id);
             return (
@@ -400,6 +435,10 @@ function AssistantMessage({
                   }
                   if (a.action === "remove-from-cart") {
                     removeFromCart(a.pending_id, msgIndex);
+                    return;
+                  }
+                  if (a.action === "talk-to-human") {
+                    triggerTalkToHuman();
                     return;
                   }
                   if (a.prompt) setInput(a.prompt);
@@ -443,6 +482,7 @@ AssistantMessage.propTypes = {
   pushAssistant: PropTypes.func.isRequired,
   expiredActions: PropTypes.arrayOf(PropTypes.string).isRequired,
   setExpiredActions: PropTypes.func.isRequired,
+  talkToHuman: PropTypes.bool,
 };
 
 export default function MetamintHelpdeskBotChatWidgetMain({
@@ -530,6 +570,7 @@ export default function MetamintHelpdeskBotChatWidgetMain({
   const [isStreaming, setIsStreaming] = useState(false);
   const [isCreatingTicket, setIsCreatingTicket] = useState(false);
   const [expiredActions, setExpiredActions] = useState([]);
+  const [talkToHuman, setTalkToHuman] = useState(false);
   const [botName, setBotName] = useState(resolvedBotName);
   const [botImage, setBotImage] = useState(resolvedBotImage);
   const apiProxy = window.location.origin + "/wp-json/mmhd-bot/v1/chat";
@@ -539,22 +580,24 @@ export default function MetamintHelpdeskBotChatWidgetMain({
 
   const fetchApiKey = async () => {
     if (!canLoadWidgetConfig) return;
-    console.log("fetchApiKey");
     try {
-      const response = await wp.apiFetch({
-        path: `/mmhd-bot/v1/widget-config`,
-      });
-      // Try both possible key formats your PHP might return
+      const response = await fetch("/wp-json/mmhd-bot/v1/widget-config");
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(`Widget config failed (${response.status})`);
+      }
       setBotName(
-        response.botName || response.bot_name || resolvedBotName || ""
+        data.botName || data.bot_name || resolvedBotName || ""
       );
       setBotImage(
-        response.botImage || response.bot_image || resolvedBotImage || ""
+        data.botImage || data.bot_image || resolvedBotImage || ""
       );
+      setTalkToHuman(!!data.talkToHuman);
     } catch (err) {
       console.error(err);
       setBotName((current) => current || resolvedBotName || "Bot");
       setBotImage((current) => current || resolvedBotImage || "");
+      setTalkToHuman(false);
     }
   };
 
@@ -601,15 +644,15 @@ export default function MetamintHelpdeskBotChatWidgetMain({
     }
   }, []);
 
-  // Listen for ticket creation events
+  // Listen for ticket creation events (the header button owns the conversion;
+  // this only mirrors its progress in the chat loader).
   useEffect(() => {
     const handleTicketCreation = (e) => {
-      setIsCreatingTicket(e.detail?.isCreating ?? false);
-      if (e.detail?.isCreating) {
-        setLoadingText("Transitioning conversations from AI to human agents.");
-      } else {
-        setLoadingText("");
-      }
+      const isCreating = e.detail?.isCreating ?? false;
+      setIsCreatingTicket(isCreating);
+      setLoadingText(
+        isCreating ? "Transitioning conversations from AI to human agents." : ""
+      );
     };
 
     window.addEventListener("mmhd:creatingTicket", handleTicketCreation);
@@ -1038,6 +1081,14 @@ export default function MetamintHelpdeskBotChatWidgetMain({
     const isCartView = CART_VIEW_RE.test(lower);
     const isCartRemove = CART_REMOVE_RE.test(lower);
 
+    // When the visitor asks for a person, the assistant's reply gets a
+    // "Talk to human" action (rendered like add-to-cart) — only if enabled.
+    const wantsHuman = talkToHuman && TALK_TO_HUMAN_RE.test(lower);
+    const humanAction = { action: "talk-to-human", label: "Talk to human" };
+    const humanUi = wantsHuman
+      ? { suggestions: [], actions: [humanAction] }
+      : undefined;
+
     if (isCartView || isCartRemove) {
       // Record the turn up front so the assistant reply lands underneath it.
       recordUserTurn(q);
@@ -1154,6 +1205,19 @@ export default function MetamintHelpdeskBotChatWidgetMain({
               finalText = "";
             }
             // console.log("Final parsed response:", finalText);
+            const parsedUi = parsed.ui || { suggestions: [], actions: [] };
+            const parsedActions = Array.isArray(parsedUi.actions)
+              ? parsedUi.actions
+              : [];
+            const offerHuman =
+              talkToHuman &&
+              (wantsHuman || HUMAN_OFFER_RE.test(finalText));
+            const ui =
+              offerHuman &&
+              !parsedActions.some((a) => a && a.action === "talk-to-human")
+                ? { ...parsedUi, actions: [...parsedActions, humanAction] }
+                : parsedUi;
+
             setMessages((m) => [
               ...m,
               {
@@ -1162,7 +1226,7 @@ export default function MetamintHelpdeskBotChatWidgetMain({
                 message: finalText || "",
                 data: parsed.response || null,
                 data: parsed.data || null,
-                ui: parsed.ui || { suggestions: [], actions: [] },
+                ui,
                 intent: parsed.intent || "",
                 timestamp: new Date().toISOString(),
               },
@@ -1183,6 +1247,7 @@ export default function MetamintHelpdeskBotChatWidgetMain({
           {
             role: "assistant",
             message: "I didn't get a response. Please try again.",
+            ui: humanUi,
             timestamp: new Date().toISOString(),
           },
         ]);
@@ -1192,7 +1257,7 @@ export default function MetamintHelpdeskBotChatWidgetMain({
     } catch (e) {
       setMessages((m) => [
         ...m,
-        { role: "assistant", message: e.message, timestamp: new Date().toISOString() },
+        { role: "assistant", message: e.message, ui: humanUi, timestamp: new Date().toISOString() },
       ]);
       setIsStreaming(false);
       setLoadingText("");
@@ -1376,6 +1441,7 @@ export default function MetamintHelpdeskBotChatWidgetMain({
                         pushAssistant={pushAssistant}
                         expiredActions={expiredActions}
                         setExpiredActions={setExpiredActions}
+                        talkToHuman={talkToHuman}
                       />
                     ) : (
                       <span
