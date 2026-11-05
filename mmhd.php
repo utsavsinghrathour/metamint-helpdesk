@@ -215,6 +215,60 @@ function mmhd_deactivate()
 }
 
 /**
+ * Default ticket priorities and their colors.
+ *
+ * @return array<string, string> Priority name => hex color.
+ */
+function mmhd_get_default_priorities()
+{
+    return array(
+        'Low'    => '#3b82f6', // Blue.
+        'Medium' => '#eab308', // Yellow.
+        'High'   => '#ef4444', // Red.
+    );
+}
+
+/**
+ * Create the default ticket priorities once, on the first activation.
+ *
+ * Runs on init (after the taxonomy is registered) and records a persistent
+ * option when done. The option is intentionally left in place on deactivation,
+ * so reactivating the plugin never recreates priorities the user has deleted.
+ */
+function mmhd_seed_default_priorities()
+{
+    if (get_option('mmhd_default_priorities_seeded')) {
+        return;
+    }
+
+    if (!taxonomy_exists('mmhd_ticket_priority')) {
+        return;
+    }
+
+    foreach (mmhd_get_default_priorities() as $priority_name => $priority_color) {
+        $term = term_exists($priority_name, 'mmhd_ticket_priority');
+
+        if (!$term) {
+            $term = wp_insert_term($priority_name, 'mmhd_ticket_priority');
+        }
+
+        if (is_wp_error($term)) {
+            continue;
+        }
+
+        $term_id = is_array($term) ? (int) $term['term_id'] : (int) $term;
+
+        // Keep any color the site already set for an existing term.
+        if ($term_id && !get_term_meta($term_id, 'priority_color', true)) {
+            update_term_meta($term_id, 'priority_color', $priority_color);
+        }
+    }
+
+    update_option('mmhd_default_priorities_seeded', 1);
+}
+add_action('init', 'mmhd_seed_default_priorities', 20);
+
+/**
  * Build threading headers (In-Reply-To / References) for a ticket so every
  * email sent about it — ticket creation, admin replies, unseen-reply emails,
  * close notifications — stays in the same conversation thread as the original
