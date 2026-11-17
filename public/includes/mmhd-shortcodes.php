@@ -618,15 +618,26 @@ function mmhd_profile_content()
 
     $current_user = wp_get_current_user();
     $user_id = get_current_user_id();
-    // Save the Edits.
 
-    if (isset($_POST['first_name']) && isset($_POST['last_name'])) {
-        // phpcs:ignore WordPress.Security.NonceVerification.Missing
+    // Validate the profile nonce once for any profile update request, then
+    // reuse the result below. This keeps the nonce check impossible to bypass
+    // through one of the individual blocks.
+    $is_profile_submission = isset($_POST['first_name'], $_POST['last_name'])
+        || (isset($_FILES['profile_picture']['error']) && $_FILES['profile_picture']['error'] !== UPLOAD_ERR_NO_FILE)
+        || !empty($_POST['password'])
+        || !empty($_POST['confirm_password']);
+
+    if ($is_profile_submission) {
         $profile_nonce = isset($_POST['mmhd_profile_nonce']) ? sanitize_text_field(wp_unslash($_POST['mmhd_profile_nonce'])) : '';
-        if ($profile_nonce === '' || ! wp_verify_nonce($profile_nonce, 'mmhd_update_profile')) {
+        if ($user_id <= 0 || $profile_nonce === '' || !wp_verify_nonce($profile_nonce, 'mmhd_update_profile')) {
             echo '<p style="color:red;">Nonce verification failed</p>';
             return;
         }
+    }
+
+    // Save the Edits.
+
+    if (isset($_POST['first_name']) && isset($_POST['last_name'])) {
         $first_name = sanitize_text_field(wp_unslash($_POST['first_name']));
         $last_name = sanitize_text_field(wp_unslash($_POST['last_name']));
 
@@ -649,13 +660,6 @@ function mmhd_profile_content()
         }
     }
     if (isset($_FILES['profile_picture']['error']) && $_FILES['profile_picture']['error'] !== UPLOAD_ERR_NO_FILE) { // Check for file and no error code for no file
-        // phpcs:ignore WordPress.Security.NonceVerification.Missing
-        $profile_nonce = isset($_POST['mmhd_profile_nonce']) ? sanitize_text_field(wp_unslash($_POST['mmhd_profile_nonce'])) : '';
-        if ($profile_nonce === '' || !wp_verify_nonce($profile_nonce, 'mmhd_update_profile')) {
-            echo '<p style="color:red;">Nonce verification failed</p>';
-            return;
-        }
-
         $max_size = 5 * 1024 * 1024; // 5MB in bytes
 
         $file_size = isset($_FILES['profile_picture']['size']) ? intval(wp_unslash($_FILES['profile_picture']['size'])) : 0;
@@ -692,12 +696,6 @@ function mmhd_profile_content()
         }
     }
     if (!empty($_POST['password']) && !empty($_POST['confirm_password'])) {
-        // phpcs:ignore WordPress.Security.NonceVerification.Missing
-        $profile_nonce = isset($_POST['mmhd_profile_nonce']) ? sanitize_text_field(wp_unslash($_POST['mmhd_profile_nonce'])) : '';
-        if ($profile_nonce === '' || ! wp_verify_nonce($profile_nonce, 'mmhd_update_profile')) {
-            echo '<p style="color:red;">Nonce verification failed</p>';
-            return;
-        }
         // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
         $password = isset($_POST['password']) ? wp_unslash($_POST['password']) : '';
         // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized

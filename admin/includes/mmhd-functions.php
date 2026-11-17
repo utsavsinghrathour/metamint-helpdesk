@@ -1076,27 +1076,10 @@ function mmhd_save_ticket_assignment_settings()
 add_action('wp_ajax_mmhd_create_ticket', 'mmhd_create_ticket');
 function mmhd_create_ticket()
 {
-    // Verify nonce (accept legacy and refactored keys/action names for compatibility)
-    $nonce = '';
-    if (isset($_POST['nonce'])) {
-        $nonce = sanitize_text_field(wp_unslash($_POST['nonce']));
-    } elseif (isset($_POST['mmhd_create_ticket_nonce'])) {
-        $nonce = sanitize_text_field(wp_unslash($_POST['mmhd_create_ticket_nonce']));
-    }
-
-    $valid_nonce = false;
-    if ($nonce !== '') {
-        $valid_nonce = wp_verify_nonce($nonce, 'mmhd_create_ticket_action') ||
-            wp_verify_nonce($nonce, 'mmhd_create_ticket_action');
-    }
-
-    if (!$valid_nonce) {
-        wp_send_json_error(['message' => 'Security check failed']);
-        wp_die();
-    }
+    check_ajax_referer('mmhd_create_ticket_action', 'nonce');
 
     if (!current_user_can('mmhd_access_dashboard')) {
-        wp_send_json_error(['message' => 'Insufficient permissions']);
+        wp_send_json_error(['message' => 'Insufficient permissions'], 403);
         wp_die();
     }
 
@@ -2401,10 +2384,10 @@ function mmhd_fetch_emails_handler()
 // cron job to fetch emails
 
 
-add_action('wp_ajax_mmhd_update_ticket_category', 'handle_update_ticket_category');
+add_action('wp_ajax_mmhd_update_ticket_category', 'mmhd_handle_update_ticket_category');
 
 // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedFunctionFound
-function handle_update_ticket_category()
+function mmhd_handle_update_ticket_category()
 {
     // Verify nonce
     if (!isset($_POST['nonce']) || !wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['nonce'])), 'mmhd_update_ticket_category_action')) {
@@ -2454,9 +2437,9 @@ function handle_update_ticket_category()
 }
 
 // Set default taxonomy term for mmhd_ticket_category when a ticket is created
-add_action('save_post', 'set_default_taxonomy_term', 10, 3);
+add_action('save_post', 'mmhd_set_default_taxonomy_term', 10, 3);
 // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedFunctionFound
-function set_default_taxonomy_term($post_id, $post, $update)
+function mmhd_set_default_taxonomy_term($post_id, $post, $update)
 {
     // Check if this is the correct post type
     if ($post->post_type !== 'mmhd_ticket') {
@@ -2464,7 +2447,7 @@ function set_default_taxonomy_term($post_id, $post, $update)
     }
 
     // Prevent infinite loops by removing the action temporarily
-    remove_action('save_post', 'set_default_taxonomy_term');
+    remove_action('save_post', 'mmhd_set_default_taxonomy_term');
 
     // Check if the post already has terms for the taxonomy
     $taxonomy = 'mmhd_ticket_category';
@@ -2479,18 +2462,18 @@ function set_default_taxonomy_term($post_id, $post, $update)
     }
 
     // Re-add the action
-    add_action('save_post', 'set_default_taxonomy_term', 10, 3);
+    add_action('save_post', 'mmhd_set_default_taxonomy_term', 10, 3);
 }
 
 
 // adding a custom meta field in the user profile
-add_action('show_user_profile', 'add_mmhd_user_meta_fields');
-add_action('edit_user_profile', 'add_mmhd_user_meta_fields');
-add_action('personal_options_update', 'save_mmhd_user_meta_fields');
-add_action('edit_user_profile_update', 'save_mmhd_user_meta_fields');
+add_action('show_user_profile', 'mmhd_add_user_meta_fields');
+add_action('edit_user_profile', 'mmhd_add_user_meta_fields');
+add_action('personal_options_update', 'mmhd_save_user_meta_fields');
+add_action('edit_user_profile_update', 'mmhd_save_user_meta_fields');
 
 // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedFunctionFound
-function add_mmhd_user_meta_fields($user)
+function mmhd_add_user_meta_fields($user)
 {
     $user_location = get_user_meta($user->ID, 'mmhd_user_location', true);
 ?>
@@ -2529,7 +2512,7 @@ function add_mmhd_user_meta_fields($user)
 }
 
 // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedFunctionFound
-function save_mmhd_user_meta_fields($user_id)
+function mmhd_save_user_meta_fields($user_id)
 {
     if (!current_user_can('edit_user', $user_id)) {
         return false;
@@ -2550,7 +2533,7 @@ function save_mmhd_user_meta_fields($user_id)
 
 // Automatically assign a ticket to support staff. Email fetch can enforce strict default-agent-only assignment.
 // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedFunctionFound
-function auto_assign_ticket_to_support_staff($prefer_default_agent = false, $strict_default_only = false)
+function mmhd_auto_assign_ticket_to_support_staff($prefer_default_agent = false, $strict_default_only = false)
 {
     // Match eligible users with roles shown in settings "Auto-assign to".
     $support_staff = get_users(array(

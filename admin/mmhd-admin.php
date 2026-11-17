@@ -115,20 +115,17 @@ function mmhd_add_admin_menu()
 
 function mmhd_update_taxonomy_order()
 {
-    $nonce = isset($_POST['nonce']) ? sanitize_text_field(wp_unslash($_POST['nonce'])) : '';
-    if ($nonce === '' || !wp_verify_nonce($nonce, 'taxonomy_order_nonce')) {
-        wp_send_json_error('Invalid nonce');
-    }
+    check_ajax_referer('taxonomy_order_nonce', 'nonce');
 
     if (!current_user_can('manage_categories')) {
-        wp_send_json_error('Insufficient permissions');
+        wp_send_json_error('Insufficient permissions', 403);
     }
 
     if (!isset($_POST['order']) || !is_array($_POST['order'])) {
         wp_send_json_error('Invalid order data');
     }
 
-    $term_order = array_map('intval', $_POST['order']);
+    $term_order = array_map('absint', wp_unslash($_POST['order']));
 
     foreach ($term_order as $index => $term_id) {
         if ($term_id) {

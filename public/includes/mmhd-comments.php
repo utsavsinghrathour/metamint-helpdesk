@@ -37,6 +37,7 @@ function mmhd_add_tinymce_to_comments($defaults)
         $value = get_post_meta($tid, '_mmhd_ticket_status', true);
 ?>
 <div class="mmhd-status-selector">
+    <?php wp_nonce_field('mmhd_reply_action', 'mmhd_reply_nonce'); ?>
     <label for="mmhd_ticket_status_comment"><?php esc_html_e('Select Status *', 'metamint-helpdesk') ?></label>
     <select name="mmhd_ticket_status_comment" id="mmhd_ticket_status_comment" required>
         <option value="open" <?php selected($value, 'new'); ?>>New</option>
@@ -65,25 +66,21 @@ function mmhd_add_tinymce_to_comments($defaults)
     return $defaults;
 }
 
-add_action('wp_enqueue_scripts', 'mmhd_restore_editor_styles', 99);
-function mmhd_restore_editor_styles()
-{
-    // phpcs:ignore WordPress.Security.NonceVerification.Recommended
-    if (!isset($_GET['tid'])) {
-        if (!wp_style_is('editor-buttons', 'enqueued')) {
-            wp_enqueue_style('editor-buttons');
-        }
-    }
-}
+// TinyMCE and its editor-buttons stylesheet are loaded by wp_editor() itself
+// on the ticket pages that render the reply form.
 
 
 //Saving Comments status dropdown field
 function mmhd_save_custom_comment_field($comment_id)
 {
-    // phpcs:ignore WordPress.Security.NonceVerification.Missing
+    // The status dropdown is only rendered for staff on a ticket reply form.
+    // Verify the reply nonce before changing ticket state.
+    if (!isset($_POST['mmhd_reply_nonce']) || !wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['mmhd_reply_nonce'])), 'mmhd_reply_action')) {
+        return;
+    }
+
     $dropdown_value = isset($_POST['mmhd_ticket_status_comment']) ? sanitize_text_field(wp_unslash($_POST['mmhd_ticket_status_comment'])) : '';
-    // phpcs:ignore WordPress.Security.NonceVerification.Missing
-    $comment_post_id = isset($_POST['comment_post_ID']) ? (int) $_POST['comment_post_ID'] : 0;
+    $comment_post_id = isset($_POST['comment_post_ID']) ? absint(wp_unslash($_POST['comment_post_ID'])) : 0;
 
     if ($dropdown_value === '' || $comment_post_id <= 0) {
         return;
@@ -94,7 +91,7 @@ function mmhd_save_custom_comment_field($comment_id)
         return;
     }
 
-    if (!current_user_can('mmhd_access_dashboard') && !current_user_can('manage_options')) {
+    if (!current_user_can('mmhd_access_dashboard') && !current_user_can('edit_post', $comment_post_id)) {
         return;
     }
 
