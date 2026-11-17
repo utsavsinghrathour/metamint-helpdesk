@@ -1044,9 +1044,32 @@ function mmhd_secure_login_endpoint(WP_REST_Request $request)
     $login = $request->get_param('email');
     $password = $request->get_param('password');
 
+    // If no credentials provided, allow token generation for an already-logged-in
+    // user via the WordPress session nonce (X-WP-Nonce). This is used by the
+    // frontend widget when the user is already authenticated through wp-login.
     if (empty($login) || empty($password)) {
-        mmhd_log_debug('Login failed: missing username/email or password.');
-        return new WP_Error('missing_credentials', 'Username and password are required.', array('status' => 400));
+        if (!is_user_logged_in()) {
+            return new WP_Error('missing_credentials', 'Username and password are required.', array('status' => 400));
+        }
+
+        $user = wp_get_current_user();
+
+        $rest_nonce = mmhd_create_session_nonce($user->ID);
+
+        $token = mmhd_generate_token($user);
+        if (is_wp_error($token)) {
+            return new WP_Error('jwt_error', 'Error generating token: ' . $token->get_error_message(), array('status' => 500));
+        }
+
+        return array(
+            'success' => true,
+            'token' => $token,
+            'user_id' => $user->ID,
+            'user_email' => $user->user_email,
+            'user_display_name' => $user->display_name,
+            'expires_at' => time() + (DAY_IN_SECONDS * 7),
+            'rest_nonce' => $rest_nonce,
+        );
     }
 
     $ip = mmhd_get_client_ip();
