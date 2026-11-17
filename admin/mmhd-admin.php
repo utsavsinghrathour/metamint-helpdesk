@@ -422,3 +422,43 @@ function mmhd_enqueue_admin_bar_ticket_badge_styles()
 }
 add_action('admin_enqueue_scripts', 'mmhd_enqueue_admin_bar_ticket_badge_styles');
 add_action('wp_enqueue_scripts', 'mmhd_enqueue_admin_bar_ticket_badge_styles');
+
+
+/**
+ * Add a "Shortcode" column to the FAQ category management table
+ * (edit-tags.php?taxonomy=mmhd_faq_category&post_type=mmhd_faq)
+ */
+add_filter('manage_edit-mmhd_faq_category_columns', 'mmhd_add_faq_category_shortcode_column');
+function mmhd_add_faq_category_shortcode_column($columns)
+{
+    $new_columns = array();
+
+    foreach ($columns as $key => $label) {
+        $new_columns[$key] = $label;
+
+        // Insert the Shortcode column right after the Name column.
+        if ('name' === $key) {
+            $new_columns['shortcode'] = __('Shortcode', 'metamint-helpdesk');
+        }
+    }
+
+    return $new_columns;
+}
+
+add_action('manage_mmhd_faq_category_custom_column', 'mmhd_render_faq_category_shortcode_column', 10, 3);
+function mmhd_render_faq_category_shortcode_column($value, $column_name, $term_id)
+{
+    if ('shortcode' !== $column_name) {
+        return;
+    }
+
+    $term = get_term($term_id);
+    if (!$term || is_wp_error($term)) {
+        return;
+    }
+
+    $shortcode = sprintf('[mmhd_faq category="%s" accordion="true"]', esc_attr($term->slug));
+
+    echo '<code style="font-size:12px; font-family:monospace; background:#f1f5f9; padding:2px 4px; border-radius:3px; border:1px solid #cbd5e1;">' . esc_html($shortcode) . '</code>';
+    echo '<div style="font-size:11px; color:#64748b; margin-top:2px;">' . esc_html__('Copy to display this category FAQs.', 'metamint-helpdesk') . '</div>';
+}

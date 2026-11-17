@@ -705,4 +705,18 @@ jQuery(document).ready(function ($) {
       : { year: "numeric", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" };
     el.textContent = d.toLocaleString(undefined, options);
   });
+
+  // FAQ shortcode accordion toggle
+  document.addEventListener("click", function (e) {
+    var btn = e.target.closest(".mmhd-shortcode-faq-question");
+    if (!btn) return;
+    var item = btn.closest(".mmhd-shortcode-faq-item");
+    if (!item) return;
+    var answer = item.querySelector(".mmhd-shortcode-faq-answer");
+    var icon = btn.querySelector(".mm-faq-icon");
+    var expanded = "true" === btn.getAttribute("aria-expanded");
+    btn.setAttribute("aria-expanded", expanded ? "false" : "true");
+    answer.hidden = expanded;
+    if (icon) icon.textContent = expanded ? "+" : "−";
+  });
 });
