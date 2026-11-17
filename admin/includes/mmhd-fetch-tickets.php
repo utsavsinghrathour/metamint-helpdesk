@@ -888,7 +888,7 @@ function mmhd_fetch_emails()
                 $existing_message_ids[] = $message_id;
 
                 // Assign the ticket to a support staff member
-                $assignee = auto_assign_ticket_to_support_staff(true);
+                $assignee = mmhd_auto_assign_ticket_to_support_staff(true);
 
                 // If an assignee was found, add it as post meta
                 if ($assignee) {

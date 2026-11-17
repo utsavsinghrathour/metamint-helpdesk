@@ -618,15 +618,26 @@ function mmhd_profile_content()
 
     $current_user = wp_get_current_user();
     $user_id = get_current_user_id();
-    // Save the Edits.
 
-    if (isset($_POST['first_name']) && isset($_POST['last_name'])) {
-        // phpcs:ignore WordPress.Security.NonceVerification.Missing
+    // Validate the profile nonce once for any profile update request, then
+    // reuse the result below. This keeps the nonce check impossible to bypass
+    // through one of the individual blocks.
+    $is_profile_submission = isset($_POST['first_name'], $_POST['last_name'])
+        || (isset($_FILES['profile_picture']['error']) && $_FILES['profile_picture']['error'] !== UPLOAD_ERR_NO_FILE)
+        || !empty($_POST['password'])
+        || !empty($_POST['confirm_password']);
+
+    if ($is_profile_submission) {
         $profile_nonce = isset($_POST['mmhd_profile_nonce']) ? sanitize_text_field(wp_unslash($_POST['mmhd_profile_nonce'])) : '';
-        if ($profile_nonce === '' || ! wp_verify_nonce($profile_nonce, 'mmhd_update_profile')) {
+        if ($user_id <= 0 || $profile_nonce === '' || !wp_verify_nonce($profile_nonce, 'mmhd_update_profile')) {
             echo '<p style="color:red;">Nonce verification failed</p>';
             return;
         }
+    }
+
+    // Save the Edits.
+
+    if (isset($_POST['first_name']) && isset($_POST['last_name'])) {
         $first_name = sanitize_text_field(wp_unslash($_POST['first_name']));
         $last_name = sanitize_text_field(wp_unslash($_POST['last_name']));
 
@@ -649,13 +660,6 @@ function mmhd_profile_content()
         }
     }
     if (isset($_FILES['profile_picture']['error']) && $_FILES['profile_picture']['error'] !== UPLOAD_ERR_NO_FILE) { // Check for file and no error code for no file
-        // phpcs:ignore WordPress.Security.NonceVerification.Missing
-        $profile_nonce = isset($_POST['mmhd_profile_nonce']) ? sanitize_text_field(wp_unslash($_POST['mmhd_profile_nonce'])) : '';
-        if ($profile_nonce === '' || !wp_verify_nonce($profile_nonce, 'mmhd_update_profile')) {
-            echo '<p style="color:red;">Nonce verification failed</p>';
-            return;
-        }
-
         $max_size = 5 * 1024 * 1024; // 5MB in bytes
 
         $file_size = isset($_FILES['profile_picture']['size']) ? intval(wp_unslash($_FILES['profile_picture']['size'])) : 0;
@@ -692,12 +696,6 @@ function mmhd_profile_content()
         }
     }
     if (!empty($_POST['password']) && !empty($_POST['confirm_password'])) {
-        // phpcs:ignore WordPress.Security.NonceVerification.Missing
-        $profile_nonce = isset($_POST['mmhd_profile_nonce']) ? sanitize_text_field(wp_unslash($_POST['mmhd_profile_nonce'])) : '';
-        if ($profile_nonce === '' || ! wp_verify_nonce($profile_nonce, 'mmhd_update_profile')) {
-            echo '<p style="color:red;">Nonce verification failed</p>';
-            return;
-        }
         // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
         $password = isset($_POST['password']) ? wp_unslash($_POST['password']) : '';
         // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
@@ -1584,3 +1582,126 @@ function mmhd_login_form_shortcode()
     return ob_get_clean();
 }
 add_shortcode('mmhd_login_form', 'mmhd_login_form_shortcode');
+
+
+/**
+ * FAQ Shortcode
+ *
+ * [mmhd_faq accordion="true" category="slug"]
+ *
+ * Parameters:
+ *   accordion - 'true' | 'false' (default: false)
+ *   category  - FAQ category slug (optional; if omitted, all FAQs are shown)
+ *
+ * Outputs FAQs in either accordion or question-answer format and includes
+ * Google FAQPage JSON-LD schema (https://schema.org/FAQPage).
+ */
+add_shortcode('mmhd_faq', 'mmhd_faq_shortcode');
+function mmhd_faq_shortcode($atts)
+{
+    $atts = shortcode_atts(array(
+        'accordion' => 'false',
+        'category'  => '',
+    ), $atts, 'mmhd_faq');
+
+    $accordion = filter_var($atts['accordion'], FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
+    if ($accordion === null) {
+        $accordion = ('true' === strtolower($atts['accordion']));
+    }
+
+    $category = sanitize_text_field($atts['category']);
+
+    $args = array(
+        'post_type'      => 'mmhd_faq',
+        'post_status'    => 'publish',
+        'posts_per_page' => -1,
+        'orderby'        => 'menu_order title',
+        'order'          => 'ASC',
+    );
+
+    if (!empty($category)) {
+        $args['tax_query'] = array(
+            array(
+                'taxonomy' => 'mmhd_faq_category',
+                'field'    => 'slug',
+                'terms'    => $category,
+            ),
+        );
+    }
+
+    $query = new WP_Query($args);
+
+    if (!$query->have_posts()) {
+        return '<div class="mmhd-container"><p>' . esc_html__('No FAQs found.', 'metamint-helpdesk') . '</p></div>';
+    }
+
+    ob_start();
+
+    $faq_items = array();
+    while ($query->have_posts()) {
+        $query->the_post();
+        $faq_items[] = array(
+            'id'      => get_the_ID(),
+            'title'   => get_the_title(),
+            'content' => get_the_content(),
+        );
+    }
+    wp_reset_postdata();
+
+    // ------------------------------------------------------------------
+    // Google FAQPage JSON-LD schema (https://developers.google.com/search/docs/appearance/structured-data/faq-page)
+    // ------------------------------------------------------------------
+    $schema_main_entity = array();
+    foreach ($faq_items as $faq) {
+        $schema_main_entity[] = array(
+            '@type' => 'Question',
+            'name'  => $faq['title'],
+            'acceptedAnswer' => array(
+                '@type' => 'Answer',
+                'text'  => wp_strip_all_tags($faq['content']),
+            ),
+        );
+    }
+
+    $schema = array(
+        '@context'   => 'https://schema.org',
+        '@type'      => 'FAQPage',
+        'mainEntity' => $schema_main_entity,
+    );
+    ?>
+    <div class="mmhd-shortcode-faq-container mmhd-shortcode-faq-mode-<?php echo esc_attr($accordion ? 'accordion' : 'qa'); ?>">
+        <script type="application/ld+json"><?php echo wp_json_encode($schema, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE); ?></script>
+
+        <?php if ($accordion) : ?>
+            <div class="mmhd-shortcode-faq-accordion" id="mmhd-shortcode-faq-accordion">
+                <?php foreach ($faq_items as $faq) : ?>
+                    <div class="mmhd-shortcode-faq-item" id="mmhd-shortcode-faq-item-<?php echo absint($faq['id']); ?>">
+                        <button class="mmhd-shortcode-faq-question"
+                                type="button"
+                                aria-expanded="false"
+                                aria-controls="mmhd-shortcode-faq-answer-<?php echo absint($faq['id']); ?>">
+                            <?php echo esc_html($faq['title']); ?>
+                            <span class="mm-faq-icon">+</span>
+                        </button>
+                        <div class="mmhd-shortcode-faq-answer" id="mmhd-shortcode-faq-answer-<?php echo absint($faq['id']); ?>" hidden>
+                            <?php echo apply_filters('the_content', $faq['content']); ?>
+                        </div>
+                    </div>
+                <?php endforeach; ?>
+            </div>
+        <?php else : ?>
+            <div class="mmhd-shortcode-faq-qa">
+                <?php foreach ($faq_items as $faq) : ?>
+                    <div class="mmhd-shortcode-faq-qa-item">
+                        <h3 class="mmhd-shortcode-faq-question"><?php echo esc_html($faq['title']); ?></h3>
+                        <div class="mmhd-shortcode-faq-answer"><?php echo apply_filters('the_content', $faq['content']); ?></div>
+                    </div>
+                <?php endforeach; ?>
+            </div>
+        <?php endif; ?>
+    </div>
+    <?php
+    $output = ob_get_clean();
+
+    return $output;
+}

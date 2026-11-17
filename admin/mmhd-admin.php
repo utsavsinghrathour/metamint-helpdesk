@@ -115,20 +115,17 @@ function mmhd_add_admin_menu()
 
 function mmhd_update_taxonomy_order()
 {
-    $nonce = isset($_POST['nonce']) ? sanitize_text_field(wp_unslash($_POST['nonce'])) : '';
-    if ($nonce === '' || !wp_verify_nonce($nonce, 'taxonomy_order_nonce')) {
-        wp_send_json_error('Invalid nonce');
-    }
+    check_ajax_referer('taxonomy_order_nonce', 'nonce');
 
     if (!current_user_can('manage_categories')) {
-        wp_send_json_error('Insufficient permissions');
+        wp_send_json_error('Insufficient permissions', 403);
     }
 
     if (!isset($_POST['order']) || !is_array($_POST['order'])) {
         wp_send_json_error('Invalid order data');
     }
 
-    $term_order = array_map('intval', $_POST['order']);
+    $term_order = array_map('absint', wp_unslash($_POST['order']));
 
     foreach ($term_order as $index => $term_id) {
         if ($term_id) {
@@ -425,3 +422,43 @@ function mmhd_enqueue_admin_bar_ticket_badge_styles()
 }
 add_action('admin_enqueue_scripts', 'mmhd_enqueue_admin_bar_ticket_badge_styles');
 add_action('wp_enqueue_scripts', 'mmhd_enqueue_admin_bar_ticket_badge_styles');
+
+
+/**
+ * Add a "Shortcode" column to the FAQ category management table
+ * (edit-tags.php?taxonomy=mmhd_faq_category&post_type=mmhd_faq)
+ */
+add_filter('manage_edit-mmhd_faq_category_columns', 'mmhd_add_faq_category_shortcode_column');
+function mmhd_add_faq_category_shortcode_column($columns)
+{
+    $new_columns = array();
+
+    foreach ($columns as $key => $label) {
+        $new_columns[$key] = $label;
+
+        // Insert the Shortcode column right after the Name column.
+        if ('name' === $key) {
+            $new_columns['shortcode'] = __('Shortcode', 'metamint-helpdesk');
+        }
+    }
+
+    return $new_columns;
+}
+
+add_action('manage_mmhd_faq_category_custom_column', 'mmhd_render_faq_category_shortcode_column', 10, 3);
+function mmhd_render_faq_category_shortcode_column($value, $column_name, $term_id)
+{
+    if ('shortcode' !== $column_name) {
+        return;
+    }
+
+    $term = get_term($term_id);
+    if (!$term || is_wp_error($term)) {
+        return;
+    }
+
+    $shortcode = sprintf('[mmhd_faq category="%s" accordion="true"]', esc_attr($term->slug));
+
+    echo '<code style="font-size:12px; font-family:monospace; background:#f1f5f9; padding:2px 4px; border-radius:3px; border:1px solid #cbd5e1;">' . esc_html($shortcode) . '</code>';
+    echo '<div style="font-size:11px; color:#64748b; margin-top:2px;">' . esc_html__('Copy to display this category FAQs.', 'metamint-helpdesk') . '</div>';
+}

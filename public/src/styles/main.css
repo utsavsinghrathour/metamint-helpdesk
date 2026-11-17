@@ -606,8 +606,8 @@ button.no-bg,
   aspect-ratio: 50 / 50;
   display: flex;
   justify-content: center;
-  max-height: 44px;
-  max-width: 44px;
+  max-height: 50px;
+  max-width: 50px;
   padding: 10px;
 }
 
@@ -899,7 +899,8 @@ button.no-bg,
   padding-bottom: 60px;
 }
 
-.mmhd-body-content-wrapper-home:has(#mmhd-bot-panel) .mmhd-single-message-faq-field {
+.mmhd-body-content-wrapper-home:has(#mmhd-bot-panel)
+  .mmhd-single-message-faq-field {
   margin-bottom: 95px;
 }
 

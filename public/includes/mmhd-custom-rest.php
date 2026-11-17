@@ -1044,9 +1044,32 @@ function mmhd_secure_login_endpoint(WP_REST_Request $request)
     $login = $request->get_param('email');
     $password = $request->get_param('password');
 
+    // If no credentials provided, allow token generation for an already-logged-in
+    // user via the WordPress session nonce (X-WP-Nonce). This is used by the
+    // frontend widget when the user is already authenticated through wp-login.
     if (empty($login) || empty($password)) {
-        mmhd_log_debug('Login failed: missing username/email or password.');
-        return new WP_Error('missing_credentials', 'Username and password are required.', array('status' => 400));
+        if (!is_user_logged_in()) {
+            return new WP_Error('missing_credentials', 'Username and password are required.', array('status' => 400));
+        }
+
+        $user = wp_get_current_user();
+
+        $rest_nonce = mmhd_create_session_nonce($user->ID);
+
+        $token = mmhd_generate_token($user);
+        if (is_wp_error($token)) {
+            return new WP_Error('jwt_error', 'Error generating token: ' . $token->get_error_message(), array('status' => 500));
+        }
+
+        return array(
+            'success' => true,
+            'token' => $token,
+            'user_id' => $user->ID,
+            'user_email' => $user->user_email,
+            'user_display_name' => $user->display_name,
+            'expires_at' => time() + (DAY_IN_SECONDS * 7),
+            'rest_nonce' => $rest_nonce,
+        );
     }
 
     $ip = mmhd_get_client_ip();
@@ -1477,9 +1500,9 @@ function mmhd_handle_selected_staff(WP_REST_Request $request)
     // If the configured staff cannot be resolved, attempt to select the least-loaded support staff dynamically.
     if (!$staff_user) {
         $assigned_name = null;
-        if (function_exists('auto_assign_ticket_to_support_staff')) {
+        if (function_exists('mmhd_auto_assign_ticket_to_support_staff')) {
             // This returns a display name for the chosen staff member
-            $assigned_name = auto_assign_ticket_to_support_staff(false, false);
+            $assigned_name = mmhd_auto_assign_ticket_to_support_staff(false, false);
         }
 
         if (!empty($assigned_name)) {
@@ -1635,7 +1658,7 @@ function mmhd_handle_ticket_creation($data)
     // Auto-assign if enabled in Advanced Settings
     $settings = get_option('mmhd_advanced_settings', []);
     if (!empty($settings['enable_auto_assign'])) {
-        $assigned = auto_assign_ticket_to_support_staff();
+        $assigned = mmhd_auto_assign_ticket_to_support_staff();
         update_post_meta($ticket, 'ticket_assignee', $assigned);
         mmhd_store_ticket_assignee_id($ticket, $assigned);
     }
@@ -2060,8 +2083,12 @@ function mmhd_send_chat_transcript(WP_REST_Request $request)
                 $avatar_url = $avatar_email ? get_avatar_url($avatar_email, array('size' => 32)) : '';
             }
             if (!$avatar_url) {
-                $avatar_url = 'https://www.gravatar.com/avatar/00000000000000000000000000000000?d=mp&s=32';
+                $avatar_url = function_exists('mmhd_get_default_avatar_url')
+                    ? mmhd_get_default_avatar_url(32)
+                    : get_avatar_url('', array('size' => 32, 'default' => 'mystery', 'force_default' => true));
             }
+            $avatar_url = esc_url($avatar_url);
+            $sender_name_safe = esc_html($sender_name);
 
             $message_text = wp_kses_post($comment->comment_content);
             $time = get_comment_time(get_option('time_format'), true, $comment);
@@ -2079,7 +2106,7 @@ function mmhd_send_chat_transcript(WP_REST_Request $request)
             <tr>
                 <td style="padding:4px 0;text-align:right;padding-right:12px;">
                     <table role="presentation" cellpadding="0" cellspacing="0" style="display:inline-block;max-width:80%">
-                        ' . (!$is_same_sender ? '<tr><td style="padding:0 0 2px 0;font-size:11px;color:#999;text-align:right">' . $sender_name . '</td></tr>' : '') . '
+                        ' . (!$is_same_sender ? '<tr><td style="padding:0 0 2px 0;font-size:11px;color:#999;text-align:right">' . $sender_name_safe . '</td></tr>' : '') . '
                         <tr>
                             <td style="background-color:' . $bubble_color . ';color:' . $text_color . ';border:' . $border . ';border-radius:10px;padding:8px 12px;font-size:14px;line-height:1.4;word-wrap:break-word">
                                 ' . $message_text . '
@@ -2097,7 +2124,7 @@ function mmhd_send_chat_transcript(WP_REST_Request $request)
                     : '<td width="38" valign="top" style="padding-right:8px;"><img src="' . $avatar_url . '" alt="" width="30" height="30" style="border-radius:50%;display:block;width:30px;height:30px;" /></td>';
                 $name_row = $is_same_sender
                     ? ''
-                    : '<tr><td style="padding:0 0 2px 0;font-size:11px;color:#999;text-align:left;">' . $sender_name . '</td></tr>';
+                    : '<tr><td style="padding:0 0 2px 0;font-size:11px;color:#999;text-align:left;">' . $sender_name_safe . '</td></tr>';
 
                 $messages_html .= '
             <tr>
