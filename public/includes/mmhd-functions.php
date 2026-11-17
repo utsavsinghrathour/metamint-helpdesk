@@ -130,20 +130,20 @@ function mmhd_maybe_create_ticket_notes_table()
         $charset_collate = $wpdb->get_charset_collate();
 
         $sql = "CREATE TABLE $table_name (
-            id BIGINT(20) UNSIGNED NOT NULL AUTO_INCREMENT,
-            ticket_id BIGINT(20) UNSIGNED NOT NULL,
-            user_id BIGINT(20) UNSIGNED NOT NULL,
-            note_content LONGTEXT NOT NULL,
-            created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-            is_private TINYINT(1) NOT NULL DEFAULT 0,
-            type VARCHAR(255) NOT NULL DEFAULT 'user_note',
-            status VARCHAR(20) NOT NULL DEFAULT 'unread',
+            id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+            ticket_id bigint(20) unsigned NOT NULL,
+            user_id bigint(20) unsigned NOT NULL,
+            note_content longtext NOT NULL,
+            created_at datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            is_private tinyint(1) NOT NULL DEFAULT 0,
+            type varchar(255) NOT NULL DEFAULT 'user_note',
+            status varchar(20) NOT NULL DEFAULT 'unread',
             PRIMARY KEY  (id),
             KEY ticket_id (ticket_id),
             KEY user_id (user_id),
             CONSTRAINT fk_mmhd_ticket_notes_faq FOREIGN KEY (ticket_id) REFERENCES {$wpdb->prefix}posts(ID) ON DELETE CASCADE,
             CONSTRAINT fk_mmhd_ticket_notes_user FOREIGN KEY (user_id) REFERENCES {$wpdb->prefix}users(ID) ON DELETE CASCADE
-        ) ENGINE=InnoDB $charset_collate;";
+        ) $charset_collate;";
 
         require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
         dbDelta($sql);
@@ -277,9 +277,9 @@ function mmhd_credentials_page()
 /**
  * Displaying a table to show open tickets after my-account page 
  */
-add_action('woocommerce_after_my_account', 'add_custom_table_to_my_account');
+add_action('woocommerce_after_my_account', 'mmhd_add_custom_table_to_my_account');
 // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedFunctionFound
-function add_custom_table_to_my_account()
+function mmhd_add_custom_table_to_my_account()
 {
 
     if (is_user_logged_in()) {

@@ -335,11 +335,8 @@ const AppContent = ({ imageUrls = { logo: "" } }) => {
         }
       }
       const response = await apiFetch({
-        path: "/jwt-auth/v1/token",
+        path: "/mmhd/v1/login",
         method: "POST",
-        data: {
-          expires_in: duration,
-        },
         includeCredentials: true,
       });
       const now = Math.floor(Date.now() / 1000);

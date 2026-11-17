@@ -65,7 +65,7 @@ jobs:
           echo "new_tag=$NEW_TAG" >> $GITHUB_OUTPUT
           echo "last_tag=$LAST_TAG" >> $GITHUB_OUTPUT
 
-      - name: Update plugin version in PHP file
+      - name: Update plugin version in PHP and readme files
         run: |
           VERSION="${{ steps.tag.outputs.new_tag }}"
           VERSION="${VERSION#metamint-helpdesk-v}"
@@ -79,6 +79,11 @@ jobs:
 
           # Update constant
           sed -i "s/define('MMHD_VERSION', '.*')/define('MMHD_VERSION', '$VERSION')/" "$FILE"
+
+          # Update Stable tag in readme.md
+          if [ -f "readme.md" ]; then
+            sed -i "s/^Stable tag: .*/Stable tag: $VERSION/" readme.md
+          fi
 
       - name: Create full plugin zip
         run: |
