@@ -1669,7 +1669,7 @@ function mmhd_faq_shortcode($atts)
         'mainEntity' => $schema_main_entity,
     );
     ?>
-    <div class="mmhd-shortcode-faq-container mmhd-shortcode-faq-mode-<?php echo esc_attr($accordion ? 'accordion' : 'qa'); ?>">
+    <div class="mmhd-shortcode-faq-container mmhd-shortcode-faq-mode-<?php echo esc_attr($accordion ? 'accordion' : 'qa'); ?> <?php echo esc_attr($accordion ? 'mmhd-shortcode-faq-accordion' : 'mmhd-shortcode-faq-qa'); ?>">
         <script type="application/ld+json"><?php echo wp_json_encode($schema, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE); ?></script>
 
         <?php if ($accordion) : ?>
