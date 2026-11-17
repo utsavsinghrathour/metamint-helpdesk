@@ -51,7 +51,7 @@ $mmhd_td_hidden      = ($mmhd_current_tab === 'ticket-detail' || $mmhd_has_ticke
                             <?php esc_html_e('Conversation Details', 'metamint-helpdesk'); ?>
                         </h3>
                         <button type="button" onclick="backFromTicketDetail()"
-                            class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                            class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-teal-600 hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500">
                             <i class="fas fa-arrow-left mr-2"></i>
                             <?php esc_html_e('Back', 'metamint-helpdesk'); ?>
                         </button>
@@ -81,7 +81,7 @@ $mmhd_td_hidden      = ($mmhd_current_tab === 'ticket-detail' || $mmhd_has_ticke
                                         <?php esc_html_e('Add Reply', 'metamint-helpdesk'); ?>
                                     </label>
                                     <button onclick="showVariablesPopup()"
-                                        class="text-xs text-blue-600 hover:text-blue-800 font-medium" type="button">
+                                        class="text-xs text-teal-600 hover:text-teal-800 font-medium" type="button">
                                         <i class="fas fa-lightbulb mr-1"></i>
                                         <?php esc_html_e('Insert Variables', 'metamint-helpdesk'); ?>
                                     </button>
@@ -105,7 +105,7 @@ $mmhd_td_hidden      = ($mmhd_current_tab === 'ticket-detail' || $mmhd_has_ticke
                                     aria-label="Reply input"></div>
                                 <?php do_action('mmhd_after_reply_editor'); ?>
                                 <button id="send-reply-btn" onclick="addReply()"
-                                    class="mt-2 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                                    class="mt-2 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-teal-600 hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500">
                                     <?php esc_html_e('Send Reply', 'metamint-helpdesk'); ?>
                                 </button>
 
@@ -127,7 +127,7 @@ $mmhd_td_hidden      = ($mmhd_current_tab === 'ticket-detail' || $mmhd_has_ticke
                                         <?php esc_html_e('Add Internal Note', 'metamint-helpdesk'); ?>
                                     </label>
                                     <button onclick="showVariablesPopup()"
-                                        class="text-xs text-blue-600 hover:text-blue-800 font-medium" type="button">
+                                        class="text-xs text-teal-600 hover:text-teal-800 font-medium" type="button">
                                         <i class="fas fa-lightbulb mr-1"></i>
                                         <?php esc_html_e('Insert Variables', 'metamint-helpdesk'); ?>
                                     </button>
@@ -149,7 +149,7 @@ $mmhd_td_hidden      = ($mmhd_current_tab === 'ticket-detail' || $mmhd_has_ticke
                                     data-placeholder="<?php esc_html_e('Type your internal note here...', 'metamint-helpdesk'); ?>">
                                 </div>
                                 <button onclick="addNote()"
-                                    class="mt-2 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-yellow-600 hover:bg-yellow-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500"
+                                    class="mt-2 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-teal-600 hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500"
                                     type="button">
                                     <?php esc_html_e('Add Note', 'metamint-helpdesk'); ?>
                                 </button>
@@ -191,9 +191,9 @@ $mmhd_td_hidden      = ($mmhd_current_tab === 'ticket-detail' || $mmhd_has_ticke
                                         class="w-full border border-gray-300 rounded-md p-2 text-sm focus:ring-blue-500 focus:border-blue-500"
                                         id="ticket-status-select">
                                         <?php foreach ($mmhd_statuses as $status): ?>
-                                        <option value="<?php echo esc_attr($status); ?>">
-                                            <?php echo esc_html(ucfirst(str_replace('-', ' ', $status))); ?>
-                                        </option>
+                                            <option value="<?php echo esc_attr($status); ?>">
+                                                <?php echo esc_html(ucfirst(str_replace('-', ' ', $status))); ?>
+                                            </option>
                                         <?php endforeach; ?>
                                     </select>
                                 </div>
@@ -205,11 +205,11 @@ $mmhd_td_hidden      = ($mmhd_current_tab === 'ticket-detail' || $mmhd_has_ticke
                                         class="w-full border border-gray-300 rounded-md p-2 text-sm focus:ring-blue-500 focus:border-blue-500"
                                         id="ticket-priority-select">
                                         <?php if (!is_wp_error($mmhd_priorities)): ?>
-                                        <?php foreach ($mmhd_priorities as $mmhd_priority): ?>
-                                        <option value="<?php echo esc_attr($mmhd_priority->name); ?>">
-                                            <?php echo esc_html($mmhd_priority->name); ?>
-                                        </option>
-                                        <?php endforeach; ?>
+                                            <?php foreach ($mmhd_priorities as $mmhd_priority): ?>
+                                                <option value="<?php echo esc_attr($mmhd_priority->name); ?>">
+                                                    <?php echo esc_html($mmhd_priority->name); ?>
+                                                </option>
+                                            <?php endforeach; ?>
                                         <?php endif; ?>
                                     </select>
                                 </div>
@@ -218,17 +218,17 @@ $mmhd_td_hidden      = ($mmhd_current_tab === 'ticket-detail' || $mmhd_has_ticke
                                     <label class="block text-sm font-medium text-gray-700 mb-1"
                                         for="ticket-assignee-select"><?php esc_html_e('Assignee', 'metamint-helpdesk'); ?></label>
                                     <select onchange="updateTicketAssignee(currentTicket.id, this.value)"
-                                        class="w-full border border-gray-300 rounded-md p-2 text-sm focus:ring-blue-500 focus:border-blue-500"
+                                        class="w-full border border-gray-300 rounded-md p-2 text-sm"
                                         id="ticket-assignee-select">
                                         <?php foreach ($mmhd_agents as $mmhd_agent): ?>
-                                        <?php
+                                            <?php
                                             $mmhd_agent_value = (int) $mmhd_agent->ID;
                                             $mmhd_is_selected = (string) $mmhd_default_agent === (string) $mmhd_agent_value || (string) $mmhd_default_agent === (string) $mmhd_agent->display_name;
                                             ?>
-                                        <option value="<?php echo esc_attr($mmhd_agent_value); ?>"
-                                            <?php selected($mmhd_is_selected, true); ?>>
-                                            <?php echo esc_html($mmhd_agent->display_name); ?>
-                                        </option>
+                                            <option value="<?php echo esc_attr($mmhd_agent_value); ?>"
+                                                <?php selected($mmhd_is_selected, true); ?>>
+                                                <?php echo esc_html($mmhd_agent->display_name); ?>
+                                            </option>
                                         <?php endforeach; ?>
                                     </select>
                                 </div>
@@ -237,17 +237,17 @@ $mmhd_td_hidden      = ($mmhd_current_tab === 'ticket-detail' || $mmhd_has_ticke
                                     <label class="block text-sm font-medium text-gray-700 mb-1"
                                         for="ticket-category-select"><?php esc_html_e('Department', 'metamint-helpdesk'); ?></label>
                                     <select id="ticket-category-select"
-                                        class="w-full border border-gray-300 rounded-md p-2 text-sm focus:ring-blue-500 focus:border-blue-500">
+                                        class="w-full border border-gray-300 rounded-md p-2 text-sm">
                                         <?php if (!empty($mmhd_terms)): ?>
-                                        <?php foreach ($mmhd_terms as $term): ?>
-                                        <option value="<?php echo esc_attr($term->term_id); ?>"
-                                            <?php selected((string) ($mmhd_default_category_obj ? $mmhd_default_category_obj->term_id : ''), (string) $term->term_id); ?>>
-                                            <?php echo esc_html($term->name); ?>
-                                        </option>
-                                        <?php endforeach; ?>
+                                            <?php foreach ($mmhd_terms as $term): ?>
+                                                <option value="<?php echo esc_attr($term->term_id); ?>"
+                                                    <?php selected((string) ($mmhd_default_category_obj ? $mmhd_default_category_obj->term_id : ''), (string) $term->term_id); ?>>
+                                                    <?php echo esc_html($term->name); ?>
+                                                </option>
+                                            <?php endforeach; ?>
                                         <?php else: ?>
-                                        <option value=""><?php esc_html_e('No departments found', 'metamint-helpdesk'); ?>
-                                        </option>
+                                            <option value=""><?php esc_html_e('No departments found', 'metamint-helpdesk'); ?>
+                                            </option>
                                         <?php endif; ?>
                                     </select>
                                 </div>

@@ -7,7 +7,7 @@
    CSS VARIABLES
 ---------------------------------------------------------- */
 :root {
-  --mmhd-primary-color: #007cba;
+  --mmhd-primary-color: #076c45;
   --mmhd-brand-color: #076c45;
   --mmhd-brand-color-light: #e7f3ec;
   --mmhd-color-white: #ffffff;
@@ -222,12 +222,9 @@
   font-size: 14px;
 }
 
-.mmhd-table-content
-  td:nth-child(2):not(.mmhd-my-credentials td:nth-child(2)),
-.mmhd-table-content
-  td:nth-child(4):not(.mmhd-my-credentials td:nth-child(4)),
-.mmhd-table-content
-  td:nth-child(5):not(.mmhd-my-credentials td:nth-child(5)) {
+.mmhd-table-content td:nth-child(2):not(.mmhd-my-credentials td:nth-child(2)),
+.mmhd-table-content td:nth-child(4):not(.mmhd-my-credentials td:nth-child(4)),
+.mmhd-table-content td:nth-child(5):not(.mmhd-my-credentials td:nth-child(5)) {
   white-space: nowrap;
 }
 
@@ -534,7 +531,7 @@
 
 /* Credential / create-ticket / profile containers */
 .mmhd-page-create-ticket .mmhd-container,
-.mmhd-page-profile .mmhd-dashboard-content > form,
+.mmhd-page-profile .mmhd-dashboard-content>form,
 #credential-form {
   background: var(--mmhd-color-white);
   border: 1px solid var(--mmhd-brand-color-light);
@@ -741,7 +738,7 @@
 }
 
 .mmhd-frontend-dashboard.mmhd-page-profile img.avatar,
-.mmhd-frontend-dashboard.mmhd-page-profile form > img {
+.mmhd-frontend-dashboard.mmhd-page-profile form>img {
   border: 3px solid var(--mmhd-color-white);
   border-radius: 999px;
   box-shadow: 0 8px 18px rgba(15, 23, 42, 0.12);
@@ -878,8 +875,7 @@
   font-weight: 600;
 }
 
-.mmhd-frontend-dashboard:has(.mmhd-single-ticket)
-  .mmhd-dashboard-content {
+.mmhd-frontend-dashboard:has(.mmhd-single-ticket) .mmhd-dashboard-content {
   border: 0;
   padding: 0 34px;
 }
@@ -982,10 +978,7 @@
   padding: 0 14px;
 }
 
-.mmhd-dashboard-content
-  .mmhd-ticket-comments
-  .mmhd-status-selector
-  select {
+.mmhd-dashboard-content .mmhd-ticket-comments .mmhd-status-selector select {
   background-color: var(--mmhd-color-white);
   border: 0;
   border-right: 1px solid var(--mmhd-brand-color-light);
@@ -1061,9 +1054,7 @@
   padding: 8px 14px;
 }
 
-.mmhd-dashboard-content
-  .mmhd-ticket-comments
-  input[type="submit"]:hover {
+.mmhd-dashboard-content .mmhd-ticket-comments input[type="submit"]:hover {
   background: transparent;
   color: var(--mmhd-brand-color);
 }
@@ -1114,7 +1105,7 @@
   border-radius: 999px;
 }
 
-.mmhd-ticket-comments .comment-list > li {
+.mmhd-ticket-comments .comment-list>li {
   background: transparent;
   border: 0;
   list-style: none;
@@ -1200,49 +1191,34 @@
 }
 
 /* Sent (current user) bubble */
-.mmhd-ticket-comments
-  .comment-list
-  > li.mmhd-comment-sent
-  .comment-body {
+.mmhd-ticket-comments .comment-list>li.mmhd-comment-sent .comment-body {
   flex-direction: row-reverse;
   justify-content: flex-start;
   margin: 5px;
 }
 
-.mmhd-ticket-comments
-  .comment-list
-  > li.mmhd-comment-sent
-  .mmhd-comment-bubble {
+.mmhd-ticket-comments .comment-list>li.mmhd-comment-sent .mmhd-comment-bubble {
   background: var(--mmhd-brand-color-light);
   border-color: var(--mmhd-border-color);
   color: var(--mmhd-color-black);
 }
 
-.mmhd-ticket-comments
-  .comment-list
-  > li.mmhd-comment-sent
-  .comment-metadata {
+.mmhd-ticket-comments .comment-list>li.mmhd-comment-sent .comment-metadata {
   color: var(--mmhd-color-black);
   text-align: right;
 }
 
-.mmhd-ticket-comments
-  .comment-list
-  > li.mmhd-comment-sent
-  .comment-meta {
+.mmhd-ticket-comments .comment-list>li.mmhd-comment-sent .comment-meta {
   color: var(--mmhd-color-black);
   text-align: right;
 }
 
 /* Same-sender grouping */
-.mmhd-ticket-comments .comment-list > li.mmhd-comment-same-sender {
+.mmhd-ticket-comments .comment-list>li.mmhd-comment-same-sender {
   margin-top: -6px;
 }
 
-.mmhd-ticket-comments
-  .comment-list
-  > li.mmhd-comment-same-sender
-  .comment-author {
+.mmhd-ticket-comments .comment-list>li.mmhd-comment-same-sender .comment-author {
   visibility: hidden;
 }
 
@@ -1282,11 +1258,9 @@
 }
 
 .mmhd-ticket-meta-priority {
-  background: color-mix(
-    in srgb,
-    var(--mmhd-priority-color, #f4c84b) 24%,
-    #fff 76%
-  );
+  background: color-mix(in srgb,
+      var(--mmhd-priority-color, #f4c84b) 24%,
+      #fff 76%);
 }
 
 .mce-container.mce-panel.mce-floatpanel {
@@ -1317,9 +1291,7 @@
   color: var(--mmhd-brand-color);
 }
 
-.mce-container.mce-panel.mce-floatpanel.mce-window
-  .mce-btn.mce-primary:hover
-  button {
+.mce-container.mce-panel.mce-floatpanel.mce-window .mce-btn.mce-primary:hover button {
   color: var(--mmhd-brand-color);
 }
 
@@ -1619,8 +1591,7 @@
   flex-direction: column;
 }
 
-.mmhd-body-content-wrapper-home:has(.single-question-box-field)
-  #mmhd-bot-panel {
+.mmhd-body-content-wrapper-home:has(.single-question-box-field) #mmhd-bot-panel {
   flex: 0 0 auto;
   min-height: 0;
   height: auto;
@@ -1755,8 +1726,7 @@
     min-height: 0;
   }
 
-  .mmhd-frontend-dashboard:has(.mmhd-single-ticket)
-    .mmhd-dashboard-content {
+  .mmhd-frontend-dashboard:has(.mmhd-single-ticket) .mmhd-dashboard-content {
     padding: 24px 16px;
   }
 
