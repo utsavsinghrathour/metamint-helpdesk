@@ -4,7 +4,7 @@ Tags: support, tickets, helpdesk, customer-support, faq
 Requires at least: 5.8
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 1.5.7
+Stable tag: 1.5.8
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -51,6 +51,15 @@ Build configuration: public/webpack.config.js
 The complete source code, including the sources used to build the frontend bundles, is available at https://github.com/utsavsinghrathour/metamint-helpdesk
 
 == Changelog ==
+
+= 1.5.8 =
+* Fixed plugin activation on clean WordPress installations (support page creation now runs on init).
+* Added Requires PHP and Requires at least headers; improved dbDelta table definitions.
+* Added nonce and capability checks to comment status changes, profile updates, taxonomy ordering, and ticket creation.
+* Prefixed remaining global function names.
+* Documented the public source repository and build tooling in the readme.
+* Removed the external Google Fonts request; the widget now uses the system font stack.
+* Removed the invalid Domain Path header and fixed an i18n translator comment.
 
 = 1.5.7 =
 * Rebranded to Metamint Helpdesk (slug mmhd)
