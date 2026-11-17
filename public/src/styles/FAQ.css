@@ -232,6 +232,9 @@
   font-weight: normal;
   font-size: 14px;
   margin-top: 12px;
+}
+
+.mmhd-shortcode-faq-mode-accordion .mmhd-shortcode-faq-answer {
   border-top: 1px solid #f1f5f9;
 }
 
@@ -242,12 +245,10 @@
 .mmhd-shortcode-faq-qa-item {
   margin-bottom: 18px;
   padding-bottom: 16px;
-  border-bottom: 1px solid #e2e8f0;
   display: block;
 }
 
 .mmhd-shortcode-faq-qa-item:last-child {
-  border-bottom: none;
   margin-bottom: 0;
   padding-bottom: 0;
 }
@@ -269,14 +270,4 @@
   font-weight: bold;
   display: block;
   clear: both;
-}
-
-.mmhd-shortcode-faq-mode-accordion .mmhd-shortcode-faq-answer,
-.mmhd-shortcode-faq-mode-qa .mmhd-shortcode-faq-answer {
-  display: block;
-  clear: both;
-  color: #334155;
-  line-height: 1.7;
-  font-weight: normal;
-  margin-top: 10px;
 }
