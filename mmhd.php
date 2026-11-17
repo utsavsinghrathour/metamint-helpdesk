@@ -473,6 +473,9 @@ function mmhd_enqueue_scripts()
     // Enqueue styles (already existing)
     wp_enqueue_style('mmhd-styles', MMHD_PLUGIN_URL . 'public/assets/css/mmhd-styles.css', array(), MMHD_VERSION);
 
+    // FAQ shortcode styles
+    wp_enqueue_style('mmhd-faq-shortcode', MMHD_PLUGIN_URL . 'public/src/styles/FAQ.css', array(), MMHD_VERSION);
+
     // Enqueue scripts (already existing). TinyMCE is enqueued automatically by
     // wp_editor() on the pages that actually render an editor, so it is not
     // loaded site-wide here.

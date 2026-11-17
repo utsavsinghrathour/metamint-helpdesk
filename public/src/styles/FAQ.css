@@ -183,3 +183,99 @@
 .chat-disabled .mmhd-main-content {
   padding-bottom: 100px;
 }
+
+/* ============================================================
+   FAQ Shortcode (namespaced to avoid collision)
+   ============================================================ */
+.mmhd-shortcode-faq-container {
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+}
+
+.mmhd-shortcode-faq-item {
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  margin-bottom: 10px;
+  display: block;
+}
+
+.mmhd-shortcode-faq-question {
+  display: flex;
+  width: 100%;
+  text-align: left;
+  padding: 12px 16px;
+  font-size: 16px;
+  font-weight: bold;
+  background: none;
+  border: none;
+  cursor: pointer;
+  margin: 0;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.mmhd-shortcode-faq-question[aria-expanded="true"] {
+  background: none;
+}
+
+.mm-faq-icon {
+  font-size: 18px;
+  line-height: 1;
+  color: #64748b;
+}
+
+.mmhd-shortcode-faq-answer {
+  display: block;
+  clear: both;
+  padding: 0 16px 14px;
+  color: #334155;
+  line-height: 1.7;
+  font-weight: normal;
+  margin-top: 12px;
+  border-top: 1px solid #f1f5f9;
+}
+
+.mmhd-shortcode-faq-answer[hidden] {
+  display: none !important;
+}
+
+.mmhd-shortcode-faq-qa-item {
+  margin-bottom: 18px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #e2e8f0;
+  display: block;
+}
+
+.mmhd-shortcode-faq-qa-item:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+  padding-bottom: 0;
+}
+
+.mmhd-shortcode-faq-mode-accordion .mmhd-shortcode-faq-question {
+  font-size: 16px;
+  margin: 0;
+  color: #0f172a;
+  font-weight: bold;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.mmhd-shortcode-faq-mode-qa .mmhd-shortcode-faq-question {
+  font-size: 18px;
+  margin: 0 0 10px;
+  color: #0f172a;
+  font-weight: bold;
+  display: block;
+  clear: both;
+}
+
+.mmhd-shortcode-faq-mode-accordion .mmhd-shortcode-faq-answer,
+.mmhd-shortcode-faq-mode-qa .mmhd-shortcode-faq-answer {
+  display: block;
+  clear: both;
+  color: #334155;
+  line-height: 1.7;
+  font-weight: normal;
+  margin-top: 10px;
+}
