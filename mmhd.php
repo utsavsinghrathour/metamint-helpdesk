@@ -4,7 +4,7 @@
  * Plugin Name: Metamint Helpdesk
  * Plugin URI: https://metamintapps.com/
  * Description: A support ticket and FAQ system.
- * Version: 1.5.8
+ * Version: 2.0.0
  * Requires at least: 5.8
  * Requires PHP: 7.4
  * Author: Code Pixelz Media
