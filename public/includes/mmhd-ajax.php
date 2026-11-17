@@ -176,7 +176,7 @@ function mmhd_handle_ticket_submission()
         // Auto-assign if enabled in Advanced Settings
         $settings = get_option('mmhd_advanced_settings', []);
         if (!empty($settings['enable_auto_assign'])) {
-            $assigned = auto_assign_ticket_to_support_staff();
+            $assigned = mmhd_auto_assign_ticket_to_support_staff();
             update_post_meta($post_id, 'ticket_assignee', $assigned);
             mmhd_store_ticket_assignee_id($post_id, $assigned);
         }
@@ -344,8 +344,9 @@ function mmhd_add_credential_callback()
             'password' => $encrypted_password,
             'url' => $url,
             'notes' => $notes,
+            'created_at' => current_time('mysql'),
         ),
-        array('%d', '%s', '%s', '%s', '%s', '%s')
+        array('%d', '%s', '%s', '%s', '%s', '%s', '%s')
     );
 
     if ($inserted !== false) {

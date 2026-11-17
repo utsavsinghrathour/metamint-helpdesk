@@ -607,7 +607,7 @@ function mmhd_handle_tickets_webhook(WP_REST_Request $request)
             $assigned = false;
             $settings = get_option('mmhd_advanced_settings', []);
             if (!empty($settings['enable_auto_assign'])) {
-                $assigned = auto_assign_ticket_to_support_staff();
+                $assigned = mmhd_auto_assign_ticket_to_support_staff();
             }
 
             update_post_meta($ticket, 'ticket_assignee', $assigned);

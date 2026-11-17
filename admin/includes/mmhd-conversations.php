@@ -38,7 +38,7 @@ $customer_filters = isset($_GET['customer']) ? mmhd_parse_multi_filter_values(wp
 $agent_filters = isset($_GET['agent']) ? mmhd_parse_multi_filter_values(wp_unslash($_GET['agent'])) : [];
 if (in_array('__all__', $agent_filters, true)) {
     // Explicit "all agents" sentinel (Clear Filters / chip removal): no agent filter.
-    // The sentinel stays in the URL (get_filter_url preserves it), so the cleared
+    // The sentinel stays in the URL (mmhd_get_filter_url preserves it), so the cleared
     // state survives navigation; a fresh visit without the param re-applies the default.
     $agent_filters = [];
 } elseif (empty($agent_filters)) {
@@ -324,7 +324,7 @@ wp_reset_postdata();
 
 // Function to generate pagination URL with current filters
 // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedFunctionFound
-function get_pagination_url($page)
+function mmhd_get_pagination_url($page)
 {
     $current_url = admin_url('admin.php');
     // phpcs:ignore WordPress.Security.NonceVerification.Recommended
@@ -338,7 +338,7 @@ function get_pagination_url($page)
 
 // Function to build filter URL
 // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedFunctionFound
-function get_filter_url($new_params = array())
+function mmhd_get_filter_url($new_params = array())
 {
     $current_url = admin_url('admin.php');
     // phpcs:ignore WordPress.Security.NonceVerification.Recommended
@@ -621,7 +621,7 @@ $mmhd_tickets_hidden = ($mmhd_current_tab === 'tickets' && $mmhd_has_ticket === 
                 <div class="flex items-center gap-4">
                     <span class="text-sm text-blue-600"><?php echo esc_html($total_posts); ?>
                         result<?php echo $total_posts !== 1 ? 's' : ''; ?> found</span>
-                    <a href="<?php echo esc_url(get_filter_url(['agent' => '__all__'])); ?>"
+                    <a href="<?php echo esc_url(mmhd_get_filter_url(['agent' => '__all__'])); ?>"
                         class="inline-flex items-center px-3 py-1.5 border border-blue-300 text-sm font-medium rounded-md shadow-sm text-blue-700 bg-white hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
                         <i class="fas fa-times mr-1.5"></i>
                         Clear Filters
@@ -669,7 +669,7 @@ $mmhd_tickets_hidden = ($mmhd_current_tab === 'tickets' && $mmhd_has_ticket === 
                     <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Assignee
                     </th>
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        <a href="<?php echo esc_url(get_filter_url($orderby === 'updated' ? ['orderby' => 'updated', 'order' => $order === 'ASC' ? 'DESC' : 'ASC'] : ['orderby' => 'updated', 'order' => 'DESC'])); ?>"
+                        <a href="<?php echo esc_url(mmhd_get_filter_url($orderby === 'updated' ? ['orderby' => 'updated', 'order' => $order === 'ASC' ? 'DESC' : 'ASC'] : ['orderby' => 'updated', 'order' => 'DESC'])); ?>"
                             title="Sort by updated date<?php echo $orderby === 'updated' ? ' (' . ($order === 'ASC' ? 'oldest first — click to reverse' : 'newest first — click to reverse') . ')' : ' (newest first)'; ?>"
                             class="inline-flex items-center gap-1.5 rounded-md border px-2 py-1 transition-colors <?php echo $orderby === 'updated' ? 'border-blue-500 bg-blue-50 text-blue-700' : 'border-gray-300 bg-white text-gray-600 hover:border-blue-400 hover:text-blue-600'; ?>">
                             Updated
@@ -787,7 +787,7 @@ $mmhd_tickets_hidden = ($mmhd_current_tab === 'tickets' && $mmhd_has_ticket === 
             <div class="flex-1 flex justify-between sm:hidden">
                 <!-- Mobile pagination -->
                 <?php if ($current_page > 1): ?>
-                <a href="<?php echo esc_url(get_pagination_url($current_page - 1)); ?>"
+                <a href="<?php echo esc_url(mmhd_get_pagination_url($current_page - 1)); ?>"
                     class="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
                     Previous
                 </a>
@@ -799,7 +799,7 @@ $mmhd_tickets_hidden = ($mmhd_current_tab === 'tickets' && $mmhd_has_ticket === 
                 <?php endif; ?>
 
                 <?php if ($current_page < $total_pages): ?>
-                <a href="<?php echo esc_url(get_pagination_url($current_page + 1)); ?>"
+                <a href="<?php echo esc_url(mmhd_get_pagination_url($current_page + 1)); ?>"
                     class="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
                     Next
                 </a>
@@ -827,7 +827,7 @@ $mmhd_tickets_hidden = ($mmhd_current_tab === 'tickets' && $mmhd_has_ticket === 
                     <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
                         <!-- Previous Page Link -->
                         <?php if ($current_page > 1): ?>
-                        <a href="<?php echo esc_url(get_pagination_url($current_page - 1)); ?>"
+                        <a href="<?php echo esc_url(mmhd_get_pagination_url($current_page - 1)); ?>"
                             class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
                             <span class="sr-only">Previous</span>
                             <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"
@@ -857,7 +857,7 @@ $mmhd_tickets_hidden = ($mmhd_current_tab === 'tickets' && $mmhd_has_ticket === 
 
                             // Show first page if we're not close to it
                             if ($start_page > 1): ?>
-                        <a href="<?php echo esc_url(get_pagination_url(1)); ?>"
+                        <a href="<?php echo esc_url(mmhd_get_pagination_url(1)); ?>"
                             class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">
                             1
                         </a>
@@ -874,7 +874,7 @@ $mmhd_tickets_hidden = ($mmhd_current_tab === 'tickets' && $mmhd_has_ticket === 
                             <?php echo esc_html($i); ?>
                         </span>
                         <?php else: ?>
-                        <a href="<?php echo esc_url(get_pagination_url($i)); ?>"
+                        <a href="<?php echo esc_url(mmhd_get_pagination_url($i)); ?>"
                             class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">
                             <?php echo esc_html($i); ?>
                         </a>
@@ -887,7 +887,7 @@ $mmhd_tickets_hidden = ($mmhd_current_tab === 'tickets' && $mmhd_has_ticket === 
                         <span
                             class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700">...</span>
                         <?php endif; ?>
-                        <a href="<?php echo esc_url(get_pagination_url(absint($total_pages))); ?>"
+                        <a href="<?php echo esc_url(mmhd_get_pagination_url(absint($total_pages))); ?>"
                             class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">
                             <?php echo esc_html($total_pages); ?>
                         </a>
@@ -895,7 +895,7 @@ $mmhd_tickets_hidden = ($mmhd_current_tab === 'tickets' && $mmhd_has_ticket === 
 
                         <!-- Next Page Link -->
                         <?php if ($current_page < $total_pages): ?>
-                        <a href="<?php echo esc_url(get_pagination_url($current_page + 1)); ?>"
+                        <a href="<?php echo esc_url(mmhd_get_pagination_url($current_page + 1)); ?>"
                             class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
                             <span class="sr-only">Next</span>
                             <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"

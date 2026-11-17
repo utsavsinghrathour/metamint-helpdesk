@@ -113,7 +113,10 @@ $mmhd_stat_cards = [
                     data-mmhd-sparkline-today="<?php echo esc_attr(wp_date('Y-m-d')); ?>"
                     data-mmhd-sparkline-label-today="<?php echo esc_attr__('Today', 'metamint-helpdesk'); ?>"
                     data-mmhd-sparkline-label-yesterday="<?php echo esc_attr__('Yesterday', 'metamint-helpdesk'); ?>"
-                    data-mmhd-sparkline-label-template="<?php echo esc_attr(__('%1$s: sparkline for the last 14 days. Trend %2$s versus the previous 7 days.', 'metamint-helpdesk')); ?>"
+                    data-mmhd-sparkline-label-template="<?php
+                        /* translators: 1: sparkline label, 2: trend direction (up or down). */
+                        echo esc_attr(__('%1$s: sparkline for the last 14 days. Trend %2$s versus the previous 7 days.', 'metamint-helpdesk'));
+                    ?>"
                     tabindex="0"
                     role="img"
                     aria-label="<?php echo esc_attr($mmhd_aria_label); ?>">

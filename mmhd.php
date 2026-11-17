@@ -4,10 +4,13 @@
  * Plugin Name: Metamint Helpdesk
  * Plugin URI: https://metamintapps.com/
  * Description: A support ticket and FAQ system.
- * Version: 1.5.7
+ * Version: 1.5.8
+ * Requires at least: 5.8
+ * Requires PHP: 7.4
  * Author: Code Pixelz Media
  * Author URI: https://codepixelzmedia.com
- * License: GPL2
+ * License: GPL-2.0-or-later
+ * License URI: https://www.gnu.org/licenses/gpl-2.0.html
  * Text Domain: metamint-helpdesk
  */
 
@@ -17,7 +20,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Define constants
-define('MMHD_VERSION', '1.5.7');
+define('MMHD_VERSION', '1.5.8');
 define('MMHD_PLUGIN_PATH', plugin_dir_path(__FILE__));
 define('MMHD_PLUGIN_URL', plugin_dir_url(__FILE__));
 
@@ -132,6 +135,10 @@ require_once MMHD_PLUGIN_PATH . 'public/includes/mmhd-shortcodes.php';
 
 function mmhd_activate()
 {
+    if (function_exists('mmhd_init_debug_log')) {
+        mmhd_init_debug_log();
+    }
+
     $admin_role = get_role('administrator');
     if ($admin_role) {
         $admin_role->add_cap('create_tickets');
@@ -403,8 +410,7 @@ function mmhd_init_debug_log()
     $debug_log = $logs_dir . '/debug.log';
 
     if (!is_dir($logs_dir)) {
-        // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_mkdir
-        if (!mkdir($logs_dir, 0755, true)) {
+        if (!wp_mkdir_p($logs_dir)) {
             mmhd_log('Failed to create Metamint Helpdesk logs directory');
             return false;
         }
@@ -425,8 +431,8 @@ function mmhd_init_debug_log()
     return true;
 }
 
-// Call debug log initialization on plugin load
-mmhd_init_debug_log();
+// Debug log initialization is deferred to activation and to the debug-log
+// screen so a normal front-end request never writes to the filesystem.
 
 // Include necessary files
 // if (is_admin()) {
@@ -467,19 +473,14 @@ function mmhd_enqueue_scripts()
     // Enqueue styles (already existing)
     wp_enqueue_style('mmhd-styles', MMHD_PLUGIN_URL . 'public/assets/css/mmhd-styles.css', array(), MMHD_VERSION);
 
-    // Enqueue scripts (already existing)
-    wp_enqueue_script('mmhd-scripts', MMHD_PLUGIN_URL . 'public/assets/js/mmhd-scripts.js', array('jquery'), MMHD_VERSION, true);
+    // Enqueue scripts (already existing). TinyMCE is enqueued automatically by
+    // wp_editor() on the pages that actually render an editor, so it is not
+    // loaded site-wide here.
+    wp_enqueue_script('mmhd-scripts', MMHD_PLUGIN_URL . 'public/assets/js/mmhd-scripts.js', array('jquery', 'wp-api', 'wp-data', 'wp-core-data'), MMHD_VERSION, true);
 
     if (is_admin()) {
         add_action('admin_enqueue_scripts', 'mmhd_enqueue_admin_scripts');
     } else {
-        // Enqueue TinyMCE for frontend
-        wp_enqueue_script('tinymce');
-
-        // Re-enqueue styles (already existing, adjust if needed)
-        wp_enqueue_style('mmhd-styles', MMHD_PLUGIN_URL . 'public/assets/css/mmhd-styles.css', array(), MMHD_VERSION);
-        // Re-enqueue scripts with TinyMCE dependency
-        wp_enqueue_script('mmhd-scripts', MMHD_PLUGIN_URL . 'public/assets/js/mmhd-scripts.js', array('jquery', 'tinymce', 'wp-api', 'wp-data', 'wp-core-data'), MMHD_VERSION, true);
 
         // Existing wp_localize_script for AJAX
         wp_localize_script('mmhd-scripts', 'mmhd_ajax_object', array(
@@ -593,7 +594,6 @@ function mmhd_enqueue_scripts()
         );
     }
 }
-add_action('wp_enqueue_scripts', 'mmhd_enqueue_scripts');
 
 function mmhd_add_plugin()
 {
@@ -602,7 +602,7 @@ function mmhd_add_plugin()
 add_action('wp_footer', 'mmhd_add_plugin');
 function mmhd_handle_settings_save()
 {
-    if (!current_user_can('mmhd_access_dashboard')) {
+    if (!current_user_can('mmhd_manage_settings')) {
         return;
     }
 
@@ -657,7 +657,6 @@ add_action('admin_post_mmhd_save_settings', 'mmhd_handle_settings_save');
 function mmhd_enqueue_admin_scripts($hook)
 {
     global $post;
-    wp_enqueue_script('jquery');
     // phpcs:ignore WordPress.Security.NonceVerification.Recommended
     $taxonomy = isset($_GET['taxonomy']) ? sanitize_text_field(wp_unslash($_GET['taxonomy'])) : '';
     // phpcs:ignore WordPress.Security.NonceVerification.Recommended
@@ -723,36 +722,20 @@ function mmhd_create_credentials_table()
 
 
     $sql = "CREATE TABLE $table_name (
-        id BIGINT(20) UNSIGNED NOT NULL AUTO_INCREMENT,
-        user_id BIGINT(20) UNSIGNED NOT NULL,
-        name VARCHAR(255) NOT NULL,
-        username VARCHAR(255) NOT NULL,
-        password LONGTEXT NOT NULL,
-        url VARCHAR(255),
-        notes TEXT,
-        created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-        PRIMARY KEY (id),
+        id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+        user_id bigint(20) unsigned NOT NULL,
+        name varchar(255) NOT NULL,
+        username varchar(255) NOT NULL,
+        password longtext NOT NULL,
+        url varchar(255) DEFAULT NULL,
+        notes text,
+        created_at datetime NOT NULL DEFAULT '1970-01-01 00:00:00',
+        PRIMARY KEY  (id),
         KEY user_id (user_id)
     ) $charset_collate;";
 
-    // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter -- $table_name is built from $wpdb->prefix, and schema changes are only possible via direct SQL.
-    if (!empty($wpdb->get_var("SHOW TABLES LIKE '{$table_name}'"))) {
-        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.SchemaChange, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter, WordPress.DB.DirectDatabaseQuery.DirectQuery -- intentional schema migration on activation.
-        $wpdb->query("ALTER TABLE {$table_name} DROP FOREIGN KEY fk_mmhd_credentials_user");
-    }
-
     require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
     dbDelta($sql);
-
-    // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter -- $table_name is built from $wpdb->prefix, and schema changes are only possible via direct SQL.
-    if (!empty($wpdb->get_var("SHOW TABLES LIKE '{$table_name}'"))) {
-        // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.DirectDatabaseQuery.SchemaChange, PluginCheck.Security.DirectDB.UnescapedDBParameter -- intentional schema migration on activation; identifiers are built from $wpdb->prefix.
-        $add_fk_sql = "ALTER TABLE {$table_name}
-             ADD CONSTRAINT fk_mmhd_credentials_user FOREIGN KEY (user_id)
-             REFERENCES {$wpdb->prefix}users(ID) ON DELETE CASCADE";
-        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.NotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter -- intentional schema migration on activation; identifiers are built from $wpdb->prefix.
-        $wpdb->query($add_fk_sql);
-    }
 }
 
 // Hook to run the function on plugin activation
@@ -761,9 +744,9 @@ register_activation_hook(__FILE__, 'mmhd_create_credentials_table');
 function mmhd_maybe_create_credentials_table()
 {
     $version = get_option('mmhd_credentials_table_version');
-    if ($version !== '1.1') {
+    if ($version !== '1.2') {
         mmhd_create_credentials_table();
-        update_option('mmhd_credentials_table_version', '1.1');
+        update_option('mmhd_credentials_table_version', '1.2');
     }
 }
 
@@ -778,20 +761,20 @@ function mmhd_create_notifications_table()
     $charset_collate = $wpdb->get_charset_collate();
 
     $sql = "CREATE TABLE $table_name (
-        id bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT,
-        notification_date datetime NOT NULL DEFAULT '0000-00-00 00:00:00',
-        user_id bigint(20) UNSIGNED NOT NULL,
+        id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+        notification_date datetime NOT NULL DEFAULT '1970-01-01 00:00:00',
+        user_id bigint(20) unsigned NOT NULL,
         message text NOT NULL,
-        ticket_id bigint(20) UNSIGNED DEFAULT NULL,
+        ticket_id bigint(20) unsigned DEFAULT NULL,
         status varchar(20) NOT NULL DEFAULT 'unread',
-        created_by bigint(20) UNSIGNED NOT NULL,
-        recipient_user_id bigint(20) UNSIGNED NOT NULL,
-        comment_id bigint(20) UNSIGNED DEFAULT NULL,
+        created_by bigint(20) unsigned NOT NULL,
+        recipient_user_id bigint(20) unsigned NOT NULL,
+        comment_id bigint(20) unsigned DEFAULT NULL,
         type varchar(32) NOT NULL,
         source varchar(32) NOT NULL,
-        created_at datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        created_at datetime NOT NULL DEFAULT '1970-01-01 00:00:00',
         read_at datetime DEFAULT NULL,
-        PRIMARY KEY (id),
+        PRIMARY KEY  (id),
         KEY recipient_user_id (recipient_user_id),
         KEY ticket_id (ticket_id),
         KEY comment_id (comment_id),
@@ -810,9 +793,9 @@ register_activation_hook(__FILE__, 'mmhd_create_notifications_table');
 function mmhd_maybe_create_notifications_table()
 {
     $version = get_option('mmhd_notifications_table_version');
-    if ($version !== '1.1') {
+    if ($version !== '1.2') {
         mmhd_create_notifications_table();
-        update_option('mmhd_notifications_table_version', '1.1');
+        update_option('mmhd_notifications_table_version', '1.2');
     }
 }
 add_action('init', 'mmhd_maybe_create_notifications_table');
@@ -962,8 +945,7 @@ function mmhd_log($message)
     $log_dir  = dirname($log_file);
 
     if (!file_exists($log_dir)) {
-        // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_mkdir
-        mkdir($log_dir, 0755, true);
+        wp_mkdir_p($log_dir);
     }
 
     if (is_array($message) || is_object($message)) {
@@ -3113,22 +3095,25 @@ register_deactivation_hook(__FILE__, 'mmhd_delete_support_page');
 
 function mmhd_check_support_page()
 {
-    // Only run this once
-    if (!get_option('mmhd_page_check_complete')) {
-        mmhd_create_support_page();
-        update_option('mmhd_page_check_complete', true);
+    // Only run this once.
+    if (get_option('mmhd_page_check_complete')) {
+        return;
     }
+
+    // Creating a page requires the rewrite rules to be initialized. Running
+    // this on `init` (rather than `plugins_loaded`) guarantees that.
+    if (!did_action('init') && !doing_action('init')) {
+        return;
+    }
+
+    mmhd_create_support_page();
+    update_option('mmhd_page_check_complete', true);
 }
-add_action('plugins_loaded', 'mmhd_check_support_page');
-register_activation_hook(__FILE__, 'mmhd_create_support_page');
-register_deactivation_hook(__FILE__, 'mmhd_delete_support_page');
+add_action('init', 'mmhd_check_support_page', 30);
 
 // function for theme color 
 function mmhd_enqueue_custom_styles()
 {
-    // Enqueue your main stylesheet first
-    wp_enqueue_style('mmhd-style', get_stylesheet_uri(), array(), '1.0.0');
-
     // Get the theme color from the options
     $theme_color = sanitize_hex_color((string) get_option('mmhd_theme_color', ''));
 
@@ -3136,14 +3121,15 @@ function mmhd_enqueue_custom_styles()
         $theme_color = '#0073aa';
     }
 
-    // Prepare inline CSS
+    // Add the color variable to the plugin stylesheet instead of enqueueing
+    // the active theme's stylesheet a second time.
     $custom_css = "
         :root {
             --mmhd-theme-color: {$theme_color};
         }
     ";
 
-    wp_add_inline_style('mmhd-style', $custom_css);
+    wp_add_inline_style('mmhd-styles', $custom_css);
 }
 add_action('wp_enqueue_scripts', 'mmhd_enqueue_custom_styles');
 
