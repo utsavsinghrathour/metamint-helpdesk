@@ -24,7 +24,11 @@ function mmhd_change_ticket_status_callback()
             if ($old_status !== $new_status && function_exists('mmhd_notify_status_changed')) {
                 mmhd_notify_status_changed($ticket_id, $new_status, get_current_user_id(), 'chat');
             }
-            wp_send_json_success();
+            wp_send_json_success(
+                function_exists('mmhd_get_dashboard_summary')
+                    ? mmhd_get_dashboard_summary()
+                    : []
+            );
         } else {
             wp_send_json_error('Failed to update ticket status.');
         }
@@ -455,13 +459,17 @@ function mmhd_mark_user_notification_read()
         $table_name,
         array(
             'id' => $notification_id,
-            'user_id' => $user_id,
+            'recipient_user_id' => $user_id,
         ),
         array('%d', '%d')
     );
 
     if ($deleted === false) {
         wp_send_json_error('Could not delete notification.');
+    }
+
+    if ($deleted < 1) {
+        wp_send_json_error('Notification not found.');
     }
 
     wp_send_json_success();
@@ -484,7 +492,7 @@ function mmhd_mark_all_user_notifications_read()
     // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
     $deleted = $wpdb->query(
         $wpdb->prepare(
-            "DELETE FROM {$table_name} WHERE user_id = %d",
+            "DELETE FROM {$table_name} WHERE recipient_user_id = %d",
             $user_id
         )
     );
