@@ -111,6 +111,12 @@ function mmhd_wizard_callback()
     $steps   = mmhd_get_wizard_steps();
     $current = mmhd_get_wizard_current_step();
 
+    // If wizard is completed, don't show the setup wizard (redirect to dashboard unless on finish step or explicitly reopening)
+    if (mmhd_is_wizard_completed() && $current !== 'finish' && !isset($_GET['reopen'])) {
+        wp_safe_redirect(admin_url('admin.php?page=mmhd-dashboard'));
+        exit;
+    }
+
     if (!array_key_exists($current, $steps)) {
         $current = 'welcome';
     }

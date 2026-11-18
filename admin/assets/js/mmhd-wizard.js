@@ -56,25 +56,28 @@
     // Copy Shortcodes
     // ============================================================
     document.addEventListener('click', function (e) {
-        var copyBtn = e.target.closest('.mmhd-wizard-copy-btn');
+        var copyBtn = e.target.closest('.mmhd-wizard-copy-btn, .mmhd-wizard-copy-chip');
         if (copyBtn) {
             e.preventDefault();
             var code = copyBtn.getAttribute('data-code') || '';
             if (!code) return;
 
             navigator.clipboard.writeText(code).then(function () {
-                var originalText = copyBtn.textContent;
-                copyBtn.textContent = 'Copied!';
-                copyBtn.style.background = '#10b981';
-                copyBtn.style.color = '#ffffff';
-                copyBtn.style.borderColor = '#10b981';
-                setTimeout(function () {
-                    copyBtn.textContent = originalText;
-                    copyBtn.style.background = '';
-                    copyBtn.style.color = '';
-                    copyBtn.style.borderColor = '';
-                }, 1800);
-                showToast('Shortcode copied to clipboard');
+                var isChip = copyBtn.classList.contains('mmhd-wizard-copy-chip');
+                if (!isChip) {
+                    var originalText = copyBtn.textContent;
+                    copyBtn.textContent = 'Copied!';
+                    copyBtn.style.background = '#10b981';
+                    copyBtn.style.color = '#ffffff';
+                    copyBtn.style.borderColor = '#10b981';
+                    setTimeout(function () {
+                        copyBtn.textContent = originalText;
+                        copyBtn.style.background = '';
+                        copyBtn.style.color = '';
+                        copyBtn.style.borderColor = '';
+                    }, 1800);
+                }
+                showToast('Shortcode copied: ' + code);
             }).catch(function () {
                 showToast('Could not copy to clipboard', 'error');
             });
@@ -113,6 +116,16 @@
         function updatePreviewColor(color) {
             if (previewHeader) previewHeader.style.backgroundColor = color;
             if (previewTrigger) previewTrigger.style.backgroundColor = color;
+            var previewClose = document.getElementById('wz-preview-close');
+            if (previewClose) previewClose.style.color = color;
+            var previewInputBox = document.getElementById('wz-preview-input-box');
+            if (previewInputBox) previewInputBox.style.borderColor = color;
+            var previewPlaceholder = document.getElementById('wz-preview-placeholder');
+            if (previewPlaceholder) previewPlaceholder.style.color = color;
+            var previewSend = document.getElementById('wz-preview-send');
+            if (previewSend) previewSend.style.color = color;
+            var previewTabHome = document.getElementById('wz-preview-tab-home');
+            if (previewTabHome) previewTabHome.style.color = color;
             var hexDisplay = document.getElementById('wz-theme-color-hex');
             if (hexDisplay) hexDisplay.textContent = color;
         }

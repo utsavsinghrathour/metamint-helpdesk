@@ -111,14 +111,41 @@ $chat_enabled = get_option('mmhd_enable_chat', '1') === '1';
                     </button>
                 </div>
 
-                <div class="mmhd-wizard-shortcode-item">
-                    <div>
-                        <span class="mmhd-wizard-shortcode-code">[mmhd_faq]</span>
-                        <div class="mmhd-wizard-shortcode-desc"><?php esc_html_e('Public knowledge base & FAQ accordion', 'metamint-helpdesk'); ?></div>
+                <div class="mmhd-wizard-shortcode-item mmhd-wizard-shortcode-item-faq">
+                    <div style="width:100%;">
+                        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.25rem;">
+                            <span class="mmhd-wizard-shortcode-code">[mmhd_faq]</span>
+                            <button type="button" class="mmhd-wizard-copy-btn" data-code="[mmhd_faq]">
+                                <?php esc_html_e('Copy Default', 'metamint-helpdesk'); ?>
+                            </button>
+                        </div>
+                        <div class="mmhd-wizard-shortcode-desc"><?php esc_html_e('Public knowledge base & FAQ accordion (includes Google FAQPage JSON-LD schema)', 'metamint-helpdesk'); ?></div>
+
+                        <!-- FAQ Parameter Details -->
+                        <div class="mmhd-wizard-faq-params">
+                            <div class="mmhd-wizard-faq-param-title"><?php esc_html_e('Supported Parameters:', 'metamint-helpdesk'); ?></div>
+                            <ul class="mmhd-wizard-faq-param-list">
+                                <li>
+                                    <code>accordion="true"</code> — <span><?php esc_html_e('Renders FAQs in interactive collapsible accordions (defaults to standard list).', 'metamint-helpdesk'); ?></span>
+                                </li>
+                                <li>
+                                    <code>category="slug"</code> — <span><?php esc_html_e('Filters FAQs by category slug (manage under FAQs → FAQ Categories).', 'metamint-helpdesk'); ?></span>
+                                </li>
+                            </ul>
+
+                            <div class="mmhd-wizard-faq-presets">
+                                <span class="mmhd-wizard-faq-presets-label"><?php esc_html_e('Quick Copy Variants:', 'metamint-helpdesk'); ?></span>
+                                <button type="button" class="mmhd-wizard-copy-chip" data-code='[mmhd_faq accordion="true"]' title="<?php esc_attr_e('Copy accordion shortcode', 'metamint-helpdesk'); ?>">
+                                    <span>[mmhd_faq accordion="true"]</span>
+                                    <svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2"/></svg>
+                                </button>
+                                <button type="button" class="mmhd-wizard-copy-chip" data-code='[mmhd_faq category="general" accordion="true"]' title="<?php esc_attr_e('Copy category accordion shortcode', 'metamint-helpdesk'); ?>">
+                                    <span>[mmhd_faq category="slug" accordion="true"]</span>
+                                    <svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2"/></svg>
+                                </button>
+                            </div>
+                        </div>
                     </div>
-                    <button type="button" class="mmhd-wizard-copy-btn" data-code="[mmhd_faq]">
-                        <?php esc_html_e('Copy Shortcode', 'metamint-helpdesk'); ?>
-                    </button>
                 </div>
             </div>
 

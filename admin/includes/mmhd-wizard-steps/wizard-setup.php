@@ -19,6 +19,9 @@ $enable_chat = get_option('mmhd_enable_chat', '1');
 $chat_heading = get_option('mmhd_chat_heading', 'Have Questions?');
 $welcome_message = get_option('mmhd_welcome_message', 'Have any questions or need assistance? Leave us a message.');
 $default_role = get_option('mmhd_wizard_default_role', 'mmhd_support_manager');
+$logo_url = file_exists(MMHD_PLUGIN_PATH . 'admin/assets/images/mmhd-logo.png')
+    ? MMHD_PLUGIN_URL . 'admin/assets/images/mmhd-logo.png'
+    : '';
 
 // Terms
 $departments = get_terms(array(
@@ -167,31 +170,84 @@ $notice_count = wp_count_posts('mmhd_notice');
                     </div>
                 </div>
 
-                <div class="mmhd-wizard-preview-container" style="margin: 0.875rem 0 0 0; border-radius: var(--mmhd-radius-lg); overflow: hidden; background: #ffffff; border: 1px solid var(--mmhd-slate-200);">
+                <div class="mmhd-wizard-preview-container">
                     <div class="mmhd-wizard-preview-header">
                         <span class="mmhd-wizard-preview-tag" id="wz-preview-status-tag"><?php esc_html_e('Live Preview', 'metamint-helpdesk'); ?></span>
                         <span style="font-size:0.6875rem;color:var(--mmhd-slate-400);"><?php esc_html_e('Real-time Visitor View', 'metamint-helpdesk'); ?></span>
                     </div>
+
+                    <!-- Live Widget Mockup (1:1 with Actual Frontend Widget) -->
                     <div class="mmhd-wizard-mockup-widget" id="wz-mockup-widget">
+                        <!-- Widget Header matching Actual Widget -->
                         <div class="mmhd-wizard-mockup-header" id="wz-preview-header" style="background-color: <?php echo esc_attr($theme_color); ?>;">
-                            <div class="mmhd-wizard-mockup-avatar">
-                                <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/></svg>
+                            <div class="mmhd-wizard-mockup-logo-badge">
+                                <?php if ($logo_url): ?>
+                                    <img src="<?php echo esc_url($logo_url); ?>" alt="Metamint">
+                                <?php else: ?>
+                                    <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="#ffffff"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                                <?php endif; ?>
                             </div>
-                            <div>
-                                <h4 class="mmhd-wizard-mockup-title" id="wz-preview-title"><?php echo esc_html($chat_heading); ?></h4>
-                                <div class="mmhd-wizard-mockup-status"><?php esc_html_e('We reply in a few minutes', 'metamint-helpdesk'); ?></div>
+                            <div class="mmhd-wizard-mockup-close-btn" id="wz-preview-close" style="color: <?php echo esc_attr($theme_color); ?>;">
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round">
+                                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                                </svg>
                             </div>
                         </div>
+
+                        <!-- Widget Body matching Actual Home Tab -->
                         <div class="mmhd-wizard-mockup-body">
-                            <div class="mmhd-wizard-mockup-bubble" id="wz-preview-bubble">
-                                <?php echo esc_html($welcome_message); ?>
-                                <div class="mmhd-wizard-mockup-time"><?php esc_html_e('Just now', 'metamint-helpdesk'); ?></div>
+                            <h4 class="mmhd-wizard-mockup-heading" id="wz-preview-title"><?php echo esc_html($chat_heading ? $chat_heading : __('Have Questions?', 'metamint-helpdesk')); ?></h4>
+                            <p class="mmhd-wizard-mockup-subtext" id="wz-preview-bubble"><?php esc_html_e('Hi there!', 'metamint-helpdesk'); ?></p>
+
+                            <div class="mmhd-wizard-mockup-input-box" id="wz-preview-input-box" style="border-color: <?php echo esc_attr($theme_color); ?>;">
+                                <span class="mmhd-wizard-mockup-placeholder" id="wz-preview-placeholder" style="color: <?php echo esc_attr($theme_color); ?>;">
+                                    <?php esc_html_e('Start a conversation...', 'metamint-helpdesk'); ?>
+                                </span>
+                                <span class="mmhd-wizard-mockup-send" id="wz-preview-send" style="color: <?php echo esc_attr($theme_color); ?>;">
+                                    <svg width="15" height="15" viewBox="0 0 17 16" fill="currentColor">
+                                        <path d="M15.3728 0.0985297L0.886843 8.45568C0.321158 8.78071 0.39304 9.5683 0.955601 9.80582L4.27783 11.1997L13.2569 3.28637C13.4288 3.13323 13.6726 3.36763 13.5257 3.54577L5.99677 12.7186V15.2345C5.99677 15.9721 6.88749 16.2628 7.32503 15.7283L9.30962 13.3124L13.2038 14.9439C13.6476 15.1314 14.1539 14.8532 14.2351 14.3751L16.4854 0.873613C16.5917 0.242295 15.9135 -0.214004 15.3728 0.0985297Z"/>
+                                    </svg>
+                                </span>
+                            </div>
+
+                            <div class="mmhd-wizard-mockup-faq-note">
+                                <?php esc_html_e('No FAQs found.', 'metamint-helpdesk'); ?>
+                            </div>
+                        </div>
+
+                        <!-- Widget Footer Tabs matching Actual Frontend Widget -->
+                        <div class="mmhd-wizard-mockup-footer">
+                            <div class="mmhd-wizard-mockup-tab-item is-active" id="wz-preview-tab-home" style="color: <?php echo esc_attr($theme_color); ?>;">
+                                <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor">
+                                    <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
+                                </svg>
+                            </div>
+                            <div class="mmhd-wizard-mockup-tab-item">
+                                <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor">
+                                    <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/>
+                                </svg>
+                                <span class="mmhd-wizard-mockup-tab-dot"></span>
+                            </div>
+                            <div class="mmhd-wizard-mockup-tab-item">
+                                <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor">
+                                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/>
+                                </svg>
+                            </div>
+                            <div class="mmhd-wizard-mockup-tab-item">
+                                <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor">
+                                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 16h-2v-2h2v2zm1.07-7.75l-.9.92C12.45 11.9 12 12.5 12 14h-2v-.5c0-1.1.45-2.1 1.17-2.83l1.24-1.26c.37-.36.59-.86.59-1.41 0-1.1-.9-2-2-2s-2 .9-2 2H7c0-2.76 2.24-5 5-5s5 2.24 5 5c0 1.04-.42 1.99-1.07 2.75z"/>
+                                </svg>
                             </div>
                         </div>
                     </div>
+
+                    <!-- Floating Chat Trigger Button matching Frontend Widget -->
                     <div class="mmhd-wizard-mockup-floating">
                         <div class="mmhd-wizard-mockup-trigger" id="wz-preview-trigger" style="background-color: <?php echo esc_attr($theme_color); ?>;">
-                            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/></svg>
+                            <svg width="18" height="18" fill="currentColor" viewBox="0 0 16 16">
+                                <path fill-rule="evenodd" d="M7.646 4.646a.5.5 0 0 1 .708 0l6 6a.5.5 0 0 1-.708.708L8 5.707l-5.646 5.647a.5.5 0 0 1-.708-.708z"/>
+                            </svg>
                         </div>
                     </div>
                 </div>
