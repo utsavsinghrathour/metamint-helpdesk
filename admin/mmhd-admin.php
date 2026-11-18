@@ -457,8 +457,45 @@ function mmhd_render_faq_category_shortcode_column($value, $column_name, $term_i
         return;
     }
 
-    $shortcode = sprintf('[mmhd_faq category="%s" accordion="true"]', esc_attr($term->slug));
+    $shortcode = sprintf('[mmhd_faq category="%s" accordion="true"]', $term->slug);
 
-    echo '<code style="font-size:12px; font-family:monospace; background:#f1f5f9; padding:2px 4px; border-radius:3px; border:1px solid #cbd5e1;">' . esc_html($shortcode) . '</code>';
-    echo '<div style="font-size:11px; color:#64748b; margin-top:2px;">' . esc_html__('Copy to display this category FAQs.', 'metamint-helpdesk') . '</div>';
+    echo '<div class="mmhd-faq-shortcode-cell">';
+    echo '<code class="mmhd-faq-shortcode-code" id="mmhd-faq-shortcode-' . absint($term_id) . '">' . esc_html($shortcode) . '</code>';
+    echo '<button type="button" class="button mmhd-copy-shortcode" data-clipboard-text="' . esc_attr($shortcode) . '">' . esc_html__('Copy', 'metamint-helpdesk') . '</button>';
+    echo '</div>';
+    echo '<div class="mmhd-faq-shortcode-help">' . esc_html__('Copy to display this category FAQs.', 'metamint-helpdesk') . '</div>';
 }
+
+/**
+ * Enqueue the copy-to-clipboard helper on the FAQ category screen only.
+ *
+ * @param string $hook Current admin page hook suffix.
+ */
+function mmhd_enqueue_faq_category_admin_assets($hook)
+{
+    if ('edit-tags.php' !== $hook) {
+        return;
+    }
+
+    // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- read-only screen detection.
+    $taxonomy = isset($_GET['taxonomy']) ? sanitize_key(wp_unslash($_GET['taxonomy'])) : '';
+    if ('mmhd_faq_category' !== $taxonomy) {
+        return;
+    }
+
+    wp_enqueue_style(
+        'mmhd-faq-category-admin',
+        MMHD_PLUGIN_URL . 'admin/assets/css/mmhd-faq-category-admin.css',
+        array(),
+        MMHD_VERSION
+    );
+
+    wp_enqueue_script(
+        'mmhd-faq-category-admin',
+        MMHD_PLUGIN_URL . 'admin/assets/js/mmhd-faq-category-admin.js',
+        array(),
+        MMHD_VERSION,
+        true
+    );
+}
+add_action('admin_enqueue_scripts', 'mmhd_enqueue_faq_category_admin_assets');

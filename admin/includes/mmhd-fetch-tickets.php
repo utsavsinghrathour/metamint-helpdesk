@@ -226,7 +226,13 @@ function mmhd_fetch_email_text_parts($email, $email_number, $structure)
         return '';
     };
 
-    $walk = function ($struct, $section = '', $inside_rfc822 = false) use (&$walk, $email, $email_number, $decode, $get_charset, $to_utf8, $fetch_first, &$result) {
+    $walk = function ($struct, $section = '', $inside_rfc822 = false, $depth = 0) use (&$walk, $email, $email_number, $decode, $get_charset, $to_utf8, $fetch_first, &$result) {
+        // Hard stop for pathological MIME trees. Real messages nest only a
+        // handful of levels; anything deeper is treated as malformed input.
+        if ($depth > 20) {
+            return;
+        }
+
         $struct_type = (int) ($struct->type ?? 0);
 
         // Descend into multipart (type 1) containers and message/rfc822
@@ -236,11 +242,11 @@ function mmhd_fetch_email_text_parts($email, $email_number, $structure)
         if (($struct_type === 1 || $struct_type === 2) && isset($struct->parts) && is_array($struct->parts)) {
             foreach ($struct->parts as $part_index => $part) {
                 if ($struct_type === 2 && (int) ($part->type ?? 0) === 1) {
-                    $walk($part, $section); // embedded multipart body: transparent
+                    $walk($part, $section, false, $depth + 1); // embedded multipart body: transparent
                     continue;
                 }
                 $child_section = $section === '' ? (string) ($part_index + 1) : $section . '.' . ($part_index + 1);
-                $walk($part, $child_section, $struct_type === 2);
+                $walk($part, $child_section, $struct_type === 2, $depth + 1);
             }
             return;
         }

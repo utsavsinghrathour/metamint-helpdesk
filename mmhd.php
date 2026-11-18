@@ -4,7 +4,7 @@
  * Plugin Name: Metamint Helpdesk
  * Plugin URI: https://metamintapps.com/
  * Description: A support ticket and FAQ system.
- * Version: 2.0.0
+ * Version: 1.5.9
  * Requires at least: 5.8
  * Requires PHP: 7.4
  * Author: Code Pixelz Media
@@ -20,7 +20,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Define constants
-define('MMHD_VERSION', '1.5.8');
+define('MMHD_VERSION', '1.5.9');
 define('MMHD_PLUGIN_PATH', plugin_dir_path(__FILE__));
 define('MMHD_PLUGIN_URL', plugin_dir_url(__FILE__));
 
@@ -473,8 +473,12 @@ function mmhd_enqueue_scripts()
     // Enqueue styles (already existing)
     wp_enqueue_style('mmhd-styles', MMHD_PLUGIN_URL . 'public/assets/css/mmhd-styles.css', array(), MMHD_VERSION);
 
-    // FAQ shortcode styles
-    wp_enqueue_style('mmhd-faq-shortcode', MMHD_PLUGIN_URL . 'public/assets/css/FAQ.css', array(), MMHD_VERSION);
+    // FAQ shortcode styles are only needed on content that renders the
+    // shortcode. The React bundle carries the chat/dashboard FAQ styles.
+    $mmhd_current_post = get_post();
+    if ($mmhd_current_post instanceof WP_Post && has_shortcode((string) $mmhd_current_post->post_content, 'mmhd_faq')) {
+        wp_enqueue_style('mmhd-faq-shortcode', MMHD_PLUGIN_URL . 'public/assets/css/FAQ.css', array(), MMHD_VERSION);
+    }
 
     // Enqueue scripts (already existing). TinyMCE is enqueued automatically by
     // wp_editor() on the pages that actually render an editor, so it is not
@@ -679,9 +683,9 @@ function mmhd_enqueue_admin_scripts($hook)
     if (!isset($post) || $post->post_type != 'mmhd_ticket')
         return;
 
-    wp_enqueue_style('mmhd-admin-styles', MMHD_PLUGIN_URL . 'admin/assets/css/mmhd-admin-styles.css', array(), '1.0');
+    wp_enqueue_style('mmhd-admin-styles', MMHD_PLUGIN_URL . 'admin/assets/css/mmhd-admin-styles.css', array(), MMHD_VERSION);
 
-    wp_enqueue_script('mmhd-admin-scripts', MMHD_PLUGIN_URL . 'admin/assets/js/mmhd-admin-scripts.js', array('jquery'), '1.0', true);
+    wp_enqueue_script('mmhd-admin-scripts', MMHD_PLUGIN_URL . 'admin/assets/js/mmhd-admin-scripts.js', array('jquery'), MMHD_VERSION, true);
     wp_localize_script('mmhd-admin-scripts', 'mmhd_ajax_object', array('ajax_url' => admin_url('admin-ajax.php'), 'ticket_id' => $post->ID, 'nonce' => wp_create_nonce('mmhd_change_ticket_nonce'), 'faq_nonce' => wp_create_nonce('mmhd_faq_vote_nonce'), 'credentials_nonce' => wp_create_nonce('mmhd_credentials_nonce')));
 }
 add_action('admin_enqueue_scripts', 'mmhd_enqueue_admin_scripts');

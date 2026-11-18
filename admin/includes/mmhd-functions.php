@@ -1224,9 +1224,9 @@ function mmhd_create_ticket()
             wp_send_json_error(['message' => 'Failed to add comment to ticket']);
             wp_die();
         } else {
-            update_comment_meta($comment_id, 'comment_source', 'admin');
-            update_comment_meta($comment_id, 'author_type', 'agent');
-            update_comment_meta($comment_id, 'admin_comment', 'yes');
+            update_comment_meta($comment_id, 'comment_source', 'admin-form');
+            update_comment_meta($comment_id, 'author_type', 'customer');
+            update_comment_meta($comment_id, 'admin_comment', 'no');
             update_comment_meta($comment_id, 'mmhd_suppress_notification', 1);
         }
     }
@@ -3210,41 +3210,40 @@ function mmhd_get_email_logo_file_path()
 /**
  * Returns the HTML email header template.
  *
- * The inline <style> block below is intentional: this markup is the body of a
- * transactional email, and email clients do not support enqueued stylesheets,
- * so the CSS must be embedded. It is never printed on a web page.
+ * Email CSS is loaded from admin/assets/css/mmhd-email.css and inlined here
+ * because email clients require embedded CSS and do not support enqueued
+ * stylesheets. This template is only used for transactional emails; it is
+ * never printed on an admin or front-end page and the stylesheet is never
+ * enqueued in the browser.
  *
- * phpcs:disable WordPress.WP.EnqueuedResources
+ * Email clients need an embedded style element, which is assembled here
+ * because the template is built in PHP. This markup is only used for
+ * transactional emails and is never printed on a page.
  */
 function mmhd_get_default_email_header_template()
 {
-    return <<<'HTML'
-<!DOCTYPE html>
+    $css_file = MMHD_PLUGIN_PATH . 'admin/assets/css/mmhd-email.css';
+    $inline_css = '';
+
+    if (file_exists($css_file)) {
+        $inline_css = (string) file_get_contents($css_file);
+    }
+
+    // Email clients need a style element. This is not a page-level style tag.
+    $email_style = sprintf(
+        '<%1$s type="text/css">%2$s</%1$s>',
+        'style',
+        str_replace('</style>', '', $inline_css)
+    );
+
+    $template = '<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <title>{{EMAIL_SUBJECT}}</title>
-    <style type="text/css">
-        body { margin: 0; padding: 0; background-color: #f1f1f1; font-family: Arial, sans-serif; color: #212529; }
-        table { border-collapse: collapse; border-spacing: 0; }
-        .wrapper { width: 100%; background-color: #f1f1f1; padding: 24px 0; }
-        .container { width: 100%; max-width: 650px; margin: 0 auto; background-color: #ffffff; border-radius: 14px; overflow: hidden; }
-        .header { padding: 24px 28px; text-align: center; }
-        .header img { max-width: 220px; width: 100%; height: auto; }
-        .subject { margin: 0; padding: 0; font-size: 22px; line-height: 1.4; color: #2c2c2c; font-weight: 700; }
-        .content { padding: 30px; font-size: 16px; line-height: 1.6; color: #212529; }
-        .content a { color: {{THEME_COLOR}}; word-break: break-word; }
-        .content p { margin: 0 0 14px; }
-        .footer { text-align: center; padding: 18px 24px; }
-        .footer, .footer a { color: #ffffff; font-size: 12px; line-height: 1.5; text-decoration: none; }
-        @media only screen and (max-width: 680px) {
-            .wrapper { padding: 12px; }
-            .content { padding: 20px; }
-            .subject { font-size: 20px; }
-        }
-    </style>
+    ' . $email_style . '
 </head>
 <body>
     <table role="presentation" class="wrapper" width="100%" cellpadding="0" cellspacing="0" border="0">
@@ -3263,10 +3262,10 @@ function mmhd_get_default_email_header_template()
                     </tr>
                     <tr>
                         <td class="content">
-HTML;
-}
-// phpcs:enable WordPress.WP.EnqueuedResources
+';
 
+    return $template;
+}
 function mmhd_get_default_email_footer_template()
 {
     return <<<'HTML'

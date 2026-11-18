@@ -4,7 +4,7 @@ Tags: support, tickets, helpdesk, customer-support, faq
 Requires at least: 5.8
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 2.0.0
+Stable tag: 1.5.9
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -51,6 +51,15 @@ Build configuration: public/webpack.config.js
 The complete source code, including the sources used to build the frontend bundles, is available at https://github.com/utsavsinghrathour/metamint-helpdesk
 
 == Changelog ==
+
+= 1.5.9 =
+* Added the `[mmhd_faq]` shortcode with accordion and Q&A modes, optional category filtering, and FAQPage structured data.
+* Added a copyable shortcode to the FAQ category admin screen.
+* Moved remaining inline admin JavaScript/CSS into enqueued asset files.
+* Removed the admin-wide email stylesheet; email styles are inlined only into transactional emails.
+* Added a depth limit to MIME parsing to prevent resource exhaustion from deeply nested messages.
+* Kept dashboard forms and buttons intact while escaping dashboard output.
+* Fixed version consistency across the plugin header, constant, and readme.
 
 = 1.5.8 =
 * Fixed plugin activation on clean WordPress installations (support page creation now runs on init).

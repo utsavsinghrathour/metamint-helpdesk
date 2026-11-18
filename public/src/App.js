@@ -8,7 +8,7 @@ import ContextualNotices from "./components/ContextualNotices.jsx";
 import { requestStartConversation } from "./utils/startConversation.js";
 import "./styles/main.css";
 import defaultLogo from "./images/mmhd-logo.png";
-import { AppDataProvider, useAppData } from "./utils/AppDataContext.jsx";
+import { AppDataProvider, useAppData, updateLoginStatus } from "./utils/AppDataContext.jsx";
 // import useExclusiveServerEvents from './Hooks/useExclusiveServerEvents.js';
 // import useSSE from './Hooks/useSSE.js';
 import { sseManager } from "./Hooks/sseManager.js";
@@ -20,6 +20,7 @@ const AppContent = ({ imageUrls = { logo: "" } }) => {
     ticketsContext,
     loggedinContext,
     loggedInUsrId,
+    updateLoginStatus,
     updateTicket,
     updateNewCommentNotification,
     errorContext,
@@ -76,6 +77,18 @@ const AppContent = ({ imageUrls = { logo: "" } }) => {
       if (chatEnabled) setActiveTab(1);
     }
   }, []);
+
+  // Sync login state from the localized mmhdAuth object so that an already-
+  // logged-in visitor gets their tickets and chat features immediately,
+  // without having to go through the login form first.
+  useEffect(() => {
+    if (window.mmhdAuth?.isLoggedIn === "true" && !loggedinContext) {
+      const userId = window.mmhdAuth?.loggedInUserId;
+      if (userId) {
+        updateLoginStatus(true, String(userId));
+      }
+    }
+  }, [loggedinContext, updateLoginStatus]);
 
   useEffect(() => {
     if (isSupportPage || !requestedTicketId || hasAutoOpenedTicket.current) {
@@ -207,7 +220,7 @@ const AppContent = ({ imageUrls = { logo: "" } }) => {
     if (!loggedinContext && !loggedInUsrId) return null;
     const nonce = window.mmhdAuth?.restNonce || window.wpApiSettings?.nonce || '';
     return `${window.location.origin}/wp-json/mmhd/v1/stream/tickets/0/${initialCursorId}/${loggedInUsrId}?_wpnonce=${nonce}`;
-  }, [initialCursorId, loggedInUsrId]);
+  }, [initialCursorId, loggedInUsrId, isOpen]);
 
   // Tracks the latest reply id already accounted for, per ticket, so we beep
   // only for genuinely NEW messages (not already-unread ones) and beep again
@@ -290,7 +303,7 @@ const AppContent = ({ imageUrls = { logo: "" } }) => {
       "tickets",
     );
     return () => {
-      console.info("closing");
+      // console.info("closing");
       unsubscribeNewTicket();
       unsubscribeNotification();
       sseManager.disconnect("tickets");
@@ -328,10 +341,10 @@ const AppContent = ({ imageUrls = { logo: "" } }) => {
         const now = Math.floor(Date.now() / 1000); // current time in seconds
         // 2. Check if token is still valid
         if (parsed.token && parsed.expiry && parsed.expiry > now) {
-          console.log("Using available token");
+          // console.log("Using available token");
           return parsed.token;
         } else {
-          console.log("Token expired, generating new one...");
+          // console.log("Token expired, generating new one...");
         }
       }
       const response = await apiFetch({
@@ -341,6 +354,13 @@ const AppContent = ({ imageUrls = { logo: "" } }) => {
       });
       const now = Math.floor(Date.now() / 1000);
 
+      // The login endpoint rotates the REST nonce when it creates a new
+      // session token. Keep the client-side mmhdAuth nonce in sync so that
+      // subsequent REST calls (ticket list, notifications, ...) keep working.
+      if (response.rest_nonce) {
+        window.mmhdAuth.restNonce = response.rest_nonce;
+      }
+
       const tokenData = {
         token: response.token,
         expiry: now + duration,
@@ -348,7 +368,7 @@ const AppContent = ({ imageUrls = { logo: "" } }) => {
 
       // 4. Store token + expiry
       localStorage.setItem(STORAGE_KEY, JSON.stringify(tokenData));
-      console.log("Generated new token");
+      // console.log("Generated new token");
       return response.token;
     } catch (err) {
       console.error(
@@ -358,7 +378,7 @@ const AppContent = ({ imageUrls = { logo: "" } }) => {
   };
 
   const handlePopupToggle = async () => {
-    console.log("Toggle Clicked", window.mmhdAuth?.isLoggedIn, typeof window.mmhdAuth?.isLoggedIn);
+    // console.log("Toggle Clicked", window.mmhdAuth?.isLoggedIn, typeof window.mmhdAuth?.isLoggedIn);
     if (isOpen) {
       setIsOpen(false);
       setShowActiveFeatured(true);
