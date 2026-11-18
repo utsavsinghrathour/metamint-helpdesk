@@ -474,27 +474,73 @@ add_action('admin_footer', 'mmhd_faq_category_shortcode_copy_js');
 function mmhd_faq_category_shortcode_copy_js()
 {
     $screen = get_current_screen();
-    if (!$screen || 'edit-tags' !== $screen->id || 'mmhd_faq_category' !== $screen->taxonomy) {
+    // Only load on taxonomy term pages for our FAQ category taxonomy.
+    if (!$screen || 'edit-tags' !== $screen->id || 'mmhd_faq_category' !== (string) $screen->taxonomy) {
         return;
     }
     ?>
     <script>
     (function () {
+        function copyText(text, btn) {
+            var success = false;
+
+            // Modern Clipboard API
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(text).then(function () {
+                    success = true;
+                    showFeedback(btn, true);
+                }, function (err) {
+                    success = false;
+                    fallbackCopy(text, btn);
+                });
+                return;
+            }
+
+            // Fallback for older browsers
+            fallbackCopy(text, btn);
+        }
+
+        function fallbackCopy(text, btn) {
+            try {
+                var textarea = document.createElement('textarea');
+                textarea.value = text;
+                textarea.style.position = 'fixed';
+                textarea.style.left = '-9999px';
+                textarea.style.top = '-9999px';
+                document.body.appendChild(textarea);
+                textarea.focus();
+                textarea.select();
+                var ok = document.execCommand('copy');
+                document.body.removeChild(textarea);
+                showFeedback(btn, ok);
+            } catch (err) {
+                showFeedback(btn, false);
+            }
+        }
+
+        function showFeedback(btn, ok) {
+            var original = btn.textContent;
+            if (ok) {
+                btn.textContent = '<?php esc_attr_e('Copied!', 'metamint-helpdesk'); ?>';
+                btn.classList.add('button-primary');
+            } else {
+                btn.textContent = '<?php esc_attr_e('Failed', 'metamint-helpdesk'); ?>';
+                btn.classList.add('button-outline');
+            }
+            setTimeout(function () {
+                btn.textContent = original;
+                btn.classList.remove('button-primary');
+                btn.classList.remove('button-outline');
+            }, 1500);
+        }
+
         document.addEventListener('click', function (e) {
             var btn = e.target.closest('.mmhd-copy-shortcode');
             if (!btn) return;
             var target = document.querySelector(btn.getAttribute('data-clipboard-target'));
             if (!target) return;
             var text = target.textContent || target.innerText;
-            navigator.clipboard.writeText(text).then(function () {
-                var original = btn.textContent;
-                btn.textContent = '<?php esc_attr_e('Copied!', 'metamint-helpdesk'); ?>';
-                btn.classList.add('button-primary');
-                setTimeout(function () {
-                    btn.textContent = original;
-                    btn.classList.remove('button-primary');
-                }, 1500);
-            });
+            copyText(text, btn);
         });
     })();
     </script>
