@@ -459,6 +459,44 @@ function mmhd_render_faq_category_shortcode_column($value, $column_name, $term_i
 
     $shortcode = sprintf('[mmhd_faq category="%s" accordion="true"]', esc_attr($term->slug));
 
-    echo '<code style="font-size:12px; font-family:monospace; background:#f1f5f9; padding:2px 4px; border-radius:3px; border:1px solid #cbd5e1;">' . esc_html($shortcode) . '</code>';
+    echo '<div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">';
+    echo '<code style="font-size:12px; font-family:monospace; background:#f1f5f9; padding:2px 4px; border-radius:3px; border:1px solid #cbd5e1;" id="mmhd-faq-shortcode-' . absint($term_id) . '">' . esc_html($shortcode) . '</code>';
+    echo '<button type="button" class="button mmhd-copy-shortcode" data-clipboard-target="#mmhd-faq-shortcode-' . absint($term_id) . '" style="font-size:11px; padding:3px 8px;">' . esc_html__('Copy', 'metamint-helpdesk') . '</button>';
+    echo '</div>';
     echo '<div style="font-size:11px; color:#64748b; margin-top:2px;">' . esc_html__('Copy to display this category FAQs.', 'metamint-helpdesk') . '</div>';
+}
+
+/**
+ * Copy-to-clipboard JS for FAQ category shortcode column
+ * (edit-tags.php?taxonomy=mmhd_faq_category&post_type=mmhd_faq)
+ */
+add_action('admin_footer', 'mmhd_faq_category_shortcode_copy_js');
+function mmhd_faq_category_shortcode_copy_js()
+{
+    $screen = get_current_screen();
+    if (!$screen || 'edit-tags' !== $screen->id || 'mmhd_faq_category' !== $screen->taxonomy) {
+        return;
+    }
+    ?>
+    <script>
+    (function () {
+        document.addEventListener('click', function (e) {
+            var btn = e.target.closest('.mmhd-copy-shortcode');
+            if (!btn) return;
+            var target = document.querySelector(btn.getAttribute('data-clipboard-target'));
+            if (!target) return;
+            var text = target.textContent || target.innerText;
+            navigator.clipboard.writeText(text).then(function () {
+                var original = btn.textContent;
+                btn.textContent = '<?php esc_attr_e('Copied!', 'metamint-helpdesk'); ?>';
+                btn.classList.add('button-primary');
+                setTimeout(function () {
+                    btn.textContent = original;
+                    btn.classList.remove('button-primary');
+                }, 1500);
+            });
+        });
+    })();
+    </script>
+    <?php
 }
