@@ -132,6 +132,8 @@ add_filter('user_has_cap', function ($allcaps, $caps, $args) {
 }, 10, 3);
 
 require_once MMHD_PLUGIN_PATH . 'public/includes/mmhd-shortcodes.php';
+require_once MMHD_PLUGIN_PATH . 'admin/includes/mmhd-wizard.php';
+require_once MMHD_PLUGIN_PATH . 'admin/includes/mmhd-functions.php';
 
 function mmhd_activate()
 {
@@ -219,6 +221,29 @@ function mmhd_deactivate()
 
     // Clear the email fetch cron event
     wp_clear_scheduled_hook('mmhd_email_fetch_cron');
+}
+
+/**
+ * Redirect to setup wizard on first admin visit after activation.
+ */
+add_action('admin_init', 'mmhd_wizard_admin_init_redirect');
+function mmhd_wizard_admin_init_redirect()
+{
+    if (defined('DOING_AJAX') || defined('DOING_CRON')) {
+        return;
+    }
+
+    $current_page = isset($_GET['page']) ? sanitize_key($_GET['page']) : '';
+
+    // Only redirect mmhd pages (not wizard itself)
+    if (!mmhd_is_wizard_completed()
+        && strpos($current_page, 'mmhd-') === 0
+        && $current_page !== 'mmhd-wizard'
+        && current_user_can('mmhd_manage_settings')
+    ) {
+        wp_safe_redirect(admin_url('admin.php?page=mmhd-wizard&step=welcome'));
+        exit;
+    }
 }
 
 /**

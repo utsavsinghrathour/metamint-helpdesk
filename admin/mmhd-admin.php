@@ -36,6 +36,28 @@ function mmhd_add_admin_menu()
         'mmhd_dashboard_callback'
     );
 
+    // Setup Wizard (only visible in sidebar menu until setup is completed)
+    if (!mmhd_is_wizard_completed()) {
+        add_submenu_page(
+            'mmhd-dashboard',
+            __('Setup Wizard', 'metamint-helpdesk'),
+            __('Setup Wizard', 'metamint-helpdesk'),
+            'mmhd_manage_settings',
+            'mmhd-wizard',
+            'mmhd_wizard_callback'
+        );
+    } else {
+        // When completed, register with null parent so it is hidden from sidebar while keeping route valid
+        add_submenu_page(
+            null,
+            __('Setup Wizard', 'metamint-helpdesk'),
+            __('Setup Wizard', 'metamint-helpdesk'),
+            'mmhd_manage_settings',
+            'mmhd-wizard',
+            'mmhd_wizard_callback'
+        );
+    }
+
 
 
     add_submenu_page(

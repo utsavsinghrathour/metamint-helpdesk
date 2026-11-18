@@ -3771,3 +3771,229 @@ function mmhd_render_ticket_reply_markdown( $content, $comment = null ) {
     return mmhd_markdown_to_html( $content );
 }
 add_filter( 'comment_text', 'mmhd_render_ticket_reply_markdown', 1, 2 );
+
+/**
+ * AJAX handler for saving wizard step data.
+ */
+add_action('wp_ajax_mmhd_wizard_save_step', 'mmhd_wizard_save_step');
+function mmhd_wizard_save_step()
+{
+    check_ajax_referer('mmhd_wizard_action', 'nonce');
+
+    if (!current_user_can('mmhd_manage_settings')) {
+        wp_send_json_error(['message' => 'Insufficient permissions']);
+    }
+
+    $step = sanitize_key($_POST['step'] ?? '');
+    $valid_steps = array_keys(mmhd_get_wizard_steps());
+
+    if (!in_array($step, $valid_steps, true)) {
+        wp_send_json_error(['message' => 'Invalid step']);
+    }
+
+    $wizard_data = get_option('mmhd_wizard_data', array());
+
+    switch ($step) {
+        case 'site':
+            $wizard_data['site'] = array(
+                'site_name'   => sanitize_text_field($_POST['site_name'] ?? ''),
+                'admin_email' => sanitize_email($_POST['admin_email'] ?? ''),
+                'theme_color' => sanitize_hex_color($_POST['theme_color'] ?? '#000000'),
+            );
+            update_option('mmhd_site_name', $wizard_data['site']['site_name']);
+            update_option('mmhd_admin_email', $wizard_data['site']['admin_email']);
+            update_option('mmhd_theme_color', $wizard_data['site']['theme_color']);
+            break;
+
+        case 'email':
+            $wizard_data['email'] = array(
+                'imap_host'  => sanitize_text_field($_POST['imap_host'] ?? ''),
+                'imap_port'  => absint($_POST['imap_port'] ?? 993),
+                'imap_user'  => sanitize_email($_POST['imap_user'] ?? ''),
+                'imap_pass'  => sanitize_text_field($_POST['imap_pass'] ?? ''),
+                'skip_email' => sanitize_text_field($_POST['skip_email'] ?? '0'),
+            );
+            if (!empty($wizard_data['email']['imap_host'])) {
+                update_option('mmhd_imap_host', $wizard_data['email']['imap_host']);
+                update_option('mmhd_imap_port', $wizard_data['email']['imap_port']);
+                update_option('mmhd_imap_user', $wizard_data['email']['imap_user']);
+                update_option('mmhd_imap_pass', $wizard_data['email']['imap_pass']);
+            }
+            break;
+
+        case 'team':
+            $members = json_decode($_POST['members'] ?? '[]', true);
+            $wizard_data['team'] = is_array($members) ? $members : array();
+            foreach ($members as $member) {
+                if (!empty($member['email'])) {
+                    $user = get_user_by('email', $member['email']);
+                    if (!$user) {
+                        $user_id = wp_insert_user(array(
+                            'user_login' => sanitize_user(strstr($member['email'], '@', true), true),
+                            'user_email' => sanitize_email($member['email']),
+                            'user_pass'  => wp_generate_password(12),
+                            'role'       => sanitize_key($member['role'] ?? 'mmhd_support_staff'),
+                        ));
+                        if (!is_wp_error($user_id)) {
+                            $user = get_user_by('id', $user_id);
+                        }
+                    }
+                    if ($user && !empty($member['role'])) {
+                        $user->set_role(sanitize_key($member['role']));
+                    }
+                }
+            }
+            break;
+
+        case 'chat':
+            $wizard_data['chat'] = array(
+                'chat_heading' => sanitize_text_field($_POST['chat_heading'] ?? ''),
+                'welcome_message' => sanitize_textarea_field($_POST['welcome_message'] ?? ''),
+                'enable_chat' => sanitize_text_field($_POST['enable_chat'] ?? '0'),
+            );
+            update_option('mmhd_chat_heading', $wizard_data['chat']['chat_heading']);
+            update_option('mmhd_welcome_message', $wizard_data['chat']['welcome_message']);
+            update_option('mmhd_enable_chat', $wizard_data['chat']['enable_chat']);
+            break;
+
+        case 'setup':
+            $wizard_data['setup'] = array(
+                'completed' => true,
+            );
+            if (isset($_POST['site_name'])) {
+                $site_name = sanitize_text_field($_POST['site_name']);
+                update_option('mmhd_site_name', $site_name);
+                $wizard_data['setup']['site_name'] = $site_name;
+            }
+            if (isset($_POST['admin_email'])) {
+                $admin_email = sanitize_email($_POST['admin_email']);
+                if (is_email($admin_email)) {
+                    update_option('mmhd_admin_email', $admin_email);
+                    $wizard_data['setup']['admin_email'] = $admin_email;
+                }
+            }
+            if (isset($_POST['theme_color'])) {
+                $theme_color = sanitize_hex_color($_POST['theme_color']);
+                if ($theme_color) {
+                    update_option('mmhd_theme_color', $theme_color);
+                    $wizard_data['setup']['theme_color'] = $theme_color;
+                }
+            }
+            if (isset($_POST['enable_chat'])) {
+                $enable_chat = sanitize_text_field($_POST['enable_chat']) === '1' ? '1' : '0';
+                update_option('mmhd_enable_chat', $enable_chat);
+                $wizard_data['setup']['enable_chat'] = $enable_chat;
+            }
+            if (isset($_POST['chat_heading'])) {
+                $chat_heading = sanitize_text_field($_POST['chat_heading']);
+                update_option('mmhd_chat_heading', $chat_heading);
+                $wizard_data['setup']['chat_heading'] = $chat_heading;
+            }
+            if (isset($_POST['welcome_message'])) {
+                $welcome_message = sanitize_textarea_field($_POST['welcome_message']);
+                update_option('mmhd_welcome_message', $welcome_message);
+                $wizard_data['setup']['welcome_message'] = $welcome_message;
+            }
+            if (isset($_POST['default_role'])) {
+                $default_role = sanitize_key($_POST['default_role']);
+                update_option('mmhd_wizard_default_role', $default_role);
+                $wizard_data['setup']['default_role'] = $default_role;
+            }
+            break;
+
+        case 'addons':
+            $wizard_data['addons'] = array(
+                'completed' => true,
+            );
+            break;
+    }
+
+    update_option('mmhd_wizard_data', $wizard_data, true);
+
+    wp_send_json_success(['message' => __('Step saved successfully', 'metamint-helpdesk')]);
+}
+
+/**
+ * AJAX handler for adding a new department or priority term during wizard setup.
+ */
+add_action('wp_ajax_mmhd_wizard_add_item', 'mmhd_wizard_add_item');
+function mmhd_wizard_add_item()
+{
+    check_ajax_referer('mmhd_wizard_action', 'nonce');
+
+    if (!current_user_can('mmhd_manage_settings')) {
+        wp_send_json_error(['message' => 'Insufficient permissions']);
+    }
+
+    $type    = sanitize_key($_POST['type'] ?? '');
+    $name    = sanitize_text_field($_POST['name'] ?? '');
+    $color   = sanitize_hex_color($_POST['color'] ?? '#10b981');
+
+    if (empty($name)) {
+        wp_send_json_error(['message' => __('Name is required', 'metamint-helpdesk')]);
+    }
+
+    if ($type === 'department') {
+        $taxonomy = 'mmhd_ticket_category';
+    } elseif ($type === 'priority') {
+        $taxonomy = 'mmhd_ticket_priority';
+    } else {
+        wp_send_json_error(['message' => __('Invalid type', 'metamint-helpdesk')]);
+    }
+
+    // Check if term already exists
+    $existing = term_exists($name, $taxonomy);
+    if (!empty($existing) && !is_wp_error($existing)) {
+        wp_send_json_error(['message' => sprintf(__('%s already exists', 'metamint-helpdesk'), $name)]);
+    }
+
+    $result = wp_insert_term($name, $taxonomy, array(
+        'description' => '',
+    ));
+
+    if (is_wp_error($result)) {
+        wp_send_json_error(['message' => $result->get_error_message()]);
+    }
+
+    if ($type === 'priority' && $color) {
+        update_term_meta($result['term_id'], 'priority_color', $color);
+    }
+
+    wp_send_json_success(array(
+        'id'   => $result['term_id'],
+        'name' => $name,
+    ));
+}
+
+/**
+ * AJAX handler for removing a department or priority term during wizard setup.
+ */
+add_action('wp_ajax_mmhd_wizard_remove_item', 'mmhd_wizard_remove_item');
+function mmhd_wizard_remove_item()
+{
+    check_ajax_referer('mmhd_wizard_action', 'nonce');
+
+    if (!current_user_can('mmhd_manage_settings')) {
+        wp_send_json_error(['message' => 'Insufficient permissions']);
+    }
+
+    $type = sanitize_key($_POST['type'] ?? '');
+    $id   = absint($_POST['id'] ?? 0);
+
+    if ($type === 'department') {
+        $taxonomy = 'mmhd_ticket_category';
+    } elseif ($type === 'priority') {
+        $taxonomy = 'mmhd_ticket_priority';
+    } else {
+        wp_send_json_error(['message' => __('Invalid type', 'metamint-helpdesk')]);
+    }
+
+    $term = get_term($id, $taxonomy);
+    if (! $term || is_wp_error($term)) {
+        wp_send_json_error(['message' => __('Term not found', 'metamint-helpdesk')]);
+    }
+
+    wp_delete_term($id, $taxonomy);
+
+    wp_send_json_success(['message' => __('Removed successfully', 'metamint-helpdesk')]);
+}
