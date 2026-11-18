@@ -1,7 +1,7 @@
 === Metamint Helpdesk ===
 Contributors: codepixelzmedia, utsavsinghrathour
 Tags: support, tickets, helpdesk, customer-support, faq
-Requires at least: 5.8
+Requires at least: 6.6
 Tested up to: 7.1
 Requires PHP: 7.4
 Stable tag: 1.5.9
