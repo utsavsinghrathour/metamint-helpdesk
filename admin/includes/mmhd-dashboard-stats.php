@@ -114,9 +114,9 @@ $mmhd_stat_cards = [
                     data-mmhd-sparkline-label-today="<?php echo esc_attr__('Today', 'metamint-helpdesk'); ?>"
                     data-mmhd-sparkline-label-yesterday="<?php echo esc_attr__('Yesterday', 'metamint-helpdesk'); ?>"
                     data-mmhd-sparkline-label-template="<?php
-                        /* translators: 1: sparkline label, 2: trend direction (up or down). */
-                        echo esc_attr(__('%1$s: sparkline for the last 14 days. Trend %2$s versus the previous 7 days.', 'metamint-helpdesk'));
-                    ?>"
+                                                        /* translators: 1: sparkline label, 2: trend direction (up or down). */
+                                                        echo esc_attr(__('%1$s: sparkline for the last 14 days. Trend %2$s versus the previous 7 days.', 'metamint-helpdesk'));
+                                                        ?>"
                     tabindex="0"
                     role="img"
                     aria-label="<?php echo esc_attr($mmhd_aria_label); ?>">
@@ -302,11 +302,11 @@ $mmhd_stat_cards = [
             <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4"><?php esc_html_e('Quick Actions', 'metamint-helpdesk'); ?></h3>
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <button onclick="showPage('new-ticket')"
-                    class="bg-blue-50 hover:bg-blue-100 p-4 rounded-lg text-left transition-colors">
-                    <i class="fas fa-plus text-blue-600 text-xl mb-2"></i>
-                    <div class="text-sm font-medium text-blue-900"><?php esc_html_e('Create New Conversation', 'metamint-helpdesk'); ?>
+                    class="bg-teal-50 hover:bg-teal-100 p-4 rounded-lg text-left transition-colors">
+                    <i class="fas fa-plus text-teal-600 text-xl mb-2"></i>
+                    <div class="text-sm font-medium text-teal-900"><?php esc_html_e('Create New Conversation', 'metamint-helpdesk'); ?>
                     </div>
-                    <div class="text-xs text-blue-700"><?php esc_html_e('Add a new support conversation', 'metamint-helpdesk'); ?></div>
+                    <div class="text-xs text-teal-600"><?php esc_html_e('Add a new support conversation', 'metamint-helpdesk'); ?></div>
                 </button>
                 <button
                     onclick="window.location.href='<?php echo esc_url(admin_url('users.php?role=mmhd_support_customer')); ?>'"

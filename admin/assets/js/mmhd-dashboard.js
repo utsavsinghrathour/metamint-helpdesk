@@ -177,56 +177,54 @@ function loadDashboardTickets() {
     });
 }
 
-  function getBlinkingClass(ticket) {
-    // Ensure ticket is from chat and status is open/in-progress
-    const isChat = ticket.source === "chat";
-    const isActiveStatus = ["open", "in-progress"].includes(ticket.status);
+function getBlinkingClass(ticket) {
+  // Ensure ticket is from chat and status is open/in-progress
+  const isChat = ticket.source === "chat";
+  const isActiveStatus = ["open", "in-progress"].includes(ticket.status);
 
-    if (!isChat || !isActiveStatus) {
-      return "";
-    }
-
-    const replies = Array.isArray(ticket.replies) ? ticket.replies : [];
-    const lastReply = replies.length > 0 ? replies[replies.length - 1] : null;
-
-    const now = new Date();
-    const lastReplyTime = parseMetamintHelpdeskDate(
-      lastReply?.timestamp || lastReply?.date || ticket.updated,
-    );
-    const isValidDate =
-      lastReplyTime instanceof Date &&
-      !isNaN(lastReplyTime.getTime()) &&
-      lastReplyTime <= now;
-
-    const diffMinutes = isValidDate
-      ? (now - lastReplyTime) / (1000 * 60)
-      : null;
-
-    const isCustomerReply =
-      lastReply &&
-      (lastReply.author === ticket.customer ||
-        lastReply.author === ticket.email ||
-        lastReply.type === "customer" ||
-        lastReply.author_type === "customer");
-
-    // Case: RED
-    if (
-      isCustomerReply &&
-      diffMinutes !== null &&
-      diffMinutes > 3 &&
-      diffMinutes < 60
-    ) {
-      return "blinking-red";
-    }
-
-    // Case: YELLOW
-    if (isCustomerReply && diffMinutes !== null && diffMinutes < 3) {
-      return "blinking-yellow";
-    }
-
-    // Case: GREEN (only if chat + status matches)
-    return "blinking-green";
+  if (!isChat || !isActiveStatus) {
+    return "";
   }
+
+  const replies = Array.isArray(ticket.replies) ? ticket.replies : [];
+  const lastReply = replies.length > 0 ? replies[replies.length - 1] : null;
+
+  const now = new Date();
+  const lastReplyTime = parseMetamintHelpdeskDate(
+    lastReply?.timestamp || lastReply?.date || ticket.updated,
+  );
+  const isValidDate =
+    lastReplyTime instanceof Date &&
+    !isNaN(lastReplyTime.getTime()) &&
+    lastReplyTime <= now;
+
+  const diffMinutes = isValidDate ? (now - lastReplyTime) / (1000 * 60) : null;
+
+  const isCustomerReply =
+    lastReply &&
+    (lastReply.author === ticket.customer ||
+      lastReply.author === ticket.email ||
+      lastReply.type === "customer" ||
+      lastReply.author_type === "customer");
+
+  // Case: RED
+  if (
+    isCustomerReply &&
+    diffMinutes !== null &&
+    diffMinutes > 3 &&
+    diffMinutes < 60
+  ) {
+    return "blinking-red";
+  }
+
+  // Case: YELLOW
+  if (isCustomerReply && diffMinutes !== null && diffMinutes < 3) {
+    return "blinking-yellow";
+  }
+
+  // Case: GREEN (only if chat + status matches)
+  return "blinking-green";
+}
 
 function renderDashboardTable(filteredTickets) {
   const tableBody = document.getElementById("dashboard-tickets-table");
@@ -539,7 +537,9 @@ function updateDashboardSparklines(trends) {
       `[data-mmhd-sparkline-area="${key}"]`,
     );
     const dot = document.querySelector(`[data-mmhd-sparkline-dot="${key}"]`);
-    const chart = document.querySelector(`[data-mmhd-sparkline-chart="${key}"]`);
+    const chart = document.querySelector(
+      `[data-mmhd-sparkline-chart="${key}"]`,
+    );
     const seriesJson = JSON.stringify(trend.series);
     const seriesChanged =
       Boolean(chart) && chart.dataset.mmhdSparklineSeries !== seriesJson;
@@ -828,9 +828,11 @@ function bindSparklineOutsideDismiss() {
   document.addEventListener("pointerdown", (event) => {
     if (event.target.closest("[data-mmhd-sparkline-chart]")) return;
 
-    document.querySelectorAll("[data-mmhd-sparkline-chart]").forEach((chart) => {
-      hideSparklinePoint(chart);
-    });
+    document
+      .querySelectorAll("[data-mmhd-sparkline-chart]")
+      .forEach((chart) => {
+        hideSparklinePoint(chart);
+      });
   });
 }
 
@@ -841,7 +843,8 @@ function initSparklineInteractions() {
     if (chart.dataset.mmhdSparklineReady === "1") return;
 
     chart.dataset.mmhdSparklineReady = "1";
-    chart.dataset.mmhdSparklineBaseLabel = chart.getAttribute("aria-label") || "";
+    chart.dataset.mmhdSparklineBaseLabel =
+      chart.getAttribute("aria-label") || "";
 
     chart.addEventListener("pointerdown", handleSparklinePointerMove);
     chart.addEventListener("pointermove", handleSparklinePointerMove);
@@ -918,7 +921,12 @@ function updateDashboardCounters(data) {
   });
 }
 
-function renderDashboardPagination(totalItems, filteredItems, currentPage, totalPages) {
+function renderDashboardPagination(
+  totalItems,
+  filteredItems,
+  currentPage,
+  totalPages,
+) {
   const container = document.getElementById("dashboard-pagination");
   if (!container) return;
 
@@ -940,7 +948,7 @@ function renderDashboardPagination(totalItems, filteredItems, currentPage, total
 
   // Previous button
   const prevDisabled = currentPage <= 1;
-  html += `<button type="button" class="dashboard-page-btn" onclick="changeDashboardPage(${currentPage - 1})"${prevDisabled ? ' disabled' : ''}>&laquo; Prev</button>`;
+  html += `<button type="button" class="dashboard-page-btn" onclick="changeDashboardPage(${currentPage - 1})"${prevDisabled ? " disabled" : ""}>&laquo; Prev</button>`;
 
   // Page numbers
   const maxVisiblePages = 5;
@@ -958,7 +966,7 @@ function renderDashboardPagination(totalItems, filteredItems, currentPage, total
   }
 
   for (let i = pageStart; i <= pageEnd; i++) {
-    const activeClass = i === currentPage ? ' active' : '';
+    const activeClass = i === currentPage ? " active" : "";
     html += `<button type="button" class="dashboard-page-btn${activeClass}" onclick="changeDashboardPage(${i})">${i}</button>`;
   }
 
@@ -971,9 +979,9 @@ function renderDashboardPagination(totalItems, filteredItems, currentPage, total
 
   // Next button
   const nextDisabled = currentPage >= totalPages;
-  html += `<button type="button" class="dashboard-page-btn" onclick="changeDashboardPage(${currentPage + 1})"${nextDisabled ? ' disabled' : ''}>Next &raquo;</button>`;
+  html += `<button type="button" class="dashboard-page-btn" onclick="changeDashboardPage(${currentPage + 1})"${nextDisabled ? " disabled" : ""}>Next &raquo;</button>`;
 
-  html += '</div></div>';
+  html += "</div></div>";
 
   container.innerHTML = html;
 }
@@ -1177,9 +1185,9 @@ function createInlineDropdown(options, selectedValue, className) {
     const item = document.createElement("button");
     item.type = "button";
     item.className =
-      "w-full text-left px-3 py-1.5 text-xs hover:bg-blue-50 border-b last:border-b-0";
+      "w-full text-left px-3 py-1.5 text-xs hover:bg-teal-50 border-b last:border-b-0";
     if (String(option.value) === String(selectedValue)) {
-      item.classList.add("bg-blue-50");
+      item.classList.add("bg-teal-50");
     }
     item.textContent = option.label;
     item.addEventListener("click", (event) => {
@@ -1290,7 +1298,7 @@ function editStatus(ticketId, element) {
   const dropdown = createInlineDropdown(
     statusOptions,
     currentStatus,
-    "border border-gray-300 bg-white rounded-md text-xs px-2 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500",
+    "border border-gray-300 bg-white rounded-md text-xs px-2 py-0.5 focus:outline-none focus:ring-2 focus:ring-teal-500",
   );
 
   const restore = () => {
@@ -1360,7 +1368,7 @@ function editPriority(ticketId, element) {
   const dropdown = createInlineDropdown(
     priorityOptions,
     currentPriority,
-    "border border-gray-300 bg-white rounded-md text-xs px-2 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500",
+    "border border-gray-300 bg-white rounded-md text-xs px-2 py-0.5 focus:outline-none focus:ring-2 focus:ring-teal-500",
   );
 
   const restore = () => {
@@ -1446,7 +1454,7 @@ function editAssignee(ticketId, element) {
   const dropdown = createInlineDropdown(
     assigneeOptions,
     currentAssigneeValue,
-    "border border-gray-300 bg-white rounded-md text-xs px-2 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500",
+    "border border-gray-300 bg-white rounded-md text-xs px-2 py-0.5 focus:outline-none focus:ring-2 focus:ring-teal-500",
   );
 
   const restore = () => {
@@ -1660,8 +1668,7 @@ document.addEventListener("DOMContentLoaded", function () {
   );
 
   function fetchSuggestions(type, value, callback) {
-    const url =
-      typeof mmhdAjax !== "undefined" ? mmhdAjax.ajaxurl : ajaxurl;
+    const url = typeof mmhdAjax !== "undefined" ? mmhdAjax.ajaxurl : ajaxurl;
     const nonce =
       typeof mmhdAjax !== "undefined" && mmhdAjax.nonces
         ? mmhdAjax.nonces.user_lookup
@@ -1688,7 +1695,7 @@ document.addEventListener("DOMContentLoaded", function () {
     }
     items.forEach((user) => {
       const div = document.createElement("div");
-      div.className = "cursor-pointer px-3 py-2 hover:bg-blue-100 text-sm";
+      div.className = "cursor-pointer px-3 py-2 hover:bg-teal-100 text-sm";
       div.textContent = `${user.display_name} (${user.user_email})`;
       div.addEventListener("click", () => onSelect(user));
       container.appendChild(div);
@@ -1943,12 +1950,12 @@ function initConversationMultiFilter(config) {
       const chip = document.createElement("span");
       chip.setAttribute("data-mmhd-chip", "1");
       chip.className =
-        "inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800";
+        "inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-teal-100 text-teal-800";
       chip.textContent = value;
 
       const removeButton = document.createElement("button");
       removeButton.type = "button";
-      removeButton.className = "ml-2 text-blue-700 hover:text-blue-900";
+      removeButton.className = "ml-2 text-teal-600 hover:text-teal-800";
       removeButton.innerHTML = "&times;";
       removeButton.setAttribute("aria-label", `Remove ${value}`);
       removeButton.addEventListener("click", () => {
@@ -2014,7 +2021,7 @@ function initConversationMultiFilter(config) {
       const row = document.createElement("button");
       row.type = "button";
       row.className =
-        "w-full text-left px-3 py-2 text-sm hover:bg-blue-50 border-b last:border-b-0";
+        "w-full text-left px-3 py-2 text-sm hover:bg-teal-50 border-b last:border-b-0";
       row.innerHTML = `<div class="font-medium text-gray-900">${escapeHTML(match.value || "")}</div><div class="text-xs text-gray-500">${escapeHTML(match.email || "")}</div>`;
       row.addEventListener("click", () => addValue(match.value || ""));
       suggestions.appendChild(row);
@@ -2054,9 +2061,7 @@ function initConversationMultiFilter(config) {
 }
 
 function initConversationMultiFilters() {
-  const hasCustomerUI = document.getElementById(
-    "mmhd-customer-filter-wrapper",
-  );
+  const hasCustomerUI = document.getElementById("mmhd-customer-filter-wrapper");
   const hasAgentUI = document.getElementById("mmhd-agent-filter-wrapper");
   if (!hasCustomerUI || !hasAgentUI) {
     return;
@@ -2074,9 +2079,7 @@ function initConversationMultiFilters() {
         ? mmhdConversationCustomerOptions
         : [],
     selected:
-      typeof mmhdSelectedCustomers !== "undefined"
-        ? mmhdSelectedCustomers
-        : [],
+      typeof mmhdSelectedCustomers !== "undefined" ? mmhdSelectedCustomers : [],
   });
 
   const agentFilter = initConversationMultiFilter({
@@ -2091,9 +2094,7 @@ function initConversationMultiFilters() {
         ? mmhdConversationAgentOptions
         : [],
     selected:
-      typeof mmhdSelectedAgents !== "undefined"
-        ? mmhdSelectedAgents
-        : [],
+      typeof mmhdSelectedAgents !== "undefined" ? mmhdSelectedAgents : [],
   });
 
   const form = hasCustomerUI.closest("form");
@@ -2346,8 +2347,7 @@ function createCategoryOptions() {
       value: String(mmhdDefaultCategoryObj.term_id),
       label: mmhdDefaultCategoryObj.name,
       selected:
-        String(currentCategoryId) ===
-        String(mmhdDefaultCategoryObj.term_id),
+        String(currentCategoryId) === String(mmhdDefaultCategoryObj.term_id),
     });
   }
 
@@ -2428,7 +2428,7 @@ function loadTicketDetail() {
               <p class="text-sm text-gray-500 truncate">${escapeHTML(currentTicket.email || "")}</p>
             </div>
             <span class="icon-tickets shrink-0 mt-1 flex items-center gap-1">
-              <a href="#" onclick="showCustomerTickets(); return false;" class="mmhd-popover-trigger text-gray-500 hover:text-blue-700" data-popover-text="View all conversations" aria-label="View all conversations">
+              <a href="#" onclick="showCustomerTickets(); return false;" class="mmhd-popover-trigger text-gray-500 hover:text-teal-600" data-popover-text="View all conversations" aria-label="View all conversations">
                 <i class="fas fa-ticket"></i>
               </a>
             </span>
@@ -2484,7 +2484,7 @@ function loadTicketDetail() {
         <div class="space-y-4 pt-6 border-t border-gray-100 text-sm">
           <div class="flex justify-between items-center">
             <span class="text-gray-500">Origin:</span>
-            <span id="ticket-source" class="bg-blue-100 text-blue-700 px-2 py-0.5 rounded text-xs font-bold uppercase">${escapeHTML(
+            <span id="ticket-source" class="bg-teal-100 text-teal-600 px-2 py-0.5 rounded text-xs font-bold uppercase">${escapeHTML(
               String(currentTicket.source || "").toUpperCase(),
             )}</span>
           </div>
@@ -2559,27 +2559,30 @@ function loadTicketDetail() {
   if (isStaffOnly) {
     const assigneeId = currentTicket?.assignee_id;
     const currentUserId = mmhdCurrentUser?.id;
-    const isAssigned = assigneeId && currentUserId && assigneeId === currentUserId;
+    const isAssigned =
+      assigneeId && currentUserId && assigneeId === currentUserId;
 
-    const replyEditor    = document.getElementById("new-reply");
-    const sendReplyBtn   = document.getElementById("send-reply-btn");
-    const replyNotice    = document.getElementById("mmhd-reply-not-assigned-notice");
+    const replyEditor = document.getElementById("new-reply");
+    const sendReplyBtn = document.getElementById("send-reply-btn");
+    const replyNotice = document.getElementById(
+      "mmhd-reply-not-assigned-notice",
+    );
 
     if (!isAssigned) {
       // Disable the reply editor
       if (replyEditor) {
         replyEditor.contentEditable = "false";
         replyEditor.style.opacity = "0.5";
-        replyEditor.style.cursor  = "not-allowed";
+        replyEditor.style.cursor = "not-allowed";
       }
       if (sendReplyBtn) {
         sendReplyBtn.disabled = true;
-        sendReplyBtn.title    = "This ticket is not assigned to you.";
+        sendReplyBtn.title = "This ticket is not assigned to you.";
       }
       // Show an inline notice if not already present
       if (!replyNotice && sendReplyBtn) {
         const notice = document.createElement("p");
-        notice.id        = "mmhd-reply-not-assigned-notice";
+        notice.id = "mmhd-reply-not-assigned-notice";
         notice.className = "text-sm text-amber-600 mt-1";
         notice.textContent = "You can only reply to tickets assigned to you.";
         sendReplyBtn.insertAdjacentElement("afterend", notice);
@@ -2589,11 +2592,11 @@ function loadTicketDetail() {
       if (replyEditor) {
         replyEditor.contentEditable = "true";
         replyEditor.style.opacity = "";
-        replyEditor.style.cursor  = "";
+        replyEditor.style.cursor = "";
       }
       if (sendReplyBtn) {
         sendReplyBtn.disabled = false;
-        sendReplyBtn.title    = "";
+        sendReplyBtn.title = "";
       }
       if (replyNotice) replyNotice.remove();
     }
@@ -2804,7 +2807,10 @@ function showSettingsTab(tabName) {
 
   // Fall back to the basic tab if the requested tab does not exist
   // (e.g. an addon tab that is not rendered because the addon is inactive)
-  if (!document.querySelector(`[data-tab="${tabName}"]`) || !document.getElementById(tabName + "-tab")) {
+  if (
+    !document.querySelector(`[data-tab="${tabName}"]`) ||
+    !document.getElementById(tabName + "-tab")
+  ) {
     if (tabName !== "basic") {
       showSettingsTab("basic");
     }
@@ -3006,9 +3012,7 @@ jQuery(document).ready(function ($) {
       data: {
         action: "mmhd_smtp_save_settings",
         nonce: $form.find('input[name="mmhd_smtp_settings_nonce"]').val(),
-        mmhd_smtp_enabled: $form
-          .find("#mmhd_smtp_enabled")
-          .is(":checked")
+        mmhd_smtp_enabled: $form.find("#mmhd_smtp_enabled").is(":checked")
           ? "1"
           : "0",
         mmhd_smtp_host: $form.find("#mmhd_smtp_host").val(),
@@ -3050,9 +3054,7 @@ jQuery(document).ready(function ($) {
       data: {
         action: "mmhd_smtp_test_connection",
         nonce: $form.find('input[name="mmhd_smtp_settings_nonce"]').val(),
-        mmhd_smtp_enabled: $form
-          .find("#mmhd_smtp_enabled")
-          .is(":checked")
+        mmhd_smtp_enabled: $form.find("#mmhd_smtp_enabled").is(":checked")
           ? "1"
           : "0",
         mmhd_smtp_host: $form.find("#mmhd_smtp_host").val(),
@@ -3169,7 +3171,9 @@ jQuery(document).ready(function ($) {
       enable_auto_assign: $("#enable-auto-assign").is(":checked"),
       enable_notifications: $("#enable-notifications").is(":checked"),
       enable_customer_portal: $("#enable-customer-portal").is(":checked"),
-      enable_signup_rate_limiting: $("#enable-signup-rate-limiting").is(":checked"),
+      enable_signup_rate_limiting: $("#enable-signup-rate-limiting").is(
+        ":checked",
+      ),
       max_file_upload_size: $("#max-file-upload-size").val(),
       reply_unseen_email_minutes: unseenEnabled
         ? $("#reply-unseen-email-minutes").val()
@@ -3188,9 +3192,7 @@ jQuery(document).ready(function ($) {
       type: "POST",
       data: {
         action: "mmhd_save_advanced_settings",
-        nonce: $form
-          .find('input[name="mmhd_advanced_settings_nonce"]')
-          .val(),
+        nonce: $form.find('input[name="mmhd_advanced_settings_nonce"]').val(),
         settings: settings,
       },
       success: function (response) {
@@ -3643,9 +3645,9 @@ jQuery(document).ready(function ($) {
                 `button[onclick="removeAudio('notification-sound-preview', 'mmhd_notification_sound')"]`,
               ).removeClass("hidden");
               // Highlight the audio preview to draw attention
-              audioPreview.addClass("border-2 border-blue-500");
+              audioPreview.addClass("border-2 border-teal-500");
               setTimeout(() => {
-                audioPreview.removeClass("border-2 border-blue-500");
+                audioPreview.removeClass("border-2 border-teal-500");
               }, 2000); // Remove highlight after 2 seconds
             }
           }
@@ -4165,7 +4167,7 @@ function addReply() {
   // Client-side assignment guard — mirrors server-side restriction
   const userRole = mmhdCurrentUser?.role;
   if (userRole === "mmhd_support_staff") {
-    const assigneeId    = currentTicket?.assignee_id;
+    const assigneeId = currentTicket?.assignee_id;
     const currentUserId = mmhdCurrentUser?.id;
     if (!assigneeId || !currentUserId || assigneeId !== currentUserId) {
       showToast("You can only reply to tickets assigned to you.", "error");
@@ -4309,7 +4311,7 @@ function renderReplies(replies) {
     .map((reply, index) => {
       // Add special style if reply.comment_meta?.is_action is true
       const isAction = reply.comment_meta?.is_action === true; // Use optional chaining for safety
-      const actionClass = isAction ? "reply-action bg-blue-200" : "";
+      const actionClass = isAction ? "reply-action bg-teal-50" : "";
       const replyRole =
         reply.role ||
         (reply.is_bot_response || reply.comment_meta?.is_bot_response
@@ -4368,7 +4370,7 @@ function closeTicket() {
       <div class="bg-white rounded-lg shadow-lg p-6 max-w-sm w-full text-center">
         <div class="mb-4 text-lg font-medium text-gray-800">${message}</div>
         <div class="flex justify-center gap-4">
-          <button id="custom-confirm-yes" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Yes</button>
+          <button id="custom-confirm-yes" class="px-4 py-2 bg-teal-600 text-white rounded hover:bg-teal-700">Yes</button>
           <button id="custom-confirm-no" class="px-4 py-2 bg-gray-300 text-gray-800 rounded hover:bg-gray-400">Cancel</button>
         </div>
       </div>
@@ -4548,11 +4550,13 @@ function loadRepliesAndNotes() {
       currentTicket.notes = result.data.notes;
       if (repliesList) {
         renderReplies(result.data.replies);
-        document.getElementById("replies-count").textContent = result.data.replies_count;
+        document.getElementById("replies-count").textContent =
+          result.data.replies_count;
       }
       if (notesList) {
         renderNotes(result.data.notes);
-        document.getElementById("notes-count").textContent = result.data.notes_count;
+        document.getElementById("notes-count").textContent =
+          result.data.notes_count;
       }
     })
     .catch((error) => {
@@ -4678,7 +4682,7 @@ document.addEventListener("DOMContentLoaded", function () {
       modal.innerHTML = `
       <div class="bg-white rounded-lg shadow-lg p-6 max-w-sm w-full text-center">
         <div class="mb-4 text-lg font-medium text-gray-800">${message}</div>
-        <button id="custom-alert-ok" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">OK</button>
+        <button id="custom-alert-ok" class="px-4 py-2 bg-teal-600 text-white rounded hover:bg-teal-700">OK</button>
       </div>
       `;
       document.body.appendChild(modal);
@@ -4696,7 +4700,7 @@ document.addEventListener("DOMContentLoaded", function () {
       <div class="bg-white rounded-lg shadow-lg p-6 max-w-sm w-full text-center">
         <div class="mb-4 text-lg font-medium text-gray-800">${message}</div>
         <div class="flex justify-center gap-4">
-        <button id="custom-confirm-yes" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Yes</button>
+        <button id="custom-confirm-yes" class="px-4 py-2 bg-teal-600 text-white rounded hover:bg-teal-700">Yes</button>
         <button id="custom-confirm-no" class="px-4 py-2 bg-gray-300 text-gray-800 rounded hover:bg-gray-400">Cancel</button>
         </div>
       </div>
@@ -4721,7 +4725,7 @@ document.addEventListener("DOMContentLoaded", function () {
         <div class="mb-4 text-lg font-medium text-gray-800 text-center">${message}</div>
        
         <div class="flex justify-center gap-4">
-        <button id="custom-confirm-yes" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Yes</button>
+        <button id="custom-confirm-yes" class="px-4 py-2 bg-teal-600 text-white rounded hover:bg-teal-700">Yes</button>
         <button id="custom-confirm-no" class="px-4 py-2 bg-gray-300 text-gray-800 rounded hover:bg-gray-400">Cancel</button>
         </div>
       </div>
@@ -4873,7 +4877,9 @@ jQuery(document).ready(function ($) {
 
           // Detect if there are genuinely new replies
           const incomingIds = new Set(replies.map((r) => String(r.id)));
-          const hasNewReplies = replies.some((r) => !lastKnownReplyIds.has(String(r.id)));
+          const hasNewReplies = replies.some(
+            (r) => !lastKnownReplyIds.has(String(r.id)),
+          );
 
           if (hasNewReplies && lastKnownReplyIds.size > 0 && repliesList) {
             // Play notification sound for new replies from others
@@ -4901,7 +4907,8 @@ jQuery(document).ready(function ($) {
             currentTicket.status = status;
             const statusBadge = document.getElementById("ticket-status-badge");
             if (statusBadge) {
-              statusBadge.textContent = status.charAt(0).toUpperCase() + status.slice(1);
+              statusBadge.textContent =
+                status.charAt(0).toUpperCase() + status.slice(1);
             }
           }
 
@@ -4909,7 +4916,9 @@ jQuery(document).ready(function ($) {
           if (repliesList) {
             const scrollThreshold = 150;
             const isNearBottom =
-              repliesList.scrollHeight - repliesList.scrollTop - repliesList.clientHeight <
+              repliesList.scrollHeight -
+                repliesList.scrollTop -
+                repliesList.clientHeight <
               scrollThreshold;
             if (isNearBottom) {
               const lastReply = repliesList.querySelector(".replys:last-child");
@@ -5197,15 +5206,17 @@ function fetchNotifications(options = {}) {
   }
 
   const dropdown = document.getElementById("notification-dropdown");
-  const dropdownOpen =
-    dropdown && !dropdown.classList.contains("hidden");
+  const dropdownOpen = dropdown && !dropdown.classList.contains("hidden");
 
   let offset = 0;
   let limit = MMHD_NOTIFICATION_PAGE_SIZE;
 
   if (append) {
     offset = notificationItems.length;
-  } else if (dropdownOpen && notificationItems.length > MMHD_NOTIFICATION_PAGE_SIZE) {
+  } else if (
+    dropdownOpen &&
+    notificationItems.length > MMHD_NOTIFICATION_PAGE_SIZE
+  ) {
     // Refresh the whole loaded range so polling does not discard pages the
     // user has already expanded with "Load more".
     limit = Math.min(notificationItems.length, 1000);
@@ -5245,9 +5256,7 @@ function fetchNotifications(options = {}) {
         : [];
 
       if (append) {
-        const existingIds = new Set(
-          notificationItems.map((item) => item.id),
-        );
+        const existingIds = new Set(notificationItems.map((item) => item.id));
         notificationItems = notificationItems.concat(
           incomingItems.filter((item) => !existingIds.has(item.id)),
         );
@@ -5281,18 +5290,22 @@ function fetchNotifications(options = {}) {
         }
       }
 
-      if (hasNewOrUpdatedNotification && !_notifFirstFetch && currentPage !== "ticket-detail") {
-          const audioUrl =
-            typeof mmhdNotificationSound !== "undefined"
-              ? mmhdNotificationSound
-              : null;
-          if (audioUrl) {
-            const audio = new Audio(audioUrl);
-            audio.play().catch((err) => {
-              console.warn("Autoplay blocked by browser:", err);
-            });
-          }
+      if (
+        hasNewOrUpdatedNotification &&
+        !_notifFirstFetch &&
+        currentPage !== "ticket-detail"
+      ) {
+        const audioUrl =
+          typeof mmhdNotificationSound !== "undefined"
+            ? mmhdNotificationSound
+            : null;
+        if (audioUrl) {
+          const audio = new Audio(audioUrl);
+          audio.play().catch((err) => {
+            console.warn("Autoplay blocked by browser:", err);
+          });
         }
+      }
       _notifFirstFetch = false;
 
       if (dropdown && !dropdown.classList.contains("hidden")) {
@@ -5316,10 +5329,7 @@ function updateNotificationLoadMoreButton() {
   const button = document.getElementById("notification-load-more");
   if (!button) return;
 
-  const remaining = Math.max(
-    0,
-    notificationCount - notificationItems.length,
-  );
+  const remaining = Math.max(0, notificationCount - notificationItems.length);
   const shouldShow = notificationHasMore && remaining > 0;
 
   button.style.display = shouldShow ? "block" : "none";
@@ -5369,9 +5379,11 @@ function renderNotificationList() {
 
   listContainer.innerHTML = sortedItems
     .map((item, index) => {
-      const timeAgo = timeSinceCompact(parseMetamintHelpdeskDate(item.timestamp));
+      const timeAgo = timeSinceCompact(
+        parseMetamintHelpdeskDate(item.timestamp),
+      );
       let icon = "fa-bell";
-      let iconColor = "text-blue-500";
+      let iconColor = "text-teal-500";
       const ticketData = Array.isArray(dashboard_tickets)
         ? dashboard_tickets.find((t) => t.id === item.ticketId)
         : null;
@@ -5387,7 +5399,7 @@ function renderNotificationList() {
           break;
         case "reply_added":
           icon = "fa-comment";
-          iconColor = "text-blue-500";
+          iconColor = "text-teal-500";
           break;
         case "status_changed":
           icon = "fa-exchange-alt";
@@ -5592,38 +5604,47 @@ let notificationPollInterval = null;
 
 function startRepliesPolling() {
   stopRepliesPolling();
-  repliesPollInterval = setInterval(function () {
-    if (!currentTicket) return;
-    const repliesTab = document.getElementById("replies-tab");
-    if (!repliesTab || repliesTab.classList.contains("hidden")) return;
+  repliesPollInterval = setInterval(
+    function () {
+      if (!currentTicket) return;
+      const repliesTab = document.getElementById("replies-tab");
+      if (!repliesTab || repliesTab.classList.contains("hidden")) return;
 
-    fetch(mmhdAjax.ajax_url, {
-      method: "POST",
-      headers: { "Content-Type": "application/x-www-form-urlencoded" },
-      body: new URLSearchParams({
-        action: "mmhd_get_ticket_replies_and_notes",
-        ticket_id: currentTicket.id,
-        nonce: mmhdAjax.nonces.get_ticket_replies_and_notes,
-      }),
-    })
-      .then((r) => r.json())
-      .then((result) => {
-        if (!result.success) return;
-        const prevReplyCount = currentTicket.replies?.length ?? 0;
-        currentTicket.replies = result.data.replies;
-        currentTicket.notes = result.data.notes;
-        renderReplies(result.data.replies);
-        renderNotes(result.data.notes);
-        document.getElementById("replies-count").textContent = result.data.replies_count;
-        document.getElementById("notes-count").textContent = result.data.notes_count;
-
-        if (result.data.replies_count > prevReplyCount) {
-          const audioUrl = document.getElementById("replies-list")?.getAttribute("data-audio");
-          if (audioUrl) new Audio(audioUrl).play().catch(() => {});
-        }
+      fetch(mmhdAjax.ajax_url, {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: new URLSearchParams({
+          action: "mmhd_get_ticket_replies_and_notes",
+          ticket_id: currentTicket.id,
+          nonce: mmhdAjax.nonces.get_ticket_replies_and_notes,
+        }),
       })
-      .catch(() => {});
-  }, (typeof mmhdAdvancedSettings !== "undefined" ? mmhdAdvancedSettings.polling_interval : 30) * 1000);
+        .then((r) => r.json())
+        .then((result) => {
+          if (!result.success) return;
+          const prevReplyCount = currentTicket.replies?.length ?? 0;
+          currentTicket.replies = result.data.replies;
+          currentTicket.notes = result.data.notes;
+          renderReplies(result.data.replies);
+          renderNotes(result.data.notes);
+          document.getElementById("replies-count").textContent =
+            result.data.replies_count;
+          document.getElementById("notes-count").textContent =
+            result.data.notes_count;
+
+          if (result.data.replies_count > prevReplyCount) {
+            const audioUrl = document
+              .getElementById("replies-list")
+              ?.getAttribute("data-audio");
+            if (audioUrl) new Audio(audioUrl).play().catch(() => {});
+          }
+        })
+        .catch(() => {});
+    },
+    (typeof mmhdAdvancedSettings !== "undefined"
+      ? mmhdAdvancedSettings.polling_interval
+      : 30) * 1000,
+  );
 }
 
 function stopRepliesPolling() {
@@ -5635,7 +5656,12 @@ function stopRepliesPolling() {
 
 function startNotificationPolling() {
   if (notificationPollInterval) return;
-  notificationPollInterval = setInterval(fetchNotifications, (typeof mmhdAdvancedSettings !== "undefined" ? mmhdAdvancedSettings.polling_interval : 30) * 1000);
+  notificationPollInterval = setInterval(
+    fetchNotifications,
+    (typeof mmhdAdvancedSettings !== "undefined"
+      ? mmhdAdvancedSettings.polling_interval
+      : 30) * 1000,
+  );
 }
 
 function stopNotificationPolling() {
@@ -5727,7 +5753,9 @@ jQuery(document).ready(function () {
 
   function getCookie(name) {
     var match = document.cookie.match(
-      new RegExp("(?:^|; )" + name.replace(/([.*+?^${}()|[\]\\])/g, "\\$1") + "=([^;]*)")
+      new RegExp(
+        "(?:^|; )" + name.replace(/([.*+?^${}()|[\]\\])/g, "\\$1") + "=([^;]*)",
+      ),
     );
     return match ? decodeURIComponent(match[1]) : null;
   }
@@ -5765,7 +5793,11 @@ jQuery(document).ready(function () {
   }
 
   function scheduleNext() {
-    setCookie(MMHD_REVIEW_NEXT_COOKIE, Date.now() + daysToMs(showEveryDays), 3650);
+    setCookie(
+      MMHD_REVIEW_NEXT_COOKIE,
+      Date.now() + daysToMs(showEveryDays),
+      3650,
+    );
   }
 
   function hideModal() {
@@ -5792,7 +5824,11 @@ jQuery(document).ready(function () {
       });
 
     $("#mmhd-review-already").on("click", function () {
-      setCookie(MMHD_REVIEW_COOKIE, Date.now() + daysToMs(snoozeDays), snoozeDays);
+      setCookie(
+        MMHD_REVIEW_COOKIE,
+        Date.now() + daysToMs(snoozeDays),
+        snoozeDays,
+      );
       hideModal();
     });
 
