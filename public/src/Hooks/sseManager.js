@@ -14,7 +14,7 @@ class SSEManager {
 
     this.disconnect(channel);
 
-    console.log("🔌 Connecting to:", url, "(channel:", channel + ")");
+    // console.log("🔌 Connecting to:", url, "(channel:", channel + ")");
     const eventSource = new EventSource(url);
 
     const events = [
@@ -29,7 +29,7 @@ class SSEManager {
       eventSource.addEventListener(event, (e) => {
         try {
           if (!e.data || e.data === "undefined" || e.data.trim() === "") {
-            console.log(`SSE ${event} received invalid or empty data:`, e.data);
+            // console.log(`SSE ${event} received invalid or empty data:`, e.data);
             return;
           }
 
@@ -56,7 +56,7 @@ class SSEManager {
     if (channel) {
       const conn = this.connections[channel];
       if (conn && conn.eventSource) {
-        console.log("❌ Closing SSE channel:", channel);
+        // console.log("❌ Closing SSE channel:", channel);
         conn.eventSource.close();
       }
       delete this.connections[channel];

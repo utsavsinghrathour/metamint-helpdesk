@@ -225,6 +225,7 @@ const SingleTicket = ({
   const fileInputRef = useRef(null);
   const chatContainerRef = useRef(null);
   const sendInFlightRef = useRef(false);
+  const emojiPickerRef = useRef(null);
   const image_urls = window.mmhdData?.imageUrls || {};
   const customerAvatar = ticket?.authorImage || DefaultAvatar;
   const configuredBotAvatar =
@@ -238,6 +239,9 @@ const SingleTicket = ({
   // per new reply, regardless of whether SSE or the polling fallback delivers
   // it first (and regardless of stale closure values).
   const beepedIds = useRef(new Set());
+  // Guards against double-adding an emoji when both the picker's internal
+  // onEmojiClick handler and the document-level fallback fire for the same click.
+  const pickerHandledRef = useRef(false);
 
   const formatTimestamp = (timestamp) =>
     new Date(timestamp).toLocaleTimeString([], {
@@ -309,6 +313,41 @@ const SingleTicket = ({
       window.removeEventListener("pointerdown", unlock);
       window.removeEventListener("keydown", unlock);
       window.removeEventListener("touchstart", unlock);
+    };
+  }, []);
+
+  // Document-level emoji click fallback: catches clicks on emoji picker
+  // buttons that the picker's internal handler may miss (e.g. when CSS
+  // overlays block part of the picker). Reads data-unified and inserts the
+  // native emoji into the reply textarea.
+  useEffect(() => {
+    const onDocumentClick = (event) => {
+      // If the picker's internal onEmojiClick already handled this click,
+      // skip the fallback to avoid double-adding the emoji.
+      if (pickerHandledRef.current) {
+        pickerHandledRef.current = false;
+        return;
+      }
+      const button = event.target.closest("button.epr-emoji");
+      if (!button) return;
+      const unified = button.getAttribute("data-unified");
+      if (!unified) return;
+
+      const emoji = unified
+        .split("-")
+        .map((hex) => String.fromCodePoint(parseInt(hex, 16)))
+        .join("");
+
+      if (emoji) {
+        setMessage((prev) => prev + emoji);
+      }
+      setShowPicker(false);
+      textareaRef.current?.focus();
+    };
+
+    document.addEventListener("click", onDocumentClick);
+    return () => {
+      document.removeEventListener("click", onDocumentClick);
     };
   }, []);
 
@@ -927,8 +966,14 @@ const SingleTicket = ({
   };
 
   const handleEmojiClick = (emojiObject) => {
-    setMessage((prev) => prev + emojiObject.emoji);
+    const emoji = emojiObject?.emoji || '';
+    if (emoji) {
+      setMessage((prev) => prev + emoji);
+      pickerHandledRef.current = true;
+    }
     setShowPicker(false);
+    // Refocus the textarea so the user can keep typing or press Enter to send.
+    textareaRef.current?.focus();
   };
 
   const toggleEmojiPicker = () => {
