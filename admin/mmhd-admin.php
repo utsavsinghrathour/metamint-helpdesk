@@ -461,7 +461,7 @@ function mmhd_render_faq_category_shortcode_column($value, $column_name, $term_i
 
     echo '<div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">';
     echo '<code style="font-size:12px; font-family:monospace; background:#f1f5f9; padding:2px 4px; border-radius:3px; border:1px solid #cbd5e1;" id="mmhd-faq-shortcode-' . absint($term_id) . '">' . esc_html($shortcode) . '</code>';
-    echo '<button type="button" class="button mmhd-copy-shortcode" data-clipboard-target="#mmhd-faq-shortcode-' . absint($term_id) . '" style="font-size:11px; padding:3px 8px;">' . esc_html__('Copy', 'metamint-helpdesk') . '</button>';
+    echo '<button type="button" class="button mmhd-copy-shortcode" data-clipboard-text="' . esc_attr($shortcode) . '" style="font-size:11px; padding:3px 8px;">' . esc_html__('Copy', 'metamint-helpdesk') . '</button>';
     echo '</div>';
     echo '<div style="font-size:11px; color:#64748b; margin-top:2px;">' . esc_html__('Copy to display this category FAQs.', 'metamint-helpdesk') . '</div>';
 }
@@ -473,24 +473,20 @@ function mmhd_render_faq_category_shortcode_column($value, $column_name, $term_i
 add_action('admin_footer', 'mmhd_faq_category_shortcode_copy_js');
 function mmhd_faq_category_shortcode_copy_js()
 {
-    $screen = get_current_screen();
-    // Only load on taxonomy term pages for our FAQ category taxonomy.
-    if (!$screen || 'edit-tags' !== $screen->id || 'mmhd_faq_category' !== (string) $screen->taxonomy) {
-        return;
-    }
+    // Load on all admin pages - the JS only acts when .mmhd-copy-shortcode is clicked.
     ?>
     <script>
     (function () {
         function copyText(text, btn) {
-            var success = false;
+            var ok = false;
 
             // Modern Clipboard API
             if (navigator.clipboard && navigator.clipboard.writeText) {
                 navigator.clipboard.writeText(text).then(function () {
-                    success = true;
+                    ok = true;
                     showFeedback(btn, true);
                 }, function (err) {
-                    success = false;
+                    console.warn('Clipboard API failed:', err);
                     fallbackCopy(text, btn);
                 });
                 return;
@@ -510,10 +506,11 @@ function mmhd_faq_category_shortcode_copy_js()
                 document.body.appendChild(textarea);
                 textarea.focus();
                 textarea.select();
-                var ok = document.execCommand('copy');
+                ok = document.execCommand('copy');
                 document.body.removeChild(textarea);
                 showFeedback(btn, ok);
             } catch (err) {
+                console.warn('Fallback copy failed:', err);
                 showFeedback(btn, false);
             }
         }
@@ -521,10 +518,10 @@ function mmhd_faq_category_shortcode_copy_js()
         function showFeedback(btn, ok) {
             var original = btn.textContent;
             if (ok) {
-                btn.textContent = '<?php esc_attr_e('Copied!', 'metamint-helpdesk'); ?>';
+                btn.textContent = 'Copied!';
                 btn.classList.add('button-primary');
             } else {
-                btn.textContent = '<?php esc_attr_e('Failed', 'metamint-helpdesk'); ?>';
+                btn.textContent = 'Failed';
                 btn.classList.add('button-outline');
             }
             setTimeout(function () {
@@ -537,9 +534,9 @@ function mmhd_faq_category_shortcode_copy_js()
         document.addEventListener('click', function (e) {
             var btn = e.target.closest('.mmhd-copy-shortcode');
             if (!btn) return;
-            var target = document.querySelector(btn.getAttribute('data-clipboard-target'));
-            if (!target) return;
-            var text = target.textContent || target.innerText;
+            e.preventDefault();
+            var text = btn.getAttribute('data-clipboard-text');
+            if (!text) return;
             copyText(text, btn);
         });
     })();
