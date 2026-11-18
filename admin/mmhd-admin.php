@@ -36,6 +36,16 @@ function mmhd_add_admin_menu()
         'mmhd_dashboard_callback'
     );
 
+    // Setup Wizard
+    add_submenu_page(
+        'mmhd-dashboard',
+        'Setup Wizard',
+        'Setup Wizard',
+        'mmhd_manage_settings',
+        'mmhd-wizard',
+        'mmhd_wizard_callback'
+    );
+
 
 
     add_submenu_page(
