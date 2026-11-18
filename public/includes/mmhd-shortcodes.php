@@ -592,6 +592,12 @@ function mmhd_frontend_dashboard_shortcode()
                             $menu_items[$current_page]['function']($notification_count, $open_tickets, $total_tickets),
                             mmhd_get_dashboard_allowed_html()
                         );
+                    } else if ($current_page === 'create-ticket') {
+                        // This tab uses wp_editor() which outputs <script>, <textarea>,
+                        // and other HTML that wp_kses() would strip. The callback
+                        // escapes its own output internally.
+                        // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- callback escapes own output
+                        echo $menu_items[$current_page]['function']();
                     } else {
                         // Tab callbacks are plugin-controlled and escape their own output.
                         echo wp_kses(
@@ -1195,7 +1201,6 @@ function mmhd_notifications_content_page()
     // ... notifications page content
     ob_start();
 ?>
-<!-- <div>Notifications Page Content</div> -->
 <?php
     mmhd_notifications_content();
     return ob_get_clean();

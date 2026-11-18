@@ -1224,9 +1224,9 @@ function mmhd_create_ticket()
             wp_send_json_error(['message' => 'Failed to add comment to ticket']);
             wp_die();
         } else {
-            update_comment_meta($comment_id, 'comment_source', 'admin');
-            update_comment_meta($comment_id, 'author_type', 'agent');
-            update_comment_meta($comment_id, 'admin_comment', 'yes');
+            update_comment_meta($comment_id, 'comment_source', 'admin-form');
+            update_comment_meta($comment_id, 'author_type', 'customer');
+            update_comment_meta($comment_id, 'admin_comment', 'no');
             update_comment_meta($comment_id, 'mmhd_suppress_notification', 1);
         }
     }
