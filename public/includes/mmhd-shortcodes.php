@@ -477,11 +477,11 @@ function mmhd_frontend_dashboard_shortcode()
                     echo do_shortcode('[mmhd_single_ticket id="' . $ticket_id . '"]');
                 } else if (array_key_exists($current_page, $menu_items)) {
                     if ($current_page == 'dashboard') {
-                        // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Tab functions escape their own output internally.
-                        echo $menu_items[$current_page]['function']($notification_count, $open_tickets, $total_tickets);
+                        // Tab functions escape their own output internally.
+                        echo wp_kses_post($menu_items[$current_page]['function']($notification_count, $open_tickets, $total_tickets));
                     } else {
-                        // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Tab functions escape their own output internally.
-                        echo $menu_items[$current_page]['function']();
+                        // Tab functions escape their own output internally.
+                        echo wp_kses_post($menu_items[$current_page]['function']());
                     }
                 } else {
                     echo "Invalid Page";
