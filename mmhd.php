@@ -211,10 +211,6 @@ function mmhd_activate()
     ));
 
     add_role('mmhd_support_customer', 'Support Customer', array('read' => true, 'create_tickets' => true, 'read_ticket' => true));
-
-    // Reset wizard so new installs run through setup
-    delete_option('mmhd_wizard_completed');
-    delete_option('mmhd_wizard_data');
 }
 
 function mmhd_deactivate()
