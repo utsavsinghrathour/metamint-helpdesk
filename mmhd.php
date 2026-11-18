@@ -5,7 +5,7 @@
  * Plugin URI: https://metamintapps.com/
  * Description: A support ticket and FAQ system.
  * Version: 1.5.9
- * Requires at least: 5.8
+ * Requires at least: 6.6
  * Requires PHP: 7.4
  * Author: Code Pixelz Media
  * Author URI: https://codepixelzmedia.com
