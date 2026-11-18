@@ -4,8 +4,8 @@ import { useEffect, useRef, useState } from "@wordpress/element";
 import { FaRegFaceSmileBeam } from "react-icons/fa6";
 import { PiPaperPlaneRightFill } from "react-icons/pi";
 import { FiPaperclip } from "react-icons/fi";
-import EmojiPicker from "emoji-picker-react";
 import DefaultAvatar from "../images/default-avatar.jpg";
+import "../styles/MetamintHelpdeskBotChatWidgetMain.css";
 import {
   START_CONVERSATION_EVENT,
   consumePendingInitialMessage,
@@ -1304,60 +1304,6 @@ export default function MetamintHelpdeskBotChatWidgetMain({
   return (
     <>
       <div id="mmhd-bot-panel">
-        <style>{`
-          #mmhd-bot-panel a,
-          #mmhd-bot-panel .message-content a,
-          #mmhd-bot-panel .ai-text a {
-            color: #1a73e8 !important;
-            font-weight: 600 !important;
-            text-decoration: underline !important;
-            text-underline-offset: 2px;
-            cursor: pointer;
-          }
-          #mmhd-bot-panel a:hover {
-            color: #0b5ed7 !important;
-          }
-          #mmhd-bot-panel .ai-actions button,
-          #mmhd-bot-panel .ai-suggestions button {
-            background: #1a73e8 !important;
-            color: #ffffff !important;
-            border: none !important;
-            border-radius: 8px;
-            padding: 9px 18px;
-            font-weight: 600 !important;
-            font-size: 14px;
-            cursor: pointer;
-            box-shadow: 0 2px 6px rgba(26, 115, 232, 0.35);
-            transition: background .15s ease, transform .15s ease, box-shadow .15s ease;
-            display: inline-block;
-            margin: 4px 6px 4px 0;
-          }
-          #mmhd-bot-panel .ai-actions button:hover,
-          #mmhd-bot-panel .ai-suggestions button:hover {
-            background: #0b5ed7 !important;
-            transform: translateY(-1px);
-            box-shadow: 0 4px 10px rgba(26, 115, 232, 0.45);
-          }
-          #mmhd-bot-panel .ai-actions button:disabled,
-          #mmhd-bot-panel .ai-suggestions button:disabled {
-            background: #9e9e9e !important;
-            color: #ffffff !important;
-            cursor: not-allowed !important;
-            box-shadow: none;
-            transform: none;
-            opacity: 0.85;
-          }
-          #mmhd-bot-panel .mmhd-countdown {
-            font-weight: 400 !important;
-            font-size: 12px;
-            margin-left: 6px;
-            opacity: 0.9;
-          }
-          #mmhd-bot-panel .ai-actions,
-          #mmhd-bot-panel .ai-suggestions {
-            margin-top: 8px;
-          }
-        `}</style>
         {/* <div id="mmhd-bot-header">
                     <strong>AI Assistant ({AIMode})</strong>
                     <button onClick={() => setOpen(false)}>x</button>
@@ -1486,10 +1432,6 @@ export default function MetamintHelpdeskBotChatWidgetMain({
               className="chat-message mmhd-flex mmhd-items-start mmhd-gap-8 received mmhd-streaming-loader"
               style={{ maxWidth: "70%" }}
             >
-              <style>{`
-                @keyframes mmhd-typing-pulse { 0%,100%{ opacity:.3; } 50%{ opacity:1; } }
-                .mmhd-typing-ellipsis { display:inline-block; min-width:28px; text-align:left; font-size:20px; font-weight:700; line-height:1; letter-spacing:2px; animation: mmhd-typing-pulse 1.2s ease-in-out infinite; }
-              `}</style>
               {getBotDisplayImage() ? (
                 <img
                   src={getBotDisplayImage()}

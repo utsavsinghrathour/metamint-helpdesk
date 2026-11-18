@@ -379,6 +379,116 @@ if (!function_exists('mmhd_is_customer_portal_enabled')) {
     }
 }
 
+/**
+ * Allowed HTML for front-end dashboard tab content.
+ *
+ * The tabs are rendered by trusted plugin callbacks that escape their own
+ * values, but the output contains interactive forms. wp_kses_post() would
+ * remove form controls, so this narrower allowlist is used instead.
+ *
+ * @return array
+ */
+function mmhd_get_dashboard_allowed_html()
+{
+    $attributes = array(
+        'class'            => true,
+        'id'               => true,
+        'style'            => true,
+        'title'            => true,
+        'href'             => true,
+        'src'              => true,
+        'alt'              => true,
+        'width'            => true,
+        'height'           => true,
+        'name'             => true,
+        'value'            => true,
+        'type'             => true,
+        'placeholder'      => true,
+        'enctype'          => true,
+        'method'           => true,
+        'action'           => true,
+        'for'              => true,
+        'checked'          => true,
+        'selected'         => true,
+        'disabled'         => true,
+        'readonly'         => true,
+        'required'         => true,
+        'multiple'         => true,
+        'accept'           => true,
+        'target'           => true,
+        'rel'              => true,
+        'colspan'          => true,
+        'rowspan'          => true,
+        'datetime'         => true,
+        'role'             => true,
+        'tabindex'         => true,
+        'hidden'           => true,
+        'autocomplete'     => true,
+        'min'              => true,
+        'max'              => true,
+        'step'             => true,
+        'pattern'          => true,
+        'size'             => true,
+        'maxlength'        => true,
+        'rows'             => true,
+        'cols'             => true,
+        'aria-controls'    => true,
+        'aria-expanded'    => true,
+        'aria-hidden'      => true,
+        'aria-label'       => true,
+        'aria-labelledby'  => true,
+        'aria-describedby' => true,
+        'aria-live'        => true,
+        'aria-current'     => true,
+        'aria-haspopup'    => true,
+        'data-*'           => true,
+    );
+
+    $tags = array(
+        'a',
+        'aside',
+        'br',
+        'button',
+        'div',
+        'fieldset',
+        'form',
+        'h2',
+        'h3',
+        'h4',
+        'hr',
+        'img',
+        'input',
+        'label',
+        'legend',
+        'li',
+        'nav',
+        'ol',
+        'option',
+        'p',
+        'select',
+        'small',
+        'span',
+        'strong',
+        'table',
+        'tbody',
+        'td',
+        'textarea',
+        'tfoot',
+        'th',
+        'thead',
+        'time',
+        'tr',
+        'ul',
+    );
+
+    $allowed = array();
+    foreach ($tags as $tag) {
+        $allowed[$tag] = $attributes;
+    }
+
+    return $allowed;
+}
+
 function mmhd_frontend_dashboard_shortcode()
 {
     if (!mmhd_is_customer_portal_enabled()) {
@@ -477,11 +587,17 @@ function mmhd_frontend_dashboard_shortcode()
                     echo do_shortcode('[mmhd_single_ticket id="' . $ticket_id . '"]');
                 } else if (array_key_exists($current_page, $menu_items)) {
                     if ($current_page == 'dashboard') {
-                        // Tab functions escape their own output internally.
-                        echo wp_kses_post($menu_items[$current_page]['function']($notification_count, $open_tickets, $total_tickets));
+                        // Tab callbacks are plugin-controlled and escape their own output.
+                        echo wp_kses(
+                            $menu_items[$current_page]['function']($notification_count, $open_tickets, $total_tickets),
+                            mmhd_get_dashboard_allowed_html()
+                        );
                     } else {
-                        // Tab functions escape their own output internally.
-                        echo wp_kses_post($menu_items[$current_page]['function']());
+                        // Tab callbacks are plugin-controlled and escape their own output.
+                        echo wp_kses(
+                            $menu_items[$current_page]['function'](),
+                            mmhd_get_dashboard_allowed_html()
+                        );
                     }
                 } else {
                     echo "Invalid Page";
@@ -1670,7 +1786,15 @@ function mmhd_faq_shortcode($atts)
     );
     ?>
     <div class="mmhd-shortcode-faq-container mmhd-shortcode-faq-mode-<?php echo esc_attr($accordion ? 'accordion' : 'qa'); ?> <?php echo esc_attr($accordion ? 'mmhd-shortcode-faq-accordion' : 'mmhd-shortcode-faq-qa'); ?>">
-        <script type="application/ld+json"><?php echo wp_json_encode($schema, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE); ?></script>
+        <?php
+        wp_print_inline_script_tag(
+            wp_json_encode(
+                $schema,
+                JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT
+            ),
+            array('type' => 'application/ld+json')
+        );
+        ?>
 
         <?php if ($accordion) : ?>
             <div class="mmhd-shortcode-faq-accordion" id="mmhd-shortcode-faq-accordion">
@@ -1684,7 +1808,10 @@ function mmhd_faq_shortcode($atts)
                             <span class="mm-faq-icon">+</span>
                         </button>
                         <div class="mmhd-shortcode-faq-answer" id="mmhd-shortcode-faq-answer-<?php echo absint($faq['id']); ?>" hidden>
-                            <?php echo apply_filters('the_content', $faq['content']); ?>
+                            <?php
+                            // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- core content filter.
+                            echo wp_kses_post(apply_filters('the_content', $faq['content']));
+                            ?>
                         </div>
                     </div>
                 <?php endforeach; ?>
@@ -1694,7 +1821,10 @@ function mmhd_faq_shortcode($atts)
                 <?php foreach ($faq_items as $faq) : ?>
                     <div class="mmhd-shortcode-faq-qa-item">
                         <h3 class="mmhd-shortcode-faq-question"><?php echo esc_html($faq['title']); ?></h3>
-                        <div class="mmhd-shortcode-faq-answer"><?php echo apply_filters('the_content', $faq['content']); ?></div>
+                        <div class="mmhd-shortcode-faq-answer"><?php
+                            // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- core content filter.
+                            echo wp_kses_post(apply_filters('the_content', $faq['content']));
+                            ?></div>
                     </div>
                 <?php endforeach; ?>
             </div>

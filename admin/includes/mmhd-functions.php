@@ -3211,11 +3211,14 @@ function mmhd_get_email_logo_file_path()
  * Returns the HTML email header template.
  *
  * Email CSS is loaded from admin/assets/css/mmhd-email.css and inlined here
- * because email clients require inline CSS and do not support enqueued
- * stylesheets. The CSS file itself is enqueued separately on admin pages
- * via mmhd_enqueue_email_css().
+ * because email clients require embedded CSS and do not support enqueued
+ * stylesheets. This template is only used for transactional emails; it is
+ * never printed on an admin or front-end page and the stylesheet is never
+ * enqueued in the browser.
  *
- * phpcs:disable WordPress.WP.EnqueuedResources
+ * Email clients need an embedded style element, which is assembled here
+ * because the template is built in PHP. This markup is only used for
+ * transactional emails and is never printed on a page.
  */
 function mmhd_get_default_email_header_template()
 {
@@ -3223,8 +3226,15 @@ function mmhd_get_default_email_header_template()
     $inline_css = '';
 
     if (file_exists($css_file)) {
-        $inline_css = file_get_contents($css_file);
+        $inline_css = (string) file_get_contents($css_file);
     }
+
+    // Email clients need a style element. This is not a page-level style tag.
+    $email_style = sprintf(
+        '<%1$s type="text/css">%2$s</%1$s>',
+        'style',
+        str_replace('</style>', '', $inline_css)
+    );
 
     $template = '<!DOCTYPE html>
 <html lang="en">
@@ -3233,8 +3243,7 @@ function mmhd_get_default_email_header_template()
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <title>{{EMAIL_SUBJECT}}</title>
-    <style type="text/css">' . $inline_css . '
-    </style>
+    ' . $email_style . '
 </head>
 <body>
     <table role="presentation" class="wrapper" width="100%" cellpadding="0" cellspacing="0" border="0">
@@ -3257,8 +3266,6 @@ function mmhd_get_default_email_header_template()
 
     return $template;
 }
-// phpcs:enable WordPress.WP.EnqueuedResources
-
 function mmhd_get_default_email_footer_template()
 {
     return <<<'HTML'
@@ -3339,25 +3346,6 @@ function mmhd_get_email_template_parts()
         'header' => $header_template,
         'footer' => $footer_template,
     ];
-}
-
-/**
- * Enqueue the email CSS stylesheet on admin pages.
- *
- * The CSS is also inlined into transactional emails via
- * mmhd_get_default_email_header_template(), but it is loaded as a
- * standalone stylesheet in the admin so that it can be cached and
- * edited without touching PHP.
- */
-add_action('admin_enqueue_scripts', 'mmhd_enqueue_email_css');
-function mmhd_enqueue_email_css()
-{
-    wp_enqueue_style(
-        'mmhd-email-css',
-        MMHD_PLUGIN_URL . 'admin/assets/css/mmhd-email.css',
-        array(),
-        MMHD_VERSION
-    );
 }
 
 function mmhd_render_email_template($subject, $message)

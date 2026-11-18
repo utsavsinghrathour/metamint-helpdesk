@@ -7,6 +7,7 @@ import { IoClose } from "react-icons/io5";
 import EmojiPicker, { EmojiStyle } from "emoji-picker-react";
 import defaultLogo from "../images/mmhd-logo.png";
 import "../styles/MessageTabs.css";
+import "../styles/SingleTicket.css";
 import { sendReply } from "../utils/modules";
 import { useAppData } from "../utils/AppDataContext";
 import DefaultAvatar from "../images/default-avatar.jpg";
@@ -152,45 +153,6 @@ const ConversationSkeleton = ({ count = 6 }) => {
           </div>
         );
       })}
-      <style jsx="true">{`
-        @keyframes shimmer {
-          0%,
-          100% {
-            opacity: 1;
-          }
-          50% {
-            opacity: 0.7;
-          }
-        }
-
-        @keyframes shimmerMove {
-          0% {
-            transform: translateX(0);
-          }
-          100% {
-            transform: translateX(200%);
-          }
-        }
-
-        .mmhd-skeleton-container {
-          display: flex;
-          flex-direction: column;
-          width: 100%;
-        }
-
-        .chat-message {
-          display: flex;
-          width: 100%;
-        }
-
-        .mmhd-justify-end {
-          justify-content: flex-end;
-        }
-
-        .mmhd-justify-start {
-          justify-content: flex-start;
-        }
-      `}</style>
     </div>
   );
 };

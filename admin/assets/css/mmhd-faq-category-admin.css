@@ -1,0 +1,25 @@
+/**
+ * FAQ category screen: shortcode column styling.
+ */
+.mmhd-faq-shortcode-cell {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	flex-wrap: wrap;
+}
+
+.mmhd-faq-shortcode-code {
+	font-family: monospace;
+	font-size: 12px;
+	line-height: 1.5;
+	padding: 2px 4px;
+	border: 1px solid #cbd5e1;
+	border-radius: 3px;
+	background: #f1f5f9;
+}
+
+.mmhd-faq-shortcode-help {
+	margin-top: 2px;
+	font-size: 11px;
+	color: #64748b;
+}
