@@ -62,15 +62,13 @@ $notice_count = wp_count_posts('mmhd_notice');
                 $dot_class = $is_completed ? 'is-completed' : ($is_current ? 'is-current' : 'is-pending');
             ?>
                 <div class="mmhd-wizard-stepper-item">
-                    <?php if ($is_completed || $is_current): ?>
+                    <?php if ($is_completed): ?>
                         <a href="<?php echo esc_url(add_query_arg('step', $key, admin_url('admin.php?page=mmhd-wizard'))); ?>" class="mmhd-wizard-stepper-node" title="<?php echo esc_attr(sprintf(__('Go to %s', 'metamint-helpdesk'), $step_item['label'])); ?>">
-                            <div class="mmhd-wizard-stepper-dot <?php echo esc_attr($dot_class); ?>">
-                                <?php echo $is_completed ? '&#10003;' : ''; ?>
-                            </div>
+                            <div class="mmhd-wizard-stepper-dot <?php echo esc_attr($dot_class); ?>">&#10003;</div>
                             <span class="mmhd-wizard-stepper-label"><?php echo esc_html($step_item['label']); ?></span>
                         </a>
                     <?php else: ?>
-                        <div class="mmhd-wizard-stepper-node">
+                        <div class="mmhd-wizard-stepper-node <?php echo $is_current ? 'is-current' : ''; ?>">
                             <div class="mmhd-wizard-stepper-dot <?php echo esc_attr($dot_class); ?>">
                                 <?php echo esc_html($index + 1); ?>
                             </div>

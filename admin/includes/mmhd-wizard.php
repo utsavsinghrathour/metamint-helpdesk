@@ -76,13 +76,6 @@ function mmhd_wizard_enqueue_assets()
         MMHD_VERSION
     );
 
-    // Clean up unnecessary admin notices on wizard page for a cleaner setup experience
-    wp_add_inline_style('mmhd-wizard-styles', '
-        .notice:not(.mmhd-wizard-notice), .update-nag { display: none !important; }
-        #wpcontent { padding-left: 0 !important; }
-        #wpbody-content { padding-bottom: 30px !important; }
-    ');
-
     wp_enqueue_script(
         'mmhd-wizard-js',
         MMHD_PLUGIN_URL . 'admin/assets/js/mmhd-wizard.js',

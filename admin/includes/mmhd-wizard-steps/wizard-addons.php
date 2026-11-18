@@ -51,7 +51,7 @@ $purchase_url = 'https://metamintapps.com/metamint-helpdesk/';
                             <span class="mmhd-wizard-stepper-label"><?php echo esc_html($step_item['label']); ?></span>
                         </a>
                     <?php else: ?>
-                        <div class="mmhd-wizard-stepper-node">
+                        <div class="mmhd-wizard-stepper-node <?php echo $is_current ? 'is-current' : ''; ?>">
                             <div class="mmhd-wizard-stepper-dot <?php echo esc_attr($dot_class); ?>">
                                 <?php echo esc_html($index + 1); ?>
                             </div>
