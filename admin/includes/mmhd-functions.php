@@ -3210,40 +3210,30 @@ function mmhd_get_email_logo_file_path()
 /**
  * Returns the HTML email header template.
  *
- * The inline <style> block below is intentional: this markup is the body of a
- * transactional email, and email clients do not support enqueued stylesheets,
- * so the CSS must be embedded. It is never printed on a web page.
+ * Email CSS is loaded from admin/assets/css/mmhd-email.css and inlined here
+ * because email clients require inline CSS and do not support enqueued
+ * stylesheets. The CSS file itself is enqueued separately on admin pages
+ * via mmhd_enqueue_email_css().
  *
  * phpcs:disable WordPress.WP.EnqueuedResources
  */
 function mmhd_get_default_email_header_template()
 {
-    return <<<'HTML'
-<!DOCTYPE html>
+    $css_file = MMHD_PLUGIN_PATH . 'admin/assets/css/mmhd-email.css';
+    $inline_css = '';
+
+    if (file_exists($css_file)) {
+        $inline_css = file_get_contents($css_file);
+    }
+
+    $template = '<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <title>{{EMAIL_SUBJECT}}</title>
-    <style type="text/css">
-        body { margin: 0; padding: 0; background-color: #f1f1f1; font-family: Arial, sans-serif; color: #212529; }
-        table { border-collapse: collapse; border-spacing: 0; }
-        .wrapper { width: 100%; background-color: #f1f1f1; padding: 24px 0; }
-        .container { width: 100%; max-width: 650px; margin: 0 auto; background-color: #ffffff; border-radius: 14px; overflow: hidden; }
-        .header { padding: 24px 28px; text-align: center; }
-        .header img { max-width: 220px; width: 100%; height: auto; }
-        .subject { margin: 0; padding: 0; font-size: 22px; line-height: 1.4; color: #2c2c2c; font-weight: 700; }
-        .content { padding: 30px; font-size: 16px; line-height: 1.6; color: #212529; }
-        .content a { color: {{THEME_COLOR}}; word-break: break-word; }
-        .content p { margin: 0 0 14px; }
-        .footer { text-align: center; padding: 18px 24px; }
-        .footer, .footer a { color: #ffffff; font-size: 12px; line-height: 1.5; text-decoration: none; }
-        @media only screen and (max-width: 680px) {
-            .wrapper { padding: 12px; }
-            .content { padding: 20px; }
-            .subject { font-size: 20px; }
-        }
+    <style type="text/css">' . $inline_css . '
     </style>
 </head>
 <body>
@@ -3263,7 +3253,9 @@ function mmhd_get_default_email_header_template()
                     </tr>
                     <tr>
                         <td class="content">
-HTML;
+';
+
+    return $template;
 }
 // phpcs:enable WordPress.WP.EnqueuedResources
 
@@ -3347,6 +3339,25 @@ function mmhd_get_email_template_parts()
         'header' => $header_template,
         'footer' => $footer_template,
     ];
+}
+
+/**
+ * Enqueue the email CSS stylesheet on admin pages.
+ *
+ * The CSS is also inlined into transactional emails via
+ * mmhd_get_default_email_header_template(), but it is loaded as a
+ * standalone stylesheet in the admin so that it can be cached and
+ * edited without touching PHP.
+ */
+add_action('admin_enqueue_scripts', 'mmhd_enqueue_email_css');
+function mmhd_enqueue_email_css()
+{
+    wp_enqueue_style(
+        'mmhd-email-css',
+        MMHD_PLUGIN_URL . 'admin/assets/css/mmhd-email.css',
+        array(),
+        MMHD_VERSION
+    );
 }
 
 function mmhd_render_email_template($subject, $message)

@@ -20,7 +20,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Define constants
-define('MMHD_VERSION', '1.5.8');
+define('MMHD_VERSION', '1.5.9');
 define('MMHD_PLUGIN_PATH', plugin_dir_path(__FILE__));
 define('MMHD_PLUGIN_URL', plugin_dir_url(__FILE__));
 
