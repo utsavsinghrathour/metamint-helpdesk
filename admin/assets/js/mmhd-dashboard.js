@@ -1,3 +1,5 @@
+let _rbd_firstTicketScroll = true;
+
 function parseMetamintHelpdeskDate(value) {
   if (!value) return null;
   if (value instanceof Date) return isNaN(value.getTime()) ? null : value;
@@ -5010,7 +5012,6 @@ let notificationHasMore = false;
 let notificationLoadingMore = false;
 const MMHD_NOTIFICATION_PAGE_SIZE = 50;
 let _notifFirstFetch = true;
-let _rbd_firstTicketScroll = true;
 let shouldRefreshTicketsPage = false;
 let lastTicketsPageReloadAt = 0;
 
