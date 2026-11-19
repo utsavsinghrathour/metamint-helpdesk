@@ -1,4 +1,5 @@
 let _rbd_firstTicketScroll = true;
+let isReplySending = false;
 
 function parseMetamintHelpdeskDate(value) {
   if (!value) return null;
@@ -4136,9 +4137,10 @@ function updateTicketAssignee(ticketId, newAssignee) {
 //
 //
 //
+
+
 // This function adds a reply to the current ticket
 // Ajax request is made to the server to save the reply
-let isReplySending = false;
 
 function resolveTemplateVariables(content, ticket) {
   if (!content || !ticket) return content;
