@@ -1814,8 +1814,10 @@ CONVERSATION
   border: 1px solid var(--color-border);
   padding: 30px;
   border-radius: 12px;
-  height: 500px;
+  min-height: auto;
+  max-height: 500px;
   overflow-y: auto;
+  scrollbar-width: thin;
 }
 
 /* ---------- Shared card ---------- */

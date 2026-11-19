@@ -130,11 +130,11 @@
                                          class="block text-sm font-medium text-gray-700"><?php esc_html_e('Theme Color', 'metamint-helpdesk'); ?></label>
                                      <div class="mt-1 flex items-center gap-3">
                                          <input type="color" name="theme_color" id="theme_color"
-                                             value="<?php echo esc_attr(get_option('mmhd_theme_color', '#3B82F6')); ?>"
+                                             value="<?php echo esc_attr(get_option('mmhd_theme_color', '#0f7173')); ?>"
                                              class="styled-input block w-10 h-10 border-gray-300 rounded-md shadow-sm">
                                          <div id="theme-color-preview"
                                              class="hidden w-16 h-8 rounded-md border border-gray-300"
-                                             style="background-color: <?php echo esc_attr(get_option('mmhd_theme_color', '#3B82F6')); ?>;">
+                                             style="background-color: <?php echo esc_attr(get_option('mmhd_theme_color', '#0f7173')); ?>;">
                                          </div>
                                      </div>
                                  </div>

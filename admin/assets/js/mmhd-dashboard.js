@@ -5841,3 +5841,31 @@ jQuery(document).ready(function () {
 
   $(init);
 })(jQuery);
+
+// Scroll to bottom of replies list when new replies are added
+document.addEventListener("DOMContentLoaded", function () {
+  const repliesList = document.querySelector(
+    "#ticket-detail-page #replies-list",
+  );
+
+  if (!repliesList) return;
+
+  const scrollToBottom = () => {
+    requestAnimationFrame(() => {
+      repliesList.scrollTop = repliesList.scrollHeight;
+    });
+  };
+
+  // Scroll on initial load
+  scrollToBottom();
+
+  // Scroll whenever replies are added or updated
+  const observer = new MutationObserver(() => {
+    scrollToBottom();
+  });
+
+  observer.observe(repliesList, {
+    childList: true,
+    subtree: true,
+  });
+});
