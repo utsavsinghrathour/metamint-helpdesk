@@ -496,8 +496,11 @@ function mmhd_enqueue_scripts()
     // Enqueue jQuery
     wp_enqueue_script('jquery');
 
-    // Enqueue styles (already existing)
-    wp_enqueue_style('mmhd-styles', MMHD_PLUGIN_URL . 'public/assets/css/mmhd-styles.css', array(), MMHD_VERSION);
+    // The front-end dashboard and credentials vault use WordPress dashicons
+    // classes. WordPress only loads dashicons in the admin by default, so make
+    // it an explicit dependency here; otherwise the icon spans (and the
+    // icon-only credential buttons they fill) collapse to zero size.
+    wp_enqueue_style('mmhd-styles', MMHD_PLUGIN_URL . 'public/assets/css/mmhd-styles.css', array('dashicons'), MMHD_VERSION);
 
     // FAQ shortcode styles are only needed on content that renders the
     // shortcode. The React bundle carries the chat/dashboard FAQ styles.
