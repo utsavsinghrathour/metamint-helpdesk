@@ -18,7 +18,6 @@ $theme_color = get_option('mmhd_theme_color', '#10b981');
 $enable_chat = get_option('mmhd_enable_chat', '1');
 $chat_heading = get_option('mmhd_chat_heading', 'Have Questions?');
 $welcome_message = get_option('mmhd_welcome_message', 'Have any questions or need assistance? Leave us a message.');
-$default_role = get_option('mmhd_wizard_default_role', 'mmhd_support_manager');
 $logo_url = file_exists(MMHD_PLUGIN_PATH . 'admin/assets/images/mmhd-logo.png')
     ? MMHD_PLUGIN_URL . 'admin/assets/images/mmhd-logo.png'
     : '';
@@ -369,25 +368,23 @@ $notice_count = wp_count_posts('mmhd_notice');
                     </div>
                 </div>
 
-                <!-- Roles options -->
+                <!-- Roles overview (informational only) -->
                 <div class="mmhd-wizard-role-grid">
-                    <label class="mmhd-wizard-role-option <?php echo $default_role === 'mmhd_support_manager' ? 'is-selected' : ''; ?>">
-                        <input type="radio" name="wz-default-role" value="mmhd_support_manager" <?php checked($default_role, 'mmhd_support_manager'); ?>>
+                    <div class="mmhd-wizard-role-option">
                         <div class="mmhd-wizard-role-title-row">
                             <span class="mmhd-wizard-role-title"><?php esc_html_e('Support Manager', 'metamint-helpdesk'); ?></span>
                             <span class="mmhd-wizard-role-pill"><?php esc_html_e('Full Admin', 'metamint-helpdesk'); ?></span>
                         </div>
                         <span class="mmhd-wizard-role-desc"><?php esc_html_e('Access to tickets, reports, settings, and addon integrations.', 'metamint-helpdesk'); ?></span>
-                    </label>
+                    </div>
 
-                    <label class="mmhd-wizard-role-option <?php echo $default_role === 'mmhd_support_staff' ? 'is-selected' : ''; ?>">
-                        <input type="radio" name="wz-default-role" value="mmhd_support_staff" <?php checked($default_role, 'mmhd_support_staff'); ?>>
+                    <div class="mmhd-wizard-role-option">
                         <div class="mmhd-wizard-role-title-row">
                             <span class="mmhd-wizard-role-title"><?php esc_html_e('Support Staff', 'metamint-helpdesk'); ?></span>
                             <span class="mmhd-wizard-role-pill"><?php esc_html_e('Agent View', 'metamint-helpdesk'); ?></span>
                         </div>
                         <span class="mmhd-wizard-role-desc"><?php esc_html_e('Access to answer tickets and chat without plugin configuration.', 'metamint-helpdesk'); ?></span>
-                    </label>
+                    </div>
                 </div>
 
                 <!-- Knowledge base quick stats -->

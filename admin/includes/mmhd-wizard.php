@@ -100,6 +100,23 @@ function mmhd_wizard_enqueue_assets()
 }
 
 /**
+ * Add a stable body class on wizard screens.
+ *
+ * The generated admin body class depends on the top-level menu title, so it is
+ * not reliable for styling. This class is used by mmhd-wizard.css.
+ */
+add_filter('admin_body_class', 'mmhd_wizard_admin_body_class');
+function mmhd_wizard_admin_body_class($classes)
+{
+    $current_page = isset($_GET['page']) ? sanitize_key($_GET['page']) : '';
+    if ($current_page === 'mmhd-wizard') {
+        $classes .= ' mmhd-wizard-page';
+    }
+
+    return $classes;
+}
+
+/**
  * Wizard page callback
  */
 function mmhd_wizard_callback()
@@ -111,8 +128,12 @@ function mmhd_wizard_callback()
     $steps   = mmhd_get_wizard_steps();
     $current = mmhd_get_wizard_current_step();
 
-    // If wizard is completed, don't show the setup wizard (redirect to dashboard unless on finish step or explicitly reopening)
-    if (mmhd_is_wizard_completed() && $current !== 'finish' && !isset($_GET['reopen'])) {
+    // Only redirect the bare wizard entry point once setup is complete. Internal
+    // navigation (stepper, Back, Skip to Addons, Next) always includes an
+    // explicit "step" parameter and must keep working.
+    $has_explicit_step = isset($_GET['step']) && array_key_exists(sanitize_key($_GET['step']), $steps);
+
+    if (mmhd_is_wizard_completed() && !$has_explicit_step && !isset($_GET['reopen'])) {
         wp_safe_redirect(admin_url('admin.php?page=mmhd-dashboard'));
         exit;
     }

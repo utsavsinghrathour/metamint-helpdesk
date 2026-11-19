@@ -50,27 +50,27 @@
    Canvas & Layout & WordPress Admin Integration
    ============================================================ */
 
-body.admin_page_mmhd-wizard #wpcontent {
+body.mmhd-wizard-page #wpcontent {
     background: #f8fafc !important;
     padding-left: 0 !important;
 }
 
-body.admin_page_mmhd-wizard #wpbody-content {
+body.mmhd-wizard-page #wpbody-content {
     padding-bottom: 40px !important;
 }
 
-body.admin_page_mmhd-wizard #wpfooter {
+body.mmhd-wizard-page #wpfooter {
     display: none !important;
 }
 
-body.admin_page_mmhd-wizard .notice:not(.mmhd-wizard-notice),
-body.admin_page_mmhd-wizard .update-nag,
-body.admin_page_mmhd-wizard #screen-meta,
-body.admin_page_mmhd-wizard #screen-meta-links {
+body.mmhd-wizard-page .notice:not(.mmhd-wizard-notice),
+body.mmhd-wizard-page .update-nag,
+body.mmhd-wizard-page #screen-meta,
+body.mmhd-wizard-page #screen-meta-links {
     display: none !important;
 }
 
-body.admin_page_mmhd-wizard {
+body.mmhd-wizard-page {
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
     color: var(--mmhd-slate-900);
     -webkit-font-smoothing: antialiased;
@@ -1139,26 +1139,9 @@ a.mmhd-wizard-stepper-node:hover .mmhd-wizard-stepper-label {
     border-radius: var(--mmhd-radius-lg);
     padding: 0.875rem 1rem;
     background: var(--mmhd-slate-50);
-    cursor: pointer;
-    transition: var(--mmhd-transition);
     display: flex;
     flex-direction: column;
     gap: 0.25rem;
-}
-
-.mmhd-wizard-role-option:hover {
-    border-color: var(--mmhd-slate-300);
-    background: #ffffff;
-}
-
-.mmhd-wizard-role-option.is-selected {
-    border-color: var(--mmhd-primary);
-    background: var(--mmhd-primary-light);
-    box-shadow: 0 0 0 1px var(--mmhd-primary);
-}
-
-.mmhd-wizard-role-option input[type="radio"] {
-    display: none;
 }
 
 .mmhd-wizard-role-title-row {

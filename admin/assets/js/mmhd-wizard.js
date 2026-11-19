@@ -90,7 +90,6 @@
     document.addEventListener('DOMContentLoaded', function () {
         initSetupPage();
         initAddonsPage();
-        initRoleSelection();
         initLivePreview();
         initPresets();
         initFinishCelebration();
@@ -281,24 +280,6 @@
         }
 
         render();
-    }
-
-    function initRoleSelection() {
-        var roleOptions = document.querySelectorAll('.mmhd-wizard-role-option');
-        if (!roleOptions.length) return;
-
-        roleOptions.forEach(function (option) {
-            option.addEventListener('click', function () {
-                roleOptions.forEach(function (opt) {
-                    opt.classList.remove('is-selected');
-                });
-                option.classList.add('is-selected');
-                var radio = option.querySelector('input[type="radio"]');
-                if (radio) {
-                    radio.checked = true;
-                }
-            });
-        });
     }
 
     function initSetupPage() {
@@ -562,9 +543,6 @@
 
                 var welcomeMsg = document.getElementById('wz-welcome-message');
                 if (welcomeMsg) params.append('welcome_message', welcomeMsg.value);
-
-                var defaultRole = document.querySelector('input[name="wz-default-role"]:checked');
-                if (defaultRole) params.append('default_role', defaultRole.value);
 
                 fetch(ajaxUrl, {
                     method: 'POST',
