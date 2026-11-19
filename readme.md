@@ -4,7 +4,7 @@ Tags: support, tickets, helpdesk, customer-support, faq
 Requires at least: 6.6
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 1.5.9
+Stable tag: 2.1.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -52,7 +52,7 @@ The complete source code, including the sources used to build the frontend bundl
 
 == Changelog ==
 
-= 1.5.9 =
+= 2.1.1 =
 * Added the `[mmhd_faq]` shortcode with accordion and Q&A modes, optional category filtering, and FAQPage structured data.
 * Added a copyable shortcode to the FAQ category admin screen.
 * Moved remaining inline admin JavaScript/CSS into enqueued asset files.
