@@ -178,7 +178,7 @@ $mmhd_td_hidden      = ($mmhd_current_tab === 'ticket-detail' || $mmhd_has_ticke
 
                 <div class="lg:col-span-1 sticky-sidebar">
                     <div class="space-y-6 px-6 py-6">
-                        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+                        <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
                             <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-4">
                                 <?php esc_html_e('Conversation Status', 'metamint-helpdesk'); ?>
                             </h2>
@@ -254,7 +254,7 @@ $mmhd_td_hidden      = ($mmhd_current_tab === 'ticket-detail' || $mmhd_has_ticke
                             </div>
                         </div>
 
-                        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+                        <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mmhd-customer-info">
                             <div class="flex items-center justify-between mb-6">
                                 <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wider">
                                     <?php esc_html_e('Conversation Details', 'metamint-helpdesk'); ?>
