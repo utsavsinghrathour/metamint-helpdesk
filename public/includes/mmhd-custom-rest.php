@@ -1658,9 +1658,11 @@ function mmhd_handle_ticket_creation($data)
     // Auto-assign if enabled in Advanced Settings
     $settings = get_option('mmhd_advanced_settings', []);
     if (!empty($settings['enable_auto_assign'])) {
-        $assigned = mmhd_auto_assign_ticket_to_support_staff();
-        update_post_meta($ticket, 'ticket_assignee', $assigned);
-        mmhd_store_ticket_assignee_id($ticket, $assigned);
+        $assigned = mmhd_auto_assign_ticket_to_support_staff(false, false, $ticket);
+        if (!empty($assigned)) {
+            update_post_meta($ticket, 'ticket_assignee', $assigned);
+            mmhd_store_ticket_assignee_id($ticket, $assigned);
+        }
     }
 
     mmhd_notify_ticket_created($ticket, 'chat');

@@ -379,8 +379,9 @@ function mmhd_migrate_settings_on_update()
 
     // Advanced settings — preserve existing values, fill in missing defaults.
     $advanced_defaults = [
-        'enable_auto_assign'           => false,
-        'enable_notifications'         => true,
+        'enable_auto_assign'            => false,
+        'enable_department_auto_assign' => false,
+        'enable_notifications'          => true,
         'enable_customer_portal'       => true,
         'enable_signup_rate_limiting'  => false,
         'max_file_upload_size'         => 10,

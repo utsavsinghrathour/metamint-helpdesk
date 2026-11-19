@@ -738,6 +738,7 @@
              <?php
                 $mmhd_advanced_settings = wp_parse_args(get_option('mmhd_advanced_settings', []), [
                     'enable_auto_assign' => false,
+                    'enable_department_auto_assign' => false,
                     'enable_notifications' => true,
                     'enable_customer_portal' => true,
                     'enable_signup_rate_limiting' => false,
@@ -782,6 +783,19 @@
                              </label>
                              <input id="enable-auto-assign" type="checkbox" role="switch" class="mmhd-adv__switch"
                                  <?php checked($mmhd_advanced_settings['enable_auto_assign'], true); ?>>
+                         </div>
+
+                         <div class="mmhd-adv__row">
+                             <div class="mmhd-adv__text">
+                                 <label for="enable-department-auto-assign" class="mmhd-adv__label">
+                                     <?php esc_html_e('Auto-assign unassigned Conversations by department', 'metamint-helpdesk'); ?>
+                                 </label>
+                                 <p class="mmhd-adv__hint">
+                                     <?php esc_html_e('Unassigned conversations are routed to the least-busy Support Staff or Support Manager whose profile lists the same department. If nobody matches, the conversation stays unassigned.', 'metamint-helpdesk'); ?>
+                                 </p>
+                             </div>
+                             <input id="enable-department-auto-assign" type="checkbox" role="switch" class="mmhd-adv__switch"
+                                 <?php checked($mmhd_advanced_settings['enable_department_auto_assign'], true); ?>>
                          </div>
 
                          <div class="mmhd-adv__row">

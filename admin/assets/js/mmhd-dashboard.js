@@ -3169,6 +3169,9 @@ jQuery(document).ready(function ($) {
     var autoCloseTicketEnabled = $("#enable-auto-close-ticket").is(":checked");
     var settings = {
       enable_auto_assign: $("#enable-auto-assign").is(":checked"),
+      enable_department_auto_assign: $(
+        "#enable-department-auto-assign",
+      ).is(":checked"),
       enable_notifications: $("#enable-notifications").is(":checked"),
       enable_customer_portal: $("#enable-customer-portal").is(":checked"),
       enable_signup_rate_limiting: $("#enable-signup-rate-limiting").is(
