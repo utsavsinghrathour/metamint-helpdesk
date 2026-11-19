@@ -2541,7 +2541,7 @@ function mmhd_get_department_auto_assign_roles()
 {
     return (array) apply_filters(
         'mmhd_department_auto_assign_roles',
-        array('mmhd_support_staff', 'mmhd_support_manager')
+        array('mmhd_support_staff', 'mmhd_support_manager', 'administrator', 'author', 'editor')
     );
 }
 

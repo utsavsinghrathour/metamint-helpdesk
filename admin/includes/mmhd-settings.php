@@ -791,7 +791,7 @@
                                      <?php esc_html_e('Auto-assign unassigned Conversations by department', 'metamint-helpdesk'); ?>
                                  </label>
                                  <p class="mmhd-adv__hint">
-                                     <?php esc_html_e('Unassigned conversations are routed to the least-busy Support Staff or Support Manager whose profile lists the same department. If nobody matches, the conversation stays unassigned.', 'metamint-helpdesk'); ?>
+                                     <?php esc_html_e('Unassigned conversations are routed to the least-busy support agent (Support Staff, Support Manager, Author, Editor, or Administrator) whose profile lists the same department. If nobody matches, the conversation stays unassigned.', 'metamint-helpdesk'); ?>
                                  </p>
                              </div>
                              <input id="enable-department-auto-assign" type="checkbox" role="switch" class="mmhd-adv__switch"
