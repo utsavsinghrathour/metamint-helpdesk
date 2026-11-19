@@ -357,11 +357,13 @@ function mmhd_enqueue_tailwind_and_styles()
         'polling_interval' => isset($mmhd_adv_settings['polling_interval']) ? absint($mmhd_adv_settings['polling_interval']) : 30,
     ]);
 
-    // Review prompt: link + timing (popup repeats every 5 days unless the user
-    // dismisses it via "Already reviewed", which snoozes it for 30 days).
+    // Review prompt: link + timing. The first popup waits one week after the
+    // wizard is finished, then repeats every two weeks. "Already reviewed"
+    // snoozes it for 30 days before the normal cadence resumes.
     wp_localize_script('mmhd-dashboard-script', 'mmhdReviewPrompt', [
+        'enabled' => mmhd_is_review_prompt_available(),
         'reviewUrl' => '#',
-        'showEveryDays' => 5,
+        'showEveryDays' => 14,
         'snoozeDays' => 30,
     ]);
 }

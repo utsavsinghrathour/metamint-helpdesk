@@ -204,7 +204,7 @@ function mmhd_compute_ticket_counters($light_tickets, $user_name = '')
         if ($user_name !== '' && $assignee === $user_name && $status !== 'closed') {
             $counters['counts']['my']++;
         }
-        if ($assignee === 'N/A') {
+        if ($assignee === 'N/A' && $status !== 'closed') {
             $counters['counts']['unassigned']++;
         }
         if ($status === 'open' || $status === 'in-progress') {
@@ -488,7 +488,7 @@ function mmhd_build_dashboard_tickets_payload($filter = 'my_conversation', $page
             case 'my_conversation':
                 return $t['assignee'] === $current_user_name && $t['status'] !== 'closed';
             case 'unassigned_conversation':
-                return $t['assignee'] === 'N/A';
+                return $t['assignee'] === 'N/A' && $t['status'] !== 'closed';
             case 'open_conversation':
                 return in_array($t['status'], ['open', 'in-progress'], true);
             case 'chat_conversation':

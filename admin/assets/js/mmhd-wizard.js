@@ -90,7 +90,6 @@
     document.addEventListener('DOMContentLoaded', function () {
         initSetupPage();
         initAddonsPage();
-        initRoleSelection();
         initLivePreview();
         initPresets();
         initFinishCelebration();
@@ -281,24 +280,6 @@
         }
 
         render();
-    }
-
-    function initRoleSelection() {
-        var roleOptions = document.querySelectorAll('.mmhd-wizard-role-option');
-        if (!roleOptions.length) return;
-
-        roleOptions.forEach(function (option) {
-            option.addEventListener('click', function () {
-                roleOptions.forEach(function (opt) {
-                    opt.classList.remove('is-selected');
-                });
-                option.classList.add('is-selected');
-                var radio = option.querySelector('input[type="radio"]');
-                if (radio) {
-                    radio.checked = true;
-                }
-            });
-        });
     }
 
     function initSetupPage() {
@@ -537,7 +518,7 @@
                 var btn = setupNextBtn;
                 var origContent = btn.innerHTML;
                 btn.classList.add('is-loading');
-                btn.textContent = 'Saving Preferences...';
+                btn.textContent = 'Saving & Continuing...';
 
                 // Collect settings from setup screen
                 var params = new URLSearchParams();
@@ -562,9 +543,6 @@
 
                 var welcomeMsg = document.getElementById('wz-welcome-message');
                 if (welcomeMsg) params.append('welcome_message', welcomeMsg.value);
-
-                var defaultRole = document.querySelector('input[name="wz-default-role"]:checked');
-                if (defaultRole) params.append('default_role', defaultRole.value);
 
                 fetch(ajaxUrl, {
                     method: 'POST',
@@ -600,7 +578,7 @@
                 var btn = addonsNextBtn;
                 var origContent = btn.innerHTML;
                 btn.classList.add('is-loading');
-                btn.textContent = 'Saving...';
+                btn.textContent = 'Saving & Continuing...';
 
                 var params = new URLSearchParams();
                 params.append('action', 'mmhd_wizard_save_step');

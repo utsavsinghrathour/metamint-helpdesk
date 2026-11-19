@@ -188,7 +188,7 @@ $purchase_url = 'https://metamintapps.com/metamint-helpdesk/';
                     <div class="mmhd-wizard-addon-icon-box">
                         <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg>
                     </div>
-                    <span class="mmhd-wizard-addon-badge new">New</span>
+                    <span class="mmhd-wizard-addon-badge hot">🔥 Popular</span>
                 </div>
                 <h3 class="mmhd-wizard-addon-name">Zapier</h3>
                 <p class="mmhd-wizard-addon-desc">
@@ -264,7 +264,7 @@ $purchase_url = 'https://metamintapps.com/metamint-helpdesk/';
                     <div class="mmhd-wizard-addon-icon-box">
                         <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"/></svg>
                     </div>
-                    <span class="mmhd-wizard-addon-badge">Security</span>
+                    <span class="mmhd-wizard-addon-badge hot">🔥 Popular</span>
                 </div>
                 <h3 class="mmhd-wizard-addon-name">Filter Emails</h3>
                 <p class="mmhd-wizard-addon-desc">
@@ -366,7 +366,7 @@ $purchase_url = 'https://metamintapps.com/metamint-helpdesk/';
                     <?php esc_html_e('Skip to Finish', 'metamint-helpdesk'); ?>
                 </a>
                 <button type="button" id="wz-addons-next" class="mmhd-wizard-btn mmhd-wizard-btn-primary">
-                    <span><?php esc_html_e('Finish Setup', 'metamint-helpdesk'); ?></span>
+                    <span><?php esc_html_e('Save & Continue to Finish', 'metamint-helpdesk'); ?></span>
                     <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
                 </button>
             </div>

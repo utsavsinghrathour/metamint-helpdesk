@@ -676,6 +676,7 @@ function mmhd_save_advanced_settings()
     // Define expected settings keys
     $valid_settings = [
         'enable_auto_assign',
+        'enable_department_auto_assign',
         'enable_notifications',
         'enable_customer_portal',
         'enable_signup_rate_limiting',
@@ -2531,10 +2532,240 @@ function mmhd_save_user_meta_fields($user_id)
     }
 }
 
+/**
+ * Roles that can receive department-based auto-assignments.
+ *
+ * @return string[]
+ */
+function mmhd_get_department_auto_assign_roles()
+{
+    return (array) apply_filters(
+        'mmhd_department_auto_assign_roles',
+        array('mmhd_support_staff', 'mmhd_support_manager')
+    );
+}
+
+/**
+ * Whether department-based auto-assignment is enabled in Advanced Settings.
+ *
+ * @return bool
+ */
+function mmhd_is_department_auto_assign_enabled()
+{
+    $settings = get_option('mmhd_advanced_settings', array());
+
+    return !empty($settings['enable_department_auto_assign']);
+}
+
+/**
+ * Get the department term IDs assigned to a ticket.
+ *
+ * @param int $ticket_id Ticket ID.
+ * @return int[]
+ */
+function mmhd_get_ticket_department_term_ids($ticket_id)
+{
+    $terms = wp_get_post_terms((int) $ticket_id, 'mmhd_ticket_category', array('fields' => 'ids'));
+
+    if (is_wp_error($terms) || empty($terms)) {
+        return array();
+    }
+
+    return array_values(array_map('intval', $terms));
+}
+
+/**
+ * Count a user's active (open or in-progress) tickets.
+ *
+ * @param WP_User $user Support user.
+ * @return int
+ */
+function mmhd_count_active_tickets_for_user($user)
+{
+    $assignee_names = array_values(array_unique(array_filter(array(
+        (string) $user->display_name,
+        (string) $user->user_login,
+    ))));
+
+    $meta_query = array(
+        'relation' => 'AND',
+        array(
+            'key'     => '_mmhd_ticket_status',
+            'value'   => array('open', 'in-progress'),
+            'compare' => 'IN',
+        ),
+        array(
+            'relation' => 'OR',
+            array(
+                'key'     => 'ticket_assignee_id',
+                'value'   => (int) $user->ID,
+                'compare' => '=',
+                'type'    => 'NUMERIC',
+            ),
+        ),
+    );
+
+    // Legacy tickets may only have the assignee display name.
+    if (!empty($assignee_names)) {
+        $meta_query[1][] = array(
+            'key'     => 'ticket_assignee',
+            'value'   => $assignee_names,
+            'compare' => 'IN',
+        );
+    }
+
+    $tickets = get_posts(array(
+        'post_type'        => 'mmhd_ticket',
+        'post_status'      => 'publish',
+        'numberposts'      => -1,
+        'fields'           => 'ids',
+        'meta_query'       => $meta_query,
+        'no_found_rows'    => true,
+        'suppress_filters' => true,
+    ));
+
+    return count($tickets);
+}
+
+/**
+ * Find the least-loaded Support Staff or Support Manager whose profile
+ * department matches the ticket's department.
+ *
+ * @param int $ticket_id Ticket ID.
+ * @return WP_User|null
+ */
+function mmhd_find_department_auto_assign_agent($ticket_id)
+{
+    $department_ids = mmhd_get_ticket_department_term_ids($ticket_id);
+    $roles = mmhd_get_department_auto_assign_roles();
+
+    if (empty($department_ids) || empty($roles)) {
+        return null;
+    }
+
+    $users = get_users(array(
+        'role__in'   => $roles,
+        'meta_query' => array(
+            array(
+                'key'     => 'mmhd_user_department',
+                'value'   => $department_ids,
+                'compare' => 'IN',
+            ),
+        ),
+        'orderby'    => 'ID',
+        'order'      => 'ASC',
+    ));
+
+    if (empty($users)) {
+        return null;
+    }
+
+    $candidates = array();
+    foreach ($users as $user) {
+        $candidates[] = array(
+            'user'  => $user,
+            'count' => mmhd_count_active_tickets_for_user($user),
+        );
+    }
+
+    // Least busy first; user ID keeps ties stable.
+    usort($candidates, function ($a, $b) {
+        if ($a['count'] === $b['count']) {
+            return (int) $a['user']->ID - (int) $b['user']->ID;
+        }
+
+        return $a['count'] - $b['count'];
+    });
+
+    return $candidates[0]['user'];
+}
+
+/**
+ * Assign an unassigned ticket to the least-loaded agent in its department.
+ *
+ * @param int $ticket_id Ticket ID.
+ * @return string|false Assignee display name, or false when nothing changed.
+ */
+function mmhd_auto_assign_ticket_by_department($ticket_id)
+{
+    $ticket_id = (int) $ticket_id;
+
+    if ($ticket_id <= 0 || get_post_type($ticket_id) !== 'mmhd_ticket') {
+        return false;
+    }
+
+    if (!mmhd_is_department_auto_assign_enabled()) {
+        return false;
+    }
+
+    $existing_assignee = trim((string) get_post_meta($ticket_id, 'ticket_assignee', true));
+    if ($existing_assignee !== '' && !in_array(strtolower($existing_assignee), array('n/a', 'unassigned'), true)) {
+        return false;
+    }
+
+    $agent = mmhd_find_department_auto_assign_agent($ticket_id);
+    if (!$agent) {
+        mmhd_log('Metamint Helpdesk: No department-matched support user found for ticket ID ' . $ticket_id . '.');
+        return false;
+    }
+
+    $assignee_name = !empty($agent->display_name) ? $agent->display_name : $agent->user_login;
+
+    update_post_meta($ticket_id, 'ticket_assignee', $assignee_name);
+    update_post_meta($ticket_id, 'ticket_assignee_id', (int) $agent->ID);
+
+    mmhd_log('Metamint Helpdesk: Ticket ID ' . $ticket_id . ' auto-assigned by department to ' . $assignee_name . ' (ID: ' . $agent->ID . ')');
+
+    return $assignee_name;
+}
+
+add_action('mmhd_after_ticket_created', 'mmhd_auto_assign_ticket_by_department', 5, 1);
+
+/**
+ * Route a ticket to its department when the department is set or changed.
+ *
+ * @param int    $object_id Object ID.
+ * @param array  $terms     Terms.
+ * @param array  $tt_ids    Term taxonomy IDs.
+ * @param string $taxonomy  Taxonomy.
+ * @return void
+ */
+function mmhd_maybe_auto_assign_ticket_on_department_change($object_id, $terms, $tt_ids, $taxonomy)
+{
+    if ($taxonomy !== 'mmhd_ticket_category' || get_post_type($object_id) !== 'mmhd_ticket') {
+        return;
+    }
+
+    mmhd_auto_assign_ticket_by_department($object_id);
+}
+add_action('set_object_terms', 'mmhd_maybe_auto_assign_ticket_on_department_change', 10, 4);
+
 // Automatically assign a ticket to support staff. Email fetch can enforce strict default-agent-only assignment.
 // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedFunctionFound
-function mmhd_auto_assign_ticket_to_support_staff($prefer_default_agent = false, $strict_default_only = false)
+function mmhd_auto_assign_ticket_to_support_staff($prefer_default_agent = false, $strict_default_only = false, $ticket_id = 0)
 {
+    $ticket_id = (int) $ticket_id;
+
+    if ($ticket_id > 0) {
+        $existing_assignee = trim((string) get_post_meta($ticket_id, 'ticket_assignee', true));
+        if ($existing_assignee !== '' && !in_array(strtolower($existing_assignee), array('n/a', 'unassigned'), true)) {
+            return $existing_assignee;
+        }
+
+        // Department routing takes priority over the general least-loaded pool.
+        if (mmhd_is_department_auto_assign_enabled()) {
+            $department_assignee = mmhd_auto_assign_ticket_by_department($ticket_id);
+            if ($department_assignee) {
+                return $department_assignee;
+            }
+
+            // Never cross department boundaries just to fill an assignment.
+            if (!empty(mmhd_get_ticket_department_term_ids($ticket_id))) {
+                return false;
+            }
+        }
+    }
+
     // Match eligible users with roles shown in settings "Auto-assign to".
     $support_staff = get_users(array(
         'role__in' => array('mmhd_support_staff', 'mmhd_support_manager', 'administrator', 'author', 'editor'),
@@ -2577,28 +2808,9 @@ function mmhd_auto_assign_ticket_to_support_staff($prefer_default_agent = false,
     // Get assignment counts for each staff member
     $staff_assignments = array();
     foreach ($support_staff as $staff) {
-        $assigned_tickets = get_posts(array(
-            'post_type' => 'mmhd_ticket',
-            'post_status' => 'publish',
-            'meta_query' => array(
-                array(
-                    'key' => 'ticket_assignee',
-                    'value' => $staff->display_name,
-                    'compare' => '='
-                ),
-                array(
-                    'key' => '_mmhd_ticket_status',
-                    'value' => array('open', 'in-progress'),
-                    'compare' => 'IN'
-                )
-            ),
-            'numberposts' => -1,
-            'fields' => 'ids'
-        ));
-
         $staff_assignments[$staff->ID] = array(
             'user' => $staff,
-            'count' => count($assigned_tickets)
+            'count' => mmhd_count_active_tickets_for_user($staff)
         );
     }
 

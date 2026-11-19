@@ -205,6 +205,7 @@ function mmhd_dashboard_callback()
 
     </div>
 
+    <?php if (mmhd_is_review_prompt_available()) : ?>
     <!-- Review Request Modal -->
     <div id="mmhd-review-modal"
         class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4"
@@ -236,6 +237,7 @@ function mmhd_dashboard_callback()
             </div>
         </div>
     </div>
+    <?php endif; ?>
 
 <?php
 }

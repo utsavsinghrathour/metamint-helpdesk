@@ -48,6 +48,12 @@ function mmhd_get_wizard_current_step()
 function mmhd_mark_wizard_complete()
 {
     update_option('mmhd_wizard_completed', '1', true);
+
+    // Record when setup was finished so time-based prompts (e.g. the review
+    // popup) can wait for a while after onboarding.
+    if (!get_option('mmhd_wizard_completed_at')) {
+        update_option('mmhd_wizard_completed_at', time(), true);
+    }
 }
 
 /**
@@ -56,6 +62,33 @@ function mmhd_mark_wizard_complete()
 function mmhd_is_wizard_completed()
 {
     return get_option('mmhd_wizard_completed', '0') === '1';
+}
+
+/**
+ * Whether the "leave us a review" popup may be shown.
+ *
+ * The first prompt appears one week after the wizard is completed. Subsequent
+ * prompts are handled client-side every two weeks (or after a 30-day snooze
+ * when the user clicks "Already reviewed").
+ *
+ * @return bool
+ */
+function mmhd_is_review_prompt_available()
+{
+    if (!mmhd_is_wizard_completed()) {
+        return false;
+    }
+
+    $completed_at = (int) get_option('mmhd_wizard_completed_at', 0);
+
+    // Existing installs completed before this timestamp existed: start the
+    // one-week window now instead of showing the popup immediately.
+    if ($completed_at <= 0) {
+        $completed_at = time();
+        update_option('mmhd_wizard_completed_at', $completed_at, true);
+    }
+
+    return (time() - $completed_at) >= 7 * DAY_IN_SECONDS;
 }
 
 /**
@@ -100,6 +133,23 @@ function mmhd_wizard_enqueue_assets()
 }
 
 /**
+ * Add a stable body class on wizard screens.
+ *
+ * The generated admin body class depends on the top-level menu title, so it is
+ * not reliable for styling. This class is used by mmhd-wizard.css.
+ */
+add_filter('admin_body_class', 'mmhd_wizard_admin_body_class');
+function mmhd_wizard_admin_body_class($classes)
+{
+    $current_page = isset($_GET['page']) ? sanitize_key($_GET['page']) : '';
+    if ($current_page === 'mmhd-wizard') {
+        $classes .= ' mmhd-wizard-page';
+    }
+
+    return $classes;
+}
+
+/**
  * Wizard page callback
  */
 function mmhd_wizard_callback()
@@ -111,8 +161,12 @@ function mmhd_wizard_callback()
     $steps   = mmhd_get_wizard_steps();
     $current = mmhd_get_wizard_current_step();
 
-    // If wizard is completed, don't show the setup wizard (redirect to dashboard unless on finish step or explicitly reopening)
-    if (mmhd_is_wizard_completed() && $current !== 'finish' && !isset($_GET['reopen'])) {
+    // Only redirect the bare wizard entry point once setup is complete. Internal
+    // navigation (stepper, Back, Skip to Addons, Next) always includes an
+    // explicit "step" parameter and must keep working.
+    $has_explicit_step = isset($_GET['step']) && array_key_exists(sanitize_key($_GET['step']), $steps);
+
+    if (mmhd_is_wizard_completed() && !$has_explicit_step && !isset($_GET['reopen'])) {
         wp_safe_redirect(admin_url('admin.php?page=mmhd-dashboard'));
         exit;
     }

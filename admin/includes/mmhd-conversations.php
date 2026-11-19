@@ -116,18 +116,19 @@ $meta_query = array();
 
 // Add meta query for status filter
 if ($status_filter === 'all') {
-    // Show only open and in-progress tickets by default
+    // "Active Conversations" means every ticket that is not closed,
+    // regardless of source or any other status value. Tickets without a
+    // status meta row are treated as not closed as well.
     $meta_query[] = array(
         'relation' => 'OR',
         array(
             'key' => '_mmhd_ticket_status',
-            'value' => 'open',
-            'compare' => '='
+            'value' => 'closed',
+            'compare' => '!='
         ),
         array(
             'key' => '_mmhd_ticket_status',
-            'value' => 'in-progress',
-            'compare' => '='
+            'compare' => 'NOT EXISTS'
         )
     );
 } else {
