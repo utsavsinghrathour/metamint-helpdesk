@@ -366,7 +366,7 @@ $purchase_url = 'https://metamintapps.com/metamint-helpdesk/';
                     <?php esc_html_e('Skip to Finish', 'metamint-helpdesk'); ?>
                 </a>
                 <button type="button" id="wz-addons-next" class="mmhd-wizard-btn mmhd-wizard-btn-primary">
-                    <span><?php esc_html_e('Finish Setup', 'metamint-helpdesk'); ?></span>
+                    <span><?php esc_html_e('Save & Continue to Finish', 'metamint-helpdesk'); ?></span>
                     <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
                 </button>
             </div>

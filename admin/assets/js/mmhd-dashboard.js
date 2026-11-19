@@ -5805,6 +5805,12 @@ jQuery(document).ready(function () {
   }
 
   function init() {
+    // The server only enables this after setup is complete and the two-week
+    // cooling-off period has elapsed.
+    if (!config.enabled) {
+      return;
+    }
+
     var $modal = $("#mmhd-review-modal");
     if (!$modal.length) {
       return;

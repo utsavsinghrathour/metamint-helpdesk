@@ -518,7 +518,7 @@
                 var btn = setupNextBtn;
                 var origContent = btn.innerHTML;
                 btn.classList.add('is-loading');
-                btn.textContent = 'Saving Preferences...';
+                btn.textContent = 'Saving & Continuing...';
 
                 // Collect settings from setup screen
                 var params = new URLSearchParams();
@@ -578,7 +578,7 @@
                 var btn = addonsNextBtn;
                 var origContent = btn.innerHTML;
                 btn.classList.add('is-loading');
-                btn.textContent = 'Saving...';
+                btn.textContent = 'Saving & Continuing...';
 
                 var params = new URLSearchParams();
                 params.append('action', 'mmhd_wizard_save_step');

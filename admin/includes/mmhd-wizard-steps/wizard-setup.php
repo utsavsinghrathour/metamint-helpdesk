@@ -418,7 +418,7 @@ $notice_count = wp_count_posts('mmhd_notice');
                     <?php esc_html_e('Skip to Addons', 'metamint-helpdesk'); ?>
                 </a>
                 <button type="button" id="wz-setup-next" class="mmhd-wizard-btn mmhd-wizard-btn-primary">
-                    <span><?php esc_html_e('Next: Supercharge with Addons', 'metamint-helpdesk'); ?></span>
+                    <span><?php esc_html_e('Save & Continue to Addons', 'metamint-helpdesk'); ?></span>
                     <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
                 </button>
             </div>

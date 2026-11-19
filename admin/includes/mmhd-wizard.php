@@ -48,6 +48,12 @@ function mmhd_get_wizard_current_step()
 function mmhd_mark_wizard_complete()
 {
     update_option('mmhd_wizard_completed', '1', true);
+
+    // Record when setup was finished so time-based prompts (e.g. the review
+    // popup) can wait for a while after onboarding.
+    if (!get_option('mmhd_wizard_completed_at')) {
+        update_option('mmhd_wizard_completed_at', time(), true);
+    }
 }
 
 /**
@@ -56,6 +62,32 @@ function mmhd_mark_wizard_complete()
 function mmhd_is_wizard_completed()
 {
     return get_option('mmhd_wizard_completed', '0') === '1';
+}
+
+/**
+ * Whether the "leave us a review" popup may be shown.
+ *
+ * Requires a completed setup plus a two-week cooling-off period measured from
+ * the moment the wizard was completed.
+ *
+ * @return bool
+ */
+function mmhd_is_review_prompt_available()
+{
+    if (!mmhd_is_wizard_completed()) {
+        return false;
+    }
+
+    $completed_at = (int) get_option('mmhd_wizard_completed_at', 0);
+
+    // Existing installs completed before this timestamp existed: start the
+    // two-week window now instead of showing the popup immediately.
+    if ($completed_at <= 0) {
+        $completed_at = time();
+        update_option('mmhd_wizard_completed_at', $completed_at, true);
+    }
+
+    return (time() - $completed_at) >= 14 * DAY_IN_SECONDS;
 }
 
 /**

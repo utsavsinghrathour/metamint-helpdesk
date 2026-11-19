@@ -359,7 +359,10 @@ function mmhd_enqueue_tailwind_and_styles()
 
     // Review prompt: link + timing (popup repeats every 5 days unless the user
     // dismisses it via "Already reviewed", which snoozes it for 30 days).
+    // The prompt stays disabled until setup is complete and two weeks have
+    // passed since the wizard was finished, so new users are not interrupted.
     wp_localize_script('mmhd-dashboard-script', 'mmhdReviewPrompt', [
+        'enabled' => mmhd_is_review_prompt_available(),
         'reviewUrl' => '#',
         'showEveryDays' => 5,
         'snoozeDays' => 30,
