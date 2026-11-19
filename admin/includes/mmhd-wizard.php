@@ -67,8 +67,9 @@ function mmhd_is_wizard_completed()
 /**
  * Whether the "leave us a review" popup may be shown.
  *
- * Requires a completed setup plus a two-week cooling-off period measured from
- * the moment the wizard was completed.
+ * The first prompt appears one week after the wizard is completed. Subsequent
+ * prompts are handled client-side every two weeks (or after a 30-day snooze
+ * when the user clicks "Already reviewed").
  *
  * @return bool
  */
@@ -81,13 +82,13 @@ function mmhd_is_review_prompt_available()
     $completed_at = (int) get_option('mmhd_wizard_completed_at', 0);
 
     // Existing installs completed before this timestamp existed: start the
-    // two-week window now instead of showing the popup immediately.
+    // one-week window now instead of showing the popup immediately.
     if ($completed_at <= 0) {
         $completed_at = time();
         update_option('mmhd_wizard_completed_at', $completed_at, true);
     }
 
-    return (time() - $completed_at) >= 14 * DAY_IN_SECONDS;
+    return (time() - $completed_at) >= 7 * DAY_IN_SECONDS;
 }
 
 /**

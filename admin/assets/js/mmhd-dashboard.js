@@ -5738,8 +5738,8 @@ jQuery(document).ready(function () {
 /**
  * Review prompt.
  *
- * Shows a "leave us a review" popup every few days (default 5). Clicking
- * "Already reviewed" snoozes it for a longer period (default 30 days) using a
+ * Shows a "leave us a review" popup every two weeks after the initial
+ * one-week wait. Clicking "Already reviewed" snoozes it for 30 days using a
  * cookie. Clicking "Leave us a review" opens the configured review URL.
  */
 (function ($) {
@@ -5748,7 +5748,7 @@ jQuery(document).ready(function () {
 
   var config = window.mmhdReviewPrompt || {};
   var reviewUrl = config.reviewUrl || "#";
-  var showEveryDays = parseInt(config.showEveryDays, 10) || 5;
+  var showEveryDays = parseInt(config.showEveryDays, 10) || 14;
   var snoozeDays = parseInt(config.snoozeDays, 10) || 30;
 
   function getCookie(name) {
@@ -5805,7 +5805,7 @@ jQuery(document).ready(function () {
   }
 
   function init() {
-    // The server only enables this after setup is complete and the two-week
+    // The server only enables this after setup is complete and the one-week
     // cooling-off period has elapsed.
     if (!config.enabled) {
       return;
