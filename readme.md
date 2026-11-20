@@ -38,6 +38,37 @@ https://github.com/utsavsinghrathour/metamint-helpdesk
 
 Build configuration: public/webpack.config.js
 
+== Security Configuration ==
+
+The plugin binds its secrets to WordPress's predefined keys from `wp-config.php`:
+
+* `AUTH_KEY` / `SECURE_AUTH_KEY` — Used to encrypt customer credentials stored
+  in the `wp_mmhd_credentials` table and to sign JWT tokens issued by the
+  `/mmhd/v1/login` and `/mmhd/v1/signup` REST endpoints.
+
+If you want to override these with plugin-specific secrets, define these
+constants in `wp-config.php`:
+
+* `MMHD_JWT_SECRET` — Secret used to sign JWT tokens issued by the
+  `/mmhd/v1/login` and `/mmhd/v1/signup` REST endpoints.
+* `MMHD_ENCRYPTION_KEY` — Secret used to encrypt customer credentials
+  stored in the `wp_mmhd_credentials` table.
+
+Example:
+
+```php
+define( 'MMHD_JWT_SECRET', 'your-long-random-string-here' );
+define( 'MMHD_ENCRYPTION_KEY', 'another-long-random-string-here' );
+```
+
+If neither the plugin-specific constants nor `AUTH_KEY` are defined, the
+plugin falls back to `wp_hash()`, which is derived from WordPress's auth
+keys and salts.
+
+Important: if you rotate `AUTH_KEY` / `SECURE_AUTH_KEY` in `wp-config.php`,
+previously encrypted credentials and issued JWT tokens will no longer be
+decryptable / verifiable, since they are bound to those keys.
+
 == Installation ==
 
 1. Upload the plugin files to /wp-content/plugins/metamint-helpdesk
