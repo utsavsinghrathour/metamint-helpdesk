@@ -3690,9 +3690,9 @@ jQuery(document).ready(function ($) {
 });
 
 // Update audio preview on dropdown change
-document
-  .getElementById("notification_sound")
-  .addEventListener("change", function () {
+const notificationSoundSelect = document.getElementById("notification_sound");
+if (notificationSoundSelect) {
+  notificationSoundSelect.addEventListener("change", function () {
     var audio = document.getElementById("notification-sound-preview");
     var src = this.value;
     if (src) {
@@ -3704,6 +3704,7 @@ document
     }
     document.getElementById("mmhd_notification_sound").value = src;
   });
+}
 
 // Remove audio preview and reset hidden input
 function removeAudio(previewId, hiddenId) {
@@ -5018,7 +5019,9 @@ let shouldRefreshTicketsPage = false;
 let lastTicketsPageReloadAt = 0;
 
 function markConversationsTabStale() {
-  shouldRefreshTicketsPage = true;
+  if (typeof shouldRefreshTicketsPage !== "undefined") {
+    shouldRefreshTicketsPage = true;
+  }
   if (currentPage === "tickets") {
     reloadConversationsPageIfVisible();
   }
