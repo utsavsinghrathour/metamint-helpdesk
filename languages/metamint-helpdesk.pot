@@ -1,0 +1,202 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: metamint-helpdesk 2.1.1\n"
+"Report-Msgid-Bugs-To: https://github.com/utsavsinghrathour/metamint-helpdesk/issues\n"
+"POT-Creation-Date: 2026-11-20 00:00+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: wp i18n make-pot\n"
+"X-Domain: metamint-helpdesk\n"
+"Plural-Forms: nplurals=INTEGER; plural=EXPRESSION;\n"
+
+#: mmhd.php:104
+msgid "mmhd_access_dashboard"
+msgstr ""
+
+#: mmhd.php:105
+msgid "create_tickets"
+msgstr ""
+
+#: mmhd.php:106
+msgid "edit_tickets"
+msgstr ""
+
+#: mmhd.php:107
+msgid "edit_others_tickets"
+msgstr ""
+
+#: mmhd.php:108
+msgid "publish_tickets"
+msgstr ""
+
+#: mmhd.php:109
+msgid "read_private_tickets"
+msgstr ""
+
+#: mmhd.php:110
+msgid "read_ticket"
+msgstr ""
+
+#: mmhd.php:111
+msgid "delete_ticket"
+msgstr ""
+
+#: mmhd.php:123
+msgid "mmhd_manage_settings"
+msgstr ""
+
+#: admin/includes/settings.php
+msgid "Basic Settings"
+msgstr ""
+
+#: admin/includes/settings.php
+msgid "Mail Settings"
+msgstr ""
+
+#: admin/includes/settings.php
+msgid "Email Templates"
+msgstr ""
+
+#: admin/includes/settings.php
+msgid "Fetch Tickets"
+msgstr ""
+
+#: admin/includes/settings.php
+msgid "Advanced"
+msgstr ""
+
+#: admin/includes/settings.php
+msgid "Core site details used across Metamint Helpdesk."
+msgstr ""
+
+#: admin/includes/settings.php
+msgid "Enable Chat"
+msgstr ""
+
+#: admin/includes/settings.php
+msgid "When disabled, the Conversations tab, \"Start a conversation\" buttons, and the AI bot chat are hidden from the frontend. FAQ and other tabs remain visible."
+msgstr ""
+
+#: admin/includes/settings.php
+msgid "Show \"Powered by Metamint Helpdesk\" credit"
+msgstr ""
+
+#: admin/includes/settings.php
+msgid "Off by default. When enabled, a \"Powered by Metamint Helpdesk\" credit is displayed in the chat widget footer."
+msgstr ""
+
+#: public/includes/mmhd-ajax.php
+msgid "Security check failed."
+msgstr ""
+
+#: public/includes/mmhd-ajax.php
+msgid "Fill in the required fields first"
+msgstr ""
+
+#: public/includes/mmhd-ajax.php
+msgid "Ticket created successfully!"
+msgstr ""
+
+#: public/includes/mmhd-ajax.php
+msgid "You have already voted on this FAQ."
+msgstr ""
+
+#: public/includes/mmhd-ajax.php
+msgid "Registration is currently disabled."
+msgstr ""
+
+#: public/includes/mmhd-ajax.php
+msgid "Too many registration attempts. Please try again later."
+msgstr ""
+
+#: public/includes/mmhd-ajax.php
+msgid "Account created! Check your email for your password."
+msgstr ""
+
+#: public/includes/mmhd-ajax.php
+msgid "Password changed successfully."
+msgstr ""
+
+#: public/includes/mmhd-custom-rest.php
+msgid "Registration is currently disabled."
+msgstr ""
+
+#: public/includes/mmhd-custom-rest.php
+msgid "Your IP has been permanently blocked due to repeated abuse."
+msgstr ""
+
+#: public/includes/mmhd-custom-rest.php
+msgid "Too many signup attempts. Please try again later."
+msgstr ""
+
+#: public/includes/mmhd-custom-rest.php
+msgid "Missing email field"
+msgstr ""
+
+#: public/includes/mmhd-custom-rest.php
+msgid "Email already exists"
+msgstr ""
+
+#: public/includes/mmhd-custom-rest.php
+msgid "User created successfully"
+msgstr ""
+
+#: admin/includes/post-types/mmhd-ticket-post-type.php
+msgid "Metamint Helpdesk Tickets"
+msgstr ""
+
+#: admin/includes/post-types/mmhd-ticket-post-type.php
+msgid "Metamint Helpdesk Ticket"
+msgstr ""
+
+#: admin/includes/post-types/mmhd-ticket-post-type.php
+msgid "Tickets"
+msgstr ""
+
+#: admin/includes/post-types/mmhd-ticket-post-type.php
+msgid "Ticket"
+msgstr ""
+
+#: admin/includes/post-types/mmhd-ticket-post-type.php
+msgid "Add New"
+msgstr ""
+
+#: admin/includes/post-types/mmhd-ticket-post-type.php
+msgid "Add New Ticket"
+msgstr ""
+
+#: admin/includes/post-types/mmhd-ticket-post-type.php
+msgid "New Ticket"
+msgstr ""
+
+#: admin/includes/post-types/mmhd-ticket-post-type.php
+msgid "Edit Ticket"
+msgstr ""
+
+#: admin/includes/post-types/mmhd-ticket-post-type.php
+msgid "View Ticket"
+msgstr ""
+
+#: admin/includes/post-types/mmhd-ticket-post-type.php
+msgid "All Tickets"
+msgstr ""
+
+#: admin/includes/post-types/mmhd-ticket-post-type.php
+msgid "Search Tickets"
+msgstr ""
+
+#: admin/includes/post-types/mmhd-ticket-post-type.php
+msgid "No tickets found."
+msgstr ""
+
+#: admin/includes/post-types/mmhd-ticket-post-type.php
+msgid "No tickets found in Trash."
+msgstr ""
+
+#: public/includes/mmhd-shortcodes.php
+msgid "Invalid email format."
+msgstr ""

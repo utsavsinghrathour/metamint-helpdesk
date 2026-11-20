@@ -224,6 +224,17 @@ function mmhd_deactivate()
 }
 
 /**
+ * Load plugin text domain for translations.
+ *
+ * Look for .mo files in /wp-content/plugins/metamint-helpdesk/languages/
+ */
+function mmhd_load_textdomain()
+{
+    load_plugin_textdomain('metamint-helpdesk', false, basename(MMHD_PLUGIN_PATH) . '/languages/');
+}
+add_action('plugins_loaded', 'mmhd_load_textdomain');
+
+/**
  * Redirect to setup wizard on first admin visit after activation.
  */
 add_action('admin_init', 'mmhd_wizard_admin_init_redirect');
@@ -838,10 +849,17 @@ add_action('init', 'mmhd_maybe_create_notifications_table');
 
 
 
+
 function mmhd_get_encryption_key()
 {
     if (defined('MMHD_ENCRYPTION_KEY') && MMHD_ENCRYPTION_KEY !== '') {
         return MMHD_ENCRYPTION_KEY;
+    }
+
+    // Use WordPress auth keys as the encryption source so credentials are
+    // bound to the site's existing wp-config.php secrets.
+    if (defined('AUTH_KEY') && AUTH_KEY !== '') {
+        return AUTH_KEY;
     }
 
     return wp_hash('mmhd-encryption-key');
@@ -881,6 +899,12 @@ function mmhd_decrypt($ciphertext, $key = null)
 
     if ($plaintext === false && defined('AUTH_KEY') && AUTH_KEY !== '') {
         $plaintext = openssl_decrypt($encrypted_data, "AES-256-CBC", AUTH_KEY, $options = 0, $iv);
+    }
+
+    // Legacy fallback: credentials encrypted before key rotation used
+    // wp_hash('mmhd-encryption-key') as the site key.
+    if ($plaintext === false) {
+        $plaintext = openssl_decrypt($encrypted_data, "AES-256-CBC", wp_hash('mmhd-encryption-key'), $options = 0, $iv);
     }
 
     return $plaintext;

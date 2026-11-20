@@ -43,6 +43,12 @@ function mmhd_get_jwt_secret_key()
         return MMHD_JWT_SECRET;
     }
 
+    // Use WordPress auth keys as the JWT signing source so tokens are bound
+    // to the site's existing wp-config.php secrets.
+    if (defined('AUTH_KEY') && AUTH_KEY !== '') {
+        return AUTH_KEY;
+    }
+
     return wp_hash('mmhd-jwt-secret');
 }
 
