@@ -324,6 +324,12 @@ $mmhd_stat_cards = [
                     <div class="text-xs text-purple-700"><?php esc_html_e('Configure system preferences', 'metamint-helpdesk'); ?></div>
                 </button>
             </div>
+
+            <div class="mt-6 pt-6 border-t border-gray-200 text-xs text-gray-400 uppercase tracking-wider">
+                <span><?php esc_html_e('Powered by', 'metamint-helpdesk'); ?></span>
+                <a href="https://metamintapps.com/" target="_blank" rel="noopener noreferrer"
+                    class="text-green-600 hover:text-green-800 transition-colors">Metamint Apps</a>
+            </div>
         </div>
     </div>
 </div>
