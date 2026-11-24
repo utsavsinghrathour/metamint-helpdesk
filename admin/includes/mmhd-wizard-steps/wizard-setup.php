@@ -49,7 +49,7 @@ $notice_count = wp_count_posts('mmhd_notice');
                     <span class="mmhd-wizard-badge"><?php esc_html_e('Step 2 of 4', 'metamint-helpdesk'); ?></span>
                 </div>
             </div>
-            <a href="<?php echo esc_url(admin_url('admin.php?page=mmhd-dashboard')); ?>" class="mmhd-wizard-exit-btn">
+            <a href="<?php echo esc_url(wp_nonce_url(admin_url('admin.php?mmhd_skip_wizard=1'), 'mmhd_skip_wizard')); ?>" class="mmhd-wizard-exit-btn">
                 <span><?php esc_html_e('Exit to Dashboard', 'metamint-helpdesk'); ?></span>
                 <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
             </a>

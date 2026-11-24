@@ -32,7 +32,7 @@ $logo_url = file_exists(MMHD_PLUGIN_PATH . 'admin/assets/images/mmhd-logo.png')
                     <span class="mmhd-wizard-badge"><?php esc_html_e('Quick Setup', 'metamint-helpdesk'); ?></span>
                 </div>
             </div>
-            <a href="<?php echo esc_url(admin_url('admin.php?page=mmhd-dashboard')); ?>" class="mmhd-wizard-exit-btn">
+            <a href="<?php echo esc_url(wp_nonce_url(admin_url('admin.php?mmhd_skip_wizard=1'), 'mmhd_skip_wizard')); ?>" class="mmhd-wizard-exit-btn">
                 <span><?php esc_html_e('Exit to Dashboard', 'metamint-helpdesk'); ?></span>
                 <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
             </a>
@@ -165,7 +165,7 @@ $logo_url = file_exists(MMHD_PLUGIN_PATH . 'admin/assets/images/mmhd-logo.png')
 
         <!-- Navigation Action -->
         <div class="mmhd-wizard-actions">
-            <a href="<?php echo esc_url(admin_url('admin.php?page=mmhd-dashboard')); ?>" class="mmhd-wizard-btn mmhd-wizard-btn-ghost">
+            <a href="<?php echo esc_url(wp_nonce_url(admin_url('admin.php?mmhd_skip_wizard=1'), 'mmhd_skip_wizard')); ?>" class="mmhd-wizard-btn mmhd-wizard-btn-ghost">
                 <?php esc_html_e('Skip to Dashboard', 'metamint-helpdesk'); ?>
             </a>
             <a href="<?php echo esc_url(add_query_arg('step', 'setup', admin_url('admin.php?page=mmhd-wizard'))); ?>" class="mmhd-wizard-btn mmhd-wizard-btn-primary">

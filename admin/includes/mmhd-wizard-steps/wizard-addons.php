@@ -11,8 +11,9 @@ if ($current_index === false) {
     $current_index = 2;
 }
 
-$is_addon_active = defined('MMHD_ADDON_VERSION');
-$purchase_url = 'https://metamintapps.com/metamint-helpdesk/';
+$is_addon_active  = defined('MMHD_ADDON_VERSION');
+$is_licensed      = $is_addon_active && function_exists('mmhd_addon_has_valid_license') && mmhd_addon_has_valid_license();
+$purchase_url     = 'https://metamintapps.com/metamint-helpdesk/';
 ?>
 <div class="mmhd-wizard-wrap">
     <div class="mmhd-wizard-step" id="mmhd-wizard-addons">
@@ -28,7 +29,7 @@ $purchase_url = 'https://metamintapps.com/metamint-helpdesk/';
                     <span class="mmhd-wizard-badge"><?php esc_html_e('Step 3 of 4', 'metamint-helpdesk'); ?></span>
                 </div>
             </div>
-            <a href="<?php echo esc_url(admin_url('admin.php?page=mmhd-dashboard')); ?>" class="mmhd-wizard-exit-btn">
+            <a href="<?php echo esc_url(wp_nonce_url(admin_url('admin.php?mmhd_skip_wizard=1'), 'mmhd_skip_wizard')); ?>" class="mmhd-wizard-exit-btn">
                 <span><?php esc_html_e('Exit to Dashboard', 'metamint-helpdesk'); ?></span>
                 <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
             </a>
@@ -336,7 +337,49 @@ $purchase_url = 'https://metamintapps.com/metamint-helpdesk/';
 
         </div>
 
-        <!-- Addons Pack Banner ($50 first year) -->
+        <!-- Addons Pack Banner -->
+        <?php if ($is_licensed): ?>
+        <div class="mmhd-wizard-addon-pack-banner" style="background:linear-gradient(135deg,#ecfdf5 0%,#d1fae5 100%);border-color:#6ee7b7;">
+            <div class="mmhd-wizard-addon-pack-content">
+                <h3 style="color:#065f46;">
+                    <svg style="display:inline;vertical-align:middle;margin-right:6px;" width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="#059669"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    <?php esc_html_e('Addon Pack Active — All 12 Addons Unlocked', 'metamint-helpdesk'); ?>
+                </h3>
+                <p style="color:#047857;">
+                    <?php
+                    printf(
+                        /* translators: %s: addon version number */
+                        esc_html__('You\'re running Addon Pack v%s with a valid license. All addons are available — enable the ones that fit your workflow below.', 'metamint-helpdesk'),
+                        esc_html(MMHD_ADDON_VERSION)
+                    );
+                    ?>
+                </p>
+            </div>
+            <div class="mmhd-wizard-addon-pack-pricing">
+                <span class="mmhd-wizard-addon-pack-amount" style="background:#059669;color:#fff;padding:8px 20px;border-radius:8px;font-size:14px;font-weight:600;display:inline-flex;align-items:center;gap:6px;">
+                    <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                    <?php esc_html_e('Licensed & Active', 'metamint-helpdesk'); ?>
+                </span>
+            </div>
+        </div>
+        <?php elseif ($is_addon_active): ?>
+        <div class="mmhd-wizard-addon-pack-banner" style="background:linear-gradient(135deg,#fffbeb 0%,#fef3c7 100%);border-color:#fcd34d;">
+            <div class="mmhd-wizard-addon-pack-content">
+                <h3 style="color:#92400e;">
+                    <svg style="display:inline;vertical-align:middle;margin-right:6px;" width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="#d97706"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M12 2a10 10 0 100 20A10 10 0 0012 2z"/></svg>
+                    <?php esc_html_e('Addon Pack Installed — License Required', 'metamint-helpdesk'); ?>
+                </h3>
+                <p style="color:#78350f;">
+                    <?php esc_html_e('The Addon Pack plugin is installed but no active license was found. Add your license key in Settings → License to unlock all 12 addons.', 'metamint-helpdesk'); ?>
+                </p>
+            </div>
+            <div class="mmhd-wizard-addon-pack-pricing">
+                <a href="<?php echo esc_url(admin_url('admin.php?page=mmhd-license')); ?>" class="mmhd-wizard-addon-pack-btn" style="background:#d97706;">
+                    <span><?php esc_html_e('Activate License →', 'metamint-helpdesk'); ?></span>
+                </a>
+            </div>
+        </div>
+        <?php else: ?>
         <div class="mmhd-wizard-addon-pack-banner">
             <div class="mmhd-wizard-addon-pack-content">
                 <h3><?php esc_html_e('Unlock All 12 Addons — One Simple License', 'metamint-helpdesk'); ?></h3>
@@ -354,6 +397,7 @@ $purchase_url = 'https://metamintapps.com/metamint-helpdesk/';
                 </a>
             </div>
         </div>
+        <?php endif; ?>
 
         <!-- Navigation Action Bar -->
         <div class="mmhd-wizard-actions">
