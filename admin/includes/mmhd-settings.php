@@ -702,7 +702,7 @@
                                      </span>
                                  </label>
                                  <p class="mt-1 text-xs text-gray-500">
-                                     <?php esc_html_e('Suppresses all outgoing Metamint Helpdesk emails — new user welcome, ticket creation confirmation, reply and close notifications, password reset, and more. Enable this to import existing conversations without notifying customers, or to pause all Metamint Helpdesk email delivery.', 'metamint-helpdesk'); ?>
+                                     <?php esc_html_e('Suppresses only import-related Metamint Helpdesk emails — such as new user welcome emails created while importing existing conversations. Regular emails like ticket creation confirmations, reply and close notifications, and password resets will still be sent.', 'metamint-helpdesk'); ?>
                                  </p>
                              </div>
                          </div>

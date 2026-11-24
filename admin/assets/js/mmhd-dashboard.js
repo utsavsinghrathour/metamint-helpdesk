@@ -2619,26 +2619,102 @@ function initTicketTransfer() {
   const btn = document.getElementById("mmhd-transfer-submit-btn");
   const form = document.getElementById("mmhd-transfer-ticket-form");
   const msg = document.getElementById("mmhd-transfer-message");
-  const userSelect = document.getElementById("mmhd-transfer-user-select");
+  const userSearch = document.getElementById("mmhd-transfer-user-search");
+  const userIdHidden = document.getElementById("mmhd-transfer-user-id");
+  const userList = document.getElementById("mmhd-transfer-user-list");
+  const noResults = document.getElementById("mmhd-transfer-user-no-results");
   const newEmailInput = document.getElementById("mmhd-transfer-new-email");
 
   if (!btn || !form || !msg) return;
+
+  // Custom searchable dropdown interactions
+  if (userSearch && userList) {
+    // Toggle dropdown on click
+    userSearch.addEventListener("click", function () {
+      const isHidden = userList.classList.contains("hidden");
+      // Close other dropdowns if any
+      document.querySelectorAll("#mmhd-transfer-user-list").forEach((list) => {
+        list.classList.add("hidden");
+      });
+      document.querySelectorAll("#mmhd-transfer-user-no-results").forEach((el) => {
+        el.classList.add("hidden");
+      });
+      if (isHidden) {
+        userList.classList.remove("hidden");
+        userSearch.focus();
+      } else {
+        userList.classList.add("hidden");
+      }
+    });
+
+    // Filter options on search input
+    userSearch.addEventListener("input", function () {
+      const searchTerm = userSearch.value.toLowerCase().trim();
+      const options = userList.querySelectorAll(".mmhd-transfer-user-option");
+      let hasVisible = false;
+
+      options.forEach((option) => {
+        const name = option.textContent.toLowerCase();
+        const email = option.dataset.userEmail ? option.dataset.userEmail.toLowerCase() : "";
+        if (name.includes(searchTerm) || email.includes(searchTerm)) {
+          option.classList.remove("hidden");
+          hasVisible = true;
+        } else {
+          option.classList.add("hidden");
+        }
+      });
+
+      if (hasVisible) {
+        noResults.classList.add("hidden");
+      } else {
+        noResults.classList.remove("hidden");
+      }
+    });
+
+    // Select option on click
+    userList.addEventListener("click", function (e) {
+      const option = e.target.closest(".mmhd-transfer-user-option");
+      if (!option) return;
+
+      const userId = option.dataset.userId;
+      const userNameEl = option.querySelector(".font-medium");
+      const userName = userNameEl ? userNameEl.textContent.trim() : "";
+      const userEmail = option.dataset.userEmail || "";
+
+      userSearch.value = userName;
+      userIdHidden.value = userId;
+      userList.classList.add("hidden");
+
+      // Clear new email input when selecting existing user
+      if (newEmailInput) newEmailInput.value = "";
+    });
+
+    // Close dropdown when clicking outside
+    document.addEventListener("click", function (e) {
+      if (!userSearch.contains(e.target) && !userList.contains(e.target)) {
+        userList.classList.add("hidden");
+        noResults.classList.add("hidden");
+      }
+    });
+  }
 
   btn.addEventListener("click", function (e) {
     e.preventDefault();
 
     const ticketId = document.getElementById("mmhd-transfer-ticket-id").value;
-    const targetUserId = userSelect.value;
-    const newUserEmail = newEmailInput.value.trim();
+    const targetUserId = userIdHidden ? userIdHidden.value : "0";
+    const newUserEmail = newEmailInput ? newEmailInput.value.trim() : "";
     const nonce = form.querySelector('input[name="mmhd_transfer_ticket_nonce_field"]').value;
 
     msg.textContent = "";
     msg.className = "mt-3 text-sm";
 
-    if (!targetUserId && !newUserEmail) {
-      msg.textContent = "Please select a user or enter an email address.";
-      msg.className += " text-red-600";
-      return;
+    if (!targetUserId || targetUserId === "0") {
+      if (!newUserEmail) {
+        msg.textContent = "Please select a user or enter an email address.";
+        msg.className += " text-red-600";
+        return;
+      }
     }
 
     btn.disabled = true;
@@ -2658,10 +2734,10 @@ function initTicketTransfer() {
       .then((response) => response.json())
       .then((response) => {
         btn.disabled = false;
-        btn.textContent = "Transfer Ticket";
+        btn.textContent = "Transfer Conversation";
 
         if (response.success) {
-          msg.textContent = response.data.message || "Ticket transferred successfully.";
+          msg.textContent = response.data.message || "Conversation transferred successfully.";
           msg.className += " text-green-600";
           setTimeout(() => {
             window.location.reload();
@@ -2673,8 +2749,8 @@ function initTicketTransfer() {
       })
       .catch(() => {
         btn.disabled = false;
-        btn.textContent = "Transfer Ticket";
-        msg.textContent = "An error occurred while transferring the ticket.";
+        btn.textContent = "Transfer Conversation";
+        msg.textContent = "An error occurred while transferring the conversation.";
         msg.className += " text-red-600";
       });
   });

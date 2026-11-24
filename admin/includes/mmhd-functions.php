@@ -1164,9 +1164,7 @@ function mmhd_create_ticket()
 
         mmhd_log('Created new user with ID: ' . $user_id);
         update_user_meta($user_id, 'nickname', $customer_name);
-        if (!mmhd_are_emails_suppressed()) {
-            wp_send_new_user_notifications($user_id, 'user');
-        }
+        wp_send_new_user_notifications($user_id, 'user');
     } else {
         $user_id = $user->ID;
         mmhd_log('Using existing user with ID: ' . $user_id);
@@ -3128,11 +3126,6 @@ function mmhd_schedule_ticket_creation_email($post_id, $post, $update)
         return;
     }
 
-    if (mmhd_are_emails_suppressed()) {
-        mmhd_log("Metamint Helpdesk: Ticket creation email blocked (email sending disabled). Not scheduled for ticket ID: $post_id");
-        return;
-    }
-
     if (wp_next_scheduled('mmhd_send_ticket_creation_email_async', [$post_id])) {
         return;
     }
@@ -3664,10 +3657,6 @@ function mmhd_clear_all_scheduled_events($hook)
 
 function mmhd_send_email($to, $subject, $message, $headers = [], $attachments = [], $reply_to = '', $outbound_message_id = '')
 {
-    if (mmhd_are_emails_suppressed()) {
-        mmhd_log("Metamint Helpdesk: Email sending is disabled (do not send email on import). Skipped: $subject");
-        return false;
-    }
 
     if (!is_array($headers)) {
         $headers = [$headers];
@@ -4281,9 +4270,7 @@ function mmhd_transfer_ticket_callback()
             }
 
             // Native WordPress new-account email flow
-            if (!mmhd_are_emails_suppressed()) {
-                wp_new_user_notification($new_user_id);
-            }
+            wp_new_user_notification($new_user_id);
 
             $resolved_user_id = (int) $new_user_id;
             $is_new_user = true;
@@ -4298,7 +4285,7 @@ function mmhd_transfer_ticket_callback()
 
     // Prevent transferring to the same author
     if ((int) $ticket->post_author === $resolved_user_id) {
-        wp_send_json_error(array('message' => 'This user is already the ticket author.'));
+        wp_send_json_error(array('message' => 'This user is already the conversation author.'));
     }
 
     $old_author_id = (int) $ticket->post_author;
@@ -4317,7 +4304,7 @@ function mmhd_transfer_ticket_callback()
     ));
 
     if (is_wp_error($updated) || $updated === false) {
-        wp_send_json_error(array('message' => 'Failed to transfer ticket ownership.'));
+        wp_send_json_error(array('message' => 'Failed to transfer conversation ownership.'));
     }
 
     // Update customer email meta
@@ -4325,7 +4312,7 @@ function mmhd_transfer_ticket_callback()
 
     // Add a transfer comment to the ticket
     $transfer_message = sprintf(
-        __( 'Ticket #%d has been transferred from %s (%s) to %s (%s).', 'metamint-helpdesk' ),
+        __( 'Conversation #%d has been transferred from %s (%s) to %s (%s).', 'metamint-helpdesk' ),
         $ticket_id,
         esc_html($old_author_name),
         esc_html($old_author_email),
@@ -4356,7 +4343,7 @@ function mmhd_transfer_ticket_callback()
     do_action('mmhd_after_ticket_transferred', $ticket_id, $old_author_id, $resolved_user_id, $current_user->ID);
 
     wp_send_json_success(array(
-        'message'     => sprintf(__('Ticket transferred to %s successfully.', 'metamint-helpdesk'), $new_author_name),
+        'message'     => sprintf(__('Conversation transferred to %s successfully.', 'metamint-helpdesk'), $new_author_name),
         'ticket_id'   => $ticket_id,
         'new_author'  => array(
             'id'    => $resolved_user_id,

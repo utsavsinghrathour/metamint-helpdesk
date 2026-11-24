@@ -709,10 +709,8 @@ function mmhd_register_user()
     $user_id = wp_create_user($username, $password, $email);
 
     if (!is_wp_error($user_id)) {
-        if (!mmhd_are_emails_suppressed()) {
-            // The $password param was deprecated in WP 4.3.1; pass only the user ID.
-            wp_new_user_notification($user_id);
-        }
+        // The $password param was deprecated in WP 4.3.1; pass only the user ID.
+        wp_new_user_notification($user_id);
 
         wp_send_json_success([
             'message' => __('Account created! Check your email for your password.', 'metamint-helpdesk'),
