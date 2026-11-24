@@ -280,11 +280,11 @@ $mmhd_td_hidden      = ($mmhd_current_tab === 'ticket-detail' || $mmhd_has_ticke
                                 <!-- Ticket meta info will be populated by JavaScript -->
                             </div>
 
-                            <!-- Transfer Ticket Card -->
+                            <!-- Transfer Conversation Card -->
                             <div id="ticket-transfer-card" class="mt-6 pt-6 border-t border-gray-200">
                                 <h3 class="text-sm font-semibold text-gray-900 mb-3 flex items-center gap-2">
                                     <i class="fas fa-share text-teal-600"></i>
-                                    <?php esc_html_e('Transfer Ticket', 'metamint-helpdesk'); ?>
+                                    <?php esc_html_e('Transfer Conversation', 'metamint-helpdesk'); ?>
                                 </h3>
                                 <form id="mmhd-transfer-ticket-form" method="post">
                                     <?php wp_nonce_field('mmhd_transfer_ticket_nonce', 'mmhd_transfer_ticket_nonce_field'); ?>
@@ -295,16 +295,36 @@ $mmhd_td_hidden      = ($mmhd_current_tab === 'ticket-detail' || $mmhd_has_ticke
                                         <label class="block text-xs font-medium text-gray-600 mb-1">
                                             <?php esc_html_e('Transfer to existing user:', 'metamint-helpdesk'); ?>
                                         </label>
-                                        <select id="mmhd-transfer-user-select" name="target_user_id"
-                                            class="w-full border border-gray-300 rounded-md p-2 text-sm focus:ring-teal-500 focus:border-teal-500">
-                                            <option value="0"><?php esc_html_e('Select a user...', 'metamint-helpdesk'); ?></option>
-                                            <?php foreach ($mmhd_transfer_users as $mmhd_tu): ?>
-                                                <option value="<?php echo esc_attr($mmhd_tu->ID); ?>"
-                                                    data-email="<?php echo esc_attr($mmhd_tu->user_email); ?>">
-                                                    <?php echo esc_html($mmhd_tu->display_name); ?>
-                                                </option>
-                                            <?php endforeach; ?>
-                                        </select>
+                                        <!-- Searchable user dropdown -->
+                                        <div class="mmhd-transfer-user-dropdown relative w-full mb-1">
+                                            <input type="text" id="mmhd-transfer-user-search"
+                                                placeholder="Search users..."
+                                                class="w-full border border-gray-300 rounded-md p-2 text-sm focus:ring-teal-500 focus:border-teal-500 cursor-pointer">
+                                            <input type="hidden" name="target_user_id" id="mmhd-transfer-user-id" value="0">
+                                            <div id="mmhd-transfer-user-list"
+                                                class="absolute z-50 w-full bg-white border border-gray-300 rounded-md shadow-lg mt-1 max-h-48 overflow-y-auto hidden">
+                                                <div class="px-3 py-2 text-sm text-gray-500 border-b border-gray-100">
+                                                    <?php esc_html_e('Select a user', 'metamint-helpdesk'); ?>
+                                                </div>
+                                                <?php foreach ($mmhd_transfer_users as $mmhd_tu): ?>
+                                                    <div class="mmhd-transfer-user-option px-3 py-2 text-sm hover:bg-teal-50 cursor-pointer"
+                                                        data-user-id="<?php echo esc_attr($mmhd_tu->ID); ?>"
+                                                        data-user-email="<?php echo esc_attr($mmhd_tu->user_email); ?>">
+                                                        <div class="font-medium text-gray-900 leading-tight">
+                                                            <?php echo esc_html($mmhd_tu->display_name); ?>
+                                                        </div>
+                                                        <div class="text-xs text-gray-500 leading-tight">
+                                                            <?php echo esc_html($mmhd_tu->user_email); ?>
+                                                        </div>
+                                                    </div>
+                                                <?php endforeach; ?>
+                                            </div>
+                                            <div id="mmhd-transfer-user-no-results"
+                                                class="absolute z-50 w-full bg-white border border-gray-300 rounded-md shadow-lg mt-1 hidden px-3 py-2 text-sm text-gray-500">
+                                                <?php esc_html_e('No users found', 'metamint-helpdesk'); ?>
+                                            </div>
+                                        </div>
+                                        <input type="hidden" id="mmhd-transfer-selected-user" value="0">
                                     </div>
 
                                     <div class="mb-3">
@@ -319,11 +339,52 @@ $mmhd_td_hidden      = ($mmhd_current_tab === 'ticket-detail' || $mmhd_has_ticke
                                     <button type="button" id="mmhd-transfer-submit-btn"
                                         class="w-full inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-teal-600 hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500"
                                         type="button">
-                                        <?php esc_html_e('Transfer Ticket', 'metamint-helpdesk'); ?>
+                                        <?php esc_html_e('Transfer Conversation', 'metamint-helpdesk'); ?>
                                     </button>
 
                                     <div id="mmhd-transfer-message" class="mt-3 text-sm"></div>
                                 </form>
+
+                                <style>
+                                    #mmhd-transfer-user-search {
+                                        cursor: auto;
+                                    }
+                                    #mmhd-transfer-user-search::-ms-clear,
+                                    #mmhd-transfer-user-search::-ms-reveal {
+                                        display: none;
+                                        width: 0;
+                                        height: 0;
+                                    }
+                                    #mmhd-transfer-user-search::-webkit-search-cancel-button,
+                                    #mmhd-transfer-user-search::-webkit-search-decoration {
+                                        display: none;
+                                    }
+                                    #mmhd-transfer-user-list {
+                                        z-index: 9999;
+                                    }
+                                    .mmhd-transfer-user-option {
+                                        transition: background 0.15s ease;
+                                        border-bottom: 1px solid #f3f4f6;
+                                    }
+                                    .mmhd-transfer-user-option:last-child {
+                                        border-bottom: none;
+                                    }
+                                    .mmhd-transfer-user-option:hover {
+                                        background: #eff6ff !important;
+                                    }
+                                    .mmhd-transfer-user-option .font-medium {
+                                        color: #111827;
+                                    }
+                                    .mmhd-transfer-user-option .text-xs {
+                                        color: #6b7280;
+                                    }
+                                    #mmhd-transfer-user-list .border-b {
+                                        font-weight: 600;
+                                        color: #6b7280;
+                                        background: #f9fafb;
+                                        padding: 0.75rem 1rem;
+                                    }
+                                </style>
                             </div>
                         </div>
                     </div>
