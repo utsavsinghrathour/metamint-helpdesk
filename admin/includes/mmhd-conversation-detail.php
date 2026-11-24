@@ -22,6 +22,17 @@ if (is_wp_error($mmhd_terms) || !is_array($mmhd_terms)) {
     $mmhd_terms = [];
 }
 
+// Users eligible to receive a transferred ticket (all registered users)
+$mmhd_transfer_users = get_users([
+    'fields' => ['ID', 'display_name', 'user_email'],
+    'number' => 100,
+    'orderby' => 'display_name',
+    'order'  => 'ASC',
+]);
+if (is_wp_error($mmhd_transfer_users) || !is_array($mmhd_transfer_users)) {
+    $mmhd_transfer_users = [];
+}
+
 $mmhd_default_category = get_option('mmhd_default_ticket_category', 'General');
 $mmhd_default_category_obj = null;
 foreach ($mmhd_terms as $term) {
@@ -267,6 +278,52 @@ $mmhd_td_hidden      = ($mmhd_current_tab === 'ticket-detail' || $mmhd_has_ticke
 
                             <div id="ticket-meta-info" class="space-y-2 pt-4 border-gray-100 text-sm">
                                 <!-- Ticket meta info will be populated by JavaScript -->
+                            </div>
+
+                            <!-- Transfer Ticket Card -->
+                            <div id="ticket-transfer-card" class="mt-6 pt-6 border-t border-gray-200">
+                                <h3 class="text-sm font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                                    <i class="fas fa-share text-teal-600"></i>
+                                    <?php esc_html_e('Transfer Ticket', 'metamint-helpdesk'); ?>
+                                </h3>
+                                <form id="mmhd-transfer-ticket-form" method="post">
+                                    <?php wp_nonce_field('mmhd_transfer_ticket_nonce', 'mmhd_transfer_ticket_nonce_field'); ?>
+                                    <input type="hidden" name="ticket_id" id="mmhd-transfer-ticket-id" value="">
+                                    <input type="hidden" name="action" value="mmhd_transfer_ticket">
+
+                                    <div class="mb-3">
+                                        <label class="block text-xs font-medium text-gray-600 mb-1">
+                                            <?php esc_html_e('Transfer to existing user:', 'metamint-helpdesk'); ?>
+                                        </label>
+                                        <select id="mmhd-transfer-user-select" name="target_user_id"
+                                            class="w-full border border-gray-300 rounded-md p-2 text-sm focus:ring-teal-500 focus:border-teal-500">
+                                            <option value="0"><?php esc_html_e('Select a user...', 'metamint-helpdesk'); ?></option>
+                                            <?php foreach ($mmhd_transfer_users as $mmhd_tu): ?>
+                                                <option value="<?php echo esc_attr($mmhd_tu->ID); ?>"
+                                                    data-email="<?php echo esc_attr($mmhd_tu->user_email); ?>">
+                                                    <?php echo esc_html($mmhd_tu->display_name); ?>
+                                                </option>
+                                            <?php endforeach; ?>
+                                        </select>
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label class="block text-xs font-medium text-gray-600 mb-1">
+                                            <?php esc_html_e('Or transfer to new user (email):', 'metamint-helpdesk'); ?>
+                                        </label>
+                                        <input type="email" id="mmhd-transfer-new-email" name="new_user_email"
+                                            placeholder="user@example.com"
+                                            class="w-full border border-gray-300 rounded-md p-2 text-sm focus:ring-teal-500 focus:border-teal-500">
+                                    </div>
+
+                                    <button type="button" id="mmhd-transfer-submit-btn"
+                                        class="w-full inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-teal-600 hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500"
+                                        type="button">
+                                        <?php esc_html_e('Transfer Ticket', 'metamint-helpdesk'); ?>
+                                    </button>
+
+                                    <div id="mmhd-transfer-message" class="mt-3 text-sm"></div>
+                                </form>
                             </div>
                         </div>
                     </div>
