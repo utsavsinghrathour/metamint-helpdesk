@@ -244,6 +244,17 @@ function mmhd_wizard_admin_init_redirect()
         return;
     }
 
+    // Handle "Exit to Dashboard" / "Skip Setup" — mark wizard complete and redirect.
+    if (
+        isset($_GET['mmhd_skip_wizard'], $_GET['_wpnonce'])
+        && wp_verify_nonce(sanitize_text_field(wp_unslash($_GET['_wpnonce'])), 'mmhd_skip_wizard')
+        && current_user_can('mmhd_manage_settings')
+    ) {
+        mmhd_mark_wizard_complete();
+        wp_safe_redirect(admin_url('admin.php?page=mmhd-dashboard'));
+        exit;
+    }
+
     $current_page = isset($_GET['page']) ? sanitize_key($_GET['page']) : '';
 
     // Only redirect mmhd pages (not wizard itself)
