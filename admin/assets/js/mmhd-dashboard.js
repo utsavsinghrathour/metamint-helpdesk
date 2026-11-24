@@ -4346,12 +4346,11 @@ function renderReplies(replies) {
     })
     .join("");
 
-  // Scroll to send-reply-btn on first ticket load only
+  // Scroll only the replies container to its bottom on initial ticket load
   if (_rbd_firstTicketScroll) {
     _rbd_firstTicketScroll = false;
-    const btn = document.getElementById("send-reply-btn");
-    if (btn) {
-      btn.scrollIntoView({ behavior: "smooth", block: "center" });
+    if (repliesList) {
+      repliesList.scrollTop = repliesList.scrollHeight;
     }
   }
 }
@@ -4594,10 +4593,9 @@ function renderNotes(notes) {
     )
     .join("");
 
-  // Scroll to the last note
-  const lastNote = notesList.querySelector(`#note-${notes.length - 1}`);
-  if (lastNote) {
-    lastNote.scrollIntoView({ behavior: "smooth", block: "end" });
+  // Scroll only the notes container to its bottom (not the whole page)
+  if (notes.length > 0) {
+    notesList.scrollTop = notesList.scrollHeight;
   }
 }
 // the message is displaying with html tags
@@ -5857,30 +5855,4 @@ jQuery(document).ready(function () {
   $(init);
 })(jQuery);
 
-// Scroll to bottom of replies list when new replies are added
-document.addEventListener("DOMContentLoaded", function () {
-  const repliesList = document.querySelector(
-    "#ticket-detail-page #replies-list",
-  );
-
-  if (!repliesList) return;
-
-  const scrollToBottom = () => {
-    requestAnimationFrame(() => {
-      repliesList.scrollTop = repliesList.scrollHeight;
-    });
-  };
-
-  // Scroll on initial load
-  scrollToBottom();
-
-  // Scroll whenever replies are added or updated
-  const observer = new MutationObserver(() => {
-    scrollToBottom();
-  });
-
-  observer.observe(repliesList, {
-    childList: true,
-    subtree: true,
-  });
-});
+// Scroll to bottom disabled — ticket detail page should not auto-scroll
