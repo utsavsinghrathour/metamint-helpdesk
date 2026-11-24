@@ -4209,3 +4209,160 @@ function mmhd_wizard_remove_item()
 
     wp_send_json_success(['message' => __('Removed successfully', 'metamint-helpdesk')]);
 }
+
+// Transfer Ticket to another user (new or existing) — Admin AJAX handler
+add_action('wp_ajax_mmhd_transfer_ticket', 'mmhd_transfer_ticket_callback');
+function mmhd_transfer_ticket_callback()
+{
+    check_ajax_referer('mmhd_transfer_ticket_nonce', 'nonce');
+
+    if (!is_user_logged_in()) {
+        wp_send_json_error(array('message' => 'You must be logged in to transfer a ticket.'));
+    }
+
+    $ticket_id = isset($_POST['ticket_id']) ? absint($_POST['ticket_id']) : 0;
+    $target_user_id = isset($_POST['target_user_id']) ? absint($_POST['target_user_id']) : 0;
+    $new_user_email = isset($_POST['new_user_email']) ? sanitize_email(wp_unslash($_POST['new_user_email'])) : '';
+
+    if ($ticket_id <= 0) {
+        wp_send_json_error(array('message' => 'Invalid ticket ID.'));
+    }
+
+    $ticket = get_post($ticket_id);
+    if (!$ticket || $ticket->post_type !== 'mmhd_ticket') {
+        wp_send_json_error(array('message' => 'Ticket not found.'));
+    }
+
+    $current_user = wp_get_current_user();
+    $is_author = (int) $ticket->post_author === $current_user->ID;
+    $is_staff = current_user_can('mmhd_access_dashboard') || current_user_can('manage_options')
+        || (bool) array_intersect(array('administrator', 'editor', 'mmhd_support_manager', 'mmhd_support_staff'), (array) $current_user->roles);
+
+    if (!$is_author && !$is_staff) {
+        wp_send_json_error(array('message' => 'You do not have permission to transfer this ticket.'));
+    }
+
+    // Resolve the target user
+    $resolved_user_id = 0;
+    $is_new_user = false;
+
+    if ($target_user_id > 0) {
+        $target_user = get_user_by('id', $target_user_id);
+        if (!$target_user) {
+            wp_send_json_error(array('message' => 'Selected user not found.'));
+        }
+        $resolved_user_id = (int) $target_user->ID;
+    } elseif (!empty($new_user_email) && is_email($new_user_email)) {
+        if (email_exists($new_user_email)) {
+            $existing = get_user_by('email', $new_user_email);
+            $resolved_user_id = (int) $existing->ID;
+        } else {
+            // Create a new user with the Support Customer role using native WordPress flow
+            $roles = wp_roles();
+            $role = isset($roles->roles['mmhd_support_customer']) ? 'mmhd_support_customer' : 'subscriber';
+
+            $base_login = explode('@', $new_user_email)[0];
+            $user_login = $base_login;
+            $counter = 1;
+            while (username_exists($user_login)) {
+                $user_login = $base_login . '_' . $counter++;
+            }
+
+            $password = wp_generate_password(12, true);
+            $new_user_id = wp_insert_user(array(
+                'user_login'   => $user_login,
+                'user_email'   => $new_user_email,
+                'user_pass'    => $password,
+                'role'         => $role,
+            ));
+
+            if (is_wp_error($new_user_id)) {
+                wp_send_json_error(array('message' => 'Failed to create user: ' . $new_user_id->get_error_message()));
+            }
+
+            // Native WordPress new-account email flow
+            if (!mmhd_are_emails_suppressed()) {
+                wp_new_user_notification($new_user_id);
+            }
+
+            $resolved_user_id = (int) $new_user_id;
+            $is_new_user = true;
+        }
+    } else {
+        wp_send_json_error(array('message' => 'Please select a user or enter a valid email address.'));
+    }
+
+    if ($resolved_user_id <= 0) {
+        wp_send_json_error(array('message' => 'Could not resolve target user.'));
+    }
+
+    // Prevent transferring to the same author
+    if ((int) $ticket->post_author === $resolved_user_id) {
+        wp_send_json_error(array('message' => 'This user is already the ticket author.'));
+    }
+
+    $old_author_id = (int) $ticket->post_author;
+    $old_author = get_userdata($old_author_id);
+    $old_author_name = $old_author ? $old_author->display_name : 'Customer';
+    $old_author_email = $old_author ? $old_author->user_email : '';
+
+    $new_author = get_user_by('id', $resolved_user_id);
+    $new_author_name = $new_author ? $new_author->display_name : $new_user_email;
+    $new_author_email = $new_author ? $new_author->user_email : $new_user_email;
+
+    // Change the ticket author (post_author) so the new user becomes the owner
+    $updated = wp_update_post(array(
+        'ID'         => $ticket_id,
+        'post_author' => $resolved_user_id,
+    ));
+
+    if (is_wp_error($updated) || $updated === false) {
+        wp_send_json_error(array('message' => 'Failed to transfer ticket ownership.'));
+    }
+
+    // Update customer email meta
+    update_post_meta($ticket_id, '_mmhd_customer_email', $new_author_email);
+
+    // Add a transfer comment to the ticket
+    $transfer_message = sprintf(
+        __( 'Ticket #%d has been transferred from %s (%s) to %s (%s).', 'metamint-helpdesk' ),
+        $ticket_id,
+        esc_html($old_author_name),
+        esc_html($old_author_email),
+        esc_html($new_author_name),
+        esc_html($new_author_email)
+    );
+
+    $comment_id = wp_insert_comment(array(
+        'comment_post_ID'      => $ticket_id,
+        'user_id'              => $current_user->ID,
+        'comment_author'       => $current_user->display_name,
+        'comment_author_email' => $current_user->user_email,
+        'comment_content'      => $transfer_message,
+        'comment_approved'     => 1,
+        'comment_type'         => 'ticket_replies',
+    ));
+
+    if (!is_wp_error($comment_id)) {
+        add_comment_meta($comment_id, 'comment_source', 'transfer', true);
+        add_comment_meta($comment_id, 'author_type', mmhd_get_author_type($current_user->ID), true);
+        add_comment_meta($comment_id, 'admin_comment', 'no', true);
+    }
+
+    // Mark ticket as needing attention (unseen) for the new owner
+    update_post_meta($ticket_id, 'mmhd_all_seen', 'no');
+
+    // Notify hooks
+    do_action('mmhd_after_ticket_transferred', $ticket_id, $old_author_id, $resolved_user_id, $current_user->ID);
+
+    wp_send_json_success(array(
+        'message'     => sprintf(__('Ticket transferred to %s successfully.', 'metamint-helpdesk'), $new_author_name),
+        'ticket_id'   => $ticket_id,
+        'new_author'  => array(
+            'id'    => $resolved_user_id,
+            'name'  => $new_author_name,
+            'email' => $new_author_email,
+        ),
+        'is_new_user' => $is_new_user,
+    ));
+}

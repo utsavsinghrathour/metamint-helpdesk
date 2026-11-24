@@ -340,6 +340,7 @@ function mmhd_enqueue_tailwind_and_styles()
             'discord_send_test_message' => wp_create_nonce('mmhd_discord_send_test_message'),
             'close_ticket' => wp_create_nonce('mmhd_close_ticket_action'),
             'update_ticket_category' => wp_create_nonce('mmhd_update_ticket_category_action'),
+            'ticket_transfer' => wp_create_nonce('mmhd_transfer_ticket_nonce'),
             'bulk_action' => wp_create_nonce('mmhd_bulk_action'),
             'refresh_dashboard_tickets' => wp_create_nonce('mmhd_refresh_dashboard_tickets_action'),
             'customer_tickets' => wp_create_nonce('mmhd_customer_tickets_action'),

@@ -2523,6 +2523,12 @@ function loadTicketDetail() {
     };
   }
 
+  // Set ticket ID for transfer form
+  const transferTicketIdInput = document.getElementById("mmhd-transfer-ticket-id");
+  if (transferTicketIdInput) {
+    transferTicketIdInput.value = currentTicket.id;
+  }
+
   // Set current values in other dropdowns
   const statusSelect = document.getElementById("ticket-status-select");
   if (statusSelect) {
@@ -2606,6 +2612,79 @@ function loadTicketDetail() {
   }
 
   loadRepliesAndNotes();
+}
+
+// Transfer ticket handler
+function initTicketTransfer() {
+  const btn = document.getElementById("mmhd-transfer-submit-btn");
+  const form = document.getElementById("mmhd-transfer-ticket-form");
+  const msg = document.getElementById("mmhd-transfer-message");
+  const userSelect = document.getElementById("mmhd-transfer-user-select");
+  const newEmailInput = document.getElementById("mmhd-transfer-new-email");
+
+  if (!btn || !form || !msg) return;
+
+  btn.addEventListener("click", function (e) {
+    e.preventDefault();
+
+    const ticketId = document.getElementById("mmhd-transfer-ticket-id").value;
+    const targetUserId = userSelect.value;
+    const newUserEmail = newEmailInput.value.trim();
+    const nonce = form.querySelector('input[name="mmhd_transfer_ticket_nonce_field"]').value;
+
+    msg.textContent = "";
+    msg.className = "mt-3 text-sm";
+
+    if (!targetUserId && !newUserEmail) {
+      msg.textContent = "Please select a user or enter an email address.";
+      msg.className += " text-red-600";
+      return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = "Transferring...";
+
+    const formData = new FormData();
+    formData.append("action", "mmhd_transfer_ticket");
+    formData.append("ticket_id", ticketId);
+    formData.append("target_user_id", targetUserId);
+    formData.append("new_user_email", newUserEmail);
+    formData.append("nonce", nonce);
+
+    fetch(mmhdAjax.ajaxurl, {
+      method: "POST",
+      body: formData,
+    })
+      .then((response) => response.json())
+      .then((response) => {
+        btn.disabled = false;
+        btn.textContent = "Transfer Ticket";
+
+        if (response.success) {
+          msg.textContent = response.data.message || "Ticket transferred successfully.";
+          msg.className += " text-green-600";
+          setTimeout(() => {
+            window.location.reload();
+          }, 1000);
+        } else {
+          msg.textContent = response.data.message || "Transfer failed.";
+          msg.className += " text-red-600";
+        }
+      })
+      .catch(() => {
+        btn.disabled = false;
+        btn.textContent = "Transfer Ticket";
+        msg.textContent = "An error occurred while transferring the ticket.";
+        msg.className += " text-red-600";
+      });
+  });
+}
+
+// Initialize transfer handler when DOM is ready
+if (typeof document !== "undefined") {
+  document.addEventListener("DOMContentLoaded", function () {
+    initTicketTransfer();
+  });
 }
 
 function bindPopoverTriggers(scope) {
