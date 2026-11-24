@@ -4918,7 +4918,7 @@ jQuery(document).ready(function ($) {
             }
           }
 
-          // Scroll to bottom only if user is near the bottom
+          // Scroll only the replies container to bottom if user is near the bottom
           if (repliesList) {
             const scrollThreshold = 150;
             const isNearBottom =
@@ -4927,10 +4927,7 @@ jQuery(document).ready(function ($) {
                 repliesList.clientHeight <
               scrollThreshold;
             if (isNearBottom) {
-              const lastReply = repliesList.querySelector(".replys:last-child");
-              if (lastReply) {
-                lastReply.scrollIntoView({ behavior: "smooth", block: "end" });
-              }
+              repliesList.scrollTop = repliesList.scrollHeight;
             }
           }
         } catch (err) {
