@@ -1,10 +1,10 @@
 === Metamint Helpdesk ===
 Contributors: codepixelzmedia, utsavsinghrathour
 Tags: support, tickets, helpdesk, customer-support, faq
-Requires at least: 5.8
+Requires at least: 6.6
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 1.5.8
+Stable tag: 2.1.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -38,6 +38,37 @@ https://github.com/utsavsinghrathour/metamint-helpdesk
 
 Build configuration: public/webpack.config.js
 
+== Security Configuration ==
+
+The plugin binds its secrets to WordPress's predefined keys from `wp-config.php`:
+
+* `AUTH_KEY` / `SECURE_AUTH_KEY` — Used to encrypt customer credentials stored
+  in the `wp_mmhd_credentials` table and to sign JWT tokens issued by the
+  `/mmhd/v1/login` and `/mmhd/v1/signup` REST endpoints.
+
+If you want to override these with plugin-specific secrets, define these
+constants in `wp-config.php`:
+
+* `MMHD_JWT_SECRET` — Secret used to sign JWT tokens issued by the
+  `/mmhd/v1/login` and `/mmhd/v1/signup` REST endpoints.
+* `MMHD_ENCRYPTION_KEY` — Secret used to encrypt customer credentials
+  stored in the `wp_mmhd_credentials` table.
+
+Example:
+
+```php
+define( 'MMHD_JWT_SECRET', 'your-long-random-string-here' );
+define( 'MMHD_ENCRYPTION_KEY', 'another-long-random-string-here' );
+```
+
+If neither the plugin-specific constants nor `AUTH_KEY` are defined, the
+plugin falls back to `wp_hash()`, which is derived from WordPress's auth
+keys and salts.
+
+Important: if you rotate `AUTH_KEY` / `SECURE_AUTH_KEY` in `wp-config.php`,
+previously encrypted credentials and issued JWT tokens will no longer be
+decryptable / verifiable, since they are bound to those keys.
+
 == Installation ==
 
 1. Upload the plugin files to /wp-content/plugins/metamint-helpdesk
@@ -51,6 +82,15 @@ Build configuration: public/webpack.config.js
 The complete source code, including the sources used to build the frontend bundles, is available at https://github.com/utsavsinghrathour/metamint-helpdesk
 
 == Changelog ==
+
+= 2.1.1 =
+* Added the `[mmhd_faq]` shortcode with accordion and Q&A modes, optional category filtering, and FAQPage structured data.
+* Added a copyable shortcode to the FAQ category admin screen.
+* Moved remaining inline admin JavaScript/CSS into enqueued asset files.
+* Removed the admin-wide email stylesheet; email styles are inlined only into transactional emails.
+* Added a depth limit to MIME parsing to prevent resource exhaustion from deeply nested messages.
+* Kept dashboard forms and buttons intact while escaping dashboard output.
+* Fixed version consistency across the plugin header, constant, and readme.
 
 = 1.5.8 =
 * Fixed plugin activation on clean WordPress installations (support page creation now runs on init).

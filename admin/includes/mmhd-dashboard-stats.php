@@ -114,9 +114,9 @@ $mmhd_stat_cards = [
                     data-mmhd-sparkline-label-today="<?php echo esc_attr__('Today', 'metamint-helpdesk'); ?>"
                     data-mmhd-sparkline-label-yesterday="<?php echo esc_attr__('Yesterday', 'metamint-helpdesk'); ?>"
                     data-mmhd-sparkline-label-template="<?php
-                        /* translators: 1: sparkline label, 2: trend direction (up or down). */
-                        echo esc_attr(__('%1$s: sparkline for the last 14 days. Trend %2$s versus the previous 7 days.', 'metamint-helpdesk'));
-                    ?>"
+                                                        /* translators: 1: sparkline label, 2: trend direction (up or down). */
+                                                        echo esc_attr(__('%1$s: sparkline for the last 14 days. Trend %2$s versus the previous 7 days.', 'metamint-helpdesk'));
+                                                        ?>"
                     tabindex="0"
                     role="img"
                     aria-label="<?php echo esc_attr($mmhd_aria_label); ?>">
@@ -306,7 +306,7 @@ $mmhd_stat_cards = [
                     <i class="fas fa-plus text-blue-600 text-xl mb-2"></i>
                     <div class="text-sm font-medium text-blue-900"><?php esc_html_e('Create New Conversation', 'metamint-helpdesk'); ?>
                     </div>
-                    <div class="text-xs text-blue-700"><?php esc_html_e('Add a new support conversation', 'metamint-helpdesk'); ?></div>
+                    <div class="text-xs text-blue-600"><?php esc_html_e('Add a new support conversation', 'metamint-helpdesk'); ?></div>
                 </button>
                 <button
                     onclick="window.location.href='<?php echo esc_url(admin_url('users.php?role=mmhd_support_customer')); ?>'"
@@ -323,6 +323,12 @@ $mmhd_stat_cards = [
                     <div class="text-sm font-medium text-purple-900"><?php esc_html_e('System Settings', 'metamint-helpdesk'); ?></div>
                     <div class="text-xs text-purple-700"><?php esc_html_e('Configure system preferences', 'metamint-helpdesk'); ?></div>
                 </button>
+            </div>
+
+            <div class="mt-6 pt-6 border-t border-gray-200 text-xs text-gray-400 uppercase tracking-wider">
+                <span><?php esc_html_e('Powered by', 'metamint-helpdesk'); ?></span>
+                <a href="https://metamintapps.com/" target="_blank" rel="noopener noreferrer"
+                    class="text-green-600 hover:text-green-800 transition-colors">Metamint Apps</a>
             </div>
         </div>
     </div>

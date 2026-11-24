@@ -19,6 +19,7 @@
                  </button>
                  <button onclick="showSettingsTab('imap')" class="settings-tab py-2 px-1 font-medium text-sm"
                      data-tab="imap">
+                     <i class="fa-regular fa-envelope-open"></i>
                      <?php esc_html_e('Mail Settings', 'metamint-helpdesk'); ?>
                  </button>
                  <button onclick="showSettingsTab('templates')"
@@ -69,14 +70,14 @@
                                          class="block text-sm font-medium text-gray-700"><?php esc_html_e('Site Name', 'metamint-helpdesk'); ?></label>
                                      <input type="text" name="site_name" id="site_name"
                                          value="<?php echo esc_attr(get_option('mmhd_site_name', 'Metamint Helpdesk')); ?>"
-                                         class="styled-input mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                                         class="styled-input mt-1 block w-full border-gray-300 rounded-md shadow-sm">
                                  </div>
                                  <div>
                                      <label for="admin_email"
                                          class="block text-sm font-medium text-gray-700"><?php esc_html_e('Admin Email', 'metamint-helpdesk'); ?></label>
                                      <input type="email" name="admin_email" id="admin_email"
                                          value="<?php echo esc_attr(get_option('mmhd_admin_email', 'admin@example.com')); ?>"
-                                         class="styled-input mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                                         class="styled-input mt-1 block w-full border-gray-300 rounded-md shadow-sm">
                                  </div>
                                  <div class="mmhd-enable-chat">
                                      <div class="flex items-center">
@@ -110,7 +111,7 @@
                                      <label for="popover_top_icon"
                                          class="block text-sm font-medium text-gray-700"><?php esc_html_e('Pop over Top Icon/Image', 'metamint-helpdesk'); ?></label>
                                      <input type="file" accept="image/*" name="popover_top_icon" id="popover_top_icon"
-                                         class="styled-input mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                                         class="styled-input mt-1 block w-full border-gray-300 rounded-md shadow-sm">
                                      <div class="mt-2 flex items-center gap-2">
                                          <img id="popover-top-icon-preview"
                                              src="<?php echo esc_url(get_option('mmhd_popover_top_icon', '')); ?>"
@@ -129,11 +130,11 @@
                                          class="block text-sm font-medium text-gray-700"><?php esc_html_e('Theme Color', 'metamint-helpdesk'); ?></label>
                                      <div class="mt-1 flex items-center gap-3">
                                          <input type="color" name="theme_color" id="theme_color"
-                                             value="<?php echo esc_attr(get_option('mmhd_theme_color', '#3B82F6')); ?>"
-                                             class="styled-input block w-10 h-10 border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                                             value="<?php echo esc_attr(get_option('mmhd_theme_color', '#0f7173')); ?>"
+                                             class="styled-input block w-10 h-10 border-gray-300 rounded-md shadow-sm">
                                          <div id="theme-color-preview"
                                              class="hidden w-16 h-8 rounded-md border border-gray-300"
-                                             style="background-color: <?php echo esc_attr(get_option('mmhd_theme_color', '#3B82F6')); ?>;">
+                                             style="background-color: <?php echo esc_attr(get_option('mmhd_theme_color', '#0f7173')); ?>;">
                                          </div>
                                      </div>
                                  </div>
@@ -141,7 +142,7 @@
                                      <label for="popover_icon"
                                          class="block text-sm font-medium text-gray-700"><?php esc_html_e('Pop over Icon/Image', 'metamint-helpdesk'); ?></label>
                                      <input type="file" accept="image/*" name="popover_icon" id="popover_icon"
-                                         class="styled-input mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                                         class="styled-input mt-1 block w-full border-gray-300 rounded-md shadow-sm">
                                      <div class="mt-2 flex items-center gap-2">
                                          <img id="popover-icon-preview"
                                              src="<?php echo esc_url(get_option('mmhd_popover_icon', '')); ?>"
@@ -157,7 +158,7 @@
                                      <label for="logo"
                                          class="block text-sm font-medium text-gray-700"><?php esc_html_e('Logo', 'metamint-helpdesk'); ?></label>
                                      <input type="file" accept="image/*" name="logo" id="logo"
-                                         class="styled-input mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                                         class="styled-input mt-1 block w-full border-gray-300 rounded-md shadow-sm">
                                      <div class="mt-2 flex items-center gap-2">
                                          <img id="logo-preview"
                                              src="<?php echo esc_url(get_option('mmhd_logo', '')); ?>"
@@ -173,7 +174,7 @@
                                      <label for="wide_logo"
                                          class="block text-sm font-medium text-gray-700"><?php esc_html_e('Wide Logo', 'metamint-helpdesk'); ?></label>
                                      <input type="file" accept="image/*" name="wide_logo" id="wide_logo"
-                                         class="styled-input mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                                         class="styled-input mt-1 block w-full border-gray-300 rounded-md shadow-sm">
                                      <div class="mt-2 flex items-center gap-2">
                                          <img id="wide-logo-preview"
                                              src="<?php echo esc_url(get_option('mmhd_wide_logo', '')); ?>"
@@ -220,7 +221,7 @@
                                      <label for="notification_sound"
                                          class="block text-sm font-medium text-gray-700"><?php esc_html_e('Notification Sound', 'metamint-helpdesk'); ?></label>
                                      <select name="mmhd_notification_sound" id="notification_sound"
-                                         class="styled-select mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                                         class="styled-select mt-1 block w-full border-gray-300 rounded-md shadow-sm">
                                          <?php
                                             $mmhd_audio_files = [
                                                 'Sample 1' => plugin_dir_url(__FILE__) . 'audio/1.mp3',
@@ -273,19 +274,19 @@
                                          class="block text-sm font-medium text-gray-700"><?php esc_html_e('Chat Heading', 'metamint-helpdesk'); ?></label>
                                      <input type="text" name="chat_heading" id="chat_heading"
                                          value="<?php echo esc_attr(get_option('mmhd_chat_heading', 'Have Questions?')); ?>"
-                                         class="styled-input mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                                         class="styled-input mt-1 block w-full border-gray-300 rounded-md shadow-sm">
                                  </div>
                                  <div>
                                      <label for="welcome_message"
                                          class="block text-sm font-medium text-gray-700"><?php esc_html_e('Welcome Message for the chat Bot', 'metamint-helpdesk'); ?></label>
                                      <textarea name="welcome_message" id="welcome_message" rows="4"
-                                         class="styled-input mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"><?php echo esc_textarea(get_option('mmhd_welcome_message', 'Have any questions or need a quote? Leave us a message.')); ?></textarea>
+                                         class="styled-input mt-1 block w-full border-gray-300 rounded-md shadow-sm"><?php echo esc_textarea(get_option('mmhd_welcome_message', 'Have any questions or need a quote? Leave us a message.')); ?></textarea>
                                  </div>
                                  <div>
                                      <label for="ticket_intro_message"
                                          class="block text-sm font-medium text-gray-700"><?php esc_html_e('Ticket Intro Message', 'metamint-helpdesk'); ?></label>
                                      <textarea name="ticket_intro_message" id="ticket_intro_message" rows="4"
-                                         class="styled-input mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"><?php echo esc_textarea(get_option('mmhd_ticket_intro_message', 'If you are interested in working with us, take a step towards discovering exciting opportunities by reaching out to us. We look forward to talking with you soon!')); ?></textarea>
+                                         class="styled-input mt-1 block w-full border-gray-300 rounded-md shadow-sm"><?php echo esc_textarea(get_option('mmhd_ticket_intro_message', 'If you are interested in working with us, take a step towards discovering exciting opportunities by reaching out to us. We look forward to talking with you soon!')); ?></textarea>
                                  </div>
                              </div>
                          </section>
@@ -348,34 +349,34 @@
                  </h3>
                  <form method="post" action="" id="mmhd-imap-form" class="space-y-6">
                      <?php wp_nonce_field('mmhd_imap_settings_action', 'mmhd_imap_settings_nonce'); ?>
-                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                          <div>
                              <label for="mmhd_imap_hostname"
                                  class="block text-sm font-medium text-gray-700"><?php esc_html_e('IMAP Host', 'metamint-helpdesk'); ?></label>
                              <input type="text" name="mmhd_imap_hostname" id="mmhd_imap_hostname"
                                  value="<?php echo esc_attr($mmhd_imap_hostname); ?>"
-                                 class="styled-input mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                                 class="styled-input mt-1 block w-full border-gray-300 rounded-md shadow-sm">
                          </div>
                          <div>
                              <label for="mmhd_imap_port"
                                  class="block text-sm font-medium text-gray-700"><?php esc_html_e('Port', 'metamint-helpdesk'); ?></label>
                              <input type="number" name="mmhd_imap_port" id="mmhd_imap_port"
                                  value="<?php echo esc_attr($mmhd_imap_port); ?>"
-                                 class="styled-input mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                                 class="styled-input mt-1 block w-full border-gray-300 rounded-md shadow-sm">
                          </div>
                          <div>
                              <label for="mmhd_imap_username"
                                  class="block text-sm font-medium text-gray-700"><?php esc_html_e('Username', 'metamint-helpdesk'); ?></label>
                              <input type="email" name="mmhd_imap_username" id="mmhd_imap_username"
                                  value="<?php echo esc_attr($mmhd_imap_username); ?>"
-                                 class="styled-input mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                                 class="styled-input mt-1 block w-full border-gray-300 rounded-md shadow-sm">
                          </div>
                          <div>
                              <label for="mmhd_imap_password"
                                  class="block text-sm font-medium text-gray-700"><?php esc_html_e('Password', 'metamint-helpdesk'); ?></label>
                              <input type="password" name="mmhd_imap_password" id="mmhd_imap_password"
                                  value="<?php echo esc_attr($mmhd_imap_password); ?>"
-                                 class="styled-input mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                                 class="styled-input mt-1 block w-full border-gray-300 rounded-md shadow-sm">
                          </div>
                          <div>
                              <label for="mmhd_imap_inbox_name"
@@ -383,14 +384,14 @@
                              <input type="text" name="mmhd_imap_inbox_name" id="mmhd_imap_inbox_name"
                                  value="<?php echo esc_attr($mmhd_imap_inbox_name); ?>"
                                  placeholder="e.g. Sales, Support, General"
-                                 class="styled-input mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                                 class="styled-input mt-1 block w-full border-gray-300 rounded-md shadow-sm">
                              <p class="text-xs text-gray-500 mt-1"><?php esc_html_e('A name to identify this inbox in the dashboard.', 'metamint-helpdesk'); ?></p>
                          </div>
                          <div>
                              <label for="mmhd_imap_auth"
                                  class="block text-sm font-medium text-gray-700"><?php esc_html_e('Encryption', 'metamint-helpdesk'); ?></label>
                              <select name="mmhd_imap_auth" id="mmhd_imap_auth"
-                                 class="styled-select mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                                 class="styled-select mt-1 block w-full border-gray-300 rounded-md shadow-sm">
                                  <option value="1" <?php selected($mmhd_imap_auth, true); ?>>
                                      <?php esc_html_e('SSL', 'metamint-helpdesk'); ?></option>
                                  <option value="0" <?php selected($mmhd_imap_auth, false); ?>>
@@ -398,15 +399,15 @@
                              </select>
                          </div>
                      </div>
-                     <div class="mt-6 flex gap-4">
+                     <div class="mmhd-imap-buttons-mail-settings mt-1 flex gap-4">
                          <button type="button" id="mmhd-imap-test" onclick="testConnection()"
-                             class="mt-4 bg-teal-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">
+                             class="bg-teal-600 text-white px-4 py-2 rounded-md">
                              <?php esc_html_e('Test Connection', 'metamint-helpdesk'); ?>
                          </button>
 
 
                          <button type="button" id="save-imap-settings"
-                             class="mt-4 bg-teal-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">
+                             class="border border-teal-600 text-teal-600 px-4 py-2 rounded-md hover:bg-teal-600 hover:text-white">
                              <?php esc_html_e('Save Settings', 'metamint-helpdesk'); ?>
                          </button>
 
@@ -436,34 +437,34 @@
                                  class="block text-sm font-medium text-gray-700"><?php esc_html_e('SMTP Host', 'metamint-helpdesk'); ?></label>
                              <input type="text" name="mmhd_smtp_host" id="mmhd_smtp_host"
                                  value="<?php echo esc_attr($mmhd_smtp_host); ?>"
-                                 class="styled-input mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                                 class="styled-input mt-1 block w-full border-gray-300 rounded-md shadow-sm">
                          </div>
                          <div>
                              <label for="mmhd_smtp_port"
                                  class="block text-sm font-medium text-gray-700"><?php esc_html_e('SMTP Port', 'metamint-helpdesk'); ?></label>
                              <input type="number" name="mmhd_smtp_port" id="mmhd_smtp_port"
                                  value="<?php echo esc_attr($mmhd_smtp_port); ?>"
-                                 class="styled-input mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                                 class="styled-input mt-1 block w-full border-gray-300 rounded-md shadow-sm">
                          </div>
                          <div>
                              <label for="mmhd_smtp_username"
                                  class="block text-sm font-medium text-gray-700"><?php esc_html_e('SMTP Username', 'metamint-helpdesk'); ?></label>
                              <input type="text" name="mmhd_smtp_username" id="mmhd_smtp_username"
                                  value="<?php echo esc_attr($mmhd_smtp_username); ?>"
-                                 class="styled-input mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                                 class="styled-input mt-1 block w-full border-gray-300 rounded-md shadow-sm ">
                          </div>
                          <div>
                              <label for="mmhd_smtp_password"
                                  class="block text-sm font-medium text-gray-700"><?php esc_html_e('SMTP Password', 'metamint-helpdesk'); ?></label>
                              <input type="password" name="mmhd_smtp_password" id="mmhd_smtp_password"
                                  value="<?php echo esc_attr($mmhd_smtp_password); ?>"
-                                 class="styled-input mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                                 class="styled-input mt-1 block w-full border-gray-300 rounded-md shadow-sm">
                          </div>
                          <div>
                              <label for="mmhd_smtp_encryption"
                                  class="block text-sm font-medium text-gray-700"><?php esc_html_e('Encryption', 'metamint-helpdesk'); ?></label>
                              <select name="mmhd_smtp_encryption" id="mmhd_smtp_encryption"
-                                 class="styled-select mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                                 class="styled-select mt-1 block w-full border-gray-300 rounded-md shadow-sm">
                                  <option value="none" <?php selected($mmhd_smtp_encryption, 'none'); ?>>
                                      <?php esc_html_e('None', 'metamint-helpdesk'); ?></option>
                                  <option value="ssl" <?php selected($mmhd_smtp_encryption, 'ssl'); ?>>
@@ -477,14 +478,14 @@
                                  class="block text-sm font-medium text-gray-700"><?php esc_html_e('From Email', 'metamint-helpdesk'); ?></label>
                              <input type="email" name="mmhd_smtp_from_email" id="mmhd_smtp_from_email"
                                  value="<?php echo esc_attr($mmhd_smtp_from_email); ?>"
-                                 class="styled-input mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                                 class="styled-input mt-1 block w-full border-gray-300 rounded-md shadow-sm">
                          </div>
                          <div class="md:col-span-2">
                              <label for="mmhd_smtp_from_name"
                                  class="block text-sm font-medium text-gray-700"><?php esc_html_e('From Name', 'metamint-helpdesk'); ?></label>
                              <input type="text" name="mmhd_smtp_from_name" id="mmhd_smtp_from_name"
                                  value="<?php echo esc_attr($mmhd_smtp_from_name); ?>"
-                                 class="styled-input mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                                 class="styled-input mt-1 block w-full border-gray-300 rounded-md shadow-sm">
                          </div>
                      </div>
 
@@ -494,7 +495,7 @@
                              <?php esc_html_e('Test SMTP Connection', 'metamint-helpdesk'); ?>
                          </button>
                          <button type="button" id="save-smtp-settings"
-                             class="bg-teal-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">
+                             class="border border-teal-600 text-teal-600 px-4 py-2 rounded-md hover:bg-teal-600 hover:text-white">
                              <?php esc_html_e('Save SMTP Settings', 'metamint-helpdesk'); ?>
                          </button>
                      </div>
@@ -613,7 +614,7 @@
              </div>
              <!------------------------------ Fetch Tickets Tab --------------------------------------->
              <div id="fetch-tab" class="settings-tab-content hidden">
-                 <h3 class="text-xl font-bold text-gray-900 mb-2">
+                 <h3 class="mmhd-adv__title text-gray-900 mb-2">
                      <?php esc_html_e('Fetch Conversations', 'metamint-helpdesk'); ?></h3>
                  <form id="mmhd-fetch-tickets-form" class="space-y-6">
                      <input type="hidden" name="mmhd_ticket_assignment_nonce"
@@ -631,14 +632,14 @@
                                          class="block text-sm font-medium text-gray-700"><?php esc_html_e('Fetch Interval (minutes)', 'metamint-helpdesk'); ?></label>
                                      <input type="number" name="fetch_interval"
                                          value="<?php echo esc_attr(get_option('mmhd_fetch_interval', 15)); ?>"
-                                         class="styled-input mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                                         class="styled-input mt-1 block w-full border-gray-300 rounded-md shadow-sm"
                                          min="1" max="1440" required>
                                  </div>
                                  <div>
                                      <label
                                          class="block text-sm font-medium text-gray-700"><?php esc_html_e('Auto-assign to', 'metamint-helpdesk'); ?></label>
                                      <select name="default_agent"
-                                         class="styled-select mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                                         class="styled-select mt-1 block w-full border-gray-300 rounded-md shadow-sm">
                                          <!-- default options -->
                                          <?php
                                             $mmhd_default_agent = get_option('mmhd_default_agent');
@@ -737,6 +738,7 @@
              <?php
                 $mmhd_advanced_settings = wp_parse_args(get_option('mmhd_advanced_settings', []), [
                     'enable_auto_assign' => false,
+                    'enable_department_auto_assign' => false,
                     'enable_notifications' => true,
                     'enable_customer_portal' => true,
                     'enable_signup_rate_limiting' => false,
@@ -781,6 +783,19 @@
                              </label>
                              <input id="enable-auto-assign" type="checkbox" role="switch" class="mmhd-adv__switch"
                                  <?php checked($mmhd_advanced_settings['enable_auto_assign'], true); ?>>
+                         </div>
+
+                         <div class="mmhd-adv__row">
+                             <div class="mmhd-adv__text">
+                                 <label for="enable-department-auto-assign" class="mmhd-adv__label">
+                                     <?php esc_html_e('Auto-assign unassigned Conversations by department', 'metamint-helpdesk'); ?>
+                                 </label>
+                                 <p class="mmhd-adv__hint">
+                                     <?php esc_html_e('Unassigned conversations are routed to the least-busy support agent (Support Staff, Support Manager, Author, Editor, or Administrator) whose profile lists the same department. If nobody matches, the conversation stays unassigned.', 'metamint-helpdesk'); ?>
+                                 </p>
+                             </div>
+                             <input id="enable-department-auto-assign" type="checkbox" role="switch" class="mmhd-adv__switch"
+                                 <?php checked($mmhd_advanced_settings['enable_department_auto_assign'], true); ?>>
                          </div>
 
                          <div class="mmhd-adv__row">

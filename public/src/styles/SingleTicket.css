@@ -1,0 +1,43 @@
+/**
+ * Single ticket component styles.
+ */
+
+@keyframes shimmer {
+	0%,
+	100% {
+		opacity: 1;
+	}
+
+	50% {
+		opacity: 0.7;
+	}
+}
+
+@keyframes shimmerMove {
+	0% {
+		transform: translateX(0);
+	}
+
+	100% {
+		transform: translateX(200%);
+	}
+}
+
+.mmhd-skeleton-container {
+	display: flex;
+	flex-direction: column;
+	width: 100%;
+}
+
+.chat-message {
+	display: flex;
+	width: 100%;
+}
+
+.mmhd-justify-end {
+	justify-content: flex-end;
+}
+
+.mmhd-justify-start {
+	justify-content: flex-start;
+}

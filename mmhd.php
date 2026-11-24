@@ -4,8 +4,8 @@
  * Plugin Name: Metamint Helpdesk
  * Plugin URI: https://metamintapps.com/
  * Description: A support ticket and FAQ system.
- * Version: 1.5.8
- * Requires at least: 5.8
+ * Version: 2.1.1
+ * Requires at least: 6.6
  * Requires PHP: 7.4
  * Author: Code Pixelz Media
  * Author URI: https://codepixelzmedia.com
@@ -20,7 +20,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Define constants
-define('MMHD_VERSION', '1.5.8');
+define('MMHD_VERSION', '2.1.1');
 define('MMHD_PLUGIN_PATH', plugin_dir_path(__FILE__));
 define('MMHD_PLUGIN_URL', plugin_dir_url(__FILE__));
 
@@ -132,6 +132,8 @@ add_filter('user_has_cap', function ($allcaps, $caps, $args) {
 }, 10, 3);
 
 require_once MMHD_PLUGIN_PATH . 'public/includes/mmhd-shortcodes.php';
+require_once MMHD_PLUGIN_PATH . 'admin/includes/mmhd-wizard.php';
+require_once MMHD_PLUGIN_PATH . 'admin/includes/mmhd-functions.php';
 
 function mmhd_activate()
 {
@@ -219,6 +221,51 @@ function mmhd_deactivate()
 
     // Clear the email fetch cron event
     wp_clear_scheduled_hook('mmhd_email_fetch_cron');
+}
+
+/**
+ * Load plugin text domain for translations.
+ *
+ * Look for .mo files in /wp-content/plugins/metamint-helpdesk/languages/
+ */
+function mmhd_load_textdomain()
+{
+    load_plugin_textdomain('metamint-helpdesk', false, basename(MMHD_PLUGIN_PATH) . '/languages/');
+}
+add_action('plugins_loaded', 'mmhd_load_textdomain');
+
+/**
+ * Redirect to setup wizard on first admin visit after activation.
+ */
+add_action('admin_init', 'mmhd_wizard_admin_init_redirect');
+function mmhd_wizard_admin_init_redirect()
+{
+    if (defined('DOING_AJAX') || defined('DOING_CRON')) {
+        return;
+    }
+
+    // Handle "Exit to Dashboard" / "Skip Setup" — mark wizard complete and redirect.
+    if (
+        isset($_GET['mmhd_skip_wizard'], $_GET['_wpnonce'])
+        && wp_verify_nonce(sanitize_text_field(wp_unslash($_GET['_wpnonce'])), 'mmhd_skip_wizard')
+        && current_user_can('mmhd_manage_settings')
+    ) {
+        mmhd_mark_wizard_complete();
+        wp_safe_redirect(admin_url('admin.php?page=mmhd-dashboard'));
+        exit;
+    }
+
+    $current_page = isset($_GET['page']) ? sanitize_key($_GET['page']) : '';
+
+    // Only redirect mmhd pages (not wizard itself)
+    if (!mmhd_is_wizard_completed()
+        && strpos($current_page, 'mmhd-') === 0
+        && $current_page !== 'mmhd-wizard'
+        && current_user_can('mmhd_manage_settings')
+    ) {
+        wp_safe_redirect(admin_url('admin.php?page=mmhd-wizard&step=welcome'));
+        exit;
+    }
 }
 
 /**
@@ -354,8 +401,9 @@ function mmhd_migrate_settings_on_update()
 
     // Advanced settings — preserve existing values, fill in missing defaults.
     $advanced_defaults = [
-        'enable_auto_assign'           => false,
-        'enable_notifications'         => true,
+        'enable_auto_assign'            => false,
+        'enable_department_auto_assign' => false,
+        'enable_notifications'          => true,
         'enable_customer_portal'       => true,
         'enable_signup_rate_limiting'  => false,
         'max_file_upload_size'         => 10,
@@ -470,11 +518,18 @@ function mmhd_enqueue_scripts()
     // Enqueue jQuery
     wp_enqueue_script('jquery');
 
-    // Enqueue styles (already existing)
-    wp_enqueue_style('mmhd-styles', MMHD_PLUGIN_URL . 'public/assets/css/mmhd-styles.css', array(), MMHD_VERSION);
+    // The front-end dashboard and credentials vault use WordPress dashicons
+    // classes. WordPress only loads dashicons in the admin by default, so make
+    // it an explicit dependency here; otherwise the icon spans (and the
+    // icon-only credential buttons they fill) collapse to zero size.
+    wp_enqueue_style('mmhd-styles', MMHD_PLUGIN_URL . 'public/assets/css/mmhd-styles.css', array('dashicons'), MMHD_VERSION);
 
-    // FAQ shortcode styles
-    wp_enqueue_style('mmhd-faq-shortcode', MMHD_PLUGIN_URL . 'public/src/styles/FAQ.css', array(), MMHD_VERSION);
+    // FAQ shortcode styles are only needed on content that renders the
+    // shortcode. The React bundle carries the chat/dashboard FAQ styles.
+    $mmhd_current_post = get_post();
+    if ($mmhd_current_post instanceof WP_Post && has_shortcode((string) $mmhd_current_post->post_content, 'mmhd_faq')) {
+        wp_enqueue_style('mmhd-faq-shortcode', MMHD_PLUGIN_URL . 'public/assets/css/FAQ.css', array(), MMHD_VERSION);
+    }
 
     // Enqueue scripts (already existing). TinyMCE is enqueued automatically by
     // wp_editor() on the pages that actually render an editor, so it is not
@@ -679,9 +734,9 @@ function mmhd_enqueue_admin_scripts($hook)
     if (!isset($post) || $post->post_type != 'mmhd_ticket')
         return;
 
-    wp_enqueue_style('mmhd-admin-styles', MMHD_PLUGIN_URL . 'admin/assets/css/mmhd-admin-styles.css', array(), '1.0');
+    wp_enqueue_style('mmhd-admin-styles', MMHD_PLUGIN_URL . 'admin/assets/css/mmhd-admin-styles.css', array(), MMHD_VERSION);
 
-    wp_enqueue_script('mmhd-admin-scripts', MMHD_PLUGIN_URL . 'admin/assets/js/mmhd-admin-scripts.js', array('jquery'), '1.0', true);
+    wp_enqueue_script('mmhd-admin-scripts', MMHD_PLUGIN_URL . 'admin/assets/js/mmhd-admin-scripts.js', array('jquery'), MMHD_VERSION, true);
     wp_localize_script('mmhd-admin-scripts', 'mmhd_ajax_object', array('ajax_url' => admin_url('admin-ajax.php'), 'ticket_id' => $post->ID, 'nonce' => wp_create_nonce('mmhd_change_ticket_nonce'), 'faq_nonce' => wp_create_nonce('mmhd_faq_vote_nonce'), 'credentials_nonce' => wp_create_nonce('mmhd_credentials_nonce')));
 }
 add_action('admin_enqueue_scripts', 'mmhd_enqueue_admin_scripts');
@@ -805,10 +860,17 @@ add_action('init', 'mmhd_maybe_create_notifications_table');
 
 
 
+
 function mmhd_get_encryption_key()
 {
     if (defined('MMHD_ENCRYPTION_KEY') && MMHD_ENCRYPTION_KEY !== '') {
         return MMHD_ENCRYPTION_KEY;
+    }
+
+    // Use WordPress auth keys as the encryption source so credentials are
+    // bound to the site's existing wp-config.php secrets.
+    if (defined('AUTH_KEY') && AUTH_KEY !== '') {
+        return AUTH_KEY;
     }
 
     return wp_hash('mmhd-encryption-key');
@@ -848,6 +910,12 @@ function mmhd_decrypt($ciphertext, $key = null)
 
     if ($plaintext === false && defined('AUTH_KEY') && AUTH_KEY !== '') {
         $plaintext = openssl_decrypt($encrypted_data, "AES-256-CBC", AUTH_KEY, $options = 0, $iv);
+    }
+
+    // Legacy fallback: credentials encrypted before key rotation used
+    // wp_hash('mmhd-encryption-key') as the site key.
+    if ($plaintext === false) {
+        $plaintext = openssl_decrypt($encrypted_data, "AES-256-CBC", wp_hash('mmhd-encryption-key'), $options = 0, $iv);
     }
 
     return $plaintext;

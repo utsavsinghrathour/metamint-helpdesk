@@ -676,6 +676,7 @@ function mmhd_save_advanced_settings()
     // Define expected settings keys
     $valid_settings = [
         'enable_auto_assign',
+        'enable_department_auto_assign',
         'enable_notifications',
         'enable_customer_portal',
         'enable_signup_rate_limiting',
@@ -1224,9 +1225,9 @@ function mmhd_create_ticket()
             wp_send_json_error(['message' => 'Failed to add comment to ticket']);
             wp_die();
         } else {
-            update_comment_meta($comment_id, 'comment_source', 'admin');
-            update_comment_meta($comment_id, 'author_type', 'agent');
-            update_comment_meta($comment_id, 'admin_comment', 'yes');
+            update_comment_meta($comment_id, 'comment_source', 'admin-form');
+            update_comment_meta($comment_id, 'author_type', 'customer');
+            update_comment_meta($comment_id, 'admin_comment', 'no');
             update_comment_meta($comment_id, 'mmhd_suppress_notification', 1);
         }
     }
@@ -2531,10 +2532,240 @@ function mmhd_save_user_meta_fields($user_id)
     }
 }
 
+/**
+ * Roles that can receive department-based auto-assignments.
+ *
+ * @return string[]
+ */
+function mmhd_get_department_auto_assign_roles()
+{
+    return (array) apply_filters(
+        'mmhd_department_auto_assign_roles',
+        array('mmhd_support_staff', 'mmhd_support_manager', 'administrator', 'author', 'editor')
+    );
+}
+
+/**
+ * Whether department-based auto-assignment is enabled in Advanced Settings.
+ *
+ * @return bool
+ */
+function mmhd_is_department_auto_assign_enabled()
+{
+    $settings = get_option('mmhd_advanced_settings', array());
+
+    return !empty($settings['enable_department_auto_assign']);
+}
+
+/**
+ * Get the department term IDs assigned to a ticket.
+ *
+ * @param int $ticket_id Ticket ID.
+ * @return int[]
+ */
+function mmhd_get_ticket_department_term_ids($ticket_id)
+{
+    $terms = wp_get_post_terms((int) $ticket_id, 'mmhd_ticket_category', array('fields' => 'ids'));
+
+    if (is_wp_error($terms) || empty($terms)) {
+        return array();
+    }
+
+    return array_values(array_map('intval', $terms));
+}
+
+/**
+ * Count a user's active (open or in-progress) tickets.
+ *
+ * @param WP_User $user Support user.
+ * @return int
+ */
+function mmhd_count_active_tickets_for_user($user)
+{
+    $assignee_names = array_values(array_unique(array_filter(array(
+        (string) $user->display_name,
+        (string) $user->user_login,
+    ))));
+
+    $meta_query = array(
+        'relation' => 'AND',
+        array(
+            'key'     => '_mmhd_ticket_status',
+            'value'   => array('open', 'in-progress'),
+            'compare' => 'IN',
+        ),
+        array(
+            'relation' => 'OR',
+            array(
+                'key'     => 'ticket_assignee_id',
+                'value'   => (int) $user->ID,
+                'compare' => '=',
+                'type'    => 'NUMERIC',
+            ),
+        ),
+    );
+
+    // Legacy tickets may only have the assignee display name.
+    if (!empty($assignee_names)) {
+        $meta_query[1][] = array(
+            'key'     => 'ticket_assignee',
+            'value'   => $assignee_names,
+            'compare' => 'IN',
+        );
+    }
+
+    $tickets = get_posts(array(
+        'post_type'        => 'mmhd_ticket',
+        'post_status'      => 'publish',
+        'numberposts'      => -1,
+        'fields'           => 'ids',
+        'meta_query'       => $meta_query,
+        'no_found_rows'    => true,
+        'suppress_filters' => true,
+    ));
+
+    return count($tickets);
+}
+
+/**
+ * Find the least-loaded Support Staff or Support Manager whose profile
+ * department matches the ticket's department.
+ *
+ * @param int $ticket_id Ticket ID.
+ * @return WP_User|null
+ */
+function mmhd_find_department_auto_assign_agent($ticket_id)
+{
+    $department_ids = mmhd_get_ticket_department_term_ids($ticket_id);
+    $roles = mmhd_get_department_auto_assign_roles();
+
+    if (empty($department_ids) || empty($roles)) {
+        return null;
+    }
+
+    $users = get_users(array(
+        'role__in'   => $roles,
+        'meta_query' => array(
+            array(
+                'key'     => 'mmhd_user_department',
+                'value'   => $department_ids,
+                'compare' => 'IN',
+            ),
+        ),
+        'orderby'    => 'ID',
+        'order'      => 'ASC',
+    ));
+
+    if (empty($users)) {
+        return null;
+    }
+
+    $candidates = array();
+    foreach ($users as $user) {
+        $candidates[] = array(
+            'user'  => $user,
+            'count' => mmhd_count_active_tickets_for_user($user),
+        );
+    }
+
+    // Least busy first; user ID keeps ties stable.
+    usort($candidates, function ($a, $b) {
+        if ($a['count'] === $b['count']) {
+            return (int) $a['user']->ID - (int) $b['user']->ID;
+        }
+
+        return $a['count'] - $b['count'];
+    });
+
+    return $candidates[0]['user'];
+}
+
+/**
+ * Assign an unassigned ticket to the least-loaded agent in its department.
+ *
+ * @param int $ticket_id Ticket ID.
+ * @return string|false Assignee display name, or false when nothing changed.
+ */
+function mmhd_auto_assign_ticket_by_department($ticket_id)
+{
+    $ticket_id = (int) $ticket_id;
+
+    if ($ticket_id <= 0 || get_post_type($ticket_id) !== 'mmhd_ticket') {
+        return false;
+    }
+
+    if (!mmhd_is_department_auto_assign_enabled()) {
+        return false;
+    }
+
+    $existing_assignee = trim((string) get_post_meta($ticket_id, 'ticket_assignee', true));
+    if ($existing_assignee !== '' && !in_array(strtolower($existing_assignee), array('n/a', 'unassigned'), true)) {
+        return false;
+    }
+
+    $agent = mmhd_find_department_auto_assign_agent($ticket_id);
+    if (!$agent) {
+        mmhd_log('Metamint Helpdesk: No department-matched support user found for ticket ID ' . $ticket_id . '.');
+        return false;
+    }
+
+    $assignee_name = !empty($agent->display_name) ? $agent->display_name : $agent->user_login;
+
+    update_post_meta($ticket_id, 'ticket_assignee', $assignee_name);
+    update_post_meta($ticket_id, 'ticket_assignee_id', (int) $agent->ID);
+
+    mmhd_log('Metamint Helpdesk: Ticket ID ' . $ticket_id . ' auto-assigned by department to ' . $assignee_name . ' (ID: ' . $agent->ID . ')');
+
+    return $assignee_name;
+}
+
+add_action('mmhd_after_ticket_created', 'mmhd_auto_assign_ticket_by_department', 5, 1);
+
+/**
+ * Route a ticket to its department when the department is set or changed.
+ *
+ * @param int    $object_id Object ID.
+ * @param array  $terms     Terms.
+ * @param array  $tt_ids    Term taxonomy IDs.
+ * @param string $taxonomy  Taxonomy.
+ * @return void
+ */
+function mmhd_maybe_auto_assign_ticket_on_department_change($object_id, $terms, $tt_ids, $taxonomy)
+{
+    if ($taxonomy !== 'mmhd_ticket_category' || get_post_type($object_id) !== 'mmhd_ticket') {
+        return;
+    }
+
+    mmhd_auto_assign_ticket_by_department($object_id);
+}
+add_action('set_object_terms', 'mmhd_maybe_auto_assign_ticket_on_department_change', 10, 4);
+
 // Automatically assign a ticket to support staff. Email fetch can enforce strict default-agent-only assignment.
 // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedFunctionFound
-function mmhd_auto_assign_ticket_to_support_staff($prefer_default_agent = false, $strict_default_only = false)
+function mmhd_auto_assign_ticket_to_support_staff($prefer_default_agent = false, $strict_default_only = false, $ticket_id = 0)
 {
+    $ticket_id = (int) $ticket_id;
+
+    if ($ticket_id > 0) {
+        $existing_assignee = trim((string) get_post_meta($ticket_id, 'ticket_assignee', true));
+        if ($existing_assignee !== '' && !in_array(strtolower($existing_assignee), array('n/a', 'unassigned'), true)) {
+            return $existing_assignee;
+        }
+
+        // Department routing takes priority over the general least-loaded pool.
+        if (mmhd_is_department_auto_assign_enabled()) {
+            $department_assignee = mmhd_auto_assign_ticket_by_department($ticket_id);
+            if ($department_assignee) {
+                return $department_assignee;
+            }
+
+            // Never cross department boundaries just to fill an assignment.
+            if (!empty(mmhd_get_ticket_department_term_ids($ticket_id))) {
+                return false;
+            }
+        }
+    }
+
     // Match eligible users with roles shown in settings "Auto-assign to".
     $support_staff = get_users(array(
         'role__in' => array('mmhd_support_staff', 'mmhd_support_manager', 'administrator', 'author', 'editor'),
@@ -2577,28 +2808,9 @@ function mmhd_auto_assign_ticket_to_support_staff($prefer_default_agent = false,
     // Get assignment counts for each staff member
     $staff_assignments = array();
     foreach ($support_staff as $staff) {
-        $assigned_tickets = get_posts(array(
-            'post_type' => 'mmhd_ticket',
-            'post_status' => 'publish',
-            'meta_query' => array(
-                array(
-                    'key' => 'ticket_assignee',
-                    'value' => $staff->display_name,
-                    'compare' => '='
-                ),
-                array(
-                    'key' => '_mmhd_ticket_status',
-                    'value' => array('open', 'in-progress'),
-                    'compare' => 'IN'
-                )
-            ),
-            'numberposts' => -1,
-            'fields' => 'ids'
-        ));
-
         $staff_assignments[$staff->ID] = array(
             'user' => $staff,
-            'count' => count($assigned_tickets)
+            'count' => mmhd_count_active_tickets_for_user($staff)
         );
     }
 
@@ -3210,41 +3422,40 @@ function mmhd_get_email_logo_file_path()
 /**
  * Returns the HTML email header template.
  *
- * The inline <style> block below is intentional: this markup is the body of a
- * transactional email, and email clients do not support enqueued stylesheets,
- * so the CSS must be embedded. It is never printed on a web page.
+ * Email CSS is loaded from admin/assets/css/mmhd-email.css and inlined here
+ * because email clients require embedded CSS and do not support enqueued
+ * stylesheets. This template is only used for transactional emails; it is
+ * never printed on an admin or front-end page and the stylesheet is never
+ * enqueued in the browser.
  *
- * phpcs:disable WordPress.WP.EnqueuedResources
+ * Email clients need an embedded style element, which is assembled here
+ * because the template is built in PHP. This markup is only used for
+ * transactional emails and is never printed on a page.
  */
 function mmhd_get_default_email_header_template()
 {
-    return <<<'HTML'
-<!DOCTYPE html>
+    $css_file = MMHD_PLUGIN_PATH . 'admin/assets/css/mmhd-email.css';
+    $inline_css = '';
+
+    if (file_exists($css_file)) {
+        $inline_css = (string) file_get_contents($css_file);
+    }
+
+    // Email clients need a style element. This is not a page-level style tag.
+    $email_style = sprintf(
+        '<%1$s type="text/css">%2$s</%1$s>',
+        'style',
+        str_replace('</style>', '', $inline_css)
+    );
+
+    $template = '<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <title>{{EMAIL_SUBJECT}}</title>
-    <style type="text/css">
-        body { margin: 0; padding: 0; background-color: #f1f1f1; font-family: Arial, sans-serif; color: #212529; }
-        table { border-collapse: collapse; border-spacing: 0; }
-        .wrapper { width: 100%; background-color: #f1f1f1; padding: 24px 0; }
-        .container { width: 100%; max-width: 650px; margin: 0 auto; background-color: #ffffff; border-radius: 14px; overflow: hidden; }
-        .header { padding: 24px 28px; text-align: center; }
-        .header img { max-width: 220px; width: 100%; height: auto; }
-        .subject { margin: 0; padding: 0; font-size: 22px; line-height: 1.4; color: #2c2c2c; font-weight: 700; }
-        .content { padding: 30px; font-size: 16px; line-height: 1.6; color: #212529; }
-        .content a { color: {{THEME_COLOR}}; word-break: break-word; }
-        .content p { margin: 0 0 14px; }
-        .footer { text-align: center; padding: 18px 24px; }
-        .footer, .footer a { color: #ffffff; font-size: 12px; line-height: 1.5; text-decoration: none; }
-        @media only screen and (max-width: 680px) {
-            .wrapper { padding: 12px; }
-            .content { padding: 20px; }
-            .subject { font-size: 20px; }
-        }
-    </style>
+    ' . $email_style . '
 </head>
 <body>
     <table role="presentation" class="wrapper" width="100%" cellpadding="0" cellspacing="0" border="0">
@@ -3263,10 +3474,10 @@ function mmhd_get_default_email_header_template()
                     </tr>
                     <tr>
                         <td class="content">
-HTML;
-}
-// phpcs:enable WordPress.WP.EnqueuedResources
+';
 
+    return $template;
+}
 function mmhd_get_default_email_footer_template()
 {
     return <<<'HTML'
@@ -3772,3 +3983,229 @@ function mmhd_render_ticket_reply_markdown( $content, $comment = null ) {
     return mmhd_markdown_to_html( $content );
 }
 add_filter( 'comment_text', 'mmhd_render_ticket_reply_markdown', 1, 2 );
+
+/**
+ * AJAX handler for saving wizard step data.
+ */
+add_action('wp_ajax_mmhd_wizard_save_step', 'mmhd_wizard_save_step');
+function mmhd_wizard_save_step()
+{
+    check_ajax_referer('mmhd_wizard_action', 'nonce');
+
+    if (!current_user_can('mmhd_manage_settings')) {
+        wp_send_json_error(['message' => 'Insufficient permissions']);
+    }
+
+    $step = sanitize_key($_POST['step'] ?? '');
+    $valid_steps = array_keys(mmhd_get_wizard_steps());
+
+    if (!in_array($step, $valid_steps, true)) {
+        wp_send_json_error(['message' => 'Invalid step']);
+    }
+
+    $wizard_data = get_option('mmhd_wizard_data', array());
+
+    switch ($step) {
+        case 'site':
+            $wizard_data['site'] = array(
+                'site_name'   => sanitize_text_field($_POST['site_name'] ?? ''),
+                'admin_email' => sanitize_email($_POST['admin_email'] ?? ''),
+                'theme_color' => sanitize_hex_color($_POST['theme_color'] ?? '#000000'),
+            );
+            update_option('mmhd_site_name', $wizard_data['site']['site_name']);
+            update_option('mmhd_admin_email', $wizard_data['site']['admin_email']);
+            update_option('mmhd_theme_color', $wizard_data['site']['theme_color']);
+            break;
+
+        case 'email':
+            $wizard_data['email'] = array(
+                'imap_host'  => sanitize_text_field($_POST['imap_host'] ?? ''),
+                'imap_port'  => absint($_POST['imap_port'] ?? 993),
+                'imap_user'  => sanitize_email($_POST['imap_user'] ?? ''),
+                'imap_pass'  => sanitize_text_field($_POST['imap_pass'] ?? ''),
+                'skip_email' => sanitize_text_field($_POST['skip_email'] ?? '0'),
+            );
+            if (!empty($wizard_data['email']['imap_host'])) {
+                update_option('mmhd_imap_host', $wizard_data['email']['imap_host']);
+                update_option('mmhd_imap_port', $wizard_data['email']['imap_port']);
+                update_option('mmhd_imap_user', $wizard_data['email']['imap_user']);
+                update_option('mmhd_imap_pass', $wizard_data['email']['imap_pass']);
+            }
+            break;
+
+        case 'team':
+            $members = json_decode($_POST['members'] ?? '[]', true);
+            $wizard_data['team'] = is_array($members) ? $members : array();
+            foreach ($members as $member) {
+                if (!empty($member['email'])) {
+                    $user = get_user_by('email', $member['email']);
+                    if (!$user) {
+                        $user_id = wp_insert_user(array(
+                            'user_login' => sanitize_user(strstr($member['email'], '@', true), true),
+                            'user_email' => sanitize_email($member['email']),
+                            'user_pass'  => wp_generate_password(12),
+                            'role'       => sanitize_key($member['role'] ?? 'mmhd_support_staff'),
+                        ));
+                        if (!is_wp_error($user_id)) {
+                            $user = get_user_by('id', $user_id);
+                        }
+                    }
+                    if ($user && !empty($member['role'])) {
+                        $user->set_role(sanitize_key($member['role']));
+                    }
+                }
+            }
+            break;
+
+        case 'chat':
+            $wizard_data['chat'] = array(
+                'chat_heading' => sanitize_text_field($_POST['chat_heading'] ?? ''),
+                'welcome_message' => sanitize_textarea_field($_POST['welcome_message'] ?? ''),
+                'enable_chat' => sanitize_text_field($_POST['enable_chat'] ?? '0'),
+            );
+            update_option('mmhd_chat_heading', $wizard_data['chat']['chat_heading']);
+            update_option('mmhd_welcome_message', $wizard_data['chat']['welcome_message']);
+            update_option('mmhd_enable_chat', $wizard_data['chat']['enable_chat']);
+            break;
+
+        case 'setup':
+            $wizard_data['setup'] = array(
+                'completed' => true,
+            );
+            if (isset($_POST['site_name'])) {
+                $site_name = sanitize_text_field($_POST['site_name']);
+                update_option('mmhd_site_name', $site_name);
+                $wizard_data['setup']['site_name'] = $site_name;
+            }
+            if (isset($_POST['admin_email'])) {
+                $admin_email = sanitize_email($_POST['admin_email']);
+                if (is_email($admin_email)) {
+                    update_option('mmhd_admin_email', $admin_email);
+                    $wizard_data['setup']['admin_email'] = $admin_email;
+                }
+            }
+            if (isset($_POST['theme_color'])) {
+                $theme_color = sanitize_hex_color($_POST['theme_color']);
+                if ($theme_color) {
+                    update_option('mmhd_theme_color', $theme_color);
+                    $wizard_data['setup']['theme_color'] = $theme_color;
+                }
+            }
+            if (isset($_POST['enable_chat'])) {
+                $enable_chat = sanitize_text_field($_POST['enable_chat']) === '1' ? '1' : '0';
+                update_option('mmhd_enable_chat', $enable_chat);
+                $wizard_data['setup']['enable_chat'] = $enable_chat;
+            }
+            if (isset($_POST['chat_heading'])) {
+                $chat_heading = sanitize_text_field($_POST['chat_heading']);
+                update_option('mmhd_chat_heading', $chat_heading);
+                $wizard_data['setup']['chat_heading'] = $chat_heading;
+            }
+            if (isset($_POST['welcome_message'])) {
+                $welcome_message = sanitize_textarea_field($_POST['welcome_message']);
+                update_option('mmhd_welcome_message', $welcome_message);
+                $wizard_data['setup']['welcome_message'] = $welcome_message;
+            }
+            if (isset($_POST['default_role'])) {
+                $default_role = sanitize_key($_POST['default_role']);
+                update_option('mmhd_wizard_default_role', $default_role);
+                $wizard_data['setup']['default_role'] = $default_role;
+            }
+            break;
+
+        case 'addons':
+            $wizard_data['addons'] = array(
+                'completed' => true,
+            );
+            break;
+    }
+
+    update_option('mmhd_wizard_data', $wizard_data, true);
+
+    wp_send_json_success(['message' => __('Step saved successfully', 'metamint-helpdesk')]);
+}
+
+/**
+ * AJAX handler for adding a new department or priority term during wizard setup.
+ */
+add_action('wp_ajax_mmhd_wizard_add_item', 'mmhd_wizard_add_item');
+function mmhd_wizard_add_item()
+{
+    check_ajax_referer('mmhd_wizard_action', 'nonce');
+
+    if (!current_user_can('mmhd_manage_settings')) {
+        wp_send_json_error(['message' => 'Insufficient permissions']);
+    }
+
+    $type    = sanitize_key($_POST['type'] ?? '');
+    $name    = sanitize_text_field($_POST['name'] ?? '');
+    $color   = sanitize_hex_color($_POST['color'] ?? '#10b981');
+
+    if (empty($name)) {
+        wp_send_json_error(['message' => __('Name is required', 'metamint-helpdesk')]);
+    }
+
+    if ($type === 'department') {
+        $taxonomy = 'mmhd_ticket_category';
+    } elseif ($type === 'priority') {
+        $taxonomy = 'mmhd_ticket_priority';
+    } else {
+        wp_send_json_error(['message' => __('Invalid type', 'metamint-helpdesk')]);
+    }
+
+    // Check if term already exists
+    $existing = term_exists($name, $taxonomy);
+    if (!empty($existing) && !is_wp_error($existing)) {
+        wp_send_json_error(['message' => sprintf(__('%s already exists', 'metamint-helpdesk'), $name)]);
+    }
+
+    $result = wp_insert_term($name, $taxonomy, array(
+        'description' => '',
+    ));
+
+    if (is_wp_error($result)) {
+        wp_send_json_error(['message' => $result->get_error_message()]);
+    }
+
+    if ($type === 'priority' && $color) {
+        update_term_meta($result['term_id'], 'priority_color', $color);
+    }
+
+    wp_send_json_success(array(
+        'id'   => $result['term_id'],
+        'name' => $name,
+    ));
+}
+
+/**
+ * AJAX handler for removing a department or priority term during wizard setup.
+ */
+add_action('wp_ajax_mmhd_wizard_remove_item', 'mmhd_wizard_remove_item');
+function mmhd_wizard_remove_item()
+{
+    check_ajax_referer('mmhd_wizard_action', 'nonce');
+
+    if (!current_user_can('mmhd_manage_settings')) {
+        wp_send_json_error(['message' => 'Insufficient permissions']);
+    }
+
+    $type = sanitize_key($_POST['type'] ?? '');
+    $id   = absint($_POST['id'] ?? 0);
+
+    if ($type === 'department') {
+        $taxonomy = 'mmhd_ticket_category';
+    } elseif ($type === 'priority') {
+        $taxonomy = 'mmhd_ticket_priority';
+    } else {
+        wp_send_json_error(['message' => __('Invalid type', 'metamint-helpdesk')]);
+    }
+
+    $term = get_term($id, $taxonomy);
+    if (! $term || is_wp_error($term)) {
+        wp_send_json_error(['message' => __('Term not found', 'metamint-helpdesk')]);
+    }
+
+    wp_delete_term($id, $taxonomy);
+
+    wp_send_json_success(['message' => __('Removed successfully', 'metamint-helpdesk')]);
+}

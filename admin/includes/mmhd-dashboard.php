@@ -125,7 +125,7 @@ function mmhd_dashboard_callback()
                                     <?php esc_html_e('Recent Updates', 'metamint-helpdesk'); ?>
                                 </h3>
                                 <span id="notification-count-label"
-                                    class="text-xs font-semibold text-blue-700 bg-blue-100 rounded-full px-2"
+                                    class="text-xs font-semibold text-teal-600 bg-teal-100 rounded-full px-2"
                                     style="display: none;">0</span>
                             </div>
                             <div id="notification-list" class="overflow-y-auto max-h-80">
@@ -141,7 +141,7 @@ function mmhd_dashboard_callback()
                                     <?php esc_html_e('Load more', 'metamint-helpdesk'); ?>
                                 </button>
                                 <button onclick="clearAllNotifications()"
-                                    class="w-full px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded hover:bg-blue-700 transition-colors">
+                                    class="w-full px-4 py-2 bg-teal-600 text-white text-sm font-medium rounded hover:bg-teal-700 transition-colors">
                                     <?php esc_html_e('Clear All', 'metamint-helpdesk'); ?>
                                 </button>
                             </div>
@@ -205,6 +205,7 @@ function mmhd_dashboard_callback()
 
     </div>
 
+    <?php if (mmhd_is_review_prompt_available()) : ?>
     <!-- Review Request Modal -->
     <div id="mmhd-review-modal"
         class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4"
@@ -236,6 +237,7 @@ function mmhd_dashboard_callback()
             </div>
         </div>
     </div>
+    <?php endif; ?>
 
 <?php
 }

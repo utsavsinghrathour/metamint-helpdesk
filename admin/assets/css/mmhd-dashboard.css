@@ -11,8 +11,19 @@
   --color-light-bg: #E6F5EE;
 }
 
+a:active,
+a:focus,
+a:hover {
+  color: var(--color-main-active);
+  box-shadow: none;
+}
+
 .text-teal-600 {
   color: var(--color-main);
+}
+
+.text-teal-800 {
+  color: var(--color-main-active);
 }
 
 .bg-teal-600 {
@@ -21,6 +32,10 @@
 
 .bg-teal-50 {
   background-color: var(--color-light-bg);
+}
+
+.bg-teal-100 {
+  background-color: #E6F5EE;
 }
 
 .bg-teal-600:hover {
@@ -350,28 +365,30 @@
   vertical-align: middle;
 }
 
-/* Customer stats */
-.customer-stat-card {
-  background: var(--color-white);
-  border: 1px solid var(--color-border);
-  border-radius: 8px;
-  padding: 1rem;
-  text-align: center;
-  transition: all 0.2s ease-in-out;
-  cursor: pointer;
+#customer-tickets-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  border: 1px solid #e8e8e4;
+  border-radius: 12px;
+  margin-bottom: 14px;
+  background: #fafaf9;
 }
 
-.customer-stat-card:hover {
-  background-color: var(--color-background);
-  border-color: var(--color-main);
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+/* Customer stats */
+.customer-stat-card {
+  cursor: pointer;
+  padding: 12px 16px;
+}
+
+.customer-stat-card:nth-child(2) {
+  border-right: 1px solid #e8e8e4;
+  border-left: 1px solid #e8e8e4;
 }
 
 .customer-stat-number {
   font-weight: 700;
   font-size: 1.5rem;
-  color: #1f2937;
+  /* color: #1f2937; */
 }
 
 .customer-stat-label {
@@ -384,33 +401,11 @@
 /* Customer tickets list */
 .customer-ticket-item {
   padding: 0.75rem;
-  border: 1px solid var(--color-border);
-  border-radius: 6px;
-  margin-bottom: 0.5rem;
+  border-bottom: 1px solid var(--color-border);
   transition: all 0.2s ease-in-out;
 }
 
-.customer-ticket-item:hover {
-  background-color: var(--color-background);
-  border-color: var(--color-main);
-}
-
-/* Reply and note styles */
-.reply-customer {
-  background-color: #eff6ff;
-  border-left: 4px solid var(--color-main);
-}
-
-.reply-agent {
-  background-color: var(--color-background);
-  border: 1px solid var(--color-border);
-  border-left: 4px solid var(--color-text);
-}
-
-.note-internal {
-  background-color: #fffbeb;
-  border-left: 4px solid #f59e0b;
-}
+/* Reply and note styles: moved to the "REPLIES TAB (redesign)" section at the end of this file */
 
 /* Styled inputs and selects */
 .mmhd-dashboard-container .styled-input,
@@ -427,7 +422,7 @@
 .mmhd-dashboard-container .styled-input:focus {
   outline: none;
   border-color: var(--color-main);
-  box-shadow: 0 0 0 1px var(--color-main);
+  box-shadow: none;
 }
 
 .styled-select,
@@ -446,10 +441,10 @@
   appearance: none;
 }
 
-.styled-select:focus {
+.mmhd-dashboard-container .styled-select:focus {
   outline: none;
   border-color: var(--color-main);
-  box-shadow: 0 0 0 1px var(--color-main);
+  box-shadow: none;
 }
 
 .mmhd-dashboard-container input[type=checkbox]:checked {
@@ -472,6 +467,23 @@
   margin-top: 10px !important;
 }
 
+.mmhd-dashboard-container .mmhd-imap-buttons-mail-settings {
+  margin-top: 12px !important;
+  margin-bottom: 35px !important;
+}
+
+.mmhd-settings-content-wrapper select:focus,
+.mmhd-dashboard-container input[type=checkbox]:focus,
+.mmhd-dashboard-container input[type=radio]:focus {
+  outline: none;
+  border-color: var(--color-main);
+  box-shadow: 0 0 0 1px var(--color-main);
+}
+
+.wp-core-ui select:hover {
+  border: 1px solid var(--color-border);
+}
+
 @media (min-width: 700px) {
   .mmhd-fetch-tickets-button-container {
     float: right;
@@ -492,18 +504,24 @@
   gap: 0.375rem;
   padding: 0 1.25rem 0 0.375rem;
   border: 1px solid var(--color-main);
+  background-color: var(--color-white);
   border-radius: 0.375rem;
-  background-color: #eff6ff;
-  color: #1d4ed8;
+  color: var(--color-main);
   font-size: 0.6875rem;
   font-weight: 500;
   letter-spacing: 0.04em;
   line-height: 1;
-  height: 1.375rem;
   cursor: pointer;
   transition: color 0.15s ease-in-out, background-color 0.15s ease-in-out, border-color 0.15s ease-in-out;
   background-image: none;
   appearance: none;
+  min-height: 30px;
+}
+
+#tickets-page #mmhd-inbox-filter {
+  background-size: 16px;
+  padding-left: 8px;
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
 }
 
 /* Font Awesome sort icon overlaid on the filter pills (same as the Updated link). */
@@ -514,7 +532,7 @@
   transform: translateY(-50%);
   font-size: 10px;
   line-height: 1;
-  color: #1d4ed8;
+  color: var(--color-main);
   pointer-events: none;
 }
 
@@ -522,7 +540,7 @@
 #mmhd-inbox-filter:focus {
   outline: none;
   border-color: var(--color-main-active);
-  box-shadow: 0 0 0 1px var(--color-main-active);
+  box-shadow: none;
 }
 
 time[data-format="datetime-block"] {
@@ -550,6 +568,7 @@ time[data-format="datetime-block"] {
   border-radius: 9999px;
   object-fit: cover;
   flex-shrink: 0;
+  border: none;
 }
 
 #tickets-page table th,
@@ -582,7 +601,6 @@ time[data-format="datetime-block"] {
   padding: 0.5rem;
   background-color: var(--color-background);
   border: 1px solid var(--color-border);
-  border-bottom: none;
   border-radius: 0.375rem 0.375rem 0 0;
 }
 
@@ -790,10 +808,6 @@ time[data-format="datetime-block"] {
   content: none;
 }
 
-.reply-action {
-  background-color: rgb(191 219 254 / var(--tw-bg-opacity, 1));
-}
-
 .blinking-red {
   display: inline-block;
   width: 10px;
@@ -926,6 +940,14 @@ time[data-format="datetime-block"] {
 /* -------------------
 CONVERSATION
 ----------------------*/
+.flex-column {
+  flex-direction: column;
+}
+
+.align-items-start {
+  align-items: flex-start;
+}
+
 .mmhd-conversations-frm input.mmhd-search {
   padding-left: 30px;
 }
@@ -1382,6 +1404,7 @@ CONVERSATION
     width: 100%;
   }
 }
+
 /* Dashboard stat cards with per-card sparklines */
 .mmhd-dashboard-stats {
   align-items: stretch;
@@ -1529,26 +1552,20 @@ CONVERSATION
   content: "";
   position: absolute;
   inset: 7px 0 9px;
-  background-image: linear-gradient(
-    to bottom,
-    rgba(15, 23, 42, 0.055) 1px,
-    transparent 1px
-  );
+  background-image: linear-gradient(to bottom,
+      rgba(15, 23, 42, 0.055) 1px,
+      transparent 1px);
   background-size: 100% 50%;
-  -webkit-mask-image: linear-gradient(
-    to right,
-    transparent,
-    #000 12%,
-    #000 88%,
-    transparent
-  );
-  mask-image: linear-gradient(
-    to right,
-    transparent,
-    #000 12%,
-    #000 88%,
-    transparent
-  );
+  -webkit-mask-image: linear-gradient(to right,
+      transparent,
+      #000 12%,
+      #000 88%,
+      transparent);
+  mask-image: linear-gradient(to right,
+      transparent,
+      #000 12%,
+      #000 88%,
+      transparent);
   pointer-events: none;
 }
 
@@ -1633,13 +1650,11 @@ CONVERSATION
   top: 0;
   bottom: 0;
   width: 1px;
-  background: linear-gradient(
-    to bottom,
-    transparent,
-    var(--mmhd-stat-accent) 16%,
-    var(--mmhd-stat-accent) 84%,
-    transparent
-  );
+  background: linear-gradient(to bottom,
+      transparent,
+      var(--mmhd-stat-accent) 16%,
+      var(--mmhd-stat-accent) 84%,
+      transparent);
   opacity: 0;
   transform: translateX(-50%);
   pointer-events: none;
@@ -1766,5 +1781,249 @@ CONVERSATION
   .mmhd-stat-card__chart-dot::after {
     animation: none;
     opacity: 0;
+  }
+}
+
+/* ---------- Tabs ---------- */
+.ticket-tab {
+  font-size: 14px;
+  font-weight: 600;
+  padding: 10px 4px;
+  transition: color 0.15s ease, border-color 0.15s ease;
+}
+
+.ticket-tab.active {
+  color: var(--color-main);
+  border-color: var(--color-main);
+}
+
+/* ---------- Thread ---------- */
+#replies-list,
+#notes-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 2px 0;
+}
+
+#replies-list {
+  margin-bottom: 24px;
+}
+
+#ticket-detail-page #replies-list {
+  border: 1px solid var(--color-border);
+  padding: 30px;
+  border-radius: 12px;
+  min-height: auto;
+  max-height: 500px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+}
+
+/* ---------- Shared card ---------- */
+#replies-list .replys,
+#notes-list .note-internal {
+  position: relative;
+  padding: 9px 14px;
+  border-radius: 12px;
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: #1f2937;
+  overflow-wrap: anywhere;
+  box-shadow: none;
+  animation: none;
+}
+
+/* Customer: left, white card with a thin teal accent line */
+#replies-list .reply-customer {
+  align-self: flex-start;
+  min-width: 300px;
+  max-width: 78%;
+  background: #ffffff;
+  border: 1px solid #E2EAE5;
+  box-shadow: inset 3px 0 0 var(--color-main);
+  border-radius: 12px 12px 12px 4px;
+}
+
+/* Agent / AI bot: right, brand tint */
+#replies-list .reply-agent {
+  align-self: flex-end;
+  min-width: 300px;
+  max-width: 85%;
+  background: var(--color-light-bg);
+  border: 1px solid #cfe9dc;
+  border-radius: 12px 12px 4px 12px;
+}
+
+/* Internal notes: warm, clearly private */
+#notes-list .note-internal {
+  align-self: stretch;
+  max-width: 100%;
+  background: #FFFBEB;
+  border: 1px solid #FDE68A;
+  box-shadow: inset 3px 0 0 #f59e0b;
+}
+
+/* ---------- Header row: name on the left, time on the right ---------- */
+#replies-list .replys>div:first-child,
+#notes-list .note-internal>div:first-child {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 2px;
+}
+
+#replies-list .replys>div:first-child>span:first-child,
+#notes-list .note-internal>div:first-child>span:first-child {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+#replies-list .replys>div:first-child>span:last-child,
+#notes-list .note-internal>div:first-child>span:last-child {
+  font-size: 11px;
+  font-weight: 500;
+  color: #94a3b8;
+  white-space: nowrap;
+}
+
+/* ---------- Message body ---------- */
+#replies-list .replys>div:last-child,
+#notes-list .note-internal>p {
+  margin: 0;
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: #1f2937;
+}
+
+#replies-list .replys a,
+#notes-list .note-internal a {
+  color: var(--color-main);
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+/* ---------- Composer header ("Add Reply" + "Insert Variables") ---------- */
+#replies-tab .add-label-wrapper {
+  display: flex;
+  align-items: flex-end;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  margin-bottom: 10px;
+}
+
+#replies-tab .add-label-wrapper>label {
+  margin: 0 !important;
+  padding-bottom: 6px;
+  font-size: 14px;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+#replies-tab .add-label-wrapper>button {
+  margin-bottom: 6px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: var(--color-light-bg);
+  color: var(--color-main);
+  font-weight: 600;
+  transition: background 0.15s ease;
+}
+
+#replies-tab .add-label-wrapper>button:hover {
+  background: #d3ecdf;
+  color: var(--color-main-active);
+}
+
+/* ---------- Editor ---------- */
+#replies-tab .editor-toolbar,
+#notes-tab .editor-toolbar {
+  gap: 6px;
+  padding: 8px 10px;
+  background: #F5F8F6;
+  border: 1px solid #E2EAE5;
+  border-bottom: 0;
+  border-radius: 12px 12px 0 0;
+}
+
+#replies-tab .editor-btn,
+#notes-tab .editor-btn {
+  width: 32px;
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 1px solid #E2EAE5;
+  border-radius: 8px;
+  color: #4F6459;
+}
+
+#replies-tab .editor-btn:hover,
+#notes-tab .editor-btn:hover {
+  background: var(--color-light-bg);
+  border-color: var(--color-main);
+  color: var(--color-main);
+}
+
+#new-reply.editor-content,
+#new-note.editor-content {
+  min-height: 120px;
+  padding: 12px 16px !important;
+  border: 1px solid #E2EAE5 !important;
+  border-radius: 0 0 12px 12px !important;
+  background: #fff;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+#new-reply.editor-content:focus,
+#new-note.editor-content:focus {
+  border-color: var(--color-main) !important;
+  box-shadow: 0 0 0 3px rgba(15, 113, 115, 0.15);
+}
+
+/* ---------- Buttons ---------- */
+#send-reply-btn,
+#notes-tab button.bg-teal-600 {
+  margin-top: 12px;
+  padding: 10px 22px;
+  border-radius: 10px;
+  font-weight: 600;
+  background: var(--color-main);
+  transition: background 0.15s ease, transform 0.15s ease;
+}
+
+#send-reply-btn:hover,
+#notes-tab button.bg-teal-600:hover {
+  background: var(--color-main-active);
+  transform: translateY(-1px);
+}
+
+#replies-tab button.bg-red-600 {
+  margin-top: 12px;
+  padding: 10px 22px;
+  border-radius: 10px;
+  font-weight: 600;
+  background: #fff;
+  color: var(--color-error);
+  border: 1px solid #fecaca;
+}
+
+#replies-tab button.bg-red-600:hover {
+  background: var(--color-error);
+  color: #fff;
+}
+
+/* ---------- Mobile ---------- */
+@media (max-width: 640px) {
+
+  #replies-list .reply-customer,
+  #replies-list .reply-agent {
+    min-width: 0;
+    max-width: 100%;
   }
 }

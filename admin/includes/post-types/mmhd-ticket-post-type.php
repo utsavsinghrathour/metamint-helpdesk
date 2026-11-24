@@ -570,15 +570,35 @@ function mmhd_handle_tickets_webhook(WP_REST_Request $request)
 
         $title    = sanitize_text_field($data['data']['title'] ?? '');
         $content  = sanitize_textarea_field($data['data']['description'] ?? '');
-        $author   = sanitize_text_field($data['data']['uid'] ?? '');
+        $author_input = sanitize_text_field($data['data']['uid'] ?? '');
         $timestamp = $data['data']['timestamp'] ?? null;
+
+        // Resolve uid (may be a user ID, email, or login) to a numeric user ID.
+        $author_id = 0;
+        if (is_numeric($author_input)) {
+            $author_id = (int) $author_input;
+        } elseif (is_email($author_input)) {
+            $user = get_user_by('email', $author_input);
+            $author_id = $user ? (int) $user->ID : 0;
+        } else {
+            $user = get_user_by('login', $author_input);
+            $author_id = $user ? (int) $user->ID : 0;
+        }
+
+        if ($author_id <= 0) {
+            return new WP_Error(
+                'invalid_author',
+                'Invalid or unknown user.',
+                array('status' => 400)
+            );
+        }
 
         $ticket_args = array(
             'post_type'   => 'mmhd_ticket',
             'post_title' => $title,
             'post_content' => $content,
             'post_status' => 'publish',
-            'post_author' => $author,
+            'post_author' => $author_id,
             'meta_input'   => array(
                 '_mmhd_ticket_status' => 'open',
                 'mmhd_ticket_origin' => 'chat',
@@ -601,19 +621,21 @@ function mmhd_handle_tickets_webhook(WP_REST_Request $request)
 
         if (!is_wp_error($ticket)) {
 
-            delete_user_meta($author, 'mmhd_openai_conversation_id');
+            delete_user_meta($author_id, 'mmhd_openai_conversation_id');
             wp_set_object_terms($ticket, 'medium', 'mmhd_ticket_priority', false);
 
             $assigned = false;
             $settings = get_option('mmhd_advanced_settings', []);
             if (!empty($settings['enable_auto_assign'])) {
-                $assigned = mmhd_auto_assign_ticket_to_support_staff();
+                $assigned = mmhd_auto_assign_ticket_to_support_staff(false, false, $ticket);
             }
 
-            update_post_meta($ticket, 'ticket_assignee', $assigned);
-            mmhd_store_ticket_assignee_id($ticket, $assigned);
+            if (!empty($assigned)) {
+                update_post_meta($ticket, 'ticket_assignee', $assigned);
+                mmhd_store_ticket_assignee_id($ticket, $assigned);
+            }
 
-            $user_object =  get_user_by('id', $author);
+            $user_object =  get_user_by('id', $author_id);
             $user_name = $user_object->display_name;
             $email_address = $user_object->user_email;    //
 
@@ -623,7 +645,7 @@ function mmhd_handle_tickets_webhook(WP_REST_Request $request)
 
             $comment_data = array(
                 'comment_post_ID' => $ticket,
-                'user_id'  => $author,
+                'user_id'  => $author_id,
                 'comment_content' => $title,
                 'comment_author' => $user_name,
                 'comment_author_email' => $email_address,
@@ -642,7 +664,7 @@ function mmhd_handle_tickets_webhook(WP_REST_Request $request)
 
             if (!is_wp_error($comment_id)) {
                 add_comment_meta($comment_id, 'comment_source', 'chat', true);
-                add_comment_meta($comment_id, 'author_type', mmhd_get_author_type($author), true);
+                add_comment_meta($comment_id, 'author_type', mmhd_get_author_type($author_id), true);
                 add_comment_meta($comment_id, 'is_bot_response', '0', true);
                 add_comment_meta($comment_id, 'mmhd_suppress_notification', 1, true);
             }

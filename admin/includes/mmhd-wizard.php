@@ -1,0 +1,179 @@
+<?php
+if (!defined('ABSPATH')) {
+    exit;
+}
+
+/**
+ * Wizard step definitions
+ */
+function mmhd_get_wizard_steps()
+{
+    return array(
+        'welcome' => array(
+            'label' => __('Welcome', 'metamint-helpdesk'),
+            'file'  => MMHD_PLUGIN_PATH . 'admin/includes/mmhd-wizard-steps/wizard-welcome.php',
+        ),
+        'setup'   => array(
+            'label' => __('Setup', 'metamint-helpdesk'),
+            'file'  => MMHD_PLUGIN_PATH . 'admin/includes/mmhd-wizard-steps/wizard-setup.php',
+        ),
+        'addons'  => array(
+            'label' => __('Addons', 'metamint-helpdesk'),
+            'file'  => MMHD_PLUGIN_PATH . 'admin/includes/mmhd-wizard-steps/wizard-addons.php',
+        ),
+        'finish'  => array(
+            'label' => __('Finish', 'metamint-helpdesk'),
+            'file'  => MMHD_PLUGIN_PATH . 'admin/includes/mmhd-wizard-steps/wizard-finish.php',
+        ),
+    );
+}
+
+/**
+ * Get current wizard step from URL query parameter.
+ */
+function mmhd_get_wizard_current_step()
+{
+    $steps = array_keys(mmhd_get_wizard_steps());
+
+    if (isset($_GET['step']) && in_array(sanitize_key($_GET['step']), $steps, true)) {
+        return sanitize_key($_GET['step']);
+    }
+
+    return 'welcome';
+}
+
+/**
+ * Mark wizard as completed
+ */
+function mmhd_mark_wizard_complete()
+{
+    update_option('mmhd_wizard_completed', '1', true);
+
+    // Record when setup was finished so time-based prompts (e.g. the review
+    // popup) can wait for a while after onboarding.
+    if (!get_option('mmhd_wizard_completed_at')) {
+        update_option('mmhd_wizard_completed_at', time(), true);
+    }
+}
+
+/**
+ * Check if wizard is already completed
+ */
+function mmhd_is_wizard_completed()
+{
+    return get_option('mmhd_wizard_completed', '0') === '1';
+}
+
+/**
+ * Whether the "leave us a review" popup may be shown.
+ *
+ * The first prompt appears one week after the wizard is completed. Subsequent
+ * prompts are handled client-side every two weeks (or after a 30-day snooze
+ * when the user clicks "Already reviewed").
+ *
+ * @return bool
+ */
+function mmhd_is_review_prompt_available()
+{
+    if (!mmhd_is_wizard_completed()) {
+        return false;
+    }
+
+    $completed_at = (int) get_option('mmhd_wizard_completed_at', 0);
+
+    // Existing installs completed before this timestamp existed: start the
+    // one-week window now instead of showing the popup immediately.
+    if ($completed_at <= 0) {
+        $completed_at = time();
+        update_option('mmhd_wizard_completed_at', $completed_at, true);
+    }
+
+    return (time() - $completed_at) >= 7 * DAY_IN_SECONDS;
+}
+
+/**
+ * Enqueue wizard assets on wizard admin page.
+ */
+add_action('admin_enqueue_scripts', 'mmhd_wizard_enqueue_assets');
+function mmhd_wizard_enqueue_assets()
+{
+    $current_page = isset($_GET['page']) ? sanitize_key($_GET['page']) : '';
+    if ($current_page !== 'mmhd-wizard') {
+        return;
+    }
+
+    wp_enqueue_style(
+        'mmhd-wizard-styles',
+        MMHD_PLUGIN_URL . 'admin/assets/css/mmhd-wizard.css',
+        array(),
+        MMHD_VERSION
+    );
+
+    wp_enqueue_script(
+        'mmhd-wizard-js',
+        MMHD_PLUGIN_URL . 'admin/assets/js/mmhd-wizard.js',
+        array(),
+        MMHD_VERSION,
+        true
+    );
+
+    wp_localize_script('mmhd-wizard-js', 'mmhdWizardData', array(
+        'ajaxUrl'  => admin_url('admin-ajax.php'),
+        'nonce'    => wp_create_nonce('mmhd_wizard_action'),
+        'adminUrl' => admin_url(),
+        'steps'    => array(
+            'welcome' => admin_url('admin.php?page=mmhd-wizard&step=welcome'),
+            'setup'   => admin_url('admin.php?page=mmhd-wizard&step=setup'),
+            'addons'  => admin_url('admin.php?page=mmhd-wizard&step=addons'),
+            'finish'  => admin_url('admin.php?page=mmhd-wizard&step=finish'),
+        ),
+        'dashboardUrl' => admin_url('admin.php?page=mmhd-dashboard'),
+        'purchaseUrl'  => 'https://metamintapps.com/metamint-helpdesk/',
+    ));
+}
+
+/**
+ * Add a stable body class on wizard screens.
+ *
+ * The generated admin body class depends on the top-level menu title, so it is
+ * not reliable for styling. This class is used by mmhd-wizard.css.
+ */
+add_filter('admin_body_class', 'mmhd_wizard_admin_body_class');
+function mmhd_wizard_admin_body_class($classes)
+{
+    $current_page = isset($_GET['page']) ? sanitize_key($_GET['page']) : '';
+    if ($current_page === 'mmhd-wizard') {
+        $classes .= ' mmhd-wizard-page';
+    }
+
+    return $classes;
+}
+
+/**
+ * Wizard page callback
+ */
+function mmhd_wizard_callback()
+{
+    if (!current_user_can('mmhd_manage_settings')) {
+        wp_die(esc_html__('You do not have sufficient permissions to access this page.', 'metamint-helpdesk'));
+    }
+
+    $steps   = mmhd_get_wizard_steps();
+    $current = mmhd_get_wizard_current_step();
+
+    // Only redirect the bare wizard entry point once setup is complete. Internal
+    // navigation (stepper, Back, Skip to Addons, Next) always includes an
+    // explicit "step" parameter and must keep working.
+    $has_explicit_step = isset($_GET['step']) && array_key_exists(sanitize_key($_GET['step']), $steps);
+
+    if (mmhd_is_wizard_completed() && !$has_explicit_step && !isset($_GET['reopen'])) {
+        wp_safe_redirect(admin_url('admin.php?page=mmhd-dashboard'));
+        exit;
+    }
+
+    if (!array_key_exists($current, $steps)) {
+        $current = 'welcome';
+    }
+
+    include $steps[$current]['file'];
+}

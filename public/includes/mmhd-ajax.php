@@ -176,9 +176,11 @@ function mmhd_handle_ticket_submission()
         // Auto-assign if enabled in Advanced Settings
         $settings = get_option('mmhd_advanced_settings', []);
         if (!empty($settings['enable_auto_assign'])) {
-            $assigned = mmhd_auto_assign_ticket_to_support_staff();
-            update_post_meta($post_id, 'ticket_assignee', $assigned);
-            mmhd_store_ticket_assignee_id($post_id, $assigned);
+            $assigned = mmhd_auto_assign_ticket_to_support_staff(false, false, $post_id);
+            if (!empty($assigned)) {
+                update_post_meta($post_id, 'ticket_assignee', $assigned);
+                mmhd_store_ticket_assignee_id($post_id, $assigned);
+            }
         }
 
         mmhd_notify_ticket_created($post_id, 'chat');
@@ -314,8 +316,6 @@ function mmhd_get_credential_form_callback()
 add_action('wp_ajax_mmhd_add_credential', 'mmhd_add_credential_callback');
 function mmhd_add_credential_callback()
 {
-    // echo 'asdfasdfasdfasdf';
-    // echo '<script>alert("asdfasdfasdf" );</script>';
     check_ajax_referer('mmhd_add_credential_nonce');
     global $wpdb;
     $credentials_table = $wpdb->prefix . 'mmhd_credentials';

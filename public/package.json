@@ -25,6 +25,7 @@
     "and": "^0.0.3",
     "build": "^0.1.4",
     "dompurify": "^3.2.5",
+    "emoji-datasource": "^15.1.2",
     "emoji-picker-react": "^4.12.2",
     "he": "^1.2.0",
     "html-react-parser": "^5.2.3",
