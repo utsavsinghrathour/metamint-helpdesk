@@ -200,3 +200,7 @@ msgstr ""
 #: public/includes/mmhd-shortcodes.php
 msgid "Invalid email format."
 msgstr ""
+
+#: admin/includes/mmhd-settings.php
+msgid "Suppresses only import-related Metamint Helpdesk emails — such as new user welcome emails created while importing existing conversations. Regular emails like ticket creation confirmations, reply and close notifications, and password resets will still be sent."
+msgstr ""

@@ -2456,11 +2456,6 @@ function mmhd_schedule_unseen_reply_email($ticket_id, $comment_id, $reply, $user
 {
     mmhd_log("Metamint Helpdesk: Unseen reply email check triggered for ticket #{$ticket_id}, comment #{$comment_id}");
 
-    if (mmhd_are_emails_suppressed()) {
-        mmhd_log("Metamint Helpdesk: Unseen reply email skipped - email sending disabled (do not send email on import) for comment #{$comment_id}");
-        return;
-    }
-
     $settings = get_option('mmhd_advanced_settings', []);
     $minutes = isset($settings['reply_unseen_email_minutes']) ? absint($settings['reply_unseen_email_minutes']) : 0;
     if ($minutes <= 0) {

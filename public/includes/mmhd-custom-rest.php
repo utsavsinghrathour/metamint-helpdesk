@@ -1287,9 +1287,7 @@ function mmhd_user_signup(WP_REST_Request $request)
     $rest_nonce = mmhd_create_session_nonce($user->ID);
 
     // Send default WordPress user notification email
-    if (!mmhd_are_emails_suppressed()) {
-        wp_new_user_notification($user_id, null, 'both'); // Sends email to user and admin
-    }
+    wp_new_user_notification($user_id, null, 'both'); // Sends email to user and admin
 
     // Generate JWT token
     $token = mmhd_generate_token($user);
@@ -1997,13 +1995,6 @@ function mmhd_custom_lost_password(WP_REST_Request $request)
     }
     set_transient($cooldown_key, true, 10 * MINUTE_IN_SECONDS);
 
-    if (mmhd_are_emails_suppressed()) {
-        mmhd_log('Metamint Helpdesk: Password reset email skipped (do not send email on import) for: ' . $user_login);
-        return new WP_REST_Response(array(
-            'message' => __('If the username or email exists, a password reset link has been sent.', 'metamint-helpdesk')
-        ), 200);
-    }
-
     $result = retrieve_password($user_login);
 
     if (is_wp_error($result)) {
@@ -2216,11 +2207,6 @@ function mmhd_send_chat_transcript(WP_REST_Request $request)
     $reply_to = function_exists('mmhd_get_inbox_email_for_ticket') ? mmhd_get_inbox_email_for_ticket($ticket_id) : '';
     if ($reply_to) {
         $headers[] = 'Reply-To: ' . $reply_to;
-    }
-
-    if (mmhd_are_emails_suppressed()) {
-        mmhd_log('Metamint Helpdesk: Chat transcript email skipped (do not send email on import).');
-        return new WP_Error('emails_disabled', __('Email sending is currently disabled on this site.', 'metamint-helpdesk'), array('status' => 403));
     }
 
     $email_sent = wp_mail($to, $subject, $full_html, $headers);
